@@ -83,7 +83,7 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 201);
 
         $sessionId = $response['body']['$id'];
-        $session = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         /**
          * Test for FAILURE
@@ -235,31 +235,28 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
-        $this->assertCount(1, $response['body']);
-        $this->assertEquals($sessionId, $response['body'][0]['$id']);
+        $this->assertCount(2, $response['body']);
+        $this->assertEquals(1, $response['body']['sum']);
+        $this->assertEquals($sessionId, $response['body']['sessions'][0]['$id']);
         
-        $this->assertIsArray($response['body'][0]['OS']);
-        $this->assertEquals('Windows', $response['body'][0]['OS']['name']);
-        $this->assertEquals('WIN', $response['body'][0]['OS']['short_name']);
-        $this->assertEquals('10', $response['body'][0]['OS']['version']);
-        $this->assertEquals('x64', $response['body'][0]['OS']['platform']);
+        $this->assertEquals('Windows', $response['body']['sessions'][0]['osName']);
+        $this->assertEquals('WIN', $response['body']['sessions'][0]['osCode']);
+        $this->assertEquals('10', $response['body']['sessions'][0]['osVersion']);
 
-        $this->assertIsArray($response['body'][0]['client']);
-        $this->assertEquals('browser', $response['body'][0]['client']['type']);
-        $this->assertEquals('Chrome', $response['body'][0]['client']['name']);
-        $this->assertEquals('CH', $response['body'][0]['client']['short_name']); // FIXME (v1) key name should be camelcase
-        $this->assertEquals('70.0', $response['body'][0]['client']['version']);
-        $this->assertEquals('Blink', $response['body'][0]['client']['engine']);
-        $this->assertEquals(0, $response['body'][0]['device']);
-        $this->assertEquals('', $response['body'][0]['brand']);
-        $this->assertEquals('', $response['body'][0]['model']);
-        $this->assertEquals($response['body'][0]['ip'], filter_var($response['body'][0]['ip'], FILTER_VALIDATE_IP));
+        $this->assertEquals('browser', $response['body']['sessions'][0]['clientType']);
+        $this->assertEquals('Chrome', $response['body']['sessions'][0]['clientName']);
+        $this->assertEquals('CH', $response['body']['sessions'][0]['clientCode']);
+        $this->assertEquals('70.0', $response['body']['sessions'][0]['clientVersion']);
+        $this->assertEquals('Blink', $response['body']['sessions'][0]['clientEngine']);
+        $this->assertEquals('desktop', $response['body']['sessions'][0]['deviceName']);
+        $this->assertEquals('', $response['body']['sessions'][0]['deviceBrand']);
+        $this->assertEquals('', $response['body']['sessions'][0]['deviceModel']);
+        $this->assertEquals($response['body']['sessions'][0]['ip'], filter_var($response['body']['sessions'][0]['ip'], FILTER_VALIDATE_IP));
         
-        $this->assertIsArray($response['body'][0]['geo']);
-        $this->assertEquals('--', $response['body'][0]['geo']['isoCode']);
-        $this->assertEquals('Unknown', $response['body'][0]['geo']['country']);
+        $this->assertEquals('--', $response['body']['sessions'][0]['countryCode']);
+        $this->assertEquals('Unknown', $response['body']['sessions'][0]['countryName']);
         
-        $this->assertEquals(true, $response['body'][0]['current']);
+        $this->assertEquals(true, $response['body']['sessions'][0]['current']);
 
         /**
          * Test for FAILURE
@@ -294,59 +291,53 @@ trait AccountBase
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertIsArray($response['body']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertCount(2, $response['body']);
+        $this->assertIsArray($response['body']['logs']);
+        $this->assertNotEmpty($response['body']['logs']);
+        $this->assertCount(2, $response['body']['logs']);
         
-        $this->assertEquals('account.sessions.create', $response['body'][0]['event']);
-        $this->assertEquals($response['body'][0]['ip'], filter_var($response['body'][0]['ip'], FILTER_VALIDATE_IP));
-        $this->assertIsNumeric($response['body'][0]['time']);
+        $this->assertEquals('account.sessions.create', $response['body']['logs'][0]['event']);
+        $this->assertEquals($response['body']['logs'][0]['ip'], filter_var($response['body']['logs'][0]['ip'], FILTER_VALIDATE_IP));
+        $this->assertIsNumeric($response['body']['logs'][0]['time']);
 
-        $this->assertIsArray($response['body'][0]['OS']);
-        $this->assertEquals('Windows', $response['body'][0]['OS']['name']);
-        $this->assertEquals('WIN', $response['body'][0]['OS']['short_name']);
-        $this->assertEquals('10', $response['body'][0]['OS']['version']);
-        $this->assertEquals('x64', $response['body'][0]['OS']['platform']);
+        $this->assertEquals('Windows', $response['body']['logs'][0]['osName']);
+        $this->assertEquals('WIN', $response['body']['logs'][0]['osCode']);
+        $this->assertEquals('10', $response['body']['logs'][0]['osVersion']);
 
-        $this->assertIsArray($response['body'][0]['client']);
-        $this->assertEquals('browser', $response['body'][0]['client']['type']);
-        $this->assertEquals('Chrome', $response['body'][0]['client']['name']);
-        $this->assertEquals('CH', $response['body'][0]['client']['short_name']); // FIXME (v1) key name should be camelcase
-        $this->assertEquals('70.0', $response['body'][0]['client']['version']);
-        $this->assertEquals('Blink', $response['body'][0]['client']['engine']);
-        $this->assertEquals(0, $response['body'][0]['device']);
-        $this->assertEquals('', $response['body'][0]['brand']);
-        $this->assertEquals('', $response['body'][0]['model']);
-        $this->assertEquals($response['body'][0]['ip'], filter_var($response['body'][0]['ip'], FILTER_VALIDATE_IP));
+        $this->assertEquals('browser', $response['body']['logs'][0]['clientType']);
+        $this->assertEquals('Chrome', $response['body']['logs'][0]['clientName']);
+        $this->assertEquals('CH', $response['body']['logs'][0]['clientCode']); // FIXME (v1) key name should be camelcase
+        $this->assertEquals('70.0', $response['body']['logs'][0]['clientVersion']);
+        $this->assertEquals('Blink', $response['body']['logs'][0]['clientEngine']);
+
+        $this->assertEquals('desktop', $response['body']['logs'][0]['deviceName']);
+        $this->assertEquals('', $response['body']['logs'][0]['deviceBrand']);
+        $this->assertEquals('', $response['body']['logs'][0]['deviceModel']);
+        $this->assertEquals($response['body']['logs'][0]['ip'], filter_var($response['body']['logs'][0]['ip'], FILTER_VALIDATE_IP));
         
-        $this->assertIsArray($response['body'][0]['geo']);
-        $this->assertEquals('--', $response['body'][0]['geo']['isoCode']);
-        $this->assertEquals('Unknown', $response['body'][0]['geo']['country']);
+        $this->assertEquals('--', $response['body']['logs'][0]['countryCode']);
+        $this->assertEquals('Unknown', $response['body']['logs'][0]['countryName']);
 
-        $this->assertEquals('account.create', $response['body'][1]['event']);
-        $this->assertEquals($response['body'][1]['ip'], filter_var($response['body'][0]['ip'], FILTER_VALIDATE_IP));
-        $this->assertIsNumeric($response['body'][1]['time']);
+        $this->assertEquals('account.create', $response['body']['logs'][1]['event']);
+        $this->assertEquals($response['body']['logs'][1]['ip'], filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP));
+        $this->assertIsNumeric($response['body']['logs'][1]['time']);
 
-        $this->assertIsArray($response['body'][1]['OS']);
-        $this->assertEquals('Windows', $response['body'][1]['OS']['name']);
-        $this->assertEquals('WIN', $response['body'][1]['OS']['short_name']);
-        $this->assertEquals('10', $response['body'][1]['OS']['version']);
-        $this->assertEquals('x64', $response['body'][1]['OS']['platform']);
+        $this->assertEquals('Windows', $response['body']['logs'][1]['osName']);
+        $this->assertEquals('WIN', $response['body']['logs'][1]['osCode']);
+        $this->assertEquals('10', $response['body']['logs'][1]['osVersion']);
 
-        $this->assertIsArray($response['body'][1]['client']);
-        $this->assertEquals('browser', $response['body'][1]['client']['type']);
-        $this->assertEquals('Chrome', $response['body'][1]['client']['name']);
-        $this->assertEquals('CH', $response['body'][1]['client']['short_name']); // FIXME (v1) key name should be camelcase
-        $this->assertEquals('70.0', $response['body'][1]['client']['version']);
-        $this->assertEquals('Blink', $response['body'][1]['client']['engine']);
-        $this->assertEquals(0, $response['body'][1]['device']);
-        $this->assertEquals('', $response['body'][1]['brand']);
-        $this->assertEquals('', $response['body'][1]['model']);
-        $this->assertEquals($response['body'][1]['ip'], filter_var($response['body'][0]['ip'], FILTER_VALIDATE_IP));
+        $this->assertEquals('browser', $response['body']['logs'][1]['clientType']);
+        $this->assertEquals('Chrome', $response['body']['logs'][1]['clientName']);
+        $this->assertEquals('CH', $response['body']['logs'][1]['clientCode']); // FIXME (v1) key name should be camelcase
+        $this->assertEquals('70.0', $response['body']['logs'][1]['clientVersion']);
+        $this->assertEquals('Blink', $response['body']['logs'][1]['clientEngine']);
+
+        $this->assertEquals('desktop', $response['body']['logs'][1]['deviceName']);
+        $this->assertEquals('', $response['body']['logs'][1]['deviceBrand']);
+        $this->assertEquals('', $response['body']['logs'][1]['deviceModel']);
+        $this->assertEquals($response['body']['logs'][1]['ip'], filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP));
         
-        $this->assertIsArray($response['body'][1]['geo']);
-        $this->assertEquals('--', $response['body'][1]['geo']['isoCode']);
-        $this->assertEquals('Unknown', $response['body'][1]['geo']['country']);
+        $this->assertEquals('--', $response['body']['logs'][1]['countryCode']);
+        $this->assertEquals('Unknown', $response['body']['logs'][1]['countryName']);
         
         /**
          * Test for FAILURE
@@ -421,7 +412,7 @@ trait AccountBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
-            'name' => 'ocSRq1d3QphHivJyUmYY7WMnrxyjdk5YvVwcDqx2zS0coxESN8RmsQwLWw5Whnf0WbVohuFWTRAaoKgCOO0Y0M7LwgFnZmi8881Y7'
+            'name' => 'ocSRq1d3QphHivJyUmYY7WMnrxyjdk5YvVwcDqx2zS0coxESN8RmsQwLWw5Whnf0WbVohuFWTRAaoKgCOO0Y0M7LwgFnZmi8881Y72222222222222222222222222222'
         ]);
         
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -573,8 +564,8 @@ trait AccountBase
             'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
             'prefs' => [
-                'key1' => 'value1',
-                'key2' => 'value2',
+                'prefKey1' => 'prefValue1',
+                'prefKey2' => 'prefValue2',
             ]
         ]);
 
@@ -582,8 +573,8 @@ trait AccountBase
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']);
-        $this->assertEquals('value1', $response['body']['key1']);
-        $this->assertEquals('value2', $response['body']['key2']);
+        $this->assertEquals('prefValue1', $response['body']['prefKey1']);
+        $this->assertEquals('prefValue2', $response['body']['prefKey2']);
 
         /**
          * Test for FAILURE
@@ -774,7 +765,7 @@ trait AccountBase
         ]);
 
         $sessionNewId = $response['body']['$id'];
-        $sessionNew = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+        $sessionNew = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         $this->assertEquals($response['headers']['status-code'], 201);
 
@@ -840,7 +831,7 @@ trait AccountBase
             'password' => $password,
         ]);
 
-        $sessionNew = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+        $sessionNew = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         $this->assertEquals($response['headers']['status-code'], 201);
 
@@ -922,7 +913,7 @@ trait AccountBase
             'password' => $password,
         ]);
 
-        $data['session'] = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+        $data['session'] = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         return $data;
     }

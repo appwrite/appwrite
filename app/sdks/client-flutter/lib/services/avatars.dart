@@ -190,6 +190,10 @@ class Avatars extends Service {
             'project': client.config['project'],
         };
 
+        params.keys.forEach((key) {if (params[key] is int || params[key] is double) {
+          params[key] = params[key].toString();
+        }});
+        
         Uri endpoint = Uri.parse(client.endPoint);
         Uri location = new Uri(scheme: endpoint.scheme,
           host: endpoint.host,
@@ -206,7 +210,7 @@ class Avatars extends Service {
      /// Converts a given plain text to a QR code image. You can use the query
      /// parameters to change the size and style of the resulting image.
      ///
-    String getQR({@required String text, int size = 400, int margin = 1, int download = 0}) {
+    String getQR({@required String text, int size = 400, int margin = 1, bool download = false}) {
         final String path = '/avatars/qr';
 
         final Map<String, dynamic> params = {

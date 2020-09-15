@@ -21,15 +21,15 @@ class Document extends ArrayObject
      * @param int    $flags
      * @param string $iterator_class
      */
-    public function __construct($input = null, $flags = 0, $iterator_class = 'ArrayIterator')
+    public function __construct($input = [], $flags = 0, $iterator_class = 'ArrayIterator')
     {
         foreach ($input as $key => &$value) {
             if (\is_array($value)) {
-                if (isset($value['$id']) || isset($value['$collection'])) {
+                if ((isset($value['$id']) || isset($value['$collection'])) && (!$value instanceof self)) {
                     $input[$key] = new self($value);
                 } else {
                     foreach ($value as $childKey => $child) {
-                        if (isset($child['$id']) || isset($child['$collection'])) {
+                        if ((isset($child['$id']) || isset($child['$collection'])) && (!$child instanceof self)) {
                             $value[$childKey] = new self($child);
                         }
                     }
@@ -191,6 +191,18 @@ class Document extends ArrayObject
     public function isEmpty()
     {
         return empty($this->getId());
+    }
+
+    /**
+     * Checks if a document key is set.
+     *
+     * @param $key
+     * 
+     * @return bool
+     */
+    public function isSet($key)
+    {
+        return isset($this[$key]);
     }
 
     /**

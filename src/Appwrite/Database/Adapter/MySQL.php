@@ -29,20 +29,6 @@ class MySQL extends Adapter
     protected $register;
 
     /**
-     * Saved nodes.
-     *
-     * @var array
-     */
-    protected $nodes = [];
-
-    /**
-     * Count documents get usage.
-     *
-     * @var int
-     */
-    protected $count = 0;
-
-    /**
      * Last modified.
      *
      * Read node with most recent changes
@@ -79,8 +65,6 @@ class MySQL extends Adapter
      */
     public function getDocument($id)
     {
-        ++$this->count;
-
         // Get fields abstraction
         $st = $this->getPDO()->prepare('SELECT * FROM `'.$this->getNamespace().'.database.documents` a
             WHERE a.uid = :uid AND a.status = 0
@@ -367,6 +351,26 @@ class MySQL extends Adapter
     }
 
     /**
+     * Delete Unique Key.
+     *
+     * @param int $key
+     *
+     * @return array
+     *
+     * @throws Exception
+     */
+    public function deleteUniqueKey($key)
+    {
+        $st1 = $this->getPDO()->prepare('DELETE FROM `'.$this->getNamespace().'.database.unique` WHERE `key` = :key');
+
+        $st1->bindValue(':key', $key, PDO::PARAM_STR);
+
+        $st1->execute();
+
+        return [];
+    }
+
+    /**
      * Create Relation.
      *
      * Adds a new relationship between different nodes
@@ -451,6 +455,7 @@ class MySQL extends Adapter
             throw new Exception('Empty namespace');
         }
 
+        $unique = 'app_'.$namespace.'.database.unique';
         $documents = 'app_'.$namespace.'.database.documents';
         $properties = 'app_'.$namespace.'.database.properties';
         $relationships = 'app_'.$namespace.'.database.relationships';
@@ -458,6 +463,7 @@ class MySQL extends Adapter
         $abuse = 'app_'.$namespace.'.abuse.abuse';
 
         try {
+            $this->getPDO()->prepare('DROP TABLE `'.$unique.'`;')->execute();
             $this->getPDO()->prepare('DROP TABLE `'.$documents.'`;')->execute();
             $this->getPDO()->prepare('DROP TABLE `'.$properties.'`;')->execute();
             $this->getPDO()->prepare('DROP TABLE `'.$relationships.'`;')->execute();
@@ -653,7 +659,6 @@ class MySQL extends Adapter
             ->setDebug('joins', \substr_count($query, 'JOIN'))
             ->setDebug('count', \count($results['data']))
             ->setDebug('sum', (int) $count['sum'])
-            ->setDebug('documents', $this->count)
         ;
 
         return $results['data'];
@@ -673,6 +678,11 @@ class MySQL extends Adapter
         $start = \microtime(true);
         $where = [];
         $join = [];
+
+        $options = array_merge([
+            'attribute' => '',
+            'filters' => [],
+        ], $options);
 
         // Filters
         foreach ($options['filters'] as $i => $filter) {
@@ -716,9 +726,10 @@ class MySQL extends Adapter
 
         $where = \implode("\n", $where);
         $join = \implode("\n", $join);
+        $attribute = $this->getPDO()->quote($options['attribute'], PDO::PARAM_STR);
         $func = 'JOIN `'.$this->getNamespace().".database.properties` b_func ON a.uid IS NOT NULL
             AND a.uid = b_func.documentUid
-            AND (b_func.key = 'sizeOriginal')";
+            AND (b_func.key = {$attribute})";
         $roles = [];
 
         foreach (Authorization::getRoles() as $role) {
@@ -729,8 +740,8 @@ class MySQL extends Adapter
             $roles = ['1=1'];
         }
 
-        $query = 'SELECT SUM(b_func.value) as result
-            FROM `'.$this->getNamespace().".database.documents` a {$where}{$join}{$func}
+        $query = "SELECT SUM(b_func.value) as result
+            FROM `".$this->getNamespace().".database.documents` a {$where}{$join}{$func}
             WHERE status = 0
                AND (".\implode('||', $roles).')';
 
@@ -749,7 +760,7 @@ class MySQL extends Adapter
             ->setDebug('joins', \substr_count($query, 'JOIN'))
         ;
 
-        return (int) (isset($result['result'])) ? $result['result'] : 0;
+        return (isset($result['result'])) ? (int)$result['result'] : 0;
     }
 
     /**
@@ -774,7 +785,7 @@ class MySQL extends Adapter
     /**
      * Last Modified.
      *
-     * Return unix timestamp of last time a node queried in corrent session has been changed
+     * Return Unix timestamp of last time a node queried in corrent session has been changed
      *
      * @return int
      */
@@ -906,7 +917,7 @@ class MySQL extends Adapter
      *
      * @throws Exception
      */
-    protected function getPDO():PDO
+    protected function getPDO()
     {
         return $this->register->get('db');
     }

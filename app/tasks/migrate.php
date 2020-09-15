@@ -1,27 +1,24 @@
-#!/bin/env php
 <?php
 
-require_once __DIR__.'/../init.php';
-
-global $register, $projectDB, $console, $request;
+global $cli, $register, $projectDB, $console;
 
 use Utopia\Config\Config;
-use Utopia\CLI\CLI;
 use Utopia\CLI\Console;
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
+use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
+use Appwrite\Database\Adapter\Redis as RedisAdapter;
 
-$cli = new CLI();
 $db = $register->get('db');
 
 $callbacks = [
     '0.4.0' => function() {
         Console::log('I got nothing to do.');
     },
-    '0.5.0' => function($project) use ($db, $projectDB, $requset) {
+    '0.5.0' => function(Document $project, $projectDB) use ($db) {
 
-        Console::log('Migrating project: '.$project->getId());
+        Console::log('Migrating project: '.$project->getAttribute('name').' ('.$project->getId().')');
 
         // Update all documents $uid -> $id
 
@@ -52,6 +49,7 @@ $callbacks = [
                 try {
                     $new = $projectDB->overwriteDocument($document->getArrayCopy());
                 } catch (\Throwable $th) {
+                    var_dump($document);
                     Console::error('Failed to update document: '.$th->getMessage());
                     continue;
                 }
@@ -113,6 +111,14 @@ function fixDocument(Document $document) {
         }
     }
 
+    if($document->getAttribute('$collection') === Database::SYSTEM_COLLECTION_WEBHOOKS){
+        $document->setAttribute('security', ($document->getAttribute('security')) ? true : false);
+    }
+
+    if($document->getAttribute('$collection') === Database::SYSTEM_COLLECTION_TASKS){
+        $document->setAttribute('security', ($document->getAttribute('security')) ? true : false);
+    }
+
     if($document->getAttribute('$collection') === Database::SYSTEM_COLLECTION_USERS) {
         foreach($providers as $key => $provider) {
             if(!empty($document->getAttribute('oauth'.\ucfirst($key)))) {
@@ -152,9 +158,7 @@ function fixDocument(Document $document) {
         ->removeAttribute('$uid')
     ;
 
-    //Console::log('Switched from $uid to $id: '.$document->getCollection().'/'.$document->getId());
-
-    foreach($document as &$attr) {
+    foreach($document as &$attr) { // Handle child documents
         if($attr instanceof Document) {
             $attr = fixDocument($attr);
         }
@@ -172,9 +176,20 @@ function fixDocument(Document $document) {
 }
 
 $cli
-    ->task('run')
-    ->action(function () use ($console, $projectDB, $consoleDB, $callbacks) {
+    ->task('migrate')
+    ->action(function () use ($register, $callbacks) {
         Console::success('Starting Data Migration');
+
+        $consoleDB = new Database();
+        $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+        $consoleDB->setNamespace('app_console'); // Main DB
+        $consoleDB->setMocks(Config::getParam('collections', []));
+        
+        $projectDB = new Database();
+        $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+        $projectDB->setMocks(Config::getParam('collections', []));
+
+        $console = $consoleDB->getDocument('console');
 
         Authorization::disable();
 
@@ -182,17 +197,18 @@ $cli
         $sum = 30;
         $offset = 0;
         $projects = [$console];
+        $count = 0;
 
         while ($sum >= 30) {
             foreach($projects as $project) {
+                
                 $projectDB->setNamespace('app_'.$project->getId());
 
                 try {
-                    $callbacks['0.5.0']($project);
+                    $callbacks['0.5.0']($project, $projectDB);
                 } catch (\Throwable $th) {
+                    throw $th;
                     Console::error('Failed to update project ("'.$project->getId().'") version with error: '.$th->getMessage());
-                    $projectDB->setNamespace('app_console');
-                    $projectDB->deleteDocument($project->getId());
                 }
             }
 
@@ -209,11 +225,10 @@ $cli
 
             $sum = \count($projects);
             $offset = $offset + $limit;
+            $count = $count + $sum;
 
-            Console::log('Fetched '.$sum.' projects...');
+            Console::log('Fetched '.$count.'/'.$consoleDB->getSum().' projects...');
         }
 
         Console::success('Data Migration Completed');
     });
-
-$cli->run();

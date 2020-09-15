@@ -55,4 +55,16 @@ return [
     'storage.files.delete' => [
         'description' => 'This event triggers when a storage file is deleted.',
     ],
+    'users.create' => [
+        'description' => 'This event triggers when a user is created from the users API.',
+    ],
+    'users.update.status' => [
+        'description' => 'This event triggers when a user status is updated from the users API.',
+    ],
+    'users.delete' => [
+        'description' => 'This event triggers when a user is deleted from users API.',
+    ],
+    'users.sessions.delete' => [
+        'description' => 'This event triggers when a user session is deleted from users API.',
+    ],
 ];

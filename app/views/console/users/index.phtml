@@ -36,7 +36,7 @@ $providers = $this->getParam('providers', []);
                     data-failure-param-alert-classname="error">
 
                     <label for="user-name">Name</label>
-                    <input type="text" class="full-width" id="user-name" name="name" required autocomplete="off" />
+                    <input type="text" class="full-width" id="user-name" name="name" required autocomplete="off" maxlength="128" />
 
                     <label for="user-email">Email</label>
                     <input type="email" class="full-width" id="user-email" name="email" required autocomplete="off" />
@@ -128,7 +128,7 @@ $providers = $this->getParam('providers', []);
                                             <span class="tag red">Blocked</span>
                                         </span>
                                     </td>
-                                    <td data-title="Created: "><small data-ls-bind="{{user.registration|date-text}}"></small></td>
+                                    <td data-title="Created: "><small data-ls-bind="{{user.registration|dateText}}"></small></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -189,7 +189,7 @@ $providers = $this->getParam('providers', []);
                     data-failure-param-alert-classname="error">
 
                     <label for="team-name">Name</label>
-                    <input type="text" class="full-width" id="team-name" name="name" required autocomplete="off" />
+                    <input type="text" class="full-width" id="team-name" name="name" required autocomplete="off" maxlength="128" />
                     
                     <hr />
 
@@ -256,7 +256,7 @@ $providers = $this->getParam('providers', []);
                                         <a data-ls-attrs="href=/console/users/teams/team?id={{team.$id}}&project={{router.params.project}}" data-ls-bind="{{team.name}}"></a>
                                     </td>
                                     <td data-title="Members: "><span data-ls-bind="{{team.sum}} members"></span></td>
-                                    <td data-title="Date Created: "><small data-ls-bind="{{team.dateCreated|date-text}}"></small></td>
+                                    <td data-title="Date Created: "><small data-ls-bind="{{team.dateCreated|dateText}}"></small></td>
                                 </tr>
                             </tbody>
                         </table>

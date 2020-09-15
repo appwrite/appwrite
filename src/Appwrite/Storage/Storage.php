@@ -16,7 +16,7 @@ class Storage
     public static $devices = array();
 
     /**
-     * Add Device.
+     * Set Device.
      *
      * Add device by name
      *
@@ -25,12 +25,8 @@ class Storage
      *
      * @throws Exception
      */
-    public static function addDevice($name, Device $device)
+    public static function setDevice($name, Device $device)
     {
-        if (\array_key_exists($name, self::$devices)) {
-            throw new Exception('The device "'.$name.'" is already listed');
-        }
-
         self::$devices[$name] = $device;
     }
 
@@ -71,24 +67,45 @@ class Storage
     /**
      * Human readable data size format from bytes input.
      *
-     * As published on https://gist.github.com/liunian/9338301 (first comment)
+     * Based on: https://stackoverflow.com/a/38659168/2299554
      *
      * @param int $bytes
      * @param int $decimals
+     * @param string $system
      *
      * @return string
      */
-    public static function human($bytes, $decimals = 2)
+    public static function human(int $bytes, $decimals = 2, $system = 'metric')
     {
-        $units = array('B','kB','MB','GB','TB','PB','EB','ZB','YB');
-        $step = 1024;
-        $i = 0;
+        $mod = ($system === 'binary') ? 1024 : 1000;
 
-        while (($bytes / $step) > 0.9) {
-            $bytes = $bytes / $step;
-            ++$i;
-        }
+        $units = array(
+            'binary' => array(
+                'B',
+                'KiB',
+                'MiB',
+                'GiB',
+                'TiB',
+                'PiB',
+                'EiB',
+                'ZiB',
+                'YiB',
+            ),
+            'metric' => array(
+                'B',
+                'kB',
+                'MB',
+                'GB',
+                'TB',
+                'PB',
+                'EB',
+                'ZB',
+                'YB',
+            ),
+        );
 
-        return \round($bytes, $decimals).$units[$i];
+        $factor = floor((strlen($bytes) - 1) / 3);
+
+        return sprintf("%.{$decimals}f%s", $bytes / pow($mod, $factor), $units[$system][$factor]);
     }
 }

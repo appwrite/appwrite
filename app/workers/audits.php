@@ -1,13 +1,14 @@
 <?php
 
+use Utopia\Audit\Audit;
+use Utopia\Audit\Adapters\MySQL as AuditAdapter;
+use Utopia\CLI\Console;
+
 require_once __DIR__.'/../init.php';
 
 \cli_set_process_title('Audits V1 Worker');
 
-echo APP_NAME.' audits worker v1 has started';
-
-use Utopia\Audit\Audit;
-use Utopia\Audit\Adapters\MySQL as AuditAdapter;
+Console::success(APP_NAME.' audits worker v1 has started');
 
 class AuditsV1
 {
@@ -28,9 +29,9 @@ class AuditsV1
         $userAgent = $this->args['userAgent'];
         $ip = $this->args['ip'];
         $data = $this->args['data'];
-        $pdo = $register->get('db', true);
+        $db = $register->get('db', true);
         
-        $adapter = new AuditAdapter($pdo);
+        $adapter = new AuditAdapter($db);
         $adapter->setNamespace('app_'.$projectId);
 
         $audit = new Audit($adapter);

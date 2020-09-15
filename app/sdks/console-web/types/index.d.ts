@@ -57,6 +57,7 @@ declare class Appwrite {
 	account:Appwrite.Account;
 	avatars:Appwrite.Avatars;
 	database:Appwrite.Database;
+	functions:Appwrite.Functions;
 	health:Appwrite.Health;
 	locale:Appwrite.Locale;
 	projects:Appwrite.Projects;
@@ -294,16 +295,17 @@ declare namespace Appwrite {
          * Use this endpoint to send a verification message to your user email address
          * to confirm they are the valid owners of that address. Both the **userId**
          * and **secret** arguments will be passed as query parameters to the URL you
-         * have provider to be attached to the verification email. The provided URL
-         * should redirect the user back for your app and allow you to complete the
+         * have provided to be attached to the verification email. The provided URL
+         * should redirect the user back to your app and allow you to complete the
          * verification process by verifying both the **userId** and **secret**
          * parameters. Learn more about how to [complete the verification
          * process](/docs/client/account#updateAccountVerification). 
          * 
          * Please note that in order to avoid a [Redirect
-         * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+         * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md),
          * the only valid redirect URLs are the ones from domains you have set when
          * adding your platforms in the console interface.
+         * 
 	     *
          * @param {string} url
          * @throws {Error}
@@ -441,11 +443,11 @@ declare namespace Appwrite {
          * @param {string} text
          * @param {number} size
          * @param {number} margin
-         * @param {number} download
+         * @param {boolean} download
          * @throws {Error}
          * @return {string}         
          */
-	    getQR(text: string, size: number, margin: number, download: number): string;
+	    getQR(text: string, size: number, margin: number, download: boolean): string;
 
 	}
 
@@ -531,18 +533,16 @@ declare namespace Appwrite {
 	     *
          * @param {string} collectionId
          * @param {string[]} filters
-         * @param {number} offset
          * @param {number} limit
+         * @param {number} offset
          * @param {string} orderField
          * @param {string} orderType
          * @param {string} orderCast
          * @param {string} search
-         * @param {number} first
-         * @param {number} last
          * @throws {Error}
          * @return {Promise}         
          */
-	    listDocuments(collectionId: string, filters: string[], offset: number, limit: number, orderField: string, orderType: string, orderCast: string, search: string, first: number, last: number): Promise<object>;
+	    listDocuments(collectionId: string, filters: string[], limit: number, offset: number, orderField: string, orderType: string, orderCast: string, search: string): Promise<object>;
 
         /**
          * Create Document
@@ -605,15 +605,178 @@ declare namespace Appwrite {
          */
 	    deleteDocument(collectionId: string, documentId: string): Promise<object>;
 
+	}
+
+    export interface Functions {
+
         /**
-         * Get Collection Logs
+         * List Functions
          *
 	     *
-         * @param {string} collectionId
+         * @param {string} search
+         * @param {number} limit
+         * @param {number} offset
+         * @param {string} orderType
          * @throws {Error}
          * @return {Promise}         
          */
-	    getCollectionLogs(collectionId: string): Promise<object>;
+	    list(search: string, limit: number, offset: number, orderType: string): Promise<object>;
+
+        /**
+         * Create Function
+         *
+	     *
+         * @param {string} name
+         * @param {string} env
+         * @param {object} vars
+         * @param {string[]} events
+         * @param {string} schedule
+         * @param {number} timeout
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    create(name: string, env: string, vars: object, events: string[], schedule: string, timeout: number): Promise<object>;
+
+        /**
+         * Get Function
+         *
+	     *
+         * @param {string} functionId
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    get(functionId: string): Promise<object>;
+
+        /**
+         * Update Function
+         *
+	     *
+         * @param {string} functionId
+         * @param {string} name
+         * @param {object} vars
+         * @param {string[]} events
+         * @param {string} schedule
+         * @param {number} timeout
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    update(functionId: string, name: string, vars: object, events: string[], schedule: string, timeout: number): Promise<object>;
+
+        /**
+         * Delete Function
+         *
+	     *
+         * @param {string} functionId
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    delete(functionId: string): Promise<object>;
+
+        /**
+         * List Executions
+         *
+	     *
+         * @param {string} functionId
+         * @param {string} search
+         * @param {number} limit
+         * @param {number} offset
+         * @param {string} orderType
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    listExecutions(functionId: string, search: string, limit: number, offset: number, orderType: string): Promise<object>;
+
+        /**
+         * Create Execution
+         *
+	     *
+         * @param {string} functionId
+         * @param {number} async
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    createExecution(functionId: string, async: number): Promise<object>;
+
+        /**
+         * Get Execution
+         *
+	     *
+         * @param {string} functionId
+         * @param {string} executionId
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    getExecution(functionId: string, executionId: string): Promise<object>;
+
+        /**
+         * Update Function Tag
+         *
+	     *
+         * @param {string} functionId
+         * @param {string} tag
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    updateTag(functionId: string, tag: string): Promise<object>;
+
+        /**
+         * List Tags
+         *
+	     *
+         * @param {string} functionId
+         * @param {string} search
+         * @param {number} limit
+         * @param {number} offset
+         * @param {string} orderType
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    listTags(functionId: string, search: string, limit: number, offset: number, orderType: string): Promise<object>;
+
+        /**
+         * Create Tag
+         *
+	     *
+         * @param {string} functionId
+         * @param {string} command
+         * @param {File} code
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    createTag(functionId: string, command: string, code: File): Promise<object>;
+
+        /**
+         * Get Tag
+         *
+	     *
+         * @param {string} functionId
+         * @param {string} tagId
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    getTag(functionId: string, tagId: string): Promise<object>;
+
+        /**
+         * Delete Tag
+         *
+	     *
+         * @param {string} functionId
+         * @param {string} tagId
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    deleteTag(functionId: string, tagId: string): Promise<object>;
+
+        /**
+         * Get Function Usage
+         *
+	     *
+         * @param {string} functionId
+         * @param {string} range
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    getUsage(functionId: string, range: string): Promise<object>;
 
 	}
 
@@ -845,10 +1008,14 @@ declare namespace Appwrite {
          * List Projects
          *
 	     *
+         * @param {string} search
+         * @param {number} limit
+         * @param {number} offset
+         * @param {string} orderType
          * @throws {Error}
          * @return {Promise}         
          */
-	    list(): Promise<object>;
+	    list(search: string, limit: number, offset: number, orderType: string): Promise<object>;
 
         /**
          * Create Project
@@ -1115,7 +1282,7 @@ declare namespace Appwrite {
          * @param {string} name
          * @param {string} status
          * @param {string} schedule
-         * @param {number} security
+         * @param {boolean} security
          * @param {string} httpMethod
          * @param {string} httpUrl
          * @param {string[]} httpHeaders
@@ -1124,7 +1291,7 @@ declare namespace Appwrite {
          * @throws {Error}
          * @return {Promise}         
          */
-	    createTask(projectId: string, name: string, status: string, schedule: string, security: number, httpMethod: string, httpUrl: string, httpHeaders: string[], httpUser: string, httpPass: string): Promise<object>;
+	    createTask(projectId: string, name: string, status: string, schedule: string, security: boolean, httpMethod: string, httpUrl: string, httpHeaders: string[], httpUser: string, httpPass: string): Promise<object>;
 
         /**
          * Get Task
@@ -1146,7 +1313,7 @@ declare namespace Appwrite {
          * @param {string} name
          * @param {string} status
          * @param {string} schedule
-         * @param {number} security
+         * @param {boolean} security
          * @param {string} httpMethod
          * @param {string} httpUrl
          * @param {string[]} httpHeaders
@@ -1155,7 +1322,7 @@ declare namespace Appwrite {
          * @throws {Error}
          * @return {Promise}         
          */
-	    updateTask(projectId: string, taskId: string, name: string, status: string, schedule: string, security: number, httpMethod: string, httpUrl: string, httpHeaders: string[], httpUser: string, httpPass: string): Promise<object>;
+	    updateTask(projectId: string, taskId: string, name: string, status: string, schedule: string, security: boolean, httpMethod: string, httpUrl: string, httpHeaders: string[], httpUser: string, httpPass: string): Promise<object>;
 
         /**
          * Delete Task
@@ -1197,13 +1364,13 @@ declare namespace Appwrite {
          * @param {string} name
          * @param {string[]} events
          * @param {string} url
-         * @param {number} security
+         * @param {boolean} security
          * @param {string} httpUser
          * @param {string} httpPass
          * @throws {Error}
          * @return {Promise}         
          */
-	    createWebhook(projectId: string, name: string, events: string[], url: string, security: number, httpUser: string, httpPass: string): Promise<object>;
+	    createWebhook(projectId: string, name: string, events: string[], url: string, security: boolean, httpUser: string, httpPass: string): Promise<object>;
 
         /**
          * Get Webhook
@@ -1225,13 +1392,13 @@ declare namespace Appwrite {
          * @param {string} name
          * @param {string[]} events
          * @param {string} url
-         * @param {number} security
+         * @param {boolean} security
          * @param {string} httpUser
          * @param {string} httpPass
          * @throws {Error}
          * @return {Promise}         
          */
-	    updateWebhook(projectId: string, webhookId: string, name: string, events: string[], url: string, security: number, httpUser: string, httpPass: string): Promise<object>;
+	    updateWebhook(projectId: string, webhookId: string, name: string, events: string[], url: string, security: boolean, httpUser: string, httpPass: string): Promise<object>;
 
         /**
          * Delete Webhook

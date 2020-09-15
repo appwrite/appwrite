@@ -29,8 +29,8 @@ class UID extends Validator
      */
     public function isValid($value)
     {
-        if (\is_numeric($value)) {
-            //return false;
+        if(mb_strlen($value) > 32) {
+            return false;
         }
 
         return true;

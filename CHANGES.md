@@ -19,6 +19,32 @@
 - Upgraded ClamAV container image to version 1.0.11 ([#412](https://github.com/appwrite/appwrite/issues/412))
 - Optimised function execution by using fully-qualified function calls
 - Added support for boolean 'true' and 'false' in query strings alongside 1 and 0
+- Added pagination for projects list on the console home page.
+- Updated storage calculation to match IEC standards
+- Now using Alpine as base Docker image
+- Upgraded device detctor to version 3.12.6
+- Upgraded MariaDB to version 10.5.5
+- User name max length is now 128 chars and not 100 for better API consistency
+- Team name max length is now 128 chars and not 100 for better API consistency
+- Collection name max length is now 128 chars and not 256 for better API consistency
+- Project name max length is now 128 chars and not 100 for better API consistency
+- Webhook name max length is now 128 chars and not 256 for better API consistency
+- API Key name max length is now 128 chars and not 256 for better API consistency
+- Task name max length is now 128 chars and not 256 for better API consistency
+- Platform name max length is now 128 chars and not 256 for better API consistency
+- Webhooks payloads are now exactly the same as any of the API response objects
+- New and consistent response format for all API object + new response examples in the docs
+  - Removed user roles attribute from user object (can be fetched from /v1/teams/memberships) **
+  - Removed type attribute from session object response (used only internally)
+  - ** - might be changed before merging to master
+
+## Breaking Changes (Read before upgrading!)
+- **Deprecated** `first` and `last` query params for documents list route in the database API
+- **Deprecated** Deprectaed Pubjabi Translations ('pn')
+- **Deprecated** `PATCH /account/prefs` is now updating the prefs payload and not just merging it
+- **Deprecated** `PATCH /users/:userId/prefs` is now updating the prefs payload and not just merging it
+- Switched order of limit and offset params in all the SDKs `listDocuments` method for better consistency
+- Default `limit` param value in all the SDKs `listDocuments` method is now 25 for better consistency
 
 ## Bug Fixes
 
@@ -41,15 +67,13 @@
 - New OAuth adapter for PayPal sandbox
 - Fixed a bug making read permission overwrite write permission in some cases
 
-## Breaking Changes
-- **Deprecated** `first` and `last` query params for documents list route in the database API
-- **Deprecated** Deprectaed Pubjabi Translations ('pn')
-
 ## Security
 
 - Access to Health API now requires authentication with an API Key with access to `health.read` scope allowed
 - Added option to force HTTPS connection to the Appwrite server (_APP_OPTIONS_FORCE_HTTPS)
 - Now using your `_APP_SYSTEM_EMAIL_ADDRESS` as the email address for issuing and renewing SSL certificates
+- Block iframe access to Appwrite console using the `X-Frame-Options` header.
+- Fixed `roles` param input validator
 
 # Version 0.6.2 (PRE-RELEASE)
 

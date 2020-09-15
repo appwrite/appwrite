@@ -6,7 +6,7 @@ sdk
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-let promise = sdk.projects.createTask('[PROJECT_ID]', '[NAME]', 'play', '', 0, 'GET', 'https://example.com');
+let promise = sdk.projects.createTask('[PROJECT_ID]', '[NAME]', 'play', '', false, 'GET', 'https://example.com');
 
 promise.then(function (response) {
     console.log(response); // Success

@@ -408,13 +408,21 @@
 
   .dashboard {
     padding: 20px;
-    min-height: 95px;
     overflow: hidden;
     position: relative;
     z-index: 1;
+    margin-bottom: 2px;
+
+    .chart {
+      width: 80%;
+
+      @media @phones, @tablets {
+        width: 100%;
+      }
+    }
 
     hr {
-      margin: 20px -20px;
+      margin: 20px -25px;
       height: 2px;
       background: var(--config-console-background);
 
@@ -444,7 +452,6 @@
         display: block;
         width: 2px;
         background: var(--config-console-background);
-        height: ~"calc(100% + 110px)";
         position: absolute;
         top: -20px;
         bottom: -20px;
@@ -465,11 +472,20 @@
       vertical-align: bottom;
       line-height: 45px;
 
+      &.small {
+        line-height: 35px;
+      }
+
       .sum {
         font-size: 45px;
         line-height: 45px;
         font-weight: 700;
         vertical-align: bottom;
+
+        &.small {
+          font-size: 25px;
+          line-height: 25px;
+        }
       }
     }
 
@@ -506,49 +522,100 @@
       padding: 0;
       border: none;
     }
+  }
 
-    .chart-metric {
-      width: 19%;
+  .chart-metric {
+    width: 19%;
 
-      @media @tablets, @phones {
-        width: 100%;
-      }
+    @media @tablets, @phones {
+      width: 100%;
     }
+  }
 
-    .chart {
-      width: 80%;
-      position: relative;
-      height: 0;
-      padding-top: 20px;
-      padding-bottom: 26%;
-      .func-margin-end(-2px);
-      overflow: hidden;
-      background-color: var(--config-color-background-fade);
-      background-image:
-        linear-gradient(transparent 1px, transparent 1px),
-        linear-gradient(90deg, transparent 1px, transparent 1px),
-        linear-gradient(var(--config-border-color) 1px, transparent 1px),
-        linear-gradient(90deg, var(--config-border-color) 1px, transparent 1px);
-      background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
-      background-position: -2px -2px, -2px -2px, -1px -1px, -1px -1px;
-      background-repeat: round;
-      border: solid 1px var(--config-border-color);
-      border-right: solid 1px transparent;
-      border-bottom: solid 1px transparent;
+  .chart {	
+    width: 100%;	
+    position: relative;	
+    height: 0;
+    padding-top: 20px;	
+    padding-bottom: 26%;	
+    .func-margin-end(-2px);	
+    overflow: hidden;	
+    background-color: var(--config-color-background-fade);	
+    background-image:	
+      linear-gradient(transparent 1px, transparent 1px),	
+      linear-gradient(90deg, transparent 1px, transparent 1px),	
+      linear-gradient(var(--config-border-color) 1px, transparent 1px),	
+      linear-gradient(90deg, var(--config-border-color) 1px, transparent 1px);	
+    background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;	
+    background-position: -2px -2px, -2px -2px, -1px -1px, -1px -1px;	
+    background-repeat: round;	
+    border: solid 1px var(--config-border-color);	
+    border-right: solid 1px transparent;	
+    border-bottom: solid 1px transparent;	
+    @media @tablets, @phones {	
+      width: 100%;	
+      padding-bottom: 32%;	
+      float: none;	
+      margin-bottom: 20px;	
+    }	
+    canvas {	
+      position: absolute;	
+      bottom: 0;	
+      display: block;	
+      height: 100%;	
+      width: 100%;	
+    }	
+  }
 
-      @media @tablets, @phones {
-        width: 100%;
-        padding-bottom: 32%;
-        float: none;
-        margin-bottom: 20px;
+  .chart-notes {
+    font-size: 12px;
+
+    li {
+      line-height: 20px;
+      display: inline-block;
+      .func-margin-end(15px);
+
+      &::before {
+        display: inline-block;
+        content: '';
+        width: 14px;
+        height: 14px;
+        background: var(--config-color-normal);
+        border-radius: 50%;
+        .func-margin-end(8px);
+        vertical-align: middle;
       }
 
-      canvas {
-        position: absolute;
-        bottom: 0;
-        display: block;
-        height: 100%;
-        width: 100%;
+      &:nth-child(1), &.blue {
+        color: #29b5d9;
+
+        &::before {
+          background: #29b5d9;
+        }
+      }
+
+      &:nth-child(2), &.green {
+        color: #4eb55b;
+
+        &::before {
+          background: #4eb55b;
+        }
+      }
+
+      &:nth-child(3), &.orange {
+        color: #ec9323;
+
+        &::before {
+          background: #ec9323;
+        }
+      }
+
+      &:nth-child(4), &.red {
+        color: #dc3232;
+
+        &::before {
+          background: #dc3232;
+        }
       }
     }
   }
@@ -928,7 +995,6 @@
 }
 
 .search {
-
   opacity: 1!important;
 
   @media @phones, @tablets {
