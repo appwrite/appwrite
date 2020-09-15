@@ -1,9 +1,5 @@
 <?php
 
-
-use Utopia\App;
-use Utopia\CLI\CLI;
-
 use Utopia\Config\Config;
 use Utopia\CLI\Console;
 use Appwrite\Spec\Swagger2;
@@ -20,11 +16,8 @@ use Appwrite\SDK\Language\Go;
 use Appwrite\SDK\Language\Java;
 use Appwrite\SDK\Language\Swift;
 
-require_once __DIR__.'/../init.php';
-$cli = new CLI();
-
 $cli
-    ->task('generate')
+    ->task('sdks')
     ->action(function () {
         function getSSLPage($url)
         {
@@ -212,5 +205,3 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
         exit();
     });
-
-$cli->run();

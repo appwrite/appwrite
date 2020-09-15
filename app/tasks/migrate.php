@@ -10,13 +10,12 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 
-$db = $register->get('db');
-
 $callbacks = [
     '0.4.0' => function() {
         Console::log('I got nothing to do.');
     },
-    '0.5.0' => function(Document $project, $projectDB) use ($db) {
+    '0.5.0' => function(Document $project, $projectDB) use ($register) {
+        $db = $register->get('db');
 
         Console::log('Migrating project: '.$project->getAttribute('name').' ('.$project->getId().')');
 
