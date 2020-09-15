@@ -109,6 +109,7 @@ RUN \
   imagemagick-dev \
   certbot \
   docker-cli \
+  docker-compose \
   && pecl install imagick yaml \ 
   && docker-php-ext-enable imagick yaml \
   && docker-php-ext-install sockets opcache pdo_mysql \
