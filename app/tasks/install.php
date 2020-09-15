@@ -6,12 +6,14 @@ use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Validator\Mock;
 use Utopia\View;
 
 $cli
     ->task('install')
     ->desc('Install Appwrite')
-    ->action(function () {
+    ->param('version', APP_VERSION_STABLE, new Mock(), 'Appwrite version', true)
+    ->action(function ($version) {
         /**
          * 1. Start - DONE
          * 2. Check for older setup and get older version - DONE
@@ -30,7 +32,6 @@ $cli
          */
         $vars = Config::getParam('variables');
         $path = '/usr/src/code/appwrite';
-        $version = null;
         $defaultHTTPPort = '80';
         $defaultHTTPSPort = '443';
         
