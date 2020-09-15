@@ -34,7 +34,7 @@ $cli
         $path = '/usr/src/code/appwrite';
         $defaultHTTPPort = '80';
         $defaultHTTPSPort = '443';
-        
+
         Console::success('Starting Appwrite installation...');
 
         // Create directory with write permissions
@@ -50,10 +50,10 @@ $cli
         if($data !== false) {
             $compose = new Compose($data);
             $appwrite = $compose->getService('appwrite');
-            $version = ($appwrite) ? $appwrite->getImageVersion() : $version;
+            $oldVersion = ($appwrite) ? $appwrite->getImageVersion() : null;
             $ports = $compose->getService('traefik')->getPorts();
 
-            if($version) {
+            if($oldVersion) {
                 foreach($compose->getServices() as $service) { // Fetch all env vars from previous compose file
                     if(!$service) {
                         continue;
@@ -100,7 +100,7 @@ $cli
         $httpPort = ($httpPort) ? $httpPort : $defaultHTTPPort;
 
         $httpsPort = Console::confirm('Choose your server HTTPS port: (default: '.$defaultHTTPSPort.')');
-        $httpsPort = ($httpsPort) ? $httpsPort : $defaultHTTPPort;
+        $httpsPort = ($httpsPort) ? $httpsPort : $defaultHTTPSPort;
     
         $input = [];
 
@@ -119,11 +119,11 @@ $cli
 
         $templateForCompose = new View(__DIR__.'/../views/install/compose.phtml');
         $templateForEnv = new View(__DIR__.'/../views/install/env.phtml');
-        
+
         $templateForCompose
             ->setParam('httpPort', $httpPort)
             ->setParam('httpsPort', $httpsPort)
-            ->setParam('version', APP_VERSION_STABLE)
+            ->setParam('version', $version)
         ;
         
         $templateForEnv
