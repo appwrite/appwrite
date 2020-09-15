@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bda6fcbd3cdb4083ece7384f7cd39146",
+    "content-hash": "180fea8b0c83626dac38e2c91758bd1c",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -1669,16 +1669,16 @@
         },
         {
             "name": "utopia-php/cli",
-            "version": "0.6.2",
+            "version": "0.7.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "8ad0371ce045b60034ebcb2b001b6e88bdcc3670"
+                "reference": "97e6e027a8d6fa752815acae984ed48daa76a5e8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/8ad0371ce045b60034ebcb2b001b6e88bdcc3670",
-                "reference": "8ad0371ce045b60034ebcb2b001b6e88bdcc3670",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/97e6e027a8d6fa752815acae984ed48daa76a5e8",
+                "reference": "97e6e027a8d6fa752815acae984ed48daa76a5e8",
                 "shasum": ""
             },
             "require": {
@@ -1713,7 +1713,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2020-06-20T11:37:51+00:00"
+            "time": "2020-09-15T19:57:49+00:00"
         },
         {
             "name": "utopia-php/config",
@@ -3649,12 +3649,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-mbstring.git",
-                "reference": "a6977d63bf9a0ad4c65cd352709e230876f9904a"
+                "reference": "48928d471ede0548b399f54b0286fe0d0ed79267"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/a6977d63bf9a0ad4c65cd352709e230876f9904a",
-                "reference": "a6977d63bf9a0ad4c65cd352709e230876f9904a",
+                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/48928d471ede0548b399f54b0286fe0d0ed79267",
+                "reference": "48928d471ede0548b399f54b0286fe0d0ed79267",
                 "shasum": ""
             },
             "require": {
@@ -3718,7 +3718,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2020-07-14T12:35:20+00:00"
+            "time": "2020-09-14T11:01:58+00:00"
         },
         {
             "name": "theseer/tokenizer",
@@ -3772,12 +3772,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "b48bd18dc6f967ad09af9eab521cdf0e68fb6a95"
+                "reference": "4d47f964701264047d3ea7a42e51834177d29fc6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/b48bd18dc6f967ad09af9eab521cdf0e68fb6a95",
-                "reference": "b48bd18dc6f967ad09af9eab521cdf0e68fb6a95",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/4d47f964701264047d3ea7a42e51834177d29fc6",
+                "reference": "4d47f964701264047d3ea7a42e51834177d29fc6",
                 "shasum": ""
             },
             "require": {
@@ -3839,7 +3839,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2020-08-23T15:56:05+00:00"
+            "time": "2020-09-14T13:18:06+00:00"
         },
         {
             "name": "webmozart/assert",
