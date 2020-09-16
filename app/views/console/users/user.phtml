@@ -179,7 +179,7 @@
                                         <button class="danger">Logout</button>
                                     </form>
 
-                                    <img data-ls-attrs="src={{env.API}}/avatars/browsers/{{session.client.short_name|lowercase}}?width=120&height=120&project={{env.PROJECT}},title={{session.client.name}},alt={{session.client.name}}" class="avatar trans pull-start margin-end" />
+                                    <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-attrs="src={{env.API}}/avatars/browsers/{{session.client.short_name|lowercase}}?width=120&height=120&project={{env.PROJECT}},title={{session.client.name}},alt={{session.client.name}}" class="avatar trans pull-start margin-end" />
 
                                     <span data-ls-bind="{{session.client.name}}"></span> <span data-ls-bind="{{session.client.version}}"></span> on <span data-ls-bind="{{session.model}}"></span> <span data-ls-bind="{{session.OS.name}}"></span> <span data-ls-bind="{{session.OS.version}}"></span>
 
