@@ -22,6 +22,14 @@
 - Added pagination for projects list on the console home page.
 - Updated storage calculation to match IEC standards
 - Now using Alpine as base Docker image
+- User name max length is now 128 chars and not 100 for better API consistency
+- Team name max length is now 128 chars and not 100 for better API consistency
+- Collection name max length is now 128 chars and not 256 for better API consistency
+- Project name max length is now 128 chars and not 100 for better API consistency
+- Webhook name max length is now 128 chars and not 256 for better API consistency
+- API Key name max length is now 128 chars and not 256 for better API consistency
+- Task name max length is now 128 chars and not 256 for better API consistency
+- Platform name max length is now 128 chars and not 256 for better API consistency
 - New and consistent response format for all API object + new response examples in the docs
   - Removed user roles attribute from user object (can be fetched from /v1/teams/memberships) **
   - Removed type attribute from session object response (used only internally)
@@ -59,6 +67,8 @@
 - Access to Health API now requires authentication with an API Key with access to `health.read` scope allowed
 - Added option to force HTTPS connection to the Appwrite server (_APP_OPTIONS_FORCE_HTTPS)
 - Now using your `_APP_SYSTEM_EMAIL_ADDRESS` as the email address for issuing and renewing SSL certificates
+- Block iframe access to Appwrite console using the `X-Frame-Options` header.
+- Fixed `roles` param input validator
 
 # Version 0.6.2 (PRE-RELEASE)
 

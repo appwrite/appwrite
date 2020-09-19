@@ -90,10 +90,10 @@ App::get('/v1/avatars/credit-cards/:code')
     ->label('sdk.method', 'getCreditCard')
     ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-credit-card.md')
-    ->param('code', '', function () { return new WhiteList(\array_keys(Config::getParam('avatar-credit-cards'))); }, 'Credit Card Code. Possible values: '.\implode(', ', \array_keys(Config::getParam('avatar-credit-cards'))).'.')
-    ->param('width', 100, function () { return new Range(0, 2000); }, 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
-    ->param('height', 100, function () { return new Range(0, 2000); }, 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
-    ->param('quality', 100, function () { return new Range(0, 100); }, 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
+    ->param('code', '', new WhiteList(\array_keys(Config::getParam('avatar-credit-cards'))), 'Credit Card Code. Possible values: '.\implode(', ', \array_keys(Config::getParam('avatar-credit-cards'))).'.')
+    ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
+    ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
+    ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->action(function ($code, $width, $height, $quality, $response) use ($avatarCallback) {
         return $avatarCallback('credit-cards', $code, $width, $height, $quality, $response);
     }, ['response']);
@@ -107,10 +107,10 @@ App::get('/v1/avatars/browsers/:code')
     ->label('sdk.method', 'getBrowser')
     ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-browser.md')
-    ->param('code', '', function () { return new WhiteList(\array_keys(Config::getParam('avatar-browsers'))); }, 'Browser Code.')
-    ->param('width', 100, function () { return new Range(0, 2000); }, 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
-    ->param('height', 100, function () { return new Range(0, 2000); }, 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
-    ->param('quality', 100, function () { return new Range(0, 100); }, 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
+    ->param('code', '', new WhiteList(\array_keys(Config::getParam('avatar-browsers'))), 'Browser Code.')
+    ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
+    ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
+    ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->action(function ($code, $width, $height, $quality, $response) use ($avatarCallback) {
         return $avatarCallback('browsers', $code, $width, $height, $quality, $response);
     }, ['response']);
@@ -124,10 +124,10 @@ App::get('/v1/avatars/flags/:code')
     ->label('sdk.method', 'getFlag')
     ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-flag.md')
-    ->param('code', '', function () { return new WhiteList(\array_keys(Config::getParam('avatar-flags'))); }, 'Country Code. ISO Alpha-2 country code format.')
-    ->param('width', 100, function () { return new Range(0, 2000); }, 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
-    ->param('height', 100, function () { return new Range(0, 2000); }, 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
-    ->param('quality', 100, function () { return new Range(0, 100); }, 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
+    ->param('code', '', new WhiteList(\array_keys(Config::getParam('avatar-flags'))), 'Country Code. ISO Alpha-2 country code format.')
+    ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
+    ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
+    ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->action(function ($code, $width, $height, $quality, $response) use ($avatarCallback) {
         return $avatarCallback('flags', $code, $width, $height, $quality, $response);
     }, ['response']);
@@ -141,9 +141,9 @@ App::get('/v1/avatars/image')
     ->label('sdk.method', 'getImage')
     ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-image.md')
-    ->param('url', '', function () { return new URL(); }, 'Image URL which you want to crop.')
-    ->param('width', 400, function () { return new Range(0, 2000); }, 'Resize preview image width, Pass an integer between 0 to 2000.', true)
-    ->param('height', 400, function () { return new Range(0, 2000); }, 'Resize preview image height, Pass an integer between 0 to 2000.', true)
+    ->param('url', '', new URL(), 'Image URL which you want to crop.')
+    ->param('width', 400, new Range(0, 2000), 'Resize preview image width, Pass an integer between 0 to 2000.', true)
+    ->param('height', 400, new Range(0, 2000), 'Resize preview image height, Pass an integer between 0 to 2000.', true)
     ->action(function ($url, $width, $height, $response) {
         /** @var Utopia\Response $response */
 
@@ -207,7 +207,7 @@ App::get('/v1/avatars/favicon')
     ->label('sdk.method', 'getFavicon')
     ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-favicon.md')
-    ->param('url', '', function () { return new URL(); }, 'Website URL which you want to fetch the favicon from.')
+    ->param('url', '', new URL(), 'Website URL which you want to fetch the favicon from.')
     ->action(function ($url, $response) {
         /** @var Utopia\Response $response */
 
@@ -357,10 +357,10 @@ App::get('/v1/avatars/qr')
     ->label('sdk.method', 'getQR')
     ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-qr.md')
-    ->param('text', '', function () { return new Text(512); }, 'Plain text to be converted to QR code image.')
-    ->param('size', 400, function () { return new Range(0, 1000); }, 'QR code size. Pass an integer between 0 to 1000. Defaults to 400.', true)
-    ->param('margin', 1, function () { return new Range(0, 10); }, 'Margin from edge. Pass an integer between 0 to 10. Defaults to 1.', true)
-    ->param('download', false, function () { return new Boolean(true); }, 'Return resulting image with \'Content-Disposition: attachment \' headers for the browser to start downloading it. Pass 0 for no header, or 1 for otherwise. Default value is set to 0.', true)
+    ->param('text', '', new Text(512), 'Plain text to be converted to QR code image.')
+    ->param('size', 400, new Range(0, 1000), 'QR code size. Pass an integer between 0 to 1000. Defaults to 400.', true)
+    ->param('margin', 1, new Range(0, 10), 'Margin from edge. Pass an integer between 0 to 10. Defaults to 1.', true)
+    ->param('download', false, new Boolean(true), 'Return resulting image with \'Content-Disposition: attachment \' headers for the browser to start downloading it. Pass 0 for no header, or 1 for otherwise. Default value is set to 0.', true)
     ->action(function ($text, $size, $margin, $download, $response) {
         /** @var Utopia\Response $response */
 
@@ -393,11 +393,11 @@ App::get('/v1/avatars/initials')
     ->label('sdk.method', 'getInitials')
     ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-initials.md')
-    ->param('name', '', function () { return new Text(512); }, 'Full Name. When empty, current user name or email will be used.', true)
-    ->param('width', 500, function () { return new Range(0, 2000); }, 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
-    ->param('height', 500, function () { return new Range(0, 2000); }, 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
-    ->param('color', '', function () { return new HexColor(); }, 'Changes text color. By default a random color will be picked and stay will persistent to the given name.', true)
-    ->param('background', '', function () { return new HexColor(); }, 'Changes background color. By default a random color will be picked and stay will persistent to the given name.', true)
+    ->param('name', '', new Text(128), 'Full Name. When empty, current user name or email will be used. Max length: 128 chars.', true)
+    ->param('width', 500, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
+    ->param('height', 500, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
+    ->param('color', '', new HexColor(), 'Changes text color. By default a random color will be picked and stay will persistent to the given name.', true)
+    ->param('background', '', new HexColor(), 'Changes background color. By default a random color will be picked and stay will persistent to the given name.', true)
     ->action(function ($name, $width, $height, $color, $background, $response, $user) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */

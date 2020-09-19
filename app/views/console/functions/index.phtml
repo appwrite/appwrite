@@ -106,7 +106,7 @@ $environments = $this->getParam('environments', []);
                             data-failure-param-alert-classname="error">
 
                             <label for="name">Name</label>
-                            <input type="text" id="name" name="name" required autocomplete="off" class="margin-bottom" />
+                            <input type="text" id="name" name="name" required autocomplete="off" class="margin-bottom" maxlength="128" />
                             
                             <label for="env">Environment</label>
                             <select name="env" id="env" required class="margin-bottom-xl">

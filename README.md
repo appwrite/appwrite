@@ -2,12 +2,12 @@
     <a href="https://appwrite.io" target="_blank"><img width="260" height="39" src="https://appwrite.io/images/github-logo.png" alt="Appwrite Logo"></a>
     <br />
     <br />
-    <b>A complete backend solution for your [Flutter / Vue / Angular / React / iOS / Android / *ANY OTHER*] client app</b>
+    <b>A complete backend solution for your [Flutter / Vue / Angular / React / iOS / Android / *ANY OTHER*] app</b>
     <br />
     <br />
 </p>
 
-
+[![Hacktoberfest](https://badgen.net/badge/hacktoberfest/friendly/pink)](CONTRIBUTING.md)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 [![Docker Pulls](https://badgen.net/docker/pulls/appwrite/appwrite)](https://travis-ci.org/appwrite/appwrite)
 [![Travis CI](https://badgen.net/travis/appwrite/appwrite?label=build)](https://travis-ci.org/appwrite/appwrite)
@@ -51,6 +51,7 @@ The easiest way to start running your Appwrite server is by running our docker-c
 docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
+    --entrypoint="install" \
     appwrite/appwrite:0.7.0
 ```
 
@@ -62,6 +63,7 @@ docker run -it --rm \
 docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
+    --entrypoint="install" ^
     appwrite/appwrite:0.7.0
 ```
 
@@ -71,6 +73,7 @@ docker run -it --rm ^
 docker run -it --rm ,
     --volume /var/run/docker.sock:/var/run/docker.sock ,
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw ,
+    --entrypoint="install" ,
     appwrite/appwrite:0.7.0
 ```
 

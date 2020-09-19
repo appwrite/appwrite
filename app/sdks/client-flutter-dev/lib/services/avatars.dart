@@ -27,6 +27,10 @@ class Avatars extends Service {
             'project': client.config['project'],
         };
 
+        params.keys.forEach((key) {if (params[key] is int || params[key] is double) {
+          params[key] = params[key].toString();
+        }});
+        
         Uri endpoint = Uri.parse(client.endPoint);
         Uri location = new Uri(scheme: endpoint.scheme,
           host: endpoint.host,
@@ -55,6 +59,10 @@ class Avatars extends Service {
             'project': client.config['project'],
         };
 
+        params.keys.forEach((key) {if (params[key] is int || params[key] is double) {
+          params[key] = params[key].toString();
+        }});
+        
         Uri endpoint = Uri.parse(client.endPoint);
         Uri location = new Uri(scheme: endpoint.scheme,
           host: endpoint.host,
@@ -79,6 +87,10 @@ class Avatars extends Service {
             'project': client.config['project'],
         };
 
+        params.keys.forEach((key) {if (params[key] is int || params[key] is double) {
+          params[key] = params[key].toString();
+        }});
+        
         Uri endpoint = Uri.parse(client.endPoint);
         Uri location = new Uri(scheme: endpoint.scheme,
           host: endpoint.host,
@@ -106,6 +118,10 @@ class Avatars extends Service {
             'project': client.config['project'],
         };
 
+        params.keys.forEach((key) {if (params[key] is int || params[key] is double) {
+          params[key] = params[key].toString();
+        }});
+        
         Uri endpoint = Uri.parse(client.endPoint);
         Uri location = new Uri(scheme: endpoint.scheme,
           host: endpoint.host,
@@ -134,6 +150,10 @@ class Avatars extends Service {
             'project': client.config['project'],
         };
 
+        params.keys.forEach((key) {if (params[key] is int || params[key] is double) {
+          params[key] = params[key].toString();
+        }});
+        
         Uri endpoint = Uri.parse(client.endPoint);
         Uri location = new Uri(scheme: endpoint.scheme,
           host: endpoint.host,
@@ -161,6 +181,10 @@ class Avatars extends Service {
             'project': client.config['project'],
         };
 
+        params.keys.forEach((key) {if (params[key] is int || params[key] is double) {
+          params[key] = params[key].toString();
+        }});
+        
         Uri endpoint = Uri.parse(client.endPoint);
         Uri location = new Uri(scheme: endpoint.scheme,
           host: endpoint.host,

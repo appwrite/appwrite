@@ -454,5 +454,6 @@ App::setResource('mode', function($request) {
 }, ['request']);
 
 App::setResource('geodb', function($request) {
+    /** @var Utopia\Request $request */
     return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2020-01.mmdb');
 }, ['request']);
