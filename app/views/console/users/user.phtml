@@ -92,6 +92,51 @@
                             <div data-ls-if="{{user-prefs|isEmptyObject}}">
                                 No user preferences found
                             </div>
+
+                            <h3 class="text-danger">Danger Zone</h3>
+
+<div class="box danger">
+    <p>This is the area where you can delete this account.</p>
+
+    <p>By deleting this account you will lose all data associated with this account.</p>
+
+    <p>PLEASE NOTE: Account deletion is irreversible.</p>
+
+    <form class="inline"
+        data-analytics-event="submit"
+        data-analytics-category="console"
+        data-analytics-label="Delete User"
+        data-service="users.deleteUser"
+        data-scope="console"
+        data-event="submit"
+        data-param-user-id="{{router.params.id}}"
+        data-confirmx="Are you sure you want to delete this user?"
+        data-success="trigger,redirect"
+        data-success-param-trigger-events="users.delete,reset,modal-close"
+        data-success-param-redirect-url="/console"
+        data-failure="alert,trigger,reset"
+        data-failure-param-alert-text="User deletion failed"
+        data-failure-param-trigger-events="modal-close"
+        data-failure-param-alert-classname="error">
+
+        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+
+        <div data-ui-modal class="modal box close width-small height-small" data-button-text="Delete Project" data-button-class="danger reverse">
+            <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
+            
+            <h3>Confirm Password</h3>
+            
+            <hr />
+
+            <label>Password</label>
+            <input name="password" type="password" class="full-width" autocomplete="off" placeholder="" required>
+            
+            <hr />
+
+            <button type="submit" class="margin-bottom-no danger fill">Delete Project</button>
+        </div>
+    </form>
+</div>
                         </div>
                     </div>
                     <div class="col span-4 sticky-top">
@@ -165,7 +210,7 @@
                                         data-analytics-event="submit"
                                         data-analytics-category="console"
                                         data-analytics-label="Delete User Session"
-                                        data-service="users.deleteSession"
+                                        data-service="users.updateStatus"
                                         data-event="submit"
                                         data-loading="Loading..."
                                         data-success="trigger"
