@@ -6,6 +6,59 @@ We would ❤️ for you to contribute to Appwrite and help make it better! We wa
 
 If you are worried or don’t know where to start, check out our next section explaining what kind of help we could use and where can you get involved. You can reach out with questions to [Eldad Fux (@eldadfux)](https://twitter.com/eldadfux) or [@appwrite_io](https://twitter.com/appwrite_io) on Twitter, and anyone from the [Appwrite team on Discord](https://discord.gg/GSeTUeA). You can also submit an issue, and a maintainer can guide you!
 
+
+## Submit a Pull Request 🚀
+
+Branch naming convention is as following 
+
+```
+TYPE-ISSUE_ID-DESCRIPTION
+
+example:
+doc-548-submit-a-pull-request-section-to-contribution-guide
+```
+
+When `TYPE` can be:
+
+- **feat** - is a new feature
+- **doc** - documentation only changes
+- **cicd** - changes related to CI/CD system
+- **fix** - a bug fix
+- **refactor** - code change that neither fixes a bug nor adds a feature
+
+<br/>
+
+**All PRs must include commit message with the changes description!** 
+
+
+For the initial start, fork the project and use git clone command to download the repository to your computer 
+<br/>
+<br/>
+### <strong>A standard procedure for working on an issue would be to: </strong>
+
+### 1. `git pull`, before creating a new branch, pull the changes from upstream. Your master needs to be up to date.
+```
+$ git pull
+```
+### 2. Create new branch from `master` like: `doc-548-submit-a-pull-request-section-to-contribution-guide`<br/>
+```
+$ git checkout -b [name_of_your_new_branch]
+```
+### 3. Work - commit - repeat ( be sure to be in your branch )
+<br/>
+
+### 4. Push changes to GitHub using the command `git push` <br/>
+<br/>
+
+### 6. Submit your changes for review
+If you go to your repository on GitHub, you'll see a `Compare & pull request` button. Click on that button.
+### 7. Start a Pull Request
+Now submit the pull request and , click on `Create pull request`.
+### 6. Get a code review approval / reject
+### 7. After approval, merge your PR
+### 8. GitHub will automatically delete the branch, after the merge is done. (they can still be restored).
+<br/>
+
 ## Where to Start?
 
 Pull requests are great, but there are many other areas where you can help Appwrite. 
