@@ -4779,6 +4779,30 @@
             },
 
             /**
+             * Delete User
+             *
+             * Delete a user by its unique ID.
+             *
+             * @param {string} userId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            deleteUser: function(userId) {
+                if(userId === undefined) {
+                    throw new Error('Missing required parameter: "userId"');
+                }
+                
+                let path = '/users/{userId}'.replace(new RegExp('{userId}', 'g'), userId);
+
+                let payload = {};
+
+                return http
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
              * Get User Logs
              *
              * Get user activity logs list by its unique ID.
