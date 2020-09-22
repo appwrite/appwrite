@@ -10,6 +10,61 @@ If you are worried or don’t know where to start, check out our next section ex
 
 Help us keep Appwrite open and inclusive. Please read and follow our [Code of Conduct](/CODE_OF_CONDUCT.md).
 
+## Submit a Pull Request 🚀
+
+Branch naming convention is as following 
+
+```
+TYPE-ISSUE_ID-DESCRIPTION
+
+example:
+doc-548-submit-a-pull-request-section-to-contribution-guide
+```
+
+When `TYPE` can be:
+
+- **feat** - is a new feature
+- **doc** - documentation only changes
+- **cicd** - changes related to CI/CD system
+- **fix** - a bug fix
+- **refactor** - code change that neither fixes a bug nor adds a feature
+
+<br/>
+
+**All PRs must include commit message with the changes description!** 
+
+
+For the initial start, fork the project and use git clone command to download the repository to your computer 
+<br/>
+<br/>
+### <strong>A standard procedure for working on an issue would be to: </strong>
+
+### 1. `git pull`, before creating a new branch, pull the changes from upstream. Your master needs to be up to date.
+```
+$ git pull
+```
+### 2. Create new branch from `master` like: `doc-548-submit-a-pull-request-section-to-contribution-guide`<br/>
+```
+$ git checkout -b [name_of_your_new_branch]
+```
+### 3. Work - commit - repeat ( be sure to be in your branch )
+<br/>
+
+### 4. Push changes to GitHub 
+```
+$ git push origin [name_of_your_new_branch]
+```
+<br/>
+
+### 6. Submit your changes for review
+If you go to your repository on GitHub, you'll see a `Compare & pull request` button. Click on that button.
+### 7. Start a Pull Request
+Now submit the pull request and , click on `Create pull request`.
+### 6. Get a code review approval / reject
+### 7. After approval, merge your PR
+### 8. GitHub will automatically delete the branch, after the merge is done. (they can still be restored).
+<br/>
+
 ## Setup From Source
 
 To set up a working **development environment**, just fork the project git repository and install the backend and frontend dependencies using the proper package manager and create run the docker-compose stack.
