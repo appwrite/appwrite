@@ -47,7 +47,10 @@ $ git checkout -b [name_of_your_new_branch]
 ### 3. Work - commit - repeat ( be sure to be in your branch )
 <br/>
 
-### 4. Push changes to GitHub using the command `git push` <br/>
+### 4. Push changes to GitHub 
+```
+$ git push origin [name_of_your_new_branch]
+```
 <br/>
 
 ### 6. Submit your changes for review
