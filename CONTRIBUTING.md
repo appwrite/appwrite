@@ -62,7 +62,7 @@ Appwrite's current structure is a combination of both [Monolithic](https://en.wi
 │   ├── images
 │   ├── scripts
 │   └── styles
-├── src # Supporting libraries (each lib should have one specific role, common libraries are released as independent projects)
+├── src # Supporting libraries (each lib has one role, common libs are released as individual projects)
 │   └── Appwrite
 │       ├── Auth
 │       ├── Database
