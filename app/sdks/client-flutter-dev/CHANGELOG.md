@@ -1,3 +1,16 @@
+## 0.3.2
+
+- Fixed package namespaces
+
+## 0.3.1
+
+- Downgraded meta package version to 1.1.8
+
+## 0.3.0
+
+- Updated package dependencies (@lohanidamodar)
+- Added Flutter for Web compatibility (@lohanidamodar)
+
 ## 0.2.3
 
 - Fixed OAuth2 cookie bug, where a new session cookie couldn&#039;t overwrite an old cookie

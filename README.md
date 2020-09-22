@@ -2,12 +2,12 @@
     <a href="https://appwrite.io" target="_blank"><img width="260" height="39" src="https://appwrite.io/images/github-logo.png" alt="Appwrite Logo"></a>
     <br />
     <br />
-    <b>A complete backend solution for your [Flutter / Vue / Angular / React / iOS / Android / *ANY OTHER*] client app</b>
+    <b>A complete backend solution for your [Flutter / Vue / Angular / React / iOS / Android / *ANY OTHER*] app</b>
     <br />
     <br />
 </p>
 
-
+[![Hacktoberfest](https://badgen.net/badge/hacktoberfest/friendly/pink)](CONTRIBUTING.md)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 [![Docker Pulls](https://badgen.net/docker/pulls/appwrite/appwrite)](https://travis-ci.org/appwrite/appwrite)
 [![Travis CI](https://badgen.net/travis/appwrite/appwrite?label=build)](https://travis-ci.org/appwrite/appwrite)
@@ -123,6 +123,12 @@ Below is a list of currently supported platforms and languages. If you wish to h
 
 Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
 
+## Contributing
+
+All code contributions - including those of people having commit access - must go through a pull request and approved by a core developer before being merged. This is to ensure proper review of all the code.
+
+We truly ❤️ pull requests! If you wish to help, you can learn more about how you can contribute to this project in the [contribution guide](CONTRIBUTING.md).
+
 ## Security
 
 For security issues, kindly email us [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue in GitHub.
@@ -130,12 +136,6 @@ For security issues, kindly email us [security@appwrite.io](mailto:security@appw
 ## Follow Us
 
 Join our growing community around the world! Follow us on [Twitter](https://twitter.com/appwrite_io), [Facebook Page](https://www.facebook.com/appwrite.io), [Facebook Group](https://www.facebook.com/groups/appwrite.developers/) or join our live [Discord server](https://discord.gg/GSeTUeA) for more help, ideas, and discussions.
-
-## Contributing
-
-All code contributions - including those of people having commit access - must go through a pull request and approved by a core developer before being merged. This is to ensure proper review of all the code.
-
-We truly ❤️ pull requests! If you wish to help, you can learn more about how you can contribute to this project in the [contribution guide](CONTRIBUTING.md).
 
 ## License
 

@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:appwrite/appwrite.dart';
+import 'package:appwrite_dev/appwrite_dev.dart';
 
 void main() { // Init SDK
   Client client = Client();
