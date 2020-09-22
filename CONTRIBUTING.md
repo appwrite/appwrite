@@ -32,6 +32,59 @@ After finishing the installation process, you can start writing and editing code
 
 Appwrite's current structure is a combination of both [Monolithic](https://en.wikipedia.org/wiki/Monolithic_application) and [Microservice](https://en.wikipedia.org/wiki/Microservices) architectures, but our final goal, as we grow, is to be using only microservices.
 
+### File Structure
+
+```bash
+.
+├── app # Main application
+│   ├── config # Config files
+│   ├── controllers # API & dashboard controllers
+│   │   ├── api
+│   │   ├── shared
+│   │   └── web
+│   ├── db # DB schemas
+│   ├── sdks # SDKs generated copies (used for generating code examples)
+│   ├── tasks # Server CLI commands
+│   ├── views # HTML server-side templates
+│   └── workers # Background workers
+├── bin # Server executables (tasks & workers)
+├── docker # Docker related resources and configs
+├── docs # Docs and tutorials
+│   ├── examples
+│   ├── references
+│   ├── sdks
+│   ├── services
+│   ├── specs
+│   └── tutorials
+├── public # Public files
+│   ├── dist
+│   ├── fonts
+│   ├── images
+│   ├── scripts
+│   └── styles
+├── src # Supporting libraries
+│   └── Appwrite
+│       ├── Auth
+│       ├── Database
+│       ├── Docker
+│       ├── Event
+│       ├── Extend
+│       ├── Network
+│       ├── OpenSSL
+│       ├── Preloader
+│       ├── Resize
+│       ├── Storage
+│       ├── Swoole
+│       ├── Task
+│       ├── Template
+│       ├── URL
+│       └── Utopia
+└── tests # End to end & unit tests
+    ├── e2e
+    ├── resources
+    └── unit
+```
+
 ---
 ![Appwrite](docs/specs/overview.drawio.svg)
 ---
