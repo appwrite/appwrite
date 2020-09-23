@@ -10,6 +10,52 @@ If you are worried or don’t know where to start, check out our next section ex
 
 Help us keep Appwrite open and inclusive. Please read and follow our [Code of Conduct](/CODE_OF_CONDUCT.md).
 
+## Submit a Pull Request 🚀
+
+Branch naming convention is as following 
+
+`TYPE-ISSUE_ID-DESCRIPTION`
+
+example:
+```
+doc-548-submit-a-pull-request-section-to-contribution-guide
+```
+
+When `TYPE` can be:
+
+- **feat** - is a new feature
+- **doc** - documentation only changes
+- **cicd** - changes related to CI/CD system
+- **fix** - a bug fix
+- **refactor** - code change that neither fixes a bug nor adds a feature
+
+**All PRs must include commit message with the changes description!** 
+
+For the initial start, fork the project and use git clone command to download the repository to your computer. A standard procedure for working on an issue would be to:
+
+1. `git pull`, before creating a new branch, pull the changes from upstream. Your master needs to be up to date.
+```
+$ git pull
+```
+2. Create new branch from `master` like: `doc-548-submit-a-pull-request-section-to-contribution-guide`<br/>
+```
+$ git checkout -b [name_of_your_new_branch]
+```
+3. Work - commit - repeat ( be sure to be in your branch )
+
+4. Push changes to GitHub 
+```
+$ git push origin [name_of_your_new_branch]
+```
+
+6. Submit your changes for review
+If you go to your repository on GitHub, you'll see a `Compare & pull request` button. Click on that button.
+7. Start a Pull Request
+Now submit the pull request and , click on `Create pull request`.
+6. Get a code review approval / reject
+7. After approval, merge your PR
+8. GitHub will automatically delete the branch, after the merge is done. (they can still be restored).
+
 ## Setup From Source
 
 To set up a working **development environment**, just fork the project git repository and install the backend and frontend dependencies using the proper package manager and create run the docker-compose stack.
@@ -31,6 +77,59 @@ After finishing the installation process, you can start writing and editing code
 ## Architecture
 
 Appwrite's current structure is a combination of both [Monolithic](https://en.wikipedia.org/wiki/Monolithic_application) and [Microservice](https://en.wikipedia.org/wiki/Microservices) architectures, but our final goal, as we grow, is to be using only microservices.
+
+### File Structure
+
+```bash
+.
+├── app # Main application
+│   ├── config # Config files
+│   ├── controllers # API & dashboard controllers
+│   │   ├── api
+│   │   ├── shared
+│   │   └── web
+│   ├── db # DB schemas
+│   ├── sdks # SDKs generated copies (used for generating code examples)
+│   ├── tasks # Server CLI commands
+│   ├── views # HTML server-side templates
+│   └── workers # Background workers
+├── bin # Server executables (tasks & workers)
+├── docker # Docker related resources and configs
+├── docs # Docs and tutorials
+│   ├── examples
+│   ├── references
+│   ├── sdks
+│   ├── services
+│   ├── specs
+│   └── tutorials
+├── public # Public files
+│   ├── dist
+│   ├── fonts
+│   ├── images
+│   ├── scripts
+│   └── styles
+├── src # Supporting libraries (each lib has one role, common libs are released as individual projects)
+│   └── Appwrite
+│       ├── Auth
+│       ├── Database
+│       ├── Docker
+│       ├── Event
+│       ├── Extend
+│       ├── Network
+│       ├── OpenSSL
+│       ├── Preloader
+│       ├── Resize
+│       ├── Storage
+│       ├── Swoole
+│       ├── Task
+│       ├── Template
+│       ├── URL
+│       └── Utopia
+└── tests # End to end & unit tests
+    ├── e2e
+    ├── resources
+    └── unit
+```
 
 ---
 ![Appwrite](docs/specs/overview.drawio.svg)
@@ -137,7 +236,7 @@ docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t appwrite/
 
 ## Tests
 
-To run tests manually, run phpunit from your command line:
+To run tests manually, use the Appwrite Docker CLI from your terminal:
 
 ```bash
 docker exec appwrite test
