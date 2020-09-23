@@ -51,6 +51,7 @@ The easiest way to start running your Appwrite server is by running our docker-c
 docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
+    --entrypoint="install" \
     appwrite/appwrite:0.7.0
 ```
 
@@ -62,6 +63,7 @@ docker run -it --rm \
 docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
+    --entrypoint="install" ^
     appwrite/appwrite:0.7.0
 ```
 
@@ -71,6 +73,7 @@ docker run -it --rm ^
 docker run -it --rm ,
     --volume /var/run/docker.sock:/var/run/docker.sock ,
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw ,
+    --entrypoint="install" ,
     appwrite/appwrite:0.7.0
 ```
 

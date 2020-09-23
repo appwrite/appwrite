@@ -8,6 +8,7 @@
 - Added option to delete team from the console
 - Added option to view team members from the console
 - Added option to join a user to any team from the console
+- Added option to delete user from the API (@TorstenDittmann)
 - Added support for Brotli compression (@PedroCisnerosSantana, @Rohitub222)
 - New UI micro-interactions and CSS fixes (@AnatoleLucet)
 - UI performance & accessibility improvments (#406)
@@ -33,6 +34,8 @@
 - Task name max length is now 128 chars and not 256 for better API consistency
 - Platform name max length is now 128 chars and not 256 for better API consistency
 - Webhooks payloads are now exactly the same as any of the API response objects
+- Added new locale: Marathi -mr (@spielers)
+>>>>>>> b12097efecffcefe89cbc411148acb45fbdfc374
 - New and consistent response format for all API object + new response examples in the docs
   - Removed user roles attribute from user object (can be fetched from /v1/teams/memberships) **
   - Removed type attribute from session object response (used only internally)
