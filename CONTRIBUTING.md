@@ -39,31 +39,28 @@ For the initial start, fork the project and use git clone command to do
 <br/>
 ### <strong>A standard procedure for working on an issue would be to: </strong>
 
-### 1. `git pull`, before creating a new branch, pull the changes from upstream. Your master needs to be up to date.
+1. `git pull`, before creating a new branch, pull the changes from upstream. Your master needs to be up to date.
 ```
 $ git pull
 ```
-### 2. Create new branch from `master` like: `doc-548-submit-a-pull-request-section-to-contribution-guide`<br/>
+2. Create new branch from `master` like: `doc-548-submit-a-pull-request-section-to-contribution-guide`<br/>
 ```
 $ git checkout -b [name_of_your_new_branch]
 ```
-### 3. Work - commit - repeat ( be sure to be in your branch )
-<br/>
+3. Work - commit - repeat ( be sure to be in your branch )
 
-### 4. Push changes to GitHub 
+4. Push changes to GitHub 
 ```
 $ git push origin [name_of_your_new_branch]
 ```
-<br/>
 
-### 6. Submit your changes for review
+6. Submit your changes for review
 If you go to your repository on GitHub, you'll see a `Compare & pull request` button. Click on that button.
-### 7. Start a Pull Request
+7. Start a Pull Request
 Now submit the pull request and , click on `Create pull request`.
-### 6. Get a code review approval / reject
-### 7. After approval, merge your PR
-### 8. GitHub will automatically delete the branch, after the merge is done. (they can still be restored).
-<br/>
+6. Get a code review approval / reject
+7. After approval, merge your PR
+8. GitHub will automatically delete the branch, after the merge is done. (they can still be restored).
 
 ## Setup From Source
 
