@@ -14,10 +14,10 @@ Help us keep Appwrite open and inclusive. Please read and follow our [Code of Co
 
 Branch naming convention is as following 
 
-```
-TYPE-ISSUE_ID-DESCRIPTION
+`TYPE-ISSUE_ID-DESCRIPTION`
 
 example:
+```
 doc-548-submit-a-pull-request-section-to-contribution-guide
 ```
 
