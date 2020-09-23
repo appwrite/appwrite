@@ -356,7 +356,7 @@ services:
   #   - "8081:8081"
 
   # resque:
-  #   image: registry.gitlab.com/appwrite/appwrite/resque-web:v1.0.2
+  #   image: appwrite/resque-web:1.1.0
   #   restart: unless-stopped
   #   networks:
   #     - appwrite
