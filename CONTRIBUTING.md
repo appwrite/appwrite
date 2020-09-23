@@ -29,15 +29,9 @@ When `TYPE` can be:
 - **fix** - a bug fix
 - **refactor** - code change that neither fixes a bug nor adds a feature
 
-<br/>
-
 **All PRs must include commit message with the changes description!** 
 
-
-For the initial start, fork the project and use git clone command to download the repository to your computer 
-<br/>
-<br/>
-### <strong>A standard procedure for working on an issue would be to: </strong>
+For the initial start, fork the project and use git clone command to download the repository to your computer. A standard procedure for working on an issue would be to:
 
 1. `git pull`, before creating a new branch, pull the changes from upstream. Your master needs to be up to date.
 ```
