@@ -51,8 +51,8 @@ App::post('/v1/functions')
             'vars' => $vars,
             'events' => $events,
             'schedule' => $schedule,
-            'previous' => null,
-            'next' => null,
+            'schedulePrevious' => null,
+            'scheduleNext' => null,
             'timeout' => $timeout,
         ]);
 
@@ -257,8 +257,8 @@ App::put('/v1/functions/:functionId')
             'vars' => $vars,
             'events' => $events,
             'schedule' => $schedule,
-            'previous' => null,
-            'next' => $next,
+            'schedulePrevious' => null,
+            'scheduleNext' => $next,
             'timeout' => $timeout,   
         ]));
 
@@ -297,7 +297,7 @@ App::patch('/v1/functions/:functionId/tag')
 
         $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
             'tag' => $tag->getId(),
-            'next' => $next,
+            'scheduleNext' => $next,
         ]));
 
         if (false === $function) {

@@ -65,13 +65,13 @@ class Func extends Model
                 'default' => '',
                 'example' => '5 4 * * *',
             ])
-            ->addRule('next', [
+            ->addRule('scheduleNext', [
                 'type' => 'integer',
                 'description' => 'Function next scheduled execution date in Unix timestamp.',
                 'example' => 1592981292,
                 'default' => 0,
             ])
-            ->addRule('previous', [
+            ->addRule('schedulePrevious', [
                 'type' => 'integer',
                 'description' => 'Function next scheduled execution date in Unix timestamp.',
                 'example' => 1592981237,
