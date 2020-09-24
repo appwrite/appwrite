@@ -11,4 +11,4 @@
 
 ## Reporting a Vulnerability
 
-For security issues, kindly email us security@appwrite.io instead of posting a public issue in GitHub.
+For security issues, kindly email us security@appwrite.io instead of posting a public issue on GitHub.
