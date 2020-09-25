@@ -1,6 +1,6 @@
 # Adding a New OAuth2 Provider
 
-This document is part of the Appwrite contributors' guide. Before you continue reading this document make sure you have read the [Code of Conduct](https://github.com/appwrite/appwrite/blob/master/CODE_OF_CONDUCT.md) and the [Contributing Guide](https://github.com/appwrite/appwrite/blob/master/CONTRIBUTING.md).
+This document is part of the Appwrite contributors' guide. Before you continue reading this document make sure you have read the [Code of Conduct](master/CODE_OF_CONDUCT.md) and the [Contributing Guide](master/CONTRIBUTING.md).
 
 ## Getting Started
 
