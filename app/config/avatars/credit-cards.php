@@ -15,4 +15,5 @@ return [
     'targeta-shopping' => __DIR__.'/credit-cards/tarjeta-shopping.png',
     'union-china-pay' => __DIR__.'/credit-cards/union-china-pay.png',
     'visa' => __DIR__.'/credit-cards/visa.png',
+    'mir' => __DIR__.'/credit-cards/mir.png',
 ];
