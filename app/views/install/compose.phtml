@@ -52,6 +52,9 @@ services:
       - influxdb
     environment:
       - _APP_ENV
+      - _APP_SYSTEM_EMAIL_NAME
+      - _APP_SYSTEM_EMAIL_ADDRESS
+      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_OPENSSL_KEY_V1
@@ -119,6 +122,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -139,6 +143,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -185,6 +190,7 @@ services:
       - appwrite-certificates:/storage/certificates:rw
     environment:
       - _APP_ENV
+      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -231,6 +237,8 @@ services:
       - smtp
     environment:
       - _APP_ENV
+      - _APP_SYSTEM_EMAIL_NAME
+      - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_SMTP_HOST
