@@ -7,7 +7,7 @@ $version = $this->getParam('version', '');
 
 services:
   traefik:
-    image: traefik:2.2
+    image: traefik:2.3
     container_name: appwrite-traefik
     command:
       - --providers.file.directory=/storage/config
