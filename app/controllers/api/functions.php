@@ -262,6 +262,19 @@ App::put('/v1/functions/:functionId')
             'timeout' => $timeout,   
         ]));
 
+        if ($next) {
+            ResqueScheduler::enqueueAt($next, 'v1-functions', 'FunctionsV1', [
+
+            ]);
+
+            // ->setParam('projectId', $project->getId())
+            // ->setParam('event', $route->getLabel('event', ''))
+            // ->setParam('payload', [])
+            // ->setParam('functionId', null)
+            // ->setParam('executionId', null)
+            // ->setParam('trigger', 'event')
+        }
+
         if (false === $function) {
             throw new Exception('Failed saving function to DB', 500);
         }
