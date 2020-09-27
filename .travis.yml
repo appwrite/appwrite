@@ -1,5 +1,3 @@
-language: php
-
 arch:
   - amd64
   - ppc64le
@@ -8,9 +6,6 @@ arch:
 
 os: linux
 
-php:
-  - '7.4'
-
 addons:
   hosts:
     - appwrite.test
@@ -18,15 +13,13 @@ addons:
 notifications:
   email:
   - team@appwrite.io
-  
-services:
-- docker
 
 before_install:
-  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-  - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-  - sudo apt-get update
-  - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
+  - curl -fsSL https://get.docker.com | sh
+  - echo '{"experimental":"enabled"}' | sudo tee /etc/docker/daemon.json
+  - mkdir -p $HOME/.docker
+  - echo '{"experimental":"enabled"}' | sudo tee $HOME/.docker/config.json
+  - sudo service docker start
 
 # cache:
 #   directories:
