@@ -7,7 +7,7 @@ $version = $this->getParam('version', '');
 
 services:
   traefik:
-    image: traefik:2.2
+    image: traefik:2.3
     container_name: appwrite-traefik
     command:
       - --providers.file.directory=/storage/config
@@ -286,7 +286,7 @@ services:
         - RELAY_NETWORKS=:192.168.0.0/24:10.0.0.0/16
 
   redis:
-    image: redis:5.0
+    image: redis:6.0-alpine3.12
     container_name: appwrite-redis
     restart: unless-stopped
     networks:
@@ -304,7 +304,7 @@ services:
       - appwrite-uploads:/storage/uploads
 
   influxdb:
-    image: influxdb:1.6
+    image: influxdb:1.8-alpine
     container_name: appwrite-influxdb
     restart: unless-stopped
     networks:
