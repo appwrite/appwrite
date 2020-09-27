@@ -256,8 +256,8 @@ services:
       - appwrite
     depends_on:
       - redis
-      # - maildev
-      - smtp
+      - maildev
+      # - smtp
     environment:
       - _APP_ENV
       - _APP_SYSTEM_EMAIL_NAME
@@ -300,26 +300,26 @@ services:
     command: 'mysqld --innodb-flush-method=fsync'
     # command: mv /var/lib/mysql/ib_logfile1 /var/lib/mysql/ib_logfile1.bu
 
-  # maildev:
-  #   image: djfarrelly/maildev
-  #   container_name: appwrite-maildev
-  #   restart: unless-stopped
-  #   ports:
-  #     - '1080:80'
-  #   networks:
-  #     - appwrite
-
-  smtp:
-    image: appwrite/smtp:1.2.0
-    container_name: appwrite-smtp
+  maildev:
+    image: djfarrelly/maildev
+    container_name: appwrite-maildev
     restart: unless-stopped
+    ports:
+      - '1080:80'
     networks:
       - appwrite
-    environment:
-      - LOCAL_DOMAINS=@
-      - RELAY_FROM_HOSTS=192.168.0.0/16 ; *.yourdomain.com
-      - SMARTHOST_HOST=smtp
-      - SMARTHOST_PORT=587
+
+  # smtp:
+  #   image: appwrite/smtp:1.2.0
+  #   container_name: appwrite-smtp
+  #   restart: unless-stopped
+  #   networks:
+  #     - appwrite
+  #   environment:
+  #     - LOCAL_DOMAINS=@
+  #     - RELAY_FROM_HOSTS=192.168.0.0/16 ; *.yourdomain.com
+  #     - SMARTHOST_HOST=smtp
+  #     - SMARTHOST_PORT=587
 
   redis:
     image: redis:5.0
