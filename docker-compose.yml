@@ -320,9 +320,9 @@ services:
   #     - RELAY_FROM_HOSTS=192.168.0.0/16 ; *.yourdomain.com
   #     - SMARTHOST_HOST=smtp
   #     - SMARTHOST_PORT=587
-
+  
   redis:
-    image: redis:5.0
+    image: redis:6.0-alpine3.12
     container_name: appwrite-redis
     restart: unless-stopped
     networks:
@@ -338,9 +338,9 @@ services:
       - appwrite
     volumes:
       - appwrite-uploads:/storage/uploads
-
+      
   influxdb:
-    image: influxdb:1.6
+    image: influxdb:1.8-alpine
     container_name: appwrite-influxdb
     restart: unless-stopped
     networks:
