@@ -115,7 +115,7 @@ class CertificatesV1
         $staging = (App::isProduction()) ? '' : ' --dry-run';
 
         $response = \shell_exec("certbot certonly --webroot --noninteractive --agree-tos{$staging} \
-            --email ".App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', 'security@localhost.test')." \
+            --email ".App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', 'security@localhost.test')." \
             -w ".APP_STORAGE_CERTIFICATES." \
             -d {$domain->get()}");
 

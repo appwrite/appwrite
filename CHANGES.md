@@ -36,6 +36,9 @@
   - Removed user roles attribute from user object (can be fetched from /v1/teams/memberships) **
   - Removed type attribute from session object response (used only internally)
   - ** - might be changed before merging to master
+- Upgraded Traefik image to version 2.3
+- Upgraded Redis Docker image to version 6.0 (alpine)
+- Upgraded Influxdb Docker image to version 1.8 (alpine)
 
 ## Breaking Changes (Read before upgrading!)
 - **Deprecated** `first` and `last` query params for documents list route in the database API

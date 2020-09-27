@@ -2,7 +2,7 @@ version: '3'
 
 services:
   traefik:
-    image: traefik:2.2
+    image: traefik:2.3
     container_name: appwrite-traefik
     command:
       - --log.level=DEBUG
@@ -66,6 +66,9 @@ services:
       - influxdb
     environment:
       - _APP_ENV
+      - _APP_SYSTEM_EMAIL_NAME
+      - _APP_SYSTEM_EMAIL_ADDRESS
+      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_OPENSSL_KEY_V1
@@ -136,6 +139,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -157,6 +161,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -206,6 +211,7 @@ services:
       - appwrite-certificates:/storage/certificates:rw
     environment:
       - _APP_ENV
+      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -255,6 +261,8 @@ services:
       # - smtp
     environment:
       - _APP_ENV
+      - _APP_SYSTEM_EMAIL_NAME
+      - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_SMTP_HOST
@@ -291,6 +299,7 @@ services:
       - MYSQL_USER=user
       - MYSQL_PASSWORD=password
     command: 'mysqld --innodb-flush-method=fsync'
+    # command: mv /var/lib/mysql/ib_logfile0 /var/lib/mysql/ib_logfile0.bu && mv /var/lib/mysql/ib_logfile1 /var/lib/mysql/ib_logfile1.bu
 
   maildev:
     image: djfarrelly/maildev
@@ -302,17 +311,19 @@ services:
       - appwrite
 
   # smtp:
-  #   image: appwrite/smtp:1.0.1
+  #   image: appwrite/smtp:1.2.0
   #   container_name: appwrite-smtp
   #   restart: unless-stopped
   #   networks:
   #     - appwrite
   #   environment:
-  #     - MAILNAME=appwrite
-  #     - RELAY_NETWORKS=:192.168.0.0/24:10.0.0.0/16
-
+  #     - LOCAL_DOMAINS=@
+  #     - RELAY_FROM_HOSTS=192.168.0.0/16 ; *.yourdomain.com
+  #     - SMARTHOST_HOST=smtp
+  #     - SMARTHOST_PORT=587
+  
   redis:
-    image: redis:5.0
+    image: redis:6.0-alpine
     container_name: appwrite-redis
     restart: unless-stopped
     networks:
@@ -328,9 +339,9 @@ services:
       - appwrite
     volumes:
       - appwrite-uploads:/storage/uploads
-
+      
   influxdb:
-    image: influxdb:1.6
+    image: influxdb:1.8-alpine
     container_name: appwrite-influxdb
     restart: unless-stopped
     networks:
