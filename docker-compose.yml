@@ -2,7 +2,7 @@ version: '3'
 
 services:
   traefik:
-    image: traefik:2.2
+    image: traefik:2.3
     container_name: appwrite-traefik
     command:
       - --log.level=DEBUG
@@ -322,7 +322,7 @@ services:
   #     - SMARTHOST_PORT=587
   
   redis:
-    image: redis:6.0-alpine3.12
+    image: redis:6.0-alpine
     container_name: appwrite-redis
     restart: unless-stopped
     networks:
