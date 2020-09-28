@@ -8,6 +8,7 @@
 - Added option to delete team from the console
 - Added option to view team members from the console
 - Added option to join a user to any team from the console
+- Added option to delete user from the API (@TorstenDittmann)
 - Added support for Brotli compression (@PedroCisnerosSantana, @Rohitub222)
 - New UI micro-interactions and CSS fixes (@AnatoleLucet)
 - UI performance & accessibility improvments (#406)
@@ -30,10 +31,14 @@
 - API Key name max length is now 128 chars and not 256 for better API consistency
 - Task name max length is now 128 chars and not 256 for better API consistency
 - Platform name max length is now 128 chars and not 256 for better API consistency
+- Added new locale: Marathi -mr (@spielers)
 - New and consistent response format for all API object + new response examples in the docs
   - Removed user roles attribute from user object (can be fetched from /v1/teams/memberships) **
   - Removed type attribute from session object response (used only internally)
   - ** - might be changed before merging to master
+- Upgraded Traefik image to version 2.3
+- Upgraded Redis Docker image to version 6.0 (alpine)
+- Upgraded Influxdb Docker image to version 1.8 (alpine)
 
 ## Breaking Changes (Read before upgrading!)
 - **Deprecated** `first` and `last` query params for documents list route in the database API
