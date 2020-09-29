@@ -8,7 +8,8 @@
 - Added option to delete team from the console
 - Added option to view team members from the console
 - Added option to join a user to any team from the console
-- Added option to delete user from the API (@TorstenDittmann)
+- Added option to delete user from the API (@TorstenDittmann - #378)
+- Added option to delete user from the console (@PineappleIOnic - #538)
 - Added support for Brotli compression (@PedroCisnerosSantana, @Rohitub222)
 - New UI micro-interactions and CSS fixes (@AnatoleLucet)
 - UI performance & accessibility improvments (#406)
