@@ -49,7 +49,7 @@
         "dragonmantank/cron-expression": "3.0.1",
         "domnikl/statsd": "2.0.*",
         "influxdb/influxdb-php": "1.15.*",
-        "bacon/bacon-qr-code": "2.0.0",
+        "bacon/bacon-qr-code": "2.0.2",
         "phpmailer/phpmailer": "6.1.7"
     },
     "require-dev": {
