@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "76177dfde843508574324417457a268f",
+    "content-hash": "0140b3871f2e37378ca495fb2e03d688",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -1464,16 +1464,16 @@
         },
         {
             "name": "utopia-php/domains",
-            "version": "0.2.1",
+            "version": "v1.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/domains.git",
-                "reference": "98e85296867a59c9d712d6ed768a5c5b2b297b43"
+                "reference": "1665e1d9932afa3be63b5c1e0dcfe01fe77d8e73"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/domains/zipball/98e85296867a59c9d712d6ed768a5c5b2b297b43",
-                "reference": "98e85296867a59c9d712d6ed768a5c5b2b297b43",
+                "url": "https://api.github.com/repos/utopia-php/domains/zipball/1665e1d9932afa3be63b5c1e0dcfe01fe77d8e73",
+                "reference": "1665e1d9932afa3be63b5c1e0dcfe01fe77d8e73",
                 "shasum": ""
             },
             "require": {
@@ -1510,7 +1510,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2020-06-20T11:47:04+00:00"
+            "time": "2020-02-23T07:40:02+00:00"
         },
         {
             "name": "utopia-php/framework",
