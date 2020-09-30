@@ -53,7 +53,7 @@
     },
     "require-dev": {
         "appwrite/sdk-generator": "master",
-        "phpunit/phpunit": "^7.0"
+        "phpunit/phpunit": "^9.3"
     },
     "repositories": [
         {
