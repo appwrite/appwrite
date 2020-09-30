@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "19733c6ed3b116b05ca08feaa1cfe7f2",
+    "content-hash": "07a5b2d2e742e8651d58889c3253c3b5",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -255,28 +255,31 @@
         },
         {
             "name": "domnikl/statsd",
-            "version": "2.0.1",
+            "version": "3.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/domnikl/statsd-php.git",
-                "reference": "cb4b2f50287c08bff820fb25ae45f0620b39f507"
+                "reference": "393c6565efbfb23c8296ae3099a62fb6366c6ce3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/domnikl/statsd-php/zipball/cb4b2f50287c08bff820fb25ae45f0620b39f507",
-                "reference": "cb4b2f50287c08bff820fb25ae45f0620b39f507",
+                "url": "https://api.github.com/repos/domnikl/statsd-php/zipball/393c6565efbfb23c8296ae3099a62fb6366c6ce3",
+                "reference": "393c6565efbfb23c8296ae3099a62fb6366c6ce3",
                 "shasum": ""
             },
             "require": {
-                "php": ">= 5.4.0"
+                "php": ">= 7.2"
             },
             "require-dev": {
-                "phpunit/phpunit": ">= 4.4.0"
+                "flyeralarm/php-code-validator": "^2.2",
+                "phpunit/phpunit": "~8.0",
+                "vimeo/psalm": "^3.4"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Domnikl\\Statsd\\": "lib/"
+                    "Domnikl\\Statsd\\": "src/",
+                    "Domnikl\\Test\\Statsd\\": "tests/unit"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -298,7 +301,7 @@
                 "statsd",
                 "udp"
             ],
-            "time": "2014-12-09T09:37:49+00:00"
+            "time": "2020-01-03T14:24:58+00:00"
         },
         {
             "name": "dragonmantank/cron-expression",

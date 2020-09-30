@@ -47,7 +47,7 @@
         "geoip2/geoip2": "2.10.0",
         "piwik/device-detector": "3.13.0",
         "dragonmantank/cron-expression": "3.0.1",
-        "domnikl/statsd": "2.0.*",
+        "domnikl/statsd": "3.0.*",
         "influxdb/influxdb-php": "1.15.*",
         "bacon/bacon-qr-code": "2.0.2",
         "phpmailer/phpmailer": "6.1.7"
