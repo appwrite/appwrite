@@ -1902,16 +1902,16 @@
         },
         {
             "name": "utopia-php/registry",
-            "version": "0.2.1",
+            "version": "0.2.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/registry.git",
-                "reference": "2cd2d318067a6b310c35c9f3ad73d2ce3c1ca7d5"
+                "reference": "948aa82942a1bde8b97ec74fdc1a83fb24122788"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/registry/zipball/2cd2d318067a6b310c35c9f3ad73d2ce3c1ca7d5",
-                "reference": "2cd2d318067a6b310c35c9f3ad73d2ce3c1ca7d5",
+                "url": "https://api.github.com/repos/utopia-php/registry/zipball/948aa82942a1bde8b97ec74fdc1a83fb24122788",
+                "reference": "948aa82942a1bde8b97ec74fdc1a83fb24122788",
                 "shasum": ""
             },
             "require": {
@@ -1945,7 +1945,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2020-06-20T11:46:06+00:00"
+            "time": "2020-07-04T22:14:07+00:00"
         }
     ],
     "packages-dev": [
