@@ -10,7 +10,7 @@
 - Added option to join a user to any team from the console
 - Added support for Brotli compression (@PedroCisnerosSantana, @Rohitub222)
 - New UI micro-interactions and CSS fixes (@AnatoleLucet)
-- UI performance & accessibility improvments (#406)
+- UI performance & accessibility improvements (#406)
 - New Doctor CLI to debug the Appwrite server ([#415](https://github.com/appwrite/appwrite/issues/415))
 - All emails are now sent asynchronously for improved performance (@TorstenDittmann)
 - Updated grid for OAuth2 providers list in the console
