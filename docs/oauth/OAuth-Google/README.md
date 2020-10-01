@@ -16,7 +16,7 @@ The result is an authorization code, which the application can exchange for an a
 The application should store the refresh token for future use and use the access token to access a Google API
 Once the access token expires, the application uses the refresh token to obtain a new one
 
-### Google Side of setup required to gain authorization:
+## Google Side of setup required to gain authorization:
 #### Create the authorization credentials for your application:
 1. [Go here](https://console.developers.google.com/apis/credentials) for creating authorization credentials  
 2. Click **Create credentials** > **OAuth client ID**
@@ -45,7 +45,7 @@ To create a Google Sign-In button that uses the default settings, add a div elem
 <div class="g-signin2" data-onsuccess="onSignIn"></div>
 ```
 
-### AppWrite Side backend code:
+## AppWrite's side of setup:
 
 #### Example Request
 ```js
