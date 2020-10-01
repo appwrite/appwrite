@@ -8,7 +8,7 @@
 - Use the success and failure arguments to redirect a URL's back to your app when login is completed
 
 ##### The Google OAuth 2.0 endpoint supports web server applications that use languages and frameworks such as PHP, Java, Python, Ruby, and ASP.NET.
-
+#### What actually happens?
 The authorization sequence begins when your application redirects a browser to a Google URL
 The URL includes query parameters that indicate the type of access being requested
 Google handles the user authentication, session selection, and user consent
@@ -45,17 +45,50 @@ To create a Google Sign-In button that uses the default settings, add a div elem
 <div class="g-signin2" data-onsuccess="onSignIn"></div>
 ```
 
+### AppWrite Side backend code:
+
 #### Example Request
 ```js
 let sdk = new Appwrite();
 
 sdk
-    .setEndpoint('https://[HOSTNAME_OR_IP]/v1/account/sessions/oauth2/google') // Your API Endpoint
+    .setEndpoint('https://[HOSTNAME_OR_IP]/v4/account/sessions/oauth2/google') // Your API Endpoint
     .setProject('5df5acd0d48c2'); // Your application ID
 
 // Go to OAuth provider login page
 sdk.account.createOAuth2Session('google');
 ```
+
+#### Functions AppWrite provides :
+```php 
+    function getLoginURL(): string
+```  
+- Returns the Google login URL to redirect the user for signing in  
+
+```php 
+    function getAccessToken(string $code): string
+```  
+- Returns the access token for authorization code passed  
+
+```php 
+    function getUserID(string $accessToken) 
+```
+- Returns the user's ID for the access token passed  
+
+```php 
+    function getUserEmail(string $accessToken) 
+```
+- Returns the user's email for the access token passed  
+
+```php 
+    function getUserName(string $accessToken) 
+```
+- Returns the user's name for the access token passed  
+
+```php 
+    function getUser(string $accessToken) 
+```
+- Returns the array of all the details(ID, email, name) of the user whose access token is passed  
 
 ### Note:
 #### Rate Limits
