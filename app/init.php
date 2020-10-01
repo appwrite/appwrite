@@ -264,6 +264,7 @@ Locale::setLanguage('ta', include __DIR__ . '/config/locale/translations/ta.php'
 Locale::setLanguage('th', include __DIR__.'/config/locale/translations/th.php');
 Locale::setLanguage('tr', include __DIR__.'/config/locale/translations/tr.php');
 Locale::setLanguage('ua', include __DIR__.'/config/locale/translations/ua.php');
+Locale::setLanguage('ur', include __DIR__.'/config/locale/translations/ur.php');
 Locale::setLanguage('vi', include __DIR__.'/config/locale/translations/vi.php');
 Locale::setLanguage('zh-cn', include __DIR__.'/config/locale/translations/zh-cn.php');
 Locale::setLanguage('zh-tw', include __DIR__.'/config/locale/translations/zh-tw.php');
