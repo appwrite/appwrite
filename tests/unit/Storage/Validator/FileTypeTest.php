@@ -12,12 +12,12 @@ class FileTypeTest extends TestCase
      */
     protected $object = null;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->object = new FileType([FileType::FILE_TYPE_JPEG]);
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
     }
 
