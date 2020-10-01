@@ -129,6 +129,8 @@ All code contributions - including those of people having commit access - must g
 
 We truly ❤️ pull requests! If you wish to help, you can learn more about how you can contribute to this project in the [contribution guide](CONTRIBUTING.md).
 
+Please let us know if you encounter any issue by filing an [issue](https://github.com/appwrite/appwrite/issues).
+
 ## Security
 
 For security issues, kindly email us [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue in GitHub.
