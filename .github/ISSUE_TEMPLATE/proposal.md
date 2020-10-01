@@ -1,6 +1,6 @@
 ---
 name: 💥 Proposal
-about: Propose a non-trivial change to Livestream
+about: Propose a non-trivial change to appwrite
 labels: "proposal"
 ---
 
