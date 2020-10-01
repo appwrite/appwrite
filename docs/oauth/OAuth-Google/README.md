@@ -1,7 +1,5 @@
 # Create Account Session through AppWrite with Google's OAuth 2.0!
 
-#### Use : _get_ command and _/account/sessions/oauth2/google_ as the suffix for your API Endpoint
-
 #### Features :
 - Allow the user to login to his account using Google's OAuth 2.0 
 - Each OAuth2 provider should be enabled from the Appwrite console first
@@ -15,6 +13,8 @@ Google handles the user authentication, session selection, and user consent
 The result is an authorization code, which the application can exchange for an access token and a refresh token
 The application should store the refresh token for future use and use the access token to access a Google API
 Once the access token expires, the application uses the refresh token to obtain a new one
+
+![OAuth Illustration](authorization-code.png "Whats OAuth 2.0?")
 
 ## Google Side of setup required to gain authorization:
 #### Create the authorization credentials for your application:
@@ -46,6 +46,8 @@ To create a Google Sign-In button that uses the default settings, add a div elem
 ```
 
 ## AppWrite's side of setup:
+
+#### Use : _get_ command and _/account/sessions/oauth2/google_ as the suffix for your API Endpoint
 
 #### Example Request
 ```js
@@ -95,3 +97,8 @@ sdk.account.createOAuth2Session('google');
 This endpoint is limited to 50 requests in every 60 minutes per IP address.   
 We use rate limits to avoid service abuse by users and as a security practice.  
 [Learn more about rate limiting](https://appwrite.io/docs/rate-limits)
+
+Refrances:
+[AppWrite Docs](https://appwrite.io/docs/client/account?sdk=web)
+[Google's Web Sign-in Guide](https://developers.google.com/identity/sign-in/web/sign-in)
+[Whats OAuth 2.0?](https://developers.google.com/identity/protocols/oauth2)
