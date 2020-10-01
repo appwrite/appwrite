@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'settings.inspire' => '"ବୁଦ୍ଧିମାନ ହବାର କଲା ଏମିତି ଏକ କଲା ଯାହା ଜଣାଇଥାଏ କୋଉ ଜିନ୍ସ କୁ ଅଣଦେଖା କରିବା ଉଚିତ |"', // This is the line printed in the homepage and console 'view-source'
+    'settings.inspire' => '"ଜ୍ଞାନୀ ହେବାର କଳା ହେଉଛି କ’ଣ ଅଣଦେଖା କରାଯିବ ଜାଣିବାର କଳା |"', // This is the line printed in the homepage and console 'view-source'
     'settings.locale' => 'od',
     'settings.direction' => 'ltr',
 
