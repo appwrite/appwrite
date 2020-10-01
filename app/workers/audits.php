@@ -5,6 +5,7 @@ require_once __DIR__.'/../init.php';
 \cli_set_process_title('Audits V1 Worker');
 
 echo APP_NAME.' audits worker v1 has started';
+#echo APP_NAME."audits worker v1 has started"; some supports double quotes
 
 use Utopia\Audit\Audit;
 use Utopia\Audit\Adapters\MySQL as AuditAdapter;
