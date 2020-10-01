@@ -1,8 +1,7 @@
-# Tutorials for integrating Appwrite's OAuth API into your core backend!
+# Tutorials for integrating AppWrite with the OAuth 2.0 API for easily managing new clients!  
+Here are various examples illustrated with the help of the Appwrite Community  
 
-Here are various examples illustrated with the help of the Appwrite Community.
+## Choices AppWrite offers :
 
-## Choices AppWrite offers:
-
-- [**Signup & login page through Google**](/OAuth-Google/) 
-  Implementation of Appwrite's OAUTH 2.0 API for regestering a user through Google.
+- [**Signup & login through Google**](OAuth-Google/README.md) 
+  AppWrite simplifies regestering a user through Google's OAuth 2.0
