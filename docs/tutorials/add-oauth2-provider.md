@@ -47,7 +47,7 @@ Please mention in your documentation what resources or API docs you used to impl
 
 After you finished adding your new provider to Appwrite you should be able to see it in your Appwrite console. Navigate to 'Project > Users > Providers' and check your new provider's settings form.
 
-Add credentials and check both a successful and a failed login (where the user rejects integration on provider page).
+Add credentials and check both a successful and a failed login (where the user rejects integration on the provider page).
 
 You can test your OAuth2 provider by trying to login using the [OAuth2 method](https://appwrite.io/docs/client/account#createOAuth2Session) when integrating the Appwrite JS SDK in a demo app.
 
