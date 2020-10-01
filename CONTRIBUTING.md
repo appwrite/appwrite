@@ -1,6 +1,6 @@
 # Contributing
 
-We would ❤️ for you to contribute to Appwrite and help make it better! We want contributing to Appwrite to be fun, enjoyable, and educational for anyone and everyone. All contributions are welcome, including issues, new docs as well as updates and tweaks, blog posts, workshops, and more.
+We would ❤️ for you to contribute to Appwrite and help make it better! We want contributing to Appwrite to be fun and educational for anyone and everyone. All contributions are welcome, including issues, new docs, updates, tweaks, blog posts, workshops, and more.
 
 ## How to Start?
 
@@ -23,7 +23,7 @@ doc-548-submit-a-pull-request-section-to-contribution-guide
 
 When `TYPE` can be:
 
-- **feat** - is a new feature
+- **feat** - is an additional feature
 - **doc** - documentation only changes
 - **cicd** - changes related to CI/CD system
 - **fix** - a bug fix
@@ -41,7 +41,7 @@ $ git pull
 ```
 $ git checkout -b [name_of_your_new_branch]
 ```
-3. Work - commit - repeat ( be sure to be in your branch )
+3. Work - commit - repeat (be sure to be in your branch )
 
 4. Push changes to GitHub 
 ```
@@ -54,15 +54,15 @@ If you go to your repository on GitHub, you'll see a `Compare & pull request` bu
 Now submit the pull request and , click on `Create pull request`.
 6. Get a code review approval / reject
 7. After approval, merge your PR
-8. GitHub will automatically delete the branch, after the merge is done. (they can still be restored).
+8. GitHub will autodelete the branch, after the merge is done. (they can still be restored).
 
 ## Setup From Source
 
 To set up a working **development environment**, just fork the project git repository and install the backend and frontend dependencies using the proper package manager and create run the docker-compose stack.
 
-> If you just want to install Appwrite for day-to-day usage and not as a code maintainer use this [installation guide](https://github.com/appwrite/appwrite#installation).
+> If you just want to install Appwrite for day-to-day usage and not as a code maintainer, use this [installation guide](https://github.com/appwrite/appwrite#installation).
 
-Please note that these instructions are for setting a functional dev environment. If you want to set up an Appwrite instance to integrate into your app, you should probably try and install Appwrite by using the instructions in the [getting started guide](https://appwrite.io/docs/getting-started-for-web) or in the main [README](README.md) file.
+Please note that these instructions are for setting a functional dev environment. If you want to set up an Appwrite instance to integrate into your app, probably try to install Appwrite by using the instructions in the [getting started guide](https://appwrite.io/docs/getting-started-for-web) or in the main [README](README.md) file.
 
 ```bash
 git clone git@github.com:[YOUR_FORK_HERE]/appwrite.git
@@ -145,7 +145,7 @@ Although the Appwrite API is a monolithic app, it has a very clear separation of
 
 Each container in Appwrite is a microservice on its own. Each service is an independent process that can scale without regard to any of the other services.
 
-Currently, all of the Appwrite microservices are intended to communicate using the TCP protocol over a private network. You should be aware to not expose any of the services to the public-facing network, besides the public port 80 and 443, who, by default, are used to expose the Appwrite HTTP API.
+Currently, all of the Appwrite microservices are intended to communicate using the TCP protocol over a private network. You should be aware of not expose any of the services to the public-facing network, besides the public port 80 and 443, who, by default, are used to expose the Appwrite HTTP API.
 
 ## Technology Stack
 
@@ -169,7 +169,7 @@ Appwrite stack is combined from a variety of open-source technologies and tools.
 
 Appwrite uses a package manager for managing code dependencies for both backend and frontend development. We try our best to avoid creating any unnecessary, and any new dependency to the project is subjected to a lead developer review and approval.
 
-Many of Appwrite's internal modules are also used as dependencies to allow other Appwrite's projects to reuse them and as a way to contribute them back to the community.
+Many of Appwrite's internal modules are also used as dependencies to allow other Appwrite's projects to reuse them and to contribute them back to the community.
 
 Appwrite uses [PHP's Composer](https://getcomposer.org/) for managing dependencies on the server-side and [JS NPM](https://www.npmjs.com/) for managing dependencies on the frontend side.
 
@@ -183,7 +183,7 @@ We use prettier for our JS coding standards and for auto-formatting our code.
 
 Appwrite is built to scale. Please keep in mind that the Appwrite stack can run in different environments and different scales.
 
-We wish Appwrite will be as easy to set up and in a single, localhost, and easy to grow to a large environment with dozens and even hundreds of instances.
+We wish Appwrite will be as easy to set up and in a single localhost, and easy to grow to a large environment with dozens and even hundreds of instances.
 
 When contributing code, please take into account the following considerations:
 
@@ -214,9 +214,9 @@ We would 💖 you to contribute to Appwrite, but we would also like to make sure
 
 For us to find the right balance, please open an issue explaining your ideas before introducing a new pull request.
 
-This will allow the Appwrite community to have sufficient discussion about the new feature value and how it fits in the product roadmap and vision.
+This will allow the Appwrite community to have a sufficient discussion about the new feature value and how it fits in the product roadmap and vision.
 
-This is also important for the Appwrite lead developers to be able to give technical input and different emphasize regarding the feature design and architecture.
+This is also important for the Appwrite lead developers to give technical input and distinct emphasis regarding the feature design and architecture.
 
 ## Build
 
@@ -246,7 +246,7 @@ docker exec appwrite test
 
 We use some automation tools to help us keep a healthy code base.
 
-Improve PHP exeution time by using [fully-qualified function calls](https://veewee.github.io/blog/optimizing-php-performance-by-fq-function-calls/):
+Improve PHP execution time by using [fully-qualified function calls](https://veewee.github.io/blog/optimizing-php-performance-by-fq-function-calls/):
 
 ```bash
 php-cs-fixer fix src/ --rules=native_function_invocation --allow-risky=yes
@@ -264,7 +264,7 @@ php-cs-fixer fix src --rules='{"braces": {"allow_single_line_closure": true}}'
 
 ## Tutorials
 
-From time to time, our team will add tutorials that will help contributors find their way in the Appwrite source code. Below is a list of currently available tutorials:
+From time to time, our team will add tutorials that will help contributors find their way in the Appwrite source code. Below is a list of available tutorials:
 
 * [Adding Support for a New OAuth2 Provider](./docs/tutorials/add-oauth2-provider.md)
 * [Appwrite Environment Variables](./docs/tutorials/environment-variables.md)
@@ -285,11 +285,11 @@ Presenting at meetups and conferences about your Appwrite projects. Your unique 
 
 ### Sending Feedbacks & Reporting Bugs
 
-Sending feedback is a great way for us to understand your different use cases of Appwrite better. If you had any issues, bugs, or want to share about your experience, feel free to do so on our GitHub issues page or at our [Discord channel](https://discord.gg/GSeTUeA).
+Sending feedback is a great way for us to understand your different use of cases of Appwrite better. If you had any issues, bugs, or want to share about your experience, feel free to do so on our GitHub issues page or at our [Discord channel](https://discord.gg/GSeTUeA).
 
 ### Submitting New Ideas
 
-If you think Appwrite could use a new feature, please open an issue on our GitHub repository, stating as much information as you can think about your new idea and it's implications. We would also use this issue to gather more information, get more feedback from the community, and have a proper discussion about the new feature.
+If you think Appwrite could use an additional feature, please open an issue on our GitHub repository, stating as much information as you can think about your new idea and its implications. We would also use this issue to gather more information, get more feedback from the community, and have a proper discussion about the new feature.
 
 ### Improving Documentation
 
