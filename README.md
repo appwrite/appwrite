@@ -140,3 +140,7 @@ Join our growing community around the world! Follow us on [Twitter](https://twit
 ## License
 
 This repository is available under the [BSD 3-Clause License](./LICENSE).
+
+## Footer
+
+Copyright © 2020 Appwrite0.4.23.125 Terms Privacy Cookies
