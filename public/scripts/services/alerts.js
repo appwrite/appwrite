@@ -49,7 +49,7 @@
 
                         scope.list.splice(index, 1);
 
-                    };
+                    }
                 }
             }
         };

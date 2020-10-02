@@ -20,7 +20,7 @@ export class Teams extends Service {
     async list(search: string = '', limit: number = 25, offset: number = 0, orderType: string = 'ASC'): Promise<string> {
         let path = '/teams';
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -47,7 +47,7 @@ export class Teams extends Service {
     async create(name: string, roles: Array<any> = ["owner"]): Promise<string> {
         let path = '/teams';
         
-        return await this.client.call('post', path, {
+        return this.client.call('post', path, {
                     'content-type': 'application/json',
                },
                {
@@ -69,7 +69,7 @@ export class Teams extends Service {
     async get(teamId: string): Promise<string> {
         let path = '/teams/{teamId}'.replace(new RegExp('{teamId}', 'g'), teamId);
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -90,7 +90,7 @@ export class Teams extends Service {
     async update(teamId: string, name: string): Promise<string> {
         let path = '/teams/{teamId}'.replace(new RegExp('{teamId}', 'g'), teamId);
         
-        return await this.client.call('put', path, {
+        return this.client.call('put', path, {
                     'content-type': 'application/json',
                },
                {
@@ -111,7 +111,7 @@ export class Teams extends Service {
     async delete(teamId: string): Promise<string> {
         let path = '/teams/{teamId}'.replace(new RegExp('{teamId}', 'g'), teamId);
         
-        return await this.client.call('delete', path, {
+        return this.client.call('delete', path, {
                     'content-type': 'application/json',
                },
                {
@@ -131,7 +131,7 @@ export class Teams extends Service {
     async getMemberships(teamId: string): Promise<string> {
         let path = '/teams/{teamId}/memberships'.replace(new RegExp('{teamId}', 'g'), teamId);
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -144,12 +144,12 @@ export class Teams extends Service {
      * Use this endpoint to invite a new member to join your team. An email with a
      * link to join the team will be sent to the new member email address if the
      * member doesn't exist in the project it will be created automatically.
-     * 
+     *
      * Use the 'URL' parameter to redirect the user from the invitation email back
      * to your app. When the user is redirected, use the [Update Team Membership
      * Status](/docs/client/teams#updateMembershipStatus) endpoint to allow the
      * user to accept the invitation to the team.
-     * 
+     *
      * Please note that in order to avoid a [Redirect
      * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
      * the only valid redirect URL's are the once from domains you have set when
@@ -166,7 +166,7 @@ export class Teams extends Service {
     async createMembership(teamId: string, email: string, roles: Array<any>, url: string, name: string = ''): Promise<string> {
         let path = '/teams/{teamId}/memberships'.replace(new RegExp('{teamId}', 'g'), teamId);
         
-        return await this.client.call('post', path, {
+        return this.client.call('post', path, {
                     'content-type': 'application/json',
                },
                {
@@ -192,7 +192,7 @@ export class Teams extends Service {
     async deleteMembership(teamId: string, inviteId: string): Promise<string> {
         let path = '/teams/{teamId}/memberships/{inviteId}'.replace(new RegExp('{teamId}', 'g'), teamId).replace(new RegExp('{inviteId}', 'g'), inviteId);
         
-        return await this.client.call('delete', path, {
+        return this.client.call('delete', path, {
                     'content-type': 'application/json',
                },
                {

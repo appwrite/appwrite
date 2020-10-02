@@ -6,8 +6,8 @@ module Appwrite
                 .gsub('{code}', code)
 
             params = {
-                'width': width, 
-                'height': height, 
+                'width': width,
+                'height': height,
                 'quality': quality
             }
 
@@ -21,8 +21,8 @@ module Appwrite
                 .gsub('{code}', code)
 
             params = {
-                'width': width, 
-                'height': height, 
+                'width': width,
+                'height': height,
                 'quality': quality
             }
 
@@ -48,8 +48,8 @@ module Appwrite
                 .gsub('{code}', code)
 
             params = {
-                'width': width, 
-                'height': height, 
+                'width': width,
+                'height': height,
                 'quality': quality
             }
 
@@ -62,8 +62,8 @@ module Appwrite
             path = '/avatars/image'
 
             params = {
-                'url': url, 
-                'width': width, 
+                'url': url,
+                'width': width,
                 'height': height
             }
 
@@ -76,9 +76,9 @@ module Appwrite
             path = '/avatars/qr'
 
             params = {
-                'text': text, 
-                'size': size, 
-                'margin': margin, 
+                'text': text,
+                'size': size,
+                'margin': margin,
                 'download': download
             }
 
@@ -91,5 +91,5 @@ module Appwrite
         protected
 
         private
-    end 
+    end
 end

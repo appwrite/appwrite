@@ -5,7 +5,7 @@ require 'cgi'
 
 module Appwrite
     class Client
-        
+
         METHOD_GET = 'get'
         METHOD_POST = 'post'
         METHOD_PUT = 'put'
@@ -45,16 +45,16 @@ module Appwrite
 
         def set_endpoint(endpoint)
             @endpoint = endpoint
-            
+
             return self
         end
-        
+
         def add_header(key, value)
             @headers[key.downcase] = value.downcase
 
             return self
         end
-        
+
         def call(method, path = '', headers = {}, params = {})
             uri = URI.parse(@endpoint + path + ((method == METHOD_GET && params.length) ? '?' + encode(params) : ''))
             return fetch(method, uri, headers, params)
@@ -70,7 +70,7 @@ module Appwrite
             http = Net::HTTP.new(uri.host, uri.port)
             http.use_ssl = (uri.scheme == 'https')
             payload = ''
-            
+
             headers = @headers.merge(headers)
 
             if (method != METHOD_GET)
@@ -87,12 +87,12 @@ module Appwrite
             rescue => error
                 raise 'Request Failed: '  + error.message
             end
-            
+
             # Handle Redirects
             if (response.class == Net::HTTPRedirection || response.class == Net::HTTPMovedPermanently)
                 location = response['location']
                 uri = URI.parse(uri.scheme + "://" + uri.host + "" + location)
-                
+
                 return fetch(method, uri, headers, {}, limit - 1)
             end
 
@@ -104,13 +104,13 @@ module Appwrite
             when Hash  then value.map { |k,v| encode(v, append_key(key,k)) }.join('&')
             when Array then value.map { |v| encode(v, "#{key}[]") }.join('&')
             when nil   then ''
-            else            
-            "#{key}=#{CGI.escape(value.to_s)}" 
+            else
+            "#{key}=#{CGI.escape(value.to_s)}"
             end
         end
 
         def append_key(root_key, key)
-            root_key.nil? ? key : "#{root_key}[#{key.to_s}]"
+            root_key.nil? ? key : "#{root_key}[#{key}]"
         end
-    end 
+    end
 end

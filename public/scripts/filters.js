@@ -209,7 +209,7 @@ window.ls.filter
   .add("limit", function($value) {
     let postfix = ($value.length >= 50) ? '...' : '';
     return $value.substring(0, 50) + postfix;
-    ;
+    
   })
   .add("arraySentence", function($value) {
     if(!Array.isArray($value)) {

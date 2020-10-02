@@ -21,7 +21,7 @@ export class Database extends Service {
     async listCollections(search: string = '', limit: number = 25, offset: number = 0, orderType: string = 'ASC'): Promise<string> {
         let path = '/database/collections';
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -47,7 +47,7 @@ export class Database extends Service {
     async createCollection(name: string, read: Array<any>, write: Array<any>, rules: Array<any>): Promise<string> {
         let path = '/database/collections';
         
-        return await this.client.call('post', path, {
+        return this.client.call('post', path, {
                     'content-type': 'application/json',
                },
                {
@@ -71,7 +71,7 @@ export class Database extends Service {
     async getCollection(collectionId: string): Promise<string> {
         let path = '/database/collections/{collectionId}'.replace(new RegExp('{collectionId}', 'g'), collectionId);
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -94,7 +94,7 @@ export class Database extends Service {
     async updateCollection(collectionId: string, name: string, read: Array<any>, write: Array<any>, rules: Array<any> = []): Promise<string> {
         let path = '/database/collections/{collectionId}'.replace(new RegExp('{collectionId}', 'g'), collectionId);
         
-        return await this.client.call('put', path, {
+        return this.client.call('put', path, {
                     'content-type': 'application/json',
                },
                {
@@ -118,7 +118,7 @@ export class Database extends Service {
     async deleteCollection(collectionId: string): Promise<string> {
         let path = '/database/collections/{collectionId}'.replace(new RegExp('{collectionId}', 'g'), collectionId);
         
-        return await this.client.call('delete', path, {
+        return this.client.call('delete', path, {
                     'content-type': 'application/json',
                },
                {
@@ -149,7 +149,7 @@ export class Database extends Service {
     async listDocuments(collectionId: string, filters: Array<any> = [], offset: number = 0, limit: number = 50, orderField: string = '$id', orderType: string = 'ASC', orderCast: string = 'string', search: string = '', first: number = 0, last: number = 0): Promise<string> {
         let path = '/database/collections/{collectionId}/documents'.replace(new RegExp('{collectionId}', 'g'), collectionId);
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -186,7 +186,7 @@ export class Database extends Service {
     async createDocument(collectionId: string, data: DocumentData, read: Array<any>, write: Array<any>, parentDocument: string = '', parentProperty: string = '', parentPropertyType: string = 'assign'): Promise<string> {
         let path = '/database/collections/{collectionId}/documents'.replace(new RegExp('{collectionId}', 'g'), collectionId);
         
-        return await this.client.call('post', path, {
+        return this.client.call('post', path, {
                     'content-type': 'application/json',
                },
                {
@@ -213,7 +213,7 @@ export class Database extends Service {
     async getDocument(collectionId: string, documentId: string): Promise<string> {
         let path = '/database/collections/{collectionId}/documents/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -234,7 +234,7 @@ export class Database extends Service {
     async updateDocument(collectionId: string, documentId: string, data: DocumentData, read: Array<any>, write: Array<any>): Promise<string> {
         let path = '/database/collections/{collectionId}/documents/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
         
-        return await this.client.call('patch', path, {
+        return this.client.call('patch', path, {
                     'content-type': 'application/json',
                },
                {
@@ -259,7 +259,7 @@ export class Database extends Service {
     async deleteDocument(collectionId: string, documentId: string): Promise<string> {
         let path = '/database/collections/{collectionId}/documents/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
         
-        return await this.client.call('delete', path, {
+        return this.client.call('delete', path, {
                     'content-type': 'application/json',
                },
                {
@@ -276,7 +276,7 @@ export class Database extends Service {
     async getCollectionLogs(collectionId: string): Promise<string> {
         let path = '/database/collections/{collectionId}/logs'.replace(new RegExp('{collectionId}', 'g'), collectionId);
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {

@@ -10,7 +10,7 @@ export class Locale extends Service {
      * country code, country name, continent name, continent code, ip address and
      * suggested currency. You can use the locale header to get the data in a
      * supported language.
-     * 
+     *
      * ([IP Geolocation by DB-IP](https://db-ip.com))
      *
      * @throws Exception
@@ -19,7 +19,7 @@ export class Locale extends Service {
     async get(): Promise<string> {
         let path = '/locale';
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -38,7 +38,7 @@ export class Locale extends Service {
     async getContinents(): Promise<string> {
         let path = '/locale/continents';
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -57,7 +57,7 @@ export class Locale extends Service {
     async getCountries(): Promise<string> {
         let path = '/locale/countries';
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -76,7 +76,7 @@ export class Locale extends Service {
     async getCountriesEU(): Promise<string> {
         let path = '/locale/countries/eu';
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -95,7 +95,7 @@ export class Locale extends Service {
     async getCountriesPhones(): Promise<string> {
         let path = '/locale/countries/phones';
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -115,7 +115,7 @@ export class Locale extends Service {
     async getCurrencies(): Promise<string> {
         let path = '/locale/currencies';
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {

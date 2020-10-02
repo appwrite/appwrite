@@ -5,9 +5,9 @@ module Appwrite
             path = '/functions'
 
             params = {
-                'search': search, 
-                'limit': limit, 
-                'offset': offset, 
+                'search': search,
+                'limit': limit,
+                'offset': offset,
                 'orderType': order_type
             }
 
@@ -20,10 +20,10 @@ module Appwrite
             path = '/functions'
 
             params = {
-                'name': name, 
-                'vars': vars, 
-                'events': events, 
-                'schedule': schedule, 
+                'name': name,
+                'vars': vars,
+                'events': events,
+                'schedule': schedule,
                 'timeout': timeout
             }
 
@@ -49,10 +49,10 @@ module Appwrite
                 .gsub('{function_id}', function_id)
 
             params = {
-                'name': name, 
-                'vars': vars, 
-                'events': events, 
-                'schedule': schedule, 
+                'name': name,
+                'vars': vars,
+                'events': events,
+                'schedule': schedule,
                 'timeout': timeout
             }
 
@@ -78,9 +78,9 @@ module Appwrite
                 .gsub('{function_id}', function_id)
 
             params = {
-                'search': search, 
-                'limit': limit, 
-                'offset': offset, 
+                'search': search,
+                'limit': limit,
+                'offset': offset,
                 'orderType': order_type
             }
 
@@ -133,9 +133,9 @@ module Appwrite
                 .gsub('{function_id}', function_id)
 
             params = {
-                'search': search, 
-                'limit': limit, 
-                'offset': offset, 
+                'search': search,
+                'limit': limit,
+                'offset': offset,
                 'orderType': order_type
             }
 
@@ -149,8 +149,8 @@ module Appwrite
                 .gsub('{function_id}', function_id)
 
             params = {
-                'env': env, 
-                'command': command, 
+                'env': env,
+                'command': command,
                 'code': code
             }
 
@@ -189,5 +189,5 @@ module Appwrite
         protected
 
         private
-    end 
+    end
 end

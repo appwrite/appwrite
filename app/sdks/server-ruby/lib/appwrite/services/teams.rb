@@ -5,9 +5,9 @@ module Appwrite
             path = '/teams'
 
             params = {
-                'search': search, 
-                'limit': limit, 
-                'offset': offset, 
+                'search': search,
+                'limit': limit,
+                'offset': offset,
                 'orderType': order_type
             }
 
@@ -20,7 +20,7 @@ module Appwrite
             path = '/teams'
 
             params = {
-                'name': name, 
+                'name': name,
                 'roles': roles
             }
 
@@ -83,9 +83,9 @@ module Appwrite
                 .gsub('{teamId}', team_id)
 
             params = {
-                'email': email, 
-                'name': name, 
-                'roles': roles, 
+                'email': email,
+                'name': name,
+                'roles': roles,
                 'url': url
             }
 
@@ -111,5 +111,5 @@ module Appwrite
         protected
 
         private
-    end 
+    end
 end

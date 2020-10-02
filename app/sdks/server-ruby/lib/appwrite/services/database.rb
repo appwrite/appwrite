@@ -5,9 +5,9 @@ module Appwrite
             path = '/database/collections'
 
             params = {
-                'search': search, 
-                'limit': limit, 
-                'offset': offset, 
+                'search': search,
+                'limit': limit,
+                'offset': offset,
                 'orderType': order_type
             }
 
@@ -20,9 +20,9 @@ module Appwrite
             path = '/database/collections'
 
             params = {
-                'name': name, 
-                'read': read, 
-                'write': write, 
+                'name': name,
+                'read': read,
+                'write': write,
                 'rules': rules
             }
 
@@ -48,9 +48,9 @@ module Appwrite
                 .gsub('{collectionId}', collection_id)
 
             params = {
-                'name': name, 
-                'read': read, 
-                'write': write, 
+                'name': name,
+                'read': read,
+                'write': write,
                 'rules': rules
             }
 
@@ -76,14 +76,14 @@ module Appwrite
                 .gsub('{collectionId}', collection_id)
 
             params = {
-                'filters': filters, 
-                'offset': offset, 
-                'limit': limit, 
-                'orderField': order_field, 
-                'orderType': order_type, 
-                'orderCast': order_cast, 
-                'search': search, 
-                'first': first, 
+                'filters': filters,
+                'offset': offset,
+                'limit': limit,
+                'orderField': order_field,
+                'orderType': order_type,
+                'orderCast': order_cast,
+                'search': search,
+                'first': first,
                 'last': last
             }
 
@@ -97,11 +97,11 @@ module Appwrite
                 .gsub('{collectionId}', collection_id)
 
             params = {
-                'data': data, 
-                'read': read, 
-                'write': write, 
-                'parentDocument': parent_document, 
-                'parentProperty': parent_property, 
+                'data': data,
+                'read': read,
+                'write': write,
+                'parentDocument': parent_document,
+                'parentProperty': parent_property,
                 'parentPropertyType': parent_property_type
             }
 
@@ -129,8 +129,8 @@ module Appwrite
                 .gsub('{documentId}', document_id)
 
             params = {
-                'data': data, 
-                'read': read, 
+                'data': data,
+                'read': read,
                 'write': write
             }
 
@@ -168,5 +168,5 @@ module Appwrite
         protected
 
         private
-    end 
+    end
 end

@@ -1,5 +1,3 @@
-
-
 class Locale: Service
 {
     /**
@@ -25,7 +23,7 @@ class Locale: Service
 
         return [self.client.call(method: Client.HTTPMethod.get.rawValue, path: path, headers: [
             "content-type": "application/json",
-        ], params: params)];
+        ], params: params)]
     }
 
     /**
@@ -47,7 +45,7 @@ class Locale: Service
 
         return [self.client.call(method: Client.HTTPMethod.get.rawValue, path: path, headers: [
             "content-type": "application/json",
-        ], params: params)];
+        ], params: params)]
     }
 
     /**
@@ -69,7 +67,7 @@ class Locale: Service
 
         return [self.client.call(method: Client.HTTPMethod.get.rawValue, path: path, headers: [
             "content-type": "application/json",
-        ], params: params)];
+        ], params: params)]
     }
 
     /**
@@ -91,7 +89,7 @@ class Locale: Service
 
         return [self.client.call(method: Client.HTTPMethod.get.rawValue, path: path, headers: [
             "content-type": "application/json",
-        ], params: params)];
+        ], params: params)]
     }
 
     /**
@@ -113,7 +111,7 @@ class Locale: Service
 
         return [self.client.call(method: Client.HTTPMethod.get.rawValue, path: path, headers: [
             "content-type": "application/json",
-        ], params: params)];
+        ], params: params)]
     }
 
     /**
@@ -136,7 +134,7 @@ class Locale: Service
 
         return [self.client.call(method: Client.HTTPMethod.get.rawValue, path: path, headers: [
             "content-type": "application/json",
-        ], params: params)];
+        ], params: params)]
     }
 
     /**
@@ -158,7 +156,7 @@ class Locale: Service
 
         return [self.client.call(method: Client.HTTPMethod.get.rawValue, path: path, headers: [
             "content-type": "application/json",
-        ], params: params)];
+        ], params: params)]
     }
 
 }

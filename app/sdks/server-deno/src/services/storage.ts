@@ -20,7 +20,7 @@ export class Storage extends Service {
     async listFiles(search: string = '', limit: number = 25, offset: number = 0, orderType: string = 'ASC'): Promise<string> {
         let path = '/storage/files';
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -47,7 +47,7 @@ export class Storage extends Service {
     async createFile(file: File | Blob, read: Array<any>, write: Array<any>): Promise<string> {
         let path = '/storage/files';
         
-        return await this.client.call('post', path, {
+        return this.client.call('post', path, {
                     'content-type': 'multipart/form-data',
                },
                {
@@ -70,7 +70,7 @@ export class Storage extends Service {
     async getFile(fileId: string): Promise<string> {
         let path = '/storage/files/{fileId}'.replace(new RegExp('{fileId}', 'g'), fileId);
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -92,7 +92,7 @@ export class Storage extends Service {
     async updateFile(fileId: string, read: Array<any>, write: Array<any>): Promise<string> {
         let path = '/storage/files/{fileId}'.replace(new RegExp('{fileId}', 'g'), fileId);
         
-        return await this.client.call('put', path, {
+        return this.client.call('put', path, {
                     'content-type': 'application/json',
                },
                {
@@ -114,7 +114,7 @@ export class Storage extends Service {
     async deleteFile(fileId: string): Promise<string> {
         let path = '/storage/files/{fileId}'.replace(new RegExp('{fileId}', 'g'), fileId);
         
-        return await this.client.call('delete', path, {
+        return this.client.call('delete', path, {
                     'content-type': 'application/json',
                },
                {
@@ -135,7 +135,7 @@ export class Storage extends Service {
     async getFileDownload(fileId: string): Promise<string> {
         let path = '/storage/files/{fileId}/download'.replace(new RegExp('{fileId}', 'g'), fileId);
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -162,7 +162,7 @@ export class Storage extends Service {
     async getFilePreview(fileId: string, width: number = 0, height: number = 0, quality: number = 100, background: string = '', output: string = ''): Promise<string> {
         let path = '/storage/files/{fileId}/preview'.replace(new RegExp('{fileId}', 'g'), fileId);
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -188,7 +188,7 @@ export class Storage extends Service {
     async getFileView(fileId: string, as: string = ''): Promise<string> {
         let path = '/storage/files/{fileId}/view'.replace(new RegExp('{fileId}', 'g'), fileId);
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
