@@ -12,7 +12,7 @@ class TemplateTest extends TestCase
      */
     protected $object = null;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->object = new Template(__DIR__.'/../../resources/template.tpl');
         $this->object
@@ -20,7 +20,7 @@ class TemplateTest extends TestCase
         ;
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
     }
 
