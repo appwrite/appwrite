@@ -39,7 +39,7 @@ Table of Contents:
 - [Contributing](#contributing)
 - [License](#license)
       
-## Installation
+## Installation  -- Appwrite it is as an amzing project we can explain all the method how to install this are followed:
 
 Appwrite backend server is designed to run in a container environment. Running your server is as easy as running one command from your terminal. You can either run Appwrite on your localhost using docker-compose or on any other container orchestration tool like Kubernetes, Docker Swarm or Rancher.
 
@@ -82,7 +82,7 @@ Once the Docker installation completes, go to http://localhost to access the App
 
 For advanced production and custom installation, check out our Docker [environment variables](docs/tutorials/environment-variables.md) docs. You can also use our public [docker-compose.yml](https://appwrite.io/docker-compose.yml) file to manually set up and environment.
 
-## Getting Started
+## Getting Started -- Before getting started you must understand its concept and how to install then move forward.
 
 Getting started with Appwrite is as easy as creating a new project, choosing your platform and integrating its SDK in your code. You can easily get started with your platform of choice by reading one of our Getting Started tutorials.
 
@@ -123,7 +123,7 @@ Below is a list of currently supported platforms and languages. If you wish to h
 
 Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
 
-## Contributing
+## Contributing -- Contribution is available for all kind of any code.
 
 All code contributions - including those of people having commit access - must go through a pull request and approved by a core developer before being merged. This is to ensure proper review of all the code.
 
