@@ -8,11 +8,11 @@ return [
     // Service - Users
     'account.emails.team' => '%s ଟିମ',
     'account.emails.verification.title' => 'ଏକାଉଣ୍ଟ ଭେରିଫିକେସନ',
-    'account.emails.verification.body' => 'en.email.auth.confirm.tpl',
+    'account.emails.verification.body' => 'od.email.auth.confirm.tpl',
     'account.emails.recovery.title' => 'ପାସୱାର୍ଡ ରିସେଟ',
-    'account.emails.recovery.body' => 'en.email.auth.recovery.tpl',
+    'account.emails.recovery.body' => 'od.email.auth.recovery.tpl',
     'account.emails.invitation.title' => 'ଈଂଭିଟେସନ %s ଟିମ at %s',
-    'account.emails.invitation.body' => 'en.email.auth.invitation.tpl',
+    'account.emails.invitation.body' => 'od.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'ଅଜ୍ଞାତ',
 
