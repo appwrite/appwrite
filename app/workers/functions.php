@@ -22,10 +22,10 @@ $environments = Config::getParam('environments');
 
 $warmupStart = \microtime(true);
 
-Co\run(function() use ($environments) {
+Co\run(function() use ($environments) {  // Warmup: make sure images are ready to run fast 🚀
     Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
     
-    foreach($environments as $environment) { // Warmup: make sure images are ready to run fast 🚀
+    foreach($environments as $environment) {
         go(function() use ($environment) {
             $stdout = '';
             $stderr = '';
@@ -169,7 +169,19 @@ class FunctionsV1
                 break;
 
             case 'schedule':
-                # code...
+                /*
+                * 1. Get Original Task
+                * 2. Check for updates
+                *  If has updates skip task and don't reschedule
+                *  If status not equal to play skip task
+                * 3. Check next run date, update task and add new job at the given date
+                * 4. Execute task (set optional timeout)
+                * 5. Update task response to log
+                *      On success reset error count
+                *      On failure add error count
+                *      If error count bigger than allowed change status to pause
+                */
+                
                 break;
 
             case 'http':
