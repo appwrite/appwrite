@@ -29,6 +29,7 @@ return [
     'ms', // Malay
     'nl', // Dutch
     'no', // Norwegian
+    'np', //Nepali
     'ph', // Filipino
     'pl', // Polish
     'pt-br', // Portuguese - Brazil	
