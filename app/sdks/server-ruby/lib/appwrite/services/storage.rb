@@ -5,9 +5,9 @@ module Appwrite
             path = '/storage/files'
 
             params = {
-                'search': search, 
-                'limit': limit, 
-                'offset': offset, 
+                'search': search,
+                'limit': limit,
+                'offset': offset,
                 'orderType': order_type
             }
 
@@ -20,8 +20,8 @@ module Appwrite
             path = '/storage/files'
 
             params = {
-                'file': file, 
-                'read': read, 
+                'file': file,
+                'read': read,
                 'write': write
             }
 
@@ -47,7 +47,7 @@ module Appwrite
                 .gsub('{fileId}', file_id)
 
             params = {
-                'read': read, 
+                'read': read,
                 'write': write
             }
 
@@ -85,10 +85,10 @@ module Appwrite
                 .gsub('{fileId}', file_id)
 
             params = {
-                'width': width, 
-                'height': height, 
-                'quality': quality, 
-                'background': background, 
+                'width': width,
+                'height': height,
+                'quality': quality,
+                'background': background,
                 'output': output
             }
 
@@ -114,5 +114,5 @@ module Appwrite
         protected
 
         private
-    end 
+    end
 end

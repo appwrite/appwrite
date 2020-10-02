@@ -14,7 +14,7 @@ export class Health extends Service {
     async get(): Promise<string> {
         let path = '/health';
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -32,7 +32,7 @@ export class Health extends Service {
     async getAntiVirus(): Promise<string> {
         let path = '/health/anti-virus';
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -51,7 +51,7 @@ export class Health extends Service {
     async getCache(): Promise<string> {
         let path = '/health/cache';
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -69,7 +69,7 @@ export class Health extends Service {
     async getDB(): Promise<string> {
         let path = '/health/db';
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -89,7 +89,7 @@ export class Health extends Service {
     async getQueueCertificates(): Promise<string> {
         let path = '/health/queue/certificates';
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -105,7 +105,7 @@ export class Health extends Service {
     async getQueueFunctions(): Promise<string> {
         let path = '/health/queue/functions';
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -124,7 +124,7 @@ export class Health extends Service {
     async getQueueLogs(): Promise<string> {
         let path = '/health/queue/logs';
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -143,7 +143,7 @@ export class Health extends Service {
     async getQueueTasks(): Promise<string> {
         let path = '/health/queue/tasks';
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -162,7 +162,7 @@ export class Health extends Service {
     async getQueueUsage(): Promise<string> {
         let path = '/health/queue/usage';
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -181,7 +181,7 @@ export class Health extends Service {
     async getQueueWebhooks(): Promise<string> {
         let path = '/health/queue/webhooks';
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -199,7 +199,7 @@ export class Health extends Service {
     async getStorageLocal(): Promise<string> {
         let path = '/health/storage/local';
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {
@@ -223,7 +223,7 @@ export class Health extends Service {
     async getTime(): Promise<string> {
         let path = '/health/time';
         
-        return await this.client.call('get', path, {
+        return this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {

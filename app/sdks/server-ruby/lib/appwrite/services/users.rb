@@ -5,9 +5,9 @@ module Appwrite
             path = '/users'
 
             params = {
-                'search': search, 
-                'limit': limit, 
-                'offset': offset, 
+                'search': search,
+                'limit': limit,
+                'offset': offset,
                 'orderType': order_type
             }
 
@@ -20,8 +20,8 @@ module Appwrite
             path = '/users'
 
             params = {
-                'email': email, 
-                'password': password, 
+                'email': email,
+                'password': password,
                 'name': name
             }
 
@@ -133,5 +133,5 @@ module Appwrite
         protected
 
         private
-    end 
+    end
 end

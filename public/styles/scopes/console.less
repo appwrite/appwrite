@@ -30,7 +30,7 @@
       .func-padding-start(50px);
       width: ~"calc(100% - 100px)";
 
-      header { 
+      header {
         width: ~"calc(100% - 50px)";
 
         .logo {
@@ -200,7 +200,7 @@
       .icon {
         display: block;
         border: none;
-        margin: 18px 10px 50px 10px;
+        margin: 18px 10px 50px;
 
         img {
           display: block;
@@ -239,7 +239,7 @@
 
       .project {
         display: block;
-        padding: 85px 25px 20px 25px;
+        padding: 85px 25px 20px;
         color: #788c99;
         position: relative;
         border: none;
@@ -524,39 +524,39 @@
     }
   }
 
-  .chart {	
-    width: 100%;	
-    position: relative;	
+  .chart {
+    width: 100%;
+    position: relative;
     height: 0;
-    padding-top: 20px;	
-    padding-bottom: 26%;	
-    .func-margin-end(-2px);	
-    overflow: hidden;	
-    background-color: var(--config-color-background-fade);	
-    background-image:	
-      linear-gradient(transparent 1px, transparent 1px),	
-      linear-gradient(90deg, transparent 1px, transparent 1px),	
-      linear-gradient(var(--config-border-color) 1px, transparent 1px),	
-      linear-gradient(90deg, var(--config-border-color) 1px, transparent 1px);	
-    background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;	
-    background-position: -2px -2px, -2px -2px, -1px -1px, -1px -1px;	
-    background-repeat: round;	
-    border: solid 1px var(--config-border-color);	
-    border-right: solid 1px transparent;	
-    border-bottom: solid 1px transparent;	
-    @media @tablets, @phones {	
-      width: 100%;	
-      padding-bottom: 32%;	
-      float: none;	
-      margin-bottom: 20px;	
-    }	
-    canvas {	
-      position: absolute;	
-      bottom: 0;	
-      display: block;	
-      height: 100%;	
-      width: 100%;	
-    }	
+    padding-top: 20px;
+    padding-bottom: 26%;
+    .func-margin-end(-2px);
+    overflow: hidden;
+    background-color: var(--config-color-background-fade);
+    background-image:
+      linear-gradient(transparent 1px, transparent 1px),
+      linear-gradient(90deg, transparent 1px, transparent 1px),
+      linear-gradient(var(--config-border-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--config-border-color) 1px, transparent 1px);
+    background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+    background-position: -2px -2px, -2px -2px, -1px -1px, -1px -1px;
+    background-repeat: round;
+    border: solid 1px var(--config-border-color);
+    border-right: solid 1px transparent;
+    border-bottom: solid 1px transparent;
+    @media @tablets, @phones {
+      width: 100%;
+      padding-bottom: 32%;
+      float: none;
+      margin-bottom: 20px;
+    }
+    canvas {
+      position: absolute;
+      bottom: 0;
+      display: block;
+      height: 100%;
+      width: 100%;
+    }
   }
 
   .chart-notes {
@@ -755,7 +755,7 @@
       }
 
       .cover {
-        margin: -30px -30px 30px -30px;
+        margin: -30px -30px 30px;
         padding: 30px;
 
         &.android {
@@ -898,14 +898,14 @@
 
     >footer {
       width: auto;
-      margin: 50px -30px 0 -30px!important;
-      padding: 0 30px 30px 30px;
+      margin: 50px -30px 0!important;
+      padding: 0 30px 30px;
     }
 
     body {
       height: "calc(100% - 70px)"!important;
       width: ~"calc(100% - 60px)"!important;
-      padding: 70px 30px 0 30px!important;
+      padding: 70px 30px 0!important;
     }
 
     .cover {
@@ -919,11 +919,11 @@
     body {
       height: "calc(100% - 70px)"!important;
       width: ~"calc(100% - 40px)"!important;
-      padding: 70px 20px 0 20px!important;
+      padding: 70px 20px 0!important;
     }
 
     .cover {
-      padding: 20px 20px;
+      padding: 20px;
       margin: 0 -20px;
     }
 
@@ -937,8 +937,8 @@
     }
 
     >footer {
-      margin: 50px -20px 0 -20px!important;
-      padding: 0 20px 20px 20px;
+      margin: 50px -20px 0!important;
+      padding: 0 20px 20px;
     }
   }
 }

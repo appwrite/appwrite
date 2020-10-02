@@ -137,5 +137,5 @@ module Appwrite
         protected
 
         private
-    end 
+    end
 end

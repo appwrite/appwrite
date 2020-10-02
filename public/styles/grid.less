@@ -7,7 +7,7 @@
 
 .zone {
   max-width: var(--config-width-xl);
-  margin: 0 auto 40px auto;
+  margin: 0 auto 40px;
 
   &.xxxl {
     max-width: ~"calc(1400px - 100px)";
@@ -268,7 +268,7 @@
 @media @phones, @tablets {
   .row.responsive {
     >.span-1,>.span-2,>.span-3,>.span-4,>.span-5,>.span-6,>.span-7,>.span-8,>.span-9,>.span-10,>.span-11,>.span-12 {
-      .mixin-span(12, 0px)!important;
+      .mixin-span(12, 0)!important;
       width: 100% !important;
     }
 
@@ -292,7 +292,7 @@
     .photo-title {
       width: ~"calc(100% + 30px)";
       height: 15px;
-      margin: -15px -15px 10px -15px;
+      margin: -15px -15px 10px;
       border-radius: 10px 10px 0 0;
       background: var(--config-color-fade-super);
       border-bottom: solid 1px var(--config-color-fade-super);

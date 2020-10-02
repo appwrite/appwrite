@@ -1,5 +1,3 @@
-
-
 class Database: Service
 {
     /**
@@ -42,7 +40,7 @@ class Database: Service
 
         return [self.client.call(method: Client.HTTPMethod.get.rawValue, path: path, headers: [
             "content-type": "application/json",
-        ], params: params)];
+        ], params: params)]
     }
 
     /**
@@ -77,7 +75,7 @@ class Database: Service
 
         return [self.client.call(method: Client.HTTPMethod.post.rawValue, path: path, headers: [
             "content-type": "application/json",
-        ], params: params)];
+        ], params: params)]
     }
 
     /**
@@ -109,7 +107,7 @@ class Database: Service
 
         return [self.client.call(method: Client.HTTPMethod.get.rawValue, path: path, headers: [
             "content-type": "application/json",
-        ], params: params)];
+        ], params: params)]
     }
 
     /**
@@ -144,7 +142,7 @@ class Database: Service
 
         return [self.client.call(method: Client.HTTPMethod.patch.rawValue, path: path, headers: [
             "content-type": "application/json",
-        ], params: params)];
+        ], params: params)]
     }
 
     /**
@@ -177,7 +175,7 @@ class Database: Service
 
         return [self.client.call(method: Client.HTTPMethod.delete.rawValue, path: path, headers: [
             "content-type": "application/json",
-        ], params: params)];
+        ], params: params)]
     }
 
 }

@@ -19,7 +19,7 @@ input, textarea {
 
 input[type=file],
 input[type=file]::-webkit-file-upload-button {
-    cursor: pointer; 
+    cursor: pointer;
 }
 
 button,
@@ -238,7 +238,7 @@ textarea,
 select {
   -webkit-appearance: none;
   -moz-appearance: none;
-  -webkit-transform: translateZ(0px);
+  -webkit-transform: translateZ(0);
   box-sizing: content-box;
   color: #313131;
   height: 40px;
@@ -299,7 +299,7 @@ input[type=url] {
     direction: ltr;
   }
 
-  ;
+  
 }
 
 select {
@@ -456,7 +456,7 @@ fieldset {
   &:hover:before {
     border: solid;
     border-color: var(--config-color-tooltip-background) transparent;
-    border-width: 6px 6px 0 6px;
+    border-width: 6px 6px 0;
     bottom: 20px;
     content: "";
     position: absolute;
@@ -471,7 +471,7 @@ fieldset {
 
   &.down:hover:before {
     top: 20px;
-    border-width: 0 6px 6px 6px;
+    border-width: 0 6px 6px;
     bottom: inherit;
   }
 }
@@ -683,7 +683,7 @@ input[type=checkbox], input[type=radio] {
 
   .pell-actionbar {
     border-bottom: solid 1px var(--config-color-fade-light);
-    margin: 0 -15px 15px -15px;
+    margin: 0 -15px 15px;
     padding: 10px 15px;
     position: sticky;
     top: 70px;
@@ -739,13 +739,13 @@ input[type=checkbox], input[type=radio] {
   }
 
   ul, ol {
-    margin: 0 0 20px 0;
+    margin: 0 0 20px;
 
     li {
       display: list-item !important;
       list-style: inherit;
       list-style-position: inside!important;
-      margin: 0 20px 2px 20px;
+      margin: 0 20px 2px;
 
       p {
         margin: 0;
@@ -790,7 +790,7 @@ label.switch {
     &:focus,
     &:hover {
       background: var(--config-color-success);
-    }  
+    }
   }
 
   &:focus,
@@ -816,7 +816,7 @@ label.switch {
 }
 
 .password-meter {
-  margin: -41px 10px 30px 10px;
+  margin: -41px 10px 30px;
   height: 2px;
   background: none;
   max-width: 100%;
@@ -1104,7 +1104,7 @@ ol {
     &:before {
       border: solid;
       border-color: var(--config-color-background-fade) transparent;
-      border-width: 8px 8px 0 8px;
+      border-width: 8px 8px 0;
       bottom: -8px;
       content: "";
       position: absolute;
@@ -1182,7 +1182,7 @@ ol {
       &:before {
         bottom: auto;
         top: -8px;
-        border-width: 0 8px 8px 8px;
+        border-width: 0 8px 8px;
       }
     }
   }

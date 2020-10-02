@@ -7,7 +7,7 @@
 
 open class Service {
 
-    open var client: Client;
+    open var client: Client
 
     public init(client: Client)
     {
