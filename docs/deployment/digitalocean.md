@@ -1,4 +1,4 @@
-# How to deploy appwrite into digitalocean
+# How to deploy appwrite into DigitalOcean
 
 ## Prequisites
 
@@ -7,9 +7,9 @@
 
 ## Getting started
 
-First of all you should get a digitalocean account you can use my referral link [here](https://m.do.co/c/35524e9707b0), to get an account, you will
-automatically get $100 to spend in digitalocean, don't forget to have $5 with you in credit card or paypal to make 
-a pre-payment which is a first payment to help prevent spam by digitalocean, if you already got an account skip this step.
+First of all you should get a DigitalOcean account you can use my referral link [here](https://m.do.co/c/35524e9707b0), to get an account, you will
+automatically get $100 to spend in DigitalOcean, don't forget to have $5 with you in credit card or paypal to make 
+a pre-payment which is a first payment to help prevent spam by DigitalOcean, if you already got an account skip this step.
 
 ## Step 1 - Create a droplet
 
@@ -126,12 +126,12 @@ after that create a project
 
 ![image](https://imgur.com/download/6LKlQoP)
 
-after that if you go to this screen you are successfully deploying your appwrite server into digitalocean
+after that if you go to this screen you are successfully deploying your appwrite server into DigitalOcean
 
 ![image](https://imgur.com/download/gaoBGGg)
 
 # What's next?
-Congratulations! You've just deploy appwrite into digitalocean.
+Congratulations! You've just deploy appwrite into DigitalOcean.
 
 Good luck on your future development using Appwrite! If you need any help, feel free to join the [Discord](https://appwrite.io/discord) or refer to the [Appwrite Documentation](https://appwrite.io/docs). 
 
