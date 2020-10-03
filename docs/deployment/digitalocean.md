@@ -23,36 +23,36 @@ In the middle of your screen there is a button that say "Get started with a Drop
 
 Click that button and you will go to a new page like this :
 
-![create a droplet page](digitalocean-tutorial/2_droplet.png)
+![choose a droplet page](digitalocean-tutorial/3_choose.png)
 
 The minimum requirements to run Appwrite is as little as 1 CPU core and 2GB of RAM, and an operating system that supports Docker. We will use the default one using Ubuntu 20.04 and RAM 2GB :
 
- ![image](https://imgur.com/download/4bqbGYg)
+ ![choose RAM](digitalocean-tutorial/4_ram.png)
  
 Scroll down into password section you can choose either using ssh keys or password we gonna use ssh keys because it's much more secure :
 
-![image](https://imgur.com/download/IpDbMmJ)
+![choose ssh keys](digitalocean-tutorial/5_ssh.png)
 
 Click "new ssh key" and then you will get this window :
 
-![image](https://imgur.com/download/cUNWz5w)
+![click new ssh key](digitalocean-tutorial/6_keys.png)
 
 There is a detailed explanation on how to make ssh key on the right hand side of the window follow that instruction and then copy paste
 your ssh public key into the box :
 
-![image](https://imgur.com/download/qbMltoP)
+![create a ssh key instruction](digitalocean-tutorial/7_instruction.png)
 
 Copy paste the ssh key you get from before like this :
 
-![image](https://imgur.com/download/Mpl0SfK)
+![copy paste the ssh key](digitalocean-tutorial/8_copy.png)
 
 Give it a name and click add SSH key now you're done set up your ssh keys scroll down until you see button "Create Droplet" like below :
 
-![image](https://imgur.com/download/FWVwhGH)
+![done setting up ssh keys](digitalocean-tutorial/9_done.png)
 
-Ok now you're done creating your first Droplet you will see in your homepage something like this (i blur the image because it contain sensitive information) :
+Ok now you're done creating your first Droplet you will see in your homepage something like this (blurred image is your ip address and your droplet name) :
 
-![image](https://imgur.com/download/b9Sr9mz)
+![droplet created](digitalocean-tutorial/10_complete.png)
 
 ## Step 2 - Run The Appwrite server
 
@@ -103,31 +103,32 @@ docker run -it --rm \
     Appwrite/install
 ```
 
-![image](https://imgur.com/download/l7R5FZf)
+![install appwrite server](digitalocean-tutorial/11_install.png)
 
 Input this according to your need for this tutorial we gonna go with the default :
 
-![image](https://imgur.com/download/ecCZ1O5)
+![input dialog of appwrite docker installation](digitalocean-tutorial/12_input.png)
 
 After its all done exit your terminal and go to your browser and type your Droplet ip address it usually take 1 minute or 
 less to start your server you will see this in your browser if you successfully run your server :
 
-![image](https://imgur.com/download/OTKn3p8)
+![exit terminal after installation done](digitalocean-tutorial/13_exit.png)
 
 To get started sign up with your email address and password :
 
-![image](https://imgur.com//download/Wva5tOi)
+![sign up](digitalocean-tutorial/14_signup.png)
 
 After that create a project :
 
-![image](https://imgur.com/download/6LKlQoP)
+![create project](digitalocean-tutorial/15_create.png)
 
 After that if you go to this screen you are successfully deploying your Appwrite server into DigitalOcean :
 
-![image](https://imgur.com/download/gaoBGGg)
+![finish deploying](digitalocean-tutorial/16_finish.png)
 
-# What's next?
-Congratulations! You've just deploy Appwrite into DigitalOcean.
+# Conclusion
+
+Now that you have your Appwrite server deployed, you have many options for the type of application you want to build and the technologies you want to use to create a richer experience.
 
 Good luck on your future development using Appwrite! If you need any help, feel free to join the [Discord](https://Appwrite.io/discord) or refer to the [Appwrite Documentation](https://Appwrite.io/docs). 
 
