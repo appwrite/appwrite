@@ -7,21 +7,19 @@
 
 ## Getting started
 
-First of all you should get a DigitalOcean account you can use my referral link [here](https://m.do.co/c/35524e9707b0), to get an account, you will
-automatically get $100 to spend in DigitalOcean, don't forget to have $5 with you in credit card or paypal to make 
-a pre-payment which is a first payment to help prevent spam by DigitalOcean, if you already got an account skip this step.
+First of all you should get a DigitalOcean account, if you already got an account let's continue to setup our appwrite server.
 
-## Step 1 - Create a droplet
+## Step 1 - Create a Droplet
 
-What is a droplet? so droplet is like a server that we can use to run the appwrite server so in order to do that we should create one
-follow the step below
+What is a Droplet? DigitalOcean Droplet are Linux-based virtual machines (VMs) that run on top of virtualized hardware. Each Droplet you create is a new server you can use, either standalone or as part of a larger, cloud-based infrastructure.
+ This droplet then can be used to run our appwrite server
 
 After you create an account or login you will get a project in the homepage like this:
 
 ![image](https://imgur.com/download/ZQ2FUjX)
 
 my project name is panda you can change the name of your project to whatever you want it doesn't matter
-the most important thing right now is you can see in the middle of your screen there is a button that say "Get started with a droplet"
+the most important thing right now is you can see in the middle of your screen there is a button that say "Get started with a Droplet"
 like this :
 
 ![image](https://imgur.com/download/f9DsKAw)
@@ -56,7 +54,7 @@ give it a name and click add SSH key now you're done set up your ssh keys scroll
 
 ![image](https://imgur.com/download/FWVwhGH)
 
-ok now you're done creating your first droplet you will see in your homepage something like this (i blur the image because it contain sensitive information):
+ok now you're done creating your first Droplet you will see in your homepage something like this (i blur the image because it contain sensitive information):
 
 ![image](https://imgur.com/download/b9Sr9mz)
 
@@ -68,7 +66,7 @@ So in order for us to access the ssh that we create earlier we should use Termin
 ssh root@<ip address> # you can see your ip address in your homepage
 ```
 
-after you login into your droplet run this command one by one to install docker:
+after you login into your Droplet run this command one by one to install docker:
 
 ```bash
 sudo apt-get remove docker docker-engine docker.io containerd runc
@@ -113,7 +111,7 @@ input this according to your need for this tutorial we gonna go with the default
 
 ![image](https://imgur.com/download/ecCZ1O5)
 
-after its all done exit your Terminal and go to your browser and type your droplet ip address it usually take 1 minute or 
+after its all done exit your Terminal and go to your browser and type your Droplet ip address it usually take 1 minute or 
 less to start your server you will see this in your browser if you successfully run your server
 
 ![image](https://imgur.com/download/OTKn3p8)
