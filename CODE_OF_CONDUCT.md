@@ -11,7 +11,7 @@ appearance, race, religion, or sexual identity and orientation.
 
 ## Our Standards
 
-Examples of behavior that contributes to creating a positive environment
+Examples of behavior that contribute to create a positive environment
 include:
 
 * Using welcoming and inclusive language
@@ -22,7 +22,7 @@ include:
 
 Examples of unacceptable behavior by participants include:
 
-* The use of sexualized language or imagery and unwelcome sexual attention or
+* Using sexualized language or imagery and unwelcome sexual attention or
  advances
 * Trolling, insulting/derogatory comments, and personal or political attacks
 * Public or private harassment
@@ -56,9 +56,9 @@ further defined and clarified by project maintainers.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported by contacting the project team at team@appwrite.io. All
-complaints will be reviewed and investigated and will result in a response that
+complaints will be reviewed and investigated and will cause a response that
 is deemed necessary and appropriate to the circumstances. The project team is
-obligated to maintain confidentiality with regard to the reporter of an incident.
+obligated to maintain confidentiality regarding the reporter of an incident.
 Further details of specific enforcement policies may be posted separately.
 
 Project maintainers who do not follow or enforce the Code of Conduct in good
