@@ -261,6 +261,7 @@ Locale::setLanguage('sl', include __DIR__ . '/config/locale/translations/sl.php'
 Locale::setLanguage('sq', include __DIR__ . '/config/locale/translations/sq.php');
 Locale::setLanguage('sv', include __DIR__ . '/config/locale/translations/sv.php');
 Locale::setLanguage('ta', include __DIR__ . '/config/locale/translations/ta.php');
+Locale::setLanguage('tel', include __DIR__ . '/config/locale/translations/tel.php');
 Locale::setLanguage('th', include __DIR__.'/config/locale/translations/th.php');
 Locale::setLanguage('tr', include __DIR__.'/config/locale/translations/tr.php');
 Locale::setLanguage('ua', include __DIR__.'/config/locale/translations/ua.php');
