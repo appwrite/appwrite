@@ -133,7 +133,6 @@ after that if you go to this screen you are successfully deploying your appwrite
 # What's next?
 Congratulations! You've just deploy appwrite into digitalocean.
 
-Good Luck on your future developments using Appwrite! If you need any help feel free to join the [Discord](https://discord.com/invite/ZFwqr3S) or refer to the [Appwrite Documentation](https://appwrite.io/docs). 
-
+Good luck on your future development using Appwrite! If you need any help, feel free to join the [Discord](https://appwrite.io/discord) or refer to the [Appwrite Documentation](https://appwrite.io/docs). 
 
 
