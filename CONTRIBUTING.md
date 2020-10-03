@@ -29,7 +29,7 @@ When `TYPE` can be:
 - **fix** - a bug fix
 - **refactor** - code change that neither fixes a bug nor adds a feature
 
-**All PRs must include commit message with the changes description!** 
+**All PRs must include a commit message with the changes description!** 
 
 For the initial start, fork the project and use git clone command to download the repository to your computer. A standard procedure for working on an issue would be to:
 
@@ -48,13 +48,13 @@ $ git checkout -b [name_of_your_new_branch]
 $ git push origin [name_of_your_new_branch]
 ```
 
-6. Submit your changes for review
+5. Submit your changes for review
 If you go to your repository on GitHub, you'll see a `Compare & pull request` button. Click on that button.
-7. Start a Pull Request
-Now submit the pull request and , click on `Create pull request`.
-6. Get a code review approval / reject
-7. After approval, merge your PR
-8. GitHub will automatically delete the branch, after the merge is done. (they can still be restored).
+6. Start a Pull Request
+Now submit the pull request and click on `Create pull request`.
+7. Get a code review approval/reject
+8. After approval, merge your PR
+9. GitHub will automatically delete the branch after the merge is done. (they can still be restored).
 
 ## Setup From Source
 
@@ -177,9 +177,9 @@ Appwrite uses [PHP's Composer](https://getcomposer.org/) for managing dependenci
 
 Appwrite is following the [PHP-FIG standards](https://www.php-fig.org/). Currently, we are using both PSR-0 and PSR-4 for coding standards and autoloading standards. Soon we will also review the project for support with PSR-12 (Extended Coding Style).
 
-We use prettier for our JS coding standards and for auto-formatting our code.
+We use prettier for our JS coding standards and auto-formatting our code.
 
-## Scalability, Speed and Performance
+## Scalability, Speed, and Performance
 
 Appwrite is built to scale. Please keep in mind that the Appwrite stack can run in different environments and different scales.
 
@@ -214,7 +214,7 @@ For us to find the right balance, please open an issue explaining your ideas bef
 
 This will allow the Appwrite community to have sufficient discussion about the new feature value and how it fits in the product roadmap and vision.
 
-This is also important for the Appwrite lead developers to be able to give technical input and different emphasize regarding the feature design and architecture.
+This is also important for the Appwrite lead developers to be able to give technical input and different emphasis regarding the feature design and architecture.
 
 ## Build
 
@@ -263,9 +263,9 @@ docker run --rm skandyla/wrk -t3 -c100 -d30  https://[APPWRITE_HOSTNAME_OR_IP]
 
 ## Code Maintenance  
 
-We use some automation tools to help us keep a healthy code base.
+We use some automation tools to help us keep a healthy codebase.
 
-Improve PHP exeution time by using [fully-qualified function calls](https://veewee.github.io/blog/optimizing-php-performance-by-fq-function-calls/):
+Improve PHP execution time by using [fully-qualified function calls](https://veewee.github.io/blog/optimizing-php-performance-by-fq-function-calls/):
 
 ```bash
 php-cs-fixer fix src/ --rules=native_function_invocation --allow-risky=yes
@@ -316,5 +316,5 @@ Submitting documentation updates, enhancements, designs, or bug fixes. Spelling 
 
 ### Helping Someone
 
-Searching for Appwrite on Discord, GitHub or StackOverflow and helping someone else who needs help. You can also help by reaching others how to contribute to Appwrite's repo!
+Searching for Appwrite on Discord, GitHub, or StackOverflow and helping someone else who needs help. You can also help by reaching others how to contribute to Appwrite's repo!
 
