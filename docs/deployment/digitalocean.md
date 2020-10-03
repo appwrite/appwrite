@@ -11,8 +11,7 @@ First of all you should get a DigitalOcean account, if you already got an accoun
 
 ## Step 1 - Create a Droplet
 
-What is a Droplet? DigitalOcean Droplets are Linux-based virtual machines (VMs) that run on top of virtualized hardware. Each Droplet is a server that you can use, either standalone or as part of a larger, cloud-based infrastructure.
- This droplet then can be used to run our Appwrite server
+What is a Droplet? DigitalOcean Droplets are Linux-based virtual machines (VMs) that run on top of virtualized hardware. Each Droplet is a server that you can use, either standalone or as part of a larger, cloud-based infrastructure.  This droplet then can be used to run our Appwrite server
 
 After you create an account or login to your account, there will be a project on the homepage like this :
 
