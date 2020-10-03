@@ -12,7 +12,7 @@
             button.title = 'Back To Top';
 
             button.addEventListener('click', function() {
-                element.scrollIntoView(true, {behavior: 'smooth'});
+                element.scrollIntoView({behavior: 'smooth'});
                 button.blur();
             }, false);
 
