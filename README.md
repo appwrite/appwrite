@@ -14,11 +14,11 @@
 [![Twitter Account](https://badgen.net/twitter/follow/appwrite_io?label=twitter)](https://twitter.com/appwrite_io)
 [![Follow Appwrite on StackShare](https://badgen.net/badge/follow%20on/stackshare/blue)](https://stackshare.io/appwrite)
 
-Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker microservices. Appwrite abstract the complexity and repetitiveness required to build a modern backend API from scratch to allow you to build secure apps faster.
+Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker microservices. Appwrite abstracts the complexity and repetitiveness required to build a modern backend API from scratch and allows you to build secure apps faster.
 
 Using Appwrite, you can easily integrate your app with user authentication & multiple sign-in methods, a database for storing and querying users and team data, storage and file management, image manipulation, schedule CRON tasks, and [more services](https://appwrite.io/docs).
 
-[https://appwrite.io](https://appwrite.io)
+Find out more at :[https://appwrite.io](https://appwrite.io)
 
 ![Appwrite](public/images/github.png)
 
@@ -89,8 +89,8 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 * [Getting Started for Web](https://appwrite.io/docs/getting-started-for-web)
 * [Getting Started for Flutter](https://appwrite.io/docs/getting-started-for-flutter)
 * [Getting Started for Server](https://appwrite.io/docs/getting-started-for-server)
-* Getting Started for Android (soon...)
-* Getting Started for iOS (soon...)
+* Getting Started for Android (Coming soon...)
+* Getting Started for iOS (Coming soon...)
 
 ### Services
 
