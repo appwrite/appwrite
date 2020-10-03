@@ -43,7 +43,7 @@
 
 ## Breaking Changes (Read before upgrading!)
 - **Deprecated** `first` and `last` query params for documents list route in the database API
-- **Deprecated** Deprectaed Pubjabi Translations ('pn')
+- **Deprecated** Punjabi Translations ('pn')
 - Switched order of limit and offset params in all the SDKs `listDocuments` method for better consistency
 - Default `limit` param value in all the SDKs `listDocuments` method is now 25 for better consistency
 
@@ -58,7 +58,7 @@
 - Grammer fix for pt-br email templates (@rubensdemelo)
 - Fixed update form labels and tooltips for Flutter Android apps
 - Fixed missing custom scopes param for OAuth2 session create API route
-- Fixed wrong JSON validation when creating and updating database documnets
+- Fixed wrong JSON validation when creating and updating database documents
 - Fixed bug where max file size was limited to max of 10MB
 - Fixed bug preventing the deletion of the project logo
 - Fixed Bug when trying to overwrite OAuth cookie in the Flutter SDK
@@ -142,7 +142,7 @@
 
 ## Bug Fixes
 
-- Fixed bug where multiple unique attribute were allowed
+- Fixed bug where multiple unique attributes were allowed
 - Blocked forms from being submitted unlimited times
   
 # Version 0.5.2 (PRE-RELEASE)
