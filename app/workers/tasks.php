@@ -22,7 +22,7 @@ class TasksV1
      */
     public $args = [];
 
-    public function setUp()
+    public function setUp(): void
     {
     }
 
@@ -205,7 +205,7 @@ class TasksV1
         return true;
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         // ... Remove environment for this job
     }

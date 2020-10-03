@@ -21,7 +21,7 @@ class DeletesV1
 
     protected $consoleDB = null;
 
-    public function setUp()
+    public function setUp(): void
     {
     }
 
@@ -49,7 +49,7 @@ class DeletesV1
         }
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         // ... Remove environment for this job
     }

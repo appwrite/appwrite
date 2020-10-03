@@ -51,13 +51,13 @@
         "dragonmantank/cron-expression": "2.2.0",
         "domnikl/statsd": "2.0.*",
         "influxdb/influxdb-php": "1.15.*",
-        "bacon/bacon-qr-code": "2.0.0",
-        "phpmailer/phpmailer": "6.1.6"
+        "bacon/bacon-qr-code": "2.0.2",
+        "phpmailer/phpmailer": "6.1.7"
     },
     "require-dev": {
-        "swoole/ide-helper": "4.5.2",
+        "swoole/ide-helper": "4.5.4",
         "appwrite/sdk-generator": "master",
-        "phpunit/phpunit": "^7.0"
+        "phpunit/phpunit": "^9.3"
     },
     "repositories": [
         {
