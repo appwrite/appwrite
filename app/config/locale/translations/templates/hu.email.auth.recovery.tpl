@@ -1,15 +1,15 @@
 <p>
-    Szia {{name}},
+    Kedves {{name}}!
 </p>
 <p>
-    Kattints erre a linkre, hogy visszaállítsuk a {{project}} jelszavad.
+    {{project}} jelszava visszaállításához kérjük, kattintson az alábbi linkre:
 </p>
 {{cta}}
 <p>
-    Ha nem kérvényezted, hogy visszaállítsuk a jelszavad ignoráld ezt a levelet.
+    Ha nem kérte jelszava visszaállítását, kérjük, tekintse ezt az üzenetet tárgytalannak.
 </p>
 <p>
-    Köszönettel,
+    Köszönettel:
     <br />
     {{project}} csapat
 </p>
