@@ -56,7 +56,7 @@ Ok now you're done creating your first Droplet you will see in your homepage som
 
 ## Step 2 - Run The Appwrite server
 
-So in order for us to access the ssh that we create earlier we should use Terminal for accessing it so first of all go to your Terminal and type :
+So in order for us to access the ssh that we create earlier we should use terminal for accessing it so first of all go to your terminal and type :
 
 ```bash
 ssh root@<ip address> # you can see your ip address in your homepage
@@ -109,7 +109,7 @@ Input this according to your need for this tutorial we gonna go with the default
 
 ![image](https://imgur.com/download/ecCZ1O5)
 
-After its all done exit your Terminal and go to your browser and type your Droplet ip address it usually take 1 minute or 
+After its all done exit your terminal and go to your browser and type your Droplet ip address it usually take 1 minute or 
 less to start your server you will see this in your browser if you successfully run your server :
 
 ![image](https://imgur.com/download/OTKn3p8)
