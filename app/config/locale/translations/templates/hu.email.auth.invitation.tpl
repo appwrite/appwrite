@@ -1,18 +1,15 @@
 <p>
-    Szia,
+    Üdvözöljük!
 </p>
 <p>
-    Azért küldtük ezt az e-mailt <b>{{owner}}</b> mert meg szeretnénk hívni a <b>{{team}}</b> csapatba a következő projektre {{project}}.
-</p>
-<p>
-    Kattints erre a linkre, hogy a <b>{{team}}</b> csapat tagja legyél:
+    Azért küldtük ezt az e-mailt, mert <b>{{owner}}</b> szeretné meghívni Önt a <b>{{team}}</b> csapatba a {{project}} projektben.
 </p>
 {{cta}}
 <p>
-    Ha nem vegy ebben érdekelt ignoráld ezt az üzenetet.
+    Ha nem szeretne csatlakozni, kérjük, tekintse ezt az üzenetet tárgytalannak.
 </p>
 <p>
-    Köszönettel,
+    Köszönettel:
     <br />
     {{project}} csapat
 </p>
