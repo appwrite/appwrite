@@ -154,6 +154,22 @@ class Redis extends Adapter
     }
 
     /**
+     * Delete Unique Key.
+     *
+     * @param $key
+     *
+     * @return array
+     *
+     * @throws Exception
+     */
+    public function deleteUniqueKey($key)
+    {
+        $data = $this->adapter->deleteUniqueKey($key);
+
+        return $data;
+    }
+
+    /**
      * Create Namespace.
      *
      * @param string $namespace
@@ -221,7 +237,7 @@ class Redis extends Adapter
     /**
      * Last Modified.
      *
-     * Return unix timestamp of last time a node queried in current session has been changed
+     * Return Unix timestamp of last time a node queried in current session has been changed
      *
      * @return int
      */

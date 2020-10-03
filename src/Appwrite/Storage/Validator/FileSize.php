@@ -12,6 +12,8 @@ class FileSize extends Validator
     protected $max;
 
     /**
+     * Max size in bytes
+     * 
      * @param int $max
      */
     public function __construct($max)

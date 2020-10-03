@@ -31,7 +31,7 @@
     <div class="zone xl">
         <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
             <li data-state="/console/users/user?id={{router.params.id}}&project={{router.params.project}}">
-                <h2>General</h2>
+                <h2>Overview</h2>
 
                 <div data-ls-if="{{user.status}} === <?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none" class="box padding-small danger margin-bottom-xxl text-align-center">
                     This user account is blocked.
@@ -45,7 +45,7 @@
                             <div class="text-align-center">
                                 <img src="" data-ls-attrs="src={{user|avatar}}" data-size="200" alt="User Avatar" class="avatar huge margin-top-negative-xxl" />
 
-                                <div class="margin-top-small" data-ls-bind="Member since {{user.registration|date-text}}"></div>
+                                <div class="margin-top-small" data-ls-bind="Member since {{user.registration|dateText}}"></div>
                                 <div class="margin-top-small">
                                     <span data-ls-if="{{user.emailVerification}} === true">
                                         <span class="tag green">Verified</span>
@@ -92,6 +92,36 @@
                             <div data-ls-if="{{user-prefs|isEmptyObject}}">
                                 No user preferences found
                             </div>
+                        </div>
+
+                        <h3 class="text-danger">Danger Zone</h3>
+
+                        <div class="box danger">
+                            <p>This is the area where you can delete this user.</p>
+                        
+                            <p>By deleting this user you will lose all data associated with this user.</p>
+                        
+                            <p>PLEASE NOTE: User deletion is irreversible.</p>
+                        
+                            <form class="inline"
+                                data-analytics-event="submit"
+                                data-analytics-category="console"
+                                data-analytics-label="Delete User"
+                                data-service="users.deleteUser"
+                                data-event="submit"
+                                data-param-user-id="{{router.params.id}}"
+                                data-success="alert,trigger,redirect"
+                                data-confirm="Are you sure you want to delete this user?"
+                                data-success-param-alert-text="Deleted user successfully"
+                                data-success-param-trigger-events="users.delete"
+                                data-success-param-redirect-url="/console/users?project={{router.params.project}}"
+                                data-failure="alert"
+                                data-failure-param-alert-text="Failed to delete user"
+                                data-failure-param-alert-classname="error">
+                                <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                        
+                                <button class="danger reverse" type="submit">Delete User</button>
+                            </form>
                         </div>
                     </div>
                     <div class="col span-4 sticky-top">
@@ -236,11 +266,12 @@
                             </thead>
                             <tbody data-ls-loop="logs" data-ls-as="log">
                                 <tr>
-                                    <td data-title="Date: "><span data-ls-bind="{{log.time|date-time}}"></span></td>
+                                    <td data-title="Date: "><span data-ls-bind="{{log.time|dateTime}}"></span></td>
                                     <td data-title="Event: "><span data-ls-bind="{{log.event}}"></span></td>
                                     <td data-title="Client: ">
-                                        <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.client.short_name|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.client.name}},alt={{log.client.name}}" class="avatar xxs inline margin-end-small" />
-                                        <span data-ls-bind="{{log.client.name}} {{log.client.version}} on {{log.model}} {{log.OS.name}} {{log.OS.version}}"></span>
+                                        <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-if="({{log.client.short_name}})" data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.client.short_name|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.client.name}},alt={{log.client.name}}" class="avatar xxs inline margin-end-small" />
+                                        <span data-ls-if="({{log.client.name}})" data-ls-bind="{{log.client.name}} {{log.client.version}} on {{log.model}} {{log.OS.name}} {{log.OS.version}}"></span>
+                                        <div data-ls-if="(!{{log.client.name}})" class="text-align-center text-fade">Unknown</div>
                                     </td>
                                     <td data-title="Location: ">
                                         <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-attrs="src={{env.API}}/avatars/flags/{{log.geo.isoCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline margin-end-small" />

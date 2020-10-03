@@ -12,12 +12,12 @@ class LocalTest extends TestCase
      */
     protected $object = null;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->object = new Local(realpath(__DIR__ . '/../../../resources/disk-a'));
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
     }
 
@@ -33,14 +33,14 @@ class LocalTest extends TestCase
 
     public function testRoot()
     {
-        $this->assertEquals($this->object->getRoot(), '/usr/share/nginx/html/tests/resources/disk-a');
+        $this->assertEquals($this->object->getRoot(), '/usr/src/code/tests/resources/disk-a');
     }
 
     public function testPath()
     {
-        $this->assertEquals($this->object->getPath('image.png'), '/usr/share/nginx/html/tests/resources/disk-a/i/m/a/g/image.png');
-        $this->assertEquals($this->object->getPath('x.png'), '/usr/share/nginx/html/tests/resources/disk-a/x/./p/n/x.png');
-        $this->assertEquals($this->object->getPath('y'), '/usr/share/nginx/html/tests/resources/disk-a/y/x/x/x/y');
+        $this->assertEquals($this->object->getPath('image.png'), '/usr/src/code/tests/resources/disk-a/i/m/a/g/image.png');
+        $this->assertEquals($this->object->getPath('x.png'), '/usr/src/code/tests/resources/disk-a/x/./p/n/x.png');
+        $this->assertEquals($this->object->getPath('y'), '/usr/src/code/tests/resources/disk-a/y/x/x/x/y');
     }
 
     public function testWrite()
