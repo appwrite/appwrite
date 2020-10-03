@@ -10,7 +10,6 @@ return [
     'en', // English
     'es', // Spanish
     'fi', // Finnish
-    'fil',//filipino
     'fo', // Faroese
     'fr', // French
     'gr', // Greek
