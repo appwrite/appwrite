@@ -11,7 +11,7 @@ First of all you should get a DigitalOcean account, if you already got an accoun
 
 ## Step 1 - Create a Droplet
 
-What is a Droplet? DigitalOcean Droplet are Linux-based virtual machines (VMs) that run on top of virtualized hardware. Each Droplet you create is a new server you can use, either standalone or as part of a larger, cloud-based infrastructure.
+What is a Droplet? DigitalOcean Droplets are Linux-based virtual machines (VMs) that run on top of virtualized hardware. Each Droplet is a server that you can use, either standalone or as part of a larger, cloud-based infrastructure.
  This droplet then can be used to run our Appwrite server
 
 After you create an account or login to your account, there will be a project on the homepage like this :
@@ -131,5 +131,4 @@ After that if you go to this screen you are successfully deploying your Appwrite
 Congratulations! You've just deploy Appwrite into DigitalOcean.
 
 Good luck on your future development using Appwrite! If you need any help, feel free to join the [Discord](https://Appwrite.io/discord) or refer to the [Appwrite Documentation](https://Appwrite.io/docs). 
-
 
