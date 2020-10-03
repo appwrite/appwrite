@@ -7,11 +7,11 @@ return [
 
     // Service - Users
     'account.emails.team' => '%s Csapat',
-    'account.emails.verification.title' => 'Fiók megerősítés',
+    'account.emails.verification.title' => 'Fiók megerősítése',
     'account.emails.verification.body' => 'hu.email.auth.confirm.tpl',
-    'account.emails.recovery.title' => 'Jelszó Visszaállítás',
+    'account.emails.recovery.title' => 'Jelszó-visszaállítás',
     'account.emails.recovery.body' => 'hu.email.auth.recovery.tpl',
-    'account.emails.invitation.title' => 'Meghívás a %s Csapathoz %s',
+    'account.emails.invitation.title' => 'Meghívás a %s csapatba %s',
     'account.emails.invitation.body' => 'hu.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'Ismeretlen',

@@ -40,6 +40,7 @@ return [
     'sq', // Albanian
     'sv', // Swedish
     'ta', // Tamil
+    'tel',// Telugu
     'th', // Thai
     'tr', // Turkish
     'ua', // Ukrainian
