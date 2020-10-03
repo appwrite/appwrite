@@ -100,7 +100,7 @@ class FunctionsV1
 
     public $allowed = [];
 
-    public function setUp()
+    public function setUp(): void
     {
     }
 
@@ -393,7 +393,7 @@ class FunctionsV1
         return $output;
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
     }
 }

@@ -10,24 +10,19 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
-use Appwrite\Database\Validator\Authorization;
 use Appwrite\Storage\Device\Local;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
 
 class DeletesV1
 {
     public $args = [];
 
-    protected $consoleDB = null;
-
-    public function setUp()
+    public function setUp(): void
     {
     }
 
     public function perform()
     {
-        $projectId = $this->args['projectId'];
         $document = $this->args['document'];
         $document = new Document($document);
         
@@ -40,24 +35,29 @@ class DeletesV1
                 break;
             
             default:
-                Console::error('No lazy delete operation available for document of type: '.$document->getCollection());
                 break;
         }
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         // ... Remove environment for this job
     }
 
     protected function deleteProject(Document $document)
     {
+        global $register;
+
+        $consoleDB = new Database();
+        $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+        $consoleDB->setNamespace('app_console'); // Main DB
+        $consoleDB->setMocks(Config::getParam('collections', []));
+
         // Delete all DBs
-        $this->getConsoleDB()->deleteNamespace($document->getId());
+        $consoleDB->deleteNamespace($document->getId());
         $uploads = new Local(APP_STORAGE_UPLOADS.'/app-'.$document->getId());
         $cache = new Local(APP_STORAGE_CACHE.'/app-'.$document->getId());
 
-        // Delete all storage directories
         $uploads->delete($uploads->getRoot(), true);
         $cache->delete($cache->getRoot(), true);
     }

@@ -3,7 +3,7 @@
 /**
  * Init
  * 
- * Inializes both Appwrite API entry point, queue workers, and CLI tasks.
+ * Initializes both Appwrite API entry point, queue workers, and CLI tasks.
  * Set configuration, framework resources, app constants
  * 
  */
