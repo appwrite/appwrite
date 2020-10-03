@@ -85,13 +85,7 @@ For advanced production and custom installation, check out our Docker [environme
 
 ### Upgrade from an Older Version
 
-If you are upgrading your Appwrite server from an older version, you should use the Appwrite migration tool once your setup is completed. Make sure to run this tool after you already finished setting up the new version, as mentioned above.
-To start the migration, run the following command from your terminal once your backup is ready and that your new Appwrite setup has completed successfully. 
-
-``` docker exec [APPWRITE_CONTAINER_ID] migrate ```
-
-Replace "[APPWRITE_CONTAINER_ID]" with your container ID. You can find your container ID by running `docker ps` command.
-
+If you are upgrading your Appwrite server from an older version, you should use the Appwrite migration tool once your setup is completed. For more information regarding this, check out the [Installation Docs](https://appwrite.io/docs/installation).
 
 ## Getting Started
 
