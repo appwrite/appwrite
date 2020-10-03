@@ -1,4 +1,4 @@
-# How to deploy appwrite into DigitalOcean
+# How to deploy Appwrite into DigitalOcean
 
 ## Prequisites
 
@@ -7,28 +7,26 @@
 
 ## Getting started
 
-First of all you should get a DigitalOcean account, if you already got an account let's continue to setup our appwrite server.
+First of all you should get a DigitalOcean account, if you already got an account let's continue to setup our Appwrite server.
 
 ## Step 1 - Create a Droplet
 
 What is a Droplet? DigitalOcean Droplet are Linux-based virtual machines (VMs) that run on top of virtualized hardware. Each Droplet you create is a new server you can use, either standalone or as part of a larger, cloud-based infrastructure.
- This droplet then can be used to run our appwrite server
+ This droplet then can be used to run our Appwrite server
 
-After you create an account or login you will get a project in the homepage like this :
+After you create an account or login to your account, there will be a project on the homepage like this :
 
-![image](https://imgur.com/download/ZQ2FUjX)
+![name of the project](digitalocean-tutorial/1_project.png)
 
-In the middle of your screen there is a button that say "Get started with a Droplet"
-like this :
+In the middle of your screen there is a button that say "Get started with a Droplet" like this :
 
-![image](https://imgur.com/download/f9DsKAw)
+![get started with a droplet button](digitalocean-tutorial/2_droplet.png)
 
 Click that button and you will go to a new page like this :
 
-![image](https://imgur.com/download/XVRkq8C)
+![create a droplet page](digitalocean-tutorial/2_droplet.png)
 
-The minimum requirements to run Appwrite is as little as 1 CPU core and 2GB of RAM, and an operating system that supports Docker.
- We will use the default one using ubuntu 20.04 and RAM 2GB :
+The minimum requirements to run Appwrite is as little as 1 CPU core and 2GB of RAM, and an operating system that supports Docker. We will use the default one using Ubuntu 20.04 and RAM 2GB :
 
  ![image](https://imgur.com/download/4bqbGYg)
  
@@ -76,10 +74,10 @@ sudo apt-get install \
     curl \
     gnupg-agent \
     software-properties-common
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+curl -fsSL https://download.docker.com/linux/Ubuntu/gpg | sudo apt-key add -
 sudo apt-key fingerprint 0EBFCD88
 sudo add-apt-repository \
-   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   "deb [arch=amd64] https://download.docker.com/linux/Ubuntu \
    $(lsb_release -cs) \
    stable"
 sudo apt-get update
@@ -96,14 +94,14 @@ sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-
 sudo chmod +x /usr/local/bin/docker-compose
 ```
 
-After that we install appwrite server :
+After that we install Appwrite server :
 
 ```bash
 docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
-    --volume "$(pwd)"/appwrite:/install/appwrite:rw \
+    --volume "$(pwd)"/Appwrite:/install/Appwrite:rw \
     -e version=0.6.2 \
-    appwrite/install
+    Appwrite/install
 ```
 
 ![image](https://imgur.com/download/l7R5FZf)
@@ -125,13 +123,13 @@ After that create a project :
 
 ![image](https://imgur.com/download/6LKlQoP)
 
-After that if you go to this screen you are successfully deploying your appwrite server into DigitalOcean :
+After that if you go to this screen you are successfully deploying your Appwrite server into DigitalOcean :
 
 ![image](https://imgur.com/download/gaoBGGg)
 
 # What's next?
-Congratulations! You've just deploy appwrite into DigitalOcean.
+Congratulations! You've just deploy Appwrite into DigitalOcean.
 
-Good luck on your future development using Appwrite! If you need any help, feel free to join the [Discord](https://appwrite.io/discord) or refer to the [Appwrite Documentation](https://appwrite.io/docs). 
+Good luck on your future development using Appwrite! If you need any help, feel free to join the [Discord](https://Appwrite.io/discord) or refer to the [Appwrite Documentation](https://Appwrite.io/docs). 
 
 
