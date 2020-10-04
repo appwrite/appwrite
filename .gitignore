@@ -10,3 +10,5 @@
 .DS_Store
 .php_cs.cache
 .env
+npm-debug.log
+Thumbs.db
