@@ -33,12 +33,11 @@ Scroll down into password section you can choose either using ssh keys or passwo
 
 ![choose ssh keys](digitalocean-tutorial/5_ssh.png)
 
-Click "new ssh key" and then you will get this window :
+Click "New SSH Key" and then you will get this window :
 
 ![click new ssh key](digitalocean-tutorial/6_keys.png)
 
-There is a detailed explanation on how to make ssh key on the right hand side of the window follow that instruction and then copy paste
-your ssh public key into the box :
+There is a detailed explanation on how to make ssh key on the right hand side of the window, follow that instruction :
 
 ![create a ssh key instruction](digitalocean-tutorial/7_instruction.png)
 
@@ -46,23 +45,23 @@ Copy paste the ssh key you get from before like this :
 
 ![copy paste the ssh key](digitalocean-tutorial/8_copy.png)
 
-Give it a name and click add SSH key now you're done set up your ssh keys scroll down until you see button "Create Droplet" like below :
+Give it a name and click "Add SSH Key", now you're done setting up your ssh keys, scroll down until you see button "Create Droplet" like below :
 
 ![done setting up ssh keys](digitalocean-tutorial/9_done.png)
 
-Ok now you're done creating your first Droplet you will see in your homepage something like this (blurred image is your ip address and your droplet name) :
+Ok now you're done creating your first droplet you will see in your homepage something like this (blurred image is your ip address and your droplet name) :
 
 ![droplet created](digitalocean-tutorial/10_complete.png)
 
 ## Step 2 - Run The Appwrite server
 
-So in order for us to access the ssh that we create earlier we should use terminal for accessing it so first of all go to your terminal and type :
+So in order for us to access the droplet that we create earlier we should use terminal for accessing it so first of all go to your terminal and type :
 
 ```bash
 ssh root@<ip address> # you can see your ip address in your homepage
 ```
 
-After you login into your Droplet run this command one by one to install docker :
+After you login into your droplet run this command one by one to install docker :
 
 ```bash
 sudo apt-get remove docker docker-engine docker.io containerd runc
@@ -86,7 +85,7 @@ sudo usermod -aG docker $USER
 newgrp docker 
 ```
 
-After we install docker we now install docker-compose :
+After we install docker, we're going to install docker-compose :
 
 ```bash
 sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
@@ -103,18 +102,19 @@ docker run -it --rm \
     Appwrite/install
 ```
 
+Input this according to your need for this tutorial we gonna go with the default :
+
 ![install appwrite server](digitalocean-tutorial/11_install.png)
 
-Input this according to your need for this tutorial we gonna go with the default :
+After it's all done you gonna see something like this :
 
 ![input dialog of appwrite docker installation](digitalocean-tutorial/12_input.png)
 
-After its all done exit your terminal and go to your browser and type your Droplet ip address it usually take 1 minute or 
-less to start your server you will see this in your browser if you successfully run your server :
+Exit your terminal and go to your browser and type your droplet ip address that you can get in your DigitalOcean project homepage before, it usually take 1 minute or less to start your server you will see this in your browser if you successfully run your server :
 
 ![exit terminal after installation done](digitalocean-tutorial/13_exit.png)
 
-To get started sign up with your email address and password :
+To get started, sign up with your email address and password :
 
 ![sign up](digitalocean-tutorial/14_signup.png)
 
