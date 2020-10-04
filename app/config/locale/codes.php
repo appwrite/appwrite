@@ -33,7 +33,7 @@ return [
     'pl', // Polish
     'pt-br', // Portuguese - Brazil	
     'pt-pt', // Portuguese - Portugal
-    'pu', //Punjabi
+    'pa', //Punjabi
     'ro', // Romanian
     'ru', // Russian
     'si', // Sinhala
