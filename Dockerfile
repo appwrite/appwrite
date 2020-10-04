@@ -7,7 +7,7 @@ ARG TESTING=false
 ENV TZ=Asia/Tel_Aviv \
     DEBIAN_FRONTEND=noninteractive \
     PHP_VERSION=7.4 \
-    PHP_REDIS_VERSION=5.2.1
+    PHP_REDIS_VERSION=5.3.1
 
 RUN \
   apt-get update && \
@@ -25,11 +25,7 @@ RUN \
   # Composer
   wget https://getcomposer.org/composer.phar && \
   chmod +x ./composer.phar && \
-  mv ./composer.phar /usr/bin/composer && \
-  #Brotli
-  cd / && \
-  git clone https://github.com/eustas/ngx_brotli.git && \
-  cd ngx_brotli && git submodule update --init && cd ..
+  mv ./composer.phar /usr/bin/composer
 
 WORKDIR /usr/local/src/
 
@@ -51,6 +47,8 @@ ARG VERSION=dev
 ENV TZ=Asia/Tel_Aviv \
     DEBIAN_FRONTEND=noninteractive \
     PHP_VERSION=7.4 \
+    PHP_API_VERSION=20190902 \
+    PHP_REDIS_VERSION=5.3.1 \
     _APP_ENV=production \
     _APP_DOMAIN=localhost \
     _APP_DOMAIN_TARGET=localhost \
@@ -80,9 +78,8 @@ ENV TZ=Asia/Tel_Aviv \
 #ENV _APP_SMTP_USERNAME ''
 #ENV _APP_SMTP_PASSWORD ''
 
-COPY --from=builder /phpredis-5.2.1/modules/redis.so /usr/lib/php/20190902/
-COPY --from=builder /phpredis-5.2.1/modules/redis.so /usr/lib/php/20190902/
-COPY --from=builder /ngx_brotli /ngx_brotli
+COPY --from=builder /phpredis-$PHP_REDIS_VERSION/modules/redis.so /usr/lib/php/$PHP_API_VERSION/
+COPY --from=builder /phpredis-$PHP_REDIS_VERSION/modules/redis.so /usr/lib/php/$PHP_API_VERSION/
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
@@ -96,27 +93,11 @@ RUN \
   apt-get install -y --no-install-recommends --no-install-suggests php$PHP_VERSION php$PHP_VERSION-fpm \
   php$PHP_VERSION-mysqlnd php$PHP_VERSION-curl php$PHP_VERSION-imagick php$PHP_VERSION-mbstring php$PHP_VERSION-dom webp certbot && \
   # Nginx
-  wget http://nginx.org/download/nginx-1.19.0.tar.gz && \
-  tar -xzvf nginx-1.19.0.tar.gz && rm nginx-1.19.0.tar.gz && \
-  cd nginx-1.19.0 && \
-  ./configure --prefix=/usr/share/nginx \
-    --sbin-path=/usr/sbin/nginx \
-    --modules-path=/usr/lib/nginx/modules \
-    --conf-path=/etc/nginx/nginx.conf \
-    --error-log-path=/var/log/nginx/error.log \
-    --http-log-path=/var/log/nginx/access.log \
-    --pid-path=/run/nginx.pid \
-    --lock-path=/var/lock/nginx.lock \
-    --user=www-data \
-    --group=www-data \
-    --build=Ubuntu \
-    --with-http_gzip_static_module \
-    --with-http_ssl_module \
-    --with-http_v2_module \
-    --add-module=/ngx_brotli && \
-  make && \
-  make install && \
-  rm -rf ../nginx-1.19.0 && \
+  wget -q https://raw.githubusercontent.com/VirtuBox/nginx-ee/master/nginx-build.sh && \
+  chmod +x nginx-build.sh && \
+  ./nginx-build.sh --openssl-system && \
+  rm nginx-build.sh && \
+  rm -rf /usr/local/src/* && \
   # Redis Extension
   echo extension=redis.so >> /etc/php/$PHP_VERSION/fpm/conf.d/redis.ini && \
   echo extension=redis.so >> /etc/php/$PHP_VERSION/cli/conf.d/redis.ini && \
@@ -124,7 +105,6 @@ RUN \
   cd ../ && \
   apt-get purge -y --auto-remove wget software-properties-common build-essential libpcre3-dev zlib1g-dev libssl-dev gnupg && \
   apt-get clean && \
-  rm -rf /ngx_brotli && \
   rm -rf /var/lib/apt/lists/*
 
 # Set Upload Limit (default to 100MB)
