@@ -22,7 +22,7 @@ This is your server private secret key that is used to encrypt all sensitive dat
 
 ### _APP_STORAGE_LIMIT
 
-Maximun file size allowed for file upload. The deafult value is 100MB limitation. You should pass your size limit value in bytes.
+Maximum file size allowed for file upload. The default value is 100MB limitation. You should pass your size limit value in bytes.
 
 ### _APP_STORAGE_ANTIVIRUS
 

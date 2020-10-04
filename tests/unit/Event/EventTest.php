@@ -18,7 +18,7 @@ class EventTest extends TestCase
      */
     protected $queue = '';
 
-    public function setUp()
+    public function setUp(): void
     {
         $redisHost = App::getEnv('_APP_REDIS_HOST', '');
         $redisPort = App::getEnv('_APP_REDIS_PORT', '');
@@ -28,7 +28,7 @@ class EventTest extends TestCase
         $this->object = new Event($this->queue, 'TestsV1');
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
     }
 

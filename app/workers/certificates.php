@@ -20,7 +20,7 @@ class CertificatesV1
 {
     public $args = [];
 
-    public function setUp()
+    public function setUp(): void
     {
     }
 
@@ -199,7 +199,7 @@ class CertificatesV1
         Authorization::reset();
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         // ... Remove environment for this job
     }
