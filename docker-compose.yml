@@ -100,6 +100,7 @@ services:
       - MYSQL_USER=user
       - MYSQL_PASSWORD=password
     command: 'mysqld --innodb-flush-method=fsync'
+    # command: mv /var/lib/mysql/ib_logfile1 /var/lib/mysql/ib_logfile1.bu
 
   maildev:
     image: djfarrelly/maildev
