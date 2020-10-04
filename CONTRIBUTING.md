@@ -289,7 +289,7 @@ Sending feedback is a great way for us to understand your different use cases of
 
 ### Submitting New Ideas
 
-If you think Appwrite could use a new feature, please open an issue on our GitHub repository, stating as much information as you can think about your new idea and it's implications. We would also use this issue to gather more information, get more feedback from the community, and have a proper discussion about the new feature.
+If you think Appwrite could use a new feature, please open an issue on our GitHub repository, stating as much information as you can think about your new idea and its implications. We would also use this issue to gather more information, get more feedback from the community, and have a proper discussion about the new feature.
 
 ### Improving Documentation
 
