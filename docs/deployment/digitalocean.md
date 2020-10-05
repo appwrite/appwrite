@@ -99,7 +99,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/Appwrite:/install/Appwrite:rw \
     -e version=0.6.2 \
-    Appwrite/install
+    appwrite/install
 ```
 
 Input this according to your need for this tutorial we gonna go with the default :
