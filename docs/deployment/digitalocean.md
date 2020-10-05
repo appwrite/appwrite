@@ -130,5 +130,4 @@ After that if you go to this screen you are successfully deploying your Appwrite
 
 Now that you have your Appwrite server deployed, you have many options for the type of application you want to build and the technologies you want to use to create a richer experience.
 
-Good luck on your future development using Appwrite! If you need any help, feel free to join the [Discord](https://Appwrite.io/discord) or refer to the [Appwrite Documentation](https://Appwrite.io/docs). 
-
+Good luck on your future development using Appwrite! If you need any help, feel free to join the [Discord](https://appwrite.io/discord) or refer to the [Appwrite Documentation](https://appwrite.io/docs). 
