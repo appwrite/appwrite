@@ -5,12 +5,12 @@ sdk
 ;
 
 /**
- * Will redirect to relevant page
- *  depends on the operation result
+ * सानुकुले पृष्टे पुनःनिर्देषिते
+ *  इदं क्रिया तु अनुबन्धस्ये संसक्त अस्ति
  */
 sdk.auth.login(
     'email@example.com',
     'password',
-    'http://example.com/success', // required for JS SDK
-    'http://example.com/failure' // required for JS SDK
+    'http://example.com/success', // JS SDK हि आवश्यक 
+    'http://example.com/failure' // JS SDK हि आवश्यक 
 );
