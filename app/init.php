@@ -225,6 +225,7 @@ Locale::$exceptions = false;
 Locale::setLanguage('af', include __DIR__.'/config/locale/translations/af.php');
 Locale::setLanguage('ar', include __DIR__.'/config/locale/translations/ar.php');
 Locale::setLanguage('be', include __DIR__.'/config/locale/translations/be.php');
+Locale::setLanguage('bg', include __DIR__.'/config/locale/translations/bg.php');
 Locale::setLanguage('bn', include __DIR__.'/config/locale/translations/bn.php');
 Locale::setLanguage('cat', include __DIR__.'/config/locale/translations/cat.php');
 Locale::setLanguage('cz', include __DIR__.'/config/locale/translations/cz.php');

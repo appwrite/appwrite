@@ -4,6 +4,7 @@ return [
     'af', // Afrikaans
     'ar', // Arabic
     'be', // Belarusian
+    'bg', // Bulgarian
     'bn', // Bengali
     'cat', // Catalan
     'cz', // Czech
