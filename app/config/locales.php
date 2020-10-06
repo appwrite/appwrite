@@ -3,6 +3,7 @@
 return [
     'af', // Afrikaans
     'ar', // Arabic
+    'bg', // Bulgarian
     'bn', // Bengali
     'cat', // Catalan
     'cz', // Czech

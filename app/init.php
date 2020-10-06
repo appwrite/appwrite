@@ -174,6 +174,7 @@ Locale::$exceptions = false;
 
 Locale::setLanguage('af', include __DIR__.'/config/locales/af.php');
 Locale::setLanguage('ar', include __DIR__.'/config/locales/ar.php');
+Locale::setLanguage('bg', include __DIR__.'/config/locales/bg.php');
 Locale::setLanguage('bn', include __DIR__.'/config/locales/bn.php');
 Locale::setLanguage('cat', include __DIR__.'/config/locales/cat.php');
 Locale::setLanguage('cz', include __DIR__.'/config/locales/cz.php');
