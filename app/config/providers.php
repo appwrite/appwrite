@@ -224,5 +224,14 @@ return [ // Ordered by ABC.
         'form' => false,
         'beta' => false,
         'mock' => true,
+    ],
+    'wordpress' => [
+        'name' => 'Wordpress',
+        'developers' => 'https://developer.wordpress.com/docs/oauth2/',
+        'icon' => 'icon-wordpress',
+        'enabled' => true,
+        'form' => false,
+        'beta' => false,
+        'mock' => false
     ]
 ];
