@@ -4,6 +4,9 @@ namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
 
+// Reference Material
+// https://developer.wordpress.com/docs/wpcc/
+
 class Wordpress extends OAuth2
 {
     /**
