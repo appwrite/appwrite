@@ -131,7 +131,7 @@ We truly ❤️ pull requests! If you wish to help, you can learn more about how
 
 ## Security
 
-For security issues, kindly email us [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue in GitHub.
+For security issues, kindly email us at [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue in GitHub.
 
 ## Follow Us
 
