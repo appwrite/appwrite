@@ -226,7 +226,7 @@ return [ // Ordered by ABC.
         'mock' => true,
     ],
     'wordpress' => [
-        'name' => 'Wordpress',
+        'name' => 'WordPress',
         'developers' => 'https://developer.wordpress.com/docs/oauth2/',
         'icon' => 'icon-wordpress',
         'enabled' => true,
