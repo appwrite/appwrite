@@ -98,7 +98,7 @@ This endpoint is limited to 50 requests in every 60 minutes per IP address.
 We use rate limits to avoid service abuse by users and as a security practice.  
 [Learn more about rate limiting](https://appwrite.io/docs/rate-limits)
 
-Refrances:
+References:
 [AppWrite Docs](https://appwrite.io/docs/client/account?sdk=web)
 [Google's Web Sign-in Guide](https://developers.google.com/identity/sign-in/web/sign-in)
 [Whats OAuth 2.0?](https://developers.google.com/identity/protocols/oauth2)
