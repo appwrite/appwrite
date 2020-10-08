@@ -5,6 +5,7 @@ return [
     'ar', // Arabic
     'ba', //Bosnian
     'be', // Belarusian
+    'bg', // Bulgarian
     'bn', // Bengali
     'cat', // Catalan
     'cz', // Czech
