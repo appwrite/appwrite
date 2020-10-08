@@ -12,12 +12,12 @@ class DomainTest extends TestCase
      */
     protected $domain = null;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->domain = new Domain();
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         $this->domain = null;
     }

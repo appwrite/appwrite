@@ -3,6 +3,8 @@
 return [
     'af', // Afrikaans
     'ar', // Arabic
+    'ba', //Bosnian
+    'be', // Belarusian
     'bn', // Bengali
     'cat', // Catalan
     'cz', // Czech
@@ -13,6 +15,7 @@ return [
     'fo', // Faroese
     'fr', // French
     'gr', // Greek
+    'gu', //Gujrati
     'he', // Hebrew
     'hi', // Hindi
     'hu', // Hungarian
@@ -26,9 +29,11 @@ return [
     'ko', // Korean
     'lt', // Lithuanian
     'ml', // Malayalam
+    'mr', //Marathi
     'ms', // Malay
     'nl', // Dutch
     'no', // Norwegian
+    'np', //Nepali
     'ph', // Filipino
     'pl', // Polish
     'pt-br', // Portuguese - Brazil	

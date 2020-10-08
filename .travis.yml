@@ -6,10 +6,6 @@ arch:
 
 os: linux
 
-addons:
-  hosts:
-    - appwrite.test
-
 notifications:
   email:
   - team@appwrite.io

@@ -99,7 +99,7 @@ class FunctionsV1
 {
     public $args = [];
 
-    public function setUp()
+    public function setUp(): void
     {
     }
 
@@ -354,7 +354,7 @@ class FunctionsV1
         }
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
     }
 }

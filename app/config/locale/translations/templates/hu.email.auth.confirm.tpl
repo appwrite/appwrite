@@ -1,15 +1,15 @@
 <p>
-    Szia {{name}},
+    Kedves {{name}}!
 </p>
 <p>
-    Kattints erre a linkre, hogy megerősítsd az e-mail címed.
+    Kérjük, e-mail címe megerősítéséhez kattintson az alábbi hivatkozásra:
 </p>
 {{cta}}
 <p>
-    Ha nem kérelmezted, hogy megerősítsük ezt a címet, ignoráld ezt a levelet.
+    Ha nem kérte az e-mail cím megerősítését, kérjük, tekintse ezt az üzenetet tárgytalannak.
 </p>
 <p>
-    Köszönettel,
+    Köszönettel:
     <br />
     {{project}} csapat
 </p>
