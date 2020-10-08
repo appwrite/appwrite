@@ -340,7 +340,7 @@ services:
       - appwrite-uploads:/storage/uploads
       
   influxdb:
-    image: influxdb:1.8-alpine
+    image: influxdb:1.8
     container_name: appwrite-influxdb
     restart: unless-stopped
     networks:
