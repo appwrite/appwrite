@@ -224,6 +224,7 @@ $register->set('queue-functions', function () {
 Locale::$exceptions = false;
 Locale::setLanguage('af', include __DIR__.'/config/locale/translations/af.php');
 Locale::setLanguage('ar', include __DIR__.'/config/locale/translations/ar.php');
+Locale::setLanguage('ba', include __DIR__.'/config/locale/translations/ba.php');
 Locale::setLanguage('be', include __DIR__.'/config/locale/translations/be.php');
 Locale::setLanguage('bn', include __DIR__.'/config/locale/translations/bn.php');
 Locale::setLanguage('cat', include __DIR__.'/config/locale/translations/cat.php');
