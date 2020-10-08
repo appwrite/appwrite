@@ -29,6 +29,7 @@ Table of Contents:
   - [Windows](#windows)
     - [CMD](#cmd)
     - [PowerShell](#powershell)
+  - [Upgrade from an Older Version](#upgrade-from-an-older-version)
 - [Getting Started](#getting-started)
   - [Services](#services)
   - [SDKs](#sdks)
@@ -81,6 +82,10 @@ Once the Docker installation completes, go to http://localhost to access the App
 
 
 For advanced production and custom installation, check out our Docker [environment variables](docs/tutorials/environment-variables.md) docs. You can also use our public [docker-compose.yml](https://appwrite.io/docker-compose.yml) file to manually set up and environment.
+
+### Upgrade from an Older Version
+
+If you are upgrading your Appwrite server from an older version, you should use the Appwrite migration tool once your setup is completed. For more information regarding this, check out the [Installation Docs](https://appwrite.io/docs/installation).
 
 ## Getting Started
 
