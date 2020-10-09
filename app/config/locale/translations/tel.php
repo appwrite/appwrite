@@ -11,7 +11,7 @@ return [
     'account.emails.verification.body' => 'tel.email.auth.confirm.tpl',
     'account.emails.recovery.title' => 'పాస్వర్డ్ రీసెట్',
     'account.emails.recovery.body' => 'tel.email.auth.recovery.tpl',
-    'account.emails.invitation.title' => 'జట్టు కోసం కాల్ చేయండి %s a లో %s',
+    'account.emails.invitation.title' => 'జట్టు ఆహ్వానం% s నుండి% s వరకు',
     'account.emails.invitation.body' => 'tel.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'తెలియదు',
