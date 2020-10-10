@@ -135,9 +135,9 @@ RUN \
 WORKDIR /usr/src/code
 
 COPY --from=step0 /usr/local/src/vendor /usr/src/code/vendor
-COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200804/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20200804/
-COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200804/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20200804/
-COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200804/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-20200804/
+COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 
 # Add Source Code
 COPY ./app /usr/src/code/app
