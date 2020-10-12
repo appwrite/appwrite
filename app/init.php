@@ -247,6 +247,7 @@ Locale::setLanguage('is', include __DIR__.'/config/locale/translations/is.php');
 Locale::setLanguage('it', include __DIR__.'/config/locale/translations/it.php');
 Locale::setLanguage('ja', include __DIR__.'/config/locale/translations/ja.php');
 Locale::setLanguage('jv', include __DIR__.'/config/locale/translations/jv.php');
+Locale::setLanguage('ka', include __DIR__.'/config/locale/translations/ka.php');
 Locale::setLanguage('km', include __DIR__.'/config/locale/translations/km.php');
 Locale::setLanguage('ko', include __DIR__.'/config/locale/translations/ko.php');
 Locale::setLanguage('lt', include __DIR__.'/config/locale/translations/lt.php');
