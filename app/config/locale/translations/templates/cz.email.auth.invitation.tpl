@@ -2,7 +2,7 @@
     Ahoj,
 </p>
 <p>
-    Tento e-mail vám byl zaslán, protože vás <b>{{owner}}</b> chtěl pozvat, abyste se stali členem týmu v týmu <b>{{team}}</b> v {{project}}.
+    Tento e-mail vám byl zaslán, protože vás <b>{{owner}}</b> chtěl pozvat, abyste se stali členem týmu <b>{{team}}</b> v {{project}}.
 </p>
 <p>
     Klepnutím na tento odkaz se připojíte k týmu <b>{{team}}</b>:
