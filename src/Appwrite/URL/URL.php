@@ -44,6 +44,8 @@ class URL
         if (isset($url['path']) && \mb_substr($url['path'], 0, 1) !== '/') {
             $url['path'] = '/'.$url['path'];
         }
+        
+        //URL component elements
     
         $parts = [];
     
