@@ -10,7 +10,7 @@
 - Added option to join a user to any team from the console
 - Added support for Brotli compression (@PedroCisnerosSantana, @Rohitub222)
 - New UI micro-interactions and CSS fixes (@AnatoleLucet)
-- UI performance & accessibility improvments (#406)
+- UI performance & accessibility improvements (#406)
 - New Doctor CLI to debug the Appwrite server ([#415](https://github.com/appwrite/appwrite/issues/415))
 - All emails are now sent asynchronously for improved performance (@TorstenDittmann)
 - Updated grid for OAuth2 providers list in the console
@@ -28,11 +28,11 @@
 - Fixed a UI bug preventing float values in numeric fields
 - Fixed scroll positioning when moving rules order up & down
 - Fixed missing validation for database documents key length (32 chars)
-- Grammer fix for pt-br email templates (@rubensdemelo)
+- Grammar fix for pt-br email templates (@rubensdemelo)
 - Fixed update form labels and tooltips for Flutter Android apps
 - Fixed missing custom scopes param for OAuth2 session create API route
-- Fixed wrong JSON validation when creating and updating database documnets
-- Fixed bug where max file size was limited to max of 10MB
+- Fixed wrong JSON validation when creating and updating database documents
+- Fixed bug where max file size was limited to a max of 10MB
 - Fixed bug preventing the deletion of the project logo
 - Fixed Bug when trying to overwrite OAuth cookie in the Flutter SDK
 - Fixed OAuth redirect when using the self-hosted instance default success URL ([#454](https://github.com/appwrite/appwrite/issues/454))
@@ -43,7 +43,7 @@
 
 ## Breaking Changes
 - **Deprecated** `first` and `last` query params for documents list route in the database API
-- **Deprecated** Deprectaed Pubjabi Translations ('pn')
+- **Deprecated** Deprecated Punjabi Translations ('pn')
 
 ## Security
 
@@ -142,7 +142,7 @@
 - Allow non-web platform to skip origin header
 - Limited console dashboard to show max 5 alerts at the same time
 - Added more webhooks events
-- Normailized all webhooks event names
+- Normalized all webhooks event names
 - Added support for SameSite cookie option with fallback cookie for old clients
 - Added a new Discord OAuth adapter
 - Added a new Twitch OAuth adapter
