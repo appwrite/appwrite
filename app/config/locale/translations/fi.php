@@ -8,11 +8,11 @@ return [
     // Service - Users
     'account.emails.team' => '%s Tiimi',
     'account.emails.verification.title' => 'Tilin Vahvistus',
-    'account.emails.verification.body' => 'en.email.auth.confirm.tpl',
+    'account.emails.verification.body' => 'fi.email.auth.confirm.tpl',
     'account.emails.recovery.title' => 'Salasanan Nollaus',
-    'account.emails.recovery.body' => 'en.email.auth.recovery.tpl',
+    'account.emails.recovery.body' => 'fi.email.auth.recovery.tpl',
     'account.emails.invitation.title' => 'Kutsu %s Tiimiin %s',
-    'account.emails.invitation.body' => 'en.email.auth.invitation.tpl',
+    'account.emails.invitation.body' => 'fi.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'Unknown',
 
