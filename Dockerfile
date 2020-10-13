@@ -112,7 +112,8 @@ RUN \
   && pecl install imagick yaml \ 
   && docker-php-ext-enable imagick yaml \
   && docker-php-ext-install sockets opcache pdo_mysql \
-  && apk del .deps
+  && apk del .deps \
+  && rm -rf /var/cache/apk/*
 
 WORKDIR /usr/src/code
 
