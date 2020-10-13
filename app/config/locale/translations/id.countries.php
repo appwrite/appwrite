@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'AF' => 'Afghanistan',
+    'AF' => 'Afganistan',
     'AO' => 'Angola',
     'AL' => 'Albania',
     'AD' => 'Andorra',
@@ -24,7 +24,7 @@ return [
     'BY' => 'Belarus',
     'BZ' => 'Belize',
     'BO' => 'Bolivia',
-    'BR' => 'Brazil',
+    'BR' => 'Brasil',
     'BB' => 'Barbados',
     'BN' => 'Brunei',
     'BT' => 'Bhutan',
