@@ -65,7 +65,7 @@
 - Fixed update form labels and tooltips for Flutter Android apps
 - Fixed missing custom scopes param for OAuth2 session create API route
 - Fixed wrong JSON validation when creating and updating database documents
-- Fixed bug where max file size was limited to max of 10MB
+- Fixed bug where max file size was limited to a max of 10MB
 - Fixed bug preventing the deletion of the project logo
 - Fixed Bug when trying to overwrite OAuth cookie in the Flutter SDK
 - Fixed OAuth redirect when using the self-hosted instance default success URL ([#454](https://github.com/appwrite/appwrite/issues/454))
