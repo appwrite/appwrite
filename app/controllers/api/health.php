@@ -278,14 +278,14 @@ App::get('/v1/health/stats') // Currently only used internally
                     'partitionFree' => Storage::human($device->getPartitionFreeSpace()),
                 ],
                 'cache' => [
-                    'uptime' => (isset($cacheStats['uptime_in_seconds'])) ? $cacheStats['uptime_in_seconds'] : 0,
-                    'clients' => (isset($cacheStats['connected_clients'])) ? $cacheStats['connected_clients'] : 0,
-                    'hits' => (isset($cacheStats['keyspace_hits'])) ? $cacheStats['keyspace_hits'] : 0,
-                    'misses' => (isset($cacheStats['keyspace_misses'])) ? $cacheStats['keyspace_misses'] : 0,
-                    'memory_used' => (isset($cacheStats['used_memory'])) ? $cacheStats['used_memory'] : 0,
-                    'memory_used_human' => (isset($cacheStats['used_memory_human'])) ? $cacheStats['used_memory_human'] : 0,
-                    'memory_used_peak' => (isset($cacheStats['used_memory_peak'])) ? $cacheStats['used_memory_peak'] : 0,
-                    'memory_used_peak_human' => (isset($cacheStats['used_memory_peak_human'])) ? $cacheStats['used_memory_peak_human'] : 0,
+                    'uptime' => $cacheStats['uptime_in_seconds'] ?? 0,
+                    'clients' => $cacheStats['connected_clients'] ?? 0,
+                    'hits' => $cacheStats['keyspace_hits'] ?? 0,
+                    'misses' => $cacheStats['keyspace_misses'] ?? 0,
+                    'memory_used' => $cacheStats['used_memory'] ?? 0,
+                    'memory_used_human' => $cacheStats['used_memory_human'] ?? 0,
+                    'memory_used_peak' => $cacheStats['used_memory_peak'] ?? 0,
+                    'memory_used_peak_human' => $cacheStats['used_memory_peak_human'] ?? 0,
                 ],
             ]);
     }, ['response', 'register']);
