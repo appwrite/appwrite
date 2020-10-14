@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Locale;
 
+use Exception;
 use Tests\E2E\Client;
 
 trait LocaleBase
@@ -236,6 +237,10 @@ trait LocaleBase
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-locale' => $lang,
             ]);
+
+            if(!\is_array($response['body']['countries'])) {
+                throw new Exception('Failed to itterate locale: '.$lang);
+            }
 
             foreach ($response['body']['countries'] as $i => $code) {
                 $this->assertArrayHasKey($code['code'], $defaultCountries, $code['code'] . ' country should be removed from ' . $lang);
