@@ -86,7 +86,7 @@ return [
     'IL' => 'Israele',
     'IT' => 'Italia',
     'JM' => 'Giamaica',
-    'JO' => 'Jordan',
+    'JO' => 'Giordania',
     'JP' => 'Giappone',
     'KZ' => 'Kazakistan',
     'KE' => 'Kenya',
