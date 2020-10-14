@@ -35,12 +35,12 @@ $array = $this->getParam('array', false);
 
     <ul>
         <?php foreach($rules as $rule):
-            $key = (isset($rule['key'])) ? $rule['key'] : '';
-            $label = (isset($rule['label'])) ? $rule['label'] : '';
-            $type = (isset($rule['type'])) ? $rule['type'] : '';
-            $array = (isset($rule['array'])) ? $rule['array'] : false;
-            $required = (isset($rule['required'])) ? $rule['required'] : false;
-            $list = (isset($rule['list'])) ? $rule['list'] : false;
+            $key = $rule['key'] ?? '';
+            $label = $rule['label'] ?? '';
+            $type = $rule['type'] ?? '';
+            $array = $rule['array'] ?? false;
+            $required = $rule['required'] ?? false;
+            $list = $rule['list'] ?? false;
             $comp = new View(__DIR__.'/rules/'.$type.'.phtml');
             $loop = new View(__DIR__.'/rules/array.phtml');
 
