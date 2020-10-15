@@ -36,7 +36,7 @@ return [
     'CN' => 'Cina',
     'CI' => 'Pantai Gading',
     'CM' => 'Kamerun',
-    'CD' => 'DR Kongo',
+    'CD' => 'Republik Demokratik Kongo',
     'CG' => 'Republik Kongo',
     'CO' => 'Kolombia',
     'KM' => 'Komoro',
