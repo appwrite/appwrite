@@ -211,7 +211,7 @@ class Client
         }
 
         $responseBody   = curl_exec($ch);
-        $responseType   = (isset($responseHeaders['content-type'])) ? $responseHeaders['content-type'] : '';
+        $responseType   = $responseHeaders['content-type'] ?? '';
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         switch (substr($responseType, 0, strpos($responseType, ';'))) {

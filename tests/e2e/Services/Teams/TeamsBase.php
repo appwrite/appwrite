@@ -75,7 +75,7 @@ trait TeamsBase
      */
     public function testGetTeam($data):array
     {
-        $id = (isset($data['teamUid'])) ? $data['teamUid'] : '';
+        $id = $data['teamUid'] ?? '';
 
         /**
          * Test for SUCCESS

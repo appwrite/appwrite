@@ -283,8 +283,8 @@ App::get('/v1/avatars/favicon')
                         case 'jpeg':
                             $size = \explode('x', \strtolower($sizes));
 
-                            $sizeWidth = (isset($size[0])) ? (int) $size[0] : 0;
-                            $sizeHeight = (isset($size[1])) ? (int) $size[1] : 0;
+                            $sizeWidth = (int) $size[0] ?? 0;
+                            $sizeHeight = (int) $size[1] ?? 0;
 
                             if (($sizeWidth * $sizeHeight) >= $space) {
                                 $space = $sizeWidth * $sizeHeight;
@@ -423,7 +423,7 @@ App::get('/v1/avatars/initials')
         $code = 0;
 
         foreach ($words as $key => $w) {
-            $initials .= (isset($w[0])) ? $w[0] : '';
+            $initials .= $w[0] ?? '';
             $code += (isset($w[0])) ? \ord($w[0]) : 0;
 
             if ($key == 1) {

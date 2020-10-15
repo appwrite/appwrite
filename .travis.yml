@@ -3,6 +3,8 @@ arch:
 
 os: linux
 
+language: minimal
+
 notifications:
   email:
   - team@appwrite.io

@@ -52,8 +52,8 @@ class CertificatesV1
         $domain = $this->args['domain'];
 
         // Validation Args
-        $validateTarget = (isset($this->args['validateTarget'])) ? $this->args['validateTarget'] : true;
-        $validateCNAME = (isset($this->args['validateCNAME'])) ? $this->args['validateCNAME'] : true;
+        $validateTarget = $this->args['validateTarget'] ?? true;
+        $validateCNAME = $this->args['validateCNAME'] ?? true;
         
         // Options
         $domain = new Domain((!empty($domain)) ? $domain : '');

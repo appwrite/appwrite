@@ -331,8 +331,8 @@ App::post('/v1/database/collections/:collectionId/documents')
          * Set default collection values
          */
         foreach ($collection->getAttribute('rules') as $key => $rule) {
-            $key = (isset($rule['key'])) ? $rule['key'] : '';
-            $default = (isset($rule['default'])) ? $rule['default'] : null;
+            $key = $rule['key'] ?? '';
+            $default = $rule['default'] ?? null;
 
             if (!isset($data[$key])) {
                 $data[$key] = $default;
