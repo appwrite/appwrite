@@ -31,11 +31,12 @@ return [
     'ko', // Korean
     'lt', // Lithuanian
     'ml', // Malayalam
-    'mr', //Marathi
+    'mr', // Marathi
     'ms', // Malay
     'nl', // Dutch
     'no', // Norwegian
-    'np', //Nepali
+    'np', // Nepali
+    'od', // Odia
     'ph', // Filipino
     'pl', // Polish
     'pt-br', // Portuguese - Brazil	

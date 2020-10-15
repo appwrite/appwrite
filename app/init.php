@@ -257,6 +257,7 @@ Locale::setLanguage('ms', include __DIR__.'/config/locale/translations/ms.php');
 Locale::setLanguage('nl', include __DIR__.'/config/locale/translations/nl.php');
 Locale::setLanguage('no', include __DIR__.'/config/locale/translations/no.php');
 Locale::setLanguage('np', include __DIR__.'/config/locale/translations/np.php');
+Locale::setLanguage('od', include __DIR__.'/config/locale/translations/od.php');
 Locale::setLanguage('ph', include __DIR__.'/config/locale/translations/ph.php');
 Locale::setLanguage('pl', include __DIR__.'/config/locale/translations/pl.php');
 Locale::setLanguage('pt-br', include __DIR__.'/config/locale/translations/pt-br.php');
