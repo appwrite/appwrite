@@ -10,6 +10,52 @@ If you are worried or don’t know where to start, check out our next section ex
 
 Help us keep Appwrite open and inclusive. Please read and follow our [Code of Conduct](/CODE_OF_CONDUCT.md).
 
+## Submit a Pull Request 🚀
+
+Branch naming convention is as following 
+
+`TYPE-ISSUE_ID-DESCRIPTION`
+
+example:
+```
+doc-548-submit-a-pull-request-section-to-contribution-guide
+```
+
+When `TYPE` can be:
+
+- **feat** - is a new feature
+- **doc** - documentation only changes
+- **cicd** - changes related to CI/CD system
+- **fix** - a bug fix
+- **refactor** - code change that neither fixes a bug nor adds a feature
+
+**All PRs must include a commit message with the changes description!** 
+
+For the initial start, fork the project and use git clone command to download the repository to your computer. A standard procedure for working on an issue would be to:
+
+1. `git pull`, before creating a new branch, pull the changes from upstream. Your master needs to be up to date.
+```
+$ git pull
+```
+2. Create new branch from `master` like: `doc-548-submit-a-pull-request-section-to-contribution-guide`<br/>
+```
+$ git checkout -b [name_of_your_new_branch]
+```
+3. Work - commit - repeat ( be sure to be in your branch )
+
+4. Push changes to GitHub 
+```
+$ git push origin [name_of_your_new_branch]
+```
+
+5. Submit your changes for review
+If you go to your repository on GitHub, you'll see a `Compare & pull request` button. Click on that button.
+6. Start a Pull Request
+Now submit the pull request and click on `Create pull request`.
+7. Get a code review approval/reject
+8. After approval, merge your PR
+9. GitHub will automatically delete the branch after the merge is done. (they can still be restored).
+
 ## Setup From Source
 
 To set up a working **development environment**, just fork the project git repository and install the backend and frontend dependencies using the proper package manager and create run the docker-compose stack.
@@ -31,6 +77,59 @@ After finishing the installation process, you can start writing and editing code
 ## Architecture
 
 Appwrite's current structure is a combination of both [Monolithic](https://en.wikipedia.org/wiki/Monolithic_application) and [Microservice](https://en.wikipedia.org/wiki/Microservices) architectures, but our final goal, as we grow, is to be using only microservices.
+
+### File Structure
+
+```bash
+.
+├── app # Main application
+│   ├── config # Config files
+│   ├── controllers # API & dashboard controllers
+│   │   ├── api
+│   │   ├── shared
+│   │   └── web
+│   ├── db # DB schemas
+│   ├── sdks # SDKs generated copies (used for generating code examples)
+│   ├── tasks # Server CLI commands
+│   ├── views # HTML server-side templates
+│   └── workers # Background workers
+├── bin # Server executables (tasks & workers)
+├── docker # Docker related resources and configs
+├── docs # Docs and tutorials
+│   ├── examples
+│   ├── references
+│   ├── sdks
+│   ├── services
+│   ├── specs
+│   └── tutorials
+├── public # Public files
+│   ├── dist
+│   ├── fonts
+│   ├── images
+│   ├── scripts
+│   └── styles
+├── src # Supporting libraries (each lib has one role, common libs are released as individual projects)
+│   └── Appwrite
+│       ├── Auth
+│       ├── Database
+│       ├── Docker
+│       ├── Event
+│       ├── Extend
+│       ├── Network
+│       ├── OpenSSL
+│       ├── Preloader
+│       ├── Resize
+│       ├── Storage
+│       ├── Swoole
+│       ├── Task
+│       ├── Template
+│       ├── URL
+│       └── Utopia
+└── tests # End to end & unit tests
+    ├── e2e
+    ├── resources
+    └── unit
+```
 
 ---
 ![Appwrite](docs/specs/overview.drawio.svg)
@@ -78,9 +177,9 @@ Appwrite uses [PHP's Composer](https://getcomposer.org/) for managing dependenci
 
 Appwrite is following the [PHP-FIG standards](https://www.php-fig.org/). Currently, we are using both PSR-0 and PSR-4 for coding standards and autoloading standards. Soon we will also review the project for support with PSR-12 (Extended Coding Style).
 
-We use prettier for our JS coding standards and for auto-formatting our code.
+We use prettier for our JS coding standards and auto-formatting our code.
 
-## Scalability, Speed and Performance
+## Scalability, Speed, and Performance
 
 Appwrite is built to scale. Please keep in mind that the Appwrite stack can run in different environments and different scales.
 
@@ -117,7 +216,7 @@ For us to find the right balance, please open an issue explaining your ideas bef
 
 This will allow the Appwrite community to have sufficient discussion about the new feature value and how it fits in the product roadmap and vision.
 
-This is also important for the Appwrite lead developers to be able to give technical input and different emphasize regarding the feature design and architecture.
+This is also important for the Appwrite lead developers to be able to give technical input and different emphasis regarding the feature design and architecture.
 
 ## Build
 
@@ -145,9 +244,9 @@ docker exec appwrite test
 
 ## Code Maintenance  
 
-We use some automation tools to help us keep a healthy code base.
+We use some automation tools to help us keep a healthy codebase.
 
-Improve PHP exeution time by using [fully-qualified function calls](https://veewee.github.io/blog/optimizing-php-performance-by-fq-function-calls/):
+Improve PHP execution time by using [fully-qualified function calls](https://veewee.github.io/blog/optimizing-php-performance-by-fq-function-calls/):
 
 ```bash
 php-cs-fixer fix src/ --rules=native_function_invocation --allow-risky=yes
@@ -178,7 +277,7 @@ Pull requests are great, but there are many other areas where you can help Appwr
 
 ### Blogging & Speaking
 
-Blogging, speaking about, or creating tutorials about one of Appwrite’s many features. Mention [@appwrite_io](https://twitter.com/appwrite_io) on Twitter and/or email team [at] appwrite [dot] io so we can give pointers and tips and help you spread the word by promoting your content on the different Appwrite communication channels. Please add your blog posts and videos of talks to our [Awesome Appwrite]() repo on GitHub.
+Blogging, speaking about, or creating tutorials about one of Appwrite’s many features. Mention [@appwrite_io](https://twitter.com/appwrite_io) on Twitter and/or email team [at] appwrite [dot] io so we can give pointers and tips and help you spread the word by promoting your content on the different Appwrite communication channels. Please add your blog posts and videos of talks to our [Awesome Appwrite](https://github.com/appwrite/awesome-appwrite) repo on GitHub.
 
 ### Presenting at Meetups
 
@@ -198,5 +297,5 @@ Submitting documentation updates, enhancements, designs, or bug fixes. Spelling 
 
 ### Helping Someone
 
-Searching for Appwrite on Discord, GitHub or StackOverflow and helping someone else who needs help. You can also help by reaching others how to contribute to Appwrite's repo!
+Searching for Appwrite on Discord, GitHub, or StackOverflow and helping someone else who needs help. You can also help by reaching others how to contribute to Appwrite's repo!
 
