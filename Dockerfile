@@ -149,6 +149,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/schedule && \
     chmod +x /usr/local/bin/ssl && \
     chmod +x /usr/local/bin/test && \
+    chmod +x /usr/local/bin/vars && \
     chmod +x /usr/local/bin/worker-audits && \
     chmod +x /usr/local/bin/worker-certificates && \
     chmod +x /usr/local/bin/worker-deletes && \
