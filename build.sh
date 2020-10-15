@@ -17,8 +17,8 @@ fi
 
 echo "Updating git repository $1 / $2"
 
-# git fetch origin
-# git reset --hard origin/master
+git fetch origin
+git reset --hard origin/master
 
 if test $(find "./app/db/DBIP/dbip-country-lite-2020-01.mmdb" -mmin +259200)
 then
