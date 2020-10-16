@@ -96,9 +96,9 @@ services:
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_FUNCTIONS_CONTAINERS
 
-  appwrite-socket:
-    entrypoint: socket
-    container_name: appwrite-socket
+  appwrite-realtime:
+    entrypoint: realtime
+    container_name: appwrite-realtime
     build:
       context: .
     restart: unless-stopped
@@ -107,17 +107,17 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=appwrite"
-      - "traefik.http.services.appwrite_socket.loadbalancer.server.port=80"
+      - "traefik.http.services.appwrite_realtime.loadbalancer.server.port=80"
       #ws
-      - traefik.http.routers.appwrite_socket_ws.entrypoints=appwrite_web
-      - traefik.http.routers.appwrite_socket_ws.rule=PathPrefix(`/v1/realtime`)
-      - traefik.http.routers.appwrite_socket_ws.service=appwrite_socket
+      - traefik.http.routers.appwrite_realtime_ws.entrypoints=appwrite_web
+      - traefik.http.routers.appwrite_realtime_ws.rule=PathPrefix(`/v1/realtime`)
+      - traefik.http.routers.appwrite_realtime_ws.service=appwrite_realtime
       # wss
-      - traefik.http.routers.appwrite_socket_wss.entrypoints=appwrite_websecure
-      - traefik.http.routers.appwrite_socket_wss.rule=PathPrefix(`/v1/realtime`)
-      - traefik.http.routers.appwrite_socket_wss.service=appwrite_socket
-      - traefik.http.routers.appwrite_socket_wss.tls=true
-      - traefik.http.routers.appwrite_socket_wss.tls.certresolver=dns
+      - traefik.http.routers.appwrite_realtime_wss.entrypoints=appwrite_websecure
+      - traefik.http.routers.appwrite_realtime_wss.rule=PathPrefix(`/v1/realtime`)
+      - traefik.http.routers.appwrite_realtime_wss.service=appwrite_realtime
+      - traefik.http.routers.appwrite_realtime_wss.tls=true
+      - traefik.http.routers.appwrite_realtime_wss.tls.certresolver=dns
     networks:
       - appwrite
     depends_on:
