@@ -52,6 +52,7 @@ return [
     'th', // Thai
     'tr', // Turkish
     'ua', // Ukrainian
+    'ur', //Urdu
     'vi', // Vietnamese
     'zh-cn', // Chinese - China
     'zh-tw', // Chinese - Taiwan
