@@ -1,5 +1,6 @@
 <?php
 
+use Ahc\Jwt\JWT;
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Config\Config;
@@ -542,6 +543,35 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             ->redirect($state['success'])
         ;
     }, ['request', 'response', 'project', 'user', 'projectDB', 'audits']);
+
+App::get('/v1/account/jwt')
+    ->desc('Create Account JWT')
+    ->groups(['api', 'account'])
+    ->label('scope', 'account')
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'createJWT')
+    ->label('sdk.description', '/docs/references/account/create-jwt.md')
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'url:{url},userId:{param-userId}')
+    ->action(function ($request, $response, $projectDB) {
+        /** @var Appwrite\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        
+        // Instantiate with key, algo, maxAge and leeway.
+        $jwt = new JWT('secret', 'HS256', 3600, 10);
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        
+        // $response->dynamic(new Document(['jwt' => $jwt]), Response::MODEL_SESSION);
+        $response->json(['jwt' => $jwt->encode([
+            'uid'    => 1,
+            'aud'    => 'http://site.com',
+            'scopes' => ['user'],
+            'iss'    => 'http://api.mysite.com',
+        ])]);
+    }, ['request', 'response', 'projectDB', 'webhooks', 'audits']);
 
 App::get('/v1/account')
     ->desc('Get Account')
