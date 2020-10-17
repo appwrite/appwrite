@@ -12,6 +12,10 @@ use Swoole\WebSocket\Frame;
  * - Limit payload size
  * - Message structure: { status: "ok"|"error", event: EVENT_NAME, data: <any arbitrary data> }
  * - JWT Authentication (in path / or in message)
+ * 
+ * 
+ * - https://github.com/hhxsv5/php-sse
+ * - https://github.com/shuixn/socket.io-swoole-server
  */
 
 $server = new Server("0.0.0.0", 80);
@@ -25,6 +29,8 @@ $server->on('open', function(Server $server, Swoole\Http\Request $request) {
     // $server->tick(1000, function() use ($server, $request) {
     //     $server->push($request->fd, json_encode(["hello", time()]));
     // });
+
+    var_dump($request->header);
     $server->push($request->fd, json_encode(["hello", time()]));
 });
 
