@@ -12,13 +12,13 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM php:8.0.0rc1-cli-alpine as step1
+FROM php:8.0.0rc2-cli-alpine as step1
 
 ENV TZ=Asia/Tel_Aviv \
     PHP_REDIS_VERSION=develop \
     PHP_SWOOLE_VERSION=master \
     PHP_IMAGICK_VERSION=master
-    
+
 RUN \
   apk add --no-cache --virtual .deps \
   make \
@@ -62,7 +62,7 @@ RUN \
   make && make install && \
   cd ..
 
-FROM php:8.0.0rc1-cli-alpine as final
+FROM php:8.0.0rc2-cli-alpine as final
 
 LABEL maintainer="team@appwrite.io"
 
