@@ -28,7 +28,7 @@ Appwrite uses a few containers to run, where each container has its job. Most of
 
 If you decide to set up a load balancer for a specific container, make sure that the containers that are trying to communicate with it are accessing it through a load balancer and not directly. All connections between Appwrite different containers are set using Docker environment variables.
 
-There are three Appwrite containers that do keep their state are the MariaDB, Redis, and InfluxDB containers that are used for storing data, cache, and stats (in this order). To scale them out, all you need to do is set up a standard cluster (just like you would with any other app using these technologies) according to your needs and performance.
+There are three Appwrite containers that do keep their state are the MariaDB, Redis, and InfluxDB containers that are used for storing data, cache, and stats (in this order). To scale them out, all you need to do is set up a standard cluster (same as you would with any other app using these technologies) according to your needs and performance.
 
 ## Sending Emails
 

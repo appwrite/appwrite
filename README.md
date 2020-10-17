@@ -10,7 +10,7 @@
 [![Hacktoberfest](https://badgen.net/badge/hacktoberfest/friendly/pink)](CONTRIBUTING.md)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 [![Docker Pulls](https://badgen.net/docker/pulls/appwrite/appwrite)](https://travis-ci.org/appwrite/appwrite)
-[![Travis CI](https://badgen.net/travis/appwrite/appwrite?label=build)](https://travis-ci.org/appwrite/appwrite)
+[![Travis CI](https://badgen.net/travis/appwrite/appwrite?label=build)](https://travis-ci.com/appwrite/appwrite)
 [![Twitter Account](https://badgen.net/twitter/follow/appwrite_io?label=twitter)](https://twitter.com/appwrite_io)
 [![Follow Appwrite on StackShare](https://badgen.net/badge/follow%20on/stackshare/blue)](https://stackshare.io/appwrite)
 
@@ -53,7 +53,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:0.7.0 --version=0.7.0
+    appwrite/appwrite:0.7.0 --version 0.7.0
 ```
 
 ### Windows
@@ -65,7 +65,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:0.7.0 --version=0.7.0
+    appwrite/appwrite:0.7.0 --version 0.7.0
 ```
 
 #### PowerShell
@@ -75,7 +75,7 @@ docker run -it --rm ,
     --volume /var/run/docker.sock:/var/run/docker.sock ,
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw ,
     --entrypoint="install" ,
-    appwrite/appwrite:0.7.0 --version=0.7.0
+    appwrite/appwrite:0.7.0 --version 0.7.0
 ```
 
 Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please note that on non-linux native hosts, the server might take a few minutes to start after installation completes.
