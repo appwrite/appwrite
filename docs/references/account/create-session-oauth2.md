@@ -1,1 +1,1 @@
-Allow the user to login to his account using the OAuth2 provider of his choice. Each OAuth2 provider should be enabled from the Appwrite console first. Use the success and failure arguments to redirect the URL back to your app when login is completed.
+Allow the user to login to their account using the OAuth2 provider of their choice. Each OAuth2 provider should be enabled from the Appwrite console first. Use the success and failure arguments to provide a redirect URL's back to your app when login is completed.

@@ -44,7 +44,7 @@ return [
     'CR' => 'Costa Rica',
     'CU' => 'Cuba',
     'CY' => 'Cipro',
-    'CZ' => 'Repubblica Ceca',
+    'CZ' => 'Cechia',
     'DE' => 'Germania',
     'DJ' => 'Gibuti',
     'DM' => 'Dominica',
