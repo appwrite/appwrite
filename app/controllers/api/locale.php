@@ -24,11 +24,7 @@ App::get('/v1/locale')
         $time = (60 * 60 * 24 * 45); // 45 days cache
         $countries = $locale->getText('countries');
         $continents = $locale->getText('continents');
-
-        if (!App::isProduction()) {
-            $ip = '79.177.241.94';
-        }
-
+        
         $output['ip'] = $ip;
 
         $currency = null;

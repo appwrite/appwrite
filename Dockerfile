@@ -125,7 +125,8 @@ RUN \
   # && mkdir -p /usr/src/php/ext/imagick && curl -fsSL https://pecl.php.net/get/imagick | tar xvz -C "/usr/src/php/ext/imagick" --strip 1 && docker-php-ext-install imagick \
   # && mkdir -p /usr/src/php/ext/yaml && curl -fsSL https://pecl.php.net/get/yaml | tar xvz -C "/usr/src/php/ext/yaml" --strip 1 && docker-php-ext-install yaml \
   && docker-php-ext-install sockets opcache pdo_mysql \
-  && apk del .deps
+  && apk del .deps \
+  && rm -rf /var/cache/apk/*
 
 # RUN wget https://github.com/FriendsOfPHP/pickle/releases/download/v0.6.0/pickle.phar && \
 #   mv pickle.phar /usr/local/bin/pickle && \
@@ -167,6 +168,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/schedule && \
     chmod +x /usr/local/bin/ssl && \
     chmod +x /usr/local/bin/test && \
+    chmod +x /usr/local/bin/vars && \
     chmod +x /usr/local/bin/worker-audits && \
     chmod +x /usr/local/bin/worker-certificates && \
     chmod +x /usr/local/bin/worker-deletes && \

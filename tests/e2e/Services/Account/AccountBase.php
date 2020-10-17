@@ -65,8 +65,8 @@ trait AccountBase
     public function testCreateAccountSession($data):array
     {
         sleep(10);
-        $email = (isset($data['email'])) ? $data['email'] : '';
-        $password = (isset($data['password'])) ? $data['password'] : '';
+        $email = $data['email'] ?? '';
+        $password = $data['password'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -132,9 +132,9 @@ trait AccountBase
      */
     public function testGetAccount($data):array
     {
-        $email = (isset($data['email'])) ? $data['email'] : '';
-        $name = (isset($data['name'])) ? $data['name'] : '';
-        $session = (isset($data['session'])) ? $data['session'] : '';
+        $email = $data['email'] ?? '';
+        $name = $data['name'] ?? '';
+        $session = $data['session'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -183,7 +183,7 @@ trait AccountBase
      */
     public function testGetAccountPrefs($data):array
     {
-        $session = (isset($data['session'])) ? $data['session'] : '';
+        $session = $data['session'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -219,8 +219,8 @@ trait AccountBase
      */
     public function testGetAccountSessions($data):array
     {
-        $session = (isset($data['session'])) ? $data['session'] : '';
-        $sessionId = (isset($data['sessionId'])) ? $data['sessionId'] : '';
+        $session = $data['session'] ?? '';
+        $sessionId = $data['sessionId'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -281,7 +281,7 @@ trait AccountBase
     public function testGetAccountLogs($data):array
     {
         sleep(10);
-        $session = (isset($data['session'])) ? $data['session'] : '';
+        $session = $data['session'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -369,8 +369,8 @@ trait AccountBase
      */
     public function testUpdateAccountName($data):array
     {
-        $email = (isset($data['email'])) ? $data['email'] : '';
-        $session = (isset($data['session'])) ? $data['session'] : '';
+        $email = $data['email'] ?? '';
+        $session = $data['session'] ?? '';
         $newName = 'New Name';
 
         /**
@@ -436,9 +436,9 @@ trait AccountBase
      */
     public function testUpdateAccountPassword($data):array
     {
-        $email = (isset($data['email'])) ? $data['email'] : '';
-        $password = (isset($data['password'])) ? $data['password'] : '';
-        $session = (isset($data['session'])) ? $data['session'] : '';
+        $email = $data['email'] ?? '';
+        $password = $data['password'] ?? '';
+        $session = $data['session'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -505,7 +505,7 @@ trait AccountBase
     public function testUpdateAccountEmail($data):array
     {
         $newEmail = uniqid().'new@localhost.test';
-        $session = (isset($data['session'])) ? $data['session'] : '';
+        $session = $data['session'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -561,7 +561,7 @@ trait AccountBase
     public function testUpdateAccountPrefs($data):array
     {
         $newEmail = uniqid().'new@localhost.test';
-        $session = (isset($data['session'])) ? $data['session'] : '';
+        $session = $data['session'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -638,9 +638,9 @@ trait AccountBase
      */
     public function testCreateAccountVerification($data):array
     {
-        $email = (isset($data['email'])) ? $data['email'] : '';
-        $name = (isset($data['name'])) ? $data['name'] : '';
-        $session = (isset($data['session'])) ? $data['session'] : '';
+        $email = $data['email'] ?? '';
+        $name = $data['name'] ?? '';
+        $session = $data['session'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -703,9 +703,9 @@ trait AccountBase
      */
     public function testUpdateAccountVerification($data):array
     {
-        $id = (isset($data['id'])) ? $data['id'] : '';
-        $session = (isset($data['session'])) ? $data['session'] : '';
-        $verification = (isset($data['verification'])) ? $data['verification'] : '';
+        $id = $data['id'] ?? '';
+        $session = $data['session'] ?? '';
+        $verification = $data['verification'] ?? '';
         
         /**
          * Test for SUCCESS
@@ -757,9 +757,9 @@ trait AccountBase
      */
     public function testDeleteAccountSession($data):array
     {
-        $email = (isset($data['email'])) ? $data['email'] : '';
-        $password = (isset($data['password'])) ? $data['password'] : '';
-        $session = (isset($data['session'])) ? $data['session'] : '';
+        $email = $data['email'] ?? '';
+        $password = $data['password'] ?? '';
+        $session = $data['session'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -825,8 +825,8 @@ trait AccountBase
      */
     public function testDeleteAccountSessionCurrent($data):array
     {
-        $email = (isset($data['email'])) ? $data['email'] : '';
-        $password = (isset($data['password'])) ? $data['password'] : '';
+        $email = $data['email'] ?? '';
+        $password = $data['password'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -882,7 +882,7 @@ trait AccountBase
      */
     public function testDeleteAccountSessions($data):array
     {
-        $session = (isset($data['session'])) ? $data['session'] : '';
+        $session = $data['session'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -910,8 +910,8 @@ trait AccountBase
         /**
          * Create new fallback session
          */
-        $email = (isset($data['email'])) ? $data['email'] : '';
-        $password = (isset($data['password'])) ? $data['password'] : '';
+        $email = $data['email'] ?? '';
+        $password = $data['password'] ?? '';
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
             'origin' => 'http://localhost',
@@ -932,8 +932,8 @@ trait AccountBase
      */
     public function testCreateAccountRecovery($data):array
     {
-        $email = (isset($data['email'])) ? $data['email'] : '';
-        $name = (isset($data['name'])) ? $data['name'] : '';
+        $email = $data['email'] ?? '';
+        $name = $data['name'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -1006,8 +1006,8 @@ trait AccountBase
      */
     public function testUpdateAccountRecovery($data):array
     {
-        $id = (isset($data['id'])) ? $data['id'] : '';
-        $recovery = (isset($data['recovery'])) ? $data['recovery'] : '';
+        $id = $data['id'] ?? '';
+        $recovery = $data['recovery'] ?? '';
         $newPassowrd = 'test-recovery';
         
         /**

@@ -3,6 +3,8 @@ arch:
 
 os: linux
 
+language: minimal
+
 notifications:
   email:
   - team@appwrite.io
@@ -35,4 +37,5 @@ install:
 script:
 - docker ps
 - docker-compose logs appwrite
-- docker exec appwrite test --debug
+- docker exec appwrite vars
+- docker exec appwrite test

@@ -38,7 +38,7 @@ class FunctionsConsoleServerTest extends Scope
             'timeout' => 10,
         ]);
 
-        $functionId = (isset($response1['body']['$id'])) ? $response1['body']['$id'] : '';
+        $functionId = $response1['body']['$id'] ?? '';
 
         $this->assertEquals(201, $response1['headers']['status-code']);
         $this->assertNotEmpty($response1['body']['$id']);
@@ -186,7 +186,7 @@ class FunctionsConsoleServerTest extends Scope
             'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php-fx.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
         ]);
 
-        $tagId = (isset($tag['body']['$id'])) ? $tag['body']['$id'] : '';
+        $tagId = $tag['body']['$id'] ?? '';
 
         $this->assertEquals(201, $tag['headers']['status-code']);
         $this->assertNotEmpty($tag['body']['$id']);
@@ -296,7 +296,7 @@ class FunctionsConsoleServerTest extends Scope
             'async' => 1,
         ]);
 
-        $executionId = (isset($execution['body']['$id'])) ? $execution['body']['$id'] : '';
+        $executionId = $execution['body']['$id'] ?? '';
 
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
