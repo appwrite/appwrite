@@ -61,7 +61,7 @@ sdk
 sdk.account.createOAuth2Session('google');
 ```
 
-## Functions Appwrite provides :
+## Functions Appwrite provides:
 ```php 
     function getLoginURL(): string
 ```  
