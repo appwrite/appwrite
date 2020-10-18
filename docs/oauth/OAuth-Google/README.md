@@ -1,6 +1,6 @@
 # Create Account Session through AppWrite with Google's OAuth 2.0!
 
-## Features :
+## Features:
 - Allow the user to login to his account using Google's OAuth 2.0 
 - Each OAuth2 provider should be enabled from the Appwrite console first
 - Use the success and failure arguments to redirect a URL's back to your app when login is completed
