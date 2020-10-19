@@ -1,7 +1,7 @@
-<header class="clear">
+<header class="clear" data-version>
     <a href="/console" class="logo pull-start">
-        <img src="/images/appwrite.svg" alt="Appwrite Light Logo" class="force-light" />
-        <img src="/images/appwrite-footer-dark.svg" alt="Appwrite Dark Logo" class="force-dark" />
+        <img src="/images/appwrite.svg" alt="Appwrite Light Logo" class="force-light" loading="lazy" />
+        <img src="/images/appwrite-footer-dark.svg" alt="Appwrite Dark Logo" class="force-dark" loading="lazy" />
     </a>
 
     <div class="change-project pull-start desktops-only">
@@ -14,7 +14,7 @@
                     data-switch
                     data-ls-bind="{{router.params.project}}"
                     data-unsync="1"
-                    data-ls-loop="projects" data-ls-as="option" aria-label="Switch Project">
+                    data-ls-loop="projects.projects" data-ls-as="option" aria-label="Switch Project">
                     <option data-ls-attrs="value={{option.$id}}" data-ls-bind="{{option.name}}"></option>
                 </select>
             </label>
@@ -72,8 +72,8 @@
             data-analytics-label="Logo Link">
             <img src="/images/appwrite-nav.svg" loading="lazy" alt="Appwrite Logo" class="nav" />
 
-            <img src="/images/appwrite.svg" loading="lazy" alt="Appwrite Light Logo" class="top force-light" />
-            <img src="/images/appwrite-footer-dark.svg" loading="lazy" alt="Appwrite Dark Logo" class="top force-dark" />
+            <img src="/images/appwrite.svg" loading="lazy" alt="Appwrite Light Logo" class="top force-light" loading="lazy" />
+            <img src="/images/appwrite-footer-dark.svg" loading="lazy" alt="Appwrite Dark Logo" class="top force-dark" loading="lazy" />
         </a>
 
         <div data-ui-highlight class="container">
@@ -118,6 +118,16 @@
                         data-analytics-label="Users Link">
                         <i class="icon-users"></i>
                         Users
+                    </a>
+                </li>
+                <li>
+                    <a data-ls-attrs="href=/console/functions?project={{router.params.project}}"
+                        data-analytics-event="click"
+                        data-analytics-category="console/navigation"
+                        data-analytics-label="Functions Link"
+                        class="link-animation-disabled">
+                        <i class="icon-lightning"></i>
+                        Functions
                     </a>
                 </li>
             </ul>
@@ -193,8 +203,8 @@
 
 <div class="load-screen" data-ls-ui-loader>
     <div class="animation"><div></div><div></div><div></div><div></div></div>
-    <img src="/images/appwrite.svg" alt="Appwrite Light Logo" class="force-light" />
-    <img src="/images/appwrite-footer-dark.svg" alt="Appwrite Dark Logo" class="force-dark" />
+    <img src="/images/appwrite.svg" alt="Appwrite Light Logo" class="force-light" loading="lazy" />
+    <img src="/images/appwrite-footer-dark.svg" alt="Appwrite Dark Logo" class="force-dark" loading="lazy" />
 </div>
 
 <div data-ui-modal class="modal box close sticky-footer" data-button-alias=".setup-new" data-button-icon="icon-plus" data-button-class="project-only" data-open-event="create-project">
@@ -208,7 +218,7 @@
         <p>Appwrite projects are containers for your resources and apps across different platforms.</p>
 
         <label>Name</label>
-        <input type="text" class="full-width margin-bottom-xl" name="name" required autocomplete="off" />
+        <input type="text" class="full-width margin-bottom-xl" name="name" required autocomplete="off" maxlength="128" />
 
         <footer>
             <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>

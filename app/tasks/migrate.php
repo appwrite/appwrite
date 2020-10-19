@@ -1,18 +1,13 @@
-#!/bin/env php
 <?php
 
-require_once __DIR__.'/../init.php';
-
-global $register, $projectDB, $console, $request;
+global $cli, $register, $projectDB, $console;
 
 use Utopia\Config\Config;
-use Utopia\CLI\CLI;
 use Utopia\CLI\Console;
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 
-$cli = new CLI();
 $db = $register->get('db');
 
 $callbacks = [
@@ -64,7 +59,7 @@ $callbacks = [
             $offset = $offset + $limit;
         }
 
-        $schema = (isset($_SERVER['_APP_DB_SCHEMA'])) ? $_SERVER['_APP_DB_SCHEMA'] : '';
+        $schema = $_SERVER['_APP_DB_SCHEMA'] ?? '';
 
         try {
             $statement = $db->prepare("
@@ -152,9 +147,7 @@ function fixDocument(Document $document) {
         ->removeAttribute('$uid')
     ;
 
-    //Console::log('Switched from $uid to $id: '.$document->getCollection().'/'.$document->getId());
-
-    foreach($document as &$attr) {
+    foreach($document as &$attr) { // Handle child documents
         if($attr instanceof Document) {
             $attr = fixDocument($attr);
         }
@@ -172,7 +165,7 @@ function fixDocument(Document $document) {
 }
 
 $cli
-    ->task('run')
+    ->task('migrate')
     ->action(function () use ($console, $projectDB, $consoleDB, $callbacks) {
         Console::success('Starting Data Migration');
 
@@ -215,5 +208,3 @@ $cli
 
         Console::success('Data Migration Completed');
     });
-
-$cli->run();

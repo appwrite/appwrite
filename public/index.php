@@ -8,16 +8,20 @@
  * ― Rick Cook, The Wizardry Compiled
  */
 
+use Appwrite\Utopia\Response;
+use Utopia\App;
+use Utopia\Request;
+
 error_reporting(0);
 ini_set('display_errors', 0);
 
-// ini_set('display_errors', 1);
-// ini_set('display_startup_errors', 1);
-// error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+//trigger_error('hide errors in prod', E_USER_NOTICE);
 
-$path = (isset($_GET['q'])) ? explode('/', $_GET['q']) : [];
+include __DIR__ . '/../app/controllers/general.php';
 
-array_shift($path);
-$version = array_shift($path);
+$app = new App('Asia/Tel_Aviv');
 
-include __DIR__ . '/../app/app.php';
+$app->run(new Request(), new Response());

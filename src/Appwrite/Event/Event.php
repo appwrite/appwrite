@@ -27,7 +27,7 @@ class Event
      * @param string $queue
      * @param string $class
      */
-    public function __construct($queue, $class)
+    public function __construct(string $queue, string $class)
     {
         $this->queue = $queue;
         $this->class = $class;
@@ -39,7 +39,7 @@ class Event
      *
      * @return $this
      */
-    public function setParam($key, $value)
+    public function setParam(string $key, $value): self
     {
         $this->params[$key] = $value;
 
@@ -51,7 +51,7 @@ class Event
      *
      * @return mixed|null
      */
-    public function getParam($key)
+    public function getParam(string $key)
     {
         return (isset($this->params[$key])) ? $this->params[$key] : null;
     }
@@ -59,8 +59,17 @@ class Event
     /**
      * Execute Event.
      */
-    public function trigger()
+    public function trigger(): void
     {
         Resque::enqueue($this->queue, $this->class, $this->params);
+
+        $this->reset();
+    }
+
+    public function reset(): self
+    {
+        $this->params = [];
+
+        return $this;
     }
 }
