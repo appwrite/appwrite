@@ -46,6 +46,10 @@ $server->on("workerStart", function ($server, $workerId) use (&$connections) {
 
             if($redis->ping('')) {
                 $attempts = 0;
+                Console::success('Connection established');
+            }
+            else {
+                Console::error('Connection failed');
             }
 
             sleep(1); // 1 sec delay between connection attempts
