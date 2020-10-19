@@ -15,9 +15,10 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
 FROM php:8.0.0RC2-cli-alpine as step1
 
 ENV TZ=Asia/Tel_Aviv \
-    PHP_REDIS_VERSION=develop \
-    PHP_SWOOLE_VERSION=master \
-    PHP_IMAGICK_VERSION=master
+    PHP_REDIS_VERSION=5.3.2RC2 \
+    PHP_SWOOLE_VERSION=4.5.5 \
+    PHP_IMAGICK_VERSION=master \
+    PHP_YAML_VERSION=2.2.0b2
 
 RUN \
   apk add --no-cache --virtual .deps \
@@ -57,6 +58,14 @@ RUN \
   git clone https://github.com/Imagick/imagick && \
   cd imagick && \
   git checkout $PHP_IMAGICK_VERSION && \
+  phpize && \
+  ./configure && \
+  make && make install && \
+  cd .. && \
+  ## YAML Extension
+  git clone https://github.com/php/pecl-file_formats-yaml && \
+  cd pecl-file_formats-yaml && \
+  git checkout $PHP_YAML_VERSION && \
   phpize && \
   ./configure && \
   make && make install && \
@@ -139,6 +148,7 @@ COPY --from=step0 /usr/local/src/vendor /usr/src/code/vendor
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/php_yaml.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 
 # Add Source Code
 COPY ./app /usr/src/code/app
@@ -185,6 +195,7 @@ RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 RUN echo extension=swoole.so >> /usr/local/etc/php/conf.d/swoole.ini
 RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
 RUN echo extension=imagick.so >> /usr/local/etc/php/conf.d/imagick.ini
+RUN echo extension=php_yaml.so >> /usr/local/etc/php/conf.d/yaml.ini
 
 RUN echo "opcache.preload_user=www-data" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.preload=/usr/src/code/app/preload.php" >> /usr/local/etc/php/conf.d/appwrite.ini
