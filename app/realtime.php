@@ -34,25 +34,24 @@ $server->on("workerStart", function ($server, $workerId) use (&$connections) {
     $attempts = 0;
     $start = time();
     
-    while ($attempts < 3) {
+    while ($attempts < 300) {
         try {
+            if($attempts > 0) {
+                Console::error('Connection lost (lasted '.(time() - $start).' seconds). Attempting restart in 5 seconds (attempt #'.$attempts.')');
+                sleep(5); // 1 sec delay between connection attempts
+            }
+
             $redis = new Redis();
             $redis->connect('redis', 6379);
             $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
-            if($attempts > 0) {
-                Console::error('Connection lost (lasted '.(time() - $start).' seconds). Attempting restart (attempt #'.$attempts.')');
-            }
-
-            if($redis->ping('')) {
+            if($redis->ping(true)) {
                 $attempts = 0;
                 Console::success('Connection established');
             }
             else {
                 Console::error('Connection failed');
             }
-
-            sleep(1); // 1 sec delay between connection attempts
 
             $redis->subscribe(['realtime'], function($redis, $channel, $message) use ($server, $workerId, &$connections) {
                 $message = 'Message from worker #'.$workerId.'; '.$message;
@@ -74,12 +73,13 @@ $server->on("workerStart", function ($server, $workerId) use (&$connections) {
                 }
             });
             
-            $attempts++;
-
         } catch (\Throwable $th) {
+            Console::error('Connection error: '.$th->getMessage());
             $attempts++;
             continue;
         }
+
+        $attempts++;
     }
 
     Console::error('Failed to restart connection...');
