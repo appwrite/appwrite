@@ -30,6 +30,19 @@ App::get('/v1/health/version')
         $response->json(['version' => APP_VERSION_STABLE]);
     }, ['response']);
 
+App::get('/v1/health/realtime')
+    ->desc('Get Realtime')
+    ->groups(['api', 'health'])
+    ->label('scope', 'public')
+    ->action(function ($response) {
+        /** @var Utopia\Response $response */
+        $redis = new Redis();
+        $redis->connect('redis', 6379);
+    
+        $redis->publish('realtime', 'I\'m a live message');
+        $response->json(['status' => 'OK']);
+    }, ['response']);
+
 App::get('/v1/health/db')
     ->desc('Get DB')
     ->groups(['api', 'health'])
