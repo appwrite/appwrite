@@ -32,6 +32,7 @@ RUN \
   git \
   zlib-dev \
   brotli-dev \
+  yaml-dev \
   imagemagick \
   imagemagick-dev
 
@@ -123,7 +124,6 @@ RUN \
   curl-dev \
   && apk add --no-cache \
   libstdc++ \
-  yaml-dev \
   certbot \
   docker-cli \
   brotli-dev \
