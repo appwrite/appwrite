@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a59e355840c9762319629e4cc5fc2dbc",
+    "content-hash": "19f7cef86ddc98623cd3ffffa2be2cae",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -1611,6 +1611,54 @@
             "time": "2020-06-29T20:53:16+00:00"
         },
         {
+            "name": "utopia-php/preloader",
+            "version": "0.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/preloader.git",
+                "reference": "e710e7cf38605dd67c6cc599dd1150735765ad2e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/preloader/zipball/e710e7cf38605dd67c6cc599dd1150735765ad2e",
+                "reference": "e710e7cf38605dd67c6cc599dd1150735765ad2e",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^7.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Preloader\\": "src/Preloader"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "team@appwrite.io"
+                }
+            ],
+            "description": "Utopia Preloader library is simple and lite library for managing PHP preloading configuration",
+            "keywords": [
+                "framework",
+                "php",
+                "preload",
+                "preloader",
+                "preloading",
+                "upf",
+                "utopia"
+            ],
+            "time": "2020-08-14T23:17:55+00:00"
+        },
+        {
             "name": "utopia-php/registry",
             "version": "0.2.3",
             "source": {
@@ -2598,12 +2646,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "137f98be3b928d5f9f14e66f7aa5eadcfc668bbe"
+                "reference": "338bf27b4510498c4b0ab70c7cbc292a591dc0df"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/137f98be3b928d5f9f14e66f7aa5eadcfc668bbe",
-                "reference": "137f98be3b928d5f9f14e66f7aa5eadcfc668bbe",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/338bf27b4510498c4b0ab70c7cbc292a591dc0df",
+                "reference": "338bf27b4510498c4b0ab70c7cbc292a591dc0df",
                 "shasum": ""
             },
             "require": {
@@ -2689,7 +2737,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2020-10-15T05:02:48+00:00"
+            "time": "2020-10-19T09:25:00+00:00"
         },
         {
             "name": "sebastian/cli-parser",
