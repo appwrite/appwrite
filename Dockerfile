@@ -148,7 +148,7 @@ COPY --from=step0 /usr/local/src/vendor /usr/src/code/vendor
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
-COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/php_yaml.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yaml.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 
 # Add Source Code
 COPY ./app /usr/src/code/app
@@ -195,7 +195,7 @@ RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 RUN echo extension=swoole.so >> /usr/local/etc/php/conf.d/swoole.ini
 RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
 RUN echo extension=imagick.so >> /usr/local/etc/php/conf.d/imagick.ini
-RUN echo extension=php_yaml.so >> /usr/local/etc/php/conf.d/yaml.ini
+RUN echo extension=yaml.so >> /usr/local/etc/php/conf.d/yaml.ini
 
 RUN echo "opcache.preload_user=www-data" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.preload=/usr/src/code/app/preload.php" >> /usr/local/etc/php/conf.d/appwrite.ini
