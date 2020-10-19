@@ -15,7 +15,7 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
 FROM php:7.4-cli-alpine as step1
 
 ENV TZ=Asia/Tel_Aviv \
-    PHP_REDIS_VERSION=5.3.0 \
+    PHP_REDIS_VERSION=5.3.2RC2 \
     PHP_SWOOLE_VERSION=4.5.5 \
     PHP_XDEBUG_VERSION=sdebug_2_9-beta
 
@@ -170,6 +170,7 @@ RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
 RUN echo "opcache.preload_user=www-data" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.preload=/usr/src/code/app/preload.php" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.enable_cli = 1" >> /usr/local/etc/php/conf.d/appwrite.ini
+RUN echo "default_socket_timeout = -1" >> /usr/local/etc/php/conf.d/appwrite.ini
 
 EXPOSE 80
 
