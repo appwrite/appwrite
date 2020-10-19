@@ -166,8 +166,7 @@ $register->set('statsd', function () { // Register DB connection
 });
 $register->set('cache', function () { // Register cache connection
     $redis = new Redis();
-    $redis->pconnect(App::getEnv('_APP_REDIS_HOST', '', 2.5),
-        App::getEnv('_APP_REDIS_PORT', ''));
+    $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
 
     return $redis;
 });
