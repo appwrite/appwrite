@@ -16,7 +16,7 @@ FROM php:8.0.0RC2-cli-alpine as step1
 
 ENV TZ=Asia/Tel_Aviv \
     PHP_REDIS_VERSION=5.3.2RC2 \
-    PHP_SWOOLE_VERSION=4.5.5 \
+    PHP_SWOOLE_VERSION=v4.5.5 \
     PHP_IMAGICK_VERSION=master \
     PHP_YAML_VERSION=2.2.0b2
 
