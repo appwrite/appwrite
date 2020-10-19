@@ -30,7 +30,6 @@ $http
         'open_http2_protocol' => true,
         // 'document_root' => __DIR__.'/../public',
         // 'enable_static_handler' => true,
-        'timeout' => 7,
         'http_compression' => true,
         'http_compression_level' => 6,
         'package_max_length' => $payloadSize,
