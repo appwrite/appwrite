@@ -127,6 +127,7 @@ RUN \
   certbot \
   docker-cli \
   brotli-dev \
+  yaml-dev \
   imagemagick \
   imagemagick-dev \
   # && pecl install imagick yaml \ 
