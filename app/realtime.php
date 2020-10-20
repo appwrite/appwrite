@@ -4,8 +4,11 @@ require_once __DIR__.'/../vendor/autoload.php';
 
 use Swoole\WebSocket\Server;
 use Swoole\Http\Request;
+use Swoole\Process;
 use Swoole\WebSocket\Frame;
+use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Route;
 
 /**
  * TODO List
@@ -16,9 +19,11 @@ use Utopia\CLI\Console;
  * - Message structure: { status: "ok"|"error", event: EVENT_NAME, data: <any arbitrary data> }
  * - JWT Authentication (in path / or in message)
  * 
- * 
- * - https://github.com/hhxsv5/php-sse
- * - https://github.com/shuixn/socket.io-swoole-server
+ * Protocols Support:
+ * - Websocket support: https://www.swoole.co.uk/docs/modules/swoole-websocket-server
+ * - MQTT support: https://www.swoole.co.uk/docs/modules/swoole-mqtt-server
+ * - SSE support: https://github.com/hhxsv5/php-sse
+ * - Socket.io support: https://github.com/shuixn/socket.io-swoole-server
  */
 
 ini_set('default_socket_timeout', -1);
@@ -55,9 +60,7 @@ $server->on("workerStart", function ($server, $workerId) use (&$connections) {
 
             $redis->subscribe(['realtime'], function($redis, $channel, $message) use ($server, $workerId, &$connections) {
                 $message = 'Message from worker #'.$workerId.'; '.$message;
-        
-                Console::warning('Total connections: '.count($connections));
-                
+                        
                 foreach($connections as $fd) {
                     if ($server->exist($fd)
                         && $server->isEstablished($fd)
@@ -87,6 +90,14 @@ $server->on("workerStart", function ($server, $workerId) use (&$connections) {
 
 $server->on("start", function (Server $server) {
     Console::success('Server started succefully');
+
+    Console::info("Master pid {$server->master_pid}, manager pid {$server->manager_pid}");
+
+    // listen ctrl + c
+    Process::signal(2, function () use ($server) {
+        Console::log('Stop by Ctrl+C');
+        $server->shutdown();
+    });
 });
 
 $server->on('open', function(Server $server, Request $request) use (&$connections) {
@@ -94,6 +105,10 @@ $server->on('open', function(Server $server, Request $request) use (&$connection
     
     Console::info("Connection open (user: {$request->fd}, worker: {$server->getWorkerId()})");
     Console::info('Total connections: '.count($connections));
+
+    $app = new App('Asia/Tel_Aviv');
+
+    var_dump($app->getResource('user'));
 
     $server->push($request->fd, json_encode(["hello", count($connections)]));
 });
