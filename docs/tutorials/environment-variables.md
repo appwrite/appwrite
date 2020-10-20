@@ -26,7 +26,7 @@ Maximum file size allowed for file upload. The default value is 100MB limitation
 
 ### _APP_STORAGE_ANTIVIRUS
 
-This variable allows you to disable the internal anti-virus scans. By default, this value is set to 'enabled' to cancel the scans, set the value to 'disabled'. When disabled, it's recommended to turn off the ClamAV container for better resource usage.
+This variable allows you to disable the internal anti-virus scans. This value is set to 'enabled' by default, to cancel the scans set the value to 'disabled'. When disabled, it's recommended to turn off the ClamAV container for better resource usage.
 
 ### _APP_CONSOLE_WHITELIST_EMAILS
 
