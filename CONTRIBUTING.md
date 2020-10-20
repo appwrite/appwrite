@@ -74,6 +74,12 @@ docker-compose up -d
 
 After finishing the installation process, you can start writing and editing code. To compile new CSS and JS distribution files, use 'less' and 'build' tasks using gulp as a task manager.
 
+Note that code hot-reloading is supported. Therefore instead of `docker-compose up -d`, you may run the following:
+
+```bash
+docker-compose -f docker-compose.yml -f docker-compose-reload.yml up
+``` 
+
 ## Architecture
 
 Appwrite's current structure is a combination of both [Monolithic](https://en.wikipedia.org/wiki/Monolithic_application) and [Microservice](https://en.wikipedia.org/wiki/Microservices) architectures, but our final goal, as we grow, is to be using only microservices.
