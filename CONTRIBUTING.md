@@ -23,11 +23,11 @@ doc-548-submit-a-pull-request-section-to-contribution-guide
 
 When `TYPE` can be:
 
-- **feat** - is a new feature
-- **doc** - documentation only changes
-- **cicd** - changes related to CI/CD system
-- **fix** - a bug fix
-- **refactor** - code change that neither fixes a bug nor adds a feature
+- **feat** - is a new feature.
+- **doc** - documentation only changes.
+- **cicd** - changes related to CI/CD system.
+- **fix** - a bug fix.
+- **refactor** - code change that neither fixes a bug nor adds a feature.
 
 **All PRs must include a commit message with the changes description!** 
 
