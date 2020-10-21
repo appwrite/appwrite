@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "19f7cef86ddc98623cd3ffffa2be2cae",
+    "content-hash": "f51a86b9521acc0e934814d05b2927d2",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -514,12 +514,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/promises.git",
-                "reference": "60d379c243457e073cff02bc323a2a86cb355631"
+                "reference": "ddfeedfff2a52661429437da0702979f708e6ac6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/promises/zipball/60d379c243457e073cff02bc323a2a86cb355631",
-                "reference": "60d379c243457e073cff02bc323a2a86cb355631",
+                "url": "https://api.github.com/repos/guzzle/promises/zipball/ddfeedfff2a52661429437da0702979f708e6ac6",
+                "reference": "ddfeedfff2a52661429437da0702979f708e6ac6",
                 "shasum": ""
             },
             "require": {
@@ -557,7 +557,7 @@
             "keywords": [
                 "promise"
             ],
-            "time": "2020-09-30T07:37:28+00:00"
+            "time": "2020-10-19T16:50:15+00:00"
         },
         {
             "name": "guzzlehttp/psr7",
@@ -1522,23 +1522,23 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.9.1",
+            "version": "0.9.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "1c33b92b9188fb11b2ae70a4b7cf51844e07aa2e"
+                "reference": "82d1d0c913f0002e79557ae2ac9da991b2256e4d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/1c33b92b9188fb11b2ae70a4b7cf51844e07aa2e",
-                "reference": "1c33b92b9188fb11b2ae70a4b7cf51844e07aa2e",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/82d1d0c913f0002e79557ae2ac9da991b2256e4d",
+                "reference": "82d1d0c913f0002e79557ae2ac9da991b2256e4d",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.0.0"
+                "php": ">=7.3.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^7.0"
+                "phpunit/phpunit": "^9.4"
             },
             "type": "library",
             "autoload": {
@@ -1562,7 +1562,7 @@
                 "php",
                 "upf"
             ],
-            "time": "2020-09-09T19:50:26+00:00"
+            "time": "2020-10-21T04:58:48+00:00"
         },
         {
             "name": "utopia-php/locale",
@@ -1713,7 +1713,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "a57b3cd56c4bfe1538276cfc77456cf95d8835cb"
+                "reference": "ad1ee55f61967546c0889d377b628e244182311e"
             },
             "require": {
                 "ext-curl": "*",
@@ -1743,7 +1743,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2020-10-14T12:07:25+00:00"
+            "time": "2020-10-20T10:23:43+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -2646,12 +2646,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "338bf27b4510498c4b0ab70c7cbc292a591dc0df"
+                "reference": "0534ed70e3a792e4891f32ff78055648dfac4a3d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/338bf27b4510498c4b0ab70c7cbc292a591dc0df",
-                "reference": "338bf27b4510498c4b0ab70c7cbc292a591dc0df",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/0534ed70e3a792e4891f32ff78055648dfac4a3d",
+                "reference": "0534ed70e3a792e4891f32ff78055648dfac4a3d",
                 "shasum": ""
             },
             "require": {
@@ -2737,7 +2737,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2020-10-19T09:25:00+00:00"
+            "time": "2020-10-21T04:49:22+00:00"
         },
         {
             "name": "sebastian/cli-parser",

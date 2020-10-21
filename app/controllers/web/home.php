@@ -437,7 +437,7 @@ App::get('/open-api-2.json')
                 ];
 
                 foreach ($route->getParams() as $name => $param) {
-                    $validator = (\is_callable($param['validator'])) ? call_user_func_array($param['validator'], $utopia->getResources($param['resources'])) : $param['validator']; /* @var $validator \Utopia\Validator */
+                    $validator = (\is_callable($param['validator'])) ? call_user_func_array($param['validator'], App::getResources($param['resources'])) : $param['validator']; /* @var $validator \Utopia\Validator */
 
                     $node = [
                         'name' => $name,
