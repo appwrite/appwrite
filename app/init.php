@@ -380,10 +380,10 @@ App::setResource('user', function($mode, $project, $console, $request, $response
                 $request->getHeader('x-appwrite-key', '')))); // Get API Key
 
     // Get fallback session from clients who block 3rd-party cookies
-    $response->addHeader('X-Debug-Fallback', 'false');
+    if($response) $response->addHeader('X-Debug-Fallback', 'false');
 
     if(empty($session['id']) && empty($session['secret'])) {
-        $response->addHeader('X-Debug-Fallback', 'true');
+        if($response) $response->addHeader('X-Debug-Fallback', 'true');
         $fallback = $request->getHeader('x-fallback-cookies', '');
         $fallback = \json_decode($fallback, true);
         $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
@@ -397,7 +397,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     }
     else {
         $user = $consoleDB->getDocument(Auth::$unique);
-
+        
         $user
             ->setAttribute('$id', 'admin-'.$user->getAttribute('$id'))
         ;
@@ -412,7 +412,8 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     if (APP_MODE_ADMIN === $mode) {
         if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
-        } else {
+        }
+        else {
             $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
         }
     }

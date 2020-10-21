@@ -1,7 +1,9 @@
 <?php
 
+require_once __DIR__.'/init.php';
 require_once __DIR__.'/../vendor/autoload.php';
 
+use Appwrite\Swoole\Request as SwooleRequest;
 use Swoole\WebSocket\Server;
 use Swoole\Http\Request;
 use Swoole\Process;
@@ -32,6 +34,7 @@ Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 $server = new Server("0.0.0.0", 80);
 
 $connections = [];
+$subscriptions = [];
 
 $server->on("workerStart", function ($server, $workerId) use (&$connections) {
     Console::success('Worker '.++$workerId.' started succefully');
@@ -71,7 +74,7 @@ $server->on("workerStart", function ($server, $workerId) use (&$connections) {
                                 SWOOLE_WEBSOCKET_FLAG_FIN | SWOOLE_WEBSOCKET_FLAG_COMPRESS);
                     }
                     else { 
-                        $server->close($fd); 
+                        $server->close($fd);
                     }
                 }
             });
@@ -106,11 +109,43 @@ $server->on('open', function(Server $server, Request $request) use (&$connection
     Console::info("Connection open (user: {$request->fd}, worker: {$server->getWorkerId()})");
     Console::info('Total connections: '.count($connections));
 
+    $connection = $request->fd;
     $app = new App('Asia/Tel_Aviv');
+    $request = new SwooleRequest($request);
 
-    var_dump($app->getResource('user'));
+    App::setResource('request', function () use ($request) {
+        return $request;
+    });
 
-    $server->push($request->fd, json_encode(["hello", count($connections)]));
+    App::setResource('response', function () {
+        return null;
+    });
+
+    $user = App::getResource('user');
+    $project = App::getResource('project');
+
+    /** @var Appwrite\Database\Document $user */
+    /** @var Appwrite\Database\Document $project */
+
+    var_dump($project->getId());
+    var_dump($project->getAttribute('name'));
+    var_dump($user->getId());
+    var_dump($user->getAttribute('name'));
+
+    if(!isset($subscriptions[$project->getId()])) { // Init Project
+        $subscriptions[$project->getId()] = [];
+    }
+
+    if(isset($subscriptions[$project->getId()][$user->getId()])) { // Close previous connection
+        $server->close($subscriptions[$project->getId()][$user->getId()]['connection']);
+    }
+
+    $subscriptions[$project->getId()][$user->getId()] = [
+        'channels' => [],
+        'connection' => $connection,
+    ];
+
+    $server->push($connection, json_encode(["hello", count($connections)]));
 });
 
 $server->on('message', function(Server $server, Frame $frame) {
