@@ -3,6 +3,7 @@
 require_once __DIR__.'/init.php';
 require_once __DIR__.'/../vendor/autoload.php';
 
+use Appwrite\Auth\Auth;
 use Appwrite\Swoole\Request as SwooleRequest;
 use Swoole\WebSocket\Server;
 use Swoole\Http\Request;
@@ -44,7 +45,8 @@ $server->on("workerStart", function ($server, $workerId) use (&$subscriptions) {
     while ($attempts < 300) {
         try {
             if($attempts > 0) {
-                Console::error('Pub/sub connection lost (lasted '.(time() - $start).' seconds). Attempting restart in 5 seconds (attempt #'.$attempts.')');
+                Console::error('Pub/sub connection lost (lasted '.(time() - $start).' seconds, worker: '.$workerId.').
+                    Attempting restart in 5 seconds (attempt #'.$attempts.')');
                 sleep(5); // 1 sec delay between connection attempts
             }
 
@@ -54,10 +56,10 @@ $server->on("workerStart", function ($server, $workerId) use (&$subscriptions) {
 
             if($redis->ping(true)) {
                 $attempts = 0;
-                Console::success('Pub/sub connection established');
+                Console::success('Pub/sub connection established (worker: '.$workerId.')');
             }
             else {
-                Console::error('Pub/sub failed');
+                Console::error('Pub/sub failed (worker: '.$workerId.')');
             }
 
             $redis->subscribe(['realtime'], function($redis, $channel, $message) use ($server, $workerId) {
@@ -105,6 +107,7 @@ $server->on("start", function (Server $server) {
 $server->on('open', function(Server $server, Request $request) use (&$connections, &$subscriptions) {    
     Console::info("Connection open (user: {$request->fd}, worker: {$server->getWorkerId()})");
 
+    $app = new App('');
     $connection = $request->fd;
     $request = new SwooleRequest($request);
 
@@ -117,8 +120,9 @@ $server->on('open', function(Server $server, Request $request) use (&$connection
     });
 
     $channels = array_flip($request->getQuery('channels', []));
-    $user = App::getResource('user');
-    $project = App::getResource('project');
+    $user = $app->getResource('user');
+    $project = $app->getResource('project');
+    $roles = ['user:'.$user->getId(), 'role:'.(($user->isEmpty()) ? Auth::USER_ROLE_GUEST : Auth::USER_ROLE_MEMBER)];
 
     /** @var Appwrite\Database\Document $user */
     /** @var Appwrite\Database\Document $project */
@@ -128,21 +132,33 @@ $server->on('open', function(Server $server, Request $request) use (&$connection
     var_dump($user->getId());
     var_dump($user->getAttribute('name'));
 
+    \array_map(function ($node) use (&$roles) {
+        if (isset($node['teamId']) && isset($node['roles'])) {
+            $roles[] = 'team:'.$node['teamId'];
+
+            foreach ($node['roles'] as $nodeRole) { // Set all team roles
+                $roles[] = 'team:'.$node['teamId'].'/'.$nodeRole;
+            }
+        }
+    }, $user->getAttribute('memberships', []));
+
     if(!isset($subscriptions[$project->getId()])) { // Init Project
         $subscriptions[$project->getId()] = [];
     }
 
-    if(!isset($subscriptions[$project->getId()][$user->getId()])) { // Add user first connection
-        $subscriptions[$project->getId()][$user->getId()] = [];
-    }
-
-    foreach ($channels as $channel => $list) {
-        $subscriptions[$project->getId()][$user->getId()][$channel][$connection] = true;
+    foreach ($roles as $key => $role) {
+        if(!isset($subscriptions[$project->getId()][$role])) { // Add user first connection
+            $subscriptions[$project->getId()][$role] = [];
+        }
+    
+        foreach ($channels as $channel => $list) {
+            $subscriptions[$project->getId()][$role][$channel][$connection] = true;
+        }
     }
 
     $connections[$connection] = [
         'projectId' => $project->getId(),
-        'userId' => $user->getId()
+        'roles' => $roles,
     ];
 
     $server->push($connection, json_encode($subscriptions));
@@ -162,18 +178,20 @@ $server->on('close', function(Server $server, int $fd) use (&$connections, &$sub
     Console::error('Connection close: '.$fd);
 
     $projectId = $connections[$fd]['projectId'] ?? '';
-    $userId = $connections[$fd]['userId'] ?? '';
+    $roles = $connections[$fd]['roles'] ?? [];
 
-    foreach ($subscriptions[$projectId][$userId] as $channel => $list) {
-        unset($subscriptions[$projectId][$userId][$channel][$fd]); // Remove connection
+    foreach ($roles as $key => $role) {
+        foreach ($subscriptions[$projectId][$role] as $channel => $list) {
+            unset($subscriptions[$projectId][$role][$channel][$fd]); // Remove connection
 
-        if(empty($list)) {
-            unset($subscriptions[$projectId][$userId][$channel]);  // Remove channel
+            if(empty($subscriptions[$projectId][$role][$channel])) {
+                unset($subscriptions[$projectId][$role][$channel]);  // Remove channel
+            }
         }
-    }
 
-    if(empty($subscriptions[$projectId][$userId])) {
-        unset($subscriptions[$projectId][$userId]); // Remove user
+        if(empty($subscriptions[$projectId][$role])) {
+            unset($subscriptions[$projectId][$role]); // Remove role
+        }
     }
 
     unset($connections[$fd]);
