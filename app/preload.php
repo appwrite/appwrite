@@ -20,17 +20,30 @@ use Utopia\Preloader\Preloader;
 
 include __DIR__.'/controllers/general.php';
 
-(new Preloader())
+$preloader = new Preloader();
+
+foreach ([
+    realpath(__DIR__ . '/../app/config'),
+    realpath(__DIR__ . '/../app/controllers'),
+    realpath(__DIR__ . '/../src'),
+    realpath(__DIR__ . '/../vendor/twig/twig'),
+    realpath(__DIR__ . '/../vendor/guzzlehttp/guzzle'),
+    realpath(__DIR__ . '/../vendor/domnikl'),
+    realpath(__DIR__ . '/../vendor/geoip2'),
+    realpath(__DIR__ . '/../vendor/domnikl'),
+    realpath(__DIR__ . '/../vendor/maxmind'),
+    realpath(__DIR__ . '/../vendor/maxmind-db'),
+    realpath(__DIR__ . '/../vendor/psr/log'),
+    realpath(__DIR__ . '/../vendor/piwik'),
+    realpath(__DIR__ . '/../vendor/symfony'),
+] as $key => $value) {
+    if($value !== false) {
+        $preloader->ignore($value);
+    }
+}
+
+$preloader
     ->paths(realpath(__DIR__ . '/../app/config'))
     ->paths(realpath(__DIR__ . '/../app/controllers'))
     ->paths(realpath(__DIR__ . '/../src'))
-    ->ignore(realpath(__DIR__ . '/../vendor/twig/twig'))
-    ->ignore(realpath(__DIR__ . '/../vendor/guzzlehttp/guzzle'))
-    ->ignore(realpath(__DIR__ . '/../vendor/geoip2'))
-    ->ignore(realpath(__DIR__ . '/../vendor/domnikl'))
-    ->ignore(realpath(__DIR__ . '/../vendor/maxmind'))
-    ->ignore(realpath(__DIR__ . '/../vendor/maxmind-db'))
-    ->ignore(realpath(__DIR__ . '/../vendor/psr/log'))
-    ->ignore(realpath(__DIR__ . '/../vendor/piwik'))
-    ->ignore(realpath(__DIR__ . '/../vendor/symfony'))
     ->load();
