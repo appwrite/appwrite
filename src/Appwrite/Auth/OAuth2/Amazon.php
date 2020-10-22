@@ -63,7 +63,7 @@ class Amazon extends OAuth2
      */
     public function getAccessToken(string $code): string
     {
-        $headers[] = 'Content-Type: application/x-www-form-urlencoded;charset=UTF-8';
+        $headers = ['Content-Type: application/x-www-form-urlencoded;charset=UTF-8'];
         $accessToken = $this->request(
             'POST',
             'https://api.amazon.com/auth/o2/token',

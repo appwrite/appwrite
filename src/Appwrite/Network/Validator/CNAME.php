@@ -39,10 +39,6 @@ class CNAME extends Validator
             return false;
         }
 
-        if (!$records || !\is_array($records)) {
-            return false;
-        }
-
         foreach ($records as $record) {
             if (isset($record['target']) && $record['target'] === $this->target) {
                 return true;

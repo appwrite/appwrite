@@ -58,7 +58,7 @@ class Apple extends OAuth2
      */
     public function getAccessToken(string $code): string
     {
-        $headers[] = 'Content-Type: application/x-www-form-urlencoded';
+        $headers = ['Content-Type: application/x-www-form-urlencoded'];
         $accessToken = $this->request(
             'POST',
             'https://appleid.apple.com/auth/token',
