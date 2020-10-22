@@ -11,12 +11,15 @@ use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Filesystem;
 use Appwrite\Resize\Resize;
 use Appwrite\URL\URL as URLParse;
-use BaconQrCode\Renderer\ImageRenderer;
+/* use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\Image\ImagickImageBackEnd;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
-use BaconQrCode\Writer;
+use BaconQrCode\Writer; */
 use Utopia\Config\Config;
 use Utopia\Validator\HexColor;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
+/* use SebastianBergmann\CodeCoverage\Report\Html\Renderer; */
 
 $avatarCallback = function ($type, $code, $width, $height, $quality, $response) {
     /** @var Utopia\Response $response */
@@ -366,12 +369,17 @@ App::get('/v1/avatars/qr')
 
         $download = ($download === '1' || $download === 'true' || $download === 1 || $download === true);
 
-        $renderer = new ImageRenderer(
+       /*  $renderer = new ImageRenderer(
             new RendererStyle($size, $margin),
             new ImagickImageBackEnd('png', 100)
-        );
+        ); */
+        $qropts = new QROptions([
+            'quietzone'         => $size
+        ]);
+        $qrcode = new QRCode($qropts);
+        $qrcode->render($text);
 
-        $writer = new Writer($renderer);
+        /* $writer = new Writer($renderer); */
 
         if ($download) {
             $response->addHeader('Content-Disposition', 'attachment; filename="qr.png"');
@@ -380,7 +388,7 @@ App::get('/v1/avatars/qr')
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
             ->setContentType('image/png')
-            ->send($writer->writeString($text))
+            /* ->send($writer->writeString($text)) */
         ;
     }, ['response']);
 
