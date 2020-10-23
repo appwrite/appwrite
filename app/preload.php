@@ -23,9 +23,6 @@ include __DIR__.'/controllers/general.php';
 $preloader = new Preloader();
 
 foreach ([
-    realpath(__DIR__ . '/../app/config'),
-    realpath(__DIR__ . '/../app/controllers'),
-    realpath(__DIR__ . '/../src'),
     realpath(__DIR__ . '/../vendor/twig/twig'),
     realpath(__DIR__ . '/../vendor/guzzlehttp/guzzle'),
     realpath(__DIR__ . '/../vendor/domnikl'),
