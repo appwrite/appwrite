@@ -17,11 +17,11 @@ class Document extends ArrayObject
      *
      * @see ArrayObject::__construct
      *
-     * @param null   $input
+     * @param array   $input
      * @param int    $flags
      * @param string $iterator_class
      */
-    public function __construct($input = null, $flags = 0, $iterator_class = 'ArrayIterator')
+    public function __construct($input = [], $flags = 0, $iterator_class = 'ArrayIterator')
     {
         foreach ($input as $key => &$value) {
             if (\is_array($value)) {
