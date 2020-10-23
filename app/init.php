@@ -233,6 +233,7 @@ Locale::setLanguage('cz', include __DIR__.'/config/locale/translations/cz.php');
 Locale::setLanguage('de', include __DIR__.'/config/locale/translations/de.php');
 Locale::setLanguage('en', include __DIR__.'/config/locale/translations/en.php');
 Locale::setLanguage('es', include __DIR__.'/config/locale/translations/es.php');
+Locale::setLanguage('fa', include __DIR__.'/config/locale/translations/fa.php');
 Locale::setLanguage('fi', include __DIR__.'/config/locale/translations/fi.php');
 Locale::setLanguage('fo', include __DIR__.'/config/locale/translations/fo.php');
 Locale::setLanguage('fr', include __DIR__.'/config/locale/translations/fr.php');
