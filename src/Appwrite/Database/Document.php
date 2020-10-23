@@ -49,7 +49,7 @@ class Document extends ArrayObject
     }
 
     /**
-     * @return int|null
+     * @return string
      */
     public function getCollection()
     {
@@ -196,7 +196,6 @@ class Document extends ArrayObject
     /**
      * Checks if a document key is set.
      *
-     * @param $key
      * @param string $key
      *
      * @return bool
