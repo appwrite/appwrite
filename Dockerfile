@@ -34,6 +34,16 @@ RUN \
 
 RUN docker-php-ext-install sockets
 
+RUN wget https://github.com/maxmind/libmaxminddb/releases/download/1.4.3/libmaxminddb-1.4.3.tar.gz
+RUN tar -xvf libmaxminddb-1.4.3.tar.gz && \
+    cd ./libmaxminddb-1.4.3 && \
+    ./configure && \
+    make && \
+    make check && \
+    make install && \
+    ldconfig ./libmaxminddb-1.4.3
+
+
 RUN \
   # Redis Extension
   wget -q https://github.com/phpredis/phpredis/archive/$PHP_REDIS_VERSION.tar.gz && \
@@ -127,6 +137,29 @@ COPY ./bin /usr/local/bin
 COPY ./docs /usr/src/code/docs
 COPY ./public /usr/src/code/public
 COPY ./src /usr/src/code/src
+
+RUN \
+  apk add --no-cache --virtual .deps \
+  make \
+  automake \
+  autoconf \
+  gcc \
+  g++ \
+  tar \
+  wget \
+  git \
+  zlib-dev \
+  brotli-dev
+
+RUN apk add libmaxminddb-dev && \
+    cd vendor/maxmind-db/reader/ext && ls -a && \
+    phpize && \
+    ./configure && \
+    make && \
+    make test && \
+    make install
+
+RUN echo extension=maxminddb.so >> /usr/local/etc/php/php.ini
 
 # Set Volumes
 RUN mkdir -p /storage/uploads && \

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "19f7cef86ddc98623cd3ffffa2be2cae",
+    "content-hash": "555bdf22c5a6417b7336ce7e616eba50",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -139,76 +139,6 @@
             "description": "Credis is a lightweight interface to the Redis key-value store which wraps the phpredis library when available for better performance.",
             "homepage": "https://github.com/colinmollenhour/credis",
             "time": "2020-10-13T23:55:13+00:00"
-        },
-        {
-            "name": "composer/ca-bundle",
-            "version": "dev-master",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/composer/ca-bundle.git",
-                "reference": "8a7ecad675253e4654ea05505233285377405215"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/composer/ca-bundle/zipball/8a7ecad675253e4654ea05505233285377405215",
-                "reference": "8a7ecad675253e4654ea05505233285377405215",
-                "shasum": ""
-            },
-            "require": {
-                "ext-openssl": "*",
-                "ext-pcre": "*",
-                "php": "^5.3.2 || ^7.0 || ^8.0"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^4.8.35 || ^5.7 || 6.5 - 8",
-                "psr/log": "^1.0",
-                "symfony/process": "^2.5 || ^3.0 || ^4.0 || ^5.0"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "1.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Composer\\CaBundle\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Jordi Boggiano",
-                    "email": "j.boggiano@seld.be",
-                    "homepage": "http://seld.be"
-                }
-            ],
-            "description": "Lets you find a path to the system CA bundle, and includes a fallback to the Mozilla CA bundle.",
-            "keywords": [
-                "cabundle",
-                "cacert",
-                "certificate",
-                "ssl",
-                "tls"
-            ],
-            "funding": [
-                {
-                    "url": "https://packagist.com",
-                    "type": "custom"
-                },
-                {
-                    "url": "https://github.com/composer",
-                    "type": "github"
-                },
-                {
-                    "url": "https://tidelift.com/funding/github/packagist/composer/composer",
-                    "type": "tidelift"
-                }
-            ],
-            "time": "2020-08-23T12:54:47+00:00"
         },
         {
             "name": "dasprid/enum",
@@ -358,59 +288,6 @@
             "time": "2020-08-21T02:30:13+00:00"
         },
         {
-            "name": "geoip2/geoip2",
-            "version": "v2.10.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/maxmind/GeoIP2-php.git",
-                "reference": "419557cd21d9fe039721a83490701a58c8ce784a"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/maxmind/GeoIP2-php/zipball/419557cd21d9fe039721a83490701a58c8ce784a",
-                "reference": "419557cd21d9fe039721a83490701a58c8ce784a",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "maxmind-db/reader": "~1.5",
-                "maxmind/web-service-common": "~0.6",
-                "php": ">=5.6"
-            },
-            "require-dev": {
-                "friendsofphp/php-cs-fixer": "2.*",
-                "phpunit/phpunit": "5.*",
-                "squizlabs/php_codesniffer": "3.*"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "GeoIp2\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "Apache-2.0"
-            ],
-            "authors": [
-                {
-                    "name": "Gregory J. Oschwald",
-                    "email": "goschwald@maxmind.com",
-                    "homepage": "https://www.maxmind.com/"
-                }
-            ],
-            "description": "MaxMind GeoIP2 PHP API",
-            "homepage": "https://github.com/maxmind/GeoIP2-php",
-            "keywords": [
-                "IP",
-                "geoip",
-                "geoip2",
-                "geolocation",
-                "maxmind"
-            ],
-            "time": "2019-12-12T18:48:39+00:00"
-        },
-        {
             "name": "guzzlehttp/guzzle",
             "version": "7.2.0",
             "source": {
@@ -514,12 +391,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/promises.git",
-                "reference": "60d379c243457e073cff02bc323a2a86cb355631"
+                "reference": "ddfeedfff2a52661429437da0702979f708e6ac6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/promises/zipball/60d379c243457e073cff02bc323a2a86cb355631",
-                "reference": "60d379c243457e073cff02bc323a2a86cb355631",
+                "url": "https://api.github.com/repos/guzzle/promises/zipball/ddfeedfff2a52661429437da0702979f708e6ac6",
+                "reference": "ddfeedfff2a52661429437da0702979f708e6ac6",
                 "shasum": ""
             },
             "require": {
@@ -557,7 +434,7 @@
             "keywords": [
                 "promise"
             ],
-            "time": "2020-09-30T07:37:28+00:00"
+            "time": "2020-10-19T16:50:15+00:00"
         },
         {
             "name": "guzzlehttp/psr7",
@@ -565,12 +442,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/psr7.git",
-                "reference": "53330f47520498c0ae1f61f7e2c90f55690c06a3"
+                "reference": "25f7f893f0b52b7b14e244a16679d72b1f0088de"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/psr7/zipball/53330f47520498c0ae1f61f7e2c90f55690c06a3",
-                "reference": "53330f47520498c0ae1f61f7e2c90f55690c06a3",
+                "url": "https://api.github.com/repos/guzzle/psr7/zipball/25f7f893f0b52b7b14e244a16679d72b1f0088de",
+                "reference": "25f7f893f0b52b7b14e244a16679d72b1f0088de",
                 "shasum": ""
             },
             "require": {
@@ -628,7 +505,7 @@
                 "uri",
                 "url"
             ],
-            "time": "2020-09-30T07:37:11+00:00"
+            "time": "2020-10-22T07:42:05+00:00"
         },
         {
             "name": "influxdb/influxdb-php",
@@ -750,52 +627,6 @@
                 "maxmind"
             ],
             "time": "2020-10-01T17:30:21+00:00"
-        },
-        {
-            "name": "maxmind/web-service-common",
-            "version": "v0.8.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/maxmind/web-service-common-php.git",
-                "reference": "ba67d9532cfaf499bd71774b8170d05df4f75fb7"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/maxmind/web-service-common-php/zipball/ba67d9532cfaf499bd71774b8170d05df4f75fb7",
-                "reference": "ba67d9532cfaf499bd71774b8170d05df4f75fb7",
-                "shasum": ""
-            },
-            "require": {
-                "composer/ca-bundle": "^1.0.3",
-                "ext-curl": "*",
-                "ext-json": "*",
-                "php": ">=7.2"
-            },
-            "require-dev": {
-                "friendsofphp/php-cs-fixer": "2.*",
-                "phpunit/phpunit": "^8.0 || ^9.0",
-                "squizlabs/php_codesniffer": "3.*"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "MaxMind\\Exception\\": "src/Exception",
-                    "MaxMind\\WebService\\": "src/WebService"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "Apache-2.0"
-            ],
-            "authors": [
-                {
-                    "name": "Gregory Oschwald",
-                    "email": "goschwald@maxmind.com"
-                }
-            ],
-            "description": "Internal MaxMind Web Service API",
-            "homepage": "https://github.com/maxmind/web-service-common-php",
-            "time": "2020-10-01T15:28:36+00:00"
         },
         {
             "name": "mustangostang/spyc",
@@ -1713,7 +1544,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "a57b3cd56c4bfe1538276cfc77456cf95d8835cb"
+                "reference": "ad1ee55f61967546c0889d377b628e244182311e"
             },
             "require": {
                 "ext-curl": "*",
@@ -1743,7 +1574,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2020-10-14T12:07:25+00:00"
+            "time": "2020-10-20T10:23:43+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -2646,12 +2477,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "338bf27b4510498c4b0ab70c7cbc292a591dc0df"
+                "reference": "b2a9914fd2057a72ec65bc9b3cd963c831a1b14b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/338bf27b4510498c4b0ab70c7cbc292a591dc0df",
-                "reference": "338bf27b4510498c4b0ab70c7cbc292a591dc0df",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/b2a9914fd2057a72ec65bc9b3cd963c831a1b14b",
+                "reference": "b2a9914fd2057a72ec65bc9b3cd963c831a1b14b",
                 "shasum": ""
             },
             "require": {
@@ -2737,7 +2568,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2020-10-19T09:25:00+00:00"
+            "time": "2020-10-22T06:06:02+00:00"
         },
         {
             "name": "sebastian/cli-parser",
@@ -3675,16 +3506,16 @@
         },
         {
             "name": "symfony/polyfill-ctype",
-            "version": "dev-master",
+            "version": "dev-main",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-ctype.git",
-                "reference": "1c302646f6efc070cd46856e600e5e0684d6b454"
+                "reference": "325e20642232b66e3f140a76f795b58b50a08787"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-ctype/zipball/1c302646f6efc070cd46856e600e5e0684d6b454",
-                "reference": "1c302646f6efc070cd46856e600e5e0684d6b454",
+                "url": "https://api.github.com/repos/symfony/polyfill-ctype/zipball/325e20642232b66e3f140a76f795b58b50a08787",
+                "reference": "325e20642232b66e3f140a76f795b58b50a08787",
                 "shasum": ""
             },
             "require": {
@@ -3696,7 +3527,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.18-dev"
+                    "dev-main": "1.19-dev"
                 },
                 "thanks": {
                     "name": "symfony/polyfill",
@@ -3747,20 +3578,20 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2020-07-14T12:35:20+00:00"
+            "time": "2020-10-21T09:57:48+00:00"
         },
         {
             "name": "symfony/polyfill-mbstring",
-            "version": "dev-master",
+            "version": "dev-main",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-mbstring.git",
-                "reference": "48928d471ede0548b399f54b0286fe0d0ed79267"
+                "reference": "15e533d0893e58cc6c7a1971046a3dfc219435f2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/48928d471ede0548b399f54b0286fe0d0ed79267",
-                "reference": "48928d471ede0548b399f54b0286fe0d0ed79267",
+                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/15e533d0893e58cc6c7a1971046a3dfc219435f2",
+                "reference": "15e533d0893e58cc6c7a1971046a3dfc219435f2",
                 "shasum": ""
             },
             "require": {
@@ -3772,7 +3603,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.18-dev"
+                    "dev-main": "1.19-dev"
                 },
                 "thanks": {
                     "name": "symfony/polyfill",
@@ -3824,7 +3655,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2020-09-14T11:01:58+00:00"
+            "time": "2020-10-21T09:57:48+00:00"
         },
         {
             "name": "theseer/tokenizer",
@@ -3878,16 +3709,16 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "fa2f1ccdb44a973571235c4a78487c040f26f116"
+                "reference": "78173b3c850e344cb8515fc2a05138d39a6c39e0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/fa2f1ccdb44a973571235c4a78487c040f26f116",
-                "reference": "fa2f1ccdb44a973571235c4a78487c040f26f116",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/78173b3c850e344cb8515fc2a05138d39a6c39e0",
+                "reference": "78173b3c850e344cb8515fc2a05138d39a6c39e0",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.1.3",
+                "php": ">=7.2.5",
                 "symfony/polyfill-ctype": "^1.8",
                 "symfony/polyfill-mbstring": "^1.3"
             },
@@ -3945,7 +3776,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2020-10-14T06:37:57+00:00"
+            "time": "2020-10-21T12:45:52+00:00"
         },
         {
             "name": "webmozart/assert",

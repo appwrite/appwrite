@@ -25,7 +25,7 @@ use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
-use GeoIp2\Database\Reader;
+use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use PDO as PDONative;
 
