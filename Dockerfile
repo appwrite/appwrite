@@ -34,6 +34,8 @@ RUN \
 
 RUN docker-php-ext-install sockets
 
+# install C extension for .mmdb reader
+# https://github.com/maxmind/libmaxminddb
 RUN wget https://github.com/maxmind/libmaxminddb/releases/download/1.4.3/libmaxminddb-1.4.3.tar.gz
 RUN tar -xvf libmaxminddb-1.4.3.tar.gz && \
     cd ./libmaxminddb-1.4.3 && \
@@ -42,7 +44,6 @@ RUN tar -xvf libmaxminddb-1.4.3.tar.gz && \
     make check && \
     make install && \
     ldconfig ./libmaxminddb-1.4.3
-
 
 RUN \
   # Redis Extension
@@ -151,6 +152,7 @@ RUN \
   zlib-dev \
   brotli-dev
 
+# Enabling C extension for .mmdb reader and adding loading it
 RUN apk add libmaxminddb-dev && \
     cd vendor/maxmind-db/reader/ext && ls -a && \
     phpize && \
