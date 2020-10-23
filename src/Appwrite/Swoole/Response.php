@@ -55,7 +55,7 @@ class Response extends UtopiaResponse
     public function send(string $body = '', int $exit = null): void
     {
         if(!$this->disablePayload) {
-            $this->addHeader('X-Debug-Speed', microtime(true) - $this->startTime);
+            $this->addHeader('X-Debug-Speed', (string)(microtime(true) - $this->startTime));
 
             $this
                 ->appendCookies()

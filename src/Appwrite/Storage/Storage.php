@@ -106,7 +106,7 @@ class Storage
             ),
         );
 
-        $factor = (int)floor((strlen($bytes) - 1) / 3);
+        $factor = (int)floor((strlen((string)$bytes) - 1) / 3);
 
         return sprintf("%.{$decimals}f%s", $bytes / pow($mod, $factor), $units[$system][$factor]);
     }
