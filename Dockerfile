@@ -1,4 +1,4 @@
-FROM ubuntu:20.10 AS builder
+FROM ubuntu:20.04 AS builder
 
 LABEL maintainer="team@appwrite.io"
 
@@ -43,7 +43,7 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM ubuntu:20.10
+FROM ubuntu:20.04
 LABEL maintainer="team@appwrite.io"
 
 ARG VERSION=dev
@@ -91,7 +91,6 @@ RUN \
   apt-get install -y --no-install-recommends --no-install-suggests wget ca-certificates software-properties-common build-essential libpcre3-dev zlib1g-dev libssl-dev openssl gnupg htop supervisor && \
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php && \
   add-apt-repository universe && \
-  add-apt-repository ppa:certbot/certbot && \
   apt-get update && \
   apt-get install -y --no-install-recommends --no-install-suggests php$PHP_VERSION php$PHP_VERSION-fpm \
   php$PHP_VERSION-mysqlnd php$PHP_VERSION-curl php$PHP_VERSION-imagick php$PHP_VERSION-mbstring php$PHP_VERSION-dom webp certbot && \
