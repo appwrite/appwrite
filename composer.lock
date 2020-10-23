@@ -1617,16 +1617,16 @@
         },
         {
             "name": "utopia-php/preloader",
-            "version": "0.2.2",
+            "version": "0.2.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/preloader.git",
-                "reference": "055dc319db5f06a4d9669b58ecd5cc6ab1f922ac"
+                "reference": "cef9eb7f804624b25fefd5d1fcec5ccb0bc08fa8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/preloader/zipball/055dc319db5f06a4d9669b58ecd5cc6ab1f922ac",
-                "reference": "055dc319db5f06a4d9669b58ecd5cc6ab1f922ac",
+                "url": "https://api.github.com/repos/utopia-php/preloader/zipball/cef9eb7f804624b25fefd5d1fcec5ccb0bc08fa8",
+                "reference": "cef9eb7f804624b25fefd5d1fcec5ccb0bc08fa8",
                 "shasum": ""
             },
             "require": {
@@ -1662,7 +1662,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2020-10-23T22:14:27+00:00"
+            "time": "2020-10-23T22:32:42+00:00"
         },
         {
             "name": "utopia-php/registry",
