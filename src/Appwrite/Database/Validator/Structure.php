@@ -269,7 +269,14 @@ class Structure extends Validator
         return true;
     }
 
-    protected function getCollection($id)
+    /**
+     * Get Collection
+     * 
+     * Get Collection by unique ID
+     * 
+     * @return Document
+     */
+    protected function getCollection($id): Document
     {
         return $this->database->getDocument($id);
     }

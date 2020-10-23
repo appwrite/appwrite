@@ -763,8 +763,10 @@ class MySQL extends Adapter
 
     /**
      * Get Unique Document ID.
+     *
+     * @return string
      */
-    public function getId()
+    public function getId(): string
     {
         $unique = \uniqid();
         $attempts = 5;
@@ -882,12 +884,12 @@ class MySQL extends Adapter
     }
 
     /**
-     * @param $key
-     * @param $value
+     * @param string $key
+     * @param mixed $value
      *
      * @return $this
      */
-    public function setDebug($key, $value)
+    public function setDebug(string $key, $value): self
     {
         $this->debug[$key] = $value;
 
@@ -897,15 +899,17 @@ class MySQL extends Adapter
     /**
      * @return array
      */
-    public function getDebug()
+    public function getDebug(): array
     {
         return $this->debug;
     }
 
     /**
      * return $this;.
+     *
+     * @return void
      */
-    public function resetDebug()
+    public function resetDebug(): void
     {
         $this->debug = [];
     }
@@ -915,7 +919,7 @@ class MySQL extends Adapter
      *
      * @throws Exception
      */
-    protected function getPDO()
+    protected function getPDO(): PDO
     {
         return $this->register->get('db');
     }
@@ -925,7 +929,7 @@ class MySQL extends Adapter
      *
      * @return Client
      */
-    protected function getRedis():Client
+    protected function getRedis(): Client
     {
         return $this->register->get('cache');
     }

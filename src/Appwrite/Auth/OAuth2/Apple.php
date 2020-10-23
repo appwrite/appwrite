@@ -175,8 +175,10 @@ class Apple extends OAuth2
 
     /**
      * @param string $data
+     *
+     * @return string
      */
-    protected function encode($data)
+    protected function encode($data): string
     {
         return \str_replace(['+', '/', '='], ['-', '_', ''], \base64_encode($data));
     }

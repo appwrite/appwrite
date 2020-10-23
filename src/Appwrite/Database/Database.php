@@ -189,10 +189,11 @@ class Database
     /**
      * @param int  $id
      * @param bool $mock is mocked data allowed?
+     * @param bool $decode enable decoding?
      *
      * @return Document
      */
-    public function getDocument($id, $mock = true, $decode = true)
+    public function getDocument($id, bool $mock = true, bool $decode = true)
     {
         if (\is_null($id)) {
             return new Document();
@@ -395,9 +396,9 @@ class Database
      * @param string $key
      * @param string $value
      *
-     * @return array
+     * @return self
      */
-    public function setMock($key, $value)
+    public function setMock($key, $value): self
     {
         $this->mocks[$key] = $value;
 
@@ -405,11 +406,11 @@ class Database
     }
 
     /**
-     * @param string $mocks
+     * @param array $mocks
      *
-     * @return array
+     * @return self
      */
-    public function setMocks(array $mocks)
+    public function setMocks(array $mocks): self
     {
         $this->mocks = $mocks;
 
@@ -426,14 +427,14 @@ class Database
 
     /**
      * Add Attribute Filter
-     * 
+     *
      * @param string $name
      * @param callable $encode
      * @param callable $decode
-     * 
-     * return $this
+     *
+     * @return void
      */
-    static public function addFilter(string $name, callable $encode, callable $decode)
+    static public function addFilter(string $name, callable $encode, callable $decode): void
     {
         self::$filters[$name] = [
             'encode' => $encode,

@@ -24,8 +24,10 @@ class Storage
      * @param Device $device
      *
      * @throws Exception
+     *
+     * @return void
      */
-    public static function setDevice($name, Device $device)
+    public static function setDevice($name, Device $device): void
     {
         self::$devices[$name] = $device;
     }

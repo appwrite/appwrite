@@ -50,7 +50,7 @@ class Response extends UtopiaResponse
      * @param string $body
      * @param int $exit exit code or don't exit if code is null
      *
-     * @return self
+     * @return void
      */
     public function send(string $body = '', int $exit = null): void
     {
