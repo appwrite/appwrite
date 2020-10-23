@@ -12,7 +12,7 @@ class Response extends UtopiaResponse
      * 
      * @var SwooleResponse
      */
-    protected $swoole = null;
+    protected $swoole;
 
     /**
      * Mime Types

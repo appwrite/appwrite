@@ -29,9 +29,9 @@ class Structure extends Validator
     protected $database;
 
     /**
-     * @var int
+     * @var string
      */
-    protected $id = null;
+    protected $id = '';
 
     /**
      * Basic rules to apply on all documents.
@@ -118,7 +118,7 @@ class Structure extends Validator
      *
      * Returns true if valid or false if not.
      *
-     * @param Document $document
+     * @param mixed $document
      *
      * @return bool
      */

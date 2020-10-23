@@ -195,14 +195,14 @@ class Database
     public function getDocument($id, $mock = true, $decode = true)
     {
         if (\is_null($id)) {
-            return new Document([]);
+            return new Document();
         }
 
         $document = new Document((isset($this->mocks[$id]) && $mock) ? $this->mocks[$id] : $this->adapter->getDocument($id));
         $validator = new Authorization($document, 'read');
 
         if (!$validator->isValid($document->getPermissions())) { // Check if user has read access to this document
-            return new Document([]);
+            return new Document();
         }
 
         $document = ($decode) ? $this->decode($document) : $document;

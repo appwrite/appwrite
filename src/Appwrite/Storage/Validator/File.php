@@ -16,7 +16,7 @@ class File extends Validator
      *
      * TODO think what to do here, currently only used for parameter to be present in SDKs
      *
-     * @param string $name
+     * @param mixed $name
      *
      * @return bool
      */

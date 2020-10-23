@@ -12,7 +12,7 @@ class Request extends UtopiaRequest
      * 
      * @var SwooleRequest
      */
-    protected $swoole = null;
+    protected $swoole;
 
     /**
      * Request constructor.
