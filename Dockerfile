@@ -1,4 +1,4 @@
-FROM ubuntu:19.10 AS builder
+FROM ubuntu:20.10 AS builder
 
 LABEL maintainer="team@appwrite.io"
 
@@ -43,7 +43,7 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM ubuntu:19.10
+FROM ubuntu:20.10
 LABEL maintainer="team@appwrite.io"
 
 ARG VERSION=dev
