@@ -54,7 +54,7 @@ abstract class Adapter
     /**
      * Get Document.
      *
-     * @param int $id
+     * @param string $id
      *
      * @return array
      */

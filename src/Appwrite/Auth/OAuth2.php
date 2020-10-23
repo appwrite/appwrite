@@ -116,7 +116,7 @@ abstract class OAuth2
     /**
      * @param $state
      *
-     * @return string
+     * @return array
      */
     public function parseState(string $state)
     {
@@ -152,6 +152,6 @@ abstract class OAuth2
 
         \curl_close($ch);
 
-        return $response;
+        return (string)$response;
     }
 }

@@ -96,7 +96,7 @@ class Response extends UtopiaResponse
     protected function appendHeaders(): self
     {
         // Send status code header
-        $this->swoole->status($this->statusCode);
+        $this->swoole->status((string)$this->statusCode);
 
         // Send content type header
         $this

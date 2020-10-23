@@ -116,7 +116,7 @@ class Database
     /**
      * Create Namespace.
      *
-     * @param int $namespace
+     * @param string $namespace
      *
      * @return bool
      */
@@ -128,7 +128,7 @@ class Database
     /**
      * Delete Namespace.
      *
-     * @param int $namespace
+     * @param string $namespace
      *
      * @return bool
      */

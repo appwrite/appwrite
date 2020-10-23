@@ -243,7 +243,7 @@ class Redis extends Adapter
      */
     public function lastModified()
     {
-        return;
+        return 0;
     }
 
     /**
@@ -259,7 +259,7 @@ class Redis extends Adapter
      *
      * @return Client
      */
-    protected function getRedis():Client
+    protected function getRedis(): Client
     {
         return $this->register->get('cache');
     }

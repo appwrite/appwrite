@@ -34,7 +34,7 @@ class Amazon extends OAuth2
     /**
      * @param $state
      *
-     * @return json
+     * @return array
      */
     public function parseState(string $state)
     {
@@ -76,6 +76,7 @@ class Amazon extends OAuth2
                 'grant_type' => 'authorization_code'
             ])
         );
+        
         $accessToken = \json_decode($accessToken, true);
 
         if (isset($accessToken['access_token'])) {
