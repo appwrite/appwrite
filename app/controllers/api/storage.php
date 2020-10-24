@@ -429,18 +429,16 @@ $utopia->get('/v1/storage/files/:fileId/preview')
 
             $output = (empty($output)) ? $type : $output;
 
-            $response
-                ->setContentType($outputs[$output])
-                ->addHeader('Expires', $date)
-                ->addHeader('X-Appwrite-Cache', 'miss')
-                ->send('')
-            ;
-
             $data = $resize->output($output, $quality);
 
             $cache->save($key, $data);
 
-            echo $data;
+            $response
+                ->setContentType($outputs[$output])
+                ->addHeader('Expires', $date)
+                ->addHeader('X-Appwrite-Cache', 'miss')
+                ->send($data)
+            ;
 
             unset($resize);
         }
