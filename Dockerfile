@@ -30,23 +30,14 @@ RUN \
   wget \
   git \
   zlib-dev \
-  brotli-dev
+  brotli-dev \
+  libmaxminddb-dev
 
 RUN docker-php-ext-install sockets
 
-# install C extension for .mmdb reader
-# https://github.com/maxmind/libmaxminddb
-RUN wget https://github.com/maxmind/libmaxminddb/releases/download/1.4.3/libmaxminddb-1.4.3.tar.gz
-RUN tar -xvf libmaxminddb-1.4.3.tar.gz && \
-    cd ./libmaxminddb-1.4.3 && \
-    ./configure && \
-    make && \
-    make check && \
-    make install && \
-    ldconfig ./libmaxminddb-1.4.3
-
 RUN \
   # Redis Extension
+
   wget -q https://github.com/phpredis/phpredis/archive/$PHP_REDIS_VERSION.tar.gz && \
   tar -xf $PHP_REDIS_VERSION.tar.gz && \
   cd phpredis-$PHP_REDIS_VERSION && \
@@ -54,14 +45,26 @@ RUN \
   ./configure && \
   make && make install && \
   cd .. && \
+
   ## Swoole Extension
+
   git clone https://github.com/swoole/swoole-src.git && \
   cd swoole-src && \
   git checkout v$PHP_SWOOLE_VERSION && \
   phpize && \
   ./configure --enable-sockets --enable-http2 && \
   make && make install && \
+  cd .. && \
+
+  ## php reader extension
+
+  git clone https://github.com/maxmind/MaxMind-DB-Reader-php.git && \
+  cd MaxMind-DB-Reader-php/ext && \
+  phpize && \
+  ./configure && \
+  make && make install && \
   cd ..
+
 
 FROM php:7.4-cli-alpine as final
 
@@ -120,6 +123,9 @@ RUN \
   imagemagick-dev \
   certbot \
   docker-cli \
+  libmaxminddb \
+  libmaxminddb-dev \
+
   && pecl install imagick yaml \ 
   && docker-php-ext-enable imagick yaml \
   && docker-php-ext-install sockets opcache pdo_mysql \
@@ -131,6 +137,7 @@ WORKDIR /usr/src/code
 COPY --from=step0 /usr/local/src/vendor /usr/src/code/vendor
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/
+COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/maxminddb.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/ 
 
 # Add Source Code
 COPY ./app /usr/src/code/app
@@ -138,30 +145,6 @@ COPY ./bin /usr/local/bin
 COPY ./docs /usr/src/code/docs
 COPY ./public /usr/src/code/public
 COPY ./src /usr/src/code/src
-
-RUN \
-  apk add --no-cache --virtual .deps \
-  make \
-  automake \
-  autoconf \
-  gcc \
-  g++ \
-  tar \
-  wget \
-  git \
-  zlib-dev \
-  brotli-dev
-
-# Enabling C extension for .mmdb reader and adding loading it
-RUN apk add libmaxminddb-dev && \
-    cd vendor/maxmind-db/reader/ext && ls -a && \
-    phpize && \
-    ./configure && \
-    make && \
-    make test && \
-    make install
-
-RUN echo extension=maxminddb.so >> /usr/local/etc/php/php.ini
 
 # Set Volumes
 RUN mkdir -p /storage/uploads && \
@@ -200,6 +183,7 @@ RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 # Enable Extensions
 RUN echo extension=swoole.so >> /usr/local/etc/php/conf.d/swoole.ini
 RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
+RUN echo extension=maxminddb.so >> /usr/local/etc/php/conf.d/maxminddb.ini
 
 RUN echo "opcache.preload_user=www-data" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.preload=/usr/src/code/app/preload.php" >> /usr/local/etc/php/conf.d/appwrite.ini
