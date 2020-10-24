@@ -67,7 +67,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
         ? $origin : 'localhost') . (!empty($port) ? ':'.$port : '');
 
     $selfDomain = new Domain(Config::getParam('hostname'));
-    $endDomain = new Domain($origin);
+    $endDomain = new Domain((string)$origin);
 
     Config::setParam('domainVerification',
         ($selfDomain->getRegisterable() === $endDomain->getRegisterable()) &&
