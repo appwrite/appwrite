@@ -45,7 +45,6 @@
         "utopia-php/domains": "1.1.*",
 
         "resque/php-resque": "1.3.6",
-        "geoip2/geoip2": "2.10.0",
         "piwik/device-detector": "3.13.0",
         "dragonmantank/cron-expression": "3.0.1",
         "domnikl/statsd": "3.0.*",
