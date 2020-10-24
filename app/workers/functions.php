@@ -29,7 +29,7 @@ Co\run(function() use ($environments) {
         
             Console::info('Warming up '.$environment['name'].' environment');
         
-            Console::execute('docker pull '.$environment['image'], null, $stdout, $stderr);
+            Console::execute('docker pull '.$environment['image'], '', $stdout, $stderr);
         
             if(!empty($stdout)) {
                 Console::log($stdout);
@@ -211,7 +211,7 @@ class FunctionsV1
         $executionStart = \microtime(true);
         
         $exitCode = Console::execute('docker ps --all --format "name={{.Names}}&status={{.Status}}&labels={{.Labels}}" --filter label=appwrite-type=function'
-        , null, $stdout, $stderr, 30);
+        , '', $stdout, $stderr, 30);
 
         $executionEnd = \microtime(true);
 
@@ -249,7 +249,7 @@ class FunctionsV1
             $stdout = '';
             $stderr = '';
             
-            if(Console::execute("docker rm {$container}", null, $stdout, $stderr, 30) !== 0) {
+            if(Console::execute("docker rm {$container}", '', $stdout, $stderr, 30) !== 0) {
                 throw new Exception('Failed to remove offline container: '.$stderr);
             }
 
@@ -277,7 +277,7 @@ class FunctionsV1
                 ".\implode("\n", $vars)."
                 {$environment['image']} \
                 sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'"
-            , null, $stdout, $stderr, 30);
+            , '', $stdout, $stderr, 30);
 
             $executionEnd = \microtime(true);
     
@@ -297,7 +297,7 @@ class FunctionsV1
         $executionStart = \microtime(true);
         
         $exitCode = Console::execute("docker exec {$container} {$command}"
-        , null, $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
+        , '', $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
 
         $executionEnd = \microtime(true);
 
@@ -345,7 +345,7 @@ class FunctionsV1
                 $stdout = '';
                 $stderr = '';
 
-                if(Console::execute("docker stop {$first['name']}", null, $stdout, $stderr, 30) !== 0) {
+                if(Console::execute("docker stop {$first['name']}", '', $stdout, $stderr, 30) !== 0) {
                     Console::error('Failed to remove container: '.$stderr);
                 }
 
