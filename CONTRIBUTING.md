@@ -200,8 +200,6 @@ When contributing code, please take into account the following considerations:
 
 Security and privacy are extremely important to Appwrite, developers, and users alike. Make sure to follow the best industry standards and practices.
 
-<!-- To help you make sure you are doing as best as possible, we have set up our security checklist for pull requests and contributors. Please make sure to follow the list before sending a pull request. -->
-
 ## Dependencies
 
 Please avoid introducing new dependencies to Appwrite without consulting the team. New dependencies can be very helpful but also introduce new security and privacy issues, complexity, and impact total docker image size.
@@ -223,7 +221,7 @@ This is also important for the Appwrite lead developers to be able to give techn
 To build a new version of the Appwrite server, all you need to do is run the build.sh file like this:
 
 ```bash
-bash ./build.sh 1.0.0
+bash ./build.sh X.X.X
 ```
 
 Before running the command, make sure you have proper write permissions to the Appwrite docker hub team.
@@ -240,6 +238,27 @@ To run tests manually, use the Appwrite Docker CLI from your terminal:
 
 ```bash
 docker-compose exec appwrite test
+```
+
+## Benchmarking
+
+You can use WRK Docker image to benchmark the server performance. Benchmarking is extremely useful when you want to compare how the server behaves before and after a change has been applied. Replace [APPWRITE_HOSTNAME_OR_IP] with your Appwrite server hostname or IP. Note that localhost is not accessible from inside the WRK container.
+
+```
+  Options:                                            
+    -c, --connections <N>  Connections to keep open   
+    -d, --duration    <T>  Duration of test           
+    -t, --threads     <N>  Number of threads to use   
+                                                      
+    -s, --script      <S>  Load Lua script file       
+    -H, --header      <H>  Add header to request      
+        --latency          Print latency statistics   
+        --timeout     <T>  Socket/request timeout     
+    -v, --version          Print version details    
+``` 
+
+```bash
+docker run --rm skandyla/wrk -t3 -c100 -d30  https://[APPWRITE_HOSTNAME_OR_IP]
 ```
 
 ## Code Maintenance  

@@ -8,6 +8,8 @@
 - Added option to delete team from the console
 - Added option to view team members from the console
 - Added option to join a user to any team from the console
+- Added option to delete user from the API (@TorstenDittmann - #378)
+- Added option to delete user from the console (@PineappleIOnic - #538)
 - Added support for Brotli compression (@PedroCisnerosSantana, @Rohitub222)
 - New UI micro-interactions and CSS fixes (@AnatoleLucet)
 - UI performance & accessibility improvements (#406)
@@ -19,6 +21,31 @@
 - Upgraded ClamAV container image to version 1.0.11 ([#412](https://github.com/appwrite/appwrite/issues/412))
 - Optimised function execution by using fully-qualified function calls
 - Added support for boolean 'true' and 'false' in query strings alongside 1 and 0
+- Added pagination for projects list on the console home page.
+- Updated storage calculation to match IEC standards
+- Now using Alpine as base Docker image
+- User name max length is now 128 chars and not 100 for better API consistency
+- Team name max length is now 128 chars and not 100 for better API consistency
+- Collection name max length is now 128 chars and not 256 for better API consistency
+- Project name max length is now 128 chars and not 100 for better API consistency
+- Webhook name max length is now 128 chars and not 256 for better API consistency
+- API Key name max length is now 128 chars and not 256 for better API consistency
+- Task name max length is now 128 chars and not 256 for better API consistency
+- Platform name max length is now 128 chars and not 256 for better API consistency
+- Added new locale: Marathi -mr (@spielers)
+- New and consistent response format for all API object + new response examples in the docs
+  - Removed user roles attribute from user object (can be fetched from /v1/teams/memberships) **
+  - Removed type attribute from session object response (used only internally)
+  - ** - might be changed before merging to master
+- Upgraded Traefik image to version 2.3
+- Upgraded Redis Docker image to version 6.0 (alpine)
+- Upgraded Influxdb Docker image to version 1.8 (alpine)
+
+## Breaking Changes (Read before upgrading!)
+- **Deprecated** `first` and `last` query params for documents list route in the database API
+- **Deprecated** Deprectaed Pubjabi Translations ('pn')
+- Switched order of limit and offset params in all the SDKs `listDocuments` method for better consistency
+- Default `limit` param value in all the SDKs `listDocuments` method is now 25 for better consistency
 
 ## Bug Fixes
 
@@ -50,6 +77,8 @@
 - Access to Health API now requires authentication with an API Key with access to `health.read` scope allowed
 - Added option to force HTTPS connection to the Appwrite server (_APP_OPTIONS_FORCE_HTTPS)
 - Now using your `_APP_SYSTEM_EMAIL_ADDRESS` as the email address for issuing and renewing SSL certificates
+- Block iframe access to Appwrite console using the `X-Frame-Options` header.
+- Fixed `roles` param input validator
 
 # Version 0.6.2 (PRE-RELEASE)
 
