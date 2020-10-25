@@ -26,6 +26,7 @@
         "ext-yaml": "*",
         "ext-dom": "*",
         "ext-redis": "*",
+        "ext-swoole": "*",
         "ext-pdo": "*",
         "ext-openssl": "*",
         "ext-zlib": "*",
