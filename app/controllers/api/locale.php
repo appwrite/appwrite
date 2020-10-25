@@ -15,7 +15,7 @@ App::get('/v1/locale')
         /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
-        /** @var GeoIp2\Database\Reader $geodb */
+        /** @var MaxMind\Db\Reader $geodb */
 
         $eu = Config::getParam('locale-eu');
         $currencies = Config::getParam('locale-currencies');
@@ -31,9 +31,12 @@ App::get('/v1/locale')
 
         try {
             $record = $geodb->get($ip);
+
+            var_dump('record');
+            var_dump($record);
+
             $output['countryCode'] = $record['country']['iso_code'];
             $output['country'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
-            //$output['countryTimeZone'] = DateTimeZone::listIdentifiers(DateTimeZone::PER_COUNTRY, $record->country->isoCode);
             $output['continent'] = (isset($continents[$record['continent']['code']])) ? $continents[$record['continent']['code']] : $locale->getText('locale.country.unknown');
             $output['continentCode'] = $record['continent']['code'];
             $output['eu'] = (\in_array($record['country']['iso_code'], $eu)) ? true : false;

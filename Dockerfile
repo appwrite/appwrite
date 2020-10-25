@@ -37,7 +37,6 @@ RUN docker-php-ext-install sockets
 
 RUN \
   # Redis Extension
-
   wget -q https://github.com/phpredis/phpredis/archive/$PHP_REDIS_VERSION.tar.gz && \
   tar -xf $PHP_REDIS_VERSION.tar.gz && \
   cd phpredis-$PHP_REDIS_VERSION && \
@@ -45,9 +44,7 @@ RUN \
   ./configure && \
   make && make install && \
   cd .. && \
-
   ## Swoole Extension
-
   git clone https://github.com/swoole/swoole-src.git && \
   cd swoole-src && \
   git checkout v$PHP_SWOOLE_VERSION && \
@@ -55,16 +52,13 @@ RUN \
   ./configure --enable-sockets --enable-http2 && \
   make && make install && \
   cd .. && \
-
-  ## php reader extension
-
+  ## Maxminddb extension
   git clone https://github.com/maxmind/MaxMind-DB-Reader-php.git && \
   cd MaxMind-DB-Reader-php/ext && \
   phpize && \
   ./configure && \
   make && make install && \
-  cd ..
-
+  cd ../..
 
 FROM php:7.4-cli-alpine as final
 
@@ -125,7 +119,6 @@ RUN \
   docker-cli \
   libmaxminddb \
   libmaxminddb-dev \
-
   && pecl install imagick yaml \ 
   && docker-php-ext-enable imagick yaml \
   && docker-php-ext-install sockets opcache pdo_mysql \
