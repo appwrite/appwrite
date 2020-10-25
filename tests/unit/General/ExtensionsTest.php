@@ -109,4 +109,9 @@ class ExtensionsTest extends TestCase
     {
         $this->assertEquals(true, extension_loaded('sockets'));
     }
+
+    public function testMaxminddb()
+    {
+        $this->assertEquals(true, extension_loaded('maxminddb'));
+    }
 }
