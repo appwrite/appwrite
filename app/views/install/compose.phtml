@@ -295,7 +295,7 @@ services:
       - appwrite-redis:/data:rw
 
   clamav:
-    image: appwrite/clamav:1.0.12
+    image: appwrite/clamav:1.2.0
     container_name: appwrite-clamav
     restart: unless-stopped
     networks:
