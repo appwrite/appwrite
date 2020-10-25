@@ -270,9 +270,17 @@ App::get('/v1/users/:userId/sessions')
             ];
 
             try {
-                $record = $geodb->country($token->getAttribute('ip', ''));
-                $sessions[$index]['geo']['isoCode'] = \strtolower($record->country->isoCode);
-                $sessions[$index]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : $locale->getText('locale.country.unknown');
+                $record = $geodb->get($token->getAttribute('ip', ''));
+
+                if(isset($record)){
+                    $sessions[$index]['geo']['isoCode'] = \strtolower($record['country']['iso_code']);
+                    $sessions[$index]['geo']['country'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
+                    }
+                else{
+                    $sessions[$index]['geo']['isoCode'] = '--';
+                    $sessions[$index]['geo']['country'] = $locale->getText('locale.country.unknown');
+                }
+
             } catch (\Exception $e) {
                 $sessions[$index]['geo']['isoCode'] = '--';
                 $sessions[$index]['geo']['country'] = $locale->getText('locale.country.unknown');
@@ -356,10 +364,17 @@ App::get('/v1/users/:userId/logs')
             ];
 
             try {
-                $record = $geodb->country($log['ip']);
-                $output[$i]['geo']['isoCode'] = \strtolower($record->country->isoCode);
-                $output[$i]['geo']['country'] = $record->country->name;
-                $output[$i]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : $locale->getText('locale.country.unknown');
+                $record = $geodb->get($log['ip']);
+
+                if(isset($record)){
+                    $output[$i]['geo']['isoCode'] = \strtolower($record['country']['iso_code']);
+                    $output[$i]['geo']['country'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
+                    }
+                else{
+                    $output[$i]['geo']['isoCode'] = '--';
+                    $output[$i]['geo']['country'] = $locale->getText('locale.country.unknown');
+                }
+
             } catch (\Exception $e) {
                 $output[$i]['geo']['isoCode'] = '--';
                 $output[$i]['geo']['country'] = $locale->getText('locale.country.unknown');
