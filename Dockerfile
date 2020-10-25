@@ -117,6 +117,7 @@ RUN \
   imagemagick-dev \
   certbot \
   docker-cli \
+  docker-compose \
   libmaxminddb \
   libmaxminddb-dev \
   && pecl install imagick yaml \ 

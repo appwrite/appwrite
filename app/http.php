@@ -98,11 +98,12 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     try {
         $app->run($request, $response);
     } catch (\Throwable $th) {
+        Console::error('[Error] Type: '.get_class($th));
+        Console::error('[Error] Message: '.$th->getMessage());
+        Console::error('[Error] File: '.$th->getFile());
+        Console::error('[Error] Line: '.$th->getLine());
+
         if(App::isDevelopment()) {
-            var_dump(get_class($th));
-            var_dump($th->getMessage());
-            var_dump($th->getFile());
-            var_dump($th->getLine());
             $swooleResponse->end('error: '.$th->getMessage());
         }
         

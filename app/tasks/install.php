@@ -142,10 +142,18 @@ $cli
 
         $stdout = '';
         $stderr = '';
+        
+        Console::log("Running \"docker-compose -f {$path}/docker-compose.yml up -d --remove-orphans\"");
+        
+        $files1 = scandir($path);
+
+        print_r($files1);
+
         $exit = Console::execute("docker-compose -f {$path}/docker-compose.yml up -d --remove-orphans", null, $stdout, $stderr);
 
         if ($exit !== 0) {
             Console::error("Failed to install Appwrite dockers");
+            Console::error($stderr);
             exit($exit);
         } else {
             Console::success("Appwrite installed successfully");
