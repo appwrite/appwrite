@@ -641,7 +641,7 @@ App::get('/v1/account/sessions')
             try {
                 $record = $geodb->get($token->getAttribute('ip', ''));
 
-                if (isset($record)){
+                if ($record) {
                     $sessions[$index]['geo']['isoCode'] = \strtolower($record['country']['iso_code']);
                     $sessions[$index]['geo']['country'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
                 }

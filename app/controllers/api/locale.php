@@ -29,12 +29,9 @@ App::get('/v1/locale')
 
         $currency = null;
 
-        try {
-            $record = $geodb->get($ip);
+        $record = $geodb->get($ip);
 
-            var_dump('record');
-            var_dump($record);
-
+        if($record) {
             $output['countryCode'] = $record['country']['iso_code'];
             $output['country'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
             $output['continent'] = (isset($continents[$record['continent']['code']])) ? $continents[$record['continent']['code']] : $locale->getText('locale.country.unknown');
@@ -48,7 +45,7 @@ App::get('/v1/locale')
             }
 
             $output['currency'] = $currency;
-        } catch (\Exception $e) {
+        } else {
             $output['countryCode'] = '--';
             $output['country'] = $locale->getText('locale.country.unknown');
             $output['continent'] = $locale->getText('locale.country.unknown');
