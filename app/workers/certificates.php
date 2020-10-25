@@ -66,7 +66,7 @@ class CertificatesV1
         }
 
         if(!$domain->isKnown() || $domain->isTest()) {
-            throw new Exception('Unkown public suffix for domain');
+            throw new Exception('Unknown public suffix for domain');
         }
 
         if($validateTarget) {
