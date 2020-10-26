@@ -43,7 +43,7 @@ $ git checkout -b [name_of_your_new_branch]
 ```
 3. Work - commit - repeat ( be sure to be in your branch )
 
-4. Push changes to GitHub 
+4. Push changes to GitHub. 
 ```
 $ git push origin [name_of_your_new_branch]
 ```
@@ -52,8 +52,8 @@ $ git push origin [name_of_your_new_branch]
 If you go to your repository on GitHub, you'll see a `Compare & pull request` button. Click on that button.
 6. Start a Pull Request
 Now submit the pull request and click on `Create pull request`.
-7. Get a code review approval/reject
-8. After approval, merge your PR
+7. Get a code review approval/reject.
+8. After approval, merge your PR.
 9. GitHub will automatically delete the branch after the merge is done. (they can still be restored).
 
 ## Setup From Source
