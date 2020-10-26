@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9656df44d70d14709f83846019101927",
+    "content-hash": "6b4324f0371e508d691337551c00c74e",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -99,6 +99,125 @@
             "description": "BaconQrCode is a QR code generator for PHP.",
             "homepage": "https://github.com/Bacon/BaconQrCode",
             "time": "2020-07-30T16:40:58+00:00"
+        },
+        {
+            "name": "chillerlan/php-qrcode",
+            "version": "4.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/chillerlan/php-qrcode.git",
+                "reference": "2cecb32cf618319dd01d9bc1fa64dc6bb683df85"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/chillerlan/php-qrcode/zipball/2cecb32cf618319dd01d9bc1fa64dc6bb683df85",
+                "reference": "2cecb32cf618319dd01d9bc1fa64dc6bb683df85",
+                "shasum": ""
+            },
+            "require": {
+                "chillerlan/php-settings-container": "^2.0",
+                "ext-mbstring": "*",
+                "php": "^7.4"
+            },
+            "require-dev": {
+                "phan/phan": "^2.7",
+                "phpunit/phpunit": "^9.1",
+                "setasign/fpdf": "^1.8.2"
+            },
+            "suggest": {
+                "chillerlan/php-authenticator": "Yet another Google authenticator! Also creates URIs for mobile apps.",
+                "setasign/fpdf": "Required to use the QR FPDF output."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "chillerlan\\QRCode\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Kazuhiko Arase",
+                    "homepage": "https://github.com/kazuhikoarase"
+                },
+                {
+                    "name": "Smiley",
+                    "email": "smiley@chillerlan.net",
+                    "homepage": "https://github.com/codemasher"
+                },
+                {
+                    "name": "Contributors",
+                    "homepage": "https://github.com/chillerlan/php-qrcode/graphs/contributors"
+                }
+            ],
+            "description": "A QR code generator. PHP 7.4+",
+            "homepage": "https://github.com/chillerlan/php-qrcode",
+            "keywords": [
+                "phpqrcode",
+                "qr",
+                "qr code",
+                "qrcode",
+                "qrcode-generator"
+            ],
+            "funding": [
+                {
+                    "url": "https://ko-fi.com/codemasher",
+                    "type": "ko_fi"
+                }
+            ],
+            "time": "2020-06-04T17:07:12+00:00"
+        },
+        {
+            "name": "chillerlan/php-settings-container",
+            "version": "2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/chillerlan/php-settings-container.git",
+                "reference": "75888345532373074fba482a6642c0f8cda996f0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/chillerlan/php-settings-container/zipball/75888345532373074fba482a6642c0f8cda996f0",
+                "reference": "75888345532373074fba482a6642c0f8cda996f0",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "php": "^7.4"
+            },
+            "require-dev": {
+                "phan/phan": "^2.6",
+                "phpunit/phpunit": "^9.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "chillerlan\\Settings\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Smiley",
+                    "email": "smiley@chillerlan.net",
+                    "homepage": "https://github.com/codemasher"
+                }
+            ],
+            "description": "A container class for immutable settings objects. Not a DI container. PHP 7.4+",
+            "homepage": "https://github.com/chillerlan/php-settings-container",
+            "keywords": [
+                "PHP7",
+                "Settings",
+                "container",
+                "helper"
+            ],
+            "time": "2020-04-16T16:56:44+00:00"
         },
         {
             "name": "colinmollenhour/credis",
