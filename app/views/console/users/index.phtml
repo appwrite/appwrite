@@ -308,9 +308,9 @@ $providers = $this->getParam('providers', []);
                     <?php foreach ($providers as $provider => $data):
                         if (isset($data['enabled']) && !$data['enabled']) { continue; }
                         if (isset($data['mock']) && $data['mock']) { continue; }
-                        $form = (isset($data['form'])) ? $data['form'] : false;
-                        $name = (isset($data['name'])) ? $data['name'] : 'Unknown';
-                        $beta = (isset($data['beta'])) ? $data['beta'] : false;
+                        $form = $data['form'] ?? false;
+                        $name = $data['name'] ?? 'Unknown';
+                        $beta = $data['beta'] ?? false;
                         ?>
                         <li class="<?php echo (isset($data['enabled']) && !$data['enabled']) ? 'dev-feature' : ''; ?>">
                             <div data-ui-modal class="modal close" data-button-alias="none" data-open-event="provider-update-<?php echo $provider; ?>">

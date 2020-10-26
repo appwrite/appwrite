@@ -8,9 +8,9 @@
 </p>
 
 [![Hacktoberfest](https://badgen.net/badge/hacktoberfest/friendly/pink)](CONTRIBUTING.md)
-[![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
+[![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)
 [![Docker Pulls](https://badgen.net/docker/pulls/appwrite/appwrite)](https://travis-ci.org/appwrite/appwrite)
-[![Travis CI](https://badgen.net/travis/appwrite/appwrite?label=build)](https://travis-ci.org/appwrite/appwrite)
+[![Travis CI](https://badgen.net/travis/appwrite/appwrite?label=build)](https://travis-ci.com/appwrite/appwrite)
 [![Twitter Account](https://badgen.net/twitter/follow/appwrite_io?label=twitter)](https://twitter.com/appwrite_io)
 [![Follow Appwrite on StackShare](https://badgen.net/badge/follow%20on/stackshare/blue)](https://stackshare.io/appwrite)
 
@@ -29,14 +29,15 @@ Table of Contents:
   - [Windows](#windows)
     - [CMD](#cmd)
     - [PowerShell](#powershell)
+  - [Upgrade from an Older Version](#upgrade-from-an-older-version)
 - [Getting Started](#getting-started)
   - [Services](#services)
   - [SDKs](#sdks)
     - [Client](#client)
     - [Server](#server)
+- [Contributing](#contributing)
 - [Security](#security)
 - [Follow Us](#follow-us)
-- [Contributing](#contributing)
 - [License](#license)
       
 ## Installation
@@ -52,7 +53,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:0.7.0
+    appwrite/appwrite:0.7.0 --version 0.7.0
 ```
 
 ### Windows
@@ -64,7 +65,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:0.7.0
+    appwrite/appwrite:0.7.0 --version 0.7.0
 ```
 
 #### PowerShell
@@ -74,13 +75,17 @@ docker run -it --rm ,
     --volume /var/run/docker.sock:/var/run/docker.sock ,
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw ,
     --entrypoint="install" ,
-    appwrite/appwrite:0.7.0
+    appwrite/appwrite:0.7.0 --version 0.7.0
 ```
 
 Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please note that on non-linux native hosts, the server might take a few minutes to start after installation completes.
 
 
 For advanced production and custom installation, check out our Docker [environment variables](docs/tutorials/environment-variables.md) docs. You can also use our public [docker-compose.yml](https://appwrite.io/docker-compose.yml) file to manually set up and environment.
+
+### Upgrade from an Older Version
+
+If you are upgrading your Appwrite server from an older version, you should use the Appwrite migration tool once your setup is completed. For more information regarding this, check out the [Installation Docs](https://appwrite.io/docs/installation).
 
 ## Getting Started
 
@@ -132,7 +137,7 @@ We truly ❤️ pull requests! If you wish to help, you can learn more about how
 
 ## Security
 
-For security issues, kindly email us [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue in GitHub.
+For security issues, kindly email us at [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue in GitHub.
 
 ## Follow Us
 

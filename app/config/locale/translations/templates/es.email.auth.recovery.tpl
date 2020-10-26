@@ -2,11 +2,11 @@
     Hola {{name}},
 </p>
 <p>
-    Sigue este enlace para reestablecer tu contraseña de {{project}}.
+    Sigue este enlace para restablecer tu contraseña de {{project}}.
 </p>
 {{cta}}
 <p>
-    Si no has pedido reestablecer tu contraseña, puedes ignorar este mensaje.
+    Si no solicitaste restablecer tu contraseña, puedes ignorar este mensaje.
 </p>
 <p>
     Gracias,

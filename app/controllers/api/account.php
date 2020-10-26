@@ -604,7 +604,7 @@ App::get('/v1/account/sessions')
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
-        /** @var GeoIp2\Database\Reader $geodb */
+        /** @var MaxMind\Db\Reader $geodb */
 
         $tokens = $user->getAttribute('tokens', []);
         $sessions = [];
@@ -639,9 +639,17 @@ App::get('/v1/account/sessions')
             ];
 
             try {
-                $record = $geodb->country($token->getAttribute('ip', ''));
-                $sessions[$index]['geo']['isoCode'] = \strtolower($record->country->isoCode);
-                $sessions[$index]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : $locale->getText('locale.country.unknown');
+                $record = $geodb->get($token->getAttribute('ip', ''));
+
+                if ($record) {
+                    $sessions[$index]['geo']['isoCode'] = \strtolower($record['country']['iso_code']);
+                    $sessions[$index]['geo']['country'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
+                }
+                else {
+                    $sessions[$index]['geo']['isoCode'] = '--';
+                    $sessions[$index]['geo']['country'] = $locale->getText('locale.country.unknown');
+                }
+
             } catch (\Exception $e) {
                 $sessions[$index]['geo']['isoCode'] = '--';
                 $sessions[$index]['geo']['country'] = $locale->getText('locale.country.unknown');
@@ -666,7 +674,7 @@ App::get('/v1/account/logs')
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
-        /** @var GeoIp2\Database\Reader $geodb */
+        /** @var MaxMind\Db\Reader $geodb */
 
         $adapter = new AuditAdapter($register->get('db'));
         $adapter->setNamespace('app_'.$project->getId());
@@ -716,10 +724,17 @@ App::get('/v1/account/logs')
             ];
 
             try {
-                $record = $geodb->country($log['ip']);
-                $output[$i]['geo']['isoCode'] = \strtolower($record->country->isoCode);
-                $output[$i]['geo']['country'] = $record->country->name;
-                $output[$i]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : $locale->getText('locale.country.unknown');
+                $record = $geodb->get($log['ip']);
+
+                if(isset($record)){
+                    $output[$i]['geo']['isoCode'] = \strtolower($record['country']['iso_code']);
+                    $output[$i]['geo']['country'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
+                    }
+                else{
+                    $output[$i]['geo']['isoCode'] = '--';
+                    $output[$i]['geo']['country'] = $locale->getText('locale.country.unknown');
+                }
+
             } catch (\Exception $e) {
                 $output[$i]['geo']['isoCode'] = '--';
                 $output[$i]['geo']['country'] = $locale->getText('locale.country.unknown');

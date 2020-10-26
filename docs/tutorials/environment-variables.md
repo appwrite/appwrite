@@ -1,6 +1,6 @@
 # Environment Variables
 
-Appwrite environment variables allow you to edit your server setup configuration and customize it. You can easily change the environment variables by changing them when running Appwrite using Docker CLI or Docker-Compose.
+Appwrite environment variables allow you to edit your server setup configuration and customize it. You can change the environment variables by changing them when running Appwrite using Docker CLI or Docker-Compose.
 
 ## General Options
 
@@ -10,7 +10,7 @@ Set your server running environment. By default, the var is set to 'development'
 
 ### _APP_OPTIONS_ABUSE
 
-Allows you to disable abuse checks and API rate limiting. By default, set to 'enabled'. To cancel the abuse checking, set to 'disabled'. It is not recommended to disable this feature in a production environment.
+Allows you to turn off abuse checks and API rate limiting. By default, set to 'enabled'. To cancel the abuse checking, set to 'disabled'. It is not recommended to turn off this feature in a production environment.
 
 ### _APP_OPTIONS_FORCE_HTTPS
 
@@ -26,7 +26,7 @@ Maximum file size allowed for file upload. The default value is 100MB limitation
 
 ### _APP_STORAGE_ANTIVIRUS
 
-This variable allows you to disable the internal anti-virus scans. By default, this value is set to 'enabled' to cancel the scans, set the value to 'disabled'. When disabled, it's recommended to turn off the ClamAV container for better resource usage.
+This variable allows you to disable the internal anti-virus scans. This value is set to 'enabled' by default, to cancel the scans set the value to 'disabled'. When disabled, it's recommended to turn off the ClamAV container for better resource usage.
 
 ### _APP_CONSOLE_WHITELIST_EMAILS
 

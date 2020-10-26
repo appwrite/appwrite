@@ -15,7 +15,7 @@ App::get('/v1/locale')
         /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
-        /** @var GeoIp2\Database\Reader $geodb */
+        /** @var MaxMind\Db\Reader $geodb */
 
         $eu = Config::getParam('locale-eu');
         $currencies = Config::getParam('locale-currencies');
@@ -24,32 +24,28 @@ App::get('/v1/locale')
         $time = (60 * 60 * 24 * 45); // 45 days cache
         $countries = $locale->getText('countries');
         $continents = $locale->getText('continents');
-
-        if (!App::isProduction()) {
-            $ip = '79.177.241.94';
-        }
-
+        
         $output['ip'] = $ip;
 
         $currency = null;
 
-        try {
-            $record = $geodb->country($ip);
-            $output['countryCode'] = $record->country->isoCode;
-            $output['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : $locale->getText('locale.country.unknown');
-            //$output['countryTimeZone'] = DateTimeZone::listIdentifiers(DateTimeZone::PER_COUNTRY, $record->country->isoCode);
-            $output['continent'] = (isset($continents[$record->continent->code])) ? $continents[$record->continent->code] : $locale->getText('locale.country.unknown');
-            $output['continentCode'] = $record->continent->code;
-            $output['eu'] = (\in_array($record->country->isoCode, $eu)) ? true : false;
+        $record = $geodb->get($ip);
+
+        if($record) {
+            $output['countryCode'] = $record['country']['iso_code'];
+            $output['country'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
+            $output['continent'] = (isset($continents[$record['continent']['code']])) ? $continents[$record['continent']['code']] : $locale->getText('locale.country.unknown');
+            $output['continentCode'] = $record['continent']['code'];
+            $output['eu'] = (\in_array($record['country']['iso_code'], $eu)) ? true : false;
 
             foreach ($currencies as $code => $element) {
-                if (isset($element['locations']) && isset($element['code']) && \in_array($record->country->isoCode, $element['locations'])) {
+                if (isset($element['locations']) && isset($element['code']) && \in_array($record['country']['iso_code'], $element['locations'])) {
                     $currency = $element['code'];
                 }
             }
 
             $output['currency'] = $currency;
-        } catch (\Exception $e) {
+        } else {
             $output['countryCode'] = '--';
             $output['country'] = $locale->getText('locale.country.unknown');
             $output['continent'] = $locale->getText('locale.country.unknown');

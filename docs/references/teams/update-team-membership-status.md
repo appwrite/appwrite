@@ -1,1 +1,1 @@
-Use this endpoint to allow a user to accept an invitation to join a team after he is being redirected back to your app from the invitation email he was sent.
+Use this endpoint to allow a user to accept an invitation to join a team after being redirected back to your app from the invitation email recieved by the user.

@@ -16,7 +16,7 @@ FROM php:7.4-cli-alpine as step1
 
 ENV TZ=Asia/Tel_Aviv \
     PHP_REDIS_VERSION=5.3.0 \
-    PHP_SWOOLE_VERSION=4.5.3 \
+    PHP_SWOOLE_VERSION=4.5.5 \
     PHP_XDEBUG_VERSION=sdebug_2_9-beta
 
 RUN \
@@ -30,7 +30,8 @@ RUN \
   wget \
   git \
   zlib-dev \
-  brotli-dev
+  brotli-dev \
+  libmaxminddb-dev
 
 RUN docker-php-ext-install sockets
 
@@ -50,7 +51,14 @@ RUN \
   phpize && \
   ./configure --enable-sockets --enable-http2 && \
   make && make install && \
-  cd ..
+  cd .. && \
+  ## Maxminddb extension
+  git clone https://github.com/maxmind/MaxMind-DB-Reader-php.git && \
+  cd MaxMind-DB-Reader-php/ext && \
+  phpize && \
+  ./configure && \
+  make && make install && \
+  cd ../..
 
 FROM php:7.4-cli-alpine as final
 
@@ -109,16 +117,21 @@ RUN \
   imagemagick-dev \
   certbot \
   docker-cli \
+  docker-compose \
+  libmaxminddb \
+  libmaxminddb-dev \
   && pecl install imagick yaml \ 
   && docker-php-ext-enable imagick yaml \
   && docker-php-ext-install sockets opcache pdo_mysql \
-  && apk del .deps
+  && apk del .deps \
+  && rm -rf /var/cache/apk/*
 
 WORKDIR /usr/src/code
 
 COPY --from=step0 /usr/local/src/vendor /usr/src/code/vendor
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/
+COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/maxminddb.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/ 
 
 # Add Source Code
 COPY ./app /usr/src/code/app
@@ -148,6 +161,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/schedule && \
     chmod +x /usr/local/bin/ssl && \
     chmod +x /usr/local/bin/test && \
+    chmod +x /usr/local/bin/vars && \
     chmod +x /usr/local/bin/worker-audits && \
     chmod +x /usr/local/bin/worker-certificates && \
     chmod +x /usr/local/bin/worker-deletes && \
@@ -163,6 +177,7 @@ RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 # Enable Extensions
 RUN echo extension=swoole.so >> /usr/local/etc/php/conf.d/swoole.ini
 RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
+RUN echo extension=maxminddb.so >> /usr/local/etc/php/conf.d/maxminddb.ini
 
 RUN echo "opcache.preload_user=www-data" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.preload=/usr/src/code/app/preload.php" >> /usr/local/etc/php/conf.d/appwrite.ini

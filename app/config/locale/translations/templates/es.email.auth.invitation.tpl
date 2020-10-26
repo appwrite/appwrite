@@ -2,7 +2,7 @@
     Hola,
 </p>
 <p>
-    Te hemos enviamos este correo porque <b>{{owner}}</b> quiere invitarte a formar parte del equipo <b>{{team}}</b> en {{project}}.
+    Te hemos enviado este correo porque <b>{{owner}}</b> quiere invitarte a formar parte del equipo <b>{{team}}</b> en {{project}}.
 </p>
 <p>
     Sigue este enlace para unirte al equipo <b>{{team}}</b>:
