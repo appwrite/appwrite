@@ -56,7 +56,7 @@ class Authorization extends Validator
      *
      * Returns true if valid or false if not.
      *
-     * @param array $permissions
+     * @param mixed $permissions
      *
      * @return bool
      */

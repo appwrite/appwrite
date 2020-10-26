@@ -139,7 +139,7 @@ class MySQL extends Adapter
     {
         $order = 0;
         $data = \array_merge(['$id' => null, '$permissions' => []], $data); // Merge data with default params
-        $signature = \md5(\json_encode($data, true));
+        $signature = \md5(\json_encode($data));
         $revision = \uniqid('', true);
         $data['$id'] = (empty($data['$id'])) ? null : $data['$id'];
 
@@ -232,6 +232,10 @@ class MySQL extends Adapter
 
             // Handle array of relations
             if (self::DATA_TYPE_ARRAY === $type) {
+                if(!is_array($value)) { // Property should be of type array, if not = skip
+                    continue;
+                }
+
                 foreach ($value as $i => $child) {
                     if (self::DATA_TYPE_DICTIONARY !== $this->getDataType($child)) { // not dictionary
 
@@ -315,13 +319,13 @@ class MySQL extends Adapter
     /**
      * Delete Document.
      *
-     * @param int $id
+     * @param string $id
      *
      * @return array
      *
      * @throws Exception
      */
-    public function deleteDocument($id)
+    public function deleteDocument(string $id)
     {
         $st1 = $this->getPDO()->prepare('DELETE FROM `'.$this->getNamespace().'.database.documents`
             WHERE uid = :id

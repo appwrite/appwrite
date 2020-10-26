@@ -137,13 +137,13 @@ class Redis extends Adapter
     /**
      * Delete Document.
      *
-     * @param $id
+     * @param string $id
      *
      * @return array
      *
      * @throws Exception
      */
-    public function deleteDocument($id)
+    public function deleteDocument(string $id)
     {
         $data = $this->adapter->deleteDocument($id);
 

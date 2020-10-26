@@ -187,7 +187,7 @@ class Database
     }
 
     /**
-     * @param int  $id
+     * @param string $id
      * @param bool $mock is mocked data allowed?
      * @param bool $decode enable decoding?
      *
@@ -327,13 +327,13 @@ class Database
     }
 
     /**
-     * @param int $id
+     * @param string $id
      *
      * @return Document|false
      *
      * @throws AuthorizationException
      */
-    public function deleteDocument($id)
+    public function deleteDocument(string $id)
     {
         $document = $this->getDocument($id);
 

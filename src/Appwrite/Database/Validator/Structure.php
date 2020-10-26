@@ -156,9 +156,14 @@ class Structure extends Validator
 
         foreach ($array as $key => $value) {
             $rule = $collection->search('key', $key, $rules);
-            $ruleType = (isset($rule['type'])) ? $rule['type'] : '';
-            $ruleRequired = (isset($rule['required'])) ? $rule['required'] : true;
-            $ruleArray = (isset($rule['array'])) ? $rule['array'] : false;
+            
+            if(!$rule) {
+                continue;
+            }
+
+            $ruleType = $rule['type'] ?? '';
+            $ruleRequired = $rule['required'] ?? true;
+            $ruleArray = $rule['array'] ?? false;
             $validator = null;
 
             switch ($ruleType) {
