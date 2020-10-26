@@ -54,7 +54,7 @@
         "phpmailer/phpmailer": "6.1.7"
     },
     "require-dev": {
-        "swoole/ide-helper": "4.5.6",
+        "swoole/ide-helper": "4.5.5",
         "appwrite/sdk-generator": "master",
         "phpunit/phpunit": "^9.3"
     },
