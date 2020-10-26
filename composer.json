@@ -49,9 +49,8 @@
         "dragonmantank/cron-expression": "3.0.1",
         "domnikl/statsd": "3.0.*",
         "influxdb/influxdb-php": "1.15.*",
-        "bacon/bacon-qr-code": "2.0.2",
         "phpmailer/phpmailer": "6.1.7",
-        "chillerlan/php-qrcode": "^4.1"
+        "chillerlan/php-qrcode": "^4.2"
     },
     "require-dev": {
         "swoole/ide-helper": "4.5.4",

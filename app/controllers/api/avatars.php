@@ -11,22 +11,17 @@ use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Filesystem;
 use Appwrite\Resize\Resize;
 use Appwrite\URL\URL as URLParse;
-/* use BaconQrCode\Renderer\ImageRenderer;
-use BaconQrCode\Renderer\Image\ImagickImageBackEnd;
-use BaconQrCode\Renderer\RendererStyle\RendererStyle;
-use BaconQrCode\Writer; */
 use Utopia\Config\Config;
 use Utopia\Validator\HexColor;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
-/* use SebastianBergmann\CodeCoverage\Report\Html\Renderer; */
 
 $avatarCallback = function ($type, $code, $width, $height, $quality, $response) {
     /** @var Utopia\Response $response */
 
     $code = \strtolower($code);
     $type = \strtolower($type);
-    $set  = Config::getParam('avatar-'.$type, []);
+    $set  = Config::getParam('avatar-' . $type, []);
 
     if (empty($set)) {
         throw new Exception('Avatar set not found', 404);
@@ -41,16 +36,16 @@ $avatarCallback = function ($type, $code, $width, $height, $quality, $response) 
     }
 
     $output = 'png';
-    $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
-    $key = \md5('/v1/avatars/:type/:code-'.$code.$width.$height.$quality.$output);
+    $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT';  // 45 days cache
+    $key = \md5('/v1/avatars/:type/:code-' . $code . $width . $height . $quality . $output);
     $path = $set[$code];
     $type = 'png';
 
     if (!\is_readable($path)) {
-        throw new Exception('File not readable in '.$path, 500);
+        throw new Exception('File not readable in ' . $path, 500);
     }
 
-    $cache = new Cache(new Filesystem(APP_STORAGE_CACHE.'/app-0')); // Limit file number or size
+    $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . '/app-0')); // Limit file number or size
     $data = $cache->load($key, 60 * 60 * 24 * 30 * 3 /* 3 months */);
 
     if ($data) {
@@ -60,8 +55,7 @@ $avatarCallback = function ($type, $code, $width, $height, $quality, $response) 
             ->setContentType('image/png')
             ->addHeader('Expires', $date)
             ->addHeader('X-Appwrite-Cache', 'hit')
-            ->send($data)
-        ;
+            ->send($data);
     }
 
     $resize = new Resize(\file_get_contents($path));
@@ -71,15 +65,14 @@ $avatarCallback = function ($type, $code, $width, $height, $quality, $response) 
     $output = (empty($output)) ? $type : $output;
 
     $data = $resize->output($output, $quality);
-    
+
     $cache->save($key, $data);
-    
+
     $response
         ->setContentType('image/png')
         ->addHeader('Expires', $date)
         ->addHeader('X-Appwrite-Cache', 'miss')
-        ->send($data, null);
-    ;
+        ->send($data, null);;
 
     unset($resize);
 };
@@ -93,7 +86,7 @@ App::get('/v1/avatars/credit-cards/:code')
     ->label('sdk.method', 'getCreditCard')
     ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-credit-card.md')
-    ->param('code', '', new WhiteList(\array_keys(Config::getParam('avatar-credit-cards'))), 'Credit Card Code. Possible values: '.\implode(', ', \array_keys(Config::getParam('avatar-credit-cards'))).'.')
+    ->param('code', '', new WhiteList(\array_keys(Config::getParam('avatar-credit-cards'))), 'Credit Card Code. Possible values: ' . \implode(', ', \array_keys(Config::getParam('avatar-credit-cards'))) . '.')
     ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
@@ -152,10 +145,10 @@ App::get('/v1/avatars/image')
 
         $quality = 80;
         $output = 'png';
-        $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
-        $key = \md5('/v2/avatars/images-'.$url.'-'.$width.'/'.$height.'/'.$quality);
+        $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT';  // 45 days cache
+        $key = \md5('/v2/avatars/images-' . $url . '-' . $width . '/' . $height . '/' . $quality);
         $type = 'png';
-        $cache = new Cache(new Filesystem(APP_STORAGE_CACHE.'/app-0')); // Limit file number or size
+        $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . '/app-0')); // Limit file number or size
         $data = $cache->load($key, 60 * 60 * 24 * 7 /* 1 week */);
 
         if ($data) {
@@ -163,8 +156,7 @@ App::get('/v1/avatars/image')
                 ->setContentType('image/png')
                 ->addHeader('Expires', $date)
                 ->addHeader('X-Appwrite-Cache', 'hit')
-                ->send($data)
-            ;
+                ->send($data);
         }
 
         if (!\extension_loaded('imagick')) {
@@ -186,17 +178,16 @@ App::get('/v1/avatars/image')
         $resize->crop((int) $width, (int) $height);
 
         $output = (empty($output)) ? $type : $output;
-        
+
         $data = $resize->output($output, $quality);
-        
+
         $cache->save($key, $data);
 
         $response
             ->setContentType('image/png')
             ->addHeader('Expires', $date)
             ->addHeader('X-Appwrite-Cache', 'miss')
-            ->send($data);
-        ;
+            ->send($data);;
 
         unset($resize);
     }, ['response']);
@@ -218,10 +209,10 @@ App::get('/v1/avatars/favicon')
         $height = 56;
         $quality = 80;
         $output = 'png';
-        $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
-        $key = \md5('/v2/avatars/favicon-'.$url);
+        $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT';  // 45 days cache
+        $key = \md5('/v2/avatars/favicon-' . $url);
         $type = 'png';
-        $cache = new Cache(new Filesystem(APP_STORAGE_CACHE.'/app-0')); // Limit file number or size
+        $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . '/app-0')); // Limit file number or size
         $data = $cache->load($key, 60 * 60 * 24 * 30 * 3 /* 3 months */);
 
         if ($data) {
@@ -229,8 +220,7 @@ App::get('/v1/avatars/favicon')
                 ->setContentType('image/png')
                 ->addHeader('Expires', $date)
                 ->addHeader('X-Appwrite-Cache', 'hit')
-                ->send($data)
-            ;
+                ->send($data);
         }
 
         if (!\extension_loaded('imagick')) {
@@ -244,7 +234,8 @@ App::get('/v1/avatars/favicon')
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_MAXREDIRS => 3,
             CURLOPT_URL => $url,
-            CURLOPT_USERAGENT => \sprintf(APP_USERAGENT,
+            CURLOPT_USERAGENT => \sprintf(
+                APP_USERAGENT,
                 App::getEnv('_APP_VERSION', 'UNKNOWN'),
                 App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
             ),
@@ -305,7 +296,7 @@ App::get('/v1/avatars/favicon')
         if (empty($outputHref) || empty($outputExt)) {
             $default = \parse_url($url);
 
-            $outputHref = $default['scheme'].'://'.$default['host'].'/favicon.ico';
+            $outputHref = $default['scheme'] . '://' . $default['host'] . '/favicon.ico';
             $outputExt = 'ico';
         }
 
@@ -322,8 +313,7 @@ App::get('/v1/avatars/favicon')
                 ->setContentType('image/x-icon')
                 ->addHeader('Expires', $date)
                 ->addHeader('X-Appwrite-Cache', 'miss')
-                ->send($data)
-            ;
+                ->send($data);
         }
 
         $fetch = @\file_get_contents($outputHref, false);
@@ -368,28 +358,20 @@ App::get('/v1/avatars/qr')
         /** @var Utopia\Response $response */
 
         $download = ($download === '1' || $download === 'true' || $download === 1 || $download === true);
-
-       /*  $renderer = new ImageRenderer(
-            new RendererStyle($size, $margin),
-            new ImagickImageBackEnd('png', 100)
-        ); */
         $qropts = new QROptions([
             'quietzone'         => $size
         ]);
         $qrcode = new QRCode($qropts);
         $qrcode->render($text);
 
-        /* $writer = new Writer($renderer); */
-
         if ($download) {
             $response->addHeader('Content-Disposition', 'attachment; filename="qr.png"');
         }
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->setContentType('image/png')
-            /* ->send($writer->writeString($text)) */
-        ;
+            ->send($qrcode->render($text));
     }, ['response']);
 
 App::get('/v1/avatars/initials')
@@ -423,7 +405,7 @@ App::get('/v1/avatars/initials')
             ['color' => '#610008', 'background' => '#f6d2d5'] // RED
         ];
 
-        $rand = \rand(0, \count($themes)-1);
+        $rand = \rand(0, \count($themes) - 1);
 
         $name = (!empty($name)) ? $name : $user->getAttribute('name', $user->getAttribute('email', ''));
         $words = \explode(' ', \strtoupper($name));
@@ -440,23 +422,23 @@ App::get('/v1/avatars/initials')
         }
 
         $length = \count($words);
-        $rand = \substr($code,-1);
-        $background = (!empty($background)) ? '#'.$background : $themes[$rand]['background'];
-        $color = (!empty($color)) ? '#'.$color : $themes[$rand]['color'];
+        $rand = \substr($code, -1);
+        $background = (!empty($background)) ? '#' . $background : $themes[$rand]['background'];
+        $color = (!empty($color)) ? '#' . $color : $themes[$rand]['color'];
 
         $image = new \Imagick();
         $draw = new \ImagickDraw();
         $fontSize = \min($width, $height) / 2;
-        
-        $draw->setFont(__DIR__."/../../../public/fonts/poppins-v9-latin-500.ttf");
-        $image->setFont(__DIR__."/../../../public/fonts/poppins-v9-latin-500.ttf");
+
+        $draw->setFont(__DIR__ . "/../../../public/fonts/poppins-v9-latin-500.ttf");
+        $image->setFont(__DIR__ . "/../../../public/fonts/poppins-v9-latin-500.ttf");
 
         $draw->setFillColor(new \ImagickPixel($color));
         $draw->setFontSize($fontSize);
-        
+
         $draw->setTextAlignment(\Imagick::ALIGN_CENTER);
         $draw->annotation($width / 1.97, ($height / 2) + ($fontSize / 3), $initials);
-        
+
         $image->newImage($width, $height, $background);
         $image->setImageFormat("png");
         $image->drawImage($draw);
@@ -464,8 +446,7 @@ App::get('/v1/avatars/initials')
         //$image->setImageCompressionQuality(9 - round(($quality / 100) * 9));
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->setContentType('image/png')
-            ->send($image->getImageBlob())
-        ;
+            ->send($image->getImageBlob());
     }, ['response', 'user']);
