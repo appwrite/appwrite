@@ -16,7 +16,7 @@ FROM php:7.4-cli-alpine as step1
 
 ENV TZ=Asia/Tel_Aviv \
     PHP_REDIS_VERSION=5.3.0 \
-    PHP_SWOOLE_VERSION=4.5.5 \
+    PHP_SWOOLE_VERSION=4.5.6 \
     PHP_XDEBUG_VERSION=sdebug_2_9-beta
 
 RUN \

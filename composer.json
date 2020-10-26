@@ -54,7 +54,7 @@
         "chillerlan/php-qrcode": "^4.2"
     },
     "require-dev": {
-        "swoole/ide-helper": "4.5.4",
+        "swoole/ide-helper": "4.5.5",
         "appwrite/sdk-generator": "master",
         "phpunit/phpunit": "^9.3"
     },
