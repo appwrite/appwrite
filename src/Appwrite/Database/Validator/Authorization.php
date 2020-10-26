@@ -15,7 +15,7 @@ class Authorization extends Validator
     /**
      * @var Document
      */
-    protected $document = null;
+    protected $document;
 
     /**
      * @var string

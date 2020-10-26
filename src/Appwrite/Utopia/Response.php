@@ -52,8 +52,10 @@ class Response extends UtopiaResponse
 
     /**
      * Response constructor.
+     * 
+     * @param float $time
      */
-    public function __construct(int $time = 0)
+    public function __construct(float $time = 0)
     {
         $this
             ->setModel(new Error())

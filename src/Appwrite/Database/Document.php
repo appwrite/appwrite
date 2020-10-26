@@ -17,7 +17,7 @@ class Document extends ArrayObject
      *
      * @see ArrayObject::__construct
      *
-     * @param array   $input
+     * @param array $input
      * @param int    $flags
      * @param string $iterator_class
      */
