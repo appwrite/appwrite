@@ -59,9 +59,11 @@ class PDO extends PDONative
         return $this->pdo->quote($string, $parameter_type);
     }
 
-    public function reconnect()
+    public function reconnect(): PDONative
     {
         $this->pdo = new PDONative($this->dsn, $this->username, $this->passwd, $this->options);
+
+        echo '[PDO] MySQL connection restarted'.PHP_EOL;
         
         // Connection settings
         $this->pdo->setAttribute(PDONative::ATTR_DEFAULT_FETCH_MODE, PDONative::FETCH_ASSOC);   // Return arrays

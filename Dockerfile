@@ -15,8 +15,8 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
 FROM php:8.0.0RC2-cli-alpine as step1
 
 ENV TZ=Asia/Tel_Aviv \
-    PHP_REDIS_VERSION=5.3.2RC2 \
-    PHP_SWOOLE_VERSION=v4.5.5 \
+    PHP_REDIS_VERSION=5.3.2 \
+    PHP_SWOOLE_VERSION=4.5.6 \
     PHP_IMAGICK_VERSION=master \
     PHP_YAML_VERSION=2.2.0b2
 
@@ -34,7 +34,8 @@ RUN \
   brotli-dev \
   yaml-dev \
   imagemagick \
-  imagemagick-dev
+  imagemagick-dev \
+  libmaxminddb-dev
 
 RUN docker-php-ext-install sockets
 
@@ -70,7 +71,14 @@ RUN \
   phpize && \
   ./configure && \
   make && make install && \
-  cd ..
+  cd .. && \
+  ## Maxminddb extension
+  git clone https://github.com/maxmind/MaxMind-DB-Reader-php.git && \
+  cd MaxMind-DB-Reader-php/ext && \
+  phpize && \
+  ./configure && \
+  make && make install && \
+  cd ../..
 
 FROM php:8.0.0RC2-cli-alpine as final
 
@@ -130,10 +138,11 @@ RUN \
   yaml-dev \
   imagemagick \
   imagemagick-dev \
-  # && pecl install imagick yaml \ 
-  # && docker-php-ext-enable imagick yaml \
-  # && mkdir -p /usr/src/php/ext/imagick && curl -fsSL https://pecl.php.net/get/imagick | tar xvz -C "/usr/src/php/ext/imagick" --strip 1 && docker-php-ext-install imagick \
-  # && mkdir -p /usr/src/php/ext/yaml && curl -fsSL https://pecl.php.net/get/yaml | tar xvz -C "/usr/src/php/ext/yaml" --strip 1 && docker-php-ext-install yaml \
+  certbot \
+  docker-cli \
+  docker-compose \
+  libmaxminddb \
+  libmaxminddb-dev \
   && docker-php-ext-install sockets opcache pdo_mysql \
   && apk del .deps \
   && rm -rf /var/cache/apk/*
@@ -150,6 +159,7 @@ COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/swoole
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yaml.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/maxminddb.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/ 
 
 # Add Source Code
 COPY ./app /usr/src/code/app
@@ -197,6 +207,7 @@ RUN echo extension=swoole.so >> /usr/local/etc/php/conf.d/swoole.ini
 RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
 RUN echo extension=imagick.so >> /usr/local/etc/php/conf.d/imagick.ini
 RUN echo extension=yaml.so >> /usr/local/etc/php/conf.d/yaml.ini
+RUN echo extension=maxminddb.so >> /usr/local/etc/php/conf.d/maxminddb.ini
 
 RUN echo "opcache.preload_user=www-data" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.preload=/usr/src/code/app/preload.php" >> /usr/local/etc/php/conf.d/appwrite.ini

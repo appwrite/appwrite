@@ -25,7 +25,7 @@ use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
-use GeoIp2\Database\Reader;
+use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use PDO as PDONative;
 
@@ -166,8 +166,8 @@ $register->set('statsd', function () { // Register DB connection
 });
 $register->set('cache', function () { // Register cache connection
     $redis = new Redis();
-    $redis->pconnect(App::getEnv('_APP_REDIS_HOST', '', 2.5),
-        App::getEnv('_APP_REDIS_PORT', ''));
+    $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
+    $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
     return $redis;
 });
@@ -233,6 +233,7 @@ Locale::setLanguage('cz', include __DIR__.'/config/locale/translations/cz.php');
 Locale::setLanguage('de', include __DIR__.'/config/locale/translations/de.php');
 Locale::setLanguage('en', include __DIR__.'/config/locale/translations/en.php');
 Locale::setLanguage('es', include __DIR__.'/config/locale/translations/es.php');
+Locale::setLanguage('fa', include __DIR__.'/config/locale/translations/fa.php');
 Locale::setLanguage('fi', include __DIR__.'/config/locale/translations/fi.php');
 Locale::setLanguage('fo', include __DIR__.'/config/locale/translations/fo.php');
 Locale::setLanguage('fr', include __DIR__.'/config/locale/translations/fr.php');

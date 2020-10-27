@@ -69,7 +69,7 @@ class Discord extends OAuth2
                 'redirect_uri' => $this->callback,
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
-                'scope' => \implode(' ', $this->scope)
+                'scope' => \implode(' ', $this->getScopes())
             ])
         );
 

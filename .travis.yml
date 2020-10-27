@@ -32,10 +32,11 @@ before_install:
 install:
 - docker --version
 - docker-compose up -d
-- sleep 90
+- sleep 15
 
 script:
 - docker ps
 - docker-compose logs appwrite
+- docker exec appwrite doctor
 - docker exec appwrite vars
 - docker exec appwrite test

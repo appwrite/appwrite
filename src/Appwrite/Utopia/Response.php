@@ -52,8 +52,10 @@ class Response extends UtopiaResponse
 
     /**
      * Response constructor.
+     * 
+     * @param float $time
      */
-    public function __construct(int $time = 0)
+    public function __construct(float $time = 0)
     {
         $this
             ->setModel(new Error())
@@ -161,8 +163,10 @@ class Response extends UtopiaResponse
      * @see https://en.wikipedia.org/wiki/YAML
      *
      * @param array $data
+     *
+     * @return void
      */
-    public function yaml(array $data)
+    public function yaml(array $data): void
     {
         if(!extension_loaded('yaml')) {
             throw new Exception('Missing yaml extension. Learn more at: https://www.php.net/manual/en/book.yaml.php');

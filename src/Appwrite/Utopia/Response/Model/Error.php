@@ -23,7 +23,7 @@ class Error extends Model
             ->addRule('version', [
                 'type' => 'string',
                 'description' => 'Server version number.',
-                'example' => APP_VERSION_STABLE,
+                'example' => '1.0',
             ])
         ;
     }
