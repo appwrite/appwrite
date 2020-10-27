@@ -6,6 +6,8 @@ arch:
 
 os: linux
 
+language: minimal
+
 notifications:
   email:
   - team@appwrite.io
@@ -30,9 +32,11 @@ before_install:
 install:
 - docker --version
 - docker-compose up -d
-- sleep 90
+- sleep 60
 
 script:
 - docker ps
 - docker-compose logs appwrite
+- docker exec appwrite doctor
+- docker exec appwrite vars
 - docker exec appwrite test

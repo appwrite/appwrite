@@ -1,1 +1,1 @@
-Allow the user to login into his account by providing a valid email and password combination. This route will create a new session for the user.
+Allow the user to login into their account by providing a valid email and password combination. This route will create a new session for the user.

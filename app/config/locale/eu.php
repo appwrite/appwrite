@@ -30,8 +30,4 @@ $list = [
     'SE', // Sweden
 ];
 
-if (\time() < \strtotime('2020-01-31')) { // @see https://en.wikipedia.org/wiki/Brexit
-    $list[] = 'GB'; // // United Kingdom
-}
-
 return $list;

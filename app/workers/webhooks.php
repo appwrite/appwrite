@@ -55,12 +55,12 @@ class WebhooksV1
                 continue;
             }
 
-            $name = (isset($webhook['name'])) ? $webhook['name'] : '';
-            $signature = (isset($webhook['signature'])) ? $webhook['signature'] : 'not-yet-implemented';
-            $url = (isset($webhook['url'])) ? $webhook['url'] : '';
-            $security = (isset($webhook['security'])) ? (bool) $webhook['security'] : true;
-            $httpUser = (isset($webhook['httpUser'])) ? $webhook['httpUser'] : null;
-            $httpPass = (isset($webhook['httpPass'])) ? $webhook['httpPass'] : null;
+            $name = $webhook['name'] ?? '';
+            $signature = $webhook['signature'] ?? 'not-yet-implemented';
+            $url = $webhook['url'] ?? '';
+            $security = (bool) $webhook['security'] ?? true;
+            $httpUser = $webhook['httpUser'] ?? null;
+            $httpPass = $webhook['httpPass'] ?? null;
 
             $ch = \curl_init($url);
 

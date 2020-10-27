@@ -237,7 +237,7 @@ docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t appwrite/
 To run tests manually, use the Appwrite Docker CLI from your terminal:
 
 ```bash
-docker exec appwrite test
+docker-compose exec appwrite test
 ```
 
 ## Benchmarking
@@ -279,6 +279,12 @@ php-cs-fixer fix app/controllers --rules='{"braces": {"allow_single_line_closure
 
 ```bash
 php-cs-fixer fix src --rules='{"braces": {"allow_single_line_closure": true}}'
+```
+
+Static Code Analysis:
+
+```bash
+docker-compose exec appwrite /usr/src/code/vendor/bin/psalm
 ```
 
 ## Tutorials

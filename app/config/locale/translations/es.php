@@ -9,7 +9,7 @@ return [
     'account.emails.team' => 'Equipo %s',
     'account.emails.verification.title' => 'Confirmación de la cuenta',
     'account.emails.verification.body' => 'es.email.auth.confirm.tpl',
-    'account.emails.recovery.title' => 'Reestablecer contraseña',
+    'account.emails.recovery.title' => 'Restablecer contraseña',
     'account.emails.recovery.body' => 'es.email.auth.recovery.tpl',
     'account.emails.invitation.title' => 'Invitación al Equipo %s en %s',
     'account.emails.invitation.body' => 'es.email.auth.invitation.tpl',

@@ -34,7 +34,7 @@ class Resize
      *
      * @return Resize
      *
-     * @throws \ImagickException
+     * @throws \Throwable
      */
     public function crop(int $width, int $height)
     {
@@ -73,7 +73,7 @@ class Resize
      *
      * @return Resize
      *
-     * @throws \ImagickException
+     * @throws \Throwable
      */
     public function setBackground($color)
     {
@@ -133,7 +133,7 @@ class Resize
             case 'webp':
                 try {
                     $this->image->setImageFormat('webp');
-                } catch (\ImagickException $th) {
+                } catch (\Throwable $th) {
                     $signature = $this->image->getImageSignature();
                     $temp = '/tmp/temp-'.$signature.'.'.\strtolower($this->image->getImageFormat());
                     $output = '/tmp/output-'.$signature.'.webp';

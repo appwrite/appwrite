@@ -11,7 +11,7 @@ trait TeamsBaseServer
      */
     public function testGetTeamMemberships($data):array
     {
-        $id = (isset($data['teamUid'])) ? $data['teamUid'] : '';
+        $id = $data['teamUid'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -37,8 +37,8 @@ trait TeamsBaseServer
      */
     public function testCreateTeamMembership($data):array
     {
-        $teamUid = (isset($data['teamUid'])) ? $data['teamUid'] : '';
-        $teamName = (isset($data['teamName'])) ? $data['teamName'] : '';
+        $teamUid = $data['teamUid'] ?? '';
+        $teamName = $data['teamName'] ?? '';
         $email = uniqid().'friend@localhost.test';
 
         /**

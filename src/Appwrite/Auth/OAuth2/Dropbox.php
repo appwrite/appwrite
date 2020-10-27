@@ -48,7 +48,7 @@ class Dropbox extends OAuth2
      */
     public function getAccessToken(string $code): string
     {
-        $headers[] = 'Content-Type: application/x-www-form-urlencoded';
+        $headers = ['Content-Type: application/x-www-form-urlencoded'];
         $accessToken = $this->request(
             'POST',
             'https://api.dropboxapi.com/oauth2/token',
@@ -127,7 +127,7 @@ class Dropbox extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $headers[] = 'Authorization: Bearer '. \urlencode($accessToken);
+            $headers = ['Authorization: Bearer '. \urlencode($accessToken)];
             $user = $this->request('POST', 'https://api.dropboxapi.com/2/users/get_current_account', $headers);
             $this->user = \json_decode($user, true);
         }

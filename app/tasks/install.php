@@ -6,12 +6,14 @@ use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Validator\Mock;
 use Utopia\View;
 
 $cli
     ->task('install')
     ->desc('Install Appwrite')
-    ->action(function () {
+    ->param('version', APP_VERSION_STABLE, new Mock(), 'Appwrite version', true)
+    ->action(function ($version) {
         /**
          * 1. Start - DONE
          * 2. Check for older setup and get older version - DONE
@@ -30,10 +32,9 @@ $cli
          */
         $vars = Config::getParam('variables');
         $path = '/usr/src/code/appwrite';
-        $version = null;
         $defaultHTTPPort = '80';
         $defaultHTTPSPort = '443';
-        
+
         Console::success('Starting Appwrite installation...');
 
         // Create directory with write permissions
@@ -49,10 +50,10 @@ $cli
         if($data !== false) {
             $compose = new Compose($data);
             $appwrite = $compose->getService('appwrite');
-            $version = ($appwrite) ? $appwrite->getImageVersion() : $version;
+            $oldVersion = ($appwrite) ? $appwrite->getImageVersion() : null;
             $ports = $compose->getService('traefik')->getPorts();
 
-            if($version) {
+            if($oldVersion) {
                 foreach($compose->getServices() as $service) { // Fetch all env vars from previous compose file
                     if(!$service) {
                         continue;
@@ -99,7 +100,7 @@ $cli
         $httpPort = ($httpPort) ? $httpPort : $defaultHTTPPort;
 
         $httpsPort = Console::confirm('Choose your server HTTPS port: (default: '.$defaultHTTPSPort.')');
-        $httpsPort = ($httpsPort) ? $httpsPort : $defaultHTTPPort;
+        $httpsPort = ($httpsPort) ? $httpsPort : $defaultHTTPSPort;
     
         $input = [];
 
@@ -118,11 +119,11 @@ $cli
 
         $templateForCompose = new View(__DIR__.'/../views/install/compose.phtml');
         $templateForEnv = new View(__DIR__.'/../views/install/env.phtml');
-        
+
         $templateForCompose
             ->setParam('httpPort', $httpPort)
             ->setParam('httpsPort', $httpsPort)
-            ->setParam('version', APP_VERSION_STABLE)
+            ->setParam('version', $version)
         ;
         
         $templateForEnv
@@ -142,10 +143,14 @@ $cli
         $stdout = '';
         $stderr = '';
 
-        //Console::execute("docker-compose -f {$path}.'/docker-compose.yml up -d --remove-orphans", null, $stdout, $stderr);
+        Console::log("Running \"docker-compose -f {$path}/docker-compose.yml up -d --remove-orphans\"");
 
-        if ($stderr !== '') {
+        $exit = Console::execute("docker-compose -f {$path}/docker-compose.yml up -d --remove-orphans", '', $stdout, $stderr);
+
+        if ($exit !== 0) {
             Console::error("Failed to install Appwrite dockers");
+            Console::error($stderr);
+            exit($exit);
         } else {
             Console::success("Appwrite installed successfully");
         }

@@ -32,20 +32,24 @@ class Files
 
     /**
      * Add MimeType
-     * 
+     *
      * @var string $mimeType
+     *
+     * @return void
      */
-    public static function addMimeType(string $mimeType)
+    public static function addMimeType(string $mimeType): void
     {
         self::$mimeTypes[$mimeType] = true;
     }
 
     /**
      * Remove MimeType
-     * 
+     *
      * @var string $mimeType
+     *
+     * @return void
      */
-    public static function removeMimeType(string $mimeType)
+    public static function removeMimeType(string $mimeType): void
     {
         if(isset(self::$mimeTypes[$mimeType])) {
             unset(self::$mimeTypes[$mimeType]);
@@ -74,10 +78,12 @@ class Files
 
     /**
      * Load
-     * 
+     *
      * @var string $path
+     *
+     * @return void
      */
-    public static function load(string $directory, string $root = null)
+    public static function load(string $directory, string $root = null): void
     {
         if(!is_readable($directory)) {
             throw new Exception('Failed to load directory: '.$directory);

@@ -14,13 +14,17 @@ class FileName extends Validator
     /**
      * The file name can only contain "a-z", "A-Z", "0-9" and "-" and not empty.
      *
-     * @param string $name
+     * @param mixed $name
      *
      * @return bool
      */
     public function isValid($name)
     {
         if (empty($name)) {
+            return false;
+        }
+
+        if(!is_string($name)) {
             return false;
         }
 
