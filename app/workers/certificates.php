@@ -20,7 +20,7 @@ class CertificatesV1
 {
     public $args = [];
 
-    public function setUp()
+    public function setUp(): void
     {
     }
 
@@ -52,8 +52,8 @@ class CertificatesV1
         $domain = $this->args['domain'];
 
         // Validation Args
-        $validateTarget = (isset($this->args['validateTarget'])) ? $this->args['validateTarget'] : true;
-        $validateCNAME = (isset($this->args['validateCNAME'])) ? $this->args['validateCNAME'] : true;
+        $validateTarget = $this->args['validateTarget'] ?? true;
+        $validateCNAME = $this->args['validateCNAME'] ?? true;
         
         // Options
         $domain = new Domain((!empty($domain)) ? $domain : '');
@@ -66,7 +66,7 @@ class CertificatesV1
         }
 
         if(!$domain->isKnown() || $domain->isTest()) {
-            throw new Exception('Unkown public suffix for domain');
+            throw new Exception('Unknown public suffix for domain');
         }
 
         if($validateTarget) {
@@ -115,7 +115,7 @@ class CertificatesV1
         $staging = (App::isProduction()) ? '' : ' --dry-run';
 
         $response = \shell_exec("certbot certonly --webroot --noninteractive --agree-tos{$staging} \
-            --email ".App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', 'security@localhost.test')." \
+            --email ".App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', 'security@localhost.test')." \
             -w ".APP_STORAGE_CERTIFICATES." \
             -d {$domain->get()}");
 
@@ -199,7 +199,7 @@ class CertificatesV1
         Authorization::reset();
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         // ... Remove environment for this job
     }

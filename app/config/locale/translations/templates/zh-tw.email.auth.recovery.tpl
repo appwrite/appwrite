@@ -2,15 +2,14 @@
     {{name}} 你好，
 </p>
 <p>
-    请点击下方的链接重新设置{{project}}的密码。
-    Follow this link to reset your {{project}} password.
+    請點擊下方的連結重設 {{project}} 的密碼。
 </p>
 {{cta}}
 <p>
-    如果您未曾申请重设密码，请忽略本邮件。
+    如果你未曾申請重設密碼，請忽略本信件。
 </p>
 <p>
-    谢谢。
+    謝謝。
     <br />
-    来自 {{project}}
+    來自 {{project}}
 </p>

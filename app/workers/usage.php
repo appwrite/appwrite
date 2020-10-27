@@ -16,7 +16,7 @@ class UsageV1
      */
     public $args = [];
 
-    public function setUp()
+    public function setUp(): void
     {
     }
 
@@ -59,7 +59,7 @@ class UsageV1
         $statsd->count('storage.all'.$tags, $storage);
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         // ... Remove environment for this job
     }

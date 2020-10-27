@@ -46,7 +46,7 @@ class Env
     /**
      * @param string $key
      *
-     * @return mixed|null
+     * @return string
      */
     public function getVar(string $key): string
     {

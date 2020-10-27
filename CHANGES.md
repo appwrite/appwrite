@@ -8,9 +8,11 @@
 - Added option to delete team from the console
 - Added option to view team members from the console
 - Added option to join a user to any team from the console
+- Added option to delete user from the API (@TorstenDittmann - #378)
+- Added option to delete user from the console (@PineappleIOnic - #538)
 - Added support for Brotli compression (@PedroCisnerosSantana, @Rohitub222)
 - New UI micro-interactions and CSS fixes (@AnatoleLucet)
-- UI performance & accessibility improvments (#406)
+- UI performance & accessibility improvements (#406)
 - New Doctor CLI to debug the Appwrite server ([#415](https://github.com/appwrite/appwrite/issues/415))
 - All emails are now sent asynchronously for improved performance (@TorstenDittmann)
 - Updated grid for OAuth2 providers list in the console
@@ -30,10 +32,14 @@
 - API Key name max length is now 128 chars and not 256 for better API consistency
 - Task name max length is now 128 chars and not 256 for better API consistency
 - Platform name max length is now 128 chars and not 256 for better API consistency
+- Added new locale: Marathi -mr (@spielers)
 - New and consistent response format for all API object + new response examples in the docs
   - Removed user roles attribute from user object (can be fetched from /v1/teams/memberships) **
   - Removed type attribute from session object response (used only internally)
   - ** - might be changed before merging to master
+- Upgraded Traefik image to version 2.3
+- Upgraded Redis Docker image to version 6.0 (alpine)
+- Upgraded Influxdb Docker image to version 1.8 (alpine)
 
 ## Breaking Changes (Read before upgrading!)
 - **Deprecated** `first` and `last` query params for documents list route in the database API
@@ -49,11 +55,11 @@
 - Fixed a UI bug preventing float values in numeric fields
 - Fixed scroll positioning when moving rules order up & down
 - Fixed missing validation for database documents key length (32 chars)
-- Grammer fix for pt-br email templates (@rubensdemelo)
+- Grammar fix for pt-br email templates (@rubensdemelo)
 - Fixed update form labels and tooltips for Flutter Android apps
 - Fixed missing custom scopes param for OAuth2 session create API route
-- Fixed wrong JSON validation when creating and updating database documnets
-- Fixed bug where max file size was limited to max of 10MB
+- Fixed wrong JSON validation when creating and updating database documents
+- Fixed bug where max file size was limited to a max of 10MB
 - Fixed bug preventing the deletion of the project logo
 - Fixed Bug when trying to overwrite OAuth cookie in the Flutter SDK
 - Fixed OAuth redirect when using the self-hosted instance default success URL ([#454](https://github.com/appwrite/appwrite/issues/454))
@@ -61,6 +67,10 @@
 - New OAuth adapter for Box.com
 - New OAuth adapter for PayPal sandbox
 - Fixed a bug making read permission overwrite write permission in some cases
+
+## Breaking Changes
+- **Deprecated** `first` and `last` query params for documents list route in the database API
+- **Deprecated** Deprecated Punjabi Translations ('pn')
 
 ## Security
 
@@ -161,7 +171,7 @@
 - Allow non-web platform to skip origin header
 - Limited console dashboard to show max 5 alerts at the same time
 - Added more webhooks events
-- Normailized all webhooks event names
+- Normalized all webhooks event names
 - Added support for SameSite cookie option with fallback cookie for old clients
 - Added a new Discord OAuth adapter
 - Added a new Twitch OAuth adapter

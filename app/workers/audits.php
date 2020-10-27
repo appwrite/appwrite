@@ -14,7 +14,7 @@ class AuditsV1
 {
     public $args = [];
 
-    public function setUp()
+    public function setUp(): void
     {
     }
 
@@ -39,7 +39,7 @@ class AuditsV1
         $audit->log($userId, $event, $resource, $userAgent, $ip, '', $data);
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         // ... Remove environment for this job
     }

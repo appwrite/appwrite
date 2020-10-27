@@ -432,7 +432,8 @@ let path='/users';let payload={};if(email){payload['email']=email;}
 if(password){payload['password']=password;}
 if(name){payload['name']=name;}
 return http.post(path,{'content-type':'application/json',},payload);},get:function(userId){if(userId===undefined){throw new Error('Missing required parameter: "userId"');}
-let path='/users/{userId}'.replace(new RegExp('{userId}','g'),userId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},getLogs:function(userId){if(userId===undefined){throw new Error('Missing required parameter: "userId"');}
+let path='/users/{userId}'.replace(new RegExp('{userId}','g'),userId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},deleteUser:function(userId){if(userId===undefined){throw new Error('Missing required parameter: "userId"');}
+let path='/users/{userId}'.replace(new RegExp('{userId}','g'),userId);let payload={};return http.delete(path,{'content-type':'application/json',},payload);},getLogs:function(userId){if(userId===undefined){throw new Error('Missing required parameter: "userId"');}
 let path='/users/{userId}/logs'.replace(new RegExp('{userId}','g'),userId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},getPrefs:function(userId){if(userId===undefined){throw new Error('Missing required parameter: "userId"');}
 let path='/users/{userId}/prefs'.replace(new RegExp('{userId}','g'),userId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},updatePrefs:function(userId,prefs){if(userId===undefined){throw new Error('Missing required parameter: "userId"');}
 if(prefs===undefined){throw new Error('Missing required parameter: "prefs"');}

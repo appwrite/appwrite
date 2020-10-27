@@ -7,7 +7,7 @@ $version = $this->getParam('version', '');
 
 services:
   traefik:
-    image: traefik:2.2
+    image: traefik:2.3
     container_name: appwrite-traefik
     command:
       - --providers.file.directory=/storage/config
@@ -52,6 +52,9 @@ services:
       - influxdb
     environment:
       - _APP_ENV
+      - _APP_SYSTEM_EMAIL_NAME
+      - _APP_SYSTEM_EMAIL_ADDRESS
+      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_OPENSSL_KEY_V1
@@ -119,6 +122,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -139,6 +143,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -185,6 +190,7 @@ services:
       - appwrite-certificates:/storage/certificates:rw
     environment:
       - _APP_ENV
+      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -231,6 +237,8 @@ services:
       - smtp
     environment:
       - _APP_ENV
+      - _APP_SYSTEM_EMAIL_NAME
+      - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_SMTP_HOST
@@ -262,9 +270,9 @@ services:
       - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=rootsecretpassword
-      - MYSQL_DATABASE=appwrite
-      - MYSQL_USER=user
-      - MYSQL_PASSWORD=password
+      - MYSQL_DATABASE=${_APP_DB_SCHEMA}
+      - MYSQL_USER=${_APP_DB_USER}
+      - MYSQL_PASSWORD=${_APP_DB_PASS}
     command: 'mysqld --innodb-flush-method=fsync'
 
   smtp:
@@ -278,7 +286,7 @@ services:
         - RELAY_NETWORKS=:192.168.0.0/24:10.0.0.0/16
 
   redis:
-    image: redis:5.0
+    image: redis:6.0-alpine3.12
     container_name: appwrite-redis
     restart: unless-stopped
     networks:
@@ -287,7 +295,7 @@ services:
       - appwrite-redis:/data:rw
 
   clamav:
-    image: appwrite/clamav:1.0.12
+    image: appwrite/clamav:1.2.0
     container_name: appwrite-clamav
     restart: unless-stopped
     networks:
@@ -296,7 +304,7 @@ services:
       - appwrite-uploads:/storage/uploads
 
   influxdb:
-    image: influxdb:1.6
+    image: influxdb:1.8-alpine
     container_name: appwrite-influxdb
     restart: unless-stopped
     networks:

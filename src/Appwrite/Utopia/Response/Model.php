@@ -4,6 +4,9 @@ namespace Appwrite\Utopia\Response;
 
 abstract class Model
 {
+    /**
+     * @return array
+     */
     protected $rules = [];
 
     /**
@@ -23,7 +26,7 @@ abstract class Model
     /**
      * Get Rules
      * 
-     * @return string
+     * @return array
      */
     public function getRules(): array
     {

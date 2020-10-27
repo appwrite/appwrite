@@ -79,7 +79,7 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testListProject($data):array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        $id = $data['projectId'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -106,7 +106,7 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testGetProject($data):array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        $id = $data['projectId'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -147,7 +147,7 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testGetProjectUsage($data):array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        $id = $data['projectId'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -206,7 +206,7 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testUpdateProject($data):array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        $id = $data['projectId'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -249,7 +249,7 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testUpdateProjectOAuth($data):array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        $id = $data['projectId'] ?? '';
         $providers = require('app/config/providers.php');
 
         /**
@@ -307,7 +307,7 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testCreateProjectWebhook($data): array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        $id = $data['projectId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/webhooks', array_merge([
             'content-type' => 'application/json',
@@ -358,7 +358,7 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testListProjectWebhook($data): array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        $id = $data['projectId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/webhooks', array_merge([
             'content-type' => 'application/json',
@@ -380,8 +380,8 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testGetProjectWebhook($data): array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
-        $webhookId = (isset($data['webhookId'])) ? $data['webhookId'] : '';
+        $id = $data['projectId'] ?? '';
+        $webhookId = $data['webhookId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/webhooks/'.$webhookId, array_merge([
             'content-type' => 'application/json',
@@ -416,8 +416,8 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testUpdateProjectWebhook($data): array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
-        $webhookId = (isset($data['webhookId'])) ? $data['webhookId'] : '';
+        $id = $data['projectId'] ?? '';
+        $webhookId = $data['webhookId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/webhooks/'.$webhookId, array_merge([
             'content-type' => 'application/json',
@@ -503,8 +503,8 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testDeleteProjectWebhook($data): array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
-        $webhookId = (isset($data['webhookId'])) ? $data['webhookId'] : '';
+        $id = $data['projectId'] ?? '';
+        $webhookId = $data['webhookId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/webhooks/'.$webhookId, array_merge([
             'content-type' => 'application/json',
@@ -541,7 +541,7 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testCreateProjectKey($data): array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        $id = $data['projectId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/keys', array_merge([
             'content-type' => 'application/json',
@@ -581,7 +581,7 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testListProjectKey($data): array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        $id = $data['projectId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/keys', array_merge([
             'content-type' => 'application/json',
@@ -603,8 +603,8 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testGetProjectKey($data): array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
-        $keyId = (isset($data['keyId'])) ? $data['keyId'] : '';
+        $id = $data['projectId'] ?? '';
+        $keyId = $data['keyId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/keys/'.$keyId, array_merge([
             'content-type' => 'application/json',
@@ -638,8 +638,8 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testUpdateProjectKey($data): array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
-        $keyId = (isset($data['keyId'])) ? $data['keyId'] : '';
+        $id = $data['projectId'] ?? '';
+        $keyId = $data['keyId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/keys/'.$keyId, array_merge([
             'content-type' => 'application/json',
@@ -693,8 +693,8 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testDeleteProjectKey($data): array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
-        $keyId = (isset($data['keyId'])) ? $data['keyId'] : '';
+        $id = $data['projectId'] ?? '';
+        $keyId = $data['keyId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/keys/'.$keyId, array_merge([
             'content-type' => 'application/json',
@@ -731,7 +731,7 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testCreateProjectTask($data): array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        $id = $data['projectId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/tasks', array_merge([
             'content-type' => 'application/json',
@@ -859,7 +859,7 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testListProjectTask($data): array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        $id = $data['projectId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/tasks', array_merge([
             'content-type' => 'application/json',
@@ -881,8 +881,8 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testGetProjectTask($data): array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
-        $taskId = (isset($data['taskId'])) ? $data['taskId'] : '';
+        $id = $data['projectId'] ?? '';
+        $taskId = $data['taskId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/tasks/'.$taskId, array_merge([
             'content-type' => 'application/json',
@@ -921,8 +921,8 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testUpdateProjectTask($data): array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
-        $taskId = (isset($data['taskId'])) ? $data['taskId'] : '';
+        $id = $data['projectId'] ?? '';
+        $taskId = $data['taskId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/tasks/'.$taskId, array_merge([
             'content-type' => 'application/json',
@@ -1087,8 +1087,8 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testDeleteProjectTask($data): array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
-        $taskId = (isset($data['taskId'])) ? $data['taskId'] : '';
+        $id = $data['projectId'] ?? '';
+        $taskId = $data['taskId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/tasks/'.$taskId, array_merge([
             'content-type' => 'application/json',
@@ -1125,7 +1125,7 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testCreateProjectPlatform($data): array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        $id = $data['projectId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/platforms', array_merge([
             'content-type' => 'application/json',
@@ -1227,7 +1227,7 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testListProjectPlatform($data): array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        $id = $data['projectId'] ?? '';
         
         $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/platforms', array_merge([
             'content-type' => 'application/json',
@@ -1249,9 +1249,9 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testGetProjectPlatform($data): array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        $id = $data['projectId'] ?? '';
         
-        $platformWebId = (isset($data['platformWebId'])) ? $data['platformWebId'] : '';
+        $platformWebId = $data['platformWebId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/platforms/'.$platformWebId, array_merge([
             'content-type' => 'application/json',
@@ -1267,7 +1267,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('localhost', $response['body']['hostname']);
          
-        $platformFultteriOSId = (isset($data['platformFultteriOSId'])) ? $data['platformFultteriOSId'] : '';
+        $platformFultteriOSId = $data['platformFultteriOSId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/platforms/'.$platformFultteriOSId, array_merge([
             'content-type' => 'application/json',
@@ -1283,7 +1283,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('', $response['body']['hostname']);
         
-        $platformFultterAndroidId = (isset($data['platformFultterAndroidId'])) ? $data['platformFultterAndroidId'] : '';
+        $platformFultterAndroidId = $data['platformFultterAndroidId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/platforms/'.$platformFultterAndroidId, array_merge([
             'content-type' => 'application/json',
@@ -1317,9 +1317,9 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testUpdateProjectPlatform($data): array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        $id = $data['projectId'] ?? '';
 
-        $platformWebId = (isset($data['platformWebId'])) ? $data['platformWebId'] : '';
+        $platformWebId = $data['platformWebId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/platforms/'.$platformWebId, array_merge([
             'content-type' => 'application/json',
@@ -1340,7 +1340,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('localhost-new', $response['body']['hostname']);
 
-        $platformFultteriOSId = (isset($data['platformFultteriOSId'])) ? $data['platformFultteriOSId'] : '';
+        $platformFultteriOSId = $data['platformFultteriOSId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/platforms/'.$platformFultteriOSId, array_merge([
             'content-type' => 'application/json',
@@ -1361,7 +1361,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('', $response['body']['hostname']);
        
-        $platformFultterAndroidId = (isset($data['platformFultterAndroidId'])) ? $data['platformFultterAndroidId'] : '';
+        $platformFultterAndroidId = $data['platformFultterAndroidId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/platforms/'.$platformFultterAndroidId, array_merge([
             'content-type' => 'application/json',
@@ -1394,9 +1394,9 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testDeleteProjectPlatform($data): array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        $id = $data['projectId'] ?? '';
         
-        $platformWebId = (isset($data['platformWebId'])) ? $data['platformWebId'] : '';
+        $platformWebId = $data['platformWebId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/platforms/'.$platformWebId, array_merge([
             'content-type' => 'application/json',
@@ -1413,7 +1413,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        $platformFultteriOSId = (isset($data['platformFultteriOSId'])) ? $data['platformFultteriOSId'] : '';
+        $platformFultteriOSId = $data['platformFultteriOSId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/platforms/'.$platformFultteriOSId, array_merge([
             'content-type' => 'application/json',
@@ -1430,7 +1430,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        $platformFultterAndroidId = (isset($data['platformFultterAndroidId'])) ? $data['platformFultterAndroidId'] : '';
+        $platformFultterAndroidId = $data['platformFultterAndroidId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/platforms/'.$platformFultterAndroidId, array_merge([
             'content-type' => 'application/json',
@@ -1467,7 +1467,7 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testCreateProjectDomain($data): array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        $id = $data['projectId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/domains', array_merge([
             'content-type' => 'application/json',
@@ -1506,7 +1506,7 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testListProjectDomain($data): array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        $id = $data['projectId'] ?? '';
         
         $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/domains', array_merge([
             'content-type' => 'application/json',
@@ -1528,8 +1528,8 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testGetProjectDomain($data): array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
-        $domainId = (isset($data['domainId'])) ? $data['domainId'] : '';
+        $id = $data['projectId'] ?? '';
+        $domainId = $data['domainId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/domains/'.$domainId, array_merge([
             'content-type' => 'application/json',
@@ -1563,8 +1563,8 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testUpdateProjectDomain($data): array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
-        $domainId = (isset($data['domainId'])) ? $data['domainId'] : '';
+        $id = $data['projectId'] ?? '';
+        $domainId = $data['domainId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/'.$id.'/domains/'.$domainId.'/verification', array_merge([
             'content-type' => 'application/json',
@@ -1585,8 +1585,8 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testDeleteProjectDomain($data): array
     {
-        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
-        $domainId = (isset($data['domainId'])) ? $data['domainId'] : '';
+        $id = $data['projectId'] ?? '';
+        $domainId = $data['domainId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/domains/'.$domainId, array_merge([
             'content-type' => 'application/json',

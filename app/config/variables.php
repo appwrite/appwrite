@@ -116,6 +116,24 @@ return [
         'question' => '',
     ],
     [
+        'name' => '_APP_SMTP_SECURE',
+        'default' => '',
+        'required' => false,
+        'question' => '',
+    ],
+    [
+        'name' => '_APP_SMTP_USERNAME',
+        'default' => '',
+        'required' => false,
+        'question' => '',
+    ],
+    [
+        'name' => '_APP_SMTP_PASSWORD',
+        'default' => '',
+        'required' => false,
+        'question' => '',
+    ],
+    [
         'name' => '_APP_STORAGE_LIMIT',
         'default' => '100000000',
         'required' => false,

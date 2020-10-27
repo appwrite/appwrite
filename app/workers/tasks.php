@@ -22,7 +22,7 @@ class TasksV1
      */
     public $args = [];
 
-    public function setUp()
+    public function setUp(): void
     {
     }
 
@@ -48,9 +48,9 @@ class TasksV1
          *      If error count bigger than allowed change status to pause
          */
 
-        $taskId = (isset($this->args['$id'])) ? $this->args['$id'] : null;
-        $updated = (isset($this->args['updated'])) ? $this->args['updated'] : null;
-        $next = (isset($this->args['next'])) ? $this->args['next'] : null;
+        $taskId = $this->args['$id'] ?? null;
+        $updated = $this->args['updated'] ?? null;
+        $next = $this->args['next'] ?? null;
         $delay = \time() - $next;
         $errors = [];
         $timeout = 60 * 5; // 5 minutes
@@ -205,7 +205,7 @@ class TasksV1
         return true;
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         // ... Remove environment for this job
     }

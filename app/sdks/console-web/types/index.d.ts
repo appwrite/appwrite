@@ -1707,6 +1707,17 @@ declare namespace Appwrite {
 	    get(userId: string): Promise<object>;
 
         /**
+         * Delete User
+         *
+         * Delete a user by its unique ID.
+	     *
+         * @param {string} userId
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    deleteUser(userId: string): Promise<object>;
+
+        /**
          * Get User Logs
          *
          * Get user activity logs list by its unique ID.

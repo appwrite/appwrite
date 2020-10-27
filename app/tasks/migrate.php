@@ -8,13 +8,12 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 
-$db = $register->get('db');
-
 $callbacks = [
     '0.4.0' => function() {
         Console::log('I got nothing to do.');
     },
-    '0.5.0' => function($project) use ($db, $projectDB, $requset) {
+    '0.5.0' => function($project) use ($register, $projectDB, $requset) {
+        $db = $register->get('db');
 
         Console::log('Migrating project: '.$project->getId());
 
@@ -59,7 +58,7 @@ $callbacks = [
             $offset = $offset + $limit;
         }
 
-        $schema = (isset($_SERVER['_APP_DB_SCHEMA'])) ? $_SERVER['_APP_DB_SCHEMA'] : '';
+        $schema = $_SERVER['_APP_DB_SCHEMA'] ?? '';
 
         try {
             $statement = $db->prepare("

@@ -236,16 +236,16 @@
                             </form>
                         </span>
 
-                        <img data-ls-attrs="src={{env.API}}/avatars/browsers/{{session.client.short_name|lowercase}}?width=120&height=120&project={{env.PROJECT}},title={{session.client.name}},alt={{session.client.name}}" class="avatar trans pull-start margin-end" />
+                        <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-attrs="src={{env.API}}/avatars/browsers/{{session.client.short_name|lowercase}}?width=120&height=120&project={{env.PROJECT}},title={{session.client.name}},alt={{session.client.name}}" class="avatar trans pull-start margin-end" />
 
-                        <span data-ls-bind="{{session.client.name}}"></span> <span data-ls-bind="{{session.client.version}}"></span> on <span data-ls-bind="{{session.model}}"></span> <span data-ls-bind="{{session.OS.name}}"></span> <span data-ls-bind="{{session.OS.version}}"></span>
+                        <span data-ls-if="({{session.client.name}})" data-ls-bind="{{session.client.name}}"></span> <span data-ls-if="(!{{session.client.name}})">Unknown</span> <span data-ls-bind="{{session.client.version}}"></span> on <span data-ls-bind="{{session.model}}"></span> <span data-ls-if="(!{{session.OS.name}})">Unknown</span> <span data-ls-if="({{session.OS.name}})" data-ls-bind="{{session.OS.name}}"></span> <span data-ls-bind="{{session.OS.version}}"></span>
                         &nbsp;
                         <span data-ls-if="true == {{session.current}}">
                             <span class="tag green">Current Session</span>
                         </span>
 
                         <div class="margin-top-small">
-                            <img data-ls-attrs="src={{env.API}}/avatars/flags/{{session.geo.isoCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs margin-end-small inline" />
+                            <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-attrs="src={{env.API}}/avatars/flags/{{session.geo.isoCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs margin-end-small inline" />
                             <small data-ls-bind="{{session.ip}}"></small> / <small data-ls-bind="{{session.geo.country}}"></small>
                         </div>
                     </li>
@@ -294,11 +294,11 @@
                                 <td data-title="Date: "><span data-ls-bind="{{log.time|dateTime}}"></span></td>
                                 <td data-title="Event: "><span data-ls-bind="{{log.event}}"></span></td>
                                 <td data-title="Client: ">
-                                    <img data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.client.short_name|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.client.name}},alt={{log.client.name}}" class="avatar xxs inline margin-end-small" />
+                                    <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.client.short_name|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.client.name}},alt={{log.client.name}}" class="avatar xxs inline margin-end-small" />
                                     <span data-ls-bind="{{log.client.name}} {{log.client.version}} on {{log.model}} {{log.OS.name}} {{log.OS.version}}"></span>
                                 </td>
                                 <td data-title="Location: ">
-                                    <img data-ls-attrs="src={{env.API}}/avatars/flags/{{log.geo.isoCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline" style="margin-top: 10px;" />
+                                    <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-attrs="src={{env.API}}/avatars/flags/{{log.geo.isoCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline margin-end-small" />
                                     <span data-ls-bind="{{log.geo.country}}"></span>
                                 </td>
                                 <td data-title="IP: "><span data-ls-bind="{{log.ip}}"></span></td>

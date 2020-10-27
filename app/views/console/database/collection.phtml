@@ -104,10 +104,10 @@ $maxCells = 10;
                                             if($i > $maxCells) {
                                                 break;
                                             }
-                                            $label = (isset($rule['label'])) ? $rule['label'] : '';
-                                            $key = (isset($rule['key'])) ? $rule['key'] : '';
-                                            $type = (isset($rule['type'])) ? $rule['type'] : '';
-                                            $array = (isset($rule['array'])) ? $rule['array'] : '';
+                                            $label = $rule['label'] ?? '';
+                                            $key = $rule['key'] ?? '';
+                                            $type = $rule['type'] ?? '';
+                                            $array = $rule['array'] ?? '';
                                             ?>
                                             <td data-title="<?php echo $this->escape($label); ?>: " class="text-size-small text-height-small">
                                                 <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection={{router.params.id}}&project={{router.params.project}}&buster={{project-collection.dateUpdated}}">

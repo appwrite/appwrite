@@ -11,12 +11,10 @@ use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Filesystem;
 use Appwrite\Resize\Resize;
 use Appwrite\URL\URL as URLParse;
-use BaconQrCode\Renderer\ImageRenderer;
-use BaconQrCode\Renderer\Image\ImagickImageBackEnd;
-use BaconQrCode\Renderer\RendererStyle\RendererStyle;
-use BaconQrCode\Writer;
 use Utopia\Config\Config;
 use Utopia\Validator\HexColor;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
 
 $avatarCallback = function ($type, $code, $width, $height, $quality, $response) {
     /** @var Utopia\Response $response */
@@ -283,8 +281,8 @@ App::get('/v1/avatars/favicon')
                         case 'jpeg':
                             $size = \explode('x', \strtolower($sizes));
 
-                            $sizeWidth = (isset($size[0])) ? (int) $size[0] : 0;
-                            $sizeHeight = (isset($size[1])) ? (int) $size[1] : 0;
+                            $sizeWidth = (int) $size[0] ?? 0;
+                            $sizeHeight = (int) $size[1] ?? 0;
 
                             if (($sizeWidth * $sizeHeight) >= $space) {
                                 $space = $sizeWidth * $sizeHeight;
@@ -365,13 +363,12 @@ App::get('/v1/avatars/qr')
         /** @var Utopia\Response $response */
 
         $download = ($download === '1' || $download === 'true' || $download === 1 || $download === true);
+        $options = new QROptions([
+            'quietzone' => $size,
+            'outputType' => QRCode::OUTPUT_IMAGICK
+        ]);
 
-        $renderer = new ImageRenderer(
-            new RendererStyle($size, $margin),
-            new ImagickImageBackEnd('png', 100)
-        );
-
-        $writer = new Writer($renderer);
+        $qrcode = new QRCode($options);
 
         if ($download) {
             $response->addHeader('Content-Disposition', 'attachment; filename="qr.png"');
@@ -380,7 +377,7 @@ App::get('/v1/avatars/qr')
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
             ->setContentType('image/png')
-            ->send($writer->writeString($text))
+            ->send($qrcode->render($text))
         ;
     }, ['response']);
 
@@ -423,7 +420,7 @@ App::get('/v1/avatars/initials')
         $code = 0;
 
         foreach ($words as $key => $w) {
-            $initials .= (isset($w[0])) ? $w[0] : '';
+            $initials .= $w[0] ?? '';
             $code += (isset($w[0])) ? \ord($w[0]) : 0;
 
             if ($key == 1) {

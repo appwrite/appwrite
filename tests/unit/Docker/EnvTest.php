@@ -14,7 +14,7 @@ class EnvTest extends TestCase
     protected $object = null;
 
 
-    public function setUp()
+    public function setUp(): void
     {
         $data = @file_get_contents(__DIR__.'/../../resources/docker/.env');
 
@@ -25,7 +25,7 @@ class EnvTest extends TestCase
         $this->object = new Env($data);
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
     }
 

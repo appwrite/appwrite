@@ -51,7 +51,7 @@ class S3 extends Device
      *
      * @throws \Exception
      *
-     * @return string|bool saved destination on success or false on failures
+     * @return bool
      */
     public function upload($source, $path):bool
     {
