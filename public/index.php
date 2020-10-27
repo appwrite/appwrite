@@ -22,6 +22,6 @@ error_reporting(E_ALL);
 
 include __DIR__ . '/../app/controllers/general.php';
 
-$app = new App('Asia/Tel_Aviv');
+$app = new App('America/New_York');
 
 $app->run(new Request(), new Response());
