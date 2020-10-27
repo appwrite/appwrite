@@ -159,7 +159,7 @@ COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/swoole
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yaml.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
-COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/maxminddb.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/ 
+COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/maxminddb.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/ 
 
 # Add Source Code
 COPY ./app /usr/src/code/app
