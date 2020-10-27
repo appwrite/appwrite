@@ -16,7 +16,8 @@ FROM php:7.4-cli-alpine as step1
 
 ENV TZ=Asia/Tel_Aviv \
     PHP_REDIS_VERSION=5.3.0 \
-    PHP_SWOOLE_VERSION=4.5.6 \
+    PHP_SWOOLE_VERSION=v4.5.6 \
+    PHP_MAXMINDDB_VERSION=v1.8.0 \
     PHP_XDEBUG_VERSION=sdebug_2_9-beta
 
 RUN \
@@ -26,8 +27,6 @@ RUN \
   autoconf \
   gcc \
   g++ \
-  tar \
-  wget \
   git \
   zlib-dev \
   brotli-dev \
@@ -37,9 +36,9 @@ RUN docker-php-ext-install sockets
 
 RUN \
   # Redis Extension
-  wget -q https://github.com/phpredis/phpredis/archive/$PHP_REDIS_VERSION.tar.gz && \
-  tar -xf $PHP_REDIS_VERSION.tar.gz && \
-  cd phpredis-$PHP_REDIS_VERSION && \
+  git clone https://github.com/phpredis/phpredis.git && \
+  cd phpredis && \
+  git checkout $PHP_REDIS_VERSION && \
   phpize && \
   ./configure && \
   make && make install && \
@@ -47,14 +46,16 @@ RUN \
   ## Swoole Extension
   git clone https://github.com/swoole/swoole-src.git && \
   cd swoole-src && \
-  git checkout v$PHP_SWOOLE_VERSION && \
+  git checkout $PHP_SWOOLE_VERSION && \
   phpize && \
   ./configure --enable-sockets --enable-http2 && \
   make && make install && \
   cd .. && \
   ## Maxminddb extension
   git clone https://github.com/maxmind/MaxMind-DB-Reader-php.git && \
-  cd MaxMind-DB-Reader-php/ext && \
+  cd MaxMind-DB-Reader-php && \
+  git checkout $PHP_MAXMINDDB_VERSION && \
+  cd ext && \
   phpize && \
   ./configure && \
   make && make install && \
