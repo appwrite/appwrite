@@ -51,7 +51,7 @@ class Files
      */
     public static function removeMimeType(string $mimeType): void
     {
-        if(isset(self::$mimeTypes[$mimeType])) {
+        if (isset(self::$mimeTypes[$mimeType])) {
             unset(self::$mimeTypes[$mimeType]);
         }
     }
@@ -85,7 +85,7 @@ class Files
      */
     public static function load(string $directory, string $root = null): void
     {
-        if(!is_readable($directory)) {
+        if (!is_readable($directory)) {
             throw new Exception('Failed to load directory: '.$directory);
         }
 
@@ -106,7 +106,7 @@ class Files
                 continue;
             }
 
-            if(substr($path, 0, 1) === '.') {
+            if (substr($path, 0, 1) === '.') {
                 continue;
             }
             
@@ -127,7 +127,7 @@ class Files
 
         closedir($handle);
 
-        if($directory === $root) {
+        if ($directory === $root) {
             echo '[Static Files] Loadded '.self::$count.' files'.PHP_EOL;
         }
     }
@@ -139,7 +139,7 @@ class Files
      */
     public static function isFileLoaded(string $uri): bool
     {
-        if(!array_key_exists($uri, self::$loaded)) {
+        if (!array_key_exists($uri, self::$loaded)) {
             return false;
         }
 
@@ -153,7 +153,7 @@ class Files
      */
     public static function getFileContents(string $uri): string
     {
-        if(!array_key_exists($uri, self::$loaded)) {
+        if (!array_key_exists($uri, self::$loaded)) {
             throw new Exception('File not found or not loaded: '.$uri);
         }
 
@@ -167,7 +167,7 @@ class Files
      */
     public static function getFileMimeType(string $uri): string
     {
-        if(!array_key_exists($uri, self::$loaded)) {
+        if (!array_key_exists($uri, self::$loaded)) {
             throw new Exception('File not found or not loaded: '.$uri);
         }
 

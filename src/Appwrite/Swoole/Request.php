@@ -33,7 +33,7 @@ class Request extends UtopiaRequest
      */
     public function getParam(string $key, $default = null)
     {
-        switch($this->getMethod()) {
+        switch ($this->getMethod()) {
             case self::METHOD_GET:
                 return $this->getQuery($key, $default);
                 break;
@@ -57,7 +57,7 @@ class Request extends UtopiaRequest
      */
     public function getParams(): array
     {
-        switch($this->getMethod()) {
+        switch ($this->getMethod()) {
             case self::METHOD_GET:
                 return (!empty($this->swoole->get)) ? $this->swoole->get : [];
                 break;
@@ -143,7 +143,7 @@ class Request extends UtopiaRequest
     {
         $protocol = $this->getHeader('x-forwarded-proto', $this->getServer('server_protocol', 'https'));
 
-        if($protocol === 'HTTP/1.1') {
+        if ($protocol === 'HTTP/1.1') {
             return 'http';
         }
 
@@ -317,7 +317,7 @@ class Request extends UtopiaRequest
                     break;
             }
 
-            if(empty($this->payload)) { // Make sure we return same data type even if json payload is empty or failed
+            if (empty($this->payload)) { // Make sure we return same data type even if json payload is empty or failed
                 $this->payload = [];
             }
         }

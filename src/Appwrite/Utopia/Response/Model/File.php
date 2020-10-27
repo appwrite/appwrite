@@ -9,7 +9,6 @@ class File extends Model
 {
     public function __construct()
     {
-
     }
 
     /**

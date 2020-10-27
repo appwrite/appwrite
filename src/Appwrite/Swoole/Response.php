@@ -37,7 +37,7 @@ class Response extends UtopiaResponse
      * Response constructor.
      */
     public function __construct(SwooleResponse $response)
-    {        
+    {
         $this->swoole = $response;
         parent::__construct(\microtime(true));
     }
@@ -54,7 +54,7 @@ class Response extends UtopiaResponse
      */
     public function send(string $body = '', int $exit = null): void
     {
-        if(!$this->disablePayload) {
+        if (!$this->disablePayload) {
             $this->addHeader('X-Debug-Speed', (string)(microtime(true) - $this->startTime));
 
             $this
@@ -67,13 +67,12 @@ class Response extends UtopiaResponse
 
             $this->size = $this->size + strlen(implode("\n", $this->headers)) + $length;
 
-            if(array_key_exists(
+            if (array_key_exists(
                 $this->contentType,
                 $this->compressed
                 ) && ($length <= $chunk)) { // Dont compress with GZIP / Brotli if header is not listed and size is bigger than 2mb
                 $this->swoole->end($body);
-            }
-            else {
+            } else {
                 for ($i=0; $i < ceil($length / $chunk); $i++) {
                     $this->swoole->write(substr($body, ($i * $chunk), min((($i * $chunk) + $chunk), $length)));
                 }

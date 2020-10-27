@@ -101,7 +101,7 @@ class Response extends UtopiaResponse
      */
     public function getModel(string $key): Model
     {
-        if(!isset($this->models[$key])) {
+        if (!isset($this->models[$key])) {
             throw new Exception('Undefined model: '.$key);
         }
 
@@ -126,23 +126,22 @@ class Response extends UtopiaResponse
         $model      = $this->getModel($model);
         $output     = [];
 
-        foreach($model->getRules() as $key => $rule) {
-            if(!$document->isSet($key)) {
-                if(!is_null($rule['default'])) {
+        foreach ($model->getRules() as $key => $rule) {
+            if (!$document->isSet($key)) {
+                if (!is_null($rule['default'])) {
                     $document->setAttribute($key, $rule['default']);
-                }
-                else {
+                } else {
                     throw new Exception('Missing response key: '.$key);
                 }
             }
 
-            if($rule['array']) {
-                if(!is_array($data[$key])) {
+            if ($rule['array']) {
+                if (!is_array($data[$key])) {
                     throw new Exception($key.' must be an array of '.$rule['type'].' types');
                 }
 
                 foreach ($data[$key] as &$item) {
-                    if(array_key_exists($rule['type'], $this->models) && $item instanceof Document) {
+                    if (array_key_exists($rule['type'], $this->models) && $item instanceof Document) {
                         $item = $this->output($item, $rule['type']);
                     }
                 }
@@ -168,7 +167,7 @@ class Response extends UtopiaResponse
      */
     public function yaml(array $data): void
     {
-        if(!extension_loaded('yaml')) {
+        if (!extension_loaded('yaml')) {
             throw new Exception('Missing yaml extension. Learn more at: https://www.php.net/manual/en/book.yaml.php');
         }
 

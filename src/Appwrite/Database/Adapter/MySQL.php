@@ -232,7 +232,7 @@ class MySQL extends Adapter
 
             // Handle array of relations
             if (self::DATA_TYPE_ARRAY === $type) {
-                if(!is_array($value)) { // Property should be of type array, if not = skip
+                if (!is_array($value)) { // Property should be of type array, if not = skip
                     continue;
                 }
 
