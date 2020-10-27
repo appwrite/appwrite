@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7ad12180c132b3225874c7f18594409a",
+    "content-hash": "f86de102bb47a43e41895a78ed3ab991",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -52,76 +52,27 @@
             "time": "2020-02-29T11:35:01+00:00"
         },
         {
-            "name": "bacon/bacon-qr-code",
-            "version": "2.0.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/Bacon/BaconQrCode.git",
-                "reference": "add6d9ff97336b62f95a3b94f75cea4e085465b2"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/Bacon/BaconQrCode/zipball/add6d9ff97336b62f95a3b94f75cea4e085465b2",
-                "reference": "add6d9ff97336b62f95a3b94f75cea4e085465b2",
-                "shasum": ""
-            },
-            "require": {
-                "dasprid/enum": "^1.0",
-                "ext-iconv": "*",
-                "php": "^7.1"
-            },
-            "require-dev": {
-                "phly/keep-a-changelog": "^1.4",
-                "phpunit/phpunit": "^7 | ^8 | ^9",
-                "squizlabs/php_codesniffer": "^3.4"
-            },
-            "suggest": {
-                "ext-imagick": "to generate QR code images"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "BaconQrCode\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "BSD-2-Clause"
-            ],
-            "authors": [
-                {
-                    "name": "Ben Scholzen 'DASPRiD'",
-                    "email": "mail@dasprids.de",
-                    "homepage": "https://dasprids.de/",
-                    "role": "Developer"
-                }
-            ],
-            "description": "BaconQrCode is a QR code generator for PHP.",
-            "homepage": "https://github.com/Bacon/BaconQrCode",
-            "time": "2020-07-30T16:40:58+00:00"
-        },
-        {
             "name": "chillerlan/php-qrcode",
-            "version": "4.1.0",
+            "version": "4.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/chillerlan/php-qrcode.git",
-                "reference": "2cecb32cf618319dd01d9bc1fa64dc6bb683df85"
+                "reference": "1972af7af51b203bc239d8fb94243f6ed2a1067a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/chillerlan/php-qrcode/zipball/2cecb32cf618319dd01d9bc1fa64dc6bb683df85",
-                "reference": "2cecb32cf618319dd01d9bc1fa64dc6bb683df85",
+                "url": "https://api.github.com/repos/chillerlan/php-qrcode/zipball/1972af7af51b203bc239d8fb94243f6ed2a1067a",
+                "reference": "1972af7af51b203bc239d8fb94243f6ed2a1067a",
                 "shasum": ""
             },
             "require": {
-                "chillerlan/php-settings-container": "^2.0",
+                "chillerlan/php-settings-container": "^2.1",
                 "ext-mbstring": "*",
-                "php": "^7.4"
+                "php": "^7.4 || ^8.0"
             },
             "require-dev": {
-                "phan/phan": "^2.7",
-                "phpunit/phpunit": "^9.1",
+                "phan/phan": "^3.2.2",
+                "phpunit/phpunit": "^9.4",
                 "setasign/fpdf": "^1.8.2"
             },
             "suggest": {
@@ -168,29 +119,29 @@
                     "type": "ko_fi"
                 }
             ],
-            "time": "2020-06-04T17:07:12+00:00"
+            "time": "2020-10-07T14:41:07+00:00"
         },
         {
             "name": "chillerlan/php-settings-container",
-            "version": "2.0.0",
+            "version": "2.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/chillerlan/php-settings-container.git",
-                "reference": "75888345532373074fba482a6642c0f8cda996f0"
+                "reference": "90ab24a3dc09569bfa0f3dbc3d44bab3aaa2a6c5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/chillerlan/php-settings-container/zipball/75888345532373074fba482a6642c0f8cda996f0",
-                "reference": "75888345532373074fba482a6642c0f8cda996f0",
+                "url": "https://api.github.com/repos/chillerlan/php-settings-container/zipball/90ab24a3dc09569bfa0f3dbc3d44bab3aaa2a6c5",
+                "reference": "90ab24a3dc09569bfa0f3dbc3d44bab3aaa2a6c5",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
-                "php": "^7.4"
+                "php": "^7.4 || ^8.0"
             },
             "require-dev": {
-                "phan/phan": "^2.6",
-                "phpunit/phpunit": "^9.1"
+                "phan/phan": "^3.2.2",
+                "phpunit/phpunit": "9.4"
             },
             "type": "library",
             "autoload": {
@@ -217,7 +168,13 @@
                 "container",
                 "helper"
             ],
-            "time": "2020-04-16T16:56:44+00:00"
+            "funding": [
+                {
+                    "url": "https://ko-fi.com/codemasher",
+                    "type": "ko_fi"
+                }
+            ],
+            "time": "2020-10-07T13:18:35+00:00"
         },
         {
             "name": "colinmollenhour/credis",
@@ -260,72 +217,32 @@
             "time": "2020-10-13T23:55:13+00:00"
         },
         {
-            "name": "dasprid/enum",
-            "version": "1.0.3",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/DASPRiD/Enum.git",
-                "reference": "5abf82f213618696dda8e3bf6f64dd042d8542b2"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/DASPRiD/Enum/zipball/5abf82f213618696dda8e3bf6f64dd042d8542b2",
-                "reference": "5abf82f213618696dda8e3bf6f64dd042d8542b2",
-                "shasum": ""
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^7 | ^8 | ^9",
-                "squizlabs/php_codesniffer": "^3.4"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "DASPRiD\\Enum\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "BSD-2-Clause"
-            ],
-            "authors": [
-                {
-                    "name": "Ben Scholzen 'DASPRiD'",
-                    "email": "mail@dasprids.de",
-                    "homepage": "https://dasprids.de/",
-                    "role": "Developer"
-                }
-            ],
-            "description": "PHP 7.1 enum implementation",
-            "keywords": [
-                "enum",
-                "map"
-            ],
-            "time": "2020-10-02T16:03:48+00:00"
-        },
-        {
             "name": "domnikl/statsd",
-            "version": "2.0.1",
+            "version": "3.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/domnikl/statsd-php.git",
-                "reference": "cb4b2f50287c08bff820fb25ae45f0620b39f507"
+                "reference": "393c6565efbfb23c8296ae3099a62fb6366c6ce3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/domnikl/statsd-php/zipball/cb4b2f50287c08bff820fb25ae45f0620b39f507",
-                "reference": "cb4b2f50287c08bff820fb25ae45f0620b39f507",
+                "url": "https://api.github.com/repos/domnikl/statsd-php/zipball/393c6565efbfb23c8296ae3099a62fb6366c6ce3",
+                "reference": "393c6565efbfb23c8296ae3099a62fb6366c6ce3",
                 "shasum": ""
             },
             "require": {
-                "php": ">= 5.4.0"
+                "php": ">= 7.2"
             },
             "require-dev": {
-                "phpunit/phpunit": ">= 4.4.0"
+                "flyeralarm/php-code-validator": "^2.2",
+                "phpunit/phpunit": "~8.0",
+                "vimeo/psalm": "^3.4"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Domnikl\\Statsd\\": "lib/"
+                    "Domnikl\\Statsd\\": "src/",
+                    "Domnikl\\Test\\Statsd\\": "tests/unit"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -347,27 +264,31 @@
                 "statsd",
                 "udp"
             ],
-            "time": "2014-12-09T09:37:49+00:00"
+            "time": "2020-01-03T14:24:58+00:00"
         },
         {
             "name": "dragonmantank/cron-expression",
-            "version": "v2.2.0",
+            "version": "3.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/dragonmantank/cron-expression.git",
-                "reference": "92a2c3768d50e21a1f26a53cb795ce72806266c5"
+                "reference": "fa4e95ff5a7f1d62c3fbc05c32729b7f3ca14b52"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dragonmantank/cron-expression/zipball/92a2c3768d50e21a1f26a53cb795ce72806266c5",
-                "reference": "92a2c3768d50e21a1f26a53cb795ce72806266c5",
+                "url": "https://api.github.com/repos/dragonmantank/cron-expression/zipball/fa4e95ff5a7f1d62c3fbc05c32729b7f3ca14b52",
+                "reference": "fa4e95ff5a7f1d62c3fbc05c32729b7f3ca14b52",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.0.0"
+                "php": "^7.1"
+            },
+            "replace": {
+                "mtdowling/cron-expression": "^1.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "~6.4"
+                "phpstan/phpstan": "^0.11",
+                "phpunit/phpunit": "^6.4|^7.0"
             },
             "type": "library",
             "autoload": {
@@ -381,11 +302,6 @@
             ],
             "authors": [
                 {
-                    "name": "Michael Dowling",
-                    "email": "mtdowling@gmail.com",
-                    "homepage": "https://github.com/mtdowling"
-                },
-                {
                     "name": "Chris Tankersley",
                     "email": "chris@ctankersley.com",
                     "homepage": "https://github.com/dragonmantank"
@@ -396,7 +312,13 @@
                 "cron",
                 "schedule"
             ],
-            "time": "2018-06-06T03:12:17+00:00"
+            "funding": [
+                {
+                    "url": "https://github.com/dragonmantank",
+                    "type": "github"
+                }
+            ],
+            "time": "2020-08-21T02:30:13+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
@@ -799,16 +721,16 @@
         },
         {
             "name": "piwik/device-detector",
-            "version": "3.12.6",
+            "version": "3.13.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/matomo-org/device-detector.git",
-                "reference": "4eb7b6d4d1a2ac1e8fee64fc73698fcb869d60f3"
+                "reference": "75ca5b690e38c40d199ade93e677bc5d7c3bc498"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/4eb7b6d4d1a2ac1e8fee64fc73698fcb869d60f3",
-                "reference": "4eb7b6d4d1a2ac1e8fee64fc73698fcb869d60f3",
+                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/75ca5b690e38c40d199ade93e677bc5d7c3bc498",
+                "reference": "75ca5b690e38c40d199ade93e677bc5d7c3bc498",
                 "shasum": ""
             },
             "require": {
@@ -850,7 +772,7 @@
                 "parser",
                 "useragent"
             ],
-            "time": "2020-06-16T12:10:46+00:00"
+            "time": "2020-08-17T07:37:33+00:00"
         },
         {
             "name": "psr/http-client",
@@ -1359,18 +1281,6 @@
         },
         {
             "name": "utopia-php/domains",
-<<<<<<< HEAD
-            "version": "0.2.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/domains.git",
-                "reference": "dbedef7da2537e7f706e3efede1f322e03ea2a8c"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/domains/zipball/dbedef7da2537e7f706e3efede1f322e03ea2a8c",
-                "reference": "dbedef7da2537e7f706e3efede1f322e03ea2a8c",
-=======
             "version": "0.2.3",
             "source": {
                 "type": "git",
@@ -1381,7 +1291,6 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/utopia-php/domains/zipball/6c9b3706b0df4e0150a1f9062321ff114270a643",
                 "reference": "6c9b3706b0df4e0150a1f9062321ff114270a643",
->>>>>>> 26c663519184046a9c7135f57147075ca3cb7196
                 "shasum": ""
             },
             "require": {
@@ -1419,11 +1328,7 @@
                 "upf",
                 "utopia"
             ],
-<<<<<<< HEAD
-            "time": "2020-09-18T19:48:57+00:00"
-=======
             "time": "2020-10-23T09:59:51+00:00"
->>>>>>> 26c663519184046a9c7135f57147075ca3cb7196
         },
         {
             "name": "utopia-php/framework",
@@ -1613,6 +1518,56 @@
                 "utopia"
             ],
             "time": "2020-10-24T08:51:37+00:00"
+        },
+        {
+            "name": "utopia-php/swoole",
+            "version": "0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/swoole.git",
+                "reference": "26965d8122cb42769a5543c3be1677321cdaebdb"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/26965d8122cb42769a5543c3be1677321cdaebdb",
+                "reference": "26965d8122cb42769a5543c3be1677321cdaebdb",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1",
+                "utopia-php/framework": "0.*.*"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^7.0",
+                "swoole/ide-helper": "4.5.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Swoole\\": "src/Swoole"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "team@appwrite.io"
+                }
+            ],
+            "description": "An extension for Utopia Framework to work with PHP Swoole as a PHP FPM alternative",
+            "keywords": [
+                "framework",
+                "http",
+                "php",
+                "server",
+                "swoole",
+                "upf",
+                "utopia"
+            ],
+            "time": "2020-08-14T22:44:34+00:00"
         }
     ],
     "packages-dev": [
@@ -4179,16 +4134,16 @@
         },
         {
             "name": "swoole/ide-helper",
-            "version": "4.5.4",
+            "version": "4.5.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/swoole/ide-helper.git",
-                "reference": "3382a1844afb206cac064252f6b8b50115bf72bb"
+                "reference": "aefd9d15e00cf14b89a5ed87cfa3bd79c9889028"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/swoole/ide-helper/zipball/3382a1844afb206cac064252f6b8b50115bf72bb",
-                "reference": "3382a1844afb206cac064252f6b8b50115bf72bb",
+                "url": "https://api.github.com/repos/swoole/ide-helper/zipball/aefd9d15e00cf14b89a5ed87cfa3bd79c9889028",
+                "reference": "aefd9d15e00cf14b89a5ed87cfa3bd79c9889028",
                 "shasum": ""
             },
             "require-dev": {
@@ -4209,7 +4164,7 @@
                 }
             ],
             "description": "IDE help files for Swoole.",
-            "time": "2020-09-16T00:12:52+00:00"
+            "time": "2020-10-14T18:05:12+00:00"
         },
         {
             "name": "symfony/console",
