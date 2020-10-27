@@ -148,11 +148,6 @@ RUN \
   && apk del .deps \
   && rm -rf /var/cache/apk/*
 
-# RUN wget https://github.com/FriendsOfPHP/pickle/releases/download/v0.6.0/pickle.phar && \
-#   mv pickle.phar /usr/local/bin/pickle && \
-#   chmod +x /usr/local/bin/pickle && \
-#   pickle install imagick yaml
-
 WORKDIR /usr/src/code
 
 COPY --from=step0 /usr/local/src/vendor /usr/src/code/vendor
