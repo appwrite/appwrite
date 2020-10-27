@@ -218,15 +218,14 @@ $cli
             Console::log('');
             $version = \json_decode(@\file_get_contents(App::getEnv('_APP_HOME', 'http://localhost').'/v1/health/version'), true);
             
-            if($version && isset($version['version'])) {
+            if ($version && isset($version['version']) && App::isProduction()) {
                 if(\version_compare($version['version'], App::getEnv('_APP_VERSION', 'UNKNOWN')) === 0) {
                     Console::info('You are running the latest version of '.APP_NAME.'! 🥳');
                 }
                 else {
                     Console::info('A new version ('.$version['version'].') is available! 🥳'."\n");
                 }
-            }
-            else {
+            } else {
                 Console::error('Failed to check for a newer version'."\n");
             }
         } catch (\Throwable $th) {
