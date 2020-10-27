@@ -648,7 +648,6 @@ App::get('/v1/account/sessions')
                     $sessions[$index]['geo']['isoCode'] = '--';
                     $sessions[$index]['geo']['country'] = $locale->getText('locale.country.unknown');
                 }
-
             } catch (\Exception $e) {
                 $sessions[$index]['geo']['isoCode'] = '--';
                 $sessions[$index]['geo']['country'] = $locale->getText('locale.country.unknown');
@@ -732,7 +731,6 @@ App::get('/v1/account/logs')
                     $output[$i]['geo']['isoCode'] = '--';
                     $output[$i]['geo']['country'] = $locale->getText('locale.country.unknown');
                 }
-
             } catch (\Exception $e) {
                 $output[$i]['geo']['isoCode'] = '--';
                 $output[$i]['geo']['country'] = $locale->getText('locale.country.unknown');

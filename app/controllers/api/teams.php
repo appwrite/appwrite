@@ -594,7 +594,6 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
             'email' => $user->getAttribute('email'),
             'name' => $user->getAttribute('name'),
         ])), Response::MODEL_MEMBERSHIP);
-        
     }, ['request', 'response', 'user', 'projectDB', 'audits']);
 
 App::delete('/v1/teams/:teamId/memberships/:inviteId')

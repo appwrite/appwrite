@@ -385,10 +385,9 @@ App::get('/console/version')
         try {
             $version = \json_decode(@\file_get_contents(App::getEnv('_APP_HOME', 'http://localhost').'/v1/health/version'), true);
             
-            if($version && isset($version['version'])) {
+            if ($version && isset($version['version'])) {
                 return $response->json(['version' => $version['version']]);
-            }
-            else {
+            } else {
                 throw new Exception('Failed to check for a newer version', 500);
             }
         } catch (\Throwable $th) {
