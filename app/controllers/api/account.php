@@ -658,6 +658,7 @@ App::get('/v1/account/sessions')
 
         $tokens = $user->getAttribute('tokens', []);
         $sessions = [];
+        $index = 0;
         $countries = $locale->getText('countries');
         $current = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
 
