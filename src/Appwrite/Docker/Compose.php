@@ -28,7 +28,7 @@ class Compose
     }
 
     /**
-     * @return array
+     * @return string
      */
     public function getVersion(): string
     {

@@ -139,7 +139,7 @@ class MySQL extends Adapter
     {
         $order = 0;
         $data = \array_merge(['$id' => null, '$permissions' => []], $data); // Merge data with default params
-        $signature = \md5(\json_encode($data, true));
+        $signature = \md5(\json_encode($data));
         $revision = \uniqid('', true);
         $data['$id'] = (empty($data['$id'])) ? null : $data['$id'];
 
@@ -232,6 +232,10 @@ class MySQL extends Adapter
 
             // Handle array of relations
             if (self::DATA_TYPE_ARRAY === $type) {
+                if(!is_array($value)) { // Property should be of type array, if not = skip
+                    continue;
+                }
+
                 foreach ($value as $i => $child) {
                     if (self::DATA_TYPE_DICTIONARY !== $this->getDataType($child)) { // not dictionary
 
@@ -315,13 +319,13 @@ class MySQL extends Adapter
     /**
      * Delete Document.
      *
-     * @param int $id
+     * @param string $id
      *
      * @return array
      *
      * @throws Exception
      */
-    public function deleteDocument($id)
+    public function deleteDocument(string $id)
     {
         $st1 = $this->getPDO()->prepare('DELETE FROM `'.$this->getNamespace().'.database.documents`
             WHERE uid = :id
@@ -763,8 +767,10 @@ class MySQL extends Adapter
 
     /**
      * Get Unique Document ID.
+     *
+     * @return string
      */
-    public function getId()
+    public function getId(): string
     {
         $unique = \uniqid();
         $attempts = 5;
@@ -882,12 +888,12 @@ class MySQL extends Adapter
     }
 
     /**
-     * @param $key
-     * @param $value
+     * @param string $key
+     * @param mixed $value
      *
      * @return $this
      */
-    public function setDebug($key, $value)
+    public function setDebug(string $key, $value): self
     {
         $this->debug[$key] = $value;
 
@@ -897,15 +903,17 @@ class MySQL extends Adapter
     /**
      * @return array
      */
-    public function getDebug()
+    public function getDebug(): array
     {
         return $this->debug;
     }
 
     /**
      * return $this;.
+     *
+     * @return void
      */
-    public function resetDebug()
+    public function resetDebug(): void
     {
         $this->debug = [];
     }
@@ -915,7 +923,7 @@ class MySQL extends Adapter
      *
      * @throws Exception
      */
-    protected function getPDO()
+    protected function getPDO(): PDO
     {
         return $this->register->get('db');
     }
@@ -925,7 +933,7 @@ class MySQL extends Adapter
      *
      * @return Client
      */
-    protected function getRedis():Client
+    protected function getRedis(): Client
     {
         return $this->register->get('cache');
     }

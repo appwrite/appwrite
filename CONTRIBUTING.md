@@ -281,6 +281,12 @@ php-cs-fixer fix app/controllers --rules='{"braces": {"allow_single_line_closure
 php-cs-fixer fix src --rules='{"braces": {"allow_single_line_closure": true}}'
 ```
 
+Static Code Analysis:
+
+```bash
+docker-compose exec appwrite /usr/src/code/vendor/bin/psalm
+```
+
 ## Tutorials
 
 From time to time, our team will add tutorials that will help contributors find their way in the Appwrite source code. Below is a list of currently available tutorials:

@@ -53,7 +53,7 @@ class OpenSSL
      * @param $length
      * @param null $crypto_strong
      *
-     * @return int
+     * @return false|string
      */
     public static function randomPseudoBytes($length, &$crypto_strong = null)
     {
