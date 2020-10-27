@@ -17,7 +17,7 @@ class Document extends ArrayObject
      *
      * @see ArrayObject::__construct
      *
-     * @param null   $input
+     * @param array $input
      * @param int    $flags
      * @param string $iterator_class
      */
@@ -49,7 +49,7 @@ class Document extends ArrayObject
     }
 
     /**
-     * @return int|null
+     * @return string
      */
     public function getCollection()
     {
@@ -196,8 +196,8 @@ class Document extends ArrayObject
     /**
      * Checks if a document key is set.
      *
-     * @param $key
-     * 
+     * @param string $key
+     *
      * @return bool
      */
     public function isSet($key)

@@ -116,7 +116,7 @@ class Database
     /**
      * Create Namespace.
      *
-     * @param int $namespace
+     * @param string $namespace
      *
      * @return bool
      */
@@ -128,7 +128,7 @@ class Database
     /**
      * Delete Namespace.
      *
-     * @param int $namespace
+     * @param string $namespace
      *
      * @return bool
      */
@@ -187,22 +187,23 @@ class Database
     }
 
     /**
-     * @param int  $id
+     * @param string $id
      * @param bool $mock is mocked data allowed?
+     * @param bool $decode enable decoding?
      *
      * @return Document
      */
-    public function getDocument($id, $mock = true, $decode = true)
+    public function getDocument($id, bool $mock = true, bool $decode = true)
     {
         if (\is_null($id)) {
-            return new Document([]);
+            return new Document();
         }
 
         $document = new Document((isset($this->mocks[$id]) && $mock) ? $this->mocks[$id] : $this->adapter->getDocument($id));
         $validator = new Authorization($document, 'read');
 
         if (!$validator->isValid($document->getPermissions())) { // Check if user has read access to this document
-            return new Document([]);
+            return new Document();
         }
 
         $document = ($decode) ? $this->decode($document) : $document;
@@ -332,13 +333,13 @@ class Database
     }
 
     /**
-     * @param int $id
+     * @param string $id
      *
      * @return Document|false
      *
      * @throws AuthorizationException
      */
-    public function deleteDocument($id)
+    public function deleteDocument(string $id)
     {
         $document = $this->getDocument($id);
 
@@ -401,9 +402,9 @@ class Database
      * @param string $key
      * @param string $value
      *
-     * @return array
+     * @return self
      */
-    public function setMock($key, $value)
+    public function setMock($key, $value): self
     {
         $this->mocks[$key] = $value;
 
@@ -411,11 +412,11 @@ class Database
     }
 
     /**
-     * @param string $mocks
+     * @param array $mocks
      *
-     * @return array
+     * @return self
      */
-    public function setMocks(array $mocks)
+    public function setMocks(array $mocks): self
     {
         $this->mocks = $mocks;
 
@@ -432,14 +433,14 @@ class Database
 
     /**
      * Add Attribute Filter
-     * 
+     *
      * @param string $name
      * @param callable $encode
      * @param callable $decode
-     * 
-     * return $this
+     *
+     * @return void
      */
-    static public function addFilter(string $name, callable $encode, callable $decode)
+    static public function addFilter(string $name, callable $encode, callable $decode): void
     {
         self::$filters[$name] = [
             'encode' => $encode,

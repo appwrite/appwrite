@@ -31,7 +31,7 @@ abstract class Model
     /**
      * Get Rules
      * 
-     * @return string
+     * @return array
      */
     public function getRules(): array
     {

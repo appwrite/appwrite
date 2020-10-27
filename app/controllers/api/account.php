@@ -690,8 +690,7 @@ App::get('/v1/account/sessions')
                 if ($record) {
                     $sessions[$index]['geo']['isoCode'] = \strtolower($record['country']['iso_code']);
                     $sessions[$index]['geo']['country'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
-                }
-                else {
+                } else {
                     $sessions[$index]['geo']['isoCode'] = '--';
                     $sessions[$index]['geo']['country'] = $locale->getText('locale.country.unknown');
                 }
@@ -795,11 +794,10 @@ App::get('/v1/account/logs')
             try {
                 $record = $geodb->get($log['ip']);
 
-                if(isset($record)){
+                if ($record) {
                     $output[$i]['geo']['isoCode'] = \strtolower($record['country']['iso_code']);
                     $output[$i]['geo']['country'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
-                    }
-                else{
+                } else {
                     $output[$i]['geo']['isoCode'] = '--';
                     $output[$i]['geo']['country'] = $locale->getText('locale.country.unknown');
                 }

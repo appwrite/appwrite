@@ -112,6 +112,8 @@ class Response extends SwooleResponse
 
     /**
      * Response constructor.
+     * 
+     * @param float $time
      */
     public function __construct(SwooleHTTPResponse $response)
     {
@@ -275,8 +277,10 @@ class Response extends SwooleResponse
      * @see https://en.wikipedia.org/wiki/YAML
      *
      * @param array $data
+     *
+     * @return void
      */
-    public function yaml(array $data)
+    public function yaml(array $data): void
     {
         if(!extension_loaded('yaml')) {
             throw new Exception('Missing yaml extension. Learn more at: https://www.php.net/manual/en/book.yaml.php');
