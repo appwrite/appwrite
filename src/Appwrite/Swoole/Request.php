@@ -12,7 +12,7 @@ class Request extends UtopiaRequest
      * 
      * @var SwooleRequest
      */
-    protected $swoole = null;
+    protected $swoole;
 
     /**
      * Request constructor.
@@ -265,9 +265,10 @@ class Request extends UtopiaRequest
      *
      * Method for querying HTTP cookie parameters. If $key is not found $default value will be returned.
      *
-     * @param  string $key
-     * @param  string  $default
-     * @return mixed
+     * @param string $key
+     * @param string  $default
+     *
+     * @return string
      */
     public function getCookie(string $key, string $default = ''): string
     {

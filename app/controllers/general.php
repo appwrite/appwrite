@@ -64,7 +64,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         ? $origin : 'localhost') . (!empty($port) ? ':'.$port : '');
 
     $selfDomain = new Domain($request->getHostname());
-    $endDomain = new Domain($origin);
+    $endDomain = new Domain((string)$origin);
 
     // var_dump('referer', $referrer);
     // var_dump('origin', $origin);
