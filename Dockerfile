@@ -14,8 +14,7 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
 
 FROM php:7.4-cli-alpine as step1
 
-ENV TZ=Asia/Tel_Aviv \
-    PHP_REDIS_VERSION=5.3.0 \
+ENV PHP_REDIS_VERSION=5.3.0 \
     PHP_SWOOLE_VERSION=v4.5.6 \
     PHP_MAXMINDDB_VERSION=v1.8.0 \
     PHP_XDEBUG_VERSION=sdebug_2_9-beta
@@ -67,8 +66,7 @@ LABEL maintainer="team@appwrite.io"
 
 ARG VERSION=dev
 
-ENV TZ=Asia/Tel_Aviv \
-    _APP_SERVER=swoole \
+ENV _APP_SERVER=swoole \
     _APP_ENV=production \
     _APP_DOMAIN=localhost \
     _APP_DOMAIN_TARGET=localhost \

@@ -93,7 +93,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         return;
     }
 
-    $app = new App('Asia/Tel_Aviv');
+    $app = new App('America/New_York');
     
     try {
         $app->run($request, $response);
