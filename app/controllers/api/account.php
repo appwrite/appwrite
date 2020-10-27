@@ -650,15 +650,13 @@ App::get('/v1/account/sessions')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getSessions')
     ->label('sdk.description', '/docs/references/account/get-sessions.md')
-    ->action(function ($response, $user, $locale, $geodb) {
+    ->action(function ($response, $user, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
-        /** @var MaxMind\Db\Reader $geodb */
 
         $tokens = $user->getAttribute('tokens', []);
         $sessions = [];
-        $index = 0;
         $countries = $locale->getText('countries');
         $current = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
 
@@ -672,49 +670,14 @@ App::get('/v1/account/sessions')
                 : $locale->getText('locale.country.unknown'));
             $token->setAttribute('current', ($current == $token->getId()) ? true : false);
 
-            $dd = new DeviceDetector($userAgent);
-
-            // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-            // $dd->skipBotDetection();
-
-            $dd->parse();
-
-            $sessions[$index] = [
-                '$id' => $token->getId(),
-                'OS' => $dd->getOs(),
-                'client' => $dd->getClient(),
-                'device' => $dd->getDevice(),
-                'brand' => $dd->getBrand(),
-                'model' => $dd->getModel(),
-                'ip' => $token->getAttribute('ip', ''),
-                'geo' => [],
-                'current' => ($current == $token->getId()) ? true : false,
-            ];
-
-            try {
-                $record = $geodb->get($token->getAttribute('ip', ''));
-
-                if ($record) {
-                    $sessions[$index]['geo']['isoCode'] = \strtolower($record['country']['iso_code']);
-                    $sessions[$index]['geo']['country'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
-                } else {
-                    $sessions[$index]['geo']['isoCode'] = '--';
-                    $sessions[$index]['geo']['country'] = $locale->getText('locale.country.unknown');
-                }
-
-            } catch (\Exception $e) {
-                $sessions[$index]['geo']['isoCode'] = '--';
-                $sessions[$index]['geo']['country'] = $locale->getText('locale.country.unknown');
-            }
-
-            ++$index;
+            $sessions[] = $token;
         }
 
         $response->dynamic(new Document([
             'sum' => count($sessions),
             'sessions' => $sessions
         ]), Response::MODEL_SESSION_LIST);
-    }, ['response', 'user', 'locale', 'geodb']);
+    }, ['response', 'user', 'locale']);
 
 App::get('/v1/account/logs')
     ->desc('Get Account Logs')
@@ -802,13 +765,12 @@ App::get('/v1/account/logs')
                 $record = $geodb->get($log['ip']);
 
                 if ($record) {
-                    $output[$i]['geo']['isoCode'] = \strtolower($record['country']['iso_code']);
-                    $output[$i]['geo']['country'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
+                    $output[$i]['countryCode'] = \strtolower($record['country']['iso_code']);
+                    $output[$i]['countryCode'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
                 } else {
-                    $output[$i]['geo']['isoCode'] = '--';
-                    $output[$i]['geo']['country'] = $locale->getText('locale.country.unknown');
+                    $output[$i]['countryCode'] = '--';
+                    $output[$i]['countryCode'] = $locale->getText('locale.country.unknown');
                 }
-
             } catch (\Exception $e) {
                 $output[$i]->setAttribute('countryCode', '--');
                 $output[$i]->setAttribute('countryName', $locale->getText('locale.country.unknown'));
