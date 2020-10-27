@@ -132,7 +132,6 @@ RUN \
   && apk add --no-cache \
   libstdc++ \
   certbot \
-  docker-cli \
   brotli-dev \
   yaml-dev \
   imagemagick \
