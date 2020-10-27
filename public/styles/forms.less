@@ -238,7 +238,6 @@ textarea,
 select {
   -webkit-appearance: none;
   -moz-appearance: none;
-  -webkit-transform: translateZ(0px);
   box-sizing: content-box;
   color: #313131;
   height: 40px;
@@ -490,6 +489,7 @@ fieldset {
   width: auto;
   white-space: nowrap;
   text-overflow: ellipsis;
+  z-index: 1;
 
   &:hover {
     border: none;
@@ -1218,14 +1218,107 @@ ol {
   height: auto;
   cursor: text;
 
+  .addContainer {
+    position: relative;
+    display: inline-block !important;
+    border: none;
+    padding: 0;
+    width: auto;
+    margin: 0;
+    max-width: 250px;
+    min-width: 200px;
+  }
+  
+  .addContainer:focus-within .icon-search {
+    display: block;
+  }
+
+  .addContainer .icon-search {
+    position: absolute;
+    right: 35px;
+    display: none;
+    top: 0px;
+  }
+
+  .addContainer:focus-within {
+    background-color: var(--config-language-web-contrast);
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    box-shadow: 0px 0px 10px black;
+  }
+
+  .addContainer:focus-within .add {
+    margin-top: 5px;
+    padding-left: 15px;
+  }
+
+  .dropdown {
+    box-shadow: 10px 0 10px -10px black, 0 10px 10px -10px black, -10px 0 10px -10px black;
+    border-bottom-left-radius:10px;
+    border-bottom-right-radius:10px;
+    z-index: 999;
+    position: absolute;
+    width: 100%;
+   }
+
+   .dropdown .loading {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 0px;
+   }
+
+   .dropdown .loading div {
+    width: 30px;
+    height: 30px;
+    margin: 0 auto;
+    border-radius: 50%;
+    border: 5px solid transparent;
+    border-top: 5px solid var(--config-color-background-input);
+    transform: translateX(-10px);
+    padding-top: 0px;
+    margin-top: 0px;
+    animation: dropdownLoadSpin 2s linear infinite;
+   }
+
+   @keyframes dropdownLoadSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+   }
+
+  .dropdown > div {
+    box-sizing: border-box;
+    padding-left: 20px;
+    color: var(--config-color-background-input);
+    background: var(--config-language-web-contrast);
+    filter: none;
+  }
+
+  .dropdown > div:hover {
+    cursor: pointer;
+    filter: contrast(0.7);
+    transition: filter 0.2s ease-in-out;
+  }
+
+
+  .dropdown div:last-child {
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+  }
+
   .add {
-    display: inline-block!important;
+    display: inline-block !important;
     border: none;
     padding: 0;
     width: auto;
     margin: 0;
     max-width: 100%;
     min-width: 200px;
+    height: 30px;
+    width: calc(100% - 100px);
+    margin-left: 10px;
+    padding-left: 0px;
+    font-size: 14px;
+    border-radius: 15px;
   }
 
   ul.tags-list {
