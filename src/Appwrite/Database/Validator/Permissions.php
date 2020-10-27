@@ -15,7 +15,7 @@ class Permissions extends Validator
     /**
      * @var Document
      */
-    protected $document = null;
+    protected $document;
 
     /**
      * Structure constructor.
@@ -44,7 +44,7 @@ class Permissions extends Validator
      *
      * Returns true if valid or false if not.
      *
-     * @param array $value
+     * @param mixed $value
      *
      * @return bool
      */

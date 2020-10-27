@@ -10,18 +10,24 @@ use Appwrite\Auth\OAuth2;
 class Paypal extends OAuth2
 {
     /**
-     * @var string
+     * @var array
      */
-    private $endpoint= [
+    private $endpoint = [
         'sandbox' => 'https://www.sandbox.paypal.com/',
         'live' => 'https://www.paypal.com/',
     ];
 
+    /**
+     * @var array
+     */
     private $resourceEndpoint = [
         'sandbox' => 'https://api.sandbox.paypal.com/v1/',
         'live' => 'https://api.paypal.com/v1/',
     ];
 
+    /**
+     * @var string
+     */
     protected $environment = 'live';
 
     /**
@@ -29,11 +35,13 @@ class Paypal extends OAuth2
      */
     protected $user = [];
 
-
+    /**
+     * @var array
+     */
     protected $scopes = [
-            'openid',
-            'profile',
-            'email'
+        'openid',
+        'profile',
+        'email'
     ];
 
     /**

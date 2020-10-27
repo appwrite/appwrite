@@ -13,7 +13,7 @@ abstract class Device
      *
      * @return string
      */
-    abstract public function getName():string;
+    abstract public function getName(): string;
 
     /**
      * Get Description.
@@ -22,7 +22,7 @@ abstract class Device
      *
      * @return string
      */
-    abstract public function getDescription():string;
+    abstract public function getDescription(): string;
 
     /**
      * Get Root.
@@ -31,7 +31,7 @@ abstract class Device
      *
      * @return string
      */
-    abstract public function getRoot():string;
+    abstract public function getRoot(): string;
 
     /**
      * Get Path.
@@ -42,7 +42,7 @@ abstract class Device
      *
      * @return string
      */
-    abstract public function getPath($filename):string;
+    abstract public function getPath($filename): string;
 
     /**
      * Upload.
@@ -56,7 +56,7 @@ abstract class Device
      *
      * @return bool
      */
-    abstract public function upload($source, $path):bool;
+    abstract public function upload($source, $path): bool;
     
     /**
      * Read file by given path.
@@ -65,7 +65,7 @@ abstract class Device
      *
      * @return string
      */
-    abstract public function read(string $path):string;
+    abstract public function read(string $path): string;
 
     /**
      * Write file by given path.
@@ -73,9 +73,9 @@ abstract class Device
      * @param string $path
      * @param string $data
      *
-     * @return string
+     * @return bool
      */
-    abstract public function write(string $path, string $data):bool;
+    abstract public function write(string $path, string $data): bool;
 
     /**
      * Move file from given source to given path, return true on success and false on failure.
@@ -87,7 +87,7 @@ abstract class Device
      *
      * @return bool
      */
-    abstract public function move(string $source, string $target):bool;
+    abstract public function move(string $source, string $target): bool;
 
     /**
      * Delete file in given path return true on success and false on failure.
@@ -99,7 +99,7 @@ abstract class Device
      *
      * @return bool
      */
-    abstract public function delete(string $path, bool $recursive = false):bool;
+    abstract public function delete(string $path, bool $recursive = false): bool;
 
     /**
      * Returns given file path its size.
@@ -110,7 +110,7 @@ abstract class Device
      *
      * @return int
      */
-    abstract public function getFileSize(string $path):int;
+    abstract public function getFileSize(string $path): int;
 
     /**
      * Returns given file path its mime type.
@@ -121,7 +121,7 @@ abstract class Device
      *
      * @return string
      */
-    abstract public function getFileMimeType(string $path):string;
+    abstract public function getFileMimeType(string $path): string;
 
     /**
      * Returns given file path its MD5 hash value.
@@ -132,7 +132,7 @@ abstract class Device
      *
      * @return string
      */
-    abstract public function getFileHash(string $path):string;
+    abstract public function getFileHash(string $path): string;
 
     /**
      * Get directory size in bytes.
@@ -145,7 +145,7 @@ abstract class Device
      *
      * @return int
      */
-    abstract public function getDirectorySize(string $path):int;
+    abstract public function getDirectorySize(string $path): int;
 
     /**
      * Get Partition Free Space.
@@ -154,7 +154,7 @@ abstract class Device
      *
      * @return float
      */
-    abstract public function getPartitionFreeSpace():float;
+    abstract public function getPartitionFreeSpace(): float;
 
     /**
      * Get Partition Total Space.
@@ -163,5 +163,5 @@ abstract class Device
      *
      * @return float
      */
-    abstract public function getPartitionTotalSpace():float;
+    abstract public function getPartitionTotalSpace(): float;
 }

@@ -137,13 +137,13 @@ class Redis extends Adapter
     /**
      * Delete Document.
      *
-     * @param $id
+     * @param string $id
      *
      * @return array
      *
      * @throws Exception
      */
-    public function deleteDocument($id)
+    public function deleteDocument(string $id)
     {
         $data = $this->adapter->deleteDocument($id);
 
@@ -243,7 +243,7 @@ class Redis extends Adapter
      */
     public function lastModified()
     {
-        return;
+        return 0;
     }
 
     /**
@@ -259,7 +259,7 @@ class Redis extends Adapter
      *
      * @return Client
      */
-    protected function getRedis():Client
+    protected function getRedis(): Client
     {
         return $this->register->get('cache');
     }

@@ -24,8 +24,10 @@ class Storage
      * @param Device $device
      *
      * @throws Exception
+     *
+     * @return void
      */
-    public static function setDevice($name, Device $device)
+    public static function setDevice($name, Device $device): void
     {
         self::$devices[$name] = $device;
     }
@@ -104,7 +106,7 @@ class Storage
             ),
         );
 
-        $factor = floor((strlen($bytes) - 1) / 3);
+        $factor = (int)floor((strlen((string)$bytes) - 1) / 3);
 
         return sprintf("%.{$decimals}f%s", $bytes / pow($mod, $factor), $units[$system][$factor]);
     }
