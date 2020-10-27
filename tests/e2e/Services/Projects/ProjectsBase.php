@@ -6,5 +6,4 @@ use Tests\E2E\Client;
 
 trait ProjectsBase
 {
-    
 }

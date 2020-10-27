@@ -43,6 +43,5 @@ class FilesTest extends TestCase
         $this->assertNotEmpty(Files::getFileContents('/dist/scripts/app.js'));
         $this->assertNotEmpty(Files::getFileContents('/dist/styles/default-ltr.css'));
         $this->assertNotEmpty(Files::getFileContents('/dist/styles/default-rtl.css'));
-
     }
 }
