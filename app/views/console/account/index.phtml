@@ -300,8 +300,8 @@
                                     <span data-ls-if="({{log.clientName}})" data-ls-bind="{{log.clientName}} {{log.clientVersion}} on {{log.model}} {{log.osName}} {{log.osVersion}}"></span>
                                 </td>
                                 <td data-title="Location: ">
-                                    <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-if="{{log.countryCode}} !== '--'" data-ls-attrs="src={{env.API}}/avatars/flags/{{log.countryCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline" style="margin-top: 10px;" />
-                                    <span data-ls-bind="{{log.countryName}}"></span>
+                                    <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-attrs="src={{env.API}}/avatars/flags/{{log.countryCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline margin-end-small" />
+                                    <span data-ls-bind="{{log.geo.countryName}}"></span>
                                 </td>
                                 <td data-title="IP: "><span data-ls-bind="{{log.ip}}"></span></td>
                             </tr>

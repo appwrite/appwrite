@@ -237,7 +237,7 @@ docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t appwrite/
 To run tests manually, use the Appwrite Docker CLI from your terminal:
 
 ```bash
-docker exec appwrite test
+docker-compose exec appwrite test
 ```
 
 ## Benchmarking

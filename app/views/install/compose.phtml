@@ -270,9 +270,9 @@ services:
       - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=rootsecretpassword
-      - MYSQL_DATABASE=appwrite
-      - MYSQL_USER=user
-      - MYSQL_PASSWORD=password
+      - MYSQL_DATABASE=${_APP_DB_SCHEMA}
+      - MYSQL_USER=${_APP_DB_USER}
+      - MYSQL_PASSWORD=${_APP_DB_PASS}
     command: 'mysqld --innodb-flush-method=fsync'
 
   smtp:
@@ -295,7 +295,7 @@ services:
       - appwrite-redis:/data:rw
 
   clamav:
-    image: appwrite/clamav:1.0.12
+    image: appwrite/clamav:1.2.0
     container_name: appwrite-clamav
     restart: unless-stopped
     networks:

@@ -14,7 +14,8 @@ $callbacks = [
     '0.4.0' => function() {
         Console::log('I got nothing to do.');
     },
-    '0.5.0' => function(Document $project, $projectDB) use ($register) {
+
+    '0.5.0' => function($project) use ($register, $projectDB) {
         $db = $register->get('db');
 
         Console::log('Migrating project: '.$project->getAttribute('name').' ('.$project->getId().')');

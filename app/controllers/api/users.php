@@ -163,6 +163,7 @@ App::get('/v1/users/:userId/sessions')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Utopia\Locale\Locale $locale */
+        /** @var MaxMind\Db\Reader $geodb */
 
         $user = $projectDB->getDocument($userId);
 
@@ -184,7 +185,34 @@ App::get('/v1/users/:userId/sessions')
                 : $locale->getText('locale.country.unknown'));
             $token->setAttribute('current', false);
 
-            $sessions[] = $token;
+            $sessions[$index] = [
+                '$id' => $token->getId(),
+                'OS' => $dd->getOs(),
+                'client' => $dd->getClient(),
+                'device' => $dd->getDevice(),
+                'brand' => $dd->getBrand(),
+                'model' => $dd->getModel(),
+                'ip' => $token->getAttribute('ip', ''),
+                'geo' => [],
+            ];
+
+            try {
+                $record = $geodb->get($token->getAttribute('ip', ''));
+
+                if ($record) {
+                    $sessions[$index]['geo']['isoCode'] = \strtolower($record['country']['iso_code']);
+                    $sessions[$index]['geo']['country'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
+                } else {
+                    $sessions[$index]['geo']['isoCode'] = '--';
+                    $sessions[$index]['geo']['country'] = $locale->getText('locale.country.unknown');
+                }
+
+            } catch (\Exception $e) {
+                $sessions[$index]['geo']['isoCode'] = '--';
+                $sessions[$index]['geo']['country'] = $locale->getText('locale.country.unknown');
+            }
+
+            ++$index;
         }
 
         $response->dynamic(new Document([
@@ -208,7 +236,7 @@ App::get('/v1/users/:userId/logs')
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Utopia\Locale\Locale $locale */
-        /** @var GeoIp2\Database\Reader $geodb */
+        /** @var MaxMind\Db\Reader $geodb */
         
         $user = $projectDB->getDocument($userId);
 
@@ -285,9 +313,17 @@ App::get('/v1/users/:userId/logs')
             ]);
 
             try {
-                $record = $geodb->country($log['ip']);
-                $output[$i]->setAttribute('countryCode', \strtolower($record->country->isoCode));
-                $output[$i]->setAttribute('countryName', (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : $locale->getText('locale.country.unknown'));
+                $record = $geodb->get($log['ip']);
+
+                if(isset($record)){
+                    $output[$i]['geo']['isoCode'] = \strtolower($record['country']['iso_code']);
+                    $output[$i]['geo']['country'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
+                    }
+                else{
+                    $output[$i]['geo']['isoCode'] = '--';
+                    $output[$i]['geo']['country'] = $locale->getText('locale.country.unknown');
+                }
+
             } catch (\Exception $e) {
                 $output[$i]->setAttribute('countryCode', '--');
                 $output[$i]->setAttribute('countryName', $locale->getText('locale.country.unknown'));
