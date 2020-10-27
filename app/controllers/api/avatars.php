@@ -363,11 +363,12 @@ App::get('/v1/avatars/qr')
         /** @var Utopia\Response $response */
 
         $download = ($download === '1' || $download === 'true' || $download === 1 || $download === true);
-        $qropts = new QROptions([
-            'quietzone'         => $size,
-            'outputType'        => QRCode::OUTPUT_IMAGICK
+        $options = new QROptions([
+            'quietzone' => $size,
+            'outputType' => QRCode::OUTPUT_IMAGICK
         ]);
-        $qrcode = new QRCode($qropts);
+
+        $qrcode = new QRCode($options);
 
         if ($download) {
             $response->addHeader('Content-Disposition', 'attachment; filename="qr.png"');
