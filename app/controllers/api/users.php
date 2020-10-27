@@ -286,8 +286,8 @@ App::get('/v1/users/:userId/logs')
 
             $record = $geodb->get($log['ip']);
 
-            if($record){
-                $output[$i]['countryCode'] = \strtolower($record['country']['iso_code']);
+            if ($record) {
+                $output[$i]['countryCode'] = (isset($countries[$record['country']['iso_code']])) ? \strtolower($record['country']['iso_code']) : '--';
                 $output[$i]['countryName'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
             } else {
                 $output[$i]['countryCode'] = '--';

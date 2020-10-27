@@ -760,11 +760,11 @@ App::get('/v1/account/logs')
             $record = $geodb->get($log['ip']);
 
             if ($record) {
-                $output[$i]['countryCode'] = \strtolower($record['country']['iso_code']);
-                $output[$i]['countryCode'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
+                $output[$i]['countryCode'] = (isset($countries[$record['country']['iso_code']])) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
             } else {
                 $output[$i]['countryCode'] = '--';
-                $output[$i]['countryCode'] = $locale->getText('locale.country.unknown');
+                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
             }
 
         }
