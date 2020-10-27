@@ -138,7 +138,7 @@ App::post('/v1/account/sessions')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Utopia\Locale\Locale $locale */
-        /** @var GeoIp2\Database\Reader $geodb */
+        /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
 
         $protocol = $request->getProtocol();
@@ -203,10 +203,13 @@ App::post('/v1/account/sessions')
         ]);
 
         try {
-            $record = $geodb->country($request->getIP());
-            $session
-                ->setAttribute('countryCode', \strtolower($record->country->isoCode))
-            ;
+            $record = $geodb->get($request->getIP());
+
+            if($record) {
+                $session
+                    ->setAttribute('countryCode', \strtolower($record['country']['iso_code']))
+                ;
+            }
         } catch (\Exception $e) {
             $session
                 ->setAttribute('countryCode', '--')
@@ -375,7 +378,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var GeoIp2\Database\Reader $geodb */
+        /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
         
         $protocol = $request->getProtocol();
@@ -540,10 +543,13 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         ]);
 
         try {
-            $record = $geodb->country($request->getIP());
-            $session
-                ->setAttribute('countryCode', \strtolower($record->country->isoCode))
-            ;
+            $record = $geodb->get($request->getIP());
+
+            if ($record) {
+                $session
+                    ->setAttribute('countryCode', \strtolower($record['country']['iso_code']))
+                ;
+            }
         } catch (\Exception $e) {
             $session
                 ->setAttribute('countryCode', '--')

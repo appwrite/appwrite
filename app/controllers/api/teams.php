@@ -468,7 +468,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var GeoIp2\Database\Reader $geodb */
+        /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
 
         $protocol = $request->getProtocol();
@@ -570,10 +570,13 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
         ]);
 
         try {
-            $record = $geodb->country($request->getIP());
-            $session
-                ->setAttribute('countryCode', \strtolower($record->country->isoCode))
-            ;
+            $record = $geodb->get($request->getIP());
+
+            if ($record) {
+                $session
+                    ->setAttribute('countryCode', \strtolower($record['country']['iso_code']))
+                ;
+            }
         } catch (\Exception $e) {
             $session
                 ->setAttribute('countryCode', '--')
