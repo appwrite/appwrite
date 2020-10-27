@@ -202,15 +202,13 @@ App::post('/v1/account/sessions')
             'deviceModel' => $dd->getModel(),
         ]);
 
-        try {
-            $record = $geodb->get($request->getIP());
+        $record = $geodb->get($request->getIP());
 
-            if($record) {
-                $session
-                    ->setAttribute('countryCode', \strtolower($record['country']['iso_code']))
-                ;
-            }
-        } catch (\Exception $e) {
+        if($record) {
+            $session
+                ->setAttribute('countryCode', \strtolower($record['country']['iso_code']))
+            ;
+        } else {
             $session
                 ->setAttribute('countryCode', '--')
             ;
@@ -542,15 +540,13 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             'deviceModel' => $dd->getModel(),
         ]);
 
-        try {
-            $record = $geodb->get($request->getIP());
+        $record = $geodb->get($request->getIP());
 
-            if ($record) {
-                $session
-                    ->setAttribute('countryCode', \strtolower($record['country']['iso_code']))
-                ;
-            }
-        } catch (\Exception $e) {
+        if($record) {
+            $session
+                ->setAttribute('countryCode', \strtolower($record['country']['iso_code']))
+            ;
+        } else {
             $session
                 ->setAttribute('countryCode', '--')
             ;
@@ -761,20 +757,16 @@ App::get('/v1/account/logs')
                 'deviceModel' => $dd->getModel(),
             ]);
 
-            try {
-                $record = $geodb->get($log['ip']);
+            $record = $geodb->get($log['ip']);
 
-                if ($record) {
-                    $output[$i]['countryCode'] = \strtolower($record['country']['iso_code']);
-                    $output[$i]['countryCode'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
-                } else {
-                    $output[$i]['countryCode'] = '--';
-                    $output[$i]['countryCode'] = $locale->getText('locale.country.unknown');
-                }
-            } catch (\Exception $e) {
-                $output[$i]->setAttribute('countryCode', '--');
-                $output[$i]->setAttribute('countryName', $locale->getText('locale.country.unknown'));
+            if ($record) {
+                $output[$i]['countryCode'] = \strtolower($record['country']['iso_code']);
+                $output[$i]['countryCode'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
+            } else {
+                $output[$i]['countryCode'] = '--';
+                $output[$i]['countryCode'] = $locale->getText('locale.country.unknown');
             }
+
         }
 
         $response->dynamic(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);

@@ -569,15 +569,13 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
             'deviceModel' => $dd->getModel(),
         ]);
 
-        try {
-            $record = $geodb->get($request->getIP());
+        $record = $geodb->get($request->getIP());
 
-            if ($record) {
-                $session
-                    ->setAttribute('countryCode', \strtolower($record['country']['iso_code']))
-                ;
-            }
-        } catch (\Exception $e) {
+        if($record) {
+            $session
+                ->setAttribute('countryCode', \strtolower($record['country']['iso_code']))
+            ;
+        } else {
             $session
                 ->setAttribute('countryCode', '--')
             ;
