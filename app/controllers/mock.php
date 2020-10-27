@@ -270,10 +270,10 @@ App::get('/v1/mock/tests/general/oauth2')
     ->param('redirect_uri', '', new Host(['localhost']), 'OAuth2 Redirect URI.') // Important to deny an open redirect attack
     ->param('scope', '', new Text(100), 'OAuth2 scope list.')
     ->param('state', '', new Text(1024), 'OAuth2 state.')
-    ->action(function ($clientId, $redirectURI, $scope, $state, $response) {
+    ->action(function ($client_id, $redirect_uri, $scope, $state, $response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $response->redirect($redirectURI.'?'.\http_build_query(['code' => 'abcdef', 'state' => $state]));
+        $response->redirect($redirect_uri.'?'.\http_build_query(['code' => 'abcdef', 'state' => $state]));
     }, ['response']);
 
 App::get('/v1/mock/tests/general/oauth2/token')
@@ -286,14 +286,14 @@ App::get('/v1/mock/tests/general/oauth2/token')
     ->param('redirect_uri', '', new Host(['localhost']), 'OAuth2 Redirect URI.')
     ->param('client_secret', '', new Text(100), 'OAuth2 scope list.')
     ->param('code', '', new Text(100), 'OAuth2 state.')
-    ->action(function ($clientId, $redirectURI, $clientSecret, $code, $response) {
+    ->action(function ($client_id, $redirect_uri, $client_secret, $code, $response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        if ($clientId != '1') {
+        if ($client_id != '1') {
             throw new Exception('Invalid client ID');
         }
 
-        if ($clientSecret != '123456') {
+        if ($client_secret != '123456') {
             throw new Exception('Invalid client secret');
         }
 
