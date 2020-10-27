@@ -650,7 +650,7 @@ App::get('/v1/account/sessions')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getSessions')
     ->label('sdk.description', '/docs/references/account/get-sessions.md')
-    ->action(function ($response, $user, $locale) {
+    ->action(function ($response, $user, $locale, $geodb) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
@@ -713,7 +713,7 @@ App::get('/v1/account/sessions')
             'sum' => count($sessions),
             'sessions' => $sessions
         ]), Response::MODEL_SESSION_LIST);
-    }, ['response', 'user', 'locale']);
+    }, ['response', 'user', 'locale', 'geodb']);
 
 App::get('/v1/account/logs')
     ->desc('Get Account Logs')
