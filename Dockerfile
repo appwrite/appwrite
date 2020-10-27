@@ -20,7 +20,7 @@ ENV TZ=Asia/Tel_Aviv \
     PHP_IMAGICK_VERSION=master \
     PHP_YAML_VERSION=2.2.0b2 \
     PHP_MAXMINDDB_VERSION=v1.8.0
-    
+
 RUN \
   apk add --no-cache --virtual .deps \
   make \
