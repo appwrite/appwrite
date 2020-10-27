@@ -31,7 +31,7 @@ App::get('/v1/locale')
 
         $record = $geodb->get($ip);
 
-        if($record) {
+        if ($record) {
             $output['countryCode'] = $record['country']['iso_code'];
             $output['country'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
             $output['continent'] = (isset($continents[$record['continent']['code']])) ? $continents[$record['continent']['code']] : $locale->getText('locale.country.unknown');
