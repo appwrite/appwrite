@@ -135,12 +135,10 @@ RUN \
   brotli-dev \
   yaml-dev \
   imagemagick \
-  imagemagick-dev \
+  libmaxminddb-dev \
   certbot \
   docker-cli \
   docker-compose \
-  libmaxminddb \
-  libmaxminddb-dev \
   && docker-php-ext-install sockets opcache pdo_mysql \
   && apk del .deps \
   && rm -rf /var/cache/apk/*
