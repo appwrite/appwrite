@@ -243,6 +243,9 @@ services:
       - _APP_REDIS_PORT
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
+      - _APP_SMTP_SECURE
+      - _APP_SMTP_USERNAME
+      - _APP_SMTP_PASSWORD
 
   appwrite-schedule:
     image: appwrite/appwrite:<?php echo $version."\n"; ?>
