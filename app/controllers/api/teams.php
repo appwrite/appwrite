@@ -480,7 +480,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('secret', '', new Text(256), 'Secret key.')
     ->action(function ($teamId, $inviteId, $userId, $secret, $request, $response, $user, $projectDB, $audits) {
-        /** @var Utopia\Request $request */
+        /** @var Utopia\Swoole\Request $request */
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */

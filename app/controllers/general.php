@@ -3,7 +3,7 @@
 require_once __DIR__.'/../init.php';
 
 use Utopia\App;
-use Appwrite\Swoole\Request;
+use Utopia\Swoole\Request;
 use Appwrite\Utopia\Response;
 use Utopia\View;
 use Utopia\Exception;
@@ -22,7 +22,7 @@ Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
 App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $webhooks, $audits, $usage, $clients) {
-    /** @var Appwrite\Swoole\Request $request */
+    /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Database\Document $console */
     /** @var Appwrite\Database\Document $project */
@@ -246,7 +246,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
 
 App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audits, $usage, $deletes, $mode) {
     /** @var Utopia\App $utopia */
-    /** @var Utopia\Request $request */
+    /** @var Utopia\Swoole\Request $request */
     /** @var Utopia\Response $response */
     /** @var Appwrite\Database\Document $project */
     /** @var Appwrite\Event\Event $webhooks */
@@ -282,7 +282,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audi
 }, ['utopia', 'request', 'response', 'project', 'webhooks', 'audits', 'usage', 'deletes', 'mode']);
 
 App::options(function ($request, $response) {
-    /** @var Appwrite\Swoole\Request $request */
+    /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
 
     $origin = $request->getOrigin();
@@ -300,7 +300,7 @@ App::options(function ($request, $response) {
 App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     /** @var Exception $error */
     /** @var Utopia\App $utopia */
-    /** @var Utopia\Request $request */
+    /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\View $layout */
     /** @var Appwrite\Database\Document $project */
