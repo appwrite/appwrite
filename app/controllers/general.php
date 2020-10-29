@@ -184,7 +184,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
     }
 
-    if($user->getId()) {
+    if ($user->getId()) {
         Authorization::setRole('user:'.$user->getId());
     }
     

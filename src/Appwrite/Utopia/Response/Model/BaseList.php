@@ -22,7 +22,7 @@ class BaseList extends Model
         $this->name = $name;
         $this->type = $type;
 
-        if($paging) {
+        if ($paging) {
             $this->addRule('sum', [
                 'type' => 'integer',
                 'description' => 'Total sum of items in the list.',
