@@ -467,7 +467,7 @@ App::setResource('mode', function($request) {
     return $request->getParam('mode', $request->getHeader('x-appwrite-mode', 'default'));
 }, ['request']);
 
-App::setResource('geodb', function($request) {
+App::setResource('geodb', function($register) {
     /** @var Utopia\Swoole\Request $request */
     return $register->get('geodb');
 }, ['request']);
