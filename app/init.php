@@ -468,6 +468,6 @@ App::setResource('mode', function($request) {
 }, ['request']);
 
 App::setResource('geodb', function($register) {
-    /** @var Utopia\Swoole\Request $request */
+    /** @var Utopia\Registry\Registry $register */
     return $register->get('geodb');
-}, ['request']);
+}, ['register']);
