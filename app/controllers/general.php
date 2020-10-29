@@ -361,10 +361,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
         ->addHeader('Pragma', 'no-cache')
         ->setStatusCode($code)
     ;
-
-    $route = $utopia->match($request);
-    $template = ($route) ? $route->getLabel('error', null) : null;
-
+    
     if ($template) {
         $comp = new View($template);
 
