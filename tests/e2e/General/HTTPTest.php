@@ -47,4 +47,49 @@ class HTTPTest extends Scope
         $this->assertEquals(404, $response['body']['code']);
         $this->assertEquals('dev', $response['body']['version']);
     }
+
+    public function testManifest()
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/manifest.json', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+        ]), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('Appwrite', $response['body']['name']);
+        $this->assertEquals('Appwrite', $response['body']['short_name']);
+        $this->assertEquals('.', $response['body']['start_url']);
+        $this->assertEquals('.', $response['body']['start_url']);
+        $this->assertEquals('https://appwrite.io/', $response['body']['url']);
+        $this->assertEquals('standalone', $response['body']['display']);
+    }
+
+    public function testHumans()
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/humans.txt', array_merge([
+            'origin' => 'http://localhost',
+        ]), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString('# humanstxt.org/', $response['body']);
+    }
+
+    public function testRobots()
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/robots.txt', array_merge([
+            'origin' => 'http://localhost',
+        ]), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString('# robotstxt.org/', $response['body']);
+    }
 }
