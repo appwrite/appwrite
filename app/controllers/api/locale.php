@@ -12,7 +12,7 @@ App::get('/v1/locale')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/locale/get-locale.md')
     ->action(function ($request, $response, $locale, $geodb) {
-        /** @var Utopia\Request $request */
+        /** @var Utopia\Swoole\Request $request */
         /** @var Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */

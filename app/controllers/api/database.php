@@ -529,7 +529,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, new UID(), 'Document unique ID.')
     ->action(function ($collectionId, $documentId, $request, $response, $projectDB) {
-        /** @var Utopia\Request $request */
+        /** @var Utopia\Swoole\Request $request */
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
