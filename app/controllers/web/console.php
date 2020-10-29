@@ -19,7 +19,7 @@ App::init(function ($layout) {
 }, ['layout'], 'console');
 
 App::shutdown(function ($response, $layout) {
-    /** @var Utopia\Response $response */
+    /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\View $layout */
 
     $header = new View(__DIR__.'/../../views/console/comps/header.phtml');
@@ -213,7 +213,7 @@ App::get('/console/database/collection')
     ->label('scope', 'console')
     ->param('id', '', new UID(), 'Collection unique ID.')
     ->action(function ($id, $response, $layout, $projectDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\View $layout */
         /** @var Appwrite\Database\Database $projectDB */
 

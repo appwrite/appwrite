@@ -38,7 +38,7 @@ App::post('/v1/storage/files')
     ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->action(function ($file, $read, $write, $request, $response, $user, $projectDB, $webhooks, $audits, $usage) {
         /** @var Utopia\Swoole\Request $request */
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $webhooks */
@@ -172,7 +172,7 @@ App::get('/v1/storage/files')
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
         $results = $projectDB->getCollection([
@@ -204,7 +204,7 @@ App::get('/v1/storage/files/:fileId')
     ->label('sdk.description', '/docs/references/storage/get-file.md')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->action(function ($fileId, $response, $projectDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
         $file = $projectDB->getDocument($fileId);
@@ -234,7 +234,7 @@ App::get('/v1/storage/files/:fileId/preview')
     ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
     ->action(function ($fileId, $width, $height, $quality, $background, $output, $request, $response, $project, $projectDB) {
         /** @var Utopia\Swoole\Request $request */
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
 
@@ -354,7 +354,7 @@ App::get('/v1/storage/files/:fileId/download')
     ->label('sdk.methodType', 'location')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->action(function ($fileId, $response, $projectDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
         $file = $projectDB->getDocument($fileId);
@@ -410,7 +410,7 @@ App::get('/v1/storage/files/:fileId/view')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->param('as', '', new WhiteList(['pdf', /*'html',*/ 'text'], true), 'Choose a file format to convert your file to. Currently you can only convert word and pdf files to pdf or txt. This option is currently experimental only, use at your own risk.', true)
     ->action(function ($fileId, $as, $response, $projectDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
         $file  = $projectDB->getDocument($fileId);
@@ -483,7 +483,7 @@ App::put('/v1/storage/files/:fileId')
     ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->action(function ($fileId, $read, $write, $response, $projectDB, $webhooks, $audits) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $webhooks */
         /** @var Appwrite\Event\Event $audits */
@@ -529,7 +529,7 @@ App::delete('/v1/storage/files/:fileId')
     ->label('sdk.description', '/docs/references/storage/delete-file.md')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->action(function ($fileId, $response, $projectDB, $webhooks, $audits, $usage) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $webhooks */
         /** @var Appwrite\Event\Event $audits */

@@ -30,7 +30,7 @@ App::post('/v1/teams')
     ->param('name', null, new Text(128), 'Team name. Max length: 128 chars.')
     ->param('roles', ['owner'], new ArrayList(new Key()), 'Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.', true)
     ->action(function ($name, $roles, $response, $user, $projectDB, $mode) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var bool $mode */
@@ -99,7 +99,7 @@ App::get('/v1/teams')
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
         $results = $projectDB->getCollection([
@@ -127,7 +127,7 @@ App::get('/v1/teams/:teamId')
     ->label('sdk.description', '/docs/references/teams/get-team.md')
     ->param('teamId', '', new UID(), 'Team unique ID.')
     ->action(function ($teamId, $response, $projectDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
         $team = $projectDB->getDocument($teamId);
@@ -150,7 +150,7 @@ App::put('/v1/teams/:teamId')
     ->param('teamId', '', new UID(), 'Team unique ID.')
     ->param('name', null, new Text(128), 'Team name. Max length: 128 chars.')
     ->action(function ($teamId, $name, $response, $projectDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
         $team = $projectDB->getDocument($teamId);
@@ -180,7 +180,7 @@ App::delete('/v1/teams/:teamId')
     ->label('sdk.description', '/docs/references/teams/delete-team.md')
     ->param('teamId', '', new UID(), 'Team unique ID.')
     ->action(function ($teamId, $response, $projectDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
         $team = $projectDB->getDocument($teamId);
@@ -225,7 +225,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->param('roles', [], new ArrayList(new Key()), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add our own built-in confirm page
     ->action(function ($teamId, $email, $name, $roles, $url, $response, $project, $user, $projectDB, $locale, $audits, $mails, $mode) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
@@ -422,7 +422,7 @@ App::get('/v1/teams/:teamId/memberships')
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->action(function ($teamId, $search, $limit, $offset, $orderType, $response, $projectDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
         $team = $projectDB->getDocument($teamId);
@@ -481,7 +481,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
     ->param('secret', '', new Text(256), 'Secret key.')
     ->action(function ($teamId, $inviteId, $userId, $secret, $request, $response, $user, $projectDB, $audits) {
         /** @var Utopia\Swoole\Request $request */
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
@@ -608,7 +608,7 @@ App::delete('/v1/teams/:teamId/memberships/:inviteId')
     ->param('teamId', '', new UID(), 'Team unique ID.')
     ->param('inviteId', '', new UID(), 'Invite unique ID.')
     ->action(function ($teamId, $inviteId, $response, $projectDB, $audits) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
 
