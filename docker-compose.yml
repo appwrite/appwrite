@@ -287,7 +287,7 @@ services:
       - _APP_REDIS_PORT
 
   mariadb:
-    image: appwrite/mariadb:1.0.3 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: appwrite/mariadb:1.1.0 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     restart: unless-stopped
     networks:
@@ -301,15 +301,24 @@ services:
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
-    command: 'mysqld --innodb-flush-method=fsync'
+    command: 'mysqld --innodb-flush-method=fsync' # add ' --query_cache_size=0' for DB tests
     # command: mv /var/lib/mysql/ib_logfile0 /var/lib/mysql/ib_logfile0.bu && mv /var/lib/mysql/ib_logfile1 /var/lib/mysql/ib_logfile1.bu
 
-  maildev:
+  maildev: # used mainly for dev tests
     image: djfarrelly/maildev
     container_name: appwrite-maildev
     restart: unless-stopped
     ports:
       - '1080:80'
+    networks:
+      - appwrite
+
+  request-catcher: # used mainly for dev tests
+    image: smarterdm/http-request-catcher
+    container_name: appwrite-request-catcher
+    restart: unless-stopped
+    ports:
+      - '5000:5000'
     networks:
       - appwrite
 
