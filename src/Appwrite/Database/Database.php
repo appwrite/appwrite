@@ -158,7 +158,7 @@ class Database
         $results = $this->adapter->getCollection($options);
 
         foreach ($results as &$node) {
-            $node = new Document($node);
+            $node = $this->decode(new Document($node));
         }
 
         return $results;
@@ -317,13 +317,19 @@ class Database
             throw new AuthorizationException($validator->getDescription()); // var_dump($validator->getDescription()); return false;
         }
 
+        $new = $this->encode($new);
+
         $validator = new Structure($this);
 
         if (!$validator->isValid($new)) { // Make sure updated structure still apply collection rules (if any)
             throw new StructureException($validator->getDescription()); // var_dump($validator->getDescription()); return false;
         }
 
-        return new Document($this->adapter->updateDocument($data));
+        $new = new Document($this->adapter->updateDocument($new->getArrayCopy()));
+
+        $new = $this->decode($new);
+
+        return $new;
     }
 
     /**

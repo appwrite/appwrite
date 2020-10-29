@@ -37,7 +37,7 @@
                         <div class="margin-bottom-tiny text-one-liner">
                             <span data-ls-attrs="title={{task.name}} ({{task.failures}} errors)" data-ls-bind="{{task.name}}"></span>
 
-                            <span data-ls-if="false === {{task.security}}" data-debug="1">
+                            <span data-ls-if="false === {{task.security}}">
                                 &nbsp; <span class="text-danger">SSL/TLS Disabled</span>
                             </span>
                             <span data-ls-if="0 !== {{task.failures}}">

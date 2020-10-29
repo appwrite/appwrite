@@ -501,7 +501,7 @@ $maxCells = 10;
 <script type="text/html" id="template-validation-document-array-true">
     <label data-ls-attrs="for=rule-list-{{rule.$id}}" class="margin-bottom">Allowed Collections</label>
 
-    <div data-ls-loop="project-collections.collections" data-ls-as="project" data-ls-key="$index2" class="tiles cell-3 margin-bottom-negative" style="visibility: hidden">
+    <div data-ls-loop="project-collections.collections" data-ls-as="project" data-ls-key="$index2" class="tiles cell-3 margin-bottom-negative">
         <div class="margin-bottom" data-ls-if="{{project.$id}} != {{router.params.id}}">
             <input type="checkbox" name="list" data-ls-attrs="value={{project.$id}}" data-ls-bind="{{rule.list}}" /> <span data-ls-bind="{{project.name}}"></span>
         </div>
@@ -511,7 +511,7 @@ $maxCells = 10;
 <script type="text/html" id="template-validation-document-array-false">
     <label data-ls-attrs="for=rule-list-{{rule.$id}}" class="margin-bottom">Allowed Collection</label>
 
-    <div data-ls-loop="project-collections.collections" data-ls-as="project" data-ls-key="$index2" class="tiles cell-3 margin-bottom-negative" style="visibility: hidden">
+    <div data-ls-loop="project-collections.collections" data-ls-as="project" data-ls-key="$index2" class="tiles cell-3 margin-bottom-negative">
         <div class="margin-bottom" data-ls-if="{{project.$id}} != {{router.params.id}}">
             <input type="radio" name="list" data-ls-attrs="value={{project.$id}}" data-ls-bind="{{rule.list|firstElement}}" data-cast-to="array" required /> <span data-ls-bind="{{project.name}}"></span>
         </div>

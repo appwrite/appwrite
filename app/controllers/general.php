@@ -3,7 +3,7 @@
 require_once __DIR__.'/../init.php';
 
 use Utopia\App;
-use Appwrite\Swoole\Request;
+use Utopia\Swoole\Request;
 use Appwrite\Utopia\Response;
 use Utopia\View;
 use Utopia\Exception;
@@ -16,13 +16,14 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Storage\Device\Local;
 use Appwrite\Storage\Storage;
+use Utopia\CLI\Console;
 
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
 App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $webhooks, $audits, $usage, $clients) {
-    /** @var Appwrite\Swoole\Request $request */
+    /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Database\Document $console */
     /** @var Appwrite\Database\Document $project */
@@ -183,7 +184,10 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
     }
 
-    Authorization::setRole('user:'.$user->getId());
+    if($user->getId()) {
+        Authorization::setRole('user:'.$user->getId());
+    }
+    
     Authorization::setRole('role:'.$role);
 
     \array_map(function ($node) {
@@ -246,8 +250,8 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
 
 App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audits, $usage, $deletes, $mode) {
     /** @var Utopia\App $utopia */
-    /** @var Utopia\Request $request */
-    /** @var Utopia\Response $response */
+    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Database\Document $project */
     /** @var Appwrite\Event\Event $webhooks */
     /** @var Appwrite\Event\Event $audits */
@@ -282,7 +286,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audi
 }, ['utopia', 'request', 'response', 'project', 'webhooks', 'audits', 'usage', 'deletes', 'mode']);
 
 App::options(function ($request, $response) {
-    /** @var Appwrite\Swoole\Request $request */
+    /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
 
     $origin = $request->getOrigin();
@@ -300,16 +304,21 @@ App::options(function ($request, $response) {
 App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     /** @var Exception $error */
     /** @var Utopia\App $utopia */
-    /** @var Utopia\Request $request */
+    /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\View $layout */
     /** @var Appwrite\Database\Document $project */
 
+    $route = $utopia->match($request);
+    $template = ($route) ? $route->getLabel('error', null) : null;
+
     if (php_sapi_name() === 'cli') {
-        var_dump(get_class($error));
-        var_dump($error->getMessage());
-        var_dump($error->getFile());
-        var_dump($error->getLine());
+        Console::error('[Error] Method: '.$route->getMethod());
+        Console::error('[Error] URL: '.$route->getURL());
+        Console::error('[Error] Type: '.get_class($error));
+        Console::error('[Error] Message: '.$error->getMessage());
+        Console::error('[Error] File: '.$error->getFile());
+        Console::error('[Error] Line: '.$error->getLine());
     }
 
     $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
@@ -352,10 +361,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
         ->addHeader('Pragma', 'no-cache')
         ->setStatusCode($code)
     ;
-
-    $route = $utopia->match($request);
-    $template = ($route) ? $route->getLabel('error', null) : null;
-
+    
     if ($template) {
         $comp = new View($template);
 
@@ -386,7 +392,7 @@ App::get('/manifest.json')
     ->label('scope', 'public')
     ->label('docs', false)
     ->action(function ($response) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $response->json([
             'name' => APP_NAME,
@@ -412,7 +418,7 @@ App::get('/robots.txt')
     ->label('scope', 'public')
     ->label('docs', false)
     ->action(function ($response) {
-        $template = new View(__DIR__.'/views/general/robots.phtml');
+        $template = new View(__DIR__.'/../views/general/robots.phtml');
         $response->text($template->render(false));
     }, ['response']);
 
@@ -421,7 +427,7 @@ App::get('/humans.txt')
     ->label('scope', 'public')
     ->label('docs', false)
     ->action(function ($response) {
-        $template = new View(__DIR__.'/views/general/humans.phtml');
+        $template = new View(__DIR__.'/../views/general/humans.phtml');
         $response->text($template->render(false));
     }, ['response']);
 

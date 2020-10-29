@@ -416,7 +416,7 @@ App::post('/v1/functions/:functionId/executions')
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('async', 1, new Range(0, 1), 'Execute code asynchronously. Pass 1 for true, 0 for false. Default value is 1.', true)
     ->action(function ($functionId, $async, $response, $project, $projectDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
 
