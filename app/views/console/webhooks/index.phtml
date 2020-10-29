@@ -135,7 +135,7 @@ $events = array_keys($this->getParam('events', []));
                 </form>
 
                 <span data-ls-bind="{{webhook.name}}"></span> &nbsp; (<span data-ls-bind="{{webhook.events.length}}"></span> events)
-                <span data-ls-if="false === {{webhook.security}}" data-debug="1">
+                <span data-ls-if="false === {{webhook.security}}">
                     &nbsp; <small class="text-danger">(SSL/TLS Disabled)</small>
                 </span>
                 <div class="margin-top-tiny">
