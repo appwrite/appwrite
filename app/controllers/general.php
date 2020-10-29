@@ -413,7 +413,7 @@ App::get('/robots.txt')
     ->label('scope', 'public')
     ->label('docs', false)
     ->action(function ($response) {
-        $template = new View(__DIR__.'/views/general/robots.phtml');
+        $template = new View(__DIR__.'/../views/general/robots.phtml');
         $response->text($template->render(false));
     }, ['response']);
 
@@ -422,7 +422,7 @@ App::get('/humans.txt')
     ->label('scope', 'public')
     ->label('docs', false)
     ->action(function ($response) {
-        $template = new View(__DIR__.'/views/general/humans.phtml');
+        $template = new View(__DIR__.'/../views/general/humans.phtml');
         $response->text($template->render(false));
     }, ['response']);
 
