@@ -16,6 +16,7 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Storage\Device\Local;
 use Appwrite\Storage\Storage;
+use Utopia\CLI\Console;
 
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
@@ -308,11 +309,16 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     /** @var Utopia\View $layout */
     /** @var Appwrite\Database\Document $project */
 
+    $route = $utopia->match($request);
+    $template = ($route) ? $route->getLabel('error', null) : null;
+
     if(php_sapi_name() === 'cli') {
-        var_dump(get_class($error));
-        var_dump($error->getMessage());
-        var_dump($error->getFile());
-        var_dump($error->getLine());
+        Console::error('[Error] Method: '.$route->getMethod());
+        Console::error('[Error] URL: '.$route->getURL());
+        Console::error('[Error] Type: '.get_class($error));
+        Console::error('[Error] Message: '.$error->getMessage());
+        Console::error('[Error] File: '.$error->getFile());
+        Console::error('[Error] Line: '.$error->getLine());
     }
 
     $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
