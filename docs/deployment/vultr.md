@@ -6,7 +6,7 @@
 
 ### DEPLOYMENT
 
-- Login to dashboard, Go to *Products* section and select specs and region of your choice (Make sure your VPS has atleast 1 IPv4)
+- Login to dashboard, Go to *Products* section and select specs and region of your choice (Make sure your VPS has atleast 1 IPv4).
 - You can select *Additional Features* according to your requirements.
 - Open new tab, Navigate to *Firewall* tab, create new rules to allow port **TCP port 80 and 443** for both IPv4 and IPv6. Set source value to *anywhere* for port to be accessible publicly.
 - Select the firewall group created in previous step from dropdown while creating server instance.
