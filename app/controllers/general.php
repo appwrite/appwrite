@@ -22,7 +22,7 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $webhooks, $audits, $usage, $clients) {
+App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $webhooks, $audits, $usage, $deletes, $clients) {
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Database\Document $console */
@@ -32,6 +32,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     /** @var Appwrite\Event\Event $webhooks */
     /** @var Appwrite\Event\Event $audits */
     /** @var Appwrite\Event\Event $usage */
+    /** @var Appwrite\Event\Event $deletes */
     /** @var bool $mode */
     /** @var array $clients */
     
@@ -187,7 +188,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     if ($user->getId()) {
         Authorization::setRole('user:'.$user->getId());
     }
-    
+
     Authorization::setRole('role:'.$role);
 
     \array_map(function ($node) {
@@ -223,7 +224,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
      */
     $webhooks
         ->setParam('projectId', $project->getId())
-        ->setParam('event', $route->getLabel('webhook', ''))
+        ->setParam('event', $route->getLabel('event', ''))
         ->setParam('payload', [])
     ;
 
@@ -246,7 +247,11 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         ->setParam('networkResponseSize', 0)
         ->setParam('storage', 0)
     ;
-}, ['utopia', 'request', 'response', 'console', 'project', 'user', 'locale', 'webhooks', 'audits', 'usage', 'clients']);
+    
+    $deletes
+        ->setParam('projectId', $project->getId())
+    ;
+}, ['utopia', 'request', 'response', 'console', 'project', 'user', 'locale', 'webhooks', 'audits', 'usage', 'deletes', 'clients']);
 
 App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audits, $usage, $deletes, $mode) {
     /** @var Utopia\App $utopia */
@@ -260,6 +265,10 @@ App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audi
     /** @var bool $mode */
 
     if (!empty($webhooks->getParam('event'))) {
+        if(empty($webhooks->getParam('payload'))) {
+            $webhooks->setParam('payload', $response->getPayload());
+        }
+
         $webhooks->trigger();
     }
     
