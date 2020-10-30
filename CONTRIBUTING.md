@@ -120,7 +120,6 @@ Appwrite's current structure is a combination of both [Monolithic](https://en.wi
 │       ├── Preloader
 │       ├── Resize
 │       ├── Storage
-│       ├── Swoole
 │       ├── Task
 │       ├── Template
 │       ├── URL
