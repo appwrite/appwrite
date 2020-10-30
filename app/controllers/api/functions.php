@@ -489,7 +489,7 @@ App::get('/v1/functions/:functionId/tags/:tagId')
 
         $tag = $projectDB->getDocument($tagId);
 
-        if($tag->getAttribute('functionId') !== $function->getId()) {
+        if ($tag->getAttribute('functionId') !== $function->getId()) {
             throw new Exception('Tag not found', 404);
         }
 
@@ -519,7 +519,7 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
         
         $tag = $projectDB->getDocument($tagId);
 
-        if($tag->getAttribute('functionId') !== $function->getId()) {
+        if ($tag->getAttribute('functionId') !== $function->getId()) {
             throw new Exception('Tag not found', 404);
         }
 
@@ -575,7 +575,7 @@ App::post('/v1/functions/:functionId/executions')
 
         $tag = $projectDB->getDocument($function->getAttribute('tag'));
 
-        if($tag->getAttribute('functionId') !== $function->getId()) {
+        if ($tag->getAttribute('functionId') !== $function->getId()) {
             throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
         }
 
@@ -673,7 +673,7 @@ App::get('/v1/functions/:functionId/executions/:executionId')
 
         $execution = $projectDB->getDocument($executionId);
 
-        if($execution->getAttribute('functionId') !== $function->getId()) {
+        if ($execution->getAttribute('functionId') !== $function->getId()) {
             throw new Exception('Execution not found', 404);
         }
 

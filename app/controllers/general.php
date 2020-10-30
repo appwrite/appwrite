@@ -47,7 +47,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
 
     $route = $utopia->match($request);
 
-    if(!empty($route->getLabel('sdk.platform', [])) && empty($project->getId()) && ($route->getLabel('scope', '') !== 'public')) {
+    if (!empty($route->getLabel('sdk.platform', [])) && empty($project->getId()) && ($route->getLabel('scope', '') !== 'public')) {
         throw new Exception('Missing or unknown project ID', 400);
     }
 
@@ -102,8 +102,8 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
      * @see https://www.owasp.org/index.php/List_of_useful_HTTP_headers
      */
     if (App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
-        if($request->getProtocol() !== 'https') {
-           return $response->redirect('https://'.$request->getHostname().$request->getURI());
+        if ($request->getProtocol() !== 'https') {
+            return $response->redirect('https://'.$request->getHostname().$request->getURI());
         }
 
         $response->addHeader('Strict-Transport-Security', 'max-age='.(60 * 60 * 24 * 126)); // 126 days
@@ -129,11 +129,11 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     $origin = $request->getOrigin($request->getReferer(''));
     $originValidator = new Origin(\array_merge($project->getAttribute('platforms', []), $console->getAttribute('platforms', [])));
 
-    if(!$originValidator->isValid($origin)
+    if (!$originValidator->isValid($origin)
         && \in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
         && $route->getLabel('origin', false) !== '*'
         && empty($request->getHeader('x-appwrite-key', ''))) {
-            throw new Exception($originValidator->getDescription(), 403);
+        throw new Exception($originValidator->getDescription(), 403);
     }
     
     /*
@@ -186,7 +186,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
     }
 
-    if($user->getId()) {
+    if ($user->getId()) {
         Authorization::setRole('user:'.$user->getId());
     }
 
@@ -301,7 +301,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audi
     
     $route = $utopia->match($request);
     
-    if($project->getId()
+    if ($project->getId()
         && $mode !== APP_MODE_ADMIN
         && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage and admin mode
         
@@ -340,7 +340,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     $route = $utopia->match($request);
     $template = ($route) ? $route->getLabel('error', null) : null;
 
-    if(php_sapi_name() === 'cli') {
+    if (php_sapi_name() === 'cli') {
         Console::error('[Error] Method: '.$route->getMethod());
         Console::error('[Error] URL: '.$route->getURL());
         Console::error('[Error] Type: '.get_class($error));
@@ -413,7 +413,6 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
 
     $response->dynamic(new Document($output),
         $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_LOCALE);
-        
 }, ['error', 'utopia', 'request', 'response', 'layout', 'project']);
 
 App::get('/manifest.json')
@@ -469,25 +468,25 @@ App::get('/.well-known/acme-challenge')
         $path = \str_replace('/.well-known/acme-challenge/', '', $request->getParam('q'));
         $absolute = \realpath($base.'/.well-known/acme-challenge/'.$path);
 
-        if(!$base) {
+        if (!$base) {
             throw new Exception('Storage error', 500);
         }
 
-        if(!$absolute) {
+        if (!$absolute) {
             throw new Exception('Unknown path', 404);
         }
 
-        if(!\substr($absolute, 0, \strlen($base)) === $base) {
+        if (!\substr($absolute, 0, \strlen($base)) === $base) {
             throw new Exception('Invalid path', 401);
         }
 
-        if(!\file_exists($absolute)) {
+        if (!\file_exists($absolute)) {
             throw new Exception('Unknown path', 404);
         }
 
         $content = @\file_get_contents($absolute);
 
-        if(!$content) {
+        if (!$content) {
             throw new Exception('Failed to get contents', 500);
         }
 
@@ -497,6 +496,6 @@ App::get('/.well-known/acme-challenge')
 include_once __DIR__ . '/shared/api.php';
 include_once __DIR__ . '/shared/web.php';
 
-foreach(Config::getParam('services', []) as $service) {
+foreach (Config::getParam('services', []) as $service) {
     include_once $service['controller'];
 }

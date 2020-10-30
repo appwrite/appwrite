@@ -13,7 +13,7 @@ class Storage
      *
      * @var array
      */
-    public static $devices = array();
+    public static $devices = [];
 
     /**
      * Set Device.

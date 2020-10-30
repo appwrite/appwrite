@@ -24,7 +24,7 @@ class FileName extends Validator
             return false;
         }
 
-        if(!is_string($name)) {
+        if (!is_string($name)) {
             return false;
         }
 

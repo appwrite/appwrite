@@ -37,7 +37,7 @@ abstract class Scope extends TestCase
         
         $emails = json_decode(file_get_contents('http://maildev/email'), true);
 
-        if($emails && is_array($emails)) {
+        if ($emails && is_array($emails)) {
             return end($emails);
         }
 
@@ -74,7 +74,7 @@ abstract class Scope extends TestCase
      */
     public function getRoot(): array
     {
-        if((self::$root)) {
+        if ((self::$root)) {
             return self::$root;
         }
 
@@ -125,7 +125,7 @@ abstract class Scope extends TestCase
      */
     public function getUser(): array
     {
-        if(isset(self::$user[$this->getProject()['$id']])) {
+        if (isset(self::$user[$this->getProject()['$id']])) {
             return self::$user[$this->getProject()['$id']];
         }
 

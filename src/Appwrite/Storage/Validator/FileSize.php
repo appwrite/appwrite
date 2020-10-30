@@ -35,7 +35,7 @@ class FileSize extends Validator
      */
     public function isValid($fileSize)
     {
-        if(!is_int($fileSize)) {
+        if (!is_int($fileSize)) {
             return false;
         }
         
