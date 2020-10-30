@@ -37,7 +37,7 @@ class UID extends Validator
             return false;
         }
         
-        if(mb_strlen($value) > 32) {
+        if (mb_strlen($value) > 32) {
             return false;
         }
 

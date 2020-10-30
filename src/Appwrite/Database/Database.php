@@ -458,7 +458,7 @@ class Database
             $filters = $rule->getAttribute('filter', null);
             $value = $document->getAttribute($key, null);
 
-            if(($value !== null) && is_array($filters)) {
+            if (($value !== null) && is_array($filters)) {
                 foreach ($filters as $filter) {
                     $value = $this->encodeAttribute($filter, $value);
                     $document->setAttribute($key, $value);
@@ -479,7 +479,7 @@ class Database
             $filters = $rule->getAttribute('filter', null);
             $value = $document->getAttribute($key, null);
 
-            if(($value !== null) && is_array($filters)) {
+            if (($value !== null) && is_array($filters)) {
                 foreach (array_reverse($filters) as $filter) {
                     $value = $this->decodeAttribute($filter, $value);
                     $document->setAttribute($key, $value);
@@ -498,7 +498,7 @@ class Database
      */
     static protected function encodeAttribute(string $name, $value)
     {
-        if(!isset(self::$filters[$name])) {
+        if (!isset(self::$filters[$name])) {
             throw new Exception('Filter not found');
         }
 
@@ -519,7 +519,7 @@ class Database
      */
     static protected function decodeAttribute(string $name, $value)
     {
-        if(!isset(self::$filters[$name])) {
+        if (!isset(self::$filters[$name])) {
             throw new Exception('Filter not found');
         }
 

@@ -18,7 +18,7 @@ class EnvTest extends TestCase
     {
         $data = @file_get_contents(__DIR__.'/../../resources/docker/.env');
 
-        if($data === false) {
+        if ($data === false) {
             throw new Exception('Failed to read compose file');
         }
 

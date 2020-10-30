@@ -16,7 +16,7 @@ trait ProjectCustom
      */
     public function getProject(): array
     {
-        if(!empty(self::$project)) {
+        if (!empty(self::$project)) {
             return self::$project;
         }
 

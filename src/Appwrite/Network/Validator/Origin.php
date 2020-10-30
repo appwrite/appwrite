@@ -99,7 +99,7 @@ class Origin extends Validator
      */
     public function isValid($origin)
     {
-        if(!is_string($origin)) {
+        if (!is_string($origin)) {
             return false;
         }
 
