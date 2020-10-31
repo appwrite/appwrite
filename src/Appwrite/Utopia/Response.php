@@ -35,6 +35,9 @@ use Appwrite\Utopia\Response\Model\Tag;
 use Appwrite\Utopia\Response\Model\Task;
 use Appwrite\Utopia\Response\Model\Webhook;
 
+/**
+ * @method public function setStatusCode(int $code = 200): Response
+ */
 class Response extends SwooleResponse
 {
     // General
@@ -215,14 +218,24 @@ class Response extends SwooleResponse
     /**
      * Validate response objects and outputs
      *  the response according to given format type
+     * 
+     * @param Document $document
+     * @param string $model
+     * 
+     * return void
      */
-    public function dynamic(Document $document, string $model)
+    public function dynamic(Document $document, string $model): void
     {
-        return $this->json($this->output($document, $model));
+        $this->json($this->output($document, $model));
     }
 
     /**
      * Generate valid response object from document data
+     * 
+     * @param Document $document
+     * @param string $model
+     * 
+     * return array
      */
     public function output(Document $document, string $model): array
     {

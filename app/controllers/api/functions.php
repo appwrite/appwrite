@@ -60,8 +60,10 @@ App::post('/v1/functions')
             throw new Exception('Failed saving function to DB', 500);
         }
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($function, Response::MODEL_FUNCTION);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($function, Response::MODEL_FUNCTION)
+        ;
     }, ['response', 'projectDB']);
 
 App::get('/v1/functions')
@@ -427,8 +429,10 @@ App::post('/v1/functions/:functionId/tags')
             ->setParam('storage', $tag->getAttribute('size', 0))
         ;
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($tag, Response::MODEL_TAG);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($tag, Response::MODEL_TAG)
+        ;
     }, ['request', 'response', 'projectDB', 'usage']);
 
 App::get('/v1/functions/:functionId/tags')
@@ -611,8 +615,10 @@ App::post('/v1/functions/:functionId/executions')
             'trigger' => 'http',
         ]);
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($execution, Response::MODEL_EXECUTION);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($execution, Response::MODEL_EXECUTION)
+        ;
     }, ['response', 'project', 'projectDB']);
 
 App::get('/v1/functions/:functionId/executions')

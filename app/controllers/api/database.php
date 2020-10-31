@@ -79,8 +79,10 @@ App::post('/v1/database/collections')
             ->setParam('data', $data->getArrayCopy())
         ;
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($data, Response::MODEL_COLLECTION);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($data, Response::MODEL_COLLECTION)
+        ;
     }, ['response', 'projectDB', 'audits']);
 
 App::get('/v1/database/collections')
@@ -357,9 +359,8 @@ App::post('/v1/database/collections/:collectionId/documents')
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($data, Response::MODEL_ANY)
         ;
-
-        $response->dynamic($data, Response::MODEL_ANY);
     }, ['response', 'projectDB', 'audits']);
 
 App::get('/v1/database/collections/:collectionId/documents')

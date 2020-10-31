@@ -66,8 +66,10 @@ App::post('/v1/users')
             throw new Exception('Account already exists', 409);
         }
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($user, Response::MODEL_USER);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($user, Response::MODEL_USER)
+        ;
     }, ['response', 'projectDB']);
 
 App::get('/v1/users')
