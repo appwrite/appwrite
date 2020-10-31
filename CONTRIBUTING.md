@@ -117,10 +117,8 @@ Appwrite's current structure is a combination of both [Monolithic](https://en.wi
 │       ├── Extend
 │       ├── Network
 │       ├── OpenSSL
-│       ├── Preloader
 │       ├── Resize
 │       ├── Storage
-│       ├── Swoole
 │       ├── Task
 │       ├── Template
 │       ├── URL
