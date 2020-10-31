@@ -7,8 +7,8 @@ use Utopia\Abuse\Adapters\TimeLimit;
 
 App::init(function ($utopia, $request, $response, $project, $user, $register) {
     /** @var Utopia\App $utopia */
-    /** @var Utopia\Request $request */
-    /** @var Utopia\Response $response */
+    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Database\Document $project */
     /** @var Appwrite\Database\Document $user */
     /** @var Utopia\Registry\Registry $register */

@@ -2,9 +2,9 @@
 
 require_once __DIR__.'/../vendor/autoload.php';
 
-use Appwrite\Swoole\Files;
-use Appwrite\Swoole\Request;
-use Appwrite\Swoole\Response;
+use Utopia\Swoole\Files;
+use Utopia\Swoole\Request;
+use Appwrite\Utopia\Response;
 use Swoole\Process;
 use Swoole\Http\Server;
 use Swoole\Http\Request as SwooleRequest;
@@ -23,7 +23,7 @@ sleep(2);
 
 $http = new Server("0.0.0.0", 80);
 
-$payloadSize = max(4000000 /* 4mb */, App::getEnv('_APP_STORAGE_LIMIT', 100000000));
+$payloadSize = max(4000000 /* 4mb */, App::getEnv('_APP_STORAGE_LIMIT', 10000000 /* 10mb */));
 
 $http
     ->set([
@@ -49,7 +49,7 @@ $http->on('AfterReload', function($serv, $workerId) {
 });
 
 $http->on('start', function (Server $http) use ($payloadSize) {
-    Console::success('Server started succefully (max payload is '.$payloadSize.' bytes)');
+    Console::success('Server started succefully (max payload is '.number_format($payloadSize).' bytes)');
 
     Console::info("Master pid {$http->master_pid}, manager pid {$http->manager_pid}");
 

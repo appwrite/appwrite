@@ -16,15 +16,14 @@ class Env
      */
     public function __construct(string $data)
     {
-
         $data = explode("\n", $data);
 
-        foreach($data as &$row) {
+        foreach ($data as &$row) {
             $row = explode('=', $row);
             $key = (isset($row[0])) ? trim($row[0]) : null;
             $value = (isset($row[1])) ? trim($row[1]) : null;
 
-            if($key) {
+            if ($key) {
                 $this->vars[$key] = $value;
             }
         }

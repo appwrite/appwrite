@@ -135,7 +135,7 @@ return [
     ],
     [
         'name' => '_APP_STORAGE_LIMIT',
-        'default' => '100000000',
+        'default' => '10000000',
         'required' => false,
         'question' => '',
     ],

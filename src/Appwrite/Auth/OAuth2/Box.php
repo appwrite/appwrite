@@ -9,9 +9,14 @@ use Appwrite\Auth\OAuth2;
 
 class Box extends OAuth2
 {
-
+    /**
+     * @var string
+     */
     private $endpoint = 'https://account.box.com/api/oauth2/';
 
+    /**
+     * @var string
+     */
     private $resourceEndpoint = 'https://api.box.com/2.0/';
 
     /**
@@ -19,6 +24,9 @@ class Box extends OAuth2
      */
     protected $user = [];
 
+    /**
+     * @var array
+     */
     protected $scopes = [
         'manage_app_users',    
     ];
@@ -148,5 +156,4 @@ class Box extends OAuth2
 
         return $this->user;
     }
-
 }

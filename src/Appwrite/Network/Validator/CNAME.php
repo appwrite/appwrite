@@ -36,7 +36,7 @@ class CNAME extends Validator
      */
     public function isValid($domain)
     {
-        if(!is_string($domain)) {
+        if (!is_string($domain)) {
             return false;
         }
 

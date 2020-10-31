@@ -243,6 +243,9 @@ services:
       - _APP_REDIS_PORT
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
+      - _APP_SMTP_SECURE
+      - _APP_SMTP_USERNAME
+      - _APP_SMTP_PASSWORD
 
   appwrite-schedule:
     image: appwrite/appwrite:<?php echo $version."\n"; ?>
@@ -259,7 +262,7 @@ services:
       - _APP_REDIS_PORT
 
   mariadb:
-    image: appwrite/mariadb:1.0.3 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: appwrite/mariadb:1.1.0 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     restart: unless-stopped
     networks:
