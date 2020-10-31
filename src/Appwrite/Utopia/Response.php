@@ -35,6 +35,9 @@ use Appwrite\Utopia\Response\Model\Tag;
 use Appwrite\Utopia\Response\Model\Task;
 use Appwrite\Utopia\Response\Model\Webhook;
 
+/**
+ * @method public function setStatusCode(int $code = 200): Response
+ */
 class Response extends SwooleResponse
 {
     // General
@@ -221,26 +224,9 @@ class Response extends SwooleResponse
      * 
      * return void
      */
-    public function dynamic(Document $document, string $model)
+    public function dynamic(Document $document, string $model): void
     {
-        return $this->json($this->output($document, $model));
-    }
-
-    /**
-     * (Mocking method for avoiding IDE errors, remove when possible)
-     * 
-     * Set status code
-     *
-     * Set HTTP response status code between available options. if status code is unknown an exception will be thrown
-     *
-     * @param int $code
-     * @return self
-     * @throws Exception
-     */
-    public function setStatusCode(int $code = 200): self
-    {
-        $this->setStatusCode($code);
-        return $this;
+        $this->json($this->output($document, $model));
     }
 
     /**
