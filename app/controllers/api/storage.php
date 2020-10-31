@@ -2,7 +2,6 @@
 
 use Utopia\App;
 use Utopia\Exception;
-use Utopia\Response;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Range;
@@ -12,6 +11,7 @@ use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Filesystem;
 use Appwrite\ClamAV\Network;
 use Appwrite\Database\Database;
+use Appwrite\Database\Document;
 use Appwrite\Database\Validator\UID;
 use Appwrite\Storage\Storage;
 use Appwrite\Storage\Validator\File;
@@ -20,13 +20,14 @@ use Appwrite\Storage\Validator\Upload;
 use Appwrite\Storage\Compression\Algorithms\GZIP;
 use Appwrite\Resize\Resize;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 
 App::post('/v1/storage/files')
     ->desc('Create File')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
-    ->label('webhook', 'storage.files.create')
+    ->label('event', 'storage.files.create')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'createFile')
@@ -36,12 +37,11 @@ App::post('/v1/storage/files')
     ->param('file', [], new File(), 'Binary file.', false)
     ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->action(function ($file, $read, $write, $request, $response, $user, $projectDB, $webhooks, $audits, $usage) {
-        /** @var Utopia\Request $request */
-        /** @var Utopia\Response $response */
+    ->action(function ($file, $read, $write, $request, $response, $user, $projectDB, $audits, $usage) {
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhooks */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $usage */
 
@@ -140,10 +140,6 @@ App::post('/v1/storage/files')
             throw new Exception('Failed saving file to DB', 500);
         }
 
-        $webhooks
-            ->setParam('payload', $file->getArrayCopy())
-        ;
-
         $audits
             ->setParam('event', 'storage.files.create')
             ->setParam('resource', 'storage/files/'.$file->getId())
@@ -155,9 +151,9 @@ App::post('/v1/storage/files')
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($file->getArrayCopy())
+            ->dynamic($file, Response::MODEL_FILE)
         ;
-    }, ['request', 'response', 'user', 'projectDB', 'webhooks', 'audits', 'usage']);
+    }, ['request', 'response', 'user', 'projectDB', 'audits', 'usage']);
 
 App::get('/v1/storage/files')
     ->desc('List Files')
@@ -172,7 +168,7 @@ App::get('/v1/storage/files')
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
         $results = $projectDB->getCollection([
@@ -187,11 +183,10 @@ App::get('/v1/storage/files')
             ],
         ]);
 
-        $results = \array_map(function ($value) { /* @var $value \Database\Document */
-            return $value->getArrayCopy(['$id', '$permissions', 'name', 'dateCreated', 'signature', 'mimeType', 'sizeOriginal']);
-        }, $results);
-
-        $response->json(['sum' => $projectDB->getSum(), 'files' => $results]);
+        $response->dynamic(new Document([
+            'sum' => $projectDB->getSum(),
+            'files' => $results
+        ]), Response::MODEL_FILE_LIST);
     }, ['response', 'projectDB']);
 
 App::get('/v1/storage/files/:fileId')
@@ -204,7 +199,7 @@ App::get('/v1/storage/files/:fileId')
     ->label('sdk.description', '/docs/references/storage/get-file.md')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->action(function ($fileId, $response, $projectDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
         $file = $projectDB->getDocument($fileId);
@@ -213,7 +208,7 @@ App::get('/v1/storage/files/:fileId')
             throw new Exception('File not found', 404);
         }
 
-        $response->json($file->getArrayCopy(['$id', '$permissions', 'name', 'dateCreated', 'signature', 'mimeType', 'sizeOriginal']));
+        $response->dynamic($file, Response::MODEL_FILE);
     }, ['response', 'projectDB']);
 
 App::get('/v1/storage/files/:fileId/preview')
@@ -233,8 +228,8 @@ App::get('/v1/storage/files/:fileId/preview')
     ->param('background', '', new HexColor(), 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
     ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
     ->action(function ($fileId, $width, $height, $quality, $background, $output, $request, $response, $project, $projectDB) {
-        /** @var Utopia\Request $request */
-        /** @var Utopia\Response $response */
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
 
@@ -354,7 +349,7 @@ App::get('/v1/storage/files/:fileId/download')
     ->label('sdk.methodType', 'location')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->action(function ($fileId, $response, $projectDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
         $file = $projectDB->getDocument($fileId);
@@ -410,7 +405,7 @@ App::get('/v1/storage/files/:fileId/view')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->param('as', '', new WhiteList(['pdf', /*'html',*/ 'text'], true), 'Choose a file format to convert your file to. Currently you can only convert word and pdf files to pdf or txt. This option is currently experimental only, use at your own risk.', true)
     ->action(function ($fileId, $as, $response, $projectDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
         $file  = $projectDB->getDocument($fileId);
@@ -474,7 +469,7 @@ App::put('/v1/storage/files/:fileId')
     ->desc('Update File')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
-    ->label('webhook', 'storage.files.update')
+    ->label('event', 'storage.files.update')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'updateFile')
@@ -482,10 +477,9 @@ App::put('/v1/storage/files/:fileId')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->action(function ($fileId, $read, $write, $response, $projectDB, $webhooks, $audits) {
-        /** @var Utopia\Response $response */
+    ->action(function ($fileId, $read, $write, $response, $projectDB, $audits) {
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhooks */
         /** @var Appwrite\Event\Event $audits */
 
         $file = $projectDB->getDocument($fileId);
@@ -506,30 +500,26 @@ App::put('/v1/storage/files/:fileId')
             throw new Exception('Failed saving file to DB', 500);
         }
 
-        $webhooks
-            ->setParam('payload', $file->getArrayCopy())
-        ;
-
         $audits
             ->setParam('event', 'storage.files.update')
             ->setParam('resource', 'storage/files/'.$file->getId())
         ;
 
-        $response->json($file->getArrayCopy());
+        $response->dynamic($file, Response::MODEL_FILE);
     }, ['response', 'projectDB', 'webhooks', 'audits']);
 
 App::delete('/v1/storage/files/:fileId')
     ->desc('Delete File')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
-    ->label('webhook', 'storage.files.delete')
+    ->label('event', 'storage.files.delete')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'deleteFile')
     ->label('sdk.description', '/docs/references/storage/delete-file.md')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->action(function ($fileId, $response, $projectDB, $webhooks, $audits, $usage) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $webhooks */
         /** @var Appwrite\Event\Event $audits */
@@ -548,11 +538,7 @@ App::delete('/v1/storage/files/:fileId')
                 throw new Exception('Failed to remove file from DB', 500);
             }
         }
-
-        $webhooks
-            ->setParam('payload', $file->getArrayCopy())
-        ;
-
+        
         $audits
             ->setParam('event', 'storage.files.delete')
             ->setParam('resource', 'storage/files/'.$file->getId())
@@ -560,6 +546,10 @@ App::delete('/v1/storage/files/:fileId')
 
         $usage
             ->setParam('storage', $file->getAttribute('size', 0) * -1)
+        ;
+
+        $webhooks
+            ->setParam('payload', $response->output($file, Response::MODEL_FILE))
         ;
 
         $response->noContent();
@@ -613,6 +603,5 @@ App::delete('/v1/storage/files/:fileId')
 //             //var_dump($antiVirus->version());
 //             //var_dump($antiVirus->fileScan('/storage/uploads/app-1/5/9/f/e/59fecaed49645.pdf'));
 
-//             //$response->json($antiVirus->continueScan($device->getRoot()));
 //         }
 //     );

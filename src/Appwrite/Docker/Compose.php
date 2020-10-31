@@ -48,7 +48,7 @@ class Compose
      */
     public function getService(string $name): Service
     {
-        if(!isset($this->compose['services'][$name])) {
+        if (!isset($this->compose['services'][$name])) {
             throw new Exception('Service not found');
         }
 

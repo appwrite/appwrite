@@ -219,7 +219,7 @@ class Document extends ArrayObject
     {
         $array = parent::getArrayCopy();
 
-        $output = array();
+        $output = [];
 
         foreach ($array as $key => &$value) {
             if (!empty($whitelist) && !\in_array($key, $whitelist)) { // Export only whitelisted fields
