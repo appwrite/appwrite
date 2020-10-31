@@ -149,8 +149,10 @@ App::post('/v1/storage/files')
             ->setParam('storage', $sizeActual)
         ;
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($file, Response::MODEL_FILE);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($file, Response::MODEL_FILE)
+        ;
     }, ['request', 'response', 'user', 'projectDB', 'audits', 'usage']);
 
 App::get('/v1/storage/files')

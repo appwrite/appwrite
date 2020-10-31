@@ -81,8 +81,10 @@ App::post('/v1/teams')
             }
         }
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($team, Response::MODEL_TEAM);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($team, Response::MODEL_TEAM)
+        ;
     }, ['response', 'user', 'projectDB', 'mode']);
 
 App::get('/v1/teams')
@@ -393,12 +395,13 @@ App::post('/v1/teams/:teamId/memberships')
             ->setParam('resource', 'teams/'.$teamId)
         ;
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-
-        $response->dynamic(new Document(\array_merge($membership->getArrayCopy(), [
-            'email' => $email,
-            'name' => $name,
-        ])), Response::MODEL_MEMBERSHIP);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic(new Document(\array_merge($membership->getArrayCopy(), [
+                'email' => $email,
+                'name' => $name,
+            ])), Response::MODEL_MEMBERSHIP)
+        ;
     }, ['response', 'project', 'user', 'projectDB', 'locale', 'audits', 'mails', 'mode']);
 
 App::get('/v1/teams/:teamId/memberships')
