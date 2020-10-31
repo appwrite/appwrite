@@ -215,6 +215,11 @@ class Response extends SwooleResponse
     /**
      * Validate response objects and outputs
      *  the response according to given format type
+     * 
+     * @param Document $document
+     * @param string $model
+     * 
+     * return void
      */
     public function dynamic(Document $document, string $model)
     {
@@ -222,7 +227,28 @@ class Response extends SwooleResponse
     }
 
     /**
+     * (Mocking method for avoiding IDE errors, remove when possible)
+     * 
+     * Set status code
+     *
+     * Set HTTP response status code between available options. if status code is unknown an exception will be thrown
+     *
+     * @param int $code
+     * @return self
+     * @throws Exception
+     */
+    public function setStatusCode(int $code = 200): self
+    {
+        return $this->setStatusCode($code);
+    }
+
+    /**
      * Generate valid response object from document data
+     * 
+     * @param Document $document
+     * @param string $model
+     * 
+     * return array
      */
     public function output(Document $document, string $model): array
     {

@@ -80,8 +80,10 @@ App::post('/v1/projects')
 
         $consoleDB->createNamespace($project->getId());
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($project, Response::MODEL_PROJECT);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($project, Response::MODEL_PROJECT)
+        ;
     }, ['response', 'consoleDB', 'projectDB']);
 
 App::get('/v1/projects')
@@ -503,8 +505,10 @@ App::post('/v1/projects/:projectId/webhooks')
             throw new Exception('Failed saving project to DB', 500);
         }
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($webhook, Response::MODEL_WEBHOOK);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($webhook, Response::MODEL_WEBHOOK)
+        ;
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId/webhooks')
@@ -682,8 +686,10 @@ App::post('/v1/projects/:projectId/keys')
             throw new Exception('Failed saving project to DB', 500);
         }
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($key, Response::MODEL_KEY);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($key, Response::MODEL_KEY)
+        ;
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId/keys')
@@ -875,8 +881,10 @@ App::post('/v1/projects/:projectId/tasks')
             ResqueScheduler::enqueueAt($next, 'v1-tasks', 'TasksV1', $task->getArrayCopy());
         }
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($task, Response::MODEL_TASK);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($task, Response::MODEL_TASK)
+        ;
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId/tasks')
@@ -1077,8 +1085,10 @@ App::post('/v1/projects/:projectId/platforms')
             throw new Exception('Failed saving project to DB', 500);
         }
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($platform, Response::MODEL_PLATFORM);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($platform, Response::MODEL_PLATFORM)
+        ;
     }, ['response', 'consoleDB']);
     
 App::get('/v1/projects/:projectId/platforms')
@@ -1267,8 +1277,10 @@ App::post('/v1/projects/:projectId/domains')
             throw new Exception('Failed saving project to DB', 500);
         }
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($domain, Response::MODEL_DOMAIN);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($domain, Response::MODEL_DOMAIN)
+        ;
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId/domains')

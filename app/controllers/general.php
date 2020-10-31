@@ -34,6 +34,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     /** @var Appwrite\Event\Event $usage */
     /** @var Appwrite\Event\Event $deletes */
     /** @var Appwrite\Event\Event $functions */
+
     /** @var bool $mode */
     /** @var array $clients */
     

@@ -116,8 +116,10 @@ App::post('/v1/account')
             ->setAttribute('roles', Authorization::getRoles())
         ;
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($user, Response::MODEL_USER);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($user, Response::MODEL_USER)
+        ;
     }, ['request', 'response', 'project', 'projectDB', 'audits']);
 
 App::post('/v1/account/sessions')
