@@ -5,17 +5,36 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-abstract class BaseList extends Model
+class BaseList extends Model
 {
-    public function __construct()
+    /**
+     * @var string
+     */
+    protected $name = '';
+    
+    /**
+     * @var string
+     */
+    protected $type = '';
+
+    public function __construct(string $name, string $type, string $key, string $model, bool $paging = true)
     {
-        $this
-            ->addRule('sum', [
+        $this->name = $name;
+        $this->type = $type;
+
+        if ($paging) {
+            $this->addRule('sum', [
                 'type' => 'integer',
                 'description' => 'Total sum of items in the list.',
                 'example' => '5',
-            ])
-        ;
+            ]);
+        }
+        $this->addRule($key, [
+            'type' => $model,
+            'description' => 'List of '.$key.'.',
+            'example' => [],
+            'array' => true,
+        ]);
     }
 
     /**
@@ -25,7 +44,7 @@ abstract class BaseList extends Model
      */
     public function getName():string
     {
-        return 'Base List';
+        return $this->name;
     }
 
     /**
@@ -35,6 +54,6 @@ abstract class BaseList extends Model
      */
     public function getType():string
     {
-        return Response::MODEL_BASE_LIST;
+        return $this->type;
     }
 }

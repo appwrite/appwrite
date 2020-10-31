@@ -352,7 +352,7 @@ App::get('/v1/functions/:functionId/tags/:tagId')
 
         $tag = $projectDB->getDocument($tagId);
 
-        if($tag->getAttribute('functionId') !== $function->getId()) {
+        if ($tag->getAttribute('functionId') !== $function->getId()) {
             throw new Exception('Tag not found', 404);
         }
 
@@ -382,7 +382,7 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
         
         $tag = $projectDB->getDocument($tagId);
 
-        if($tag->getAttribute('functionId') !== $function->getId()) {
+        if ($tag->getAttribute('functionId') !== $function->getId()) {
             throw new Exception('Tag not found', 404);
         }
 
@@ -416,7 +416,7 @@ App::post('/v1/functions/:functionId/executions')
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('async', 1, new Range(0, 1), 'Execute code asynchronously. Pass 1 for true, 0 for false. Default value is 1.', true)
     ->action(function ($functionId, $async, $response, $project, $projectDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
 
@@ -428,7 +428,7 @@ App::post('/v1/functions/:functionId/executions')
 
         $tag = $projectDB->getDocument($function->getAttribute('tag'));
 
-        if($tag->getAttribute('functionId') !== $function->getId()) {
+        if ($tag->getAttribute('functionId') !== $function->getId()) {
             throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
         }
 
@@ -455,7 +455,7 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception('Failed saving execution to DB', 500);
         }
         
-        if((bool)$async) {
+        if ((bool)$async) {
             // Issue a TLS certificate when domain is verified
             Resque::enqueue('v1-functions', 'FunctionsV1', [
                 'projectId' => $project->getId(),
@@ -527,7 +527,7 @@ App::get('/v1/functions/:functionId/executions/:executionId')
 
         $execution = $projectDB->getDocument($executionId);
 
-        if($execution->getAttribute('functionId') !== $function->getId()) {
+        if ($execution->getAttribute('functionId') !== $function->getId()) {
             throw new Exception('Execution not found', 404);
         }
 

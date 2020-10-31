@@ -15,7 +15,7 @@ App::get('/v1/health')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/health/get.md')
     ->action(function ($response) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $response->json(['status' => 'OK']);
     }, ['response']);
@@ -25,7 +25,7 @@ App::get('/v1/health/version')
     ->groups(['api', 'health'])
     ->label('scope', 'public')
     ->action(function ($response) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $response->json(['version' => APP_VERSION_STABLE]);
     }, ['response']);
@@ -39,7 +39,7 @@ App::get('/v1/health/db')
     ->label('sdk.method', 'getDB')
     ->label('sdk.description', '/docs/references/health/get-db.md')
     ->action(function ($response, $register) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Registry\Registry $register */
 
         $register->get('db'); /* @var $db PDO */
@@ -56,7 +56,7 @@ App::get('/v1/health/cache')
     ->label('sdk.method', 'getCache')
     ->label('sdk.description', '/docs/references/health/get-cache.md')
     ->action(function ($response, $register) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Registry\Registry $register */
         $register->get('cache'); /* @var $cache Predis\Client */
 
@@ -72,7 +72,7 @@ App::get('/v1/health/time')
     ->label('sdk.method', 'getTime')
     ->label('sdk.description', '/docs/references/health/get-time.md')
     ->action(function ($response) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         /*
          * Code from: @see https://www.beliefmedia.com.au/query-ntp-time-server
@@ -120,7 +120,7 @@ App::get('/v1/health/queue/webhooks')
     ->label('sdk.method', 'getQueueWebhooks')
     ->label('sdk.description', '/docs/references/health/get-queue-webhooks.md')
     ->action(function ($response) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $response->json(['size' => Resque::size('v1-webhooks')]);
     }, ['response']);
@@ -134,7 +134,7 @@ App::get('/v1/health/queue/tasks')
     ->label('sdk.method', 'getQueueTasks')
     ->label('sdk.description', '/docs/references/health/get-queue-tasks.md')
     ->action(function ($response) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $response->json(['size' => Resque::size('v1-tasks')]);
     }, ['response']);
@@ -148,7 +148,7 @@ App::get('/v1/health/queue/logs')
     ->label('sdk.method', 'getQueueLogs')
     ->label('sdk.description', '/docs/references/health/get-queue-logs.md')
     ->action(function ($response) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $response->json(['size' => Resque::size('v1-audit')]);
     }, ['response']);
@@ -162,7 +162,7 @@ App::get('/v1/health/queue/usage')
     ->label('sdk.method', 'getQueueUsage')
     ->label('sdk.description', '/docs/references/health/get-queue-usage.md')
     ->action(function ($response) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $response->json(['size' => Resque::size('v1-usage')]);
     }, ['response']);
@@ -176,7 +176,7 @@ App::get('/v1/health/queue/certificates')
     ->label('sdk.method', 'getQueueCertificates')
     ->label('sdk.description', '/docs/references/health/get-queue-certificates.md')
     ->action(function ($response) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $response->json(['size' => Resque::size('v1-certificates')]);
     }, ['response']);
@@ -190,7 +190,7 @@ App::get('/v1/health/queue/functions')
     ->label('sdk.method', 'getQueueFunctions')
     ->label('sdk.description', '/docs/references/health/get-queue-functions.md')
     ->action(function ($response) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $response->json(['size' => Resque::size('v1-functions')]);
     }, ['response']);
@@ -204,7 +204,7 @@ App::get('/v1/health/storage/local')
     ->label('sdk.method', 'getStorageLocal')
     ->label('sdk.description', '/docs/references/health/get-storage-local.md')
     ->action(function ($response) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         foreach ([
             'Uploads' => APP_STORAGE_UPLOADS,
@@ -235,7 +235,7 @@ App::get('/v1/health/anti-virus')
     ->label('sdk.method', 'getAntiVirus')
     ->label('sdk.description', '/docs/references/health/get-storage-anti-virus.md')
     ->action(function ($response) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'disabled') { // Check if scans are enabled
             throw new Exception('Anitvirus is disabled');
@@ -258,7 +258,7 @@ App::get('/v1/health/stats') // Currently only used internally
     // ->label('sdk.method', 'getStats')
     ->label('docs', false)
     ->action(function ($response, $register) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Registry\Registry $register */
 
         $device = Storage::getDevice('files');

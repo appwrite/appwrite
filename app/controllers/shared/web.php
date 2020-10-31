@@ -5,8 +5,8 @@ use Utopia\Config\Config;
 
 App::init(function ($utopia, $request, $response, $layout) {
     /** @var Utopia\App $utopia */
-    /** @var Utopia\Request $request */
-    /** @var Utopia\Response $response */
+    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\View $layout */
 
     /* AJAX check  */

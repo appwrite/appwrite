@@ -18,7 +18,6 @@ class User extends Model
             ->addRule('name', [
                 'type' => 'string',
                 'description' => 'User name.',
-                'default' => '',
                 'example' => 'John Doe',
             ])
             ->addRule('registration', [
@@ -29,13 +28,11 @@ class User extends Model
             ->addRule('status', [
                 'type' => 'integer',
                 'description' => 'User status. 0 for Unavtivated, 1 for active and 2 is blocked.',
-                'default' => false,
-                'example' => true,
+                'example' => 0,
             ])
             ->addRule('email', [
                 'type' => 'string',
                 'description' => 'User email address.',
-                'default' => '',
                 'example' => 'john@appwrite.io',
             ])
             ->addRule('emailVerification', [
@@ -48,7 +45,7 @@ class User extends Model
                 'type' => 'json',
                 'description' => 'User preferences as a key-value object',
                 'default' => new \stdClass,
-                'example' => ['theme' => 'dark', 'timezone' => 'UTC'],
+                'example' => ['theme' => 'pink', 'timezone' => 'UTC'],
             ])
             ->addRule('roles', [
                 'type' => 'string',

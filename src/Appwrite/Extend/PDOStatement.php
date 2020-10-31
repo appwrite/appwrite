@@ -73,15 +73,15 @@ class PDOStatement extends PDOStatementNative
             $this->pdo = $this->pdo->reconnect();
             $this->PDOStatement = $this->pdo->prepare($this->PDOStatement->queryString, []);
 
-            foreach($this->values as $key => $set) {
+            foreach ($this->values as $key => $set) {
                 $this->PDOStatement->bindValue($key, $set['value'], $set['data_type']);
             }
      
-            foreach($this->params as $key => $set) {
+            foreach ($this->params as $key => $set) {
                 $this->PDOStatement->bindParam($key, $set['variable'], $set['data_type'], $set['length'], $set['driver_options']);
             }
 
-            foreach($this->columns as $key => $set) {
+            foreach ($this->columns as $key => $set) {
                 $this->PDOStatement->bindColumn($key, $set['param'], $set['type'], $set['maxlen'], $set['driverdata']);
             }
 
