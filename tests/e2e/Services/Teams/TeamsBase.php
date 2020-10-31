@@ -96,7 +96,7 @@ trait TeamsBase
          * Test for FAILURE
          */
 
-         return [];
+        return [];
     }
 
     /**
@@ -171,7 +171,7 @@ trait TeamsBase
          * Test for FAILURE
          */
 
-         return [];
+        return [];
     }
 
     public function testUpdateTeam():array

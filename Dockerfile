@@ -75,7 +75,7 @@ ENV _APP_SERVER=swoole \
     _APP_OPTIONS_ABUSE=enabled \
     _APP_OPTIONS_FORCE_HTTPS=disabled \
     _APP_OPENSSL_KEY_V1=your-secret-key \
-    _APP_STORAGE_LIMIT=100000000 \
+    _APP_STORAGE_LIMIT=10000000 \
     _APP_STORAGE_ANTIVIRUS=enabled \
     _APP_REDIS_HOST=redis \
     _APP_REDIS_PORT=6379 \
@@ -158,6 +158,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/migrate && \
     chmod +x /usr/local/bin/schedule && \
+    chmod +x /usr/local/bin/sdks && \
     chmod +x /usr/local/bin/ssl && \
     chmod +x /usr/local/bin/test && \
     chmod +x /usr/local/bin/vars && \
@@ -180,7 +181,7 @@ RUN echo extension=maxminddb.so >> /usr/local/etc/php/conf.d/maxminddb.ini
 
 RUN echo "opcache.preload_user=www-data" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.preload=/usr/src/code/app/preload.php" >> /usr/local/etc/php/conf.d/appwrite.ini
-RUN echo "opcache.enable_cli = 1" >> /usr/local/etc/php/conf.d/appwrite.ini
+RUN echo "opcache.enable_cli=1" >> /usr/local/etc/php/conf.d/appwrite.ini
 
 EXPOSE 80
 

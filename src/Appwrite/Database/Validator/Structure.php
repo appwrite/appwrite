@@ -157,7 +157,7 @@ class Structure extends Validator
         foreach ($array as $key => $value) {
             $rule = $collection->search('key', $key, $rules);
             
-            if(!$rule) {
+            if (!$rule) {
                 continue;
             }
 

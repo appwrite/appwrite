@@ -28,7 +28,7 @@ class StorageTest extends TestCase
         try {
             get_class(Storage::getDevice('disk-c'));
             $this->fail("Expected exception not thrown");
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             $this->assertEquals('The device "disk-c" is not listed', $e->getMessage());
         }
     }

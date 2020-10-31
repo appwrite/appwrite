@@ -20,7 +20,7 @@ class Upload extends Validator
      */
     public function isValid($path)
     {
-        if(!is_string($path)) {
+        if (!is_string($path)) {
             return false;
         }
         

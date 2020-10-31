@@ -28,23 +28,10 @@ use Utopia\Validator\ArrayList;
 $oauthDefaultSuccess = App::getEnv('_APP_HOME').'/auth/oauth2/success';
 $oauthDefaultFailure = App::getEnv('_APP_HOME').'/auth/oauth2/failure';
 
-$oauth2Keys = [];
-
-App::init(function() use (&$oauth2Keys) {
-    foreach (Config::getParam('providers') as $key => $provider) {
-        if (!$provider['enabled']) {
-            continue;
-        }
-
-        $oauth2Keys[] = 'oauth2'.\ucfirst($key);
-        $oauth2Keys[] = 'oauth2'.\ucfirst($key).'AccessToken';
-    }
-}, [], 'account');
-
 App::post('/v1/account')
     ->desc('Create Account')
     ->groups(['api', 'account'])
-    ->label('webhook', 'account.create')
+    ->label('event', 'account.create')
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
@@ -54,12 +41,11 @@ App::post('/v1/account')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
-    ->action(function ($email, $password, $name, $request, $response, $project, $projectDB, $webhooks, $audits) use ($oauth2Keys) {
-        /** @var Utopia\Request $request */
-        /** @var Utopia\Response $response */
+    ->action(function ($email, $password, $name, $request, $response, $project, $projectDB, $audits) {
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhooks */
         /** @var Appwrite\Event\Event $audits */
 
         if ('console' === $project->getId()) {
@@ -120,36 +106,26 @@ App::post('/v1/account')
             throw new Exception('Failed saving user to DB', 500);
         }
 
-        $webhooks
-            ->setParam('payload', [
-                'name' => $name,
-                'email' => $email,
-            ])
-        ;
-
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.create')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 
+        $user
+            ->setAttribute('roles', Authorization::getRoles())
+        ;
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json(\array_merge($user->getArrayCopy(\array_merge(
-                [
-                    '$id',
-                    'email',
-                    'registration',
-                    'name',
-                ],
-                $oauth2Keys
-            )), ['roles' => Authorization::getRoles()]));
-    }, ['request', 'response', 'project', 'projectDB', 'webhooks', 'audits']);
+            ->dynamic($user, Response::MODEL_USER)
+        ;
+    }, ['request', 'response', 'project', 'projectDB', 'audits']);
 
 App::post('/v1/account/sessions')
     ->desc('Create Account Session')
     ->groups(['api', 'account'])
-    ->label('webhook', 'account.sessions.create')
+    ->label('event', 'account.sessions.create')
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
@@ -159,11 +135,12 @@ App::post('/v1/account/sessions')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
-    ->action(function ($email, $password, $request, $response, $projectDB, $webhooks, $audits) {
-        /** @var Appwrite\Swoole\Request $request */
+    ->action(function ($email, $password, $request, $response, $projectDB, $locale, $geodb, $audits) {
+        /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Utopia\Locale\Locale $locale */
+        /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
 
         $protocol = $request->getProtocol();
@@ -185,6 +162,23 @@ App::post('/v1/account/sessions')
             throw new Exception('Invalid credentials', 401); // Wrong password or username
         }
 
+        $dd = new DeviceDetector($request->getUserAgent('UNKNOWN'));
+
+        $dd->parse();
+
+        $os = $dd->getOs();
+        $osCode = (isset($os['short_name'])) ? $os['short_name'] : '';
+        $osName = (isset($os['name'])) ? $os['name'] : '';
+        $osVersion = (isset($os['version'])) ? $os['version'] : '';
+
+        $client = $dd->getClient();
+        $clientType = (isset($client['type'])) ? $client['type'] : '';
+        $clientCode = (isset($client['short_name'])) ? $client['short_name'] : '';
+        $clientName = (isset($client['name'])) ? $client['name'] : '';
+        $clientVersion = (isset($client['version'])) ? $client['version'] : '';
+        $clientEngine = (isset($client['engine'])) ? $client['engine'] : '';
+        $clientEngineVersion = (isset($client['engine_version'])) ? $client['engine_version'] : '';
+
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $secret = Auth::tokenGenerator();
         $session = new Document([
@@ -195,7 +189,32 @@ App::post('/v1/account/sessions')
             'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
+
+            'osCode' => $osCode,
+            'osName' => $osName,
+            'osVersion' => $osVersion,
+            'clientType' => $clientType,
+            'clientCode' => $clientCode,
+            'clientName' => $clientName,
+            'clientVersion' => $clientVersion,
+            'clientEngine' => $clientEngine,
+            'clientEngineVersion' => $clientEngineVersion,
+            'deviceName' => $dd->getDeviceName(),
+            'deviceBrand' => $dd->getBrandName(),
+            'deviceModel' => $dd->getModel(),
         ]);
+
+        $record = $geodb->get($request->getIP());
+
+        if($record) {
+            $session
+                ->setAttribute('countryCode', \strtolower($record['country']['iso_code']))
+            ;
+        } else {
+            $session
+                ->setAttribute('countryCode', '--')
+            ;
+        }
 
         Authorization::setRole('user:'.$profile->getId());
 
@@ -212,14 +231,7 @@ App::post('/v1/account/sessions')
         if (false === $profile) {
             throw new Exception('Failed saving user to DB', 500);
         }
-
-        $webhooks
-            ->setParam('payload', [
-                'name' => $profile->getAttribute('name', ''),
-                'email' => $profile->getAttribute('email', ''),
-            ])
-        ;
-
+        
         $audits
             ->setParam('userId', $profile->getId())
             ->setParam('event', 'account.sessions.create')
@@ -237,10 +249,14 @@ App::post('/v1/account/sessions')
             ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
+
+        $session
+            ->setAttribute('current', true)
+            ->setAttribute('countryName', (isset($countries[$session->getAttribute('countryCode')])) ? $countries[$session->getAttribute('countryCode')] : $locale->getText('locale.country.unknown'))
+        ;
         
         $response->dynamic($session, Response::MODEL_SESSION);
-        ;
-    }, ['request', 'response', 'projectDB', 'webhooks', 'audits']);
+    }, ['request', 'response', 'projectDB', 'locale', 'geodb', 'audits']);
 
 App::get('/v1/account/sessions/oauth2/:provider')
     ->desc('Create Account Session with OAuth2')
@@ -261,8 +277,8 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->param('failure', $oauthDefaultFailure, function ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->param('scopes', [], new ArrayList(new Text(128)), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes.', true)
     ->action(function ($provider, $success, $failure, $scopes, $request, $response, $project) {
-        /** @var Utopia\Request $request */
-        /** @var Utopia\Response $response */
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
 
         $protocol = $request->getProtocol();
@@ -306,8 +322,8 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->param('code', '', new Text(1024), 'OAuth2 code.')
     ->param('state', '', new Text(2048), 'Login state params.', true)
     ->action(function ($projectId, $provider, $code, $state, $request, $response) {
-        /** @var Utopia\Request $request */
-        /** @var Utopia\Response $response */
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
 
         $domain = $request->getHostname();
         $protocol = $request->getProtocol();
@@ -331,8 +347,8 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->param('code', '', new Text(1024), 'OAuth2 code.')
     ->param('state', '', new Text(2048), 'Login state params.', true)
     ->action(function ($projectId, $provider, $code, $state, $request, $response) {
-        /** @var Utopia\Request $request */
-        /** @var Utopia\Response $response */
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
 
         $domain = $request->getHostname();
         $protocol = $request->getProtocol();
@@ -348,7 +364,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->desc('OAuth2 Redirect')
     ->groups(['api', 'account'])
     ->label('error', __DIR__.'/../../views/general/error.phtml')
-    ->label('webhook', 'account.sessions.create')
+    ->label('event', 'account.sessions.create')
     ->label('scope', 'public')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
@@ -356,12 +372,13 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 provider.')
     ->param('code', '', new Text(1024), 'OAuth2 code.')
     ->param('state', '', new Text(2048), 'OAuth2 state params.', true)
-    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $projectDB, $audits) use ($oauthDefaultSuccess) {
-        /** @var Utopia\Request $request */
-        /** @var Utopia\Response $response */
+    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $projectDB, $geodb, $audits) use ($oauthDefaultSuccess) {
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
         
         $protocol = $request->getProtocol();
@@ -482,6 +499,24 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         // Create session token, verify user account and update OAuth2 ID and Access Token
 
+
+        $dd = new DeviceDetector($request->getUserAgent('UNKNOWN'));
+
+        $dd->parse();
+
+        $os = $dd->getOs();
+        $osCode = (isset($os['short_name'])) ? $os['short_name'] : '';
+        $osName = (isset($os['name'])) ? $os['name'] : '';
+        $osVersion = (isset($os['version'])) ? $os['version'] : '';
+
+        $client = $dd->getClient();
+        $clientType = (isset($client['type'])) ? $client['type'] : '';
+        $clientCode = (isset($client['short_name'])) ? $client['short_name'] : '';
+        $clientName = (isset($client['name'])) ? $client['name'] : '';
+        $clientVersion = (isset($client['version'])) ? $client['version'] : '';
+        $clientEngine = (isset($client['engine'])) ? $client['engine'] : '';
+        $clientEngineVersion = (isset($client['engine_version'])) ? $client['engine_version'] : '';
+
         $secret = Auth::tokenGenerator();
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $session = new Document([
@@ -492,7 +527,32 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
+
+            'osCode' => $osCode,
+            'osName' => $osName,
+            'osVersion' => $osVersion,
+            'clientType' => $clientType,
+            'clientCode' => $clientCode,
+            'clientName' => $clientName,
+            'clientVersion' => $clientVersion,
+            'clientEngine' => $clientEngine,
+            'clientEngineVersion' => $clientEngineVersion,
+            'deviceName' => $dd->getDeviceName(),
+            'deviceBrand' => $dd->getBrandName(),
+            'deviceModel' => $dd->getModel(),
         ]);
+
+        $record = $geodb->get($request->getIP());
+
+        if($record) {
+            $session
+                ->setAttribute('countryCode', \strtolower($record['country']['iso_code']))
+            ;
+        } else {
+            $session
+                ->setAttribute('countryCode', '--')
+            ;
+        }
 
         $user
             ->setAttribute('oauth2'.\ucfirst($provider), $oauth2ID)
@@ -523,7 +583,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
         
         // Add keys for non-web platforms - TODO - add verification phase to aviod session sniffing
-        if (parse_url($state['success'], PHP_URL_PATH) === $oauthDefaultSuccess) {
+        if (parse_url($state['success'], PHP_URL_PATH) === parse_url($oauthDefaultSuccess, PHP_URL_PATH)) {
             $state['success'] = URLParser::parse($state['success']);
             $query = URLParser::parseQuery($state['success']['query']);
             $query['project'] = $project->getId();
@@ -541,7 +601,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->redirect($state['success'])
         ;
-    }, ['request', 'response', 'project', 'user', 'projectDB', 'audits']);
+    }, ['request', 'response', 'project', 'user', 'projectDB', 'geodb', 'audits']);
 
 App::get('/v1/account')
     ->desc('Get Account')
@@ -552,20 +612,15 @@ App::get('/v1/account')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/account/get.md')
     ->label('sdk.response', ['200' => 'user'])
-    ->action(function ($response, $user) use ($oauth2Keys) {
-        /** @var Utopia\Response $response */
+    ->action(function ($response, $user) {
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
 
-        $response->json(\array_merge($user->getArrayCopy(\array_merge(
-            [
-                '$id',
-                'email',
-                'emailVerification',
-                'registration',
-                'name',
-            ],
-            $oauth2Keys
-        )), ['roles' => Authorization::getRoles()]));
+        $user
+            ->setAttribute('roles', Authorization::getRoles())
+        ;
+
+        $response->dynamic($user, Response::MODEL_USER);
     }, ['response', 'user']);
 
 App::get('/v1/account/prefs')
@@ -577,17 +632,10 @@ App::get('/v1/account/prefs')
     ->label('sdk.method', 'getPrefs')
     ->label('sdk.description', '/docs/references/account/get-prefs.md')
     ->action(function ($response, $user) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
 
-        $prefs = $user->getAttribute('prefs', '{}');
-
-        try {
-            $prefs = \json_decode($prefs, true);
-            $prefs = ($prefs) ? $prefs : [];
-        } catch (\Exception $error) {
-            throw new Exception('Failed to parse prefs', 500);
-        }
+        $prefs = $user->getAttribute('prefs', new \stdClass);
 
         $response->json($prefs);
     }, ['response', 'user']);
@@ -600,65 +648,34 @@ App::get('/v1/account/sessions')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getSessions')
     ->label('sdk.description', '/docs/references/account/get-sessions.md')
-    ->action(function ($response, $user, $locale, $geodb) {
-        /** @var Utopia\Response $response */
+    ->action(function ($response, $user, $locale) {
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
-        /** @var MaxMind\Db\Reader $geodb */
 
         $tokens = $user->getAttribute('tokens', []);
         $sessions = [];
-        $current = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
-        $index = 0;
         $countries = $locale->getText('countries');
+        $current = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
 
         foreach ($tokens as $token) { /* @var $token Document */
             if (Auth::TOKEN_TYPE_LOGIN != $token->getAttribute('type')) {
                 continue;
             }
 
-            $userAgent = (!empty($token->getAttribute('userAgent'))) ? $token->getAttribute('userAgent') : 'UNKNOWN';
+            $token->setAttribute('countryName', (isset($countries[$token->getAttribute('contryCode')]))
+                ? $countries[$token->getAttribute('contryCode')]
+                : $locale->getText('locale.country.unknown'));
+            $token->setAttribute('current', ($current == $token->getId()) ? true : false);
 
-            $dd = new DeviceDetector($userAgent);
-
-            // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-            // $dd->skipBotDetection();
-
-            $dd->parse();
-
-            $sessions[$index] = [
-                '$id' => $token->getId(),
-                'OS' => $dd->getOs(),
-                'client' => $dd->getClient(),
-                'device' => $dd->getDevice(),
-                'brand' => $dd->getBrand(),
-                'model' => $dd->getModel(),
-                'ip' => $token->getAttribute('ip', ''),
-                'geo' => [],
-                'current' => ($current == $token->getId()) ? true : false,
-            ];
-
-            try {
-                $record = $geodb->get($token->getAttribute('ip', ''));
-
-                if ($record) {
-                    $sessions[$index]['geo']['isoCode'] = \strtolower($record['country']['iso_code']);
-                    $sessions[$index]['geo']['country'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
-                } else {
-                    $sessions[$index]['geo']['isoCode'] = '--';
-                    $sessions[$index]['geo']['country'] = $locale->getText('locale.country.unknown');
-                }
-
-            } catch (\Exception $e) {
-                $sessions[$index]['geo']['isoCode'] = '--';
-                $sessions[$index]['geo']['country'] = $locale->getText('locale.country.unknown');
-            }
-
-            ++$index;
+            $sessions[] = $token;
         }
 
-        $response->json($sessions);
-    }, ['response', 'user', 'locale', 'geodb']);
+        $response->dynamic(new Document([
+            'sum' => count($sessions),
+            'sessions' => $sessions
+        ]), Response::MODEL_SESSION_LIST);
+    }, ['response', 'user', 'locale']);
 
 App::get('/v1/account/logs')
     ->desc('Get Account Logs')
@@ -669,7 +686,7 @@ App::get('/v1/account/logs')
     ->label('sdk.method', 'getLogs')
     ->label('sdk.description', '/docs/references/account/get-logs.md')
     ->action(function ($response, $register, $project, $user, $locale, $geodb) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
@@ -710,50 +727,65 @@ App::get('/v1/account/logs')
 
             $dd->parse();
 
-            $output[$i] = [
+            $os = $dd->getOs();
+            $osCode = (isset($os['short_name'])) ? $os['short_name'] : '';
+            $osName = (isset($os['name'])) ? $os['name'] : '';
+            $osVersion = (isset($os['version'])) ? $os['version'] : '';
+
+            $client = $dd->getClient();
+            $clientType = (isset($client['type'])) ? $client['type'] : '';
+            $clientCode = (isset($client['short_name'])) ? $client['short_name'] : '';
+            $clientName = (isset($client['name'])) ? $client['name'] : '';
+            $clientVersion = (isset($client['version'])) ? $client['version'] : '';
+            $clientEngine = (isset($client['engine'])) ? $client['engine'] : '';
+            $clientEngineVersion = (isset($client['engine_version'])) ? $client['engine_version'] : '';
+
+            $output[$i] = new Document([
                 'event' => $log['event'],
                 'ip' => $log['ip'],
                 'time' => \strtotime($log['time']),
-                'OS' => $dd->getOs(),
-                'client' => $dd->getClient(),
-                'device' => $dd->getDevice(),
-                'brand' => $dd->getBrand(),
-                'model' => $dd->getModel(),
-                'geo' => [],
-            ];
 
-            try {
-                $record = $geodb->get($log['ip']);
+                'osCode' => $osCode,
+                'osName' => $osName,
+                'osVersion' => $osVersion,
+                'clientType' => $clientType,
+                'clientCode' => $clientCode,
+                'clientName' => $clientName,
+                'clientVersion' => $clientVersion,
+                'clientEngine' => $clientEngine,
+                'clientEngineVersion' => $clientEngineVersion,
+                'deviceName' => $dd->getDeviceName(),
+                'deviceBrand' => $dd->getBrandName(),
+                'deviceModel' => $dd->getModel(),
+            ]);
 
-                if ($record) {
-                    $output[$i]['geo']['isoCode'] = \strtolower($record['country']['iso_code']);
-                    $output[$i]['geo']['country'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
-                } else {
-                    $output[$i]['geo']['isoCode'] = '--';
-                    $output[$i]['geo']['country'] = $locale->getText('locale.country.unknown');
-                }
+            $record = $geodb->get($log['ip']);
 
-            } catch (\Exception $e) {
-                $output[$i]['geo']['isoCode'] = '--';
-                $output[$i]['geo']['country'] = $locale->getText('locale.country.unknown');
+            if ($record) {
+                $output[$i]['countryCode'] = (isset($countries[$record['country']['iso_code']])) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
+            } else {
+                $output[$i]['countryCode'] = '--';
+                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
             }
+
         }
 
-        $response->json($output);
+        $response->dynamic(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
     }, ['response', 'register', 'project', 'user', 'locale', 'geodb']);
 
 App::patch('/v1/account/name')
     ->desc('Update Account Name')
     ->groups(['api', 'account'])
-    ->label('webhook', 'account.update.name')
+    ->label('event', 'account.update.name')
     ->label('scope', 'account')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateName')
     ->label('sdk.description', '/docs/references/account/update-name.md')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.')
-    ->action(function ($name, $response, $user, $projectDB, $audits) use ($oauth2Keys) {
-        /** @var Utopia\Response $response */
+    ->action(function ($name, $response, $user, $projectDB, $audits) {
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
@@ -766,27 +798,21 @@ App::patch('/v1/account/name')
             throw new Exception('Failed saving user to DB', 500);
         }
 
+        $user->setAttribute('roles', Authorization::getRoles());
+
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.update.name')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 
-        $response->json(\array_merge($user->getArrayCopy(\array_merge(
-            [
-                '$id',
-                'email',
-                'registration',
-                'name',
-            ],
-            $oauth2Keys
-        )), ['roles' => Authorization::getRoles()]));
+        $response->dynamic($user, Response::MODEL_USER);
     }, ['response', 'user', 'projectDB', 'audits']);
 
 App::patch('/v1/account/password')
     ->desc('Update Account Password')
     ->groups(['api', 'account'])
-    ->label('webhook', 'account.update.password')
+    ->label('event', 'account.update.password')
     ->label('scope', 'account')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
@@ -794,8 +820,8 @@ App::patch('/v1/account/password')
     ->label('sdk.description', '/docs/references/account/update-password.md')
     ->param('password', '', new Password(), 'New user password. Must be between 6 to 32 chars.')
     ->param('oldPassword', '', new Password(), 'Old user password. Must be between 6 to 32 chars.')
-    ->action(function ($password, $oldPassword, $response, $user, $projectDB, $audits) use ($oauth2Keys) {
-        /** @var Utopia\Response $response */
+    ->action(function ($password, $oldPassword, $response, $user, $projectDB, $audits) {
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
@@ -812,27 +838,21 @@ App::patch('/v1/account/password')
             throw new Exception('Failed saving user to DB', 500);
         }
 
+        $user->setAttribute('roles', Authorization::getRoles());
+
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.update.password')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 
-        $response->json(\array_merge($user->getArrayCopy(\array_merge(
-            [
-                '$id',
-                'email',
-                'registration',
-                'name',
-            ],
-            $oauth2Keys
-        )), ['roles' => Authorization::getRoles()]));
+        $response->dynamic($user, Response::MODEL_USER);
     }, ['response', 'user', 'projectDB', 'audits']);
 
 App::patch('/v1/account/email')
     ->desc('Update Account Email')
     ->groups(['api', 'account'])
-    ->label('webhook', 'account.update.email')
+    ->label('event', 'account.update.email')
     ->label('scope', 'account')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
@@ -840,8 +860,8 @@ App::patch('/v1/account/email')
     ->label('sdk.description', '/docs/references/account/update-email.md')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
-    ->action(function ($email, $password, $response, $user, $projectDB, $audits) use ($oauth2Keys) {
-        /** @var Utopia\Response $response */
+    ->action(function ($email, $password, $response, $user, $projectDB, $audits) {
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
@@ -873,44 +893,35 @@ App::patch('/v1/account/email')
             throw new Exception('Failed saving user to DB', 500);
         }
 
+        $user->setAttribute('roles', Authorization::getRoles());
+        
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.update.email')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 
-        $response->json(\array_merge($user->getArrayCopy(\array_merge(
-            [
-                '$id',
-                'email',
-                'registration',
-                'name',
-            ],
-            $oauth2Keys
-        )), ['roles' => Authorization::getRoles()]));
+        $response->dynamic($user, Response::MODEL_USER);
     }, ['response', 'user', 'projectDB', 'audits']);
 
 App::patch('/v1/account/prefs')
     ->desc('Update Account Preferences')
     ->groups(['api', 'account'])
-    ->label('webhook', 'account.update.prefs')
+    ->label('event', 'account.update.prefs')
     ->label('scope', 'account')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePrefs')
-    ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
     ->label('sdk.description', '/docs/references/account/update-prefs.md')
+    ->param('prefs', [], new Assoc(), 'Prefs key-value JSON object.')
     ->action(function ($prefs, $response, $user, $projectDB, $audits) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
-
-        $old = \json_decode($user->getAttribute('prefs', '{}'), true);
-        $old = ($old) ? $old : [];
-
+        
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
-            'prefs' => \json_encode(\array_merge($old, $prefs)),
+            'prefs' => $prefs,
         ]));
 
         if (false === $user) {
@@ -922,14 +933,7 @@ App::patch('/v1/account/prefs')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 
-        $prefs = $user->getAttribute('prefs', '{}');
-
-        try {
-            $prefs = \json_decode($prefs, true);
-            $prefs = ($prefs) ? $prefs : [];
-        } catch (\Exception $error) {
-            throw new Exception('Failed to parse prefs', 500);
-        }
+        $prefs = $user->getAttribute('prefs', new \stdClass);
 
         $response->json($prefs);
     }, ['response', 'user', 'projectDB', 'audits']);
@@ -937,15 +941,15 @@ App::patch('/v1/account/prefs')
 App::delete('/v1/account')
     ->desc('Delete Account')
     ->groups(['api', 'account'])
-    ->label('webhook', 'account.delete')
+    ->label('event', 'account.delete')
     ->label('scope', 'account')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', '/docs/references/account/delete.md')
     ->action(function ($request, $response, $user, $projectDB, $audits, $webhooks) {
-        /** @var Utopia\Request $request */
-        /** @var Utopia\Response $response */
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
@@ -976,10 +980,7 @@ App::delete('/v1/account')
         ;
 
         $webhooks
-            ->setParam('payload', [
-                'name' => $user->getAttribute('name', ''),
-                'email' => $user->getAttribute('email', ''),
-            ])
+            ->setParam('payload', $response->output($user, Response::MODEL_USER))
         ;
 
         if (!Config::getParam('domainVerification')) {
@@ -999,7 +1000,7 @@ App::delete('/v1/account/sessions/:sessionId')
     ->desc('Delete Account Session')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
-    ->label('webhook', 'account.sessions.delete')
+    ->label('event', 'account.sessions.delete')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'deleteSession')
@@ -1007,8 +1008,8 @@ App::delete('/v1/account/sessions/:sessionId')
     ->label('abuse-limit', 100)
     ->param('sessionId', null, new UID(), 'Session unique ID. Use the string \'current\' to delete the current device session.')
     ->action(function ($sessionId, $request, $response, $user, $projectDB, $audits, $webhooks) {
-        /** @var Utopia\Request $request */
-        /** @var Utopia\Response $response */
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
@@ -1034,10 +1035,7 @@ App::delete('/v1/account/sessions/:sessionId')
                 ;
 
                 $webhooks
-                    ->setParam('payload', [
-                        'name' => $user->getAttribute('name', ''),
-                        'email' => $user->getAttribute('email', ''),
-                    ])
+                    ->setParam('payload', $response->output($user, Response::MODEL_USER))
                 ;
 
                 if (!Config::getParam('domainVerification')) {
@@ -1064,15 +1062,15 @@ App::delete('/v1/account/sessions')
     ->desc('Delete All Account Sessions')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
-    ->label('webhook', 'account.sessions.delete')
+    ->label('event', 'account.sessions.delete')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'deleteSessions')
     ->label('sdk.description', '/docs/references/account/delete-sessions.md')
     ->label('abuse-limit', 100)
     ->action(function ($request, $response, $user, $projectDB, $audits, $webhooks) {
-        /** @var Utopia\Request $request */
-        /** @var Utopia\Response $response */
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
@@ -1091,12 +1089,9 @@ App::delete('/v1/account/sessions')
                 ->setParam('event', 'account.sessions.delete')
                 ->setParam('resource', '/user/'.$user->getId())
             ;
-
+            
             $webhooks
-                ->setParam('payload', [
-                    'name' => $user->getAttribute('name', ''),
-                    'email' => $user->getAttribute('email', ''),
-                ])
+                ->setParam('payload', $response->output($user, Response::MODEL_USER))
             ;
 
             if (!Config::getParam('domainVerification')) {
@@ -1129,8 +1124,8 @@ App::post('/v1/account/recovery')
     ->param('email', '', new Email(), 'User email.')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients'])
     ->action(function ($email, $url, $request, $response, $projectDB, $project, $locale, $mails, $audits) {
-        /** @var Utopia\Request $request */
-        /** @var Utopia\Response $response */
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Database\Document $project */
         /** @var Utopia\Locale\Locale $locale */
@@ -1237,7 +1232,7 @@ App::put('/v1/account/recovery')
     ->param('password', '', new Password(), 'New password. Must be between 6 to 32 chars.')
     ->param('passwordAgain', '', new Password(), 'New password again. Must be between 6 to 32 chars.')
     ->action(function ($userId, $secret, $password, $passwordAgain, $response, $projectDB, $audits) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
     
@@ -1306,8 +1301,8 @@ App::post('/v1/account/verification')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add built-in confirm page
     ->action(function ($url, $request, $response, $project, $user, $projectDB, $locale, $audits, $mails) {
-        /** @var Utopia\Request $request */
-        /** @var Utopia\Response $response */
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
@@ -1402,7 +1397,7 @@ App::put('/v1/account/verification')
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('secret', '', new Text(256), 'Valid verification token.')
     ->action(function ($userId, $secret, $response, $user, $projectDB, $audits) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */

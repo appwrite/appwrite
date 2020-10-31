@@ -213,7 +213,6 @@ $cli
                 Console::error('🔴 ' . $message);
             }
         }
-
         
         try {
             Console::log('');
