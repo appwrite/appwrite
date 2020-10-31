@@ -137,14 +137,14 @@ trait UsersBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'prefs' => [
-                'key1' => 'value1',
-                'key2' => 'value2',
+                'funcKey1' => 'funcValue1',
+                'funcKey2' => 'funcValue2',
             ],
         ]);
 
         $this->assertEquals($user['headers']['status-code'], 200);
-        $this->assertEquals($user['body']['key1'], 'value1');
-        $this->assertEquals($user['body']['key2'], 'value2');
+        $this->assertEquals($user['body']['funcKey1'], 'funcValue1');
+        $this->assertEquals($user['body']['funcKey2'], 'funcValue2');
 
         /**
          * Test for FAILURE

@@ -24,9 +24,9 @@ class FunctionsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Test',
             'vars' => [
-                'key1' => 'value1',
-                'key2' => 'value2',
-                'key3' => 'value3',
+                'funcKey1' => 'funcValue1',
+                'funcKey2' => 'funcValue2',
+                'funcKey3' => 'funcValue3',
             ],
             'events' => [
                 'account.create',

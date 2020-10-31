@@ -2,7 +2,6 @@
 
 use Utopia\App;
 use Utopia\Exception;
-use Utopia\Response;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
@@ -18,6 +17,7 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Validator\UID;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain as DomainValidator;
+use Appwrite\Utopia\Response;
 use Cron\CronExpression;
 
 App::post('/v1/projects')
@@ -70,6 +70,7 @@ App::post('/v1/projects')
                 'webhooks' => [],
                 'keys' => [],
                 'tasks' => [],
+                'domains' => [],
             ]
         );
 
@@ -79,10 +80,8 @@ App::post('/v1/projects')
 
         $consoleDB->createNamespace($project->getId());
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($project->getArrayCopy())
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($project, Response::MODEL_PROJECT);
     }, ['response', 'consoleDB', 'projectDB']);
 
 App::get('/v1/projects')
@@ -111,7 +110,10 @@ App::get('/v1/projects')
             ],
         ]);
 
-        $response->json(['sum' => $consoleDB->getSum(), 'projects' => $results]);
+        $response->dynamic(new Document([
+            'sum' => $consoleDB->getSum(),
+            'projects' => $results
+        ]), Response::MODEL_PROJECT_LIST);
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId')
@@ -131,7 +133,7 @@ App::get('/v1/projects/:projectId')
             throw new Exception('Project not found', 404);
         }
 
-        $response->json($project->getArrayCopy());
+        $response->dynamic($project, Response::MODEL_PROJECT);
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId/usage')
@@ -141,7 +143,7 @@ App::get('/v1/projects/:projectId/usage')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getUsage')
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('range', 'last30', new WhiteList(['daily', 'monthly', 'last30', 'last90'], true), 'Date range.', true)
+    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
     ->action(function ($projectId, $range, $response, $consoleDB, $projectDB, $register) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -155,31 +157,26 @@ App::get('/v1/projects/:projectId/usage')
         }
 
         $period = [
-            'daily' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('today')),
-                'end' => DateTime::createFromFormat('U', \strtotime('tomorrow')),
-                'group' => '1m',
+            '24h' => [
+                'start' => DateTime::createFromFormat('U', \strtotime('-24 hours')),
+                'end' => DateTime::createFromFormat('U', \strtotime('+1 hour')),
+                'group' => '30m',
             ],
-            'monthly' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('midnight first day of this month')),
-                'end' => DateTime::createFromFormat('U', \strtotime('midnight last day of this month')),
+            '7d' => [
+                'start' => DateTime::createFromFormat('U', \strtotime('-7 days')),
+                'end' => DateTime::createFromFormat('U', \strtotime('now')),
                 'group' => '1d',
             ],
-            'last30' => [
+            '30d' => [
                 'start' => DateTime::createFromFormat('U', \strtotime('-30 days')),
-                'end' => DateTime::createFromFormat('U', \strtotime('tomorrow')),
+                'end' => DateTime::createFromFormat('U', \strtotime('now')),
                 'group' => '1d',
             ],
-            'last90' => [
+            '90d' => [
                 'start' => DateTime::createFromFormat('U', \strtotime('-90 days')),
-                'end' => DateTime::createFromFormat('U', \strtotime('today')),
+                'end' => DateTime::createFromFormat('U', \strtotime('now')),
                 'group' => '1d',
             ],
-            // 'yearly' => [
-            //     'start' => DateTime::createFromFormat('U', strtotime('midnight first day of january')),
-            //     'end' => DateTime::createFromFormat('U', strtotime('midnight last day of december')),
-            //     'group' => '4w',
-            // ],
         ];
 
         $client = $register->get('influxdb');
@@ -257,6 +254,7 @@ App::get('/v1/projects/:projectId/usage')
         $tasksTotal = \count($project->getAttribute('tasks', []));
 
         $response->json([
+            'range' => $range,
             'requests' => [
                 'data' => $requests,
                 'total' => \array_sum(\array_map(function ($item) {
@@ -298,7 +296,7 @@ App::get('/v1/projects/:projectId/usage')
                 ) + 
                 $projectDB->getCount(
                     [
-                        'attribute' => 'codeSize',
+                        'attribute' => 'size',
                         'filters' => [
                             '$collection='.Database::SYSTEM_COLLECTION_TAGS,
                         ],
@@ -352,7 +350,7 @@ App::patch('/v1/projects/:projectId')
             throw new Exception('Failed saving project to DB', 500);
         }
 
-        $response->json($project->getArrayCopy());
+        $response->dynamic($project, Response::MODEL_PROJECT);
     }, ['response', 'consoleDB']);
 
 App::patch('/v1/projects/:projectId/oauth2')
@@ -384,7 +382,7 @@ App::patch('/v1/projects/:projectId/oauth2')
             throw new Exception('Failed saving project to DB', 500);
         }
 
-        $response->json($project->getArrayCopy());
+        $response->dynamic($project, Response::MODEL_PROJECT);
     }, ['response', 'consoleDB']);
 
 App::delete('/v1/projects/:projectId')
@@ -487,10 +485,8 @@ App::post('/v1/projects/:projectId/webhooks')
             throw new Exception('Failed saving project to DB', 500);
         }
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($webhook->getArrayCopy())
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId/webhooks')
@@ -512,7 +508,10 @@ App::get('/v1/projects/:projectId/webhooks')
 
         $webhooks = $project->getAttribute('webhooks', []);
 
-        $response->json($webhooks);
+        $response->dynamic(new Document([
+            'sum' => count($webhooks),
+            'webhooks' => $webhooks
+        ]), Response::MODEL_WEBHOOK_LIST);
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId/webhooks/:webhookId')
@@ -539,7 +538,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
             throw new Exception('Webhook not found', 404);
         }
 
-        $response->json($webhook->getArrayCopy());
+        $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     }, ['response', 'consoleDB']);
 
 App::put('/v1/projects/:projectId/webhooks/:webhookId')
@@ -587,7 +586,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             throw new Exception('Failed saving webhook to DB', 500);
         }
 
-        $response->json($webhook->getArrayCopy());
+        $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     }, ['response', 'consoleDB']);
 
 App::delete('/v1/projects/:projectId/webhooks/:webhookId')
@@ -665,10 +664,8 @@ App::post('/v1/projects/:projectId/keys')
             throw new Exception('Failed saving project to DB', 500);
         }
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($key->getArrayCopy())
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($key, Response::MODEL_KEY);
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId/keys')
@@ -688,7 +685,12 @@ App::get('/v1/projects/:projectId/keys')
             throw new Exception('Project not found', 404);
         }
 
-        $response->json($project->getAttribute('keys', [])); //FIXME make sure array objects return correctly
+        $keys = $project->getAttribute('keys', []);
+
+        $response->dynamic(new Document([
+            'sum' => count($keys),
+            'keys' => $keys
+        ]), Response::MODEL_KEY_LIST);
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId/keys/:keyId')
@@ -712,7 +714,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
             throw new Exception('Key not found', 404);
         }
 
-        $response->json($key->getArrayCopy());
+        $response->dynamic($key, Response::MODEL_KEY);
     }, ['response', 'consoleDB']);
 
 App::put('/v1/projects/:projectId/keys/:keyId')
@@ -750,7 +752,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
             throw new Exception('Failed saving key to DB', 500);
         }
 
-        $response->json($key->getArrayCopy());
+        $response->dynamic($key, Response::MODEL_KEY);
     }, ['response', 'consoleDB']);
 
 App::delete('/v1/projects/:projectId/keys/:keyId')
@@ -855,10 +857,8 @@ App::post('/v1/projects/:projectId/tasks')
             ResqueScheduler::enqueueAt($next, 'v1-tasks', 'TasksV1', $task->getArrayCopy());
         }
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($task->getArrayCopy())
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($task, Response::MODEL_TASK);
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId/tasks')
@@ -880,7 +880,11 @@ App::get('/v1/projects/:projectId/tasks')
 
         $tasks = $project->getAttribute('tasks', []);
 
-        $response->json($tasks);
+        $response->dynamic(new Document([
+            'sum' => count($tasks),
+            'tasks' => $tasks
+        ]), Response::MODEL_TASK_LIST);
+
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId/tasks/:taskId')
@@ -907,7 +911,7 @@ App::get('/v1/projects/:projectId/tasks/:taskId')
             throw new Exception('Task not found', 404);
         }
 
-        $response->json($task->getArrayCopy());
+        $response->dynamic($task, Response::MODEL_TASK);
     }, ['response', 'consoleDB']);
 
 App::put('/v1/projects/:projectId/tasks/:taskId')
@@ -970,7 +974,7 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
             ResqueScheduler::enqueueAt($next, 'v1-tasks', 'TasksV1', $task->getArrayCopy());
         }
 
-        $response->json($task->getArrayCopy());
+        $response->dynamic($task, Response::MODEL_TASK);
     }, ['response', 'consoleDB']);
 
 App::delete('/v1/projects/:projectId/tasks/:taskId')
@@ -1055,10 +1059,8 @@ App::post('/v1/projects/:projectId/platforms')
             throw new Exception('Failed saving project to DB', 500);
         }
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($platform->getArrayCopy())
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($platform, Response::MODEL_PLATFORM);
     }, ['response', 'consoleDB']);
     
 App::get('/v1/projects/:projectId/platforms')
@@ -1080,7 +1082,10 @@ App::get('/v1/projects/:projectId/platforms')
 
         $platforms = $project->getAttribute('platforms', []);
 
-        $response->json($platforms);
+        $response->dynamic(new Document([
+            'sum' => count($platforms),
+            'platforms' => $platforms
+        ]), Response::MODEL_PLATFORM_LIST);
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId/platforms/:platformId')
@@ -1107,7 +1112,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
             throw new Exception('Platform not found', 404);
         }
 
-        $response->json($platform->getArrayCopy());
+        $response->dynamic($platform, Response::MODEL_PLATFORM);
     }, ['response', 'consoleDB']);
 
 App::put('/v1/projects/:projectId/platforms/:platformId')
@@ -1150,7 +1155,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
             throw new Exception('Failed saving platform to DB', 500);
         }
 
-        $response->json($platform->getArrayCopy());
+        $response->dynamic($platform, Response::MODEL_PLATFORM);
     }, ['response', 'consoleDB']);
 
 App::delete('/v1/projects/:projectId/platforms/:platformId')
@@ -1244,10 +1249,8 @@ App::post('/v1/projects/:projectId/domains')
             throw new Exception('Failed saving project to DB', 500);
         }
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($domain->getArrayCopy())
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($domain, Response::MODEL_DOMAIN);
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId/domains')
@@ -1268,8 +1271,11 @@ App::get('/v1/projects/:projectId/domains')
         }
 
         $domains = $project->getAttribute('domains', []);
-
-        $response->json($domains);
+        
+        $response->dynamic(new Document([
+            'sum' => count($domains),
+            'domains' => $domains
+        ]), Response::MODEL_DOMAIN_LIST);
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId/domains/:domainId')
@@ -1296,7 +1302,7 @@ App::get('/v1/projects/:projectId/domains/:domainId')
             throw new Exception('Domain not found', 404);
         }
 
-        $response->json($domain->getArrayCopy());
+        $response->dynamic($domain, Response::MODEL_DOMAIN);
     }, ['response', 'consoleDB']);
 
 App::patch('/v1/projects/:projectId/domains/:domainId/verification')
@@ -1330,7 +1336,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         }
 
         if ($domain->getAttribute('verification') === true) {
-            return $response->json($domain->getArrayCopy());
+            return $response->dynamic($domain, Response::MODEL_DOMAIN);
         }
 
         // Verify Domain with DNS records
@@ -1354,7 +1360,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
             'domain' => $domain->getAttribute('domain'),
         ]);
 
-        $response->json($domain->getArrayCopy());
+        $response->dynamic($domain, Response::MODEL_DOMAIN);
     }, ['response', 'consoleDB']);
 
 App::delete('/v1/projects/:projectId/domains/:domainId')
