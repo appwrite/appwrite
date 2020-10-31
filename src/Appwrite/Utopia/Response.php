@@ -239,7 +239,8 @@ class Response extends SwooleResponse
      */
     public function setStatusCode(int $code = 200): self
     {
-        return $this->setStatusCode($code);
+        $this->setStatusCode($code);
+        return $this;
     }
 
     /**
