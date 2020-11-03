@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f86de102bb47a43e41895a78ed3ab991",
+    "content-hash": "17cb743e6efae97f01129b2a4a5239cd",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -1186,16 +1186,16 @@
         },
         {
             "name": "utopia-php/cli",
-            "version": "0.7.2",
+            "version": "0.7.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "0b19cd33b86deb6aeb26bfdabc18bd2bdf5eba04"
+                "reference": "0337918242278e0cf98f8dcab2e75b5a3153b856"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/0b19cd33b86deb6aeb26bfdabc18bd2bdf5eba04",
-                "reference": "0b19cd33b86deb6aeb26bfdabc18bd2bdf5eba04",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/0337918242278e0cf98f8dcab2e75b5a3153b856",
+                "reference": "0337918242278e0cf98f8dcab2e75b5a3153b856",
                 "shasum": ""
             },
             "require": {
@@ -1231,7 +1231,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2020-10-23T13:34:41+00:00"
+            "time": "2020-11-02T07:50:18+00:00"
         },
         {
             "name": "utopia-php/config",
@@ -1333,16 +1333,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.9.6",
+            "version": "0.9.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "959767e401c0497f0ddf31446d8d4dfa125aa5dc"
+                "reference": "20568f1325b4e38a43ef422a00e2271d5695a561"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/959767e401c0497f0ddf31446d8d4dfa125aa5dc",
-                "reference": "959767e401c0497f0ddf31446d8d4dfa125aa5dc",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/20568f1325b4e38a43ef422a00e2271d5695a561",
+                "reference": "20568f1325b4e38a43ef422a00e2271d5695a561",
                 "shasum": ""
             },
             "require": {
@@ -1374,7 +1374,7 @@
                 "php",
                 "upf"
             ],
-            "time": "2020-10-26T00:20:11+00:00"
+            "time": "2020-10-29T12:25:16+00:00"
         },
         {
             "name": "utopia-php/locale",
@@ -1522,25 +1522,27 @@
         },
         {
             "name": "utopia-php/swoole",
-            "version": "0.1.0",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/swoole.git",
-                "reference": "26965d8122cb42769a5543c3be1677321cdaebdb"
+                "reference": "bc9dd3e113e9b8cbbf54468524637f39b2deb861"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/26965d8122cb42769a5543c3be1677321cdaebdb",
-                "reference": "26965d8122cb42769a5543c3be1677321cdaebdb",
+                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/bc9dd3e113e9b8cbbf54468524637f39b2deb861",
+                "reference": "bc9dd3e113e9b8cbbf54468524637f39b2deb861",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.1",
+                "ext-swoole": "*",
+                "php": ">=7.3",
                 "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
-                "phpunit/phpunit": "^7.0",
-                "swoole/ide-helper": "4.5.2"
+                "phpunit/phpunit": "^9.3",
+                "swoole/ide-helper": "4.5.5",
+                "vimeo/psalm": "4.0.1"
             },
             "type": "library",
             "autoload": {
@@ -1568,7 +1570,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2020-08-14T22:44:34+00:00"
+            "time": "2020-10-29T12:42:38+00:00"
         }
     ],
     "packages-dev": [
@@ -1734,7 +1736,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "ad1ee55f61967546c0889d377b628e244182311e"
+                "reference": "11789d2169109f182dbc9d7cca91aba925582cf3"
             },
             "require": {
                 "ext-curl": "*",
@@ -1764,7 +1766,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2020-10-20T10:23:43+00:00"
+            "time": "2020-10-31T19:31:23+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",
@@ -3394,12 +3396,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/comparator.git",
-                "reference": "237324bd32872e15f51bc2eadac2a9e43e28409d"
+                "reference": "169f358f64962df247708bb7a2974f04cd44f836"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/comparator/zipball/237324bd32872e15f51bc2eadac2a9e43e28409d",
-                "reference": "237324bd32872e15f51bc2eadac2a9e43e28409d",
+                "url": "https://api.github.com/repos/sebastianbergmann/comparator/zipball/169f358f64962df247708bb7a2974f04cd44f836",
+                "reference": "169f358f64962df247708bb7a2974f04cd44f836",
                 "shasum": ""
             },
             "require": {
@@ -3456,7 +3458,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2020-10-30T14:10:53+00:00"
+            "time": "2020-10-31T09:38:51+00:00"
         },
         {
             "name": "sebastian/complexity",
@@ -4173,12 +4175,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "f372360d0dfa520b23b91fc70e2bba6a232ac62d"
+                "reference": "5164210f240d580ce0f490a7f24827c6fbc7bc36"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/f372360d0dfa520b23b91fc70e2bba6a232ac62d",
-                "reference": "f372360d0dfa520b23b91fc70e2bba6a232ac62d",
+                "url": "https://api.github.com/repos/symfony/console/zipball/5164210f240d580ce0f490a7f24827c6fbc7bc36",
+                "reference": "5164210f240d580ce0f490a7f24827c6fbc7bc36",
                 "shasum": ""
             },
             "require": {
@@ -4259,7 +4261,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2020-10-29T07:35:47+00:00"
+            "time": "2020-11-01T17:40:07+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
