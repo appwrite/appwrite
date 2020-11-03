@@ -506,7 +506,7 @@ App::put('/v1/storage/files/:fileId')
         ;
 
         $response->dynamic($file, Response::MODEL_FILE);
-    }, ['response', 'projectDB', 'webhooks', 'audits']);
+    }, ['response', 'projectDB', 'audits']);
 
 App::delete('/v1/storage/files/:fileId')
     ->desc('Delete File')
