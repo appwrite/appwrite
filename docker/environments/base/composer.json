@@ -1,0 +1,29 @@
+{
+    "name": "appwrite/env-base",
+    "description": "Appwrite Function HTTP server.",
+    "type": "project",
+    "license": "BSD-3-Clause",
+    "authors": [
+        {
+            "name": "Appwrite Team",
+            "email": "team@appwrite.io"
+        }
+    ],
+    "require": {
+        "php": ">=7.4.0",
+        "ext-swoole": "*",
+
+        "utopia-php/framework": "0.9.7",
+        "utopia-php/swoole": "0.2.*",
+        "utopia-php/cli": "0.7.3"
+    },
+    "require-dev": {
+        "swoole/ide-helper": "4.5.5"
+    },
+    "minimum-stability": "dev",
+    "config": {
+        "platform": {
+            "php": "7.4"
+        }
+    }
+}

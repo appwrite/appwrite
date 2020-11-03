@@ -2,7 +2,6 @@ FROM composer:2.0 as step0
 
 WORKDIR /usr/local/src/
 
-COPY composer.lock /usr/local/src/
 COPY composer.json /usr/local/src/
 
 RUN composer update --ignore-platform-reqs --optimize-autoloader \
@@ -20,8 +19,7 @@ RUN \
   gcc \
   g++ \
   git \
-  zlib-dev \
-  brotli-dev
+  zlib-dev
 
 RUN docker-php-ext-install sockets
 
@@ -44,6 +42,9 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN \
   apk update \
   && apk add --no-cache --virtual .deps \
+  && apk add --no-cache \
+  tar \
+  libstdc++ \
   && docker-php-ext-install sockets opcache \
   && apk del .deps \
   && rm -rf /var/cache/apk/*
@@ -53,14 +54,20 @@ WORKDIR /usr/src/code
 COPY --from=step0 /usr/local/src/vendor /usr/src/code/vendor
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/
 
+RUN ls -ll /usr/local/lib/php/extensions/no-debug-non-zts-20190902/
+
 # Add Source Code
 COPY ./app /usr/src/code/app
+COPY ./start /usr/local/bin/start
+
+RUN chmod +x /usr/local/bin/start
 
 # Enable Extensions
 RUN echo extension=swoole.so >> /usr/local/etc/php/conf.d/swoole.ini
 
+# PHP Settings
 RUN echo "opcache.enable_cli=1" >> /usr/local/etc/php/conf.d/appwrite.ini
 
 EXPOSE 80
 
-CMD [ "php", "app/http.php" ]
+CMD [ "start" ]
