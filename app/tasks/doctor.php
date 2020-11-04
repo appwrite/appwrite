@@ -40,7 +40,7 @@ $cli
             Console::log('🟢 CNAME target has a public suffix ('.$domain->get().')');
         }
         
-        if(App::getEnv('_APP_OPENSSL_KEY_V1', 'your-secret-key') === 'your-secret-key' || empty(App::getEnv('_APP_OPENSSL_KEY_V1', 'your-secret-key'))) {
+        if(App::getEnv('_APP_OPENSSL_KEY_V1') === 'your-secret-key' || empty(App::getEnv('_APP_OPENSSL_KEY_V1'))) {
             Console::log('🔴 Using a unique secret key for encryption');
         }
         else {
@@ -54,7 +54,7 @@ $cli
             Console::log('🟢 App enviornment is set for production');
         }
 
-        if(App::getEnv('_APP_OPTIONS_ABUSE', 'disabled') === 'disabled' || empty(App::getEnv('_APP_OPTIONS_ABUSE', 'disabled'))) {
+        if('enabled' !== App::getEnv('_APP_OPTIONS_ABUSE', 'disabled')) {
             Console::log('🔴 Abuse protection is enabled');
         }
         else {
@@ -75,7 +75,7 @@ $cli
             Console::log('🟢 Console access limits are enabled');
         }
         
-        if('disabled' === App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') || empty(App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled'))) {
+        if('enabled' !== App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled')) {
             Console::log('🔴 HTTPS force option is disabled');
         }
         else {
