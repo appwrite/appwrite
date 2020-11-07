@@ -11,27 +11,27 @@ class Domain extends Model
     {
         $this
             ->addRule('$id', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Domain ID.',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('domain', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Domain name.',
                 'example' => 'appwrite.company.com',
             ])
             ->addRule('registerable', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Registerable domain name.',
                 'example' => 'company.com',
             ])
             ->addRule('tld', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'TLD name.',
                 'example' => 'com',
             ])
             ->addRule('verification', [
-                'type' => 'boolean',
+                'type' => self::TYPE_BOOLEAN,
                 'description' => 'Verification process status.',
                 'example' => true,
             ])

@@ -11,40 +11,40 @@ class Webhook extends Model
     {
         $this
             ->addRule('$id', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Webhook ID.',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('name', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Webhook name.',
                 'example' => 'My Webhook',
             ])
             ->addRule('url', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Webhook URL endpoint.',
                 'example' => 'https://example.com/webhook',
             ])
             ->addRule('events', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Webhook trigger events.',
                 'default' => [],
                 'example' => ['database.collections.update', 'database.collections.delete'],
                 'array' => true,
             ])
             ->addRule('security', [
-                'type' => 'boolean',
+                'type' => self::TYPE_BOOLEAN,
                 'description' => 'Indicated if SSL / TLS Certificate verification is enabled.',
                 'example' => true,
             ])
             ->addRule('httpUser', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'HTTP basic authentication username.',
                 'default' => '',
                 'example' => 'username',
             ])
             ->addRule('httpPass', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'HTTP basic authentication password.',
                 'default' => '',
                 'example' => 'password',

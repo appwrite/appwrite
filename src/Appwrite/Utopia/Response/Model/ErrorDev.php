@@ -12,17 +12,17 @@ class ErrorDev extends Error
         
         $this
             ->addRule('file', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'File path.',
                 'example' => '/usr/code/vendor/utopia-php/framework/src/App.php',
             ])
             ->addRule('line', [
-                'type' => 'integer',
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Line number.',
                 'example' => 209,
             ])
             ->addRule('trace', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Error trace.',
                 'example' => [
                     ''
