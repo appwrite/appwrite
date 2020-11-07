@@ -25,36 +25,36 @@ $cli
         $domain = new Domain(App::getEnv('_APP_DOMAIN'));
 
         if(!$domain->isKnown() || $domain->isTest()) {
-            Console::log('🔴 Hostname has a public suffix');
+            Console::log('🔴 Hostname has a public suffix ('.$domain->get().')');
         }
         else {
-            Console::log('🟢 Hostname has a public suffix');
+            Console::log('🟢 Hostname has a public suffix ('.$domain->get().')');
         }
         
         $domain = new Domain(App::getEnv('_APP_DOMAIN_TARGET'));
 
         if(!$domain->isKnown() || $domain->isTest()) {
-            Console::log('🔴 CNAME target has a public suffix');
+            Console::log('🔴 CNAME target has a public suffix ('.$domain->get().')');
         }
         else {
-            Console::log('🟢 CNAME target has a public suffix');
+            Console::log('🟢 CNAME target has a public suffix ('.$domain->get().')');
         }
         
-        if(App::getEnv('_APP_OPENSSL_KEY_V1', 'your-secret-key') === 'your-secret-key') {
+        if(App::getEnv('_APP_OPENSSL_KEY_V1') === 'your-secret-key' || empty(App::getEnv('_APP_OPENSSL_KEY_V1'))) {
             Console::log('🔴 Using a unique secret key for encryption');
         }
         else {
             Console::log('🟢 Using a unique secret key for encryption');
         }
 
-        if(App::getEnv('_APP_ENV', 'development') === 'development') {
+        if(App::getEnv('_APP_ENV', 'development') !== 'production') {
             Console::log('🔴 App enviornment is set for production');
         }
         else {
             Console::log('🟢 App enviornment is set for production');
         }
 
-        if(App::getEnv('_APP_OPTIONS_ABUSE', 'disabled') === 'disabled') {
+        if('enabled' !== App::getEnv('_APP_OPTIONS_ABUSE', 'disabled')) {
             Console::log('🔴 Abuse protection is enabled');
         }
         else {
@@ -75,11 +75,11 @@ $cli
             Console::log('🟢 Console access limits are enabled');
         }
         
-        if(empty(App::getEnv('_APP_OPTIONS_FORCE_HTTPS', null))) {
-            Console::log('🔴 HTTP force option is disabled');
+        if('enabled' !== App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled')) {
+            Console::log('🔴 HTTPS force option is disabled');
         }
         else {
-            Console::log('🟢 HTTP force option is enabled');
+            Console::log('🟢 HTTPS force option is enabled');
         }
 
         \sleep(0.2);
@@ -215,18 +215,20 @@ $cli
         }
         
         try {
-            Console::log('');
-            $version = \json_decode(@\file_get_contents(App::getEnv('_APP_HOME', 'http://localhost').'/v1/health/version'), true);
-            
-            if ($version && isset($version['version']) && App::isProduction()) {
-                if(\version_compare($version['version'], App::getEnv('_APP_VERSION', 'UNKNOWN')) === 0) {
-                    Console::info('You are running the latest version of '.APP_NAME.'! 🥳');
+            if(App::isProduction()) {
+                Console::log('');
+                $version = \json_decode(@\file_get_contents(App::getEnv('_APP_HOME', 'http://localhost').'/v1/health/version'), true);
+                
+                if ($version && isset($version['version'])) {
+                    if(\version_compare($version['version'], App::getEnv('_APP_VERSION', 'UNKNOWN')) === 0) {
+                        Console::info('You are running the latest version of '.APP_NAME.'! 🥳');
+                    }
+                    else {
+                        Console::info('A new version ('.$version['version'].') is available! 🥳'."\n");
+                    }
+                } else {
+                    Console::error('Failed to check for a newer version'."\n");
                 }
-                else {
-                    Console::info('A new version ('.$version['version'].') is available! 🥳'."\n");
-                }
-            } else {
-                Console::error('Failed to check for a newer version'."\n");
             }
         } catch (\Throwable $th) {
             Console::error('Failed to check for a newer version'."\n");

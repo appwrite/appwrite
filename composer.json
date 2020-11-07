@@ -49,16 +49,16 @@
         "resque/php-resque": "1.3.6",
         "piwik/device-detector": "3.13.0",
         "dragonmantank/cron-expression": "3.0.1",
-        "domnikl/statsd": "3.0.*",
-        "influxdb/influxdb-php": "1.15.*",
+        "domnikl/statsd": "3.0.2",
+        "influxdb/influxdb-php": "1.15.1",
         "phpmailer/phpmailer": "6.1.7",
-        "chillerlan/php-qrcode": "^4.2"
+        "chillerlan/php-qrcode": "4.2.0"
     },
     "require-dev": {
         "swoole/ide-helper": "4.5.5",
         "appwrite/sdk-generator": "master",
-        "phpunit/phpunit": "^9.3",
-        "vimeo/psalm": "4.0.1"
+        "phpunit/phpunit": "9.4.2",
+        "vimeo/psalm": "4.1.1"
     },
     "repositories": [
         {
