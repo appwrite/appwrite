@@ -27,6 +27,7 @@ use Appwrite\Utopia\Response\Model\Team;
 use Appwrite\Utopia\Response\Model\Locale;
 use Appwrite\Utopia\Response\Model\Log;
 use Appwrite\Utopia\Response\Model\Membership;
+use Appwrite\Utopia\Response\Model\Permissions;
 use Appwrite\Utopia\Response\Model\Phone;
 use Appwrite\Utopia\Response\Model\Platform;
 use Appwrite\Utopia\Response\Model\Project;
@@ -148,6 +149,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Currencies List', self::MODEL_CURRENCY_LIST, 'currencies', self::MODEL_CURRENCY))
             ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
             // Entities
+            ->setModel(new Permissions())
             ->setModel(new Any())
             ->setModel(new Collection())
             ->setModel(new Rule())
@@ -213,6 +215,16 @@ class Response extends SwooleResponse
         }
 
         return $this->models[$key];
+    }
+
+    /**
+     * Get Models List
+     * 
+     * @return Model[]
+     */
+    public function getModels(): array
+    {
+        return $this->models;
     }
 
     /**
