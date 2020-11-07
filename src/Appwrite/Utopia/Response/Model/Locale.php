@@ -36,7 +36,7 @@ class Locale extends Model
                 'example' => 'North America',
             ])
             ->addRule('eu', [
-                'type' => 'Boolean',
+                'type' => 'boolean',
                 'description' => 'True if country is part of the Europian Union.',
                 'default' => false,
                 'example' => false,
