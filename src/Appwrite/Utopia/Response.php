@@ -7,6 +7,7 @@ use Utopia\Swoole\Response as SwooleResponse;
 use Swoole\Http\Response as SwooleHTTPResponse;
 use Appwrite\Database\Document;
 use Appwrite\Utopia\Response\Model;
+use Appwrite\Utopia\Response\Model\None;
 use Appwrite\Utopia\Response\Model\Any;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Collection;
@@ -42,6 +43,7 @@ use Appwrite\Utopia\Response\Model\Webhook;
 class Response extends SwooleResponse
 {
     // General
+    const MODEL_NONE = 'none';
     const MODEL_ANY = 'any';
     const MODEL_LOG = 'log';
     const MODEL_LOG_LIST = 'logList';
@@ -123,6 +125,8 @@ class Response extends SwooleResponse
     {
         $this
             // General
+            ->setModel(new None())
+            ->setModel(new Any())
             ->setModel(new Error())
             ->setModel(new ErrorDev())
             // Lists
@@ -150,7 +154,6 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
             // Entities
             ->setModel(new Permissions())
-            ->setModel(new Any())
             ->setModel(new Collection())
             ->setModel(new Rule())
             ->setModel(new Log())

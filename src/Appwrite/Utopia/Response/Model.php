@@ -13,6 +13,11 @@ abstract class Model
     /**
      * @var bool
      */
+    protected $none = false;
+
+    /**
+     * @var bool
+     */
     protected $any = false;
 
     /**
@@ -74,6 +79,25 @@ abstract class Model
         return $list;
     }
 
+    /**
+     * Is None
+     * 
+     * Use to check if response is empty
+     * 
+     * @return bool
+     */
+    public function isNone(): bool
+    {
+        return $this->none;
+    }
+
+    /**
+     * Is Any
+     * 
+     * Use to check if response is a wildcard
+     * 
+     * @return bool
+     */
     public function isAny(): bool
     {
         return $this->any;
