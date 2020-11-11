@@ -1,9 +1,14 @@
 <?php
 
+use Appwrite\Spec\Spec;
+use Appwrite\Specification\Format\OpenAPI3;
+use Appwrite\Specification\Format\Swagger2;
+use Appwrite\Specification\Specification;
 use Appwrite\Template\Template;
 use Utopia\App;
 use Utopia\View;
 use Utopia\Config\Config;
+use Utopia\Exception;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Range;
 
@@ -180,29 +185,25 @@ App::get('/error/:code')
             ->setParam('body', $page);
     }, ['layout']);
 
-App::get('/open-api-2.json')
+App::get('/specs/:format')
     ->groups(['web', 'home'])
     ->label('scope', 'public')
     ->label('docs', false)
+    ->param('format', 'swagger2', new WhiteList(['swagger2', 'open-api3'], true), 'Spec format.', true)
     ->param('platform', APP_PLATFORM_CLIENT, new WhiteList([APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER, APP_PLATFORM_CONSOLE], true), 'Choose target platform.', true)
-    ->param('extensions', 0, new Range(0, 1), 'Show extra data.', true)
-    ->param('tests', 0, new Range(0, 1), 'Include only test services.', true)
-    ->action(function ($platform, $extensions, $tests, $utopia, $request, $response) {
+    ->action(function ($format, $platform, $utopia, $request, $response) {
         /** @var Utopia\App $utopia */
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
 
-        $security = [
-            APP_PLATFORM_CLIENT => ['Project' => []],
-            APP_PLATFORM_SERVER => ['Project' => [], 'Key' => []],
-            APP_PLATFORM_CONSOLE => ['Project' => [], 'Key' => []],
-        ];
-
         $platforms = [
             'client' => APP_PLATFORM_CLIENT,
             'server' => APP_PLATFORM_SERVER,
-            'all' => APP_PLATFORM_CONSOLE,
+            'console' => APP_PLATFORM_CONSOLE,
         ];
+
+        $routes = [];
+        $models = [];
 
         $keys = [
             APP_PLATFORM_CLIENT => [
@@ -267,98 +268,16 @@ App::get('/open-api-2.json')
             ],
         ];
 
-        /*
-        * Specifications (v3.0.0):
-        * https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.0.md
-        */
-        $output = [
-            'swagger' => '2.0',
-            'info' => [
-                'version' => APP_VERSION_STABLE,
-                'title' => APP_NAME,
-                'description' => 'Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)',
-                'termsOfService' => 'https://appwrite.io/policy/terms',
-                'contact' => [
-                    'name' => 'Appwrite Team',
-                    'url' => 'https://appwrite.io/support',
-                    'email' => App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
-                ],
-                'license' => [
-                    'name' => 'BSD-3-Clause',
-                    'url' => 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
-                ],
-            ],
-            'host' => \parse_url(App::getEnv('_APP_HOME', $request->getHostname()), PHP_URL_HOST),
-            'basePath' => '/v1',
-            'schemes' => ['https'],
-            'consumes' => ['application/json', 'multipart/form-data'],
-            'produces' => ['application/json'],
-            'securityDefinitions' => $keys[$platform],
-            'paths' => [],
-            'definitions' => [
-                // 'Pet' => [
-                //     'required' => ['id', 'name'],
-                //     'properties' => [
-                //         'id' => [
-                //             'type' => 'integer',
-                //             'format' => 'int64',
-                //         ],
-                //         'name' => [
-                //             'type' => 'string',
-                //         ],
-                //         'tag' => [
-                //             'type' => 'string',
-                //         ],
-                //     ],
-                // ],
-                // 'Pets' => array(
-                //         'type' => 'array',
-                //         'items' => array(
-                //                 '$ref' => '#/definitions/Pet',
-                //             ),
-                //     ),
-                'Error' => array(
-                        'required' => array(
-                                0 => 'code',
-                                1 => 'message',
-                            ),
-                        'properties' => array(
-                                'code' => array(
-                                        'type' => 'integer',
-                                        'format' => 'int32',
-                                    ),
-                                'message' => array(
-                                        'type' => 'string',
-                                    ),
-                            ),
-                    ),
-            ],
-            'externalDocs' => [
-                'description' => 'Full API docs, specs and tutorials',
-                'url' => $request->getProtocol().'://'.$request->getHostname().'/docs',
-            ],
+        $security = [
+            APP_PLATFORM_CLIENT => ['Project' => []],
+            APP_PLATFORM_SERVER => ['Project' => [], 'Key' => []],
+            APP_PLATFORM_CONSOLE => ['Project' => [], 'Key' => []],
         ];
 
-        if ($extensions) {
-            if (isset($output['securityDefinitions']['Project'])) {
-                $output['securityDefinitions']['Project']['extensions'] = ['demo' => '5df5acd0d48c2'];
-            }
-            
-            if (isset($output['securityDefinitions']['Key'])) {
-                $output['securityDefinitions']['Key']['extensions'] = ['demo' => '919c2d18fb5d4...a2ae413da83346ad2'];
-            }
-            
-            if (isset($output['securityDefinitions']['Locale'])) {
-                $output['securityDefinitions']['Locale']['extensions'] = ['demo' => 'en'];
-            }
-
-            if (isset($output['securityDefinitions']['Mode'])) {
-                $output['securityDefinitions']['Mode']['extensions'] = ['demo' => ''];
-            }
-        }
-
         foreach ($utopia->getRoutes() as $key => $method) {
-            foreach ($method as $route) { /* @var $route \Utopia\Route */
+            foreach ($method as $route) { /** @var \Utopia\Route $route */
+                var_dump($route->getURL());
+
                 if (!$route->getLabel('docs', true)) {
                     continue;
                 }
@@ -375,184 +294,50 @@ App::get('/open-api-2.json')
                     continue;
                 }
 
-                $url = \str_replace('/v1', '', $route->getURL());
-                $scope = $route->getLabel('scope', '');
-                $hide = $route->getLabel('sdk.hide', false);
-                $consumes = ['application/json'];
-
-                if ($hide) {
-                    continue;
+                $routes[] = $route;
+                $model = $response->getModel($route->getLabel('sdk.response.model', 'none'));
+                
+                if($model) {
+                    $models[$model->getType()] = $model;
                 }
-
-                $desc = (!empty($route->getLabel('sdk.description', ''))) ? \realpath(__DIR__.'/../../../'.$route->getLabel('sdk.description', '')) : null;
-    
-                $temp = [
-                    'summary' => $route->getDesc(),
-                    'operationId' => $route->getLabel('sdk.method', \uniqid()),
-                    'consumes' => [],
-                    'tags' => [$route->getLabel('sdk.namespace', 'default')],
-                    'description' => ($desc) ? \file_get_contents($desc) : '',
-                    
-                    // 'responses' => [
-                    //     200 => [
-                    //         'description' => 'An paged array of pets',
-                    //         'schema' => [
-                    //             '$ref' => '#/definitions/Pet',
-                    //         ],
-                    //     ],
-                    // ],
-                ];
-
-                if ($extensions) {
-                    $platformList = $route->getLabel('sdk.platform', []);
-
-                    $temp['extensions'] = [
-                        'weight' => $route->getOrder(),
-                        'cookies' => $route->getLabel('sdk.cookies', false),
-                        'type' => $route->getLabel('sdk.methodType', ''),
-                        'demo' => 'docs/examples/'. Template::fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')).'/'.Template::fromCamelCaseToDash($temp['operationId']).'.md',
-                        'edit' => 'https://github.com/appwrite/appwrite/edit/master' . $route->getLabel('sdk.description', ''),
-                        'rate-limit' => $route->getLabel('abuse-limit', 0),
-                        'rate-time' => $route->getLabel('abuse-time', 3600),
-                        'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
-                        'scope' => $route->getLabel('scope', ''),
-                        'platforms' => $platformList,
-                    ];
-                }
-
-                if ((!empty($scope))) { //  && 'public' != $scope
-                    $temp['security'][] = $route->getLabel('sdk.security', $security[$platform]);
-                }
-
-                $requestBody = [
-                    'content' => [
-                        'application/x-www-form-urlencoded' => [
-                            'schema' => [
-                                'type' => 'object',
-                                'properties' => [],
-                            ],
-                            'required' => [],
-                        ],
-                    ],
-                ];
-
-                foreach ($route->getParams() as $name => $param) {
-                    $validator = (\is_callable($param['validator'])) ? call_user_func_array($param['validator'], $utopia->getResources($param['resources'])) : $param['validator']; /* @var $validator \Utopia\Validator */
-
-                    $node = [
-                        'name' => $name,
-                        'description' => $param['description'],
-                        'required' => !$param['optional'],
-                    ];
-
-                    switch ((!empty($validator)) ? \get_class($validator) : '') {
-                        case 'Utopia\Validator\Text':
-                            $node['type'] = 'string';
-                            $node['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
-                            break;
-                        case 'Utopia\Validator\Boolean':
-                            $node['type'] = 'boolean';
-                            $node['x-example'] = false;
-                            break;
-                        case 'Appwrite\Database\Validator\UID':
-                            $node['type'] = 'string';
-                            $node['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
-                            break;
-                        case 'Utopia\Validator\Email':
-                            $node['type'] = 'string';
-                            $node['format'] = 'email';
-                            $node['x-example'] = 'email@example.com';
-                            break;
-                        case 'Utopia\Validator\URL':
-                            $node['type'] = 'string';
-                            $node['format'] = 'url';
-                            $node['x-example'] = 'https://example.com';
-                            break;
-                        case 'Utopia\Validator\JSON':
-                        case 'Utopia\Validator\Mock':
-                        case 'Utopia\Validator\Assoc':
-                            $node['type'] = 'object';
-                            $node['type'] = 'object';
-                            $node['x-example'] = '{}';
-                            //$node['format'] = 'json';
-                            break;
-                        case 'Appwrite\Storage\Validator\File':
-                            $consumes = ['multipart/form-data'];
-                            $node['type'] = 'file';
-                            break;
-                        case 'Utopia\Validator\ArrayList':
-                            $node['type'] = 'array';
-                            $node['collectionFormat'] = 'multi';
-                            $node['items'] = [
-                                'type' => 'string',
-                            ];
-                            break;
-                        case 'Appwrite\Auth\Validator\Password':
-                            $node['type'] = 'string';
-                            $node['format'] = 'format';
-                            $node['x-example'] = 'password';
-                            break;
-                        case 'Utopia\Validator\Range': /* @var $validator \Utopia\Validator\Range */
-                            $node['type'] = 'integer';
-                            $node['format'] = 'int32';
-                            $node['x-example'] = $validator->getMin();
-                            break;
-                        case 'Utopia\Validator\Numeric':
-                            $node['type'] = 'integer';
-                            $node['format'] = 'int32';
-                            break;
-                        case 'Utopia\Validator\Length':
-                            $node['type'] = 'string';
-                            break;
-                        case 'Utopia\Validator\Host':
-                            $node['type'] = 'string';
-                            $node['format'] = 'url';
-                            $node['x-example'] = 'https://example.com';
-                            break;
-                        case 'Utopia\Validator\WhiteList': /* @var $validator \Utopia\Validator\WhiteList */
-                            $node['type'] = 'string';
-                            $node['x-example'] = $validator->getList()[0];
-                            break;
-                        default:
-                            $node['type'] = 'string';
-                            break;
-                    }
-
-                    if ($param['optional'] && !\is_null($param['default'])) { // Param has default value
-                        $node['default'] = $param['default'];
-                    }
-
-                    if (false !== \strpos($url, ':'.$name)) { // Param is in URL path
-                        $node['in'] = 'path';
-                        $temp['parameters'][] = $node;
-                    } elseif ($key == 'GET') { // Param is in query
-                        $node['in'] = 'query';
-                        $temp['parameters'][] = $node;
-                    } else { // Param is in payload
-                        $node['in'] = 'formData';
-                        $temp['parameters'][] = $node;
-                        $requestBody['content']['application/x-www-form-urlencoded']['schema']['properties'][] = $node;
-
-                        if (!$param['optional']) {
-                            $requestBody['content']['application/x-www-form-urlencoded']['required'][] = $name;
-                        }
-                    }
-
-                    $url = \str_replace(':'.$name, '{'.$name.'}', $url);
-                }
-
-                $temp['consumes'] = $consumes;
-
-                $output['paths'][$url][\strtolower($route->getMethod())] = $temp;
             }
         }
 
-        /*foreach ($consoleDB->getMocks() as $mock) {
-            var_dump($mock['name']);
-        }*/
+        $models = $response->getModels();
 
-        \ksort($output['paths']);
+        switch ($format) {
+            case 'swagger2':
+                $format = new Swagger2($utopia, $routes, $models, $keys[$platform], $security[$platform]);
+                break;
+
+            case 'open-api3':
+                $format = new OpenAPI3($utopia, $routes, $models, $keys[$platform], $security[$platform]);
+                break;
+            
+            default:
+                throw new Exception('Format not found', 404);
+                break;
+        }
+
+        $specs = new Specification($format);
+        
+        $format
+            ->setParam('name', APP_NAME)
+            ->setParam('description', 'Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)')
+            ->setParam('endpoint', App::getEnv('_APP_HOME', $request->getProtocol().'://'.$request->getHostname()).'/v1')
+            ->setParam('version', APP_VERSION_STABLE)
+            ->setParam('terms', App::getEnv('_APP_HOME', $request->getProtocol().'://'.$request->getHostname()).'/policy/terms')
+            ->setParam('support.email', App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM))
+            ->setParam('support.url', App::getEnv('_APP_HOME', $request->getProtocol().'://'.$request->getHostname()).'/support')
+            ->setParam('contact.name', APP_NAME.' Team')
+            ->setParam('contact.email', App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM))
+            ->setParam('contact.url', App::getEnv('_APP_HOME', $request->getProtocol().'://'.$request->getHostname()).'/support')
+            ->setParam('license.name', 'BSD-3-Clause')
+            ->setParam('license.url', 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE')
+            ->setParam('docs.description', 'Full API docs, specs and tutorials')
+            ->setParam('docs.url', App::getEnv('_APP_HOME', $request->getProtocol().'://'.$request->getHostname()).'/docs')
+        ;
 
         $response
-            ->json($output);
+            ->json($specs->parse());
     }, ['utopia', 'request', 'response']);
