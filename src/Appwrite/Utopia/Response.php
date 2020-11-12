@@ -35,6 +35,7 @@ use Appwrite\Utopia\Response\Model\Project;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Tag;
 use Appwrite\Utopia\Response\Model\Task;
+use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
 
 /**
@@ -159,6 +160,7 @@ class Response extends SwooleResponse
             ->setModel(new Log())
             ->setModel(new User())
             ->setModel(new Session())
+            ->setModel(new Token())
             ->setModel(new Locale())
             ->setModel(new File())
             ->setModel(new Team())

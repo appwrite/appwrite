@@ -145,6 +145,9 @@ App::get('/v1/users/:userId/prefs')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getPrefs')
     ->label('sdk.description', '/docs/references/users/get-user-prefs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ANY)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->action(function ($userId, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
@@ -158,7 +161,7 @@ App::get('/v1/users/:userId/prefs')
 
         $prefs = $user->getAttribute('prefs', '');
 
-        $response->json($prefs);
+        $response->dynamic(new Document($prefs), Response::MODEL_ANY);
     }, ['response', 'projectDB']);
 
 App::get('/v1/users/:userId/sessions')
@@ -358,6 +361,9 @@ App::patch('/v1/users/:userId/prefs')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updatePrefs')
     ->label('sdk.description', '/docs/references/users/update-user-prefs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ANY)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
     ->action(function ($userId, $prefs, $response, $projectDB) {
@@ -378,7 +384,7 @@ App::patch('/v1/users/:userId/prefs')
             throw new Exception('Failed saving user to DB', 500);
         }
 
-        $response->json($prefs);
+        $response->dynamic(new Document($prefs), Response::MODEL_ANY);
     }, ['response', 'projectDB']);
 
 App::delete('/v1/users/:userId/sessions/:sessionId')

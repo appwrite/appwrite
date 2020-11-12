@@ -191,7 +191,7 @@ App::post('/v1/account/sessions')
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
             '$permissions' => ['read' => ['user:'.$profile->getId()], 'write' => ['user:'.$profile->getId()]],
             'type' => Auth::TOKEN_TYPE_LOGIN,
-            'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
+            'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
@@ -529,7 +529,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
             '$permissions' => ['read' => ['user:'.$user['$id']], 'write' => ['user:'.$user['$id']]],
             'type' => Auth::TOKEN_TYPE_LOGIN,
-            'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
+            'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
@@ -639,13 +639,16 @@ App::get('/v1/account/prefs')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getPrefs')
     ->label('sdk.description', '/docs/references/account/get-prefs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ANY)
     ->action(function ($response, $user) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
 
         $prefs = $user->getAttribute('prefs', new \stdClass);
 
-        $response->json($prefs);
+        $response->dynamic(new Document($prefs), Response::MODEL_ANY);
     }, ['response', 'user']);
 
 App::get('/v1/account/sessions')
@@ -936,6 +939,9 @@ App::patch('/v1/account/prefs')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePrefs')
     ->label('sdk.description', '/docs/references/account/update-prefs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ANY)
     ->param('prefs', [], new Assoc(), 'Prefs key-value JSON object.')
     ->action(function ($prefs, $response, $user, $projectDB, $audits) {
         /** @var Appwrite\Utopia\Response $response */
@@ -958,7 +964,7 @@ App::patch('/v1/account/prefs')
 
         $prefs = $user->getAttribute('prefs', new \stdClass);
 
-        $response->json($prefs);
+        $response->dynamic(new Document($prefs), Response::MODEL_ANY);
     }, ['response', 'user', 'projectDB', 'audits']);
 
 App::delete('/v1/account')
@@ -1181,7 +1187,7 @@ App::post('/v1/account/recovery')
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
             '$permissions' => ['read' => ['user:'.$profile->getId()], 'write' => ['user:'.$profile->getId()]],
             'type' => Auth::TOKEN_TYPE_RECOVERY,
-            'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
+            'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => \time() + Auth::TOKEN_EXPIRATION_RECOVERY,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
@@ -1245,7 +1251,7 @@ App::post('/v1/account/recovery')
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($recovery->getArrayCopy(['$id', 'type', 'expire']))
+            ->dynamic($recovery, Response::MODEL_TOKEN)
         ;
     }, ['request', 'response', 'projectDB', 'project', 'locale', 'mails', 'audits']);
 
@@ -1318,7 +1324,7 @@ App::put('/v1/account/recovery')
 
         $recovery = $profile->search('$id', $recovery, $profile->getAttribute('tokens', []));
 
-        $response->json($recovery->getArrayCopy(['$id', 'type', 'expire']));
+        $response->dynamic($recovery, Response::MODEL_TOKEN);
     }, ['response', 'projectDB', 'audits']);
 
 App::post('/v1/account/verification')
@@ -1348,7 +1354,7 @@ App::post('/v1/account/verification')
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
             '$permissions' => ['read' => ['user:'.$user->getId()], 'write' => ['user:'.$user->getId()]],
             'type' => Auth::TOKEN_TYPE_VERIFICATION,
-            'secret' => Auth::hash($verificationSecret), // On way hash encryption to protect DB leak
+            'secret' => Auth::hash($verificationSecret), // One way hash encryption to protect DB leak
             'expire' => \time() + Auth::TOKEN_EXPIRATION_CONFIRM,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
@@ -1412,7 +1418,7 @@ App::post('/v1/account/verification')
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($verification->getArrayCopy(['$id', 'type', 'expire']))
+            ->dynamic($verification, Response::MODEL_TOKEN)
         ;
     }, ['request', 'response', 'project', 'user', 'projectDB', 'locale', 'audits', 'mails']);
 
@@ -1478,5 +1484,5 @@ App::put('/v1/account/verification')
 
         $verification = $profile->search('$id', $verification, $profile->getAttribute('tokens', []));
 
-        $response->json($verification->getArrayCopy(['$id', 'type', 'expire']));
+        $response->dynamic($verification, Response::MODEL_TOKEN);
     }, ['response', 'user', 'projectDB', 'audits']);

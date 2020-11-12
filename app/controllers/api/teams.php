@@ -578,7 +578,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
             '$permissions' => ['read' => ['user:'.$user->getId()], 'write' => ['user:'.$user->getId()]],
             'type' => Auth::TOKEN_TYPE_LOGIN,
-            'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
+            'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
