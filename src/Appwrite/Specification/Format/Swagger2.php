@@ -149,6 +149,11 @@ class Swagger2 extends Format
                 ];
             }
 
+            if($route->getLabel('sdk.response.code', 500) === 204) {
+                $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')]['description'] = 'No content';
+                unset($temp['responses'][(string)$route->getLabel('sdk.response.code', '500')]['schema']);
+            }
+
             if ((!empty($scope))) { //  && 'public' != $scope
                 $temp['security'][] = $route->getLabel('sdk.security', $this->security);
             }
