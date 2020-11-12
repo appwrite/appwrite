@@ -276,8 +276,6 @@ App::get('/specs/:format')
 
         foreach ($utopia->getRoutes() as $key => $method) {
             foreach ($method as $route) { /** @var \Utopia\Route $route */
-                var_dump($route->getURL());
-
                 if (!$route->getLabel('docs', true)) {
                     continue;
                 }
@@ -304,6 +302,12 @@ App::get('/specs/:format')
         }
 
         $models = $response->getModels();
+
+        foreach ($models as $key => $value) {
+            if($platform !== APP_PLATFORM_CONSOLE && !$value->isPublic()) {
+                unset($models[$key]);
+            }
+        }
 
         switch ($format) {
             case 'swagger2':

@@ -8,6 +8,11 @@ use Utopia\Config\Config;
 
 class Project extends Model
 {
+    /**
+     * @var bool
+     */
+    protected $public = false;
+    
     public function __construct()
     {
         $this

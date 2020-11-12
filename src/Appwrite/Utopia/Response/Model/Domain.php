@@ -7,6 +7,11 @@ use Appwrite\Utopia\Response\Model;
 
 class Domain extends Model
 {
+    /**
+     * @var bool
+     */
+    protected $public = false;
+    
     public function __construct()
     {
         $this

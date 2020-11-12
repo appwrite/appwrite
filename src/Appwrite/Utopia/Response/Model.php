@@ -21,6 +21,11 @@ abstract class Model
     protected $any = false;
 
     /**
+     * @var bool
+     */
+    protected $public = true;
+
+    /**
      * @var array
      */
     protected $rules = [];
@@ -101,5 +106,17 @@ abstract class Model
     public function isAny(): bool
     {
         return $this->any;
+    }
+
+    /**
+     * Is Public
+     * 
+     * Should this model be publicly available in docs and spec files?
+     * 
+     * @return bool
+     */
+    public function isPublic(): bool
+    {
+        return $this->public;
     }
 }
