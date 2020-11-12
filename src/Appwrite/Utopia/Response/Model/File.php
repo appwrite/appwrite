@@ -11,7 +11,7 @@ class File extends Model
     {
         $this
             ->addRule('$id', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'File ID.',
                 'example' => '5e5ea5c16897e',
             ])
@@ -22,27 +22,27 @@ class File extends Model
                 'array' => false,
             ])
             ->addRule('name', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'File name.',
                 'example' => 'Pink.png',
             ])
             ->addRule('dateCreated', [
-                'type' => 'integer',
+                'type' => self::TYPE_INTEGER,
                 'description' => 'File creation date in Unix timestamp.',
                 'example' => 1592981250,
             ])
             ->addRule('signature', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'File MD5 signature.',
                 'example' => '5d529fd02b544198ae075bd57c1762bb',
             ])
             ->addRule('mimeType', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'File mime type.',
                 'example' => 'image/png',
             ])
             ->addRule('sizeOriginal', [
-                'type' => 'integer',
+                'type' => self::TYPE_INTEGER,
                 'description' => 'File original size in bytes.',
                 'example' => 17890,
             ])

@@ -17,14 +17,23 @@ class BaseList extends Model
      */
     protected $type = '';
 
-    public function __construct(string $name, string $type, string $key, string $model, bool $paging = true)
+    /**
+     * @param string $name
+     * @param string $type
+     * @param string $key
+     * @param string $model
+     * @param bool $paging
+     * @param bool $public
+     */
+    public function __construct(string $name, string $type, string $key, string $model, bool $paging = true, bool $public = true)
     {
         $this->name = $name;
         $this->type = $type;
+        $this->public = $public;
 
         if ($paging) {
             $this->addRule('sum', [
-                'type' => 'integer',
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Total sum of items in the list.',
                 'example' => '5',
             ]);

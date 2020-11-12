@@ -11,48 +11,48 @@ class Rule extends Model
     {
         $this
             ->addRule('$id', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Rule ID.',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$collection', [ // TODO remove this from public response
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Rule Collection.',
                 'example' => '5e5e66c16897e',
             ])
             ->addRule('type', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Rule type. Possible values: ',
                 'example' => 'title',
             ])
             ->addRule('key', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Rule key.',
                 'example' => 'title',
             ])
             ->addRule('label', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Rule label.',
                 'example' => 'Title',
             ])
             ->addRule('default', [ // TODO should be of mixed types
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Rule default value.',
                 'example' => 'Movie Name',
                 'default' => '',
             ])
             ->addRule('array', [
-                'type' => 'boolean',
+                'type' => self::TYPE_BOOLEAN,
                 'description' => 'Is array?',
                 'example' => false,
             ])
             ->addRule('required', [
-                'type' => 'boolean',
+                'type' => self::TYPE_BOOLEAN,
                 'description' => 'Is required?',
                 'example' => true,
             ])
             ->addRule('list', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'List of allowed values',
                 'array' => true,
                 'default' => [],

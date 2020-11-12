@@ -37,6 +37,9 @@ App::post('/v1/account')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'create')
     ->label('sdk.description', '/docs/references/account/create.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
     ->label('abuse-limit', 10)
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
@@ -131,6 +134,9 @@ App::post('/v1/account/sessions')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createSession')
     ->label('sdk.description', '/docs/references/account/create-session.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SESSION)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', new Email(), 'User email.')
@@ -185,7 +191,7 @@ App::post('/v1/account/sessions')
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
             '$permissions' => ['read' => ['user:'.$profile->getId()], 'write' => ['user:'.$profile->getId()]],
             'type' => Auth::TOKEN_TYPE_LOGIN,
-            'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
+            'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
@@ -523,7 +529,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
             '$permissions' => ['read' => ['user:'.$user['$id']], 'write' => ['user:'.$user['$id']]],
             'type' => Auth::TOKEN_TYPE_LOGIN,
-            'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
+            'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
@@ -611,7 +617,9 @@ App::get('/v1/account')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/account/get.md')
-    ->label('sdk.response', ['200' => 'user'])
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
     ->action(function ($response, $user) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
@@ -631,13 +639,16 @@ App::get('/v1/account/prefs')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getPrefs')
     ->label('sdk.description', '/docs/references/account/get-prefs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ANY)
     ->action(function ($response, $user) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
 
         $prefs = $user->getAttribute('prefs', new \stdClass);
 
-        $response->json($prefs);
+        $response->dynamic(new Document($prefs), Response::MODEL_ANY);
     }, ['response', 'user']);
 
 App::get('/v1/account/sessions')
@@ -648,6 +659,9 @@ App::get('/v1/account/sessions')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getSessions')
     ->label('sdk.description', '/docs/references/account/get-sessions.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SESSION_LIST)
     ->action(function ($response, $user, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
@@ -685,6 +699,9 @@ App::get('/v1/account/logs')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getLogs')
     ->label('sdk.description', '/docs/references/account/get-logs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->action(function ($response, $register, $project, $user, $locale, $geodb) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
@@ -783,6 +800,9 @@ App::patch('/v1/account/name')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateName')
     ->label('sdk.description', '/docs/references/account/update-name.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.')
     ->action(function ($name, $response, $user, $projectDB, $audits) {
         /** @var Appwrite\Utopia\Response $response */
@@ -818,6 +838,9 @@ App::patch('/v1/account/password')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePassword')
     ->label('sdk.description', '/docs/references/account/update-password.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
     ->param('password', '', new Password(), 'New user password. Must be between 6 to 32 chars.')
     ->param('oldPassword', '', new Password(), 'Old user password. Must be between 6 to 32 chars.')
     ->action(function ($password, $oldPassword, $response, $user, $projectDB, $audits) {
@@ -858,6 +881,9 @@ App::patch('/v1/account/email')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateEmail')
     ->label('sdk.description', '/docs/references/account/update-email.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
     ->action(function ($email, $password, $response, $user, $projectDB, $audits) {
@@ -913,6 +939,9 @@ App::patch('/v1/account/prefs')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePrefs')
     ->label('sdk.description', '/docs/references/account/update-prefs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ANY)
     ->param('prefs', [], new Assoc(), 'Prefs key-value JSON object.')
     ->action(function ($prefs, $response, $user, $projectDB, $audits) {
         /** @var Appwrite\Utopia\Response $response */
@@ -935,7 +964,7 @@ App::patch('/v1/account/prefs')
 
         $prefs = $user->getAttribute('prefs', new \stdClass);
 
-        $response->json($prefs);
+        $response->dynamic(new Document($prefs), Response::MODEL_ANY);
     }, ['response', 'user', 'projectDB', 'audits']);
 
 App::delete('/v1/account')
@@ -947,6 +976,9 @@ App::delete('/v1/account')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', '/docs/references/account/delete.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
     ->action(function ($request, $response, $user, $projectDB, $audits, $webhooks) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
@@ -1005,6 +1037,9 @@ App::delete('/v1/account/sessions/:sessionId')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'deleteSession')
     ->label('sdk.description', '/docs/references/account/delete-session.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
     ->label('abuse-limit', 100)
     ->param('sessionId', null, new UID(), 'Session unique ID. Use the string \'current\' to delete the current device session.')
     ->action(function ($sessionId, $request, $response, $user, $projectDB, $audits, $webhooks) {
@@ -1067,6 +1102,9 @@ App::delete('/v1/account/sessions')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'deleteSessions')
     ->label('sdk.description', '/docs/references/account/delete-sessions.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
     ->label('abuse-limit', 100)
     ->action(function ($request, $response, $user, $projectDB, $audits, $webhooks) {
         /** @var Utopia\Swoole\Request $request */
@@ -1149,7 +1187,7 @@ App::post('/v1/account/recovery')
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
             '$permissions' => ['read' => ['user:'.$profile->getId()], 'write' => ['user:'.$profile->getId()]],
             'type' => Auth::TOKEN_TYPE_RECOVERY,
-            'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
+            'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => \time() + Auth::TOKEN_EXPIRATION_RECOVERY,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
@@ -1213,7 +1251,7 @@ App::post('/v1/account/recovery')
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($recovery->getArrayCopy(['$id', 'type', 'expire']))
+            ->dynamic($recovery, Response::MODEL_TOKEN)
         ;
     }, ['request', 'response', 'projectDB', 'project', 'locale', 'mails', 'audits']);
 
@@ -1286,7 +1324,7 @@ App::put('/v1/account/recovery')
 
         $recovery = $profile->search('$id', $recovery, $profile->getAttribute('tokens', []));
 
-        $response->json($recovery->getArrayCopy(['$id', 'type', 'expire']));
+        $response->dynamic($recovery, Response::MODEL_TOKEN);
     }, ['response', 'projectDB', 'audits']);
 
 App::post('/v1/account/verification')
@@ -1316,7 +1354,7 @@ App::post('/v1/account/verification')
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
             '$permissions' => ['read' => ['user:'.$user->getId()], 'write' => ['user:'.$user->getId()]],
             'type' => Auth::TOKEN_TYPE_VERIFICATION,
-            'secret' => Auth::hash($verificationSecret), // On way hash encryption to protect DB leak
+            'secret' => Auth::hash($verificationSecret), // One way hash encryption to protect DB leak
             'expire' => \time() + Auth::TOKEN_EXPIRATION_CONFIRM,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
@@ -1380,7 +1418,7 @@ App::post('/v1/account/verification')
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($verification->getArrayCopy(['$id', 'type', 'expire']))
+            ->dynamic($verification, Response::MODEL_TOKEN)
         ;
     }, ['request', 'response', 'project', 'user', 'projectDB', 'locale', 'audits', 'mails']);
 
@@ -1446,5 +1484,5 @@ App::put('/v1/account/verification')
 
         $verification = $profile->search('$id', $verification, $profile->getAttribute('tokens', []));
 
-        $response->json($verification->getArrayCopy(['$id', 'type', 'expire']));
+        $response->dynamic($verification, Response::MODEL_TOKEN);
     }, ['response', 'user', 'projectDB', 'audits']);

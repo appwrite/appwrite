@@ -27,6 +27,9 @@ App::post('/v1/users')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'create')
     ->label('sdk.description', '/docs/references/users/create-user.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
@@ -80,6 +83,9 @@ App::get('/v1/users')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'list')
     ->label('sdk.description', '/docs/references/users/list-users.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER_LIST)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
@@ -114,6 +120,9 @@ App::get('/v1/users/:userId')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/users/get-user.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->action(function ($userId, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
@@ -136,6 +145,9 @@ App::get('/v1/users/:userId/prefs')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getPrefs')
     ->label('sdk.description', '/docs/references/users/get-user-prefs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ANY)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->action(function ($userId, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
@@ -149,7 +161,7 @@ App::get('/v1/users/:userId/prefs')
 
         $prefs = $user->getAttribute('prefs', '');
 
-        $response->json($prefs);
+        $response->dynamic(new Document($prefs), Response::MODEL_ANY);
     }, ['response', 'projectDB']);
 
 App::get('/v1/users/:userId/sessions')
@@ -160,6 +172,9 @@ App::get('/v1/users/:userId/sessions')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getSessions')
     ->label('sdk.description', '/docs/references/users/get-user-sessions.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SESSION_LIST)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->action(function ($userId, $response, $projectDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
@@ -203,6 +218,9 @@ App::get('/v1/users/:userId/logs')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getLogs')
     ->label('sdk.description', '/docs/references/users/get-user-logs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->action(function ($userId, $response, $register, $project, $projectDB, $locale, $geodb) {
         /** @var Appwrite\Utopia\Response $response */
@@ -309,6 +327,9 @@ App::patch('/v1/users/:userId/status')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updateStatus')
     ->label('sdk.description', '/docs/references/users/update-user-status.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('status', '', new WhiteList([Auth::USER_STATUS_ACTIVATED, Auth::USER_STATUS_BLOCKED, Auth::USER_STATUS_UNACTIVATED], true), 'User Status code. To activate the user pass '.Auth::USER_STATUS_ACTIVATED.', to block the user pass '.Auth::USER_STATUS_BLOCKED.' and for disabling the user pass '.Auth::USER_STATUS_UNACTIVATED)
     ->action(function ($userId, $status, $response, $projectDB) {
@@ -340,6 +361,9 @@ App::patch('/v1/users/:userId/prefs')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updatePrefs')
     ->label('sdk.description', '/docs/references/users/update-user-prefs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ANY)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
     ->action(function ($userId, $prefs, $response, $projectDB) {
@@ -360,7 +384,7 @@ App::patch('/v1/users/:userId/prefs')
             throw new Exception('Failed saving user to DB', 500);
         }
 
-        $response->json($prefs);
+        $response->dynamic(new Document($prefs), Response::MODEL_ANY);
     }, ['response', 'projectDB']);
 
 App::delete('/v1/users/:userId/sessions/:sessionId')
@@ -372,6 +396,9 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'deleteSession')
     ->label('sdk.description', '/docs/references/users/delete-user-session.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
     ->label('abuse-limit', 100)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('sessionId', null, new UID(), 'User unique session ID.')
@@ -412,6 +439,9 @@ App::delete('/v1/users/:userId/sessions')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'deleteSessions')
     ->label('sdk.description', '/docs/references/users/delete-user-sessions.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
     ->label('abuse-limit', 100)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->action(function ($userId, $response, $projectDB, $webhooks) {
@@ -449,6 +479,9 @@ App::delete('/v1/users/:userId')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'deleteUser')
     ->label('sdk.description', '/docs/references/users/delete-user.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
     ->label('abuse-limit', 100)
     ->param('userId', '', function () {return new UID();}, 'User unique ID.')
     ->action(function ($userId, $response, $projectDB, $webhooks, $deletes) {
