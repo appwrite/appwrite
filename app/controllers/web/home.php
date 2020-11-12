@@ -1,16 +1,13 @@
 <?php
 
-use Appwrite\Spec\Spec;
 use Appwrite\Specification\Format\OpenAPI3;
 use Appwrite\Specification\Format\Swagger2;
 use Appwrite\Specification\Specification;
-use Appwrite\Template\Template;
 use Utopia\App;
 use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Exception;
 use Utopia\Validator\WhiteList;
-use Utopia\Validator\Range;
 
 App::init(function ($layout) {
     /** @var Utopia\View $layout */

@@ -6,6 +6,11 @@ use Appwrite\Utopia\Response;
 
 class ErrorDev extends Error
 {
+    /**
+     * @var bool
+     */
+    protected $public = false;
+
     public function __construct()
     {
         parent::__construct();
