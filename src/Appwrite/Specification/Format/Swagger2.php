@@ -345,7 +345,7 @@ class Swagger2 extends Format
                         break;
                     
                     case 'boolean':
-                        $type = 'string';
+                        $type = 'boolean';
                         break;
                     
                     default:
@@ -379,7 +379,7 @@ class Swagger2 extends Format
                     $output['definitions'][$model->getType()]['properties'][$name] = [
                         'type' => $type,
                         'description' => $rule['description'] ?? '',
-                        'default' => $rule['default'] ?? null,
+                        //'default' => $rule['default'] ?? null,
                         'x-example' => $rule['example'] ?? null,
                     ];
 
