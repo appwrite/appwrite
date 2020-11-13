@@ -307,6 +307,7 @@ class Swagger2 extends Format
             $rules = $model->getRules();
 
             $output['definitions'][$model->getType()] = [
+                'description' => $model->getName(),
                 'type' => 'object',
             ];
 
@@ -378,6 +379,8 @@ class Swagger2 extends Format
                     $output['definitions'][$model->getType()]['properties'][$name] = [
                         'type' => $type,
                         'description' => $rule['description'] ?? '',
+                        'default' => $rule['default'] ?? null,
+                        'x-example' => $rule['example'] ?? null,
                     ];
 
                     if($format) {

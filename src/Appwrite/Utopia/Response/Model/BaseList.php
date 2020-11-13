@@ -35,12 +35,14 @@ class BaseList extends Model
             $this->addRule('sum', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total sum of items in the list.',
-                'example' => '5',
+                'default' => 0,
+                'example' => 5,
             ]);
         }
         $this->addRule($key, [
             'type' => $model,
             'description' => 'List of '.$key.'.',
+            'default' => [],
             'example' => [],
             'array' => true,
         ]);
