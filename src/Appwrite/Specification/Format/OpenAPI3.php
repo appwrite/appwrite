@@ -277,9 +277,12 @@ class OpenAPI3 extends Format
                     $body['content'][$consumes[0]]['schema']['properties'][$name] = [
                         'type' => $node['schema']['type'],
                         'description' => $node['description'],
-                        'default' => $node['default'] ?? null,
                         'x-example' => $node['x-example'] ?? null,
                     ];
+
+                    if(!\is_null($node['default'])) {
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['default'] = $node['default'];
+                    }
 
                     if(\array_key_exists('items', $node['schema'])) {
                         $body['content'][$consumes[0]]['schema']['properties'][$name]['items'] = $node['schema']['items'];
@@ -289,15 +292,12 @@ class OpenAPI3 extends Format
                 $url = \str_replace(':'.$name, '{'.$name.'}', $url);
             }
 
-
-            var_dump($body);
-            var_dump('-------');
-            if(!empty($body['content'][$consumes[0]]['schema']['properties'])) {
-                $temp['requestBody'] = $body;
+            if(!empty($bodyRequired)) {
+                $body['content'][$consumes[0]]['schema']['required'] = $bodyRequired;
             }
 
-            if(!empty($bodyRequired)) {
-                $body['schema']['required'] = $bodyRequired;
+            if(!empty($body['content'][$consumes[0]]['schema']['properties'])) {
+                $temp['requestBody'] = $body;
             }
 
             //$temp['consumes'] = $consumes;

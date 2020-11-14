@@ -96,7 +96,7 @@ class HTTPTest extends Scope
         $this->assertStringContainsString('# robotstxt.org/', $response['body']);
     }
 
-    public function testSpecSwagger()
+    public function testSpecSwagger2()
     {
         $response = $this->client->call(Client::METHOD_GET, '/specs/swagger2?platform=client', [
             'content-type' => 'application/json',
@@ -119,8 +119,36 @@ class HTTPTest extends Scope
         $response['body'] = json_decode($response['body'], true);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEmpty($response['body']);
+        $this->assertFalse(isset($response['body']['messages']));
 
         unlink(realpath(__DIR__ . '/../../resources/swagger2.json'));
+    }
+
+    public function testSpecOpenAPI3()
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/specs/open-api3?platform=client', [
+            'content-type' => 'application/json',
+        ], []);
+
+        if(!file_put_contents(__DIR__ . '/../../resources/open-api3.json', json_encode($response['body']))) {
+            throw new Exception('Failed to save spec file');
+        }
+
+        $client = new Client();
+        $client->setEndpoint('https://validator.swagger.io');
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $client->call(Client::METHOD_POST, '/validator/debug', [
+            'content-type' => 'application/json',
+        ], json_decode(file_get_contents(realpath(__DIR__ . '/../../resources/open-api3.json')), true));
+
+        $response['body'] = json_decode($response['body'], true);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertFalse(isset($response['body']['messages']));
+
+        unlink(realpath(__DIR__ . '/../../resources/open-api3.json'));
     }
 }
