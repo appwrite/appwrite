@@ -289,12 +289,12 @@ class Swagger2 extends Format
                 $url = \str_replace(':'.$name, '{'.$name.'}', $url);
             }
 
-            if(!empty($body['schema']['properties'])) {
-                $temp['parameters'][] = $body;
-            }
-
             if(!empty($bodyRequired)) {
                 $body['schema']['required'] = $bodyRequired;
+            }
+
+            if(!empty($body['schema']['properties'])) {
+                $temp['parameters'][] = $body;
             }
 
             $temp['consumes'] = $consumes;
