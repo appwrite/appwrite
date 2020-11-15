@@ -11,44 +11,44 @@ class User extends Model
     {
         $this
             ->addRule('$id', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'User ID.',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('name', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'User name.',
                 'example' => 'John Doe',
             ])
             ->addRule('registration', [
-                'type' => 'integer',
+                'type' => self::TYPE_INTEGER,
                 'description' => 'User registration date in Unix timestamp.',
                 'example' => 1592981250,
             ])
             ->addRule('status', [
-                'type' => 'integer',
+                'type' => self::TYPE_INTEGER,
                 'description' => 'User status. 0 for Unavtivated, 1 for active and 2 is blocked.',
                 'example' => 0,
             ])
             ->addRule('email', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'User email address.',
                 'example' => 'john@appwrite.io',
             ])
             ->addRule('emailVerification', [
-                'type' => 'boolean',
+                'type' => self::TYPE_BOOLEAN,
                 'description' => 'Email verification status.',
                 'default' => false,
                 'example' => true,
             ])
             ->addRule('prefs', [
-                'type' => 'json',
+                'type' => self::TYPE_JSON,
                 'description' => 'User preferences as a key-value object',
                 'default' => new \stdClass,
                 'example' => ['theme' => 'pink', 'timezone' => 'UTC'],
             ])
             ->addRule('roles', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'User list of roles',
                 'default' => [],
                 'example' => [],
