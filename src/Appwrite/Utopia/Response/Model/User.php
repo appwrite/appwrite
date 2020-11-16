@@ -51,7 +51,7 @@ class User extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'User list of roles',
                 'default' => [],
-                'example' => [],
+                'example' => '*',
                 'array' => true,
             ])
         ;

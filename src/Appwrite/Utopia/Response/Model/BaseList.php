@@ -43,7 +43,6 @@ class BaseList extends Model
             'type' => $model,
             'description' => 'List of '.$key.'.',
             'default' => [],
-            'example' => [],
             'array' => true,
         ]);
     }
