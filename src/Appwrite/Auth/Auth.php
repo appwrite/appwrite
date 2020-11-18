@@ -49,9 +49,9 @@ class Auth
     /**
      * User Unique ID.
      *
-     * @var int
+     * @var string
      */
-    public static $unique = 0;
+    public static $unique = '';
 
     /**
      * User Secret Key.
@@ -75,7 +75,7 @@ class Auth
     /**
      * Encode Session.
      *
-     * @param int    $id
+     * @param string $id
      * @param string $secret
      *
      * @return string
