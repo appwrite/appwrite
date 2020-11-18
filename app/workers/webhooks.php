@@ -34,8 +34,9 @@ class WebhooksV1
         $errors = [];
 
         // Event
-        $projectId = $this->args['projectId'];
-        $event = $this->args['event'];
+        $projectId = $this->args['projectId'] ?? '';
+        $userId = $this->args['userId'] ?? '';
+        $event = $this->args['event'] ?? '';
         $payload = \json_encode($this->args['payload']);
 
         // Webhook
