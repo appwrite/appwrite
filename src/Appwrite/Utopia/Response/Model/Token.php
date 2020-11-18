@@ -15,12 +15,12 @@ class Token extends Model
                 'description' => 'Token ID.',
                 'example' => '5e5ea5c16897e',
             ])
-            // ->addRule('type', [ TODO: use this when token types will be strings
-            //     'type' => self::TYPE_STRING,
-            //     'description' => 'Token type. Possible values: play, pause',
-            //     'default' => '',
-            //     'example' => '127.0.0.1',
-            // ])
+            ->addRule('secret', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Token secret key. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
+                'default' => 0,
+                'example' => '',
+            ])
             ->addRule('expire', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Token expiration date in Unix timestamp.',

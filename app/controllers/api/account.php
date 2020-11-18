@@ -1153,6 +1153,7 @@ App::post('/v1/account/recovery')
     ->desc('Create Password Recovery')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
+    ->label('event', 'account.recovery.create')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createRecovery')
@@ -1164,7 +1165,7 @@ App::post('/v1/account/recovery')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', new Email(), 'User email.')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients'])
-    ->action(function ($email, $url, $request, $response, $projectDB, $project, $locale, $mails, $audits) {
+    ->action(function ($email, $url, $request, $response, $projectDB, $project, $locale, $mails, $audits, $webhooks, $mode) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -1172,6 +1173,8 @@ App::post('/v1/account/recovery')
         /** @var Utopia\Locale\Locale $locale */
         /** @var Appwrite\Event\Event $mails */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Event $webhooks */
+        /** @var bool $mode */
 
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
             'limit' => 1,
@@ -1246,6 +1249,17 @@ App::post('/v1/account/recovery')
             ->trigger();
         ;
 
+        $webhooks
+            ->setParam('payload',
+                $response->output($recovery->setAttribute('secret', $secret),
+                Response::MODEL_TOKEN
+            ))
+        ;
+
+        $recovery  // Hide secret for clients, sp
+            ->setAttribute('secret',
+                ((APP_MODE_ADMIN === $mode)) ? $secret : '');
+
         $audits
             ->setParam('userId', $profile->getId())
             ->setParam('event', 'account.recovery.create')
@@ -1256,12 +1270,13 @@ App::post('/v1/account/recovery')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($recovery, Response::MODEL_TOKEN)
         ;
-    }, ['request', 'response', 'projectDB', 'project', 'locale', 'mails', 'audits']);
+    }, ['request', 'response', 'projectDB', 'project', 'locale', 'mails', 'audits', 'webhooks', 'mode']);
 
 App::put('/v1/account/recovery')
     ->desc('Complete Password Recovery')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
+    ->label('event', 'account.recovery.update')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateRecovery')
@@ -1347,7 +1362,7 @@ App::post('/v1/account/verification')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add built-in confirm page
-    ->action(function ($url, $request, $response, $project, $user, $projectDB, $locale, $audits, $mails) {
+    ->action(function ($url, $request, $response, $project, $user, $projectDB, $locale, $audits, $webhooks, $mails, $mode) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
@@ -1355,7 +1370,9 @@ App::post('/v1/account/verification')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Utopia\Locale\Locale $locale */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Event $webhooks */
         /** @var Appwrite\Event\Event $mails */
+        /** @var bool $mode */
 
         $verificationSecret = Auth::tokenGenerator();
         
@@ -1419,6 +1436,17 @@ App::post('/v1/account/verification')
             ->trigger()
         ;
 
+        $webhooks
+            ->setParam('payload',
+                $response->output($verification->setAttribute('secret', $verificationSecret),
+                Response::MODEL_TOKEN
+            ))
+        ;
+
+        $verification  // Hide secret for clients, sp
+            ->setAttribute('secret',
+                ((APP_MODE_ADMIN === $mode)) ? $verificationSecret : '');
+
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.verification.create')
@@ -1429,7 +1457,7 @@ App::post('/v1/account/verification')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($verification, Response::MODEL_TOKEN)
         ;
-    }, ['request', 'response', 'project', 'user', 'projectDB', 'locale', 'audits', 'mails']);
+    }, ['request', 'response', 'project', 'user', 'projectDB', 'locale', 'audits', 'webhooks', 'mails', 'mode']);
 
 App::put('/v1/account/verification')
     ->desc('Complete Email Verification')

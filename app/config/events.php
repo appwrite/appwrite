@@ -19,6 +19,12 @@ return [
     'account.update.prefs' => [
         'description' => 'This event triggers when the account preferences are updated.',
     ],
+    'account.recovery.create' => [
+        'description' => 'This event triggers when the account recovery token is created.',
+    ],
+    'account.recovery.update' => [
+        'description' => 'This event triggers when the account recovery token is validated.',
+    ],
     'account.delete' => [
         'description' => 'This event triggers when the account is deleted.',
     ],
