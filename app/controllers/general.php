@@ -36,8 +36,6 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     /** @var bool $mode */
     /** @var array $clients */
     
-    Authorization::$roles = ['*'];
-
     $localeParam = (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
 
     if (\in_array($localeParam, Config::getParam('locale-codes'))) {

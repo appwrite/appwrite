@@ -42,6 +42,11 @@ class AuthorizationTest extends TestCase
         Authorization::setRole('user:456');
         Authorization::setRole('user:123');
         
+        $this->assertEquals(Authorization::isRole('user:456'), true);
+        $this->assertEquals(Authorization::isRole('user:457'), false);
+        $this->assertEquals(Authorization::isRole(''), false);
+        $this->assertEquals(Authorization::isRole('*'), true);
+
         $this->assertEquals($this->object->isValid($this->document->getPermissions()), true);
         
         Authorization::cleanRoles();
