@@ -2,6 +2,7 @@
 
 require_once __DIR__.'/../vendor/autoload.php';
 
+use Appwrite\Database\Validator\Authorization;
 use Utopia\Swoole\Files;
 use Utopia\Swoole\Request;
 use Appwrite\Utopia\Response;
@@ -94,6 +95,9 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     $app = new App('America/New_York');
     
     try {
+        Authorization::cleanRoles();
+        Authorization::setRole('*');
+
         $app->run($request, $response);
     } catch (\Throwable $th) {
         Console::error('[Error] Type: '.get_class($th));
