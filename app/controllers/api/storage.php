@@ -49,12 +49,10 @@ App::post('/v1/storage/files')
         /** @var Appwrite\Event\Event $usage */
 
         $file = $request->getFiles('file');
-        $read = (empty($read)) ? ['user:'.$user->getId()] : $read;
-        $write = (empty($write)) ? ['user:'.$user->getId()] : $write;
 
         /*
-            * Validators
-            */
+         * Validators
+         */
         //$fileType = new FileType(array(FileType::FILE_TYPE_PNG, FileType::FILE_TYPE_GIF, FileType::FILE_TYPE_JPEG));
         $fileSize = new FileSize(App::getEnv('_APP_STORAGE_LIMIT', 0));
         $upload = new Upload();
