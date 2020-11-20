@@ -1,6 +1,7 @@
 <?php
 
 use Utopia\App;
+use Utopia\CLI\Console;
 
 require_once __DIR__.'/../init.php';
 
@@ -22,6 +23,11 @@ class MailsV1
     public function perform()
     {
         global $register;
+
+        if(empty(App::getEnv('_APP_SMTP_HOST'))) {
+            Console::info('Skipped mail. No SMTP server hostname has been set.');
+            return;
+        }
 
         $event = $this->args['event'];
         $from = $this->args['from'];
