@@ -280,7 +280,7 @@ class OpenAPI3 extends Format
                         'x-example' => $node['x-example'] ?? null,
                     ];
 
-                    if(!\is_null($node['default'])) {
+                    if(isset($node['default'])) {
                         $body['content'][$consumes[0]]['schema']['properties'][$name]['default'] = $node['default'];
                     }
 

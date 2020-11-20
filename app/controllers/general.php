@@ -35,8 +35,6 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     /** @var Appwrite\Event\Event $deletes */
     /** @var bool $mode */
     /** @var array $clients */
-    
-    Authorization::$roles = ['*'];
 
     $localeParam = (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
 
