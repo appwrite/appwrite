@@ -114,7 +114,7 @@ class Session extends Model
             ->addRule('current', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Returns true if this the current user session.',
-                'default' => '',
+                'default' => false,
                 'example' => true,
             ])
         ;
