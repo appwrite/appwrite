@@ -1165,7 +1165,7 @@ App::post('/v1/account/recovery')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', new Email(), 'User email.')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients'])
-    ->action(function ($email, $url, $request, $response, $projectDB, $project, $locale, $mails, $audits, $webhooks, $mode) {
+    ->action(function ($email, $url, $request, $response, $projectDB, $project, $locale, $mails, $audits, $webhooks) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -1174,7 +1174,9 @@ App::post('/v1/account/recovery')
         /** @var Appwrite\Event\Event $mails */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $webhooks */
-        /** @var bool $mode */
+
+        $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
+        $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
             'limit' => 1,
@@ -1258,7 +1260,7 @@ App::post('/v1/account/recovery')
 
         $recovery  // Hide secret for clients, sp
             ->setAttribute('secret',
-                ((APP_MODE_ADMIN === $mode)) ? $secret : '');
+                ($isPreviliggedUser || $isAppUser) ? $secret : '');
 
         $audits
             ->setParam('userId', $profile->getId())
@@ -1270,7 +1272,7 @@ App::post('/v1/account/recovery')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($recovery, Response::MODEL_TOKEN)
         ;
-    }, ['request', 'response', 'projectDB', 'project', 'locale', 'mails', 'audits', 'webhooks', 'mode']);
+    }, ['request', 'response', 'projectDB', 'project', 'locale', 'mails', 'audits', 'webhooks']);
 
 App::put('/v1/account/recovery')
     ->desc('Complete Password Recovery')
@@ -1362,7 +1364,7 @@ App::post('/v1/account/verification')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add built-in confirm page
-    ->action(function ($url, $request, $response, $project, $user, $projectDB, $locale, $audits, $webhooks, $mails, $mode) {
+    ->action(function ($url, $request, $response, $project, $user, $projectDB, $locale, $audits, $webhooks, $mails) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
@@ -1372,7 +1374,9 @@ App::post('/v1/account/verification')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $webhooks */
         /** @var Appwrite\Event\Event $mails */
-        /** @var bool $mode */
+
+        $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
+        $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $verificationSecret = Auth::tokenGenerator();
         
@@ -1445,7 +1449,7 @@ App::post('/v1/account/verification')
 
         $verification  // Hide secret for clients, sp
             ->setAttribute('secret',
-                ((APP_MODE_ADMIN === $mode)) ? $verificationSecret : '');
+                ($isPreviliggedUser || $isAppUser) ? $verificationSecret : '');
 
         $audits
             ->setParam('userId', $user->getId())
@@ -1457,7 +1461,7 @@ App::post('/v1/account/verification')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($verification, Response::MODEL_TOKEN)
         ;
-    }, ['request', 'response', 'project', 'user', 'projectDB', 'locale', 'audits', 'webhooks', 'mails', 'mode']);
+    }, ['request', 'response', 'project', 'user', 'projectDB', 'locale', 'audits', 'webhooks', 'mails']);
 
 App::put('/v1/account/verification')
     ->desc('Complete Email Verification')

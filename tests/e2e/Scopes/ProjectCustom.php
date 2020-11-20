@@ -81,9 +81,49 @@ trait ProjectCustom
             ],
         ]);
 
-        $this->assertEquals(201, $project['headers']['status-code']);
+        $this->assertEquals(201, $key['headers']['status-code']);
         $this->assertNotEmpty($key['body']);
         $this->assertNotEmpty($key['body']['secret']);
+
+        $webhook = $this->client->call(Client::METHOD_POST, '/projects/'.$project['body']['$id'].'/webhooks', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Webhook Test',
+            'events' => [
+                'account.create',
+                'account.update.email',
+                'account.update.name',
+                'account.update.password',
+                'account.update.prefs',
+                'account.recovery.create',
+                'account.recovery.update',
+                'account.delete',
+                'account.sessions.create',
+                'account.sessions.delete',
+                'database.collections.create',
+                'database.collections.update',
+                'database.collections.delete',
+                'database.documents.create',
+                'database.documents.patch',
+                'database.documents.delete',
+                'storage.files.create',
+                'storage.files.update',
+                'storage.files.delete',
+                'users.create',
+                'users.update.status',
+                'users.delete',
+                'users.sessions.delete',
+            ],
+            'url' => 'http://request-catcher:5000/webhook',
+            'security' => false,
+            'httpUser' => '',
+            'httpPass' => '',
+        ]);
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $this->assertNotEmpty($webhook['body']);
+        $this->assertNotEmpty($webhook['body']['secret']);
 
         // return [
         //     'email' => $this->demoEmail,
