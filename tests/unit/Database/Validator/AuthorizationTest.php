@@ -79,5 +79,12 @@ class AuthorizationTest extends TestCase
         
         $this->assertEquals($this->object->isValid($this->document->getPermissions()), false);
 
+        Authorization::setRole('textX');
+
+        $this->assertContains('textX', Authorization::getRoles());
+
+        Authorization::unsetRole('textX');
+
+        $this->assertNotContains('textX', Authorization::getRoles());
     }
 }
