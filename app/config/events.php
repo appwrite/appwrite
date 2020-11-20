@@ -25,6 +25,12 @@ return [
     'account.recovery.update' => [
         'description' => 'This event triggers when the account recovery token is validated.',
     ],
+    'account.verification.create' => [
+        'description' => 'This event triggers when the account verification token is created.',
+    ],
+    'account.verification.update' => [
+        'description' => 'This event triggers when the account verification token is validated.',
+    ],
     'account.delete' => [
         'description' => 'This event triggers when the account is deleted.',
     ],
