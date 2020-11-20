@@ -85,10 +85,12 @@ trait ProjectCustom
         $this->assertNotEmpty($key['body']);
         $this->assertNotEmpty($key['body']['secret']);
 
-        $webhook = $this->client->call(Client::METHOD_POST, '/projects/'.$project['body']['$id'].'/webhooks', array_merge([
+        $webhook = $this->client->call(Client::METHOD_POST, '/projects/'.$project['body']['$id'].'/webhooks', [
+            'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
             'name' => 'Webhook Test',
             'events' => [
                 'account.create',
@@ -98,6 +100,8 @@ trait ProjectCustom
                 'account.update.prefs',
                 'account.recovery.create',
                 'account.recovery.update',
+                'account.verification.create',
+                'account.verification.update',
                 'account.delete',
                 'account.sessions.create',
                 'account.sessions.delete',
@@ -123,16 +127,6 @@ trait ProjectCustom
 
         $this->assertEquals(201, $webhook['headers']['status-code']);
         $this->assertNotEmpty($webhook['body']);
-        $this->assertNotEmpty($webhook['body']['secret']);
-
-        // return [
-        //     'email' => $this->demoEmail,
-        //     'password' => $this->demoPassword,
-        //     'session' => $session,
-        //     'projectUid' => $project['body']['$id'],
-        //     'projectAPIKeySecret' => $key['body']['secret'],
-        //     'projectSession' => $this->client->parseCookie($user['headers']['set-cookie'])['a_session_' . $project['body']['$id']],
-        // ];
 
         self::$project = [
             '$id' => $project['body']['$id'],
