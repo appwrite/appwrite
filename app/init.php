@@ -382,8 +382,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
 
     $session = Auth::decodeSession(
         $request->getCookie(Auth::$cookieName, // Get sessions
-            $request->getCookie(Auth::$cookieName.'_legacy', // Get fallback session from old clients (no SameSite support)
-                $request->getHeader('x-appwrite-key', '')))); // Get API Key
+            $request->getCookie(Auth::$cookieName.'_legacy', '')));// Get fallback session from old clients (no SameSite support)
 
     // Get fallback session from clients who block 3rd-party cookies
     $response->addHeader('X-Debug-Fallback', 'false');

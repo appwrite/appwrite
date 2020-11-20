@@ -23,7 +23,6 @@ class Auth
     const USER_ROLE_OWNER = 4;
     const USER_ROLE_APP = 5;
     const USER_ROLE_SYSTEM = 6;
-    const USER_ROLE_ALL = '*';
 
     /**
      * Token Types.
@@ -202,6 +201,42 @@ class Auth
                 $token->getAttribute('expire') >= \time()) {
                 return (string)$token->getId();
             }
+        }
+
+        return false;
+    }
+
+    /**
+     * Is Previligged User?
+     * 
+     * @param array $roles
+     * 
+     * @return bool
+     */
+    public static function isPreviliggedUser(array $roles): bool
+    {
+        if(
+            array_key_exists('role:'.self::USER_ROLE_OWNER, $roles) ||
+            array_key_exists('role:'.self::USER_ROLE_DEVELOPER, $roles) ||
+            array_key_exists('role:'.self::USER_ROLE_ADMIN, $roles)
+        ) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Is App User?
+     * 
+     * @param array $roles
+     * 
+     * @return bool
+     */
+    public static function isAppUser(array $roles): bool
+    {
+        if(array_key_exists('role:'.self::USER_ROLE_APP, $roles)) {
+            return true;
         }
 
         return false;
