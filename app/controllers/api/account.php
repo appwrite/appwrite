@@ -105,6 +105,10 @@ App::post('/v1/account')
 
         Authorization::enable();
 
+        Authorization::unsetRole('role:'.Auth::USER_ROLE_GUEST);
+        Authorization::setRole('user:'.$user->getId());
+        Authorization::setRole('role:'.Auth::USER_ROLE_MEMBER);
+
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500);
         }
@@ -624,9 +628,7 @@ App::get('/v1/account')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
 
-        $user
-            ->setAttribute('roles', Authorization::getRoles())
-        ;
+        $user->setAttribute('roles', Authorization::getRoles());
 
         $response->dynamic($user, Response::MODEL_USER);
     }, ['response', 'user']);
@@ -1011,6 +1013,8 @@ App::delete('/v1/account')
             ->setParam('data', $user->getArrayCopy())
         ;
 
+        $user->setAttribute('roles', Authorization::getRoles());
+
         $webhooks
             ->setParam('payload', $response->output($user, Response::MODEL_USER))
         ;
@@ -1069,22 +1073,26 @@ App::delete('/v1/account/sessions/:sessionId')
                     ->setParam('resource', '/user/'.$user->getId())
                 ;
 
-                $webhooks
-                    ->setParam('payload', $response->output($user, Response::MODEL_USER))
-                ;
-
                 if (!Config::getParam('domainVerification')) {
                     $response
                         ->addHeader('X-Fallback-Cookies', \json_encode([]))
                     ;
                 }
+                
+                $token->setAttribute('current', false);
 
                 if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                    $token->setAttribute('current', true);
+
                     $response
                         ->addCookie(Auth::$cookieName.'_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
                         ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
                     ;
                 }
+
+                $webhooks
+                    ->setParam('payload', $response->output($token, Response::MODEL_SESSION))
+                ;
 
                 return $response->noContent();
             }
@@ -1127,10 +1135,6 @@ App::delete('/v1/account/sessions')
                 ->setParam('event', 'account.sessions.delete')
                 ->setParam('resource', '/user/'.$user->getId())
             ;
-            
-            $webhooks
-                ->setParam('payload', $response->output($user, Response::MODEL_USER))
-            ;
 
             if (!Config::getParam('domainVerification')) {
                 $response
@@ -1138,13 +1142,23 @@ App::delete('/v1/account/sessions')
                 ;
             }
 
+            $token->setAttribute('current', false);
+
             if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                $token->setAttribute('current', true);
                 $response
                     ->addCookie(Auth::$cookieName.'_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
                     ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
                 ;
             }
         }
+                    
+        $webhooks
+            ->setParam('payload', $response->output(new Document([
+                'sum' => count($tokens),
+                'sessions' => $tokens
+            ]), Response::MODEL_SESSION_LIST))
+        ;
 
         $response->noContent();
     }, ['request', 'response', 'user', 'projectDB', 'audits', 'webhooks']);
@@ -1354,6 +1368,7 @@ App::post('/v1/account/verification')
     ->desc('Create Email Verification')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
+    ->label('event', 'account.verification.create')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createVerification')
@@ -1467,6 +1482,7 @@ App::put('/v1/account/verification')
     ->desc('Complete Email Verification')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
+    ->label('event', 'account.verification.update')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateVerification')
