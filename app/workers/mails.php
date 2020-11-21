@@ -25,7 +25,7 @@ class MailsV1
         global $register;
 
         if(empty(App::getEnv('_APP_SMTP_HOST'))) {
-            Console::info('Skipped mail. No SMTP server hostname has been set.');
+            Console::info('Skipped mail processing. No SMTP server hostname has been set.');
             return;
         }
 
