@@ -32,8 +32,11 @@ App::post('/v1/storage/files')
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'createFile')
     ->label('sdk.description', '/docs/references/storage/create-file.md')
-    ->label('sdk.consumes', 'multipart/form-data')
+    ->label('sdk.request.type', 'multipart/form-data')
     ->label('sdk.methodType', 'upload')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_FILE)
     ->param('file', [], new File(), 'Binary file.', false)
     ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
@@ -46,12 +49,10 @@ App::post('/v1/storage/files')
         /** @var Appwrite\Event\Event $usage */
 
         $file = $request->getFiles('file');
-        $read = (empty($read)) ? ['user:'.$user->getId()] : $read;
-        $write = (empty($write)) ? ['user:'.$user->getId()] : $write;
 
         /*
-            * Validators
-            */
+         * Validators
+         */
         //$fileType = new FileType(array(FileType::FILE_TYPE_PNG, FileType::FILE_TYPE_GIF, FileType::FILE_TYPE_JPEG));
         $fileSize = new FileSize(App::getEnv('_APP_STORAGE_LIMIT', 0));
         $upload = new Upload();
@@ -163,6 +164,9 @@ App::get('/v1/storage/files')
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'listFiles')
     ->label('sdk.description', '/docs/references/storage/list-files.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_FILE_LIST)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
@@ -197,6 +201,9 @@ App::get('/v1/storage/files/:fileId')
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getFile')
     ->label('sdk.description', '/docs/references/storage/get-file.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_FILE)
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->action(function ($fileId, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
@@ -219,7 +226,8 @@ App::get('/v1/storage/files/:fileId/preview')
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getFilePreview')
     ->label('sdk.description', '/docs/references/storage/get-file-preview.md')
-    ->label('sdk.response.type', 'image/*')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE)
     ->label('sdk.methodType', 'location')
     ->param('fileId', '', new UID(), 'File unique ID')
     ->param('width', 0, new Range(0, 4000), 'Resize preview image width, Pass an integer between 0 to 4000.', true)
@@ -345,7 +353,8 @@ App::get('/v1/storage/files/:fileId/download')
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getFileDownload')
     ->label('sdk.description', '/docs/references/storage/get-file-download.md')
-    ->label('sdk.response.type', '*')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', '*/*')
     ->label('sdk.methodType', 'location')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->action(function ($fileId, $response, $projectDB) {
@@ -400,7 +409,8 @@ App::get('/v1/storage/files/:fileId/view')
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getFileView')
     ->label('sdk.description', '/docs/references/storage/get-file-view.md')
-    ->label('sdk.response.type', '*')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', '*/*')
     ->label('sdk.methodType', 'location')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->param('as', '', new WhiteList(['pdf', /*'html',*/ 'text'], true), 'Choose a file format to convert your file to. Currently you can only convert word and pdf files to pdf or txt. This option is currently experimental only, use at your own risk.', true)
@@ -474,6 +484,9 @@ App::put('/v1/storage/files/:fileId')
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'updateFile')
     ->label('sdk.description', '/docs/references/storage/update-file.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_FILE)
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
@@ -506,7 +519,7 @@ App::put('/v1/storage/files/:fileId')
         ;
 
         $response->dynamic($file, Response::MODEL_FILE);
-    }, ['response', 'projectDB', 'webhooks', 'audits']);
+    }, ['response', 'projectDB', 'audits']);
 
 App::delete('/v1/storage/files/:fileId')
     ->desc('Delete File')
@@ -517,6 +530,9 @@ App::delete('/v1/storage/files/:fileId')
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'deleteFile')
     ->label('sdk.description', '/docs/references/storage/delete-file.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->action(function ($fileId, $response, $projectDB, $webhooks, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
