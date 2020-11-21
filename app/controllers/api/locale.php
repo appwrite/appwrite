@@ -13,6 +13,9 @@ App::get('/v1/locale')
     ->label('sdk.namespace', 'locale')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/locale/get-locale.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_LOCALE)
     ->action(function ($request, $response, $locale, $geodb) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
@@ -71,6 +74,9 @@ App::get('/v1/locale/countries')
     ->label('sdk.namespace', 'locale')
     ->label('sdk.method', 'getCountries')
     ->label('sdk.description', '/docs/references/locale/get-countries.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_COUNTRY_LIST)
     ->action(function ($response, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
@@ -98,6 +104,9 @@ App::get('/v1/locale/countries/eu')
     ->label('sdk.namespace', 'locale')
     ->label('sdk.method', 'getCountriesEU')
     ->label('sdk.description', '/docs/references/locale/get-countries-eu.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_COUNTRY_LIST)    
     ->action(function ($response, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
@@ -128,6 +137,9 @@ App::get('/v1/locale/countries/phones')
     ->label('sdk.namespace', 'locale')
     ->label('sdk.method', 'getCountriesPhones')
     ->label('sdk.description', '/docs/references/locale/get-countries-phones.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PHONE_LIST)
     ->action(function ($response, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
@@ -159,6 +171,9 @@ App::get('/v1/locale/continents')
     ->label('sdk.namespace', 'locale')
     ->label('sdk.method', 'getContinents')
     ->label('sdk.description', '/docs/references/locale/get-continents.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_CONTINENT_LIST)
     ->action(function ($response, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
@@ -185,6 +200,9 @@ App::get('/v1/locale/currencies')
     ->label('sdk.namespace', 'locale')
     ->label('sdk.method', 'getCurrencies')
     ->label('sdk.description', '/docs/references/locale/get-currencies.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_CURRENCY_LIST)
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
@@ -206,6 +224,9 @@ App::get('/v1/locale/languages')
     ->label('sdk.namespace', 'locale')
     ->label('sdk.method', 'getLanguages')
     ->label('sdk.description', '/docs/references/locale/get-languages.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_LANGUAGE_LIST)
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 

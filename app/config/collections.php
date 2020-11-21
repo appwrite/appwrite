@@ -172,6 +172,14 @@ $collections = [
                 'required' => false,
                 'array' => true,
             ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Filter',
+                'key' => 'filter',
+                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
+                'required' => false,
+                'array' => true,
+            ],
         ],
     ],
     Database::SYSTEM_COLLECTION_USERS => [

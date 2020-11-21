@@ -34,9 +34,10 @@ const APP_DOMAIN = 'appwrite.io';
 const APP_EMAIL_TEAM = 'team@localhost.test'; // Default email address
 const APP_EMAIL_SECURITY = 'security@localhost.test'; // Default security email address
 const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
+const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
-const APP_CACHE_BUSTER = 139;
+const APP_CACHE_BUSTER = 140;
 const APP_VERSION_STABLE = '0.7.0';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
@@ -381,8 +382,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
 
     $session = Auth::decodeSession(
         $request->getCookie(Auth::$cookieName, // Get sessions
-            $request->getCookie(Auth::$cookieName.'_legacy', // Get fallback session from old clients (no SameSite support)
-                $request->getHeader('x-appwrite-key', '')))); // Get API Key
+            $request->getCookie(Auth::$cookieName.'_legacy', '')));// Get fallback session from old clients (no SameSite support)
 
     // Get fallback session from clients who block 3rd-party cookies
     $response->addHeader('X-Debug-Fallback', 'false');
@@ -463,7 +463,7 @@ App::setResource('projectDB', function($register, $project) {
 
 App::setResource('mode', function($request) {
     /** @var Utopia\Swoole\Request $request */
-    return $request->getParam('mode', $request->getHeader('x-appwrite-mode', 'default'));
+    return $request->getParam('mode', $request->getHeader('x-appwrite-mode', APP_MODE_DEFAULT));
 }, ['request']);
 
 App::setResource('geodb', function($register) {
