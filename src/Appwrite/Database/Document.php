@@ -110,8 +110,7 @@ class Document extends ArrayObject
                 break;
             case self::SET_TYPE_APPEND:
                 $this[$key] = (!isset($this[$key]) || !\is_array($this[$key])) ? [] : $this[$key];
-                // \array_push($this[$key], $value);
-                $this[$key][count($this[$key])] = $value;
+                \array_push($this[$key], $value);
                 break;
             case self::SET_TYPE_PREPEND:
                 $this[$key] = (!isset($this[$key]) || !\is_array($this[$key])) ? [] : $this[$key];
