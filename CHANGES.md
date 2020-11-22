@@ -3,22 +3,30 @@
 ## Features
 
 - New route in Locale API to fetch a list of languages (@TorstenDittmann)
-- Added Google Fonts to Appwrite for offline availability
-- Added a new route in the Avatars API to get user initials avatar
-- Added option to delete team from the console
-- Added option to view team members from the console
+- Added response to /locale/languages API with a list of languages (@TorstenDittmann ,[#351](https://github.com/appwrite/appwrite/issues/351))
+- Added API response payload structure info and examples to the docs site ([#381](https://github.com/appwrite/appwrite/issues/381))
+- Added Google Fonts to Appwrite for offline availability 
+- Added a new route in the Avatars API to get user initials avatar ([#386](https://github.com/appwrite/appwrite/issues/386))
+- Added option to delete team from the console ([#380](https://github.com/appwrite/appwrite/issues/380))
+- Added option to view team members from the console ([#378](https://github.com/appwrite/appwrite/issues/378))
 - Added option to join a user to any team from the console
-- Added support for Brotli compression (@PedroCisnerosSantana, @Rohitub222)
+- Add option to assign new team members to a team from the console and the API ([#379](https://github.com/appwrite/appwrite/issues/379))
+- Added support for Brotli compression (@PedroCisnerosSantana, @Rohitub222, [#310](https://github.com/appwrite/appwrite/issues/310))
 - New UI micro-interactions and CSS fixes (@AnatoleLucet)
-- UI performance & accessibility improvements (#406)
+- Added Select All Checkbox for on Console API key Scopes Screen ([#477](https://github.com/appwrite/appwrite/issues/477))
+- Added pagination and search for team memberships route ([#387](https://github.com/appwrite/appwrite/issues/387))
+- UI performance & accessibility improvements ([#406](https://github.com/appwrite/appwrite/pull/406))
 - New Doctor CLI to debug the Appwrite server ([#415](https://github.com/appwrite/appwrite/issues/415))
-- All emails are now sent asynchronously for improved performance (@TorstenDittmann)
-- Updated grid for OAuth2 providers list in the console
-- Upgraded Redis Resque queue library to version 1.3.6
+- Created lazy deletion of data worker ([#521](https://github.com/appwrite/appwrite/issues/521))
+- All emails are now sent asynchronously for improved performance (@TorstenDittmann ,[#402](https://github.com/appwrite/appwrite/pull/402))
+- Updated grid for OAuth2 providers list in the console ([#413](https://github.com/appwrite/appwrite/issues/413))
+- Upgraded Redis Resque queue library to version 1.3.6 ([#319](https://github.com/appwrite/appwrite/issues/319))
+- Moved all Appwrite container logs to STDOUT & STDERR ([#389](https://github.com/appwrite/appwrite/issues/389))
 - Added container names to docker-compose.yml (@drandell)
 - Upgraded ClamAV container image to version 1.0.11 ([#412](https://github.com/appwrite/appwrite/issues/412))
 - Optimised function execution by using fully-qualified function calls
 - Added support for boolean 'true' and 'false' in query strings alongside 1 and 0
+- Upgraded installation script ([#490](https://github.com/appwrite/appwrite/issues/490))
 
 ## Bug Fixes
 
