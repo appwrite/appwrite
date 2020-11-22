@@ -29,7 +29,18 @@
 - Upgraded installation script ([#490](https://github.com/appwrite/appwrite/issues/490))
 
 ## Bug Fixes
-
+- Fixed an issue where Special characters in _APP_OPENSSL_KEY_V1_ env caused an error ([#732](https://github.com/appwrite/appwrite/issues/732))
+- Fixed an issue where Account webhook doesn't trigger through the console ([#493](https://github.com/appwrite/appwrite/issues/493))
+- Fixed case sensitive country flag code ([#526](https://github.com/appwrite/appwrite/issues/526))
+- Fixed redirect to Appwrite login page when deep link is provided ([#427](https://github.com/appwrite/appwrite/issues/427))
+- Fixed an issue where Creating documents fails for parent documents would result in an error ([#514](https://github.com/appwrite/appwrite/issues/514))
+- Fixed an issue with Email Sending Problem using external smtp ([#707](https://github.com/appwrite/appwrite/issues/707))
+- Fixed an issue where you could not remove a key from User Prefs ([#316](https://github.com/appwrite/appwrite/issues/316))
+- Fixed an issue where events are not fully visible in the console ([#492](https://github.com/appwrite/appwrite/issues/492))
+- Nginx now acknowledges max file upload ([#441](https://github.com/appwrite/appwrite/issues/441))
+- Fixed an issue where UI would wrongly validate integers ([#394](https://github.com/appwrite/appwrite/issues/394))
+- Fixed an issue where graphs were cut in mobile view ([#376](https://github.com/appwrite/appwrite/issues/376))
+- Fixed URL issue where console/ would not display list of projects ([#372](https://github.com/appwrite/appwrite/issues/372))
 - Fixed output of /v1/health/queue/certificates returning wrong data
 - Fixed bug where team members count was wrong in some cases
 - Fixed network calculation for uploaded files
