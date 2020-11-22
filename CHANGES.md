@@ -40,6 +40,7 @@
 - Upgraded Traefik image to version 2.3
 - Upgraded Redis Docker image to version 6.0 (alpine)
 - Upgraded Influxdb Docker image to version 1.8 (alpine)
+- Added option to disable mail sending by setting empty SMTP host
 
 ## Breaking Changes (Read before upgrading!)
 - **Deprecated** `first` and `last` query params for documents list route in the database API
