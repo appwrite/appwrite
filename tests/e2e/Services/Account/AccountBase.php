@@ -152,10 +152,6 @@ trait AccountBase
         $this->assertIsNumeric($response['body']['registration']);
         $this->assertEquals($response['body']['email'], $email);
         $this->assertEquals($response['body']['name'], $name);
-        $this->assertContains('*', $response['body']['roles']);
-        $this->assertContains('user:'.$response['body']['$id'], $response['body']['roles']);
-        $this->assertContains('role:1', $response['body']['roles']);
-        $this->assertCount(3, $response['body']['roles']);
 
         /**
          * Test for FAILURE
@@ -573,8 +569,8 @@ trait AccountBase
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']);
-        $this->assertEquals('prefValue1', $response['body']['prefKey1']);
-        $this->assertEquals('prefValue2', $response['body']['prefKey2']);
+        $this->assertEquals('prefValue1', $response['body']['prefs']['prefKey1']);
+        $this->assertEquals('prefValue2', $response['body']['prefs']['prefKey2']);
 
         /**
          * Test for FAILURE

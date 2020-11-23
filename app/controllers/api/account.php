@@ -119,10 +119,6 @@ App::post('/v1/account')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 
-        $user
-            ->setAttribute('roles', Authorization::getRoles())
-        ;
-
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($user, Response::MODEL_USER)
@@ -628,8 +624,6 @@ App::get('/v1/account')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
 
-        $user->setAttribute('roles', Authorization::getRoles());
-
         $response->dynamic($user, Response::MODEL_USER);
     }, ['response', 'user']);
 
@@ -820,8 +814,6 @@ App::patch('/v1/account/name')
             throw new Exception('Failed saving user to DB', 500);
         }
 
-        $user->setAttribute('roles', Authorization::getRoles());
-
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.update.name')
@@ -862,8 +854,6 @@ App::patch('/v1/account/password')
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500);
         }
-
-        $user->setAttribute('roles', Authorization::getRoles());
 
         $audits
             ->setParam('userId', $user->getId())
@@ -920,8 +910,6 @@ App::patch('/v1/account/email')
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500);
         }
-
-        $user->setAttribute('roles', Authorization::getRoles());
         
         $audits
             ->setParam('userId', $user->getId())
@@ -964,9 +952,7 @@ App::patch('/v1/account/prefs')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 
-        $prefs = $user->getAttribute('prefs', new \stdClass);
-
-        $response->dynamic(new Document($prefs), Response::MODEL_ANY);
+        $response->dynamic($user, Response::MODEL_USER);
     }, ['response', 'user', 'projectDB', 'audits']);
 
 App::delete('/v1/account')
@@ -1012,8 +998,6 @@ App::delete('/v1/account')
             ->setParam('resource', 'users/'.$user->getId())
             ->setParam('data', $user->getArrayCopy())
         ;
-
-        $user->setAttribute('roles', Authorization::getRoles());
 
         $webhooks
             ->setParam('payload', $response->output($user, Response::MODEL_USER))

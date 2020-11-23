@@ -45,7 +45,6 @@ trait WebhooksBase
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals($webhook['data']['emailVerification'], false);
         $this->assertEquals($webhook['data']['prefs'], []);
-        $this->assertEquals($webhook['data']['roles'], ['*', 'user:'.$id, 'role:1']);
 
         return [
             'id' => $id,
@@ -306,7 +305,6 @@ trait WebhooksBase
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals($webhook['data']['emailVerification'], false);
         $this->assertEquals($webhook['data']['prefs'], []);
-        $this->assertEquals($webhook['data']['roles'], ['*', 'user:'.$id, 'role:1']);
 
         return $data;
     }
@@ -348,7 +346,6 @@ trait WebhooksBase
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals($webhook['data']['emailVerification'], false);
         $this->assertEquals($webhook['data']['prefs'], []);
-        $this->assertEquals($webhook['data']['roles'], ['*', 'user:'.$id, 'role:1']);
 
         $data['password'] = 'new-password';
 
@@ -392,9 +389,53 @@ trait WebhooksBase
         $this->assertEquals($webhook['data']['email'], $newEmail);
         $this->assertEquals($webhook['data']['emailVerification'], false);
         $this->assertEquals($webhook['data']['prefs'], []);
-        $this->assertEquals($webhook['data']['roles'], ['*', 'user:'.$id, 'role:1']);
 
         $data['email'] = $newEmail;
+
+        return $data;
+    }
+
+    /**
+     * @depends testUpdateAccountEmail
+     */
+    public function testUpdateAccountPrefs($data): array
+    {
+        $id = $data['id'] ?? '';
+        $email = $data['email'] ?? '';
+        $session = $data['session'] ?? '';
+
+        $account = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]), [
+            'prefs' => [
+                'prefKey1' => 'prefValue1',
+                'prefKey2' => 'prefValue2',
+            ]
+        ]);
+
+        $this->assertEquals($account['headers']['status-code'], 200);
+        $this->assertIsArray($account['body']);
+
+        $webhook = $this->getLastRequest();
+
+        $this->assertEquals($webhook['method'], 'POST');
+        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
+        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'account.update.prefs');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertNotEmpty($webhook['data']['$id']);
+        $this->assertEquals($webhook['data']['name'], 'New Name');
+        $this->assertIsInt($webhook['data']['registration']);
+        $this->assertEquals($webhook['data']['status'], 0);
+        $this->assertEquals($webhook['data']['email'], $email);
+        $this->assertEquals($webhook['data']['emailVerification'], false);
+        $this->assertEquals($webhook['data']['prefs'], [
+            'prefKey1' => 'prefValue1',
+            'prefKey2' => 'prefValue2',
+        ]);
 
         return $data;
     }
