@@ -658,24 +658,24 @@ trait AccountBase
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
-            'url' => 'localhost/recovery',
+            'url' => 'localhost/verification',
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
-            'url' => 'http://remotehost/recovery',
+            'url' => 'http://remotehost/verification',
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
