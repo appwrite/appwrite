@@ -302,6 +302,15 @@ $collections = [
         'rules' => [
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'User ID',
+                'key' => 'userId',
+                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
+                'default' => null,
+                'required' => false,
+                'array' => false,
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Type',
                 'key' => 'type',
                 'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,

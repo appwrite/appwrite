@@ -13,7 +13,12 @@ class Token extends Model
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Token ID.',
-                'example' => '5e5ea5c16897e',
+                'example' => 'bb8ea5c16897e',
+            ])
+            ->addRule('userId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'User ID.',
+                'example' => '5e5ea5c168bb8',
             ])
             ->addRule('secret', [
                 'type' => self::TYPE_STRING,

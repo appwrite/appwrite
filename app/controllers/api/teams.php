@@ -581,6 +581,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
         $session = new Document([
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
             '$permissions' => ['read' => ['user:'.$user->getId()], 'write' => ['user:'.$user->getId()]],
+            'userId' => $user->getId(),
             'type' => Auth::TOKEN_TYPE_LOGIN,
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expiry,

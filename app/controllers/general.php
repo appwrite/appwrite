@@ -170,7 +170,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
      */
     if (null !== $key && $user->isEmpty()) {
         $user = new Document([
-            '$id' => 0,
+            '$id' => '',
             'status' => Auth::USER_STATUS_ACTIVATED,
             'email' => 'app.'.$project->getId().'@service.'.$request->getHostname(),
             'password' => '',
