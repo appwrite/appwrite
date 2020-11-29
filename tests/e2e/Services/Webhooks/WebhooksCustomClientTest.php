@@ -61,6 +61,68 @@ class WebhooksCustomClientTest extends Scope
         ];
     }
 
+    public function testDeleteAccount():array
+    {
+        $email = uniqid().'user1@localhost.test';
+        $password = 'password';
+        $name = 'User Name 1';
+
+        /**
+         * Test for SUCCESS
+         */
+        $account = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $accountSession = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals($accountSession['headers']['status-code'], 201);
+
+        $sessionId = $accountSession['body']['$id'];
+        $session = $this->client->parseCookie((string)$accountSession['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+
+        $account = $this->client->call(Client::METHOD_DELETE, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]));
+
+        $this->assertEquals($account['headers']['status-code'], 204);
+        $this->assertEmpty($account['body']);
+
+        $webhook = $this->getLastRequest();
+
+        $this->assertEquals($webhook['method'], 'POST');
+        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
+        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'account.delete');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-Userid'] ?? ''), ('server' === $this->getSide()));
+        $this->assertNotEmpty($webhook['data']['$id']);
+        $this->assertEquals($webhook['data']['name'], $name);
+        $this->assertIsInt($webhook['data']['registration']);
+        $this->assertEquals($webhook['data']['status'], 2);
+        $this->assertEquals($webhook['data']['email'], $email);
+        $this->assertEquals($webhook['data']['emailVerification'], false);
+        $this->assertEquals($webhook['data']['prefs'], []);
+
+        return [];
+    }
+
     /**
      * @depends testCreateAccount
      */
