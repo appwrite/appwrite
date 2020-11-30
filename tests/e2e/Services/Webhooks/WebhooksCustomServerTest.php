@@ -13,6 +13,131 @@ class WebhooksCustomServerTest extends Scope
     use ProjectCustom;
     use SideServer;
 
+    /**
+     * @depends testCreateCollection
+     */
+    public function testUpdateCollection($data): array
+    {
+        var_dump($data);
+        exit();
+        /**
+         * Test for SUCCESS
+         */
+        $actors = $this->client->call(Client::METHOD_PUT, '/database/collections/'.$data['actorsId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'name' => 'Actors1',
+            'read' => ['*'],
+            'write' => ['*'],
+            'rules' => [
+                [
+                    'label' => 'First Name',
+                    'key' => 'firstName',
+                    'type' => 'text',
+                    'default' => '',
+                    'required' => true,
+                    'array' => false
+                ],
+                [
+                    'label' => 'Last Name',
+                    'key' => 'lastName',
+                    'type' => 'text',
+                    'default' => '',
+                    'required' => true,
+                    'array' => false
+                ],
+            ],
+        ]);
+        
+        $this->assertEquals($actors['headers']['status-code'], 200);
+        $this->assertNotEmpty($actors['body']['$id']);
+
+        $webhook = $this->getLastRequest();
+
+        $this->assertEquals($webhook['method'], 'POST');
+        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
+        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'database.collections.update');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-Userid'] ?? ''), true);
+        $this->assertNotEmpty($webhook['data']['$id']);
+        $this->assertEquals($webhook['data']['name'], 'Actors1');
+        $this->assertIsArray($webhook['data']['$permissions']);
+        $this->assertIsArray($webhook['data']['$permissions']['read']);
+        $this->assertIsArray($webhook['data']['$permissions']['write']);
+        $this->assertCount(1, $webhook['data']['$permissions']['read']);
+        $this->assertCount(1, $webhook['data']['$permissions']['write']);
+        $this->assertCount(2, $webhook['data']['rules']);
+
+        return array_merge(['actorsId' => $actors['body']['$id']]);
+    }
+
+    public function testDeleteCollection(): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $actors = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'name' => 'Demo',
+            'read' => ['*'],
+            'write' => ['*'],
+            'rules' => [
+                [
+                    'label' => 'First Name',
+                    'key' => 'firstName',
+                    'type' => 'text',
+                    'default' => '',
+                    'required' => true,
+                    'array' => false
+                ],
+                [
+                    'label' => 'Last Name',
+                    'key' => 'lastName',
+                    'type' => 'text',
+                    'default' => '',
+                    'required' => true,
+                    'array' => false
+                ],
+            ],
+        ]);
+        
+        $this->assertEquals($actors['headers']['status-code'], 201);
+        $this->assertNotEmpty($actors['body']['$id']);
+
+        $actors = $this->client->call(Client::METHOD_DELETE, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), []);
+        
+        $this->assertEquals($actors['headers']['status-code'], 204);
+
+        $webhook = $this->getLastRequest();
+
+        $this->assertEquals($webhook['method'], 'POST');
+        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
+        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'database.collections.delete');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-Userid'] ?? ''), true);
+        $this->assertNotEmpty($webhook['data']['$id']);
+        $this->assertEquals($webhook['data']['name'], 'Demo');
+        $this->assertIsArray($webhook['data']['$permissions']);
+        $this->assertIsArray($webhook['data']['$permissions']['read']);
+        $this->assertIsArray($webhook['data']['$permissions']['write']);
+        $this->assertCount(1, $webhook['data']['$permissions']['read']);
+        $this->assertCount(1, $webhook['data']['$permissions']['write']);
+        $this->assertCount(2, $webhook['data']['rules']);
+
+        return array_merge(['actorsId' => $actors['body']['$id']]);
+    }
+
     public function testCreateUser():array
     {
         $email = uniqid().'user@localhost.test';

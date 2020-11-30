@@ -52,8 +52,8 @@ return [
     'database.documents.create' => [
         'description' => 'This event triggers when a database document is created.',
     ],
-    'database.documents.patch' => [
-        'description' => 'This event triggers when a database document is patched.',
+    'database.documents.update' => [
+        'description' => 'This event triggers when a database document is updated.',
     ],
     'database.documents.delete' => [
         'description' => 'This event triggers when a database document is deleted.',

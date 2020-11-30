@@ -109,7 +109,7 @@ trait ProjectCustom
                 'database.collections.update',
                 'database.collections.delete',
                 'database.documents.create',
-                'database.documents.patch',
+                'database.documents.update',
                 'database.documents.delete',
                 'storage.files.create',
                 'storage.files.update',
