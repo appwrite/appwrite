@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 services:
   traefik:
@@ -27,7 +27,7 @@ services:
     networks:
       - gateway
       - appwrite
-  
+
   appwrite:
     container_name: appwrite
     build:
@@ -50,7 +50,7 @@ services:
       - ./phpunit.xml:/usr/share/nginx/html/phpunit.xml
       - ./tests:/usr/share/nginx/html/tests
       - ./app:/usr/share/nginx/html/app
-     # - ./vendor:/usr/share/nginx/html/vendor
+      # - ./vendor:/usr/share/nginx/html/vendor
       - ./docs:/usr/share/nginx/html/docs
       - ./public:/usr/share/nginx/html/public
       - ./src:/usr/share/nginx/html/src
@@ -99,14 +99,13 @@ services:
       - MYSQL_DATABASE=appwrite
       - MYSQL_USER=user
       - MYSQL_PASSWORD=password
-    command: 'mysqld --innodb-flush-method=fsync'
 
   maildev:
     image: djfarrelly/maildev
     container_name: appwrite_maildev
     restart: unless-stopped
     ports:
-      - '1080:80'
+      - "1080:80"
     networks:
       - appwrite
 
@@ -182,19 +181,19 @@ services:
     container_name: appwrite_chronograf
     restart: unless-stopped
     networks:
-    - appwrite
+      - appwrite
     volumes:
-    - appwrite-chronograf:/var/lib/chronograf
+      - appwrite-chronograf:/var/lib/chronograf
     ports:
-    - "8888:8888"
+      - "8888:8888"
     environment:
-    - INFLUXDB_URL=http://influxdb:8086
-    - KAPACITOR_URL=http://kapacitor:9092
-    - AUTH_DURATION=48h
-    - TOKEN_SECRET=duperduper5674829!jwt
-    - GH_CLIENT_ID=d86f7145a41eacfc52cc
-    - GH_CLIENT_SECRET=9e0081062367a2134e7f2ea95ba1a32d08b6c8ab
-    - GH_ORGS=appwrite
+      - INFLUXDB_URL=http://influxdb:8086
+      - KAPACITOR_URL=http://kapacitor:9092
+      - AUTH_DURATION=48h
+      - TOKEN_SECRET=duperduper5674829!jwt
+      - GH_CLIENT_ID=d86f7145a41eacfc52cc
+      - GH_CLIENT_SECRET=9e0081062367a2134e7f2ea95ba1a32d08b6c8ab
+      - GH_ORGS=appwrite
 
 networks:
   gateway:
