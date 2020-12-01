@@ -18,6 +18,7 @@ class Session extends Model
             ->addRule('userId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'User ID.',
+                'default' => '',
                 'example' => '5e5bb8c16897e',
             ])
             ->addRule('expire', [

@@ -18,8 +18,6 @@ class WebhooksCustomServerTest extends Scope
      */
     public function testUpdateCollection($data): array
     {
-        var_dump($data);
-        exit();
         /**
          * Test for SUCCESS
          */
@@ -110,7 +108,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($actors['headers']['status-code'], 201);
         $this->assertNotEmpty($actors['body']['$id']);
 
-        $actors = $this->client->call(Client::METHOD_DELETE, '/database/collections', array_merge([
+        $actors = $this->client->call(Client::METHOD_DELETE, '/database/collections/'.$actors['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -135,7 +133,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertCount(1, $webhook['data']['$permissions']['write']);
         $this->assertCount(2, $webhook['data']['rules']);
 
-        return array_merge(['actorsId' => $actors['body']['$id']]);
+        return [];
     }
 
     public function testCreateUser():array
