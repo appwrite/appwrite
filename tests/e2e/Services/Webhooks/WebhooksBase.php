@@ -303,4 +303,226 @@ trait WebhooksBase
         
         return $data;
     }
+
+    public function testCreateTeam(): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Arsenal'
+        ]);
+
+        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertNotEmpty($team['body']['$id']);
+
+        $webhook = $this->getLastRequest();
+
+        $this->assertEquals($webhook['method'], 'POST');
+        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
+        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'teams.create');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-Userid'] ?? ''), ('server' === $this->getSide()));
+        $this->assertNotEmpty($webhook['data']['$id']);
+        $this->assertEquals('Arsenal', $webhook['data']['name']);
+        $this->assertGreaterThan(-1, $webhook['data']['sum']);
+        $this->assertIsInt($webhook['data']['sum']);
+        $this->assertIsInt($webhook['data']['dateCreated']);
+
+        /**
+         * Test for FAILURE
+         */
+        return ['teamId' => $team['body']['$id']];
+    }
+
+    /**
+     * @depends testCreateTeam
+     */
+    public function testUpdateTeam($data): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $team = $this->client->call(Client::METHOD_PUT, '/teams/'.$data['teamId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Demo New'
+        ]);
+
+        $this->assertEquals(200, $team['headers']['status-code']);
+        $this->assertNotEmpty($team['body']['$id']);
+
+        $webhook = $this->getLastRequest();
+
+        $this->assertEquals($webhook['method'], 'POST');
+        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
+        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'teams.update');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-Userid'] ?? ''), ('server' === $this->getSide()));
+        $this->assertNotEmpty($webhook['data']['$id']);
+        $this->assertEquals('Demo New', $webhook['data']['name']);
+        $this->assertGreaterThan(-1, $webhook['data']['sum']);
+        $this->assertIsInt($webhook['data']['sum']);
+        $this->assertIsInt($webhook['data']['dateCreated']);
+
+        /**
+         * Test for FAILURE
+         */
+        return ['teamId' => $team['body']['$id']];
+    }
+
+    public function testDeleteTeam(): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Chelsea'
+        ]);
+
+        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertNotEmpty($team['body']['$id']);
+
+        $team = $this->client->call(Client::METHOD_DELETE, '/teams/'.$team['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $webhook = $this->getLastRequest();
+
+        $this->assertEquals($webhook['method'], 'POST');
+        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
+        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'teams.delete');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-Userid'] ?? ''), ('server' === $this->getSide()));
+        $this->assertNotEmpty($webhook['data']['$id']);
+        $this->assertEquals('Chelsea', $webhook['data']['name']);
+        $this->assertGreaterThan(-1, $webhook['data']['sum']);
+        $this->assertIsInt($webhook['data']['sum']);
+        $this->assertIsInt($webhook['data']['dateCreated']);
+
+        /**
+         * Test for FAILURE
+         */
+        return [];
+    }
+
+    /**
+     * @depends testCreateTeam
+     */
+    public function testCreateTeamMembership($data): array
+    {
+        $teamUid = $data['teamId'] ?? '';
+        $email = uniqid().'friend@localhost.test';
+
+        /**
+         * Test for SUCCESS
+         */
+        $team = $this->client->call(Client::METHOD_POST, '/teams/'.$teamUid.'/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'email' => $email,
+            'name' => 'Friend User',
+            'roles' => ['admin', 'editor'],
+            'url' => 'http://localhost:5000/join-us#title'
+        ]);
+
+        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertNotEmpty($team['body']['$id']);
+
+        $lastEmail = $this->getLastEmail();
+
+        $secret = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
+        $inviteUid = substr($lastEmail['text'], strpos($lastEmail['text'], '?inviteId=', 0) + 10, 13);
+        $userUid = substr($lastEmail['text'], strpos($lastEmail['text'], '&userId=', 0) + 8, 13);
+
+        $webhook = $this->getLastRequest();
+
+        $this->assertEquals($webhook['method'], 'POST');
+        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
+        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'teams.memberships.create');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-Userid'] ?? ''), ('server' === $this->getSide()));
+        $this->assertNotEmpty($webhook['data']['$id']);
+        $this->assertNotEmpty($webhook['data']['userId']);
+        $this->assertNotEmpty($webhook['data']['teamId']);
+        $this->assertCount(2, $webhook['data']['roles']);
+        $this->assertIsInt($webhook['data']['joined']);
+        $this->assertEquals(('server' === $this->getSide()), $webhook['data']['confirm']);
+
+        /**
+         * Test for FAILURE
+         */
+        return [
+            'teamId' => $teamUid,
+            'secret' => $secret,
+            'inviteId' => $inviteUid,
+            'userId' => $webhook['data']['userId'],
+        ];
+    }
+
+    /**
+     * @depends testCreateTeam
+     */
+    public function testDeleteTeamMembership($data): array
+    {
+        $teamUid = $data['teamId'] ?? '';
+        $email = uniqid().'friend@localhost.test';
+
+        /**
+         * Test for SUCCESS
+         */
+        $team = $this->client->call(Client::METHOD_POST, '/teams/'.$teamUid.'/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'email' => $email,
+            'name' => 'Friend User',
+            'roles' => ['admin', 'editor'],
+            'url' => 'http://localhost:5000/join-us#title'
+        ]);
+
+        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertNotEmpty($team['body']['$id']);
+        
+        $team = $this->client->call(Client::METHOD_DELETE, '/teams/'.$teamUid.'/memberships/'.$team['body']['$id'], array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $team['headers']['status-code']);
+
+        $webhook = $this->getLastRequest();
+
+        $this->assertEquals($webhook['method'], 'POST');
+        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
+        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'teams.memberships.delete');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-Userid'] ?? ''), ('server' === $this->getSide()));
+        $this->assertNotEmpty($webhook['data']['$id']);
+        $this->assertNotEmpty($webhook['data']['userId']);
+        $this->assertNotEmpty($webhook['data']['teamId']);
+        $this->assertCount(2, $webhook['data']['roles']);
+        $this->assertIsInt($webhook['data']['joined']);
+        $this->assertEquals(('server' === $this->getSide()), $webhook['data']['confirm']);
+
+        /**
+         * Test for FAILURE
+         */
+        return [];
+    }
 }

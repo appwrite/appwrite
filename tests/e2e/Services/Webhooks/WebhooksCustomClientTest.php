@@ -680,4 +680,50 @@ class WebhooksCustomClientTest extends Scope
 
         return $data;
     }
+
+    /**
+     * @depends testCreateTeamMembership
+     */
+    public function testUpdateTeamMembership($data): array
+    {
+        $teamUid = $data['teamId'] ?? '';
+        $secret = $data['secret'] ?? '';
+        $inviteUid = $data['inviteId'] ?? '';
+        $userUid = $data['userId'] ?? '';
+
+        /**
+         * Test for SUCCESS
+         */
+        $team = $this->client->call(Client::METHOD_PATCH, '/teams/'.$teamUid.'/memberships/'.$inviteUid.'/status', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'secret' => $secret,
+            'userId' => $userUid,
+        ]);
+
+        $this->assertEquals(200, $team['headers']['status-code']);
+        $this->assertNotEmpty($team['body']['$id']);
+
+        $webhook = $this->getLastRequest();
+
+        $this->assertEquals($webhook['method'], 'POST');
+        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
+        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'teams.memberships.update.status');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-Userid'] ?? ''), true);
+        $this->assertNotEmpty($webhook['data']['$id']);
+        $this->assertNotEmpty($webhook['data']['userId']);
+        $this->assertNotEmpty($webhook['data']['teamId']);
+        $this->assertCount(2, $webhook['data']['roles']);
+        $this->assertIsInt($webhook['data']['joined']);
+        $this->assertEquals(true, $webhook['data']['confirm']);
+
+        /**
+         * Test for FAILURE
+         */
+        return [];
+    }
 }

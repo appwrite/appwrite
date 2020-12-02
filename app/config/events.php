@@ -79,4 +79,22 @@ return [
     'users.sessions.delete' => [
         'description' => 'This event triggers when a user session is deleted from users API.',
     ],
+    'teams.create' => [
+        'description' => 'This event triggers when a team is created.',
+    ],
+    'teams.update' => [
+        'description' => 'This event triggers when a team is updated.',
+    ],
+    'teams.delete' => [
+        'description' => 'This event triggers when a team is deleted.',
+    ],
+    'teams.memberships.create' => [
+        'description' => 'This event triggers when a team memberships is created.',
+    ],
+    'teams.memberships.update.status' => [
+        'description' => 'This event triggers when a team memberships status is updated.',
+    ],
+    'teams.memberships.delete' => [
+        'description' => 'This event triggers when a team memberships is deleted.',
+    ],
 ];
