@@ -656,7 +656,7 @@ trait AccountBase
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
         $this->assertEquals('Account Verification', $lastEmail['subject']);
 
-        $verification = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
+        $verification = substr($lastEmail['text'], strpos($lastEmail['text'], '&amp;secret=', 0) + 12, 256);
 
         /**
          * Test for FAILURE
@@ -947,7 +947,7 @@ trait AccountBase
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
         $this->assertEquals('Password Reset', $lastEmail['subject']);
 
-        $recovery = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
+        $recovery = substr($lastEmail['text'], strpos($lastEmail['text'], '&amp;secret=', 0) + 12, 256);
 
         /**
          * Test for FAILURE

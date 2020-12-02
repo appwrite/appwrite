@@ -209,7 +209,7 @@ let path='/functions/{functionId}/tags/{tagId}'.replace(new RegExp('{functionId}
 if(limit){payload['limit']=limit;}
 if(offset){payload['offset']=offset;}
 if(orderType){payload['orderType']=orderType;}
-return http.get(path,{'content-type':'application/json',},payload);},create:function(name,teamId,description='',logo='',url='',legalName='',legalCountry='',legalState='',legalCity='',legalAddress='',legalTaxId=''){if(name===undefined){throw new Error('Missing required parameter: "name"');}
+return http.get(path,{'content-type':'application/json',},payload);},create:function(name,teamId,description='',logo='',url='',legalName='',legalCountry='',legalState='',legalCity='',legalAddress='',legalTaxId='',colorText='',colorTextPrimary='',colorBg='',colorBgContent='',colorBgPrimary=''){if(name===undefined){throw new Error('Missing required parameter: "name"');}
 if(teamId===undefined){throw new Error('Missing required parameter: "teamId"');}
 let path='/projects';let payload={};if(name){payload['name']=name;}
 if(teamId){payload['teamId']=teamId;}
@@ -222,8 +222,13 @@ if(legalState){payload['legalState']=legalState;}
 if(legalCity){payload['legalCity']=legalCity;}
 if(legalAddress){payload['legalAddress']=legalAddress;}
 if(legalTaxId){payload['legalTaxId']=legalTaxId;}
+if(colorText){payload['colorText']=colorText;}
+if(colorTextPrimary){payload['colorTextPrimary']=colorTextPrimary;}
+if(colorBg){payload['colorBg']=colorBg;}
+if(colorBgContent){payload['colorBgContent']=colorBgContent;}
+if(colorBgPrimary){payload['colorBgPrimary']=colorBgPrimary;}
 return http.post(path,{'content-type':'application/json',},payload);},get:function(projectId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
-let path='/projects/{projectId}'.replace(new RegExp('{projectId}','g'),projectId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},update:function(projectId,name,description='',logo='',url='',legalName='',legalCountry='',legalState='',legalCity='',legalAddress='',legalTaxId=''){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
+let path='/projects/{projectId}'.replace(new RegExp('{projectId}','g'),projectId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},update:function(projectId,name,description='',logo='',url='',legalName='',legalCountry='',legalState='',legalCity='',legalAddress='',legalTaxId='',colorText='',colorTextPrimary='',colorBg='',colorBgContent='',colorBgPrimary=''){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
 if(name===undefined){throw new Error('Missing required parameter: "name"');}
 let path='/projects/{projectId}'.replace(new RegExp('{projectId}','g'),projectId);let payload={};if(name){payload['name']=name;}
 if(description){payload['description']=description;}
@@ -235,6 +240,11 @@ if(legalState){payload['legalState']=legalState;}
 if(legalCity){payload['legalCity']=legalCity;}
 if(legalAddress){payload['legalAddress']=legalAddress;}
 if(legalTaxId){payload['legalTaxId']=legalTaxId;}
+if(colorText){payload['colorText']=colorText;}
+if(colorTextPrimary){payload['colorTextPrimary']=colorTextPrimary;}
+if(colorBg){payload['colorBg']=colorBg;}
+if(colorBgContent){payload['colorBgContent']=colorBgContent;}
+if(colorBgPrimary){payload['colorBgPrimary']=colorBgPrimary;}
 return http.patch(path,{'content-type':'application/json',},payload);},delete:function(projectId,password){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
 if(password===undefined){throw new Error('Missing required parameter: "password"');}
 let path='/projects/{projectId}'.replace(new RegExp('{projectId}','g'),projectId);let payload={};if(password){payload['password']=password;}

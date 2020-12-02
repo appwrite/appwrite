@@ -40,7 +40,12 @@ App::post('/v1/projects')
     ->param('legalCity', '', new Text(256), 'Project legal City. Max length: 256 chars.', true)
     ->param('legalAddress', '', new Text(256), 'Project legal Address. Max length: 256 chars.', true)
     ->param('legalTaxId', '', new Text(256), 'Project legal Tax ID. Max length: 256 chars.', true)
-    ->action(function ($name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $consoleDB, $projectDB) {
+    ->param('colorText', '#000000', new Text(7), 'Text color for E-Mails.', true)
+    ->param('colorTextPrimary', '#ffffff', new Text(7), 'Text color on primary background color for E-Mails.', true)
+    ->param('colorBg', '#f6f6f6', new Text(7), 'Background color for E-Mails.', true)
+    ->param('colorBgContent', '#ffffff', new Text(7), 'Content background color for E-Mails.', true)
+    ->param('colorBgPrimary', '#3498db', new Text(7), 'Primary background color for E-Mails.', true)
+    ->action(function ($name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $colorText, $colorTextPrimary, $colorBg, $colorBgContent, $colorBgPrimary, $response, $consoleDB, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
         /** @var Appwrite\Database\Database $projectDB */
@@ -68,6 +73,11 @@ App::post('/v1/projects')
                 'legalCity' => $legalCity,
                 'legalAddress' => $legalAddress,
                 'legalTaxId' => $legalTaxId,
+                'colorText' => $colorText,
+                'colorTextPrimary' => $colorTextPrimary,
+                'colorBg' => $colorBg,
+                'colorBgContent' => $colorBgContent,
+                'colorBgPrimary' => $colorBgPrimary,
                 'teamId' => $team->getId(),
                 'platforms' => [],
                 'webhooks' => [],
@@ -337,7 +347,12 @@ App::patch('/v1/projects/:projectId')
     ->param('legalCity', '', new Text(256), 'Project legal city. Max length: 256 chars.', true)
     ->param('legalAddress', '', new Text(256), 'Project legal address. Max length: 256 chars.', true)
     ->param('legalTaxId', '', new Text(256), 'Project legal tax ID. Max length: 256 chars.', true)
-    ->action(function ($projectId, $name, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $consoleDB) {
+    ->param('colorText', '#000000', new Text(7), 'Text color for E-Mails.', true)
+    ->param('colorTextPrimary', '#ffffff', new Text(7), 'Text color on primary background color for E-Mails.', true)
+    ->param('colorBg', '#f6f6f6', new Text(7), 'Background color for E-Mails.', true)
+    ->param('colorBgContent', '#ffffff', new Text(7), 'Content background color for E-Mails.', true)
+    ->param('colorBgPrimary', '#3498db', new Text(7), 'Primary background color for E-Mails.', true)
+    ->action(function ($projectId, $name, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $colorText, $colorTextPrimary, $colorBg, $colorBgContent, $colorBgPrimary, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
@@ -358,6 +373,11 @@ App::patch('/v1/projects/:projectId')
             'legalCity' => $legalCity,
             'legalAddress' => $legalAddress,
             'legalTaxId' => $legalTaxId,
+            'colorText' => $colorText,
+            'colorTextPrimary' => $colorTextPrimary,
+            'colorBg' => $colorBg,
+            'colorBgContent' => $colorBgContent,
+            'colorBgPrimary' => $colorBgPrimary,
         ]));
 
         if (false === $project) {

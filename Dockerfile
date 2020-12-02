@@ -29,9 +29,11 @@ RUN \
   git \
   zlib-dev \
   brotli-dev \
-  libmaxminddb-dev
+  libmaxminddb-dev \
+  libxslt-dev
 
 RUN docker-php-ext-install sockets
+RUN docker-php-ext-install xsl
 
 RUN \
   # Redis Extension
@@ -119,6 +121,7 @@ RUN \
   docker-compose \
   libmaxminddb \
   libmaxminddb-dev \
+  libxslt-dev \
   && pecl install imagick yaml \ 
   && docker-php-ext-enable imagick yaml \
   && docker-php-ext-install sockets opcache pdo_mysql \
@@ -131,6 +134,7 @@ COPY --from=step0 /usr/local/src/vendor /usr/src/code/vendor
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/maxminddb.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/ 
+COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/xsl.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/ 
 
 # Add Source Code
 COPY ./app /usr/src/code/app
@@ -178,6 +182,7 @@ RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 RUN echo extension=swoole.so >> /usr/local/etc/php/conf.d/swoole.ini
 RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
 RUN echo extension=maxminddb.so >> /usr/local/etc/php/conf.d/maxminddb.ini
+RUN echo extension=xsl.so >> /usr/local/etc/php/conf.d/xsl.ini
 
 RUN echo "opcache.preload_user=www-data" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.preload=/usr/src/code/app/preload.php" >> /usr/local/etc/php/conf.d/appwrite.ini

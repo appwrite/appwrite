@@ -2687,10 +2687,15 @@
              * @param {string} legalCity
              * @param {string} legalAddress
              * @param {string} legalTaxId
+             * @param {string} colorText
+             * @param {string} colorTextPrimary
+             * @param {string} colorBg
+             * @param {string} colorBgContent
+             * @param {string} colorBgPrimary
              * @throws {Error}
              * @return {Promise}             
              */
-            create: function(name, teamId, description = '', logo = '', url = '', legalName = '', legalCountry = '', legalState = '', legalCity = '', legalAddress = '', legalTaxId = '') {
+            create: function(name, teamId, description = '', logo = '', url = '', legalName = '', legalCountry = '', legalState = '', legalCity = '', legalAddress = '', legalTaxId = '', colorText = '', colorTextPrimary = '', colorBg = '', colorBgContent = '', colorBgPrimary = '') {
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
                 }
@@ -2747,6 +2752,26 @@
                     payload['legalTaxId'] = legalTaxId;
                 }
 
+                if(colorText) {
+                    payload['colorText'] = colorText;
+                }
+
+                if(colorTextPrimary) {
+                    payload['colorTextPrimary'] = colorTextPrimary;
+                }
+
+                if(colorBg) {
+                    payload['colorBg'] = colorBg;
+                }
+
+                if(colorBgContent) {
+                    payload['colorBgContent'] = colorBgContent;
+                }
+
+                if(colorBgPrimary) {
+                    payload['colorBgPrimary'] = colorBgPrimary;
+                }
+
                 return http
                     .post(path, {
                         'content-type': 'application/json',
@@ -2791,10 +2816,15 @@
              * @param {string} legalCity
              * @param {string} legalAddress
              * @param {string} legalTaxId
+             * @param {string} colorText
+             * @param {string} colorTextPrimary
+             * @param {string} colorBg
+             * @param {string} colorBgContent
+             * @param {string} colorBgPrimary
              * @throws {Error}
              * @return {Promise}             
              */
-            update: function(projectId, name, description = '', logo = '', url = '', legalName = '', legalCountry = '', legalState = '', legalCity = '', legalAddress = '', legalTaxId = '') {
+            update: function(projectId, name, description = '', logo = '', url = '', legalName = '', legalCountry = '', legalState = '', legalCity = '', legalAddress = '', legalTaxId = '', colorText = '', colorTextPrimary = '', colorBg = '', colorBgContent = '', colorBgPrimary = '') {
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
@@ -2845,6 +2875,26 @@
 
                 if(legalTaxId) {
                     payload['legalTaxId'] = legalTaxId;
+                }
+
+                if(colorText) {
+                    payload['colorText'] = colorText;
+                }
+
+                if(colorTextPrimary) {
+                    payload['colorTextPrimary'] = colorTextPrimary;
+                }
+
+                if(colorBg) {
+                    payload['colorBg'] = colorBg;
+                }
+
+                if(colorBgContent) {
+                    payload['colorBgContent'] = colorBgContent;
+                }
+
+                if(colorBgPrimary) {
+                    payload['colorBgPrimary'] = colorBgPrimary;
                 }
 
                 return http

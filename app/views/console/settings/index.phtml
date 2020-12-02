@@ -89,17 +89,16 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                             <form class="inline"
                                 data-analytics-event="submit"
                                 data-analytics-category="console"
-                                data-analytics-label="Delete Project"
-                                data-service="projects.delete"
+                                data-analytics-label="Update Project"
+                                data-service="projects.update"
                                 data-scope="console"
                                 data-event="submit"
-                                data-confirmx="Are you sure you want to delete this project?"
-                                data-success="trigger,redirect"
-                                data-success-param-trigger-events="project.delete,reset,modal-close"
-                                data-success-param-redirect-url="/console"
-                                data-failure="alert,trigger,reset"
-                                data-failure-param-alert-text="Project deletion failed"
-                                data-failure-param-trigger-events="modal-close"
+                                data-param-project-id="{{router.params.project}}"
+                                data-success="alert,trigger"
+                                data-success-param-alert-text="Saved project successfully"
+                                data-success-param-trigger-events="projects.update"
+                                data-failure="alert"
+                                data-failure-param-alert-text="Failed to update project"
                                 data-failure-param-alert-classname="error">
 
                                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
@@ -138,6 +137,73 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                             <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <a data-ls-attrs="href=/console/settings/domains?project={{router.params.project}}" class=" text-size-small">Add a custom endpoint</a></li>
                         </ul>
                     </div>
+                </div>
+            </li>
+            <li data-state="/console/settings/branding?project={{router.params.project}}">
+                <h2>Branding</h2>
+                <div class="box margin-bottom-large">
+                    <form
+                        data-analytics-event="submit"
+                        data-analytics-category="console"
+                        data-analytics-label="Update Branding"
+                        data-service="projects.update"
+                        data-scope="console"
+                        data-event="submit"
+                        data-param-project-id="{{router.params.project}}"
+                        data-success="alert,trigger"
+                        data-success-param-alert-text="Saved project successfully"
+                        data-success-param-trigger-events="projects.update"
+                        data-failure="alert"
+                        data-failure-param-alert-text="Failed to update project"
+                        data-failure-param-alert-classname="error">
+
+                        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                        <input type="hidden" name="name" data-ls-bind="{{console-project.name}}" />
+                        <h3 class="text-fade">Texts</h3>
+                        <div class="row responsive">
+                            <div class="col span-3">
+                                <label for="colorText">Normal</label>
+                                <input name="colorText" type="color" class="full-width" name="primary" autocomplete="off" data-ls-bind="{{console-project.colorText}}" />
+                            </div>
+                            <div class="col span-3">
+                                <label for="colorTextPrimary">Primary</label>
+                                <input name="colorTextPrimary" type="color" class="full-width" name="primary" autocomplete="off" data-ls-bind="{{console-project.colorTextPrimary}}" />
+                            </div>
+                        </div>
+                        <h3 class="text-fade">Backgrounds</h3>
+                        <div class="row responsive">
+                            <div class="col span-3">
+                                <label for="colorBg">Body</label>
+                                <input name="colorBg" type="color" class="full-width" name="primary" autocomplete="off" data-ls-bind="{{console-project.colorBg}}" />
+                            </div>
+                            <div class="col span-3">
+                                <label for="colorBgContent">Content</label>
+                                <input name="colorBgContent" type="color" class="full-width" name="primary" autocomplete="off" data-ls-bind="{{console-project.colorBgContent}}" />
+                            </div>
+                            <div class="col span-3">
+                                <label for="colorBgPrimary">Primary</label>
+                                <input name="colorBgPrimary" type="color" class="full-width" name="primary" autocomplete="off" data-ls-bind="{{console-project.colorBgPrimary}}" />
+                            </div>
+                        </div>
+                        <hr>
+                        <button class="" type="submit">Save</button>
+                    </form>
+                </div>
+                <h3 class="text-fade">Preview  <span class="tooltip large" data-tooltip="E-Mails may differ from the preview in terms of Font size, Margins and Paddings."><i class="icon-question"></i></span></h3>
+                <div class="box" data-ls-attrs="style=background: {{console-project.colorBg}};">
+                    <div class="row responsive">
+                            <div class="col span-2">&nbsp;</div>
+                            <div class="col span-8 text-align-center clear" data-ls-attrs="style=background: {{console-project.colorBgContent}}; color: {{console-project.colorText}}; padding: 0;">
+                                <h1 data-ls-attrs="style=background: {{console-project.colorBgPrimary}}; color: {{console-project.colorTextPrimary}}; padding: 1em 0; margin-bottom: 1em;" data-ls-bind="{{console-project.name}}"></h1>
+                                <h3>Lorem Ipsum</h3>
+                                <p>Dolor sit amet consectetur, </p>
+                                <p>Tenetur tempora perferendis, nobis consequuntur error aliquam.</p>
+                                <p data-ls-attrs="style=background: {{console-project.colorBgPrimary}}; color: {{console-project.colorTextPrimary}};padding: 1em; margin: 1em;">Corrupti!</p>
+                                <p>Necessitatibus,</p>
+                                <p>at sunt!</p>
+                            </div>
+                            <div class="col span-2">&nbsp;</div>
+                        </div>
                 </div>
             </li>
             <!-- <li data-state="/console/settings/privacy?project={{router.params.project}}">

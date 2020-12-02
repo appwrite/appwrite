@@ -19,6 +19,7 @@ use Appwrite\Database\Exception\Duplicate;
 use Appwrite\Database\Validator\UID;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Template\Template;
+use Appwrite\Template\Inky;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as URLParser;
 use Appwrite\Utopia\Response;
@@ -1216,7 +1217,7 @@ App::post('/v1/account/recovery')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret]);
         $url = Template::unParseURL($url);
 
-        $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
+        $body = new Inky(__DIR__.'/../../config/locale/templates/email-base.tpl');
         $content = new Template(__DIR__.'/../../config/locale/translations/templates/'.$locale->getText('account.emails.recovery.body'));
         $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
 
@@ -1228,12 +1229,11 @@ App::post('/v1/account/recovery')
             ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
             ->setParam('{{name}}', $profile->getAttribute('name'))
             ->setParam('{{redirect}}', $url)
-            ->setParam('{{bg-body}}', '#f6f6f6')
-            ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{bg-cta}}', '#3498db')
-            ->setParam('{{bg-cta-hover}}', '#34495e')
-            ->setParam('{{text-content}}', '#000000')
-            ->setParam('{{text-cta}}', '#ffffff')
+            ->setParam('{{colorText}}', $project->getAttribute('colorText', ['#000000']))
+            ->setParam('{{colorTextPrimary}}', $project->getAttribute('colorTextPrimary', ['#ffffff']))
+            ->setParam('{{colorBg}}', $project->getAttribute('colorBg', ['#f6f6f6']))
+            ->setParam('{{colorBgContent}}', $project->getAttribute('colorBgContent', ['#ffffff']))
+            ->setParam('{{colorBgPrimary}}', $project->getAttribute('colorBgPrimary', ['#3498db']))
         ;
 
         $mails
@@ -1242,7 +1242,7 @@ App::post('/v1/account/recovery')
             ->setParam('recipient', $profile->getAttribute('email', ''))
             ->setParam('name', $profile->getAttribute('name', ''))
             ->setParam('subject', $locale->getText('account.emails.recovery.title'))
-            ->setParam('body', $body->render())
+            ->setParam('body', $body->transpileInky())
             ->trigger();
         ;
 
@@ -1389,7 +1389,7 @@ App::post('/v1/account/verification')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret]);
         $url = Template::unParseURL($url);
 
-        $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
+        $body = new Inky(__DIR__.'/../../config/locale/templates/email-base.tpl');
         $content = new Template(__DIR__.'/../../config/locale/translations/templates/'.$locale->getText('account.emails.verification.body'));
         $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
 
@@ -1401,12 +1401,11 @@ App::post('/v1/account/verification')
             ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
             ->setParam('{{name}}', $user->getAttribute('name'))
             ->setParam('{{redirect}}', $url)
-            ->setParam('{{bg-body}}', '#f6f6f6')
-            ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{bg-cta}}', '#3498db')
-            ->setParam('{{bg-cta-hover}}', '#34495e')
-            ->setParam('{{text-content}}', '#000000')
-            ->setParam('{{text-cta}}', '#ffffff')
+            ->setParam('{{colorText}}', $project->getAttribute('colorText', ['#000000']))
+            ->setParam('{{colorTextPrimary}}', $project->getAttribute('colorTextPrimary', ['#ffffff']))
+            ->setParam('{{colorBg}}', $project->getAttribute('colorBg', ['#f6f6f6']))
+            ->setParam('{{colorBgContent}}', $project->getAttribute('colorBgContent', ['#ffffff']))
+            ->setParam('{{colorBgPrimary}}', $project->getAttribute('colorBgPrimary', ['#3498db']))
         ;
 
         $mails
@@ -1415,7 +1414,7 @@ App::post('/v1/account/verification')
             ->setParam('recipient', $user->getAttribute('email'))
             ->setParam('name', $user->getAttribute('name'))
             ->setParam('subject', $locale->getText('account.emails.verification.title'))
-            ->setParam('body', $body->render())
+            ->setParam('body', $body->transpileInky())
             ->trigger()
         ;
 

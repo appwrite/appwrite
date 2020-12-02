@@ -86,6 +86,36 @@ class Project extends Model
                 'default' => '',
                 'example' => '131102020',
             ])
+            ->addRule('colorText', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Text color for E-Mails.',
+                'default' => '#000000',
+                'example' => '#000000',
+            ])
+            ->addRule('colorTextPrimary', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Text color on primary background for E-Mails.',
+                'default' => '#ffffff',
+                'example' => '#ffffff',
+            ])
+            ->addRule('colorBg', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Background color for E-Mails.',
+                'default' => '#f6f6f6',
+                'example' => '#f6f6f6',
+            ])
+            ->addRule('colorBgContent', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Content background color for E-Mails.',
+                'default' => '#ffffff',
+                'example' => '#ffffff',
+            ])
+            ->addRule('colorBgPrimary', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Primary background color for E-Mails.',
+                'default' => '#3498db',
+                'example' => '#3498db',
+            ])
             ->addRule('platforms', [
                 'type' => Response::MODEL_PLATFORM,
                 'description' => 'List of Platforms.',
