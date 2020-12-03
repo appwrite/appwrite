@@ -147,6 +147,5 @@ class WebhooksTest extends Scope
         $this->assertEquals($webhook['data']['name'], $name);
         $this->assertIsBool($webhook['data']['emailVerification']);
         $this->assertIsArray($webhook['data']['prefs']);
-        $this->assertIsArray($webhook['data']['roles']);
     }
 }

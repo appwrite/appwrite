@@ -34,8 +34,9 @@ class WebhooksV1
         $errors = [];
 
         // Event
-        $projectId = $this->args['projectId'];
-        $event = $this->args['event'];
+        $projectId = $this->args['projectId'] ?? '';
+        $userId = $this->args['userId'] ?? '';
+        $event = $this->args['event'] ?? '';
         $payload = \json_encode($this->args['payload']);
 
         // Webhook
@@ -80,6 +81,7 @@ class WebhooksV1
                     'Content-Length: '.\strlen($payload),
                     'X-'.APP_NAME.'-Webhook-Event: '.$event,
                     'X-'.APP_NAME.'-Webhook-Name: '.$name,
+                    'X-'.APP_NAME.'-Webhook-Userid: '.$userId,
                     'X-'.APP_NAME.'-Webhook-Signature: '.$signature,
                 ]
             );
