@@ -138,6 +138,7 @@ trait ProjectCustom
             '$id' => $project['body']['$id'],
             'name' => $project['body']['name'],
             'apiKey' => $key['body']['secret'],
+            'webhookId' => $webhook['body']['$id'],
         ];
 
         return self::$project;

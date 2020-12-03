@@ -56,6 +56,7 @@ class WebhooksV1
                 continue;
             }
 
+            $id = $webhook['$id'] ?? '';
             $name = $webhook['name'] ?? '';
             $signature = $webhook['signature'] ?? 'not-yet-implemented';
             $url = $webhook['url'] ?? '';
@@ -79,9 +80,11 @@ class WebhooksV1
                 [
                     'Content-Type: application/json',
                     'Content-Length: '.\strlen($payload),
+                    'X-'.APP_NAME.'-Webhook-Id: '.$id,
                     'X-'.APP_NAME.'-Webhook-Event: '.$event,
                     'X-'.APP_NAME.'-Webhook-Name: '.$name,
-                    'X-'.APP_NAME.'-Webhook-Userid: '.$userId,
+                    'X-'.APP_NAME.'-Webhook-User-Id: '.$userId,
+                    'X-'.APP_NAME.'-Webhook-Project-Id: '.$projectId,
                     'X-'.APP_NAME.'-Webhook-Signature: '.$signature,
                 ]
             );
