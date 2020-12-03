@@ -5,7 +5,6 @@
 - New route in Locale API to fetch a list of languages (@TorstenDittmann)
 - Added Google Fonts to Appwrite for offline availability
 - Added response to /locale/languages API with a list of languages (@TorstenDittmann ,[#351](https://github.com/appwrite/appwrite/issues/351))
-- Added response to /locale/languages API with a list of languages (@TorstenDittmann ,[#351](https://github.com/appwrite/appwrite/issues/351))
 - Added API response payload structure info and examples to the docs site ([#381](https://github.com/appwrite/appwrite/issues/381))
 - Added Google Fonts to Appwrite for offline availability 
 - Added a new route in the Avatars API to get user initials avatar ([#386](https://github.com/appwrite/appwrite/issues/386))
