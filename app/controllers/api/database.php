@@ -235,7 +235,7 @@ App::delete('/v1/database/collections/:collectionId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('collectionId', '', new UID(), 'Collection unique ID.')
-    ->action(function ($collectionId, $response, $projectDB, $webhooks, $audits) {
+    ->action(function ($collectionId, $response, $projectDB, $webhooks, $audits, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $webhooks */
@@ -250,7 +250,11 @@ App::delete('/v1/database/collections/:collectionId')
         if (!$projectDB->deleteDocument($collectionId)) {
             throw new Exception('Failed to remove collection from DB', 500);
         }
-        
+
+        $deletes
+            ->setParam('document', $collection)
+        ;
+
         $webhooks
             ->setParam('payload', $response->output($collection, Response::MODEL_COLLECTION))
         ;
@@ -262,7 +266,7 @@ App::delete('/v1/database/collections/:collectionId')
         ;
 
         $response->noContent();
-    }, ['response', 'projectDB', 'webhooks', 'audits']);
+    }, ['response', 'projectDB', 'webhooks', 'audits', 'deletes']);
 
 App::post('/v1/database/collections/:collectionId/documents')
     ->desc('Create Document')
