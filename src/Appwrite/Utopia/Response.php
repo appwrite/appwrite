@@ -261,7 +261,8 @@ class Response extends SwooleResponse
         $output     = [];
 
         if ($model->isAny()) {
-            return $document->getArrayCopy();
+            $this->payload = $document->getArrayCopy();
+            return $this->payload;
         }
 
         foreach ($model->getRules() as $key => $rule) {
@@ -294,7 +295,7 @@ class Response extends SwooleResponse
 
         $this->payload = $output;
 
-        return $output;
+        return $this->payload;
     }
 
     /**

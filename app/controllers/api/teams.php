@@ -23,6 +23,7 @@ use DeviceDetector\DeviceDetector;
 App::post('/v1/teams')
     ->desc('Create Team')
     ->groups(['api', 'teams'])
+    ->label('event', 'teams.create')
     ->label('scope', 'teams.write')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'teams')
@@ -157,6 +158,7 @@ App::get('/v1/teams/:teamId')
 App::put('/v1/teams/:teamId')
     ->desc('Update Team')
     ->groups(['api', 'teams'])
+    ->label('event', 'teams.update')
     ->label('scope', 'teams.write')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'teams')
@@ -191,6 +193,7 @@ App::put('/v1/teams/:teamId')
 App::delete('/v1/teams/:teamId')
     ->desc('Delete Team')
     ->groups(['api', 'teams'])
+    ->label('event', 'teams.delete')
     ->label('scope', 'teams.write')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'teams')
@@ -200,9 +203,10 @@ App::delete('/v1/teams/:teamId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('teamId', '', new UID(), 'Team unique ID.')
-    ->action(function ($teamId, $response, $projectDB) {
+    ->action(function ($teamId, $response, $projectDB, $webhooks) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $webhooks */
 
         $team = $projectDB->getDocument($teamId);
 
@@ -229,12 +233,17 @@ App::delete('/v1/teams/:teamId')
             throw new Exception('Failed to remove team from DB', 500);
         }
 
+        $webhooks
+            ->setParam('payload', $response->output($team, Response::MODEL_TEAM))
+        ;
+
         $response->noContent();
-    }, ['response', 'projectDB']);
+    }, ['response', 'projectDB', 'webhooks']);
 
 App::post('/v1/teams/:teamId/memberships')
     ->desc('Create Team Membership')
     ->groups(['api', 'teams'])
+    ->label('event', 'teams.memberships.create')
     ->label('scope', 'teams.write')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'teams')
@@ -483,6 +492,7 @@ App::get('/v1/teams/:teamId/memberships')
 App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
     ->desc('Update Team Membership Status')
     ->groups(['api', 'teams'])
+    ->label('event', 'teams.memberships.update.status')
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'teams')
@@ -581,6 +591,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
         $session = new Document([
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
             '$permissions' => ['read' => ['user:'.$user->getId()], 'write' => ['user:'.$user->getId()]],
+            'userId' => $user->getId(),
             'type' => Auth::TOKEN_TYPE_LOGIN,
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expiry,
@@ -661,6 +672,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
 App::delete('/v1/teams/:teamId/memberships/:inviteId')
     ->desc('Delete Team Membership')
     ->groups(['api', 'teams'])
+    ->label('event', 'teams.memberships.delete')
     ->label('scope', 'teams.write')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'teams')
@@ -671,10 +683,11 @@ App::delete('/v1/teams/:teamId/memberships/:inviteId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('teamId', '', new UID(), 'Team unique ID.')
     ->param('inviteId', '', new UID(), 'Invite unique ID.')
-    ->action(function ($teamId, $inviteId, $response, $projectDB, $audits) {
+    ->action(function ($teamId, $inviteId, $response, $projectDB, $audits, $webhooks) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Event $webhooks */
 
         $membership = $projectDB->getDocument($inviteId);
 
@@ -712,5 +725,9 @@ App::delete('/v1/teams/:teamId/memberships/:inviteId')
             ->setParam('resource', 'teams/'.$teamId)
         ;
 
+        $webhooks
+            ->setParam('payload', $response->output($membership, Response::MODEL_MEMBERSHIP))
+        ;
+
         $response->noContent();
-    }, ['response', 'projectDB', 'audits']);
+    }, ['response', 'projectDB', 'audits', 'webhooks']);
