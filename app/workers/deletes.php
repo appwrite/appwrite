@@ -43,7 +43,7 @@ class DeletesV1
                 $this->deleteUser($document, $projectId);
                 break;
             case Database::SYSTEM_COLLECTION_COLLECTIONS:
-                $this->deleteDocuments($document,$projectId);
+                $this->deleteDocuments($document, $projectId);
                 break;
             default:
                 Console::error('No lazy delete operation available for document of type: '.$document->getCollection());
