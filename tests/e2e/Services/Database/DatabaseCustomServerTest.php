@@ -19,8 +19,6 @@ class DatabaseCustomServerTest extends Scope
          * Test for SUCCESS
          */
 
-        var_dump("Test Starting");
-
         // Create collection
         $actors = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
             'content-type' => 'application/json',
