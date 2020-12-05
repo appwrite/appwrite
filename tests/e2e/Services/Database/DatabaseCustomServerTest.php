@@ -9,7 +9,7 @@ use Tests\E2E\Client;
 
 class DatabaseCustomServerTest extends Scope
 {
-    // use DatabaseBase;
+    use DatabaseBase;
     use ProjectCustom;
     use SideServer;
 
