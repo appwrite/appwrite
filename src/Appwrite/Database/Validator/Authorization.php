@@ -98,6 +98,16 @@ class Authorization extends Validator
     }
 
     /**
+     * @param string $role
+     *
+     * @return void
+     */
+    public static function unsetRole(string $role): void
+    {
+        unset(self::$roles[$role]);
+    }
+
+    /**
      * @return array
      */
     public static function getRoles(): array

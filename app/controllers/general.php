@@ -172,7 +172,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
      */
     if (null !== $key && $user->isEmpty()) {
         $user = new Document([
-            '$id' => 0,
+            '$id' => '',
             'status' => Auth::USER_STATUS_ACTIVATED,
             'email' => 'app.'.$project->getId().'@service.'.$request->getHostname(),
             'password' => '',
@@ -233,6 +233,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
 
     $webhooks
         ->setParam('projectId', $project->getId())
+        ->setParam('userId', $user->getId())
         ->setParam('event', $route->getLabel('event', ''))
         ->setParam('payload', [])
     ;
@@ -301,8 +302,8 @@ App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audi
     $route = $utopia->match($request);
     
     if ($project->getId()
-        && $mode !== APP_MODE_ADMIN
-        && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage and admin mode
+        && $mode !== APP_MODE_ADMIN //TODO: add check to make sure user is admin
+        && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage on admin mode
         
         $usage
             ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
