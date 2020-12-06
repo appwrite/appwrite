@@ -374,7 +374,7 @@ class FunctionsV1
     
             $executionStart = \microtime(true);
             $executionTime = \time();
-            
+
             $exitCode = Console::execute("docker run \
                 -d \
                 --entrypoint=\"\" \
