@@ -3,14 +3,30 @@
 ## Features
 
 - New route in Locale API to fetch a list of languages (@TorstenDittmann)
+- Improved Webhooks and New System Events - [Learn more]()
 - Added Google Fonts to Appwrite for offline availability
+- Added response to /locale/languages API with a list of languages (@TorstenDittmann ,[#351](https://github.com/appwrite/appwrite/issues/351))
+- Added API response payload structure info and examples to the docs site ([#381](https://github.com/appwrite/appwrite/issues/381))
+- Added Google Fonts to Appwrite for offline availability 
+- Added a new route in the Avatars API to get user initials avatar ([#386](https://github.com/appwrite/appwrite/issues/386))
+- Added option to delete team from the console ([#380](https://github.com/appwrite/appwrite/issues/380))
+- Added option to view team members from the console ([#378](https://github.com/appwrite/appwrite/issues/378))
+- Add option to assign new team members to a team from the console and the API ([#379](https://github.com/appwrite/appwrite/issues/379))
+- Added support for Brotli compression (@PedroCisnerosSantana, @Rohitub222, [#310](https://github.com/appwrite/appwrite/issues/310))
 - Added a new route in the Avatars API to get user initials avatar
 - Added option to delete team from the console
+- Added Select All Checkbox for on Console API key Scopes Screen ([#477](https://github.com/appwrite/appwrite/issues/477))
+- Added pagination and search for team memberships route ([#387](https://github.com/appwrite/appwrite/issues/387))
+- UI performance & accessibility improvements ([#406](https://github.com/appwrite/appwrite/pull/406))
 - Added option to view team members from the console
 - Added option to join a user to any team from the console
 - Added option to delete user from the API (@TorstenDittmann - #378)
 - Added option to delete user from the console (@PineappleIOnic - #538)
-- Added support for Brotli compression (@PedroCisnerosSantana, @Rohitub222)
+- Created lazy deletion of data worker ([#521](https://github.com/appwrite/appwrite/issues/521))
+- All emails are now sent asynchronously for improved performance (@TorstenDittmann ,[#402](https://github.com/appwrite/appwrite/pull/402))
+- Updated grid for OAuth2 providers list in the console ([#413](https://github.com/appwrite/appwrite/issues/413))
+- Upgraded Redis Resque queue library to version 1.3.6 ([#319](https://github.com/appwrite/appwrite/issues/319))
+- Moved all Appwrite container logs to STDOUT & STDERR ([#389](https://github.com/appwrite/appwrite/issues/389))
 - New UI micro-interactions and CSS fixes (@AnatoleLucet)
 - UI performance & accessibility improvements (#406)
 - New Doctor CLI to debug the Appwrite server ([#415](https://github.com/appwrite/appwrite/issues/415))
@@ -43,6 +59,8 @@
 - Upgraded Traefik image to version 2.3
 - Upgraded Redis Docker image to version 6.0 (alpine)
 - Upgraded Influxdb Docker image to version 1.8 (alpine)
+- Added option to disable mail sending by setting empty SMTP host
+- Upgraded installation script ([#490](https://github.com/appwrite/appwrite/issues/490))
 
 ## Breaking Changes (Read before upgrading!)
 - **Deprecated** `first` and `last` query params for documents list route in the database API
@@ -54,6 +72,17 @@
 
 ## Bug Fixes
 
+- Fixed an issue where Special characters in _APP_OPENSSL_KEY_V1_ env caused an error ([#732](https://github.com/appwrite/appwrite/issues/732))
+- Fixed an issue where Account webhook doesn't trigger through the console ([#493](https://github.com/appwrite/appwrite/issues/493))
+- Fixed case sensitive country flag code ([#526](https://github.com/appwrite/appwrite/issues/526))
+- Fixed redirect to Appwrite login page when deep link is provided ([#427](https://github.com/appwrite/appwrite/issues/427))
+- Fixed an issue where Creating documents fails for parent documents would result in an error ([#514](https://github.com/appwrite/appwrite/issues/514))
+- Fixed an issue with Email Sending Problem using external smtp ([#707](https://github.com/appwrite/appwrite/issues/707))
+- Fixed an issue where you could not remove a key from User Prefs ([#316](https://github.com/appwrite/appwrite/issues/316))
+- Fixed an issue where events are not fully visible in the console ([#492](https://github.com/appwrite/appwrite/issues/492))
+- Fixed an issue where UI would wrongly validate integers ([#394](https://github.com/appwrite/appwrite/issues/394))
+- Fixed an issue where graphs were cut in mobile view ([#376](https://github.com/appwrite/appwrite/issues/376))
+- Fixed URL issue where console/ would not display list of projects ([#372](https://github.com/appwrite/appwrite/issues/372))
 - Fixed output of /v1/health/queue/certificates returning wrong data
 - Fixed bug where team members count was wrong in some cases
 - Fixed network calculation for uploaded files

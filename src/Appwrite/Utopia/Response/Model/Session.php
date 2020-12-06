@@ -15,6 +15,12 @@ class Session extends Model
                 'description' => 'Session ID.',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('userId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'User ID.',
+                'default' => '',
+                'example' => '5e5bb8c16897e',
+            ])
             ->addRule('expire', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Session expiration date in Unix timestamp.',
@@ -114,7 +120,7 @@ class Session extends Model
             ->addRule('current', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Returns true if this the current user session.',
-                'default' => '',
+                'default' => false,
                 'example' => true,
             ])
         ;

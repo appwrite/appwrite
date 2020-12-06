@@ -25,7 +25,6 @@ trait UsersBase
         $this->assertEquals($user['body']['email'], 'users.service@example.com');
         $this->assertEquals($user['body']['status'], 0);
         $this->assertGreaterThan(0, $user['body']['registration']);
-        $this->assertIsArray($user['body']['roles']);
 
         return ['userId' => $user['body']['$id']];
     }
@@ -48,7 +47,6 @@ trait UsersBase
         $this->assertEquals($user['body']['email'], 'users.service@example.com');
         $this->assertEquals($user['body']['status'], 0);
         $this->assertGreaterThan(0, $user['body']['registration']);
-        $this->assertIsArray($user['body']['roles']);
 
         $sessions = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/sessions', array_merge([
             'content-type' => 'application/json',

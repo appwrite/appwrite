@@ -19,6 +19,18 @@ return [
     'account.update.prefs' => [
         'description' => 'This event triggers when the account preferences are updated.',
     ],
+    'account.recovery.create' => [
+        'description' => 'This event triggers when the account recovery token is created.',
+    ],
+    'account.recovery.update' => [
+        'description' => 'This event triggers when the account recovery token is validated.',
+    ],
+    'account.verification.create' => [
+        'description' => 'This event triggers when the account verification token is created.',
+    ],
+    'account.verification.update' => [
+        'description' => 'This event triggers when the account verification token is validated.',
+    ],
     'account.delete' => [
         'description' => 'This event triggers when the account is deleted.',
     ],
@@ -40,8 +52,8 @@ return [
     'database.documents.create' => [
         'description' => 'This event triggers when a database document is created.',
     ],
-    'database.documents.patch' => [
-        'description' => 'This event triggers when a database document is patched.',
+    'database.documents.update' => [
+        'description' => 'This event triggers when a database document is updated.',
     ],
     'database.documents.delete' => [
         'description' => 'This event triggers when a database document is deleted.',
@@ -66,5 +78,23 @@ return [
     ],
     'users.sessions.delete' => [
         'description' => 'This event triggers when a user session is deleted from users API.',
+    ],
+    'teams.create' => [
+        'description' => 'This event triggers when a team is created.',
+    ],
+    'teams.update' => [
+        'description' => 'This event triggers when a team is updated.',
+    ],
+    'teams.delete' => [
+        'description' => 'This event triggers when a team is deleted.',
+    ],
+    'teams.memberships.create' => [
+        'description' => 'This event triggers when a team memberships is created.',
+    ],
+    'teams.memberships.update.status' => [
+        'description' => 'This event triggers when a team memberships status is updated.',
+    ],
+    'teams.memberships.delete' => [
+        'description' => 'This event triggers when a team memberships is deleted.',
     ],
 ];

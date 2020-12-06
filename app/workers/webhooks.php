@@ -34,8 +34,9 @@ class WebhooksV1
         $errors = [];
 
         // Event
-        $projectId = $this->args['projectId'];
-        $event = $this->args['event'];
+        $projectId = $this->args['projectId'] ?? '';
+        $userId = $this->args['userId'] ?? '';
+        $event = $this->args['event'] ?? '';
         $payload = \json_encode($this->args['payload']);
 
         // Webhook
@@ -55,6 +56,7 @@ class WebhooksV1
                 continue;
             }
 
+            $id = $webhook['$id'] ?? '';
             $name = $webhook['name'] ?? '';
             $signature = $webhook['signature'] ?? 'not-yet-implemented';
             $url = $webhook['url'] ?? '';
@@ -78,8 +80,11 @@ class WebhooksV1
                 [
                     'Content-Type: application/json',
                     'Content-Length: '.\strlen($payload),
+                    'X-'.APP_NAME.'-Webhook-Id: '.$id,
                     'X-'.APP_NAME.'-Webhook-Event: '.$event,
                     'X-'.APP_NAME.'-Webhook-Name: '.$name,
+                    'X-'.APP_NAME.'-Webhook-User-Id: '.$userId,
+                    'X-'.APP_NAME.'-Webhook-Project-Id: '.$projectId,
                     'X-'.APP_NAME.'-Webhook-Signature: '.$signature,
                 ]
             );

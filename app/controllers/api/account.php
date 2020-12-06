@@ -105,6 +105,10 @@ App::post('/v1/account')
 
         Authorization::enable();
 
+        Authorization::unsetRole('role:'.Auth::USER_ROLE_GUEST);
+        Authorization::setRole('user:'.$user->getId());
+        Authorization::setRole('role:'.Auth::USER_ROLE_MEMBER);
+
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500);
         }
@@ -113,10 +117,6 @@ App::post('/v1/account')
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.create')
             ->setParam('resource', 'users/'.$user->getId())
-        ;
-
-        $user
-            ->setAttribute('roles', Authorization::getRoles())
         ;
 
         $response
@@ -190,12 +190,12 @@ App::post('/v1/account/sessions')
         $session = new Document([
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
             '$permissions' => ['read' => ['user:'.$profile->getId()], 'write' => ['user:'.$profile->getId()]],
+            'userId' => $profile->getId(),
             'type' => Auth::TOKEN_TYPE_LOGIN,
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
-
             'osCode' => $osCode,
             'osName' => $osName,
             'osVersion' => $osVersion,
@@ -505,7 +505,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         // Create session token, verify user account and update OAuth2 ID and Access Token
 
-
         $dd = new DeviceDetector($request->getUserAgent('UNKNOWN'));
 
         $dd->parse();
@@ -528,12 +527,12 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $session = new Document([
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
             '$permissions' => ['read' => ['user:'.$user['$id']], 'write' => ['user:'.$user['$id']]],
+            'userId' => $user->getId(),
             'type' => Auth::TOKEN_TYPE_LOGIN,
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
-
             'osCode' => $osCode,
             'osName' => $osName,
             'osVersion' => $osVersion,
@@ -623,10 +622,6 @@ App::get('/v1/account')
     ->action(function ($response, $user) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
-
-        $user
-            ->setAttribute('roles', Authorization::getRoles())
-        ;
 
         $response->dynamic($user, Response::MODEL_USER);
     }, ['response', 'user']);
@@ -818,8 +813,6 @@ App::patch('/v1/account/name')
             throw new Exception('Failed saving user to DB', 500);
         }
 
-        $user->setAttribute('roles', Authorization::getRoles());
-
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.update.name')
@@ -860,8 +853,6 @@ App::patch('/v1/account/password')
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500);
         }
-
-        $user->setAttribute('roles', Authorization::getRoles());
 
         $audits
             ->setParam('userId', $user->getId())
@@ -918,8 +909,6 @@ App::patch('/v1/account/email')
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500);
         }
-
-        $user->setAttribute('roles', Authorization::getRoles());
         
         $audits
             ->setParam('userId', $user->getId())
@@ -962,9 +951,7 @@ App::patch('/v1/account/prefs')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 
-        $prefs = $user->getAttribute('prefs', new \stdClass);
-
-        $response->dynamic(new Document($prefs), Response::MODEL_ANY);
+        $response->dynamic($user, Response::MODEL_USER);
     }, ['response', 'user', 'projectDB', 'audits']);
 
 App::delete('/v1/account')
@@ -1069,22 +1056,26 @@ App::delete('/v1/account/sessions/:sessionId')
                     ->setParam('resource', '/user/'.$user->getId())
                 ;
 
-                $webhooks
-                    ->setParam('payload', $response->output($user, Response::MODEL_USER))
-                ;
-
                 if (!Config::getParam('domainVerification')) {
                     $response
                         ->addHeader('X-Fallback-Cookies', \json_encode([]))
                     ;
                 }
+                
+                $token->setAttribute('current', false);
 
                 if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                    $token->setAttribute('current', true);
+
                     $response
                         ->addCookie(Auth::$cookieName.'_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
                         ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
                     ;
                 }
+
+                $webhooks
+                    ->setParam('payload', $response->output($token, Response::MODEL_SESSION))
+                ;
 
                 return $response->noContent();
             }
@@ -1127,10 +1118,6 @@ App::delete('/v1/account/sessions')
                 ->setParam('event', 'account.sessions.delete')
                 ->setParam('resource', '/user/'.$user->getId())
             ;
-            
-            $webhooks
-                ->setParam('payload', $response->output($user, Response::MODEL_USER))
-            ;
 
             if (!Config::getParam('domainVerification')) {
                 $response
@@ -1138,13 +1125,23 @@ App::delete('/v1/account/sessions')
                 ;
             }
 
+            $token->setAttribute('current', false);
+
             if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                $token->setAttribute('current', true);
                 $response
                     ->addCookie(Auth::$cookieName.'_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
                     ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
                 ;
             }
         }
+                    
+        $webhooks
+            ->setParam('payload', $response->output(new Document([
+                'sum' => count($tokens),
+                'sessions' => $tokens
+            ]), Response::MODEL_SESSION_LIST))
+        ;
 
         $response->noContent();
     }, ['request', 'response', 'user', 'projectDB', 'audits', 'webhooks']);
@@ -1153,6 +1150,7 @@ App::post('/v1/account/recovery')
     ->desc('Create Password Recovery')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
+    ->label('event', 'account.recovery.create')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createRecovery')
@@ -1164,7 +1162,7 @@ App::post('/v1/account/recovery')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', new Email(), 'User email.')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients'])
-    ->action(function ($email, $url, $request, $response, $projectDB, $project, $locale, $mails, $audits) {
+    ->action(function ($email, $url, $request, $response, $projectDB, $project, $locale, $mails, $audits, $webhooks) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -1172,6 +1170,10 @@ App::post('/v1/account/recovery')
         /** @var Utopia\Locale\Locale $locale */
         /** @var Appwrite\Event\Event $mails */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Event $webhooks */
+
+        $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
+        $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
             'limit' => 1,
@@ -1189,6 +1191,7 @@ App::post('/v1/account/recovery')
         $recovery = new Document([
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
             '$permissions' => ['read' => ['user:'.$profile->getId()], 'write' => ['user:'.$profile->getId()]],
+            'userId' => $profile->getId(),
             'type' => Auth::TOKEN_TYPE_RECOVERY,
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => \time() + Auth::TOKEN_EXPIRATION_RECOVERY,
@@ -1246,6 +1249,17 @@ App::post('/v1/account/recovery')
             ->trigger();
         ;
 
+        $webhooks
+            ->setParam('payload',
+                $response->output($recovery->setAttribute('secret', $secret),
+                Response::MODEL_TOKEN
+            ))
+        ;
+
+        $recovery  // Hide secret for clients, sp
+            ->setAttribute('secret',
+                ($isPreviliggedUser || $isAppUser) ? $secret : '');
+
         $audits
             ->setParam('userId', $profile->getId())
             ->setParam('event', 'account.recovery.create')
@@ -1256,12 +1270,13 @@ App::post('/v1/account/recovery')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($recovery, Response::MODEL_TOKEN)
         ;
-    }, ['request', 'response', 'projectDB', 'project', 'locale', 'mails', 'audits']);
+    }, ['request', 'response', 'projectDB', 'project', 'locale', 'mails', 'audits', 'webhooks']);
 
 App::put('/v1/account/recovery')
     ->desc('Complete Password Recovery')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
+    ->label('event', 'account.recovery.update')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateRecovery')
@@ -1337,6 +1352,7 @@ App::post('/v1/account/verification')
     ->desc('Create Email Verification')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
+    ->label('event', 'account.verification.create')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createVerification')
@@ -1347,7 +1363,7 @@ App::post('/v1/account/verification')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add built-in confirm page
-    ->action(function ($url, $request, $response, $project, $user, $projectDB, $locale, $audits, $mails) {
+    ->action(function ($url, $request, $response, $project, $user, $projectDB, $locale, $audits, $webhooks, $mails) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
@@ -1355,13 +1371,18 @@ App::post('/v1/account/verification')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Utopia\Locale\Locale $locale */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Event $webhooks */
         /** @var Appwrite\Event\Event $mails */
+
+        $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
+        $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $verificationSecret = Auth::tokenGenerator();
         
         $verification = new Document([
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
             '$permissions' => ['read' => ['user:'.$user->getId()], 'write' => ['user:'.$user->getId()]],
+            'userId' => $user->getId(),
             'type' => Auth::TOKEN_TYPE_VERIFICATION,
             'secret' => Auth::hash($verificationSecret), // One way hash encryption to protect DB leak
             'expire' => \time() + Auth::TOKEN_EXPIRATION_CONFIRM,
@@ -1419,6 +1440,17 @@ App::post('/v1/account/verification')
             ->trigger()
         ;
 
+        $webhooks
+            ->setParam('payload',
+                $response->output($verification->setAttribute('secret', $verificationSecret),
+                Response::MODEL_TOKEN
+            ))
+        ;
+
+        $verification  // Hide secret for clients, sp
+            ->setAttribute('secret',
+                ($isPreviliggedUser || $isAppUser) ? $verificationSecret : '');
+
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.verification.create')
@@ -1429,12 +1461,13 @@ App::post('/v1/account/verification')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($verification, Response::MODEL_TOKEN)
         ;
-    }, ['request', 'response', 'project', 'user', 'projectDB', 'locale', 'audits', 'mails']);
+    }, ['request', 'response', 'project', 'user', 'projectDB', 'locale', 'audits', 'webhooks', 'mails']);
 
 App::put('/v1/account/verification')
     ->desc('Complete Email Verification')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
+    ->label('event', 'account.verification.update')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateVerification')
