@@ -311,7 +311,7 @@ App::setResource('locale', function() {
 });
 
 // Queues
-App::setResource('webhooks', function($register) {
+App::setResource('events', function($register) {
     return $register->get('queue-webhooks');
 }, ['register']);
 
@@ -329,10 +329,6 @@ App::setResource('mails', function($register) {
 
 App::setResource('deletes', function($register) {
     return $register->get('queue-deletes');
-}, ['register']);
-
-App::setResource('functions', function($register) {
-    return $register->get('queue-functions');
 }, ['register']);
 
 // Test Mock
