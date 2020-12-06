@@ -374,8 +374,6 @@ class FunctionsV1
     
             $executionStart = \microtime(true);
             $executionTime = \time();
-            
-            $environment['image'] = 'appwrite/env-php-7-4:1.0';
 
             $exitCode = Console::execute("docker run \
                 -d \
