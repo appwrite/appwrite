@@ -32,7 +32,7 @@ class DeletesV1
 
         $document = new Document($document);
         
-        switch ($document->getCollection()) {
+        switch (strval($document->getCollection())) {
             case Database::SYSTEM_COLLECTION_PROJECTS:
                 $this->deleteProject($document);
                 break;
@@ -42,7 +42,9 @@ class DeletesV1
             case Database::SYSTEM_COLLECTION_USERS:
                 $this->deleteUser($document, $projectId);
                 break;
-            
+            case Database::SYSTEM_COLLECTION_COLLECTIONS:
+                $this->deleteDocuments($document, $projectId);
+                break;
             default:
                 Console::error('No lazy delete operation available for document of type: '.$document->getCollection());
                 break;
@@ -52,6 +54,16 @@ class DeletesV1
     public function tearDown(): void
     {
         // ... Remove environment for this job
+    }
+    
+    protected function deleteDocuments(Document $document, $projectId) 
+    {
+        $collectionId = $document->getId();
+        
+        // Delete Documents in the deleted collection 
+        $this->deleteByGroup([
+            '$collection='.$collectionId
+        ], $this->getProjectDB($projectId));   
     }
 
     protected function deleteProject(Document $document)
