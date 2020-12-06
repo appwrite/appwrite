@@ -378,7 +378,7 @@ class FunctionsV1
             $exitCode = Console::execute("docker run \
                 -d \
                 --entrypoint=\"\" \
-                --cpus=4 \
+                --cpus=1 \
                 --memory=128m \
                 --memory-swap=128m \
                 --rm \
@@ -408,8 +408,6 @@ class FunctionsV1
                 ],
             ];
 
-            var_dump($list);
-    
             Console::info("Function created in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
         }
         else {
