@@ -273,12 +273,15 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
             $events->setParam('payload', $response->getPayload());
         }
 
-        $events
+        $webhooks = clone $events;
+        $functions = clone $events;
+
+        $webhooks
             ->setQueue('v1-webhooks')
             ->setClass('WebhooksV1')
             ->trigger();
 
-        $events
+        $functions
             ->setQueue('v1-functions')
             ->setClass('FunctionsV1')
             ->trigger();
