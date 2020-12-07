@@ -268,7 +268,15 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
             $events->setParam('payload', $response->getPayload());
         }
 
-        $events->trigger();
+        $events
+            ->setQueue('v1-webhooks')
+            ->setClass('WebhooksV1')
+            ->trigger();
+
+        $events
+            ->setQueue('v1-functions')
+            ->setClass('FunctionsV1')
+            ->trigger();
     }
     
     if (!empty($audits->getParam('event'))) {
