@@ -203,10 +203,10 @@ App::delete('/v1/teams/:teamId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('teamId', '', new UID(), 'Team unique ID.')
-    ->action(function ($teamId, $response, $projectDB, $webhooks) {
+    ->action(function ($teamId, $response, $projectDB, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $events */
 
         $team = $projectDB->getDocument($teamId);
 
@@ -233,12 +233,12 @@ App::delete('/v1/teams/:teamId')
             throw new Exception('Failed to remove team from DB', 500);
         }
 
-        $webhooks
+        $events
             ->setParam('payload', $response->output($team, Response::MODEL_TEAM))
         ;
 
         $response->noContent();
-    }, ['response', 'projectDB', 'webhooks']);
+    }, ['response', 'projectDB', 'events']);
 
 App::post('/v1/teams/:teamId/memberships')
     ->desc('Create Team Membership')
@@ -682,11 +682,11 @@ App::delete('/v1/teams/:teamId/memberships/:inviteId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('teamId', '', new UID(), 'Team unique ID.')
     ->param('inviteId', '', new UID(), 'Invite unique ID.')
-    ->action(function ($teamId, $inviteId, $response, $projectDB, $audits, $webhooks) {
+    ->action(function ($teamId, $inviteId, $response, $projectDB, $audits, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
-        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $events */
 
         $membership = $projectDB->getDocument($inviteId);
 
@@ -724,9 +724,9 @@ App::delete('/v1/teams/:teamId/memberships/:inviteId')
             ->setParam('resource', 'teams/'.$teamId)
         ;
 
-        $webhooks
+        $events
             ->setParam('payload', $response->output($membership, Response::MODEL_MEMBERSHIP))
         ;
 
         $response->noContent();
-    }, ['response', 'projectDB', 'audits', 'webhooks']);
+    }, ['response', 'projectDB', 'audits', 'events']);

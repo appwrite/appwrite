@@ -235,10 +235,10 @@ App::delete('/v1/database/collections/:collectionId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('collectionId', '', new UID(), 'Collection unique ID.')
-    ->action(function ($collectionId, $response, $projectDB, $webhooks, $audits, $deletes) {
+    ->action(function ($collectionId, $response, $projectDB, $events, $audits, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
 
         $collection = $projectDB->getDocument($collectionId, false);
@@ -255,7 +255,7 @@ App::delete('/v1/database/collections/:collectionId')
             ->setParam('document', $collection)
         ;
 
-        $webhooks
+        $events
             ->setParam('payload', $response->output($collection, Response::MODEL_COLLECTION))
         ;
 
@@ -266,7 +266,7 @@ App::delete('/v1/database/collections/:collectionId')
         ;
 
         $response->noContent();
-    }, ['response', 'projectDB', 'webhooks', 'audits', 'deletes']);
+    }, ['response', 'projectDB', 'events', 'audits', 'deletes']);
 
 App::post('/v1/database/collections/:collectionId/documents')
     ->desc('Create Document')
@@ -565,10 +565,10 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, new UID(), 'Document unique ID.')
-    ->action(function ($collectionId, $documentId, $response, $projectDB, $webhooks, $audits) {
+    ->action(function ($collectionId, $documentId, $response, $projectDB, $events, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
 
         $collection = $projectDB->getDocument($collectionId, false);
@@ -592,7 +592,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
             throw new Exception('Failed to remove document from DB', 500);
         }
 
-        $webhooks
+        $events
             ->setParam('payload', $response->output($document, Response::MODEL_ANY))
         ;
         
@@ -603,4 +603,4 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         ;
 
         $response->noContent();
-    }, ['response', 'projectDB', 'webhooks', 'audits']);
+    }, ['response', 'projectDB', 'events', 'audits']);

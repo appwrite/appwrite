@@ -966,13 +966,13 @@ App::delete('/v1/account')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->action(function ($request, $response, $user, $projectDB, $audits, $webhooks) {
+    ->action(function ($request, $response, $user, $projectDB, $audits, $events) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
-        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $events */
 
         $protocol = $request->getProtocol();
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
@@ -998,7 +998,7 @@ App::delete('/v1/account')
             ->setParam('data', $user->getArrayCopy())
         ;
 
-        $webhooks
+        $events
             ->setParam('payload', $response->output($user, Response::MODEL_USER))
         ;
 
@@ -1013,7 +1013,7 @@ App::delete('/v1/account')
             ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->noContent()
         ;
-    }, ['request', 'response', 'user', 'projectDB', 'audits', 'webhooks']);
+    }, ['request', 'response', 'user', 'projectDB', 'audits', 'events']);
 
 App::delete('/v1/account/sessions/:sessionId')
     ->desc('Delete Account Session')
@@ -1029,13 +1029,13 @@ App::delete('/v1/account/sessions/:sessionId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->label('abuse-limit', 100)
     ->param('sessionId', null, new UID(), 'Session unique ID. Use the string \'current\' to delete the current device session.')
-    ->action(function ($sessionId, $request, $response, $user, $projectDB, $audits, $webhooks) {
+    ->action(function ($sessionId, $request, $response, $user, $projectDB, $audits, $events) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
-        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $events */
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
@@ -1073,7 +1073,7 @@ App::delete('/v1/account/sessions/:sessionId')
                     ;
                 }
 
-                $webhooks
+                $events
                     ->setParam('payload', $response->output($token, Response::MODEL_SESSION))
                 ;
 
@@ -1082,7 +1082,7 @@ App::delete('/v1/account/sessions/:sessionId')
         }
 
         throw new Exception('Session not found', 404);
-    }, ['request', 'response', 'user', 'projectDB', 'audits', 'webhooks']);
+    }, ['request', 'response', 'user', 'projectDB', 'audits', 'events']);
 
 App::delete('/v1/account/sessions')
     ->desc('Delete All Account Sessions')
@@ -1097,13 +1097,13 @@ App::delete('/v1/account/sessions')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->label('abuse-limit', 100)
-    ->action(function ($request, $response, $user, $projectDB, $audits, $webhooks) {
+    ->action(function ($request, $response, $user, $projectDB, $audits, $events) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
-        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $events */
 
         $protocol = $request->getProtocol();
         $tokens = $user->getAttribute('tokens', []);
@@ -1136,7 +1136,7 @@ App::delete('/v1/account/sessions')
             }
         }
                     
-        $webhooks
+        $events
             ->setParam('payload', $response->output(new Document([
                 'sum' => count($tokens),
                 'sessions' => $tokens
@@ -1144,7 +1144,7 @@ App::delete('/v1/account/sessions')
         ;
 
         $response->noContent();
-    }, ['request', 'response', 'user', 'projectDB', 'audits', 'webhooks']);
+    }, ['request', 'response', 'user', 'projectDB', 'audits', 'events']);
 
 App::post('/v1/account/recovery')
     ->desc('Create Password Recovery')
@@ -1162,7 +1162,7 @@ App::post('/v1/account/recovery')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', new Email(), 'User email.')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients'])
-    ->action(function ($email, $url, $request, $response, $projectDB, $project, $locale, $mails, $audits, $webhooks) {
+    ->action(function ($email, $url, $request, $response, $projectDB, $project, $locale, $mails, $audits, $events) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -1170,7 +1170,7 @@ App::post('/v1/account/recovery')
         /** @var Utopia\Locale\Locale $locale */
         /** @var Appwrite\Event\Event $mails */
         /** @var Appwrite\Event\Event $audits */
-        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $events */
 
         $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
@@ -1249,7 +1249,7 @@ App::post('/v1/account/recovery')
             ->trigger();
         ;
 
-        $webhooks
+        $events
             ->setParam('payload',
                 $response->output($recovery->setAttribute('secret', $secret),
                 Response::MODEL_TOKEN
@@ -1270,7 +1270,7 @@ App::post('/v1/account/recovery')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($recovery, Response::MODEL_TOKEN)
         ;
-    }, ['request', 'response', 'projectDB', 'project', 'locale', 'mails', 'audits', 'webhooks']);
+    }, ['request', 'response', 'projectDB', 'project', 'locale', 'mails', 'audits', 'events']);
 
 App::put('/v1/account/recovery')
     ->desc('Complete Password Recovery')
@@ -1363,7 +1363,7 @@ App::post('/v1/account/verification')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add built-in confirm page
-    ->action(function ($url, $request, $response, $project, $user, $projectDB, $locale, $audits, $webhooks, $mails) {
+    ->action(function ($url, $request, $response, $project, $user, $projectDB, $locale, $audits, $events, $mails) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
@@ -1371,7 +1371,7 @@ App::post('/v1/account/verification')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Utopia\Locale\Locale $locale */
         /** @var Appwrite\Event\Event $audits */
-        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $mails */
 
         $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
@@ -1440,7 +1440,7 @@ App::post('/v1/account/verification')
             ->trigger()
         ;
 
-        $webhooks
+        $events
             ->setParam('payload',
                 $response->output($verification->setAttribute('secret', $verificationSecret),
                 Response::MODEL_TOKEN
@@ -1461,7 +1461,7 @@ App::post('/v1/account/verification')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($verification, Response::MODEL_TOKEN)
         ;
-    }, ['request', 'response', 'project', 'user', 'projectDB', 'locale', 'audits', 'webhooks', 'mails']);
+    }, ['request', 'response', 'project', 'user', 'projectDB', 'locale', 'audits', 'events', 'mails']);
 
 App::put('/v1/account/verification')
     ->desc('Complete Email Verification')
