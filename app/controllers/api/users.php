@@ -402,10 +402,10 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->label('abuse-limit', 100)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('sessionId', null, new UID(), 'User unique session ID.')
-    ->action(function ($userId, $sessionId, $response, $projectDB, $webhooks) {
+    ->action(function ($userId, $sessionId, $response, $projectDB, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $events */
 
         $user = $projectDB->getDocument($userId);
 
@@ -421,14 +421,14 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
                     throw new Exception('Failed to remove token from DB', 500);
                 }
 
-                $webhooks
+                $events
                     ->setParam('payload', $response->output($user, Response::MODEL_USER))
                 ;
             }
         }
 
         $response->noContent();
-    }, ['response', 'projectDB', 'webhooks']);
+    }, ['response', 'projectDB', 'events']);
 
 App::delete('/v1/users/:userId/sessions')
     ->desc('Delete User Sessions')
@@ -444,10 +444,10 @@ App::delete('/v1/users/:userId/sessions')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->label('abuse-limit', 100)
     ->param('userId', '', new UID(), 'User unique ID.')
-    ->action(function ($userId, $response, $projectDB, $webhooks) {
+    ->action(function ($userId, $response, $projectDB, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $events */
 
         $user = $projectDB->getDocument($userId);
 
@@ -463,12 +463,12 @@ App::delete('/v1/users/:userId/sessions')
             }
         }
 
-        $webhooks
+        $events
             ->setParam('payload', $response->output($user, Response::MODEL_USER))
         ;
 
         $response->noContent();
-    }, ['response', 'projectDB', 'webhooks']);
+    }, ['response', 'projectDB', 'events']);
 
 App::delete('/v1/users/:userId')
     ->desc('Delete User')
@@ -484,10 +484,10 @@ App::delete('/v1/users/:userId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->label('abuse-limit', 100)
     ->param('userId', '', function () {return new UID();}, 'User unique ID.')
-    ->action(function ($userId, $response, $projectDB, $webhooks, $deletes) {
+    ->action(function ($userId, $response, $projectDB, $events, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $deletes */
         
         $user = $projectDB->getDocument($userId);
@@ -519,9 +519,9 @@ App::delete('/v1/users/:userId')
             ->setParam('document', $user)
         ;
 
-        $webhooks
+        $events
             ->setParam('payload', $response->output($user, Response::MODEL_USER))
         ;
 
         $response->noContent();
-    }, ['response', 'projectDB', 'webhooks', 'deletes']);
+    }, ['response', 'projectDB', 'events', 'deletes']);
