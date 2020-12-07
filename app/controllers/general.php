@@ -228,6 +228,9 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         ->setParam('userId', $user->getId())
         ->setParam('event', $route->getLabel('event', ''))
         ->setParam('payload', [])
+        ->setParam('functionId', null)	
+        ->setParam('executionId', null)	
+        ->setParam('trigger', 'event')
     ;
 
     $audits
