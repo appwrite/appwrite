@@ -8,6 +8,7 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
+use Appwrite\Event\Event;
 use Swoole\Runtime;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -448,7 +449,7 @@ class FunctionsV1
             throw new Exception('Failed saving execution to DB', 500);
         }
 
-        $usage = $register->get('queue-usage');
+        $usage = new Event('v1-usage', 'UsageV1');
 
         $usage
             ->setParam('projectId', $projectId)
