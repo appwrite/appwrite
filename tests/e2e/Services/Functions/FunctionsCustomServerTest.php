@@ -279,7 +279,6 @@ class FunctionsConsoleServerTest extends Scope
         return $data;
     }
 
-
     /**
      * @depends testUpdateTag
      */
