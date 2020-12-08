@@ -321,14 +321,9 @@ class FunctionsV1
             'APPWRITE_FUNCTION_TRIGGER' => $trigger,
             'APPWRITE_FUNCTION_ENV_NAME' => $environment['name'],
             'APPWRITE_FUNCTION_ENV_VERSION' => $environment['version'],
+            'APPWRITE_FUNCTION_EVENT' => $event,
+            'APPWRITE_FUNCTION_EVENT_PAYLOAD' => $payload,
         ]);
-
-        if('event' === $trigger) {
-            $vars = \array_merge($vars, [
-                'APPWRITE_FUNCTION_EVENT' => $event,
-                'APPWRITE_FUNCTION_EVENT_PAYLOAD' => $payload,
-            ]);
-        }
 
         \array_walk($vars, function (&$value, $key) {
             $key = $this->filterEnvKey($key);
