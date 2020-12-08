@@ -216,7 +216,6 @@ services:
       - mariadb
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /tmp:/tmp:rw
       - appwrite-functions:/storage/functions:rw
     environment:
       - _APP_ENV
