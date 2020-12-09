@@ -7,6 +7,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\CLI\Console;
 
 class FunctionsCustomServerTest extends Scope
 {
@@ -452,20 +453,32 @@ class FunctionsCustomServerTest extends Scope
 
     public function testENVS():array
     {
+        $functions = realpath(__DIR__ . '/../../../resources/functions');
+
+        /**
+         * Command for rebuilding code packages:
+         *  bash tests/resources/functions/package.sh
+         */
+
         $envs = [
+            //[
+            //    'name' => 'php-7.4',
+            //    'code' => $functions.'/php-fx.tar.gz',
+            //    'command' => 'php function.php',
+            //],
+
             [
-                'name' => 'php-7.4',
-                'code' => realpath(__DIR__ . '/../../../resources/functions/php-fx.tar.gz'),
-                'command' => 'php function.php',
-            ],
-            [
+                'language' => 'Python',
+                'version' => '3.8',
                 'name' => 'python-3.8',
-                'code' => realpath(__DIR__ . '/../../../resources/functions/python/code.tar.gz'),
+                'code' => $functions.'/python.tar.gz',
                 'command' => 'python main.py',
             ],
         ];
 
         foreach ($envs as $key => $env) {
+            $language = $env['language'] ?? '';
+            $version = $env['version'] ?? '';
             $name = $env['name'] ?? '';
             $code = $env['code'] ?? '';
             $command = $env['command'] ?? '';
@@ -526,8 +539,6 @@ class FunctionsCustomServerTest extends Scope
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
-
-            var_dump($executions['body']['executions'][0]);
     
             $this->assertEquals($executions['headers']['status-code'], 200);
             $this->assertEquals($executions['body']['sum'], 1);
@@ -537,6 +548,15 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
             $this->assertEquals($executions['body']['executions'][0]['status'], 'completed');
             $this->assertEquals($executions['body']['executions'][0]['exitCode'], 0);
+            
+            $stdout = explode("\n", $executions['body']['executions'][0]['stdout']);
+            
+            $this->assertEquals($stdout[0], $functionId);
+            $this->assertEquals($stdout[1], 'Test '.$name);
+            $this->assertEquals($stdout[2], $tagId);
+            $this->assertEquals($stdout[3], 'http');
+            $this->assertEquals($stdout[4], $language);
+            $this->assertEquals($stdout[5], $version);
         }
 
         return [
