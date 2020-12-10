@@ -63,17 +63,8 @@ Console::success('Finished warmup in '.$warmupTime.' seconds');
 $stdout = '';
 $stderr = '';
 
-
 $exitCode = Console::execute('docker ps --all --format "name={{.Names}}&status={{.Status}}&labels={{.Labels}}" --filter label=appwrite-type=function'
     , '', $stdout, $stderr, 30);
-
-
-$exitCode = Console::execute('docker ps --all'
-  , '', $stdout, $stderr, 30);
-var_dump('GET ALL');
-var_dump($stdout);
-var_dump($stderr);
-var_dump('GET ALL END');
 
 $executionStart = \microtime(true);
 
@@ -383,24 +374,6 @@ class FunctionsV1
             $executionStart = \microtime(true);
             $executionTime = \time();
 
-            Console::log('Execute Docker DEBUG');
-
-            var_dump("docker run \
-            -d \
-            --entrypoint=\"\" \
-            --cpus=1 \
-            --memory=128m \
-            --memory-swap=128m \
-            --rm \
-            --name={$container} \
-            --label appwrite-type=function \
-            --label appwrite-created=".$executionTime." \
-            --volume {$tagPathTargetDir}:/tmp:rw \
-            --workdir /usr/local/src \
-            ".\implode("\n", $vars)."
-            {$environment['image']} \
-            sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null')");
-
             $exitCode = Console::execute("docker run \
                 -d \
                 --entrypoint=\"\" \
@@ -416,10 +389,6 @@ class FunctionsV1
                 {$environment['image']} \
                 sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'"
             , '', $stdout, $stderr, 30);
-
-            Console::log('Execute Docker RUN');
-            var_dump($stdout);
-            var_dump($stderr);
 
             $executionEnd = \microtime(true);
     
@@ -442,17 +411,6 @@ class FunctionsV1
         else {
             Console::info('Container is ready to run');
         }
-
-        $stdout = '';
-        $stderr = '';
-
-        $exitCode = Console::execute("docker logs \
-        {$container}"
-        , '', $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
-
-        Console::log('Execute Docker LOGS');
-        var_dump($stdout);
-        var_dump($stderr);
         
         $stdout = '';
         $stderr = '';
@@ -464,10 +422,6 @@ class FunctionsV1
         {$container} \
         {$command}"
         , '', $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
-
-        Console::log('Execute Docker EXEC');
-        var_dump($stdout);
-        var_dump($stderr);
 
         $executionEnd = \microtime(true);
         $executionTime = ($executionEnd - $executionStart);

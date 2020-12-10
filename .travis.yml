@@ -39,6 +39,4 @@ script:
 - docker-compose logs appwrite
 - docker-compose exec appwrite doctor
 - docker-compose exec appwrite vars
-- docker-compose exec appwrite test /usr/src/code/tests/e2e/Services/Functions
-- docker-compose logs appwrite-worker-functions
-- docker ps -a
+- docker-compose exec appwrite test
