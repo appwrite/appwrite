@@ -30,8 +30,8 @@ before_install:
 # - docker save -o docker_images/images.tar appwrite_appwrite
 
 install:
-- sudo apt-get update -y
-- sudo apt-get install -y hostname
+- apt-get update -y
+- apt-get install -y hostname
 - hostname -i
 - hostname -i | awk '{print $3}'
 - docker --version
