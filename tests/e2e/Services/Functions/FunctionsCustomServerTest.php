@@ -542,6 +542,7 @@ class FunctionsCustomServerTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
 
+            var_dump($executions['body']['executions'][0]);
             var_dump($executions['body']['executions'][0]['stdout']);
             var_dump($executions['body']['executions'][0]['stderr']);
     
