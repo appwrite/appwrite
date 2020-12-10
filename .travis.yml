@@ -41,4 +41,4 @@ script:
 - docker-compose exec appwrite vars
 - docker-compose exec appwrite test /usr/src/code/tests/e2e/Services/Functions
 - docker-compose logs appwrite-worker-functions
-- docker ps
+- docker ps -a
