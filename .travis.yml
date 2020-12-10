@@ -38,6 +38,7 @@ install:
 - sleep 90
 
 script:
+- ifconfig
 - docker ps
 - docker-compose logs appwrite
 - docker-compose exec appwrite doctor
