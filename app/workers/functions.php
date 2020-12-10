@@ -388,6 +388,10 @@ class FunctionsV1
                 sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'"
             , '', $stdout, $stderr, 30);
 
+            Console::log('Execute Docker RUN');
+            var_dump($stdout);
+            var_dump($stderr);
+
             $executionEnd = \microtime(true);
     
             if($exitCode !== 0) {
@@ -420,6 +424,10 @@ class FunctionsV1
         {$container} \
         {$command}"
         , '', $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
+
+        Console::log('Execute Docker EXEC');
+        var_dump($stdout);
+        var_dump($stderr);
 
         $executionEnd = \microtime(true);
         $executionTime = ($executionEnd - $executionStart);
