@@ -383,6 +383,22 @@ class FunctionsV1
             $executionStart = \microtime(true);
             $executionTime = \time();
 
+            var_dump("docker run \
+            -d \
+            --entrypoint=\"\" \
+            --cpus=1 \
+            --memory=128m \
+            --memory-swap=128m \
+            --rm \
+            --name={$container} \
+            --label appwrite-type=function \
+            --label appwrite-created=".$executionTime." \
+            --volume {$tagPathTargetDir}:/tmp:rw \
+            --workdir /usr/local/src \
+            ".\implode("\n", $vars)."
+            {$environment['image']} \
+            sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null')");
+
             $exitCode = Console::execute("docker run \
                 -d \
                 --entrypoint=\"\" \
