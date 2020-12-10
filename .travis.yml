@@ -40,3 +40,5 @@ script:
 - docker exec appwrite doctor
 - docker exec appwrite vars
 - docker exec appwrite test
+- docker logs appwrite-worker-functions
+- docker ps
