@@ -17,6 +17,7 @@ class FunctionsCustomServerTest extends Scope
 
     public function testCreate():array
     {
+        sleep(60);
         /**
          * Test for SUCCESS
          */
