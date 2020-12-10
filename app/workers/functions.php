@@ -37,9 +37,9 @@ Co\run(function() use ($environments) {  // Warmup: make sure images are ready t
             $stdout = '';
             $stderr = '';
         
-            Console::info('Warming up '.$environment['name'].' environment...');
+            //Console::info('Warming up '.$environment['name'].' environment...');
         
-            Console::execute('docker pull '.$environment['image'], '', $stdout, $stderr);
+            //Console::execute('docker pull '.$environment['image'], '', $stdout, $stderr);
         
             if(!empty($stdout)) {
                 Console::log($stdout);
@@ -241,7 +241,7 @@ class FunctionsV1
                 Authorization::reset();
 
                 if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-                    throw new Exception('Function not found');
+                    throw new Exception('Function not found ('.$functionId.')');
                 }
 
                 Swoole\Coroutine\run(function () use ($trigger, $projectId, $executionId, $database, $function) {
