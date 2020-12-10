@@ -407,7 +407,6 @@ class FunctionsV1
                 --cpus=1 \
                 --memory=128m \
                 --memory-swap=128m \
-                --rm \
                 --name={$container} \
                 --label appwrite-type=function \
                 --label appwrite-created=".$executionTime." \
