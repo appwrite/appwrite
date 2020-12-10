@@ -453,6 +453,8 @@ class FunctionsCustomServerTest extends Scope
 
     public function testENVS():array
     {
+        sleep(30);
+
         $functions = realpath(__DIR__ . '/../../../resources/functions');
 
         /**
