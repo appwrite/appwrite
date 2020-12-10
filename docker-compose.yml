@@ -253,6 +253,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-functions:/storage/functions:rw
+      - /tmp:/tmp:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
