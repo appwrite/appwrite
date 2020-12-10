@@ -1,4 +1,4 @@
-echo 'Python Packaging'
+echo 'Python Packaging...'
 
 cp -r $(pwd)/tests/resources/functions/python $(pwd)/tests/resources/functions/packages/python
 
