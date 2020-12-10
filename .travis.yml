@@ -33,6 +33,8 @@ before_install:
 # - docker save -o docker_images/images.tar appwrite_appwrite
 
 install:
+- hostname -i
+- hostname -i | awk '{print $3}'
 - docker --version
 - docker-compose up -d
 - sleep 90
