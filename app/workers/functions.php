@@ -37,9 +37,9 @@ Co\run(function() use ($environments) {  // Warmup: make sure images are ready t
             $stdout = '';
             $stderr = '';
         
-            //Console::info('Warming up '.$environment['name'].' environment...');
+            Console::info('Warming up '.$environment['name'].' environment...');
         
-            //Console::execute('docker pull '.$environment['image'], '', $stdout, $stderr);
+            Console::execute('docker pull '.$environment['image'], '', $stdout, $stderr);
         
             if(!empty($stdout)) {
                 Console::log($stdout);
@@ -62,6 +62,18 @@ Console::success('Finished warmup in '.$warmupTime.' seconds');
  */
 $stdout = '';
 $stderr = '';
+
+
+$exitCode = Console::execute('docker ps --all --format "name={{.Names}}&status={{.Status}}&labels={{.Labels}}" --filter label=appwrite-type=function'
+    , '', $stdout, $stderr, 30);
+
+
+$exitCode = Console::execute('docker ps --all'
+  , '', $stdout, $stderr, 30);
+var_dump('GET ALL');
+var_dump($stdout);
+var_dump($stderr);
+var_dump('GET ALL END');
 
 $executionStart = \microtime(true);
 
