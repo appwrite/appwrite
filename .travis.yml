@@ -38,7 +38,8 @@ install:
 - sleep 90
 
 script:
-- ifconfig
+- ipconfig getifaddr en0
+- ipconfig getifaddr en1
 - docker ps
 - docker-compose logs appwrite
 - docker-compose exec appwrite doctor
