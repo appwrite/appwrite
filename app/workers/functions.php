@@ -413,6 +413,17 @@ class FunctionsV1
         else {
             Console::info('Container is ready to run');
         }
+
+        $stdout = '';
+        $stderr = '';
+
+        $exitCode = Console::execute("docker logs \
+        {$container}"
+        , '', $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
+
+        Console::log('Execute Docker LOGS');
+        var_dump($stdout);
+        var_dump($stderr);
         
         $stdout = '';
         $stderr = '';
