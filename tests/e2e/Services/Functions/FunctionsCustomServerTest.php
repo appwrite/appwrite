@@ -550,6 +550,11 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals($executions['body']['executions'][0]['exitCode'], 0);
             
             $stdout = explode("\n", $executions['body']['executions'][0]['stdout']);
+
+            if($executions['body']['executions'][0]['status'] === 'failed') {
+                var_dump($executions['body']['executions'][0]['stdout']);
+                var_dump($executions['body']['executions'][0]['stderr']);
+            }
             
             $this->assertEquals($stdout[0], $functionId);
             $this->assertEquals($stdout[1], 'Test '.$name);
