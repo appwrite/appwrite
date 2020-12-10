@@ -13,8 +13,6 @@ services:
 - docker
 
 before_install:
-  - sudo apt-get update -y
-  - sudo apt-get install -y hostname
   - curl -fsSL https://get.docker.com | sh
   - echo '{"experimental":"enabled"}' | sudo tee /etc/docker/daemon.json
   - mkdir -p $HOME/.docker
@@ -32,8 +30,7 @@ before_install:
 # - docker save -o docker_images/images.tar appwrite_appwrite
 
 install:
-- hostname -i
-- hostname -i | awk '{print $3}'
+- ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'
 - docker --version
 - docker-compose up -d
 - sleep 90
