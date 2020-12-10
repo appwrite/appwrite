@@ -38,8 +38,7 @@ install:
 - sleep 90
 
 script:
-- ipconfig getifaddr en0
-- ipconfig getifaddr en1
+- ifconfig | grep "inet " | grep -v 127.0.0.1 | cut -d\  -f2
 - docker ps
 - docker-compose logs appwrite
 - docker-compose exec appwrite doctor
