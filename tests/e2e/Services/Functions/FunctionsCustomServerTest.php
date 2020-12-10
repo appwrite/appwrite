@@ -539,6 +539,9 @@ class FunctionsCustomServerTest extends Scope
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
+
+            var_dump($executions['body']['executions'][0]['stdout']);
+            var_dump($executions['body']['executions'][0]['stderr']);
     
             $this->assertEquals($executions['headers']['status-code'], 200);
             $this->assertEquals($executions['body']['sum'], 1);
@@ -550,9 +553,6 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals($executions['body']['executions'][0]['exitCode'], 0);
             
             $stdout = explode("\n", $executions['body']['executions'][0]['stdout']);
-
-            var_dump($executions['body']['executions'][0]['stdout']);
-            var_dump($executions['body']['executions'][0]['stderr']);
             
             $this->assertEquals($stdout[0], $functionId);
             $this->assertEquals($stdout[1], 'Test '.$name);
