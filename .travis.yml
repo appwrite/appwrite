@@ -30,13 +30,11 @@ before_install:
 # - docker save -o docker_images/images.tar appwrite_appwrite
 
 install:
-- ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'
 - docker --version
 - docker-compose up -d
 - sleep 90
 
 script:
-- ifconfig | grep "inet " | grep -v 127.0.0.1 | cut -d\  -f2
 - docker ps
 - docker-compose logs appwrite
 - docker-compose exec appwrite doctor
