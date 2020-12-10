@@ -383,6 +383,8 @@ class FunctionsV1
             $executionStart = \microtime(true);
             $executionTime = \time();
 
+            Console::log('Execute Docker DEBUG');
+
             var_dump("docker run \
             -d \
             --entrypoint=\"\" \
