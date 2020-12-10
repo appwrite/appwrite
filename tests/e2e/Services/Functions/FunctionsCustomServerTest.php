@@ -17,7 +17,7 @@ class FunctionsCustomServerTest extends Scope
 
     public function testCreate():array
     {
-        sleep(60);
+        sleep(25);
         /**
          * Test for SUCCESS
          */
@@ -454,7 +454,25 @@ class FunctionsCustomServerTest extends Scope
 
     public function testENVS():array
     {
-        sleep(60);
+        sleep(25);
+
+        /**
+         * Test for SUCCESS
+         */
+        $file = $this->client->call(Client::METHOD_POST, '/storage/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'read' => ['*'],
+            'write' => ['*'],
+            'folderId' => 'xyz',
+        ]);
+
+        $this->assertEquals($file['headers']['status-code'], 201);
+        $this->assertNotEmpty($file['body']['$id']);
+
+        $fileId = $file['body']['$id'] ?? '';
 
         $functions = realpath(__DIR__ . '/../../../resources/functions');
 
@@ -462,7 +480,6 @@ class FunctionsCustomServerTest extends Scope
          * Command for rebuilding code packages:
          *  bash tests/resources/functions/package.sh
          */
-
         $envs = [
             //[
             //    'name' => 'php-7.4',
@@ -493,14 +510,17 @@ class FunctionsCustomServerTest extends Scope
                 'name' => 'Test '.$name,
                 'env' => $name,
                 'vars' => [
-                    'APPWRITE_ENDPOINT' => 'http://'.gethostbyname(trim(`hostname`)).'/v1',
+                    'APPWRITE_ENDPOINT' => 'http://appwrite.test/v1',
                     'APPWRITE_PROJECT' => $this->getProject()['$id'],
                     'APPWRITE_SECRET' => $this->getProject()['apiKey'],
+                    'APPWRITE_FILEID' => $fileId,
                 ],
                 'events' => [],
                 'schedule' => '',
-                'timeout' => 10,
+                'timeout' => 15,
             ]);
+
+            var_dump('http://'.gethostbyname(trim(`hostname`)).'/v1');
     
             $functionId = $function['body']['$id'] ?? '';
     
@@ -536,12 +556,14 @@ class FunctionsCustomServerTest extends Scope
             $executionId = $execution['body']['$id'] ?? '';
             $this->assertEquals(201, $execution['headers']['status-code']);
 
-            sleep(15);
+            sleep(20);
 
             $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
+
+            var_dump($executions['body']);
     
             $this->assertEquals($executions['headers']['status-code'], 200);
             $this->assertEquals($executions['body']['sum'], 1);
@@ -560,6 +582,7 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals($stdout[3], 'http');
             $this->assertEquals($stdout[4], $language);
             $this->assertEquals($stdout[5], $version);
+            $this->assertEquals($stdout[6], $fileId);
         }
 
         return [

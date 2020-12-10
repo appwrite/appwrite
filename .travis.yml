@@ -3,6 +3,9 @@ arch:
 
 os: linux
 
+addons:
+  hostname: appwrite.test
+
 language: minimal
 
 notifications:
