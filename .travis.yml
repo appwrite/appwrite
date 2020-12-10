@@ -37,8 +37,8 @@ install:
 script:
 - docker ps
 - docker-compose logs appwrite
-- docker exec appwrite doctor
-- docker exec appwrite vars
-- docker exec appwrite test
-- docker logs appwrite-worker-functions
+- docker-compose exec appwrite doctor
+- docker-compose exec appwrite vars
+- docker-compose exec appwrite test
+- docker-compose logs appwrite-worker-functions
 - docker ps
