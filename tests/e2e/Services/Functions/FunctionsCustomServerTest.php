@@ -337,6 +337,8 @@ class FunctionsCustomServerTest extends Scope
          * Test for FAILURE
          */
 
+        sleep(10);
+
         return array_merge($data, ['executionId' => $executionId]);
     }
 
@@ -575,7 +577,7 @@ class FunctionsCustomServerTest extends Scope
             $executionId = $execution['body']['$id'] ?? '';
             $this->assertEquals(201, $execution['headers']['status-code']);
 
-            sleep(15);
+            sleep(25);
 
             $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
                 'content-type' => 'application/json',

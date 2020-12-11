@@ -2,8 +2,6 @@ const sdk = require('node-appwrite');
 
 let client = new sdk.Client();
 
-console.log(process.env);
-
 client
     .setEndpoint(process.env.APPWRITE_ENDPOINT) // Your API Endpoint
     .setProject(process.env.APPWRITE_PROJECT) // Your project ID
