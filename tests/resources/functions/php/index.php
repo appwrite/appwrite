@@ -1,6 +1,6 @@
 <?php
 
-include realpath(__DIR__.'./vendor/autoload.php');
+include './vendor/autoload.php';
 
 use Appwrite\Client;
 use Appwrite\Services\Storage;
