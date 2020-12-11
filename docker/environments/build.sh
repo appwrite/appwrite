@@ -19,4 +19,4 @@ echo 'Python 3.8...'
 docker buildx build --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/386,linux/ppc64le -t appwrite/env-python-3.8:1.0.0 ./docker/environments/python-3.8/ --push
 
 echo 'Ruby 2.7...'
-docker buildx build --platform linux/amd64,linux/arm64,linux/386,linux/ppc64le -t appwrite/env-ruby-2.7:1.0.0 ./docker/environments/ruby-2.7/ --push
+docker buildx build --platform linux/amd64,linux/arm64,linux/386,linux/ppc64le -t appwrite/env-ruby-2.7:1.0.2 ./docker/environments/ruby-2.7/ --push

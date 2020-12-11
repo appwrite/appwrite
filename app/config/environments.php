@@ -26,7 +26,7 @@ return [
         'name' => 'Ruby',
         'version' => '2.7',
         'base' => 'ruby:2.7-alpine',
-        'image' => 'appwrite/env-ruby-2.7:1.0.0',
+        'image' => 'appwrite/env-ruby-2.7:1.0.2',
         'logo' => 'ruby.png',
     ],
     'python-3.8' => [
