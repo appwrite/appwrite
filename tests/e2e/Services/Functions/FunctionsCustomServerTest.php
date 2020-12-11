@@ -478,7 +478,7 @@ class FunctionsCustomServerTest extends Scope
 
         /**
          * Command for rebuilding code packages:
-         *  bash tests/resources/functions/package.sh
+         *  bash tests/resources/functions/package-*.sh
          */
         $envs = [
             [
@@ -521,7 +521,7 @@ class FunctionsCustomServerTest extends Scope
                 'timeout' => 15,
             ]);
 
-            var_dump('http://'.gethostbyname(trim(`hostname`)).'/v1');
+            // var_dump('http://'.gethostbyname(trim(`hostname`)).'/v1');
     
             $functionId = $function['body']['$id'] ?? '';
     
@@ -563,8 +563,6 @@ class FunctionsCustomServerTest extends Scope
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
-
-            var_dump($executions['body']);
     
             $this->assertEquals($executions['headers']['status-code'], 200);
             $this->assertEquals($executions['body']['sum'], 1);
