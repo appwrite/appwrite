@@ -9,11 +9,6 @@
             "email": "team@appwrite.io"
         }
     ],
-    "autoload": {
-        "psr-4": {
-            "Appwrite\\": "src/Appwrite"
-        }
-    },
     "require": {
         "php": ">=7.4.0",
         "ext-curl": "*",

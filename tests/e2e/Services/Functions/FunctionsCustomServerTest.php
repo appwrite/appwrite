@@ -185,7 +185,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'command' => 'php function.php',
-            'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php-fx.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
+            'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
         ]);
 
         $tagId = $tag['body']['$id'] ?? '';
@@ -194,7 +194,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($tag['body']['$id']);
         $this->assertIsInt($tag['body']['dateCreated']);
         $this->assertEquals('php function.php', $tag['body']['command']);
-        $this->assertEquals(751, $tag['body']['size']);
+        $this->assertGreaterThan(10000, $tag['body']['size']);
        
         /**
          * Test for FAILURE
@@ -266,7 +266,7 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $function['headers']['status-code']);
-        $this->assertEquals(751, $function['body']['size']);
+        $this->assertGreaterThan(10000, $function['body']['size']);
 
         /**
          * Test for FAILURE
