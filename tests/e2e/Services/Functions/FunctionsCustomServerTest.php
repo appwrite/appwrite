@@ -481,12 +481,13 @@ class FunctionsCustomServerTest extends Scope
          *  bash tests/resources/functions/package.sh
          */
         $envs = [
-            //[
-            //    'name' => 'php-7.4',
-            //    'code' => $functions.'/php-fx.tar.gz',
-            //    'command' => 'php function.php',
-            //],
-
+            [
+                'language' => 'PHP',
+                'version' => '8.0',
+                'name' => 'php-8.0',
+                'code' => $functions.'/php.tar.gz',
+                'command' => 'php index.php',
+            ],
             [
                 'language' => 'Python',
                 'version' => '3.8',
