@@ -486,12 +486,33 @@ class FunctionsCustomServerTest extends Scope
                 'command' => 'php index.php',
             ],
             [
+                'language' => 'PHP',
+                'version' => '7.4',
+                'name' => 'php-7.4',
+                'code' => $functions.'/php.tar.gz',
+                'command' => 'php index.php',
+            ],
+            [
                 'language' => 'Python',
                 'version' => '3.8',
                 'name' => 'python-3.8',
                 'code' => $functions.'/python.tar.gz',
                 'command' => 'python main.py',
             ],
+            [
+                'language' => 'Node.js',
+                'version' => '14.5',
+                'name' => 'node-14',
+                'code' => $functions.'/node.tar.gz',
+                'command' => 'node index.js',
+            ],
+            // [
+            //     'language' => 'Deno',
+            //     'version' => '1.5',
+            //     'name' => 'deno-1.5',
+            //     'code' => $functions.'/deno.tar.gz',
+            //     'command' => 'deno run --allow-env index.ts',
+            // ],
         ];
 
         foreach ($envs as $key => $env) {
@@ -554,12 +575,16 @@ class FunctionsCustomServerTest extends Scope
             $executionId = $execution['body']['$id'] ?? '';
             $this->assertEquals(201, $execution['headers']['status-code']);
 
-            sleep(5);
+            sleep(15);
 
             $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
+
+            if($executions['body']['executions'][0]['status'] === 'failed') {
+                var_dump($executions['body']['executions'][0]);
+            }
     
             $this->assertEquals($executions['headers']['status-code'], 200);
             $this->assertEquals($executions['body']['sum'], 1);
