@@ -508,6 +508,13 @@ class FunctionsCustomServerTest extends Scope
                 'code' => $functions.'/node.tar.gz',
                 'command' => 'node index.js',
             ],
+            [
+                'language' => 'Ruby',
+                'version' => '2.7',
+                'name' => 'ruby-2.7',
+                'code' => $functions.'/ruby.tar.gz',
+                'command' => 'ruby app.rb',
+            ],
             // [
             //     'language' => 'Deno',
             //     'version' => '1.5',
