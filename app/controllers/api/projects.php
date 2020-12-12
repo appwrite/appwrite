@@ -115,7 +115,6 @@ App::get('/v1/projects')
             ],
         ]);
 
-        var_dump($consoleDB->getDebug());
         $response->dynamic(new Document([
             'sum' => $consoleDB->getSum(),
             'projects' => $results
