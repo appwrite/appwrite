@@ -88,9 +88,6 @@ class CertificatesV1
         $certificate = $consoleDB->getCollectionFirst([
             'limit' => 1,
             'offset' => 0,
-            'orderField' => 'id',
-            'orderType' => 'ASC',
-            'orderCast' => 'string',
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_CERTIFICATES,
                 'domain='.$domain->get(),
