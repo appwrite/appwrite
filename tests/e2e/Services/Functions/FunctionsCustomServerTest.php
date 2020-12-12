@@ -482,17 +482,19 @@ class FunctionsCustomServerTest extends Scope
         $envs = [
             [
                 'language' => 'PHP',
-                'version' => '8.0',
-                'name' => 'php-8.0',
-                'code' => $functions.'/php.tar.gz',
-                'command' => 'php index.php',
-            ],
-            [
-                'language' => 'PHP',
                 'version' => '7.4',
                 'name' => 'php-7.4',
                 'code' => $functions.'/php.tar.gz',
                 'command' => 'php index.php',
+                'timeout' => 15,
+            ],
+            [
+                'language' => 'PHP',
+                'version' => '8.0',
+                'name' => 'php-8.0',
+                'code' => $functions.'/php.tar.gz',
+                'command' => 'php index.php',
+                'timeout' => 15,
             ],
             [
                 'language' => 'Python',
@@ -500,6 +502,7 @@ class FunctionsCustomServerTest extends Scope
                 'name' => 'python-3.8',
                 'code' => $functions.'/python.tar.gz',
                 'command' => 'python main.py',
+                'timeout' => 15,
             ],
             [
                 'language' => 'Node.js',
@@ -507,6 +510,7 @@ class FunctionsCustomServerTest extends Scope
                 'name' => 'node-14',
                 'code' => $functions.'/node.tar.gz',
                 'command' => 'node index.js',
+                'timeout' => 15,
             ],
             [
                 'language' => 'Ruby',
@@ -514,6 +518,7 @@ class FunctionsCustomServerTest extends Scope
                 'name' => 'ruby-2.7',
                 'code' => $functions.'/ruby.tar.gz',
                 'command' => 'ruby app.rb',
+                'timeout' => 15,
             ],
             // [
             //     'language' => 'Deno',
@@ -521,6 +526,7 @@ class FunctionsCustomServerTest extends Scope
             //     'name' => 'deno-1.5',
             //     'code' => $functions.'/deno.tar.gz',
             //     'command' => 'deno run --allow-env index.ts',
+            //     'timeout' => 15,
             // ],
         ];
 
@@ -530,6 +536,7 @@ class FunctionsCustomServerTest extends Scope
             $name = $env['name'] ?? '';
             $code = $env['code'] ?? '';
             $command = $env['command'] ?? '';
+            $timeout = $env['timeout'] ?? 15;
 
             $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
                 'content-type' => 'application/json',
@@ -545,7 +552,7 @@ class FunctionsCustomServerTest extends Scope
                 ],
                 'events' => [],
                 'schedule' => '',
-                'timeout' => 15,
+                'timeout' => $timeout,
             ]);
 
             // var_dump('http://'.gethostbyname(trim(`hostname`)).'/v1');
@@ -584,7 +591,7 @@ class FunctionsCustomServerTest extends Scope
             $executionId = $execution['body']['$id'] ?? '';
             $this->assertEquals(201, $execution['headers']['status-code']);
 
-            sleep(25);
+            sleep(15);
 
             $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
                 'content-type' => 'application/json',
@@ -618,5 +625,83 @@ class FunctionsCustomServerTest extends Scope
         return [
             'functionId' => $functionId,
         ];
+    }
+    /**
+     * @depends testENVS
+     */
+    public function testTimeout()
+    {
+        $language = 'PHP';
+        $version = '8.0';
+        $name = 'php-8.0';
+        $code = realpath(__DIR__ . '/../../../resources/functions').'/timeout.tar.gz';
+        $command = 'php index.php';
+        $timeout = 2;
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Test '.$name,
+            'env' => $name,
+            'vars' => [],
+            'events' => [],
+            'schedule' => '',
+            'timeout' => $timeout,
+        ]);
+
+        $functionId = $function['body']['$id'] ?? '';
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+
+        $tag = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/tags', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'command' => $command,
+            'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
+        ]);
+
+        $tagId = $tag['body']['$id'] ?? '';
+        $this->assertEquals(201, $tag['headers']['status-code']);
+
+        $tag = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/tag', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'tag' => $tagId,
+        ]);
+
+        $this->assertEquals(200, $tag['headers']['status-code']);
+       
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => 1,
+        ]);
+
+        $executionId = $execution['body']['$id'] ?? '';
+        $this->assertEquals(201, $execution['headers']['status-code']);
+
+        sleep(15);
+
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($executions['headers']['status-code'], 200);
+        $this->assertEquals($executions['body']['sum'], 1);
+        $this->assertIsArray($executions['body']['executions']);
+        $this->assertCount(1, $executions['body']['executions']);
+        $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
+        $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
+        $this->assertEquals($executions['body']['executions'][0]['status'], 'failed');
+        $this->assertEquals($executions['body']['executions'][0]['exitCode'], 1);
+        $this->assertGreaterThan(2, $executions['body']['executions'][0]['time']);
+        $this->assertLessThan(3, $executions['body']['executions'][0]['time']);
+        $this->assertEquals($executions['body']['executions'][0]['stdout'], '');
+        $this->assertEquals($executions['body']['executions'][0]['stderr'], '');
     }
 }
