@@ -143,9 +143,9 @@ $cli
         $stdout = '';
         $stderr = '';
 
-        Console::log("Running \"docker-compose -f {$path}/docker-compose.yml up -d --remove-orphans\"");
+        Console::log("Running \"docker-compose -f {$path}/docker-compose.yml up -d --remove-orphans --renew-anon-volumes\"");
 
-        $exit = Console::execute("docker-compose -f {$path}/docker-compose.yml up -d --remove-orphans", '', $stdout, $stderr);
+        $exit = Console::execute("docker-compose -f {$path}/docker-compose.yml up -d --remove-orphans --renew-anon-volumes", '', $stdout, $stderr);
 
         if ($exit !== 0) {
             Console::error("Failed to install Appwrite dockers");

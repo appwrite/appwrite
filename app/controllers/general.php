@@ -22,14 +22,14 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $webhooks, $audits, $usage, $deletes, $clients) {
+App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $events, $audits, $usage, $deletes, $clients) {
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Database\Document $console */
     /** @var Appwrite\Database\Document $project */
     /** @var Appwrite\Database\Document $user */
     /** @var Utopia\Locale\Locale $locale */
-    /** @var Appwrite\Event\Event $webhooks */
+    /** @var Appwrite\Event\Event $events */
     /** @var Appwrite\Event\Event $audits */
     /** @var Appwrite\Event\Event $usage */
     /** @var Appwrite\Event\Event $deletes */
@@ -170,7 +170,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
      */
     if (null !== $key && $user->isEmpty()) {
         $user = new Document([
-            '$id' => 0,
+            '$id' => '',
             'status' => Auth::USER_STATUS_ACTIVATED,
             'email' => 'app.'.$project->getId().'@service.'.$request->getHostname(),
             'password' => '',
@@ -220,8 +220,9 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     /*
      * Background Jobs
      */
-    $webhooks
+    $events
         ->setParam('projectId', $project->getId())
+        ->setParam('userId', $user->getId())
         ->setParam('event', $route->getLabel('event', ''))
         ->setParam('payload', [])
     ;
@@ -249,25 +250,33 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     $deletes
         ->setParam('projectId', $project->getId())
     ;
-}, ['utopia', 'request', 'response', 'console', 'project', 'user', 'locale', 'webhooks', 'audits', 'usage', 'deletes', 'clients']);
+}, ['utopia', 'request', 'response', 'console', 'project', 'user', 'locale', 'events', 'audits', 'usage', 'deletes', 'clients']);
 
-App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audits, $usage, $deletes, $mode) {
+App::shutdown(function ($utopia, $request, $response, $project, $events, $audits, $usage, $deletes, $mode) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Database\Document $project */
-    /** @var Appwrite\Event\Event $webhooks */
+    /** @var Appwrite\Event\Event $events */
     /** @var Appwrite\Event\Event $audits */
     /** @var Appwrite\Event\Event $usage */
     /** @var Appwrite\Event\Event $deletes */
     /** @var bool $mode */
 
-    if (!empty($webhooks->getParam('event'))) {
-        if(empty($webhooks->getParam('payload'))) {
-            $webhooks->setParam('payload', $response->getPayload());
+    if (!empty($events->getParam('event'))) {
+        if(empty($events->getParam('payload'))) {
+            $events->setParam('payload', $response->getPayload());
         }
 
-        $webhooks->trigger();
+        $events
+            ->setQueue('v1-webhooks')
+            ->setClass('WebhooksV1')
+            ->trigger();
+
+        $events
+            ->setQueue('v1-functions')
+            ->setClass('FunctionsV1')
+            ->trigger();
     }
     
     if (!empty($audits->getParam('event'))) {
@@ -281,8 +290,8 @@ App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audi
     $route = $utopia->match($request);
     
     if ($project->getId()
-        && $mode !== APP_MODE_ADMIN
-        && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage and admin mode
+        && $mode !== APP_MODE_ADMIN //TODO: add check to make sure user is admin
+        && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage on admin mode
         
         $usage
             ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
@@ -290,7 +299,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audi
             ->trigger()
         ;
     }
-}, ['utopia', 'request', 'response', 'project', 'webhooks', 'audits', 'usage', 'deletes', 'mode']);
+}, ['utopia', 'request', 'response', 'project', 'events', 'audits', 'usage', 'deletes', 'mode']);
 
 App::options(function ($request, $response) {
     /** @var Utopia\Swoole\Request $request */

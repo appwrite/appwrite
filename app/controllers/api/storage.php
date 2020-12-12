@@ -534,10 +534,10 @@ App::delete('/v1/storage/files/:fileId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('fileId', '', new UID(), 'File unique ID.')
-    ->action(function ($fileId, $response, $projectDB, $webhooks, $audits, $usage) {
+    ->action(function ($fileId, $response, $projectDB, $events, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $usage */
         
@@ -564,12 +564,12 @@ App::delete('/v1/storage/files/:fileId')
             ->setParam('storage', $file->getAttribute('size', 0) * -1)
         ;
 
-        $webhooks
+        $events
             ->setParam('payload', $response->output($file, Response::MODEL_FILE))
         ;
 
         $response->noContent();
-    }, ['response', 'projectDB', 'webhooks', 'audits', 'usage']);
+    }, ['response', 'projectDB', 'events', 'audits', 'usage']);
 
 // App::get('/v1/storage/files/:fileId/scan')
 //     ->desc('Scan Storage')

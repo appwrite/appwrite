@@ -47,13 +47,6 @@ class User extends Model
                 'default' => new \stdClass,
                 'example' => ['theme' => 'pink', 'timezone' => 'UTC'],
             ])
-            ->addRule('roles', [
-                'type' => self::TYPE_STRING,
-                'description' => 'User list of roles',
-                'default' => [],
-                'example' => '*',
-                'array' => true,
-            ])
         ;
     }
 
