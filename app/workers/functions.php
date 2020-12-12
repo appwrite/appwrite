@@ -82,6 +82,14 @@ $stdout = \explode("\n", $stdout);
     \parse_str($value, $container);
 
     if(isset($container['name'])) {
+        // $labels = [];
+        // $temp = explode(',', $container['labels'] ?? []);
+
+        // foreach($temp as &$label) {
+        //     $label = explode('=', $label);
+        //     $labels[$label[0] || 0] = $label[1] || '';
+        // }
+
         $container = [
             'name' => $container['name'],
             'online' => (\substr($container['status'], 0, 2) === 'Up'),
@@ -100,6 +108,8 @@ $stdout = \explode("\n", $stdout);
         $list[$container['name']] = $container;
     }
 }, $stdout);
+
+var_dump(json_encode($list));
 
 Console::info(count($list)." functions listed in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
 
@@ -484,7 +494,7 @@ class FunctionsV1
             foreach($list as $env) {
                 $sorted[] = [
                     'name' => $env['name'],
-                    'created' => (int)$env['appwrite-created']
+                    'created' => (int)($env['appwrite-created'] ?? 0)
                 ];
             }
 
