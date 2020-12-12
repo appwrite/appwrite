@@ -520,14 +520,14 @@ class FunctionsCustomServerTest extends Scope
                 'command' => 'ruby app.rb',
                 'timeout' => 15,
             ],
-            // [
-            //     'language' => 'Deno',
-            //     'version' => '1.5',
-            //     'name' => 'deno-1.5',
-            //     'code' => $functions.'/deno.tar.gz',
-            //     'command' => 'deno run --allow-env index.ts',
-            //     'timeout' => 15,
-            // ],
+            [
+                'language' => 'Deno',
+                'version' => '1.5',
+                'name' => 'deno-1.5',
+                'code' => $functions.'/deno.tar.gz',
+                'command' => 'deno run --allow-env index.ts',
+                'timeout' => 15,
+            ],
         ];
 
         foreach ($envs as $key => $env) {
@@ -631,8 +631,6 @@ class FunctionsCustomServerTest extends Scope
      */
     public function testTimeout()
     {
-        $language = 'PHP';
-        $version = '8.0';
         $name = 'php-8.0';
         $code = realpath(__DIR__ . '/../../../resources/functions').'/timeout.tar.gz';
         $command = 'php index.php';
