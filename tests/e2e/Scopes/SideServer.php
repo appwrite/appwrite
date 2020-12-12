@@ -15,4 +15,12 @@ trait SideServer
             'x-appwrite-key' => $this->getProject()['apiKey']
         ];
     }
+
+    /**
+     * @return string
+     */
+    public function getSide()
+    {
+        return 'server';
+    }
 }

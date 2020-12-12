@@ -11,17 +11,17 @@ class Phone extends Model
     {
         $this
             ->addRule('code', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Phone code.',
                 'example' => '+1',
             ])
             ->addRule('countryCode', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Country two-character ISO 3166-1 alpha code.',
                 'example' => 'US',
             ])
             ->addRule('countryName', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Country name.',
                 'example' => 'United States',
             ])

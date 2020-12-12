@@ -7,47 +7,52 @@ use Appwrite\Utopia\Response\Model;
 
 class Platform extends Model
 {
+    /**
+     * @var bool
+     */
+    protected $public = false;
+
     public function __construct()
     {
         $this
             ->addRule('$id', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Platform ID.',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('name', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Platform name.',
                 'example' => 'My Web App',
             ])
             ->addRule('type', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Platform type. Possible values are: web, flutter-ios, flutter-android, ios, android, and unity.',
                 'example' => 'My Web App',
             ])
             ->addRule('key', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Platform Key. iOS bundle ID or Android package name.  Empty string for other platforms.',
                 'example' => 'com.company.appname',
             ])
             // ->addRule('store', [
-            //     'type' => 'string',
+            //     'type' => self::TYPE_STRING,
             //     'description' => 'Link to platform store.',
             //     'example' => '',
             // ])
             ->addRule('hostname', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Web app hostname. Empty string for other platforms.',
                 'example' => true,
             ])
             ->addRule('httpUser', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'HTTP basic authentication username.',
                 'default' => '',
                 'example' => 'username',
             ])
             ->addRule('httpPass', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'HTTP basic authentication password.',
                 'default' => '',
                 'example' => 'password',

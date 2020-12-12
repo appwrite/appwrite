@@ -112,7 +112,7 @@ If running in production, it might be easier to use a 3rd party SMTP server as i
 
 ### _APP_SMTP_HOST
 
-SMTP server host name address. Default value is: 'smtp'
+SMTP server host name address. Default value is: 'smtp'. Pass an empty string to disable all mail sending from the server.
 
 ### _APP_SMTP_PORT
 

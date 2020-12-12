@@ -27,6 +27,9 @@ App::post('/v1/database/collections')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.method', 'createCollection')
     ->label('sdk.description', '/docs/references/database/create-collection.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_COLLECTION)
     ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
     ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
@@ -93,6 +96,9 @@ App::get('/v1/database/collections')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.method', 'listCollections')
     ->label('sdk.description', '/docs/references/database/list-collections.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_COLLECTION_LIST)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 40000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
@@ -127,6 +133,9 @@ App::get('/v1/database/collections/:collectionId')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.method', 'getCollection')
     ->label('sdk.description', '/docs/references/database/get-collection.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_COLLECTION)
     ->param('collectionId', '', new UID(), 'Collection unique ID.')
     ->action(function ($collectionId, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
@@ -150,6 +159,9 @@ App::put('/v1/database/collections/:collectionId')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.method', 'updateCollection')
     ->label('sdk.description', '/docs/references/database/update-collection.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_COLLECTION)
     ->param('collectionId', '', new UID(), 'Collection unique ID.')
     ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.')
     ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions(/docs/permissions) and get a full list of available permissions.')
@@ -219,11 +231,14 @@ App::delete('/v1/database/collections/:collectionId')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.method', 'deleteCollection')
     ->label('sdk.description', '/docs/references/database/delete-collection.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('collectionId', '', new UID(), 'Collection unique ID.')
-    ->action(function ($collectionId, $response, $projectDB, $webhooks, $audits) {
+    ->action(function ($collectionId, $response, $projectDB, $events, $audits, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
 
         $collection = $projectDB->getDocument($collectionId, false);
@@ -235,8 +250,12 @@ App::delete('/v1/database/collections/:collectionId')
         if (!$projectDB->deleteDocument($collectionId)) {
             throw new Exception('Failed to remove collection from DB', 500);
         }
-        
-        $webhooks
+
+        $deletes
+            ->setParam('document', $collection)
+        ;
+
+        $events
             ->setParam('payload', $response->output($collection, Response::MODEL_COLLECTION))
         ;
 
@@ -247,7 +266,7 @@ App::delete('/v1/database/collections/:collectionId')
         ;
 
         $response->noContent();
-    }, ['response', 'projectDB', 'webhooks', 'audits']);
+    }, ['response', 'projectDB', 'events', 'audits', 'deletes']);
 
 App::post('/v1/database/collections/:collectionId/documents')
     ->desc('Create Document')
@@ -258,6 +277,9 @@ App::post('/v1/database/collections/:collectionId/documents')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.method', 'createDocument')
     ->label('sdk.description', '/docs/references/database/create-document.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ANY)
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
     ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
@@ -371,10 +393,13 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.method', 'listDocuments')
     ->label('sdk.description', '/docs/references/database/list-documents.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_DOCUMENT_LIST)
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('filters', [], new ArrayList(new Text(128)), 'Array of filter strings. Each filter is constructed from a key name, comparison operator (=, !=, >, <, <=, >=) and a value. You can also use a dot (.) separator in attribute names to filter by child document attributes. Examples: \'name=John Doe\' or \'category.$id>=5bed2d152c362\'.', true)
-    ->param('limit', 25, new Range(0, 1000), 'Maximum number of documents to return in response.  Use this value to manage pagination.', true)
-    ->param('offset', 0, new Range(0, 900000000), 'Offset value. Use this value to manage pagination.', true)
+    ->param('limit', 25, new Range(0, 100), 'Maximum number of documents to return in response.  Use this value to manage pagination. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, 900000000), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderField', '$id', new Text(128), 'Document field that results will be sorted by.', true)
     ->param('orderType', 'ASC', new WhiteList(['DESC', 'ASC'], true), 'Order direction. Possible values are DESC for descending order, or ASC for ascending order.', true)
     ->param('orderCast', 'string', new WhiteList(['int', 'string', 'date', 'time', 'datetime'], true), 'Order field type casting. Possible values are int, string, date, time or datetime. The database will attempt to cast the order field to the value you pass here. The default value is a string.', true)
@@ -429,6 +454,9 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.method', 'getDocument')
     ->label('sdk.description', '/docs/references/database/get-document.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ANY)
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, new UID(), 'Document unique ID.')
     ->action(function ($collectionId, $documentId, $request, $response, $projectDB) {
@@ -455,6 +483,9 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.method', 'updateDocument')
     ->label('sdk.description', '/docs/references/database/update-document.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ANY)
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, new UID(), 'Document unique ID.')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
@@ -529,12 +560,15 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.method', 'deleteDocument')
     ->label('sdk.description', '/docs/references/database/delete-document.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, new UID(), 'Document unique ID.')
-    ->action(function ($collectionId, $documentId, $response, $projectDB, $webhooks, $audits) {
+    ->action(function ($collectionId, $documentId, $response, $projectDB, $events, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
 
         $collection = $projectDB->getDocument($collectionId, false);
@@ -558,7 +592,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
             throw new Exception('Failed to remove document from DB', 500);
         }
 
-        $webhooks
+        $events
             ->setParam('payload', $response->output($document, Response::MODEL_ANY))
         ;
         
@@ -569,4 +603,4 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         ;
 
         $response->noContent();
-    }, ['response', 'projectDB', 'webhooks', 'audits']);
+    }, ['response', 'projectDB', 'events', 'audits']);
