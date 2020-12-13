@@ -160,9 +160,6 @@ class DeletesV1
             $results = $database->getCollection([
                 'limit' => $limit,
                 'offset' => 0,
-                'orderField' => '$id',
-                'orderType' => 'ASC',
-                'orderCast' => 'string',
                 'filters' => $filters,
             ]);
 

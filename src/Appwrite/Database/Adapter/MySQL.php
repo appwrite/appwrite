@@ -501,7 +501,7 @@ class MySQL extends Adapter
         ];
         $orderTypeMap = ['DESC', 'ASC'];
 
-        $options['orderField'] = (empty($options['orderField'])) ? '$id' : $options['orderField']; // Set default order field
+        $options['orderField'] = (empty($options['orderField'])) ? '' : $options['orderField']; // Set default order field
         $options['orderCast'] = (empty($options['orderCast'])) ? 'string' : $options['orderCast']; // Set default order field
 
         if (!\array_key_exists($options['orderCast'], $orderCastMap)) {
@@ -567,34 +567,39 @@ class MySQL extends Adapter
         }
 
         // Sorting
-        $orderPath = \explode('.', $options['orderField']);
-        $len = \count($orderPath);
-        $orderKey = 'order_b';
-        $part = $this->getPDO()->quote(\implode('', $orderPath), PDO::PARAM_STR);
-        $orderSelect = "CASE WHEN {$orderKey}.key = {$part} THEN CAST({$orderKey}.value AS {$orderCastMap[$options['orderCast']]}) END AS sort_ff";
-
-        if (1 === $len) {
-            //if($path == "''") { // Handle direct attributes queries
-            $sorts[] = 'LEFT JOIN `'.$this->getNamespace().".database.properties` order_b ON a.uid IS NOT NULL AND order_b.documentUid = a.uid AND (order_b.key = {$part})";
-        } else { // Handle direct child attributes queries
-            $prev = 'c';
-            $orderKey = 'order_e';
-
-            foreach ($orderPath as $y => $part) {
-                $part = $this->getPDO()->quote($part, PDO::PARAM_STR);
-                $x = $y - 1;
-
-                if (0 === $y) { // First key
-                    $sorts[] = 'JOIN `'.$this->getNamespace().".database.relationships` order_c{$y} ON a.uid IS NOT NULL AND order_c{$y}.start = a.uid AND order_c{$y}.key = {$part}";
-                } elseif ($y == $len - 1) { // Last key
-                    $sorts[] .= 'JOIN `'.$this->getNamespace().".database.properties` order_e ON order_e.documentUid = order_{$prev}{$x}.end AND order_e.key = {$part}";
-                } else {
-                    $sorts[] .= 'JOIN `'.$this->getNamespace().".database.relationships` order_d{$y} ON order_d{$y}.start = order_{$prev}{$x}.end AND order_d{$y}.key = {$part}";
-                    $prev = 'd';
+        if(!empty($options['orderField'])) {
+            $orderPath = \explode('.', $options['orderField']);
+            $len = \count($orderPath);
+            $orderKey = 'order_b';
+            $part = $this->getPDO()->quote(\implode('', $orderPath), PDO::PARAM_STR);
+            $orderSelect = "CASE WHEN {$orderKey}.key = {$part} THEN CAST({$orderKey}.value AS {$orderCastMap[$options['orderCast']]}) END AS sort_ff";
+    
+            if (1 === $len) {
+                //if($path == "''") { // Handle direct attributes queries
+                $sorts[] = 'LEFT JOIN `'.$this->getNamespace().".database.properties` order_b ON a.uid IS NOT NULL AND order_b.documentUid = a.uid AND (order_b.key = {$part})";
+            } else { // Handle direct child attributes queries
+                $prev = 'c';
+                $orderKey = 'order_e';
+    
+                foreach ($orderPath as $y => $part) {
+                    $part = $this->getPDO()->quote($part, PDO::PARAM_STR);
+                    $x = $y - 1;
+    
+                    if (0 === $y) { // First key
+                        $sorts[] = 'JOIN `'.$this->getNamespace().".database.relationships` order_c{$y} ON a.uid IS NOT NULL AND order_c{$y}.start = a.uid AND order_c{$y}.key = {$part}";
+                    } elseif ($y == $len - 1) { // Last key
+                        $sorts[] .= 'JOIN `'.$this->getNamespace().".database.properties` order_e ON order_e.documentUid = order_{$prev}{$x}.end AND order_e.key = {$part}";
+                    } else {
+                        $sorts[] .= 'JOIN `'.$this->getNamespace().".database.relationships` order_d{$y} ON order_d{$y}.start = order_{$prev}{$x}.end AND order_d{$y}.key = {$part}";
+                        $prev = 'd';
+                    }
                 }
-            }
+            }    
         }
-
+        else {
+            $orderSelect = 'a.uid AS sort_ff';
+        }
+        
         /*
          * Workaround for a MySQL bug as reported here:
          * https://bugs.mysql.com/bug.php?id=78485
