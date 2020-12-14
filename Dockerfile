@@ -93,7 +93,8 @@ ENV _APP_SERVER=swoole \
     _APP_FUNCTIONS_TIMEOUT=900 \
     _APP_FUNCTIONS_CONTAINERS=10 \
     _APP_SETUP=self-hosted \
-    _APP_VERSION=$VERSION
+    _APP_VERSION=$VERSION \
+    _APP_MAINTENANCE_INTERVAL=10
 #ENV _APP_SMTP_SECURE ''
 #ENV _APP_SMTP_USERNAME ''
 #ENV _APP_SMTP_PASSWORD ''
@@ -155,6 +156,7 @@ RUN mkdir -p /storage/uploads && \
 
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
+    chmod +x /usr/local/bin/maintenance && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/migrate && \
     chmod +x /usr/local/bin/schedule && \
