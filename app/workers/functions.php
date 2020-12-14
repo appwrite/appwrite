@@ -387,9 +387,9 @@ class FunctionsV1
             $exitCode = Console::execute("docker run \
                 -d \
                 --entrypoint=\"\" \
-                --cpus=1 \
-                --memory=128m \
-                --memory-swap=128m \
+                --cpus=".App::getEnv('_APP_FUNCTIONS_CPUS', '1')." \
+                --memory=".App::getEnv('_APP_FUNCTIONS_MEMORY', '128')."m \
+                --memory-swap=".App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '128')."m \
                 --name={$container} \
                 --label appwrite-type=function \
                 --label appwrite-created=".$executionTime." \
