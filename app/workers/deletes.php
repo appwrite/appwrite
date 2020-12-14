@@ -39,6 +39,9 @@ class DeletesV1
             case Database::SYSTEM_COLLECTION_FUNCTIONS:
                 $this->deleteFunction($document, $projectId);
                 break;
+            case Database::SYSTEM_COLLECTION_EXECUTIONS:
+                $this->deleteExecutionLogs($document);
+                break;
             case Database::SYSTEM_COLLECTION_USERS:
                 $this->deleteUser($document, $projectId);
                 break;
@@ -93,6 +96,26 @@ class DeletesV1
             '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
             'userId='.$document->getId(),
         ], $this->getProjectDB($projectId));
+    }
+
+    protected function deleteExecutionLogs(Document $document) 
+    {
+        var_dump("*********************DELETING EXECUTION LOGS *********************");
+        $projectIds = $document->getAttribute('projectIds', []);
+        print_r($projectIds);
+        foreach ($projectIds as $projectId) {
+            if (!($projectDB = $this->getProjectDB($projectId))) {
+                throw new Exception('Failed to get projectDB for project '.$projectId, 500);
+            }
+            
+            var_dump("********************* DELETING FOR PROJECT *********************");
+            var_dump($projectId);
+            // Delete Executions
+            $this->deleteByGroup([
+                '$collection='.$document->getCollection(),
+                '$projectId='.$projectId
+            ], $projectDB);
+        }
     }
 
     protected function deleteFunction(Document $document, $projectId)
