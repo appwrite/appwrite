@@ -32,7 +32,6 @@ $cli
         //Convert Seconds to microseconds
         $interval = $interval * 1000000;
 
-
         $consoleDB = getConsoleDB();
 
         Console::loop(function() use ($consoleDB){
