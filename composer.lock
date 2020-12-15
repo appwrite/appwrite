@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "18cec0afcb76ef57fa38386fe04fd87b",
+    "content-hash": "58b7669908833b2a32d550d9e38f112f",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -1268,16 +1268,16 @@
         },
         {
             "name": "utopia-php/cli",
-            "version": "0.7.2",
+            "version": "0.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "0b19cd33b86deb6aeb26bfdabc18bd2bdf5eba04"
+                "reference": "090c7ae22b53a175d962e8f9601d36350496153c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/0b19cd33b86deb6aeb26bfdabc18bd2bdf5eba04",
-                "reference": "0b19cd33b86deb6aeb26bfdabc18bd2bdf5eba04",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/090c7ae22b53a175d962e8f9601d36350496153c",
+                "reference": "090c7ae22b53a175d962e8f9601d36350496153c",
                 "shasum": ""
             },
             "require": {
@@ -1315,9 +1315,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cli/issues",
-                "source": "https://github.com/utopia-php/cli/tree/0.7.2"
+                "source": "https://github.com/utopia-php/cli/tree/0.8"
             },
-            "time": "2020-10-23T13:34:41+00:00"
+            "time": "2020-12-14T06:31:42+00:00"
         },
         {
             "name": "utopia-php/config",

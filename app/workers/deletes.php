@@ -100,16 +100,13 @@ class DeletesV1
 
     protected function deleteExecutionLogs(Document $document) 
     {
-        var_dump("*********************DELETING EXECUTION LOGS *********************");
+        
         $projectIds = $document->getAttribute('projectIds', []);
-        print_r($projectIds);
         foreach ($projectIds as $projectId) {
             if (!($projectDB = $this->getProjectDB($projectId))) {
                 throw new Exception('Failed to get projectDB for project '.$projectId, 500);
             }
-            
-            var_dump("********************* DELETING FOR PROJECT *********************");
-            var_dump($projectId);
+
             // Delete Executions
             $this->deleteByGroup([
                 '$collection='.$document->getCollection(),
