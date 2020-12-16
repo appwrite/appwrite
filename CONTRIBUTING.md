@@ -227,7 +227,7 @@ Before running the command, make sure you have proper write permissions to the A
 **Build for multicore**
 
 ```bash
-docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t appwrite/appwrite:dev . --push
+docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x -t appwrite/appwrite:dev --push .
 ```
 
 ## Tests
