@@ -37,12 +37,22 @@ function notifyDeleteExecutionLogs(array $projectIds)
 
 function notifyDeleteAbuseLogs(array $projectIds) 
 {
-
+    Resque::enqueue(DELETE_QUEUE_NAME, DELETE_CLASS_NAME, [
+        'document' => new Document([
+            '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
+            'projectIds' => $projectIds
+        ]),
+    ]);
 }
 
 function notifyDeleteAuditLogs(array $projectIds) 
 {
-
+    Resque::enqueue(DELETE_QUEUE_NAME, DELETE_CLASS_NAME, [
+        'document' => new Document([
+            '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
+            'projectIds' => $projectIds
+        ]),
+    ]);
 }
 
 $cli
