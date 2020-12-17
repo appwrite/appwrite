@@ -16,6 +16,8 @@ services:
       - --providers.file.directory=/storage/config
       - --providers.file.watch=true
       - --providers.docker=true
+      - --providers.docker.exposedByDefault=false
+      - --providers.docker.constraints=Label(`traefik.constraint-label-stack`,`appwrite`)
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
       - --accesslog=true
@@ -47,6 +49,8 @@ services:
     networks:
       - appwrite
     labels:
+      - traefik.enable=true
+      - traefik.constraint-label-stack=appwrite
       - traefik.http.routers.appwrite.rule=PathPrefix(`/`)
       - traefik.http.routers.appwrite-secure.rule=PathPrefix(`/`)
       - traefik.http.routers.appwrite-secure.tls=true
