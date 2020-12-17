@@ -30,9 +30,7 @@ $callbacks = [
             $all = $projectDB->getCollection([
                 'limit' => $limit,
                 'offset' => $offset,
-                'orderField' => '$uid',
                 'orderType' => 'DESC',
-                'orderCast' => 'string',
             ]);
 
             $sum = \count($all);
@@ -215,9 +213,6 @@ $cli
             $projects = $consoleDB->getCollection([
                 'limit' => $limit,
                 'offset' => $offset,
-                'orderField' => 'name',
-                'orderType' => 'ASC',
-                'orderCast' => 'string',
                 'filters' => [
                     '$collection='.Database::SYSTEM_COLLECTION_PROJECTS,
                 ],
