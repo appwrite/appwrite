@@ -14,6 +14,8 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Storage\Device\Local;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Audit\Audit;
+use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 
 class DeletesV1
 {
@@ -100,7 +102,6 @@ class DeletesV1
 
     protected function deleteExecutionLogs(Document $document) 
     {
-        
         $projectIds = $document->getAttribute('projectIds', []);
         foreach ($projectIds as $projectId) {
             if (!($projectDB = $this->getProjectDB($projectId))) {
@@ -112,6 +113,38 @@ class DeletesV1
                 '$collection='.$document->getCollection(),
                 '$projectId='.$projectId
             ], $projectDB);
+        }
+    }
+
+    protected function deleteAbuseLogs($document) 
+    {
+        global $register;
+        $projectIds = $document->getAttribute('projectIds', []);
+
+        foreach ($projectIds as $projectId) {
+            $adapter = new AuditAdapter($register->get('db'));
+            $adapter->setNamespace('app_'.$projectId);
+            $audit = new Audit($adapter);
+            $status = $audit->deleteLogsOlderThan();
+            if (!$status) {
+                throw new Exception('Failed to delete Audit logs for project'.$projectId, 500);
+            }
+        }
+    }
+
+    protected function deleteAuditLogs($document)
+    {
+        global $register;
+        $projectIds = $document->getAttribute('projectIds', []);
+
+        foreach ($projectIds as $projectId) {
+            $adapter = new AuditAdapter($register->get('db'));
+            $adapter->setNamespace('app_'.$projectId);
+            $audit = new Audit($adapter);
+            $status = $audit->deleteLogsOlderThan();
+            if (!$status) {
+                throw new Exception('Failed to delete Audit logs for project'.$projectId, 500);
+            }
         }
     }
 

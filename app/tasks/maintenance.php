@@ -13,6 +13,8 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 
+define("DELETE_QUEUE_NAME", "v1-deletes");
+define("DELETE_CLASS_NAME", "DeletesV1");
 
 function getConsoleDB() {
     global $register;
@@ -21,6 +23,26 @@ function getConsoleDB() {
     $consoleDB->setNamespace('app_console'); // Main DB
     $consoleDB->setMocks(Config::getParam('collections', []));
     return $consoleDB;
+}
+
+function notifyDeleteExecutionLogs(array $projectIds)
+{
+    Resque::enqueue(DELETE_QUEUE_NAME, DELETE_CLASS_NAME, [
+        'document' => new Document([
+            '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
+            'projectIds' => $projectIds
+        ]),
+    ]);
+}
+
+function notifyDeleteAbuseLogs(array $projectIds) 
+{
+
+}
+
+function notifyDeleteAuditLogs(array $projectIds) 
+{
+
 }
 
 $cli
@@ -48,12 +70,10 @@ $cli
                 return $project->getId(); 
             }, $projects);
 
-            Resque::enqueue('v1-deletes', 'DeletesV1', [
-                'document' => new Document([
-                    '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
-                    'projectIds' => $projectIds
-                ]),
-            ]);
+            notifyDeleteExecutionLogs($projectIds);
+            notifyDeleteAbuseLogs($projectIds);
+            notifyDeleteAuditLogs($projectIds);
+            
         }, $interval);
 
     });
