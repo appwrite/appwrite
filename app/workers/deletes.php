@@ -12,6 +12,8 @@ use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Storage\Device\Local;
+use Utopia\Abuse\Abuse;
+use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Audit\Audit;
@@ -140,12 +142,15 @@ class DeletesV1
         }
 
         foreach ($projectIds as $projectId) {
-            $adapter = new AuditAdapter($register->get('db'));
-            $adapter->setNamespace('app_'.$projectId);
-            $audit = new Audit($adapter);
-            $status = $audit->cleanup($timestamp);
+            $timeLimit = new TimeLimit("", 0, 0, function () use ($register) {
+                return $register->get('db');
+            });
+            $timeLimit->setNamespace('app_'.$projectId);
+            $abuse = new Abuse($timeLimit); 
+
+            $status = $abuse->cleanup($timestamp);
             if (!$status) {
-                throw new Exception('Failed to delete Audit logs for project'.$projectId, 500);
+                throw new Exception('Failed to delete Abuse logs for project '.$projectId, 500);
             }
         }
         
