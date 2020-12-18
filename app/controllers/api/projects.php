@@ -429,7 +429,10 @@ App::delete('/v1/projects/:projectId')
             throw new Exception('Project not found', 404);
         }
 
-        $deletes->setParam('document', $project->getArrayCopy());
+        $deletes
+            ->setParam('document', $project->getArrayCopy())
+            ->setParam('collection', Database::SYSTEM_COLLECTION_PROJECTS)
+        ;
 
         foreach (['keys', 'webhooks', 'tasks', 'platforms', 'domains'] as $key) { // Delete all children (keys, webhooks, tasks [stop tasks?], platforms)
             $list = $project->getAttribute('webhooks', []);

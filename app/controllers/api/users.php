@@ -517,6 +517,7 @@ App::delete('/v1/users/:userId')
 
         $deletes
             ->setParam('document', $user)
+            ->setParam('collection', Database::SYSTEM_COLLECTION_USERS)
         ;
 
         $events

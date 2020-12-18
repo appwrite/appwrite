@@ -29,12 +29,12 @@ class DeletesV1
 
     public function perform()
     {
-        $projectId = $this->args['projectId'];
         $document = $this->args['document'];
-
         $document = new Document($document);
+        $projectId = $this->args['projectId'];
+        $collection = $this->args['collection'];
         
-        switch (strval($document->getCollection())) {
+        switch (strval($collection)) {
             case Database::SYSTEM_COLLECTION_PROJECTS:
                 $this->deleteProject($document);
                 break;

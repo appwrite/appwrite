@@ -29,30 +29,30 @@ function getConsoleDB() {
 function notifyDeleteExecutionLogs(array $projectIds)
 {
     Resque::enqueue(DELETE_QUEUE_NAME, DELETE_CLASS_NAME, [
+        'collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
         'document' => new Document([
-            '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
             'projectIds' => $projectIds
-        ]),
+        ])
     ]);
 }
 
 function notifyDeleteAbuseLogs(array $projectIds) 
 {
     Resque::enqueue(DELETE_QUEUE_NAME, DELETE_CLASS_NAME, [
+        'collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
         'document' => new Document([
-            '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
             'projectIds' => $projectIds
-        ]),
+        ])
     ]);
 }
 
 function notifyDeleteAuditLogs(array $projectIds) 
 {
     Resque::enqueue(DELETE_QUEUE_NAME, DELETE_CLASS_NAME, [
+        'collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
         'document' => new Document([
-            '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
             'projectIds' => $projectIds
-        ]),
+        ])
     ]);
 }
 

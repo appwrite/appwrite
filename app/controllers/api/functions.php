@@ -366,6 +366,7 @@ App::delete('/v1/functions/:functionId')
 
         $deletes
             ->setParam('document', $function->getArrayCopy())
+            ->setParam('collection', Database::SYSTEM_COLLECTION_FUNCTIONS)
         ;
 
         $response->noContent();
