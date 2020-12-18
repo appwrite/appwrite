@@ -125,7 +125,7 @@ class DeletesV1
             $adapter = new AuditAdapter($register->get('db'));
             $adapter->setNamespace('app_'.$projectId);
             $audit = new Audit($adapter);
-            $status = $audit->deleteLogsOlderThan();
+            $status = $audit->cleanup();
             if (!$status) {
                 throw new Exception('Failed to delete Audit logs for project'.$projectId, 500);
             }
@@ -141,7 +141,7 @@ class DeletesV1
             $adapter = new AuditAdapter($register->get('db'));
             $adapter->setNamespace('app_'.$projectId);
             $audit = new Audit($adapter);
-            $status = $audit->deleteLogsOlderThan();
+            $status = $audit->cleanup();
             if (!$status) {
                 throw new Exception('Failed to delete Audit logs for project'.$projectId, 500);
             }

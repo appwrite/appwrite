@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "58b7669908833b2a32d550d9e38f112f",
+    "content-hash": "f366e884df2132577f44576e459e3a4b",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -1112,16 +1112,16 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.2.2",
+            "version": "0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "8e65890a6d7afa9f57992f1eca9fe64508f9822e"
+                "reference": "5047cb311de8d7609e2678fdc405651f43f7e550"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/8e65890a6d7afa9f57992f1eca9fe64508f9822e",
-                "reference": "8e65890a6d7afa9f57992f1eca9fe64508f9822e",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/5047cb311de8d7609e2678fdc405651f43f7e550",
+                "reference": "5047cb311de8d7609e2678fdc405651f43f7e550",
                 "shasum": ""
             },
             "require": {
@@ -1158,22 +1158,22 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.2.2"
+                "source": "https://github.com/utopia-php/abuse/tree/0.3.0"
             },
-            "time": "2020-10-23T06:51:42+00:00"
+            "time": "2020-12-17T18:39:44+00:00"
         },
         {
             "name": "utopia-php/audit",
-            "version": "0.3.2",
+            "version": "0.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "544ecff78788d11f60992a721f102cafc22ab084"
+                "reference": "5000fdbe755bbfb1e8bc26c61b90e28c40e5744a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/544ecff78788d11f60992a721f102cafc22ab084",
-                "reference": "544ecff78788d11f60992a721f102cafc22ab084",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/5000fdbe755bbfb1e8bc26c61b90e28c40e5744a",
+                "reference": "5000fdbe755bbfb1e8bc26c61b90e28c40e5744a",
                 "shasum": ""
             },
             "require": {
@@ -1210,9 +1210,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/0.3.2"
+                "source": "https://github.com/utopia-php/audit/tree/0.5.0"
             },
-            "time": "2020-10-23T08:09:44+00:00"
+            "time": "2020-12-17T18:41:34+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -4501,12 +4501,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "1ba3caf8ed39a49e39fc8a6cad666724524a5342"
+                "reference": "15c96194f32e1b1aa30d1b302c71c5f83fd4dea9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/1ba3caf8ed39a49e39fc8a6cad666724524a5342",
-                "reference": "1ba3caf8ed39a49e39fc8a6cad666724524a5342",
+                "url": "https://api.github.com/repos/symfony/console/zipball/15c96194f32e1b1aa30d1b302c71c5f83fd4dea9",
+                "reference": "15c96194f32e1b1aa30d1b302c71c5f83fd4dea9",
                 "shasum": ""
             },
             "require": {
@@ -4591,7 +4591,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2020-12-12T00:32:42+00:00"
+            "time": "2020-12-18T08:03:24+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",

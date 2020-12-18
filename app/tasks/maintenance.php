@@ -16,6 +16,7 @@ use Utopia\Config\Config;
 define("DELETE_QUEUE_NAME", "v1-deletes");
 define("DELETE_CLASS_NAME", "DeletesV1");
 
+// TODO: Think of a better way to access consoleDB
 function getConsoleDB() {
     global $register;
     $consoleDB = new Database();
@@ -59,7 +60,7 @@ $cli
     ->task('maintenance')
     ->desc('Schedules maintenance tasks and publishes them to resque')
     ->action(function () {
-        // Convert string to integer
+        // # of days in seconds (1 day = 86400s)
         $interval = App::getEnv('_APP_MAINTENANCE_INTERVAL', '') + 0;
         //Convert Seconds to microseconds
         $interval = $interval * 1000000;

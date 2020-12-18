@@ -94,7 +94,9 @@ ENV _APP_SERVER=swoole \
     _APP_FUNCTIONS_CONTAINERS=10 \
     _APP_SETUP=self-hosted \
     _APP_VERSION=$VERSION \
-    _APP_MAINTENANCE_INTERVAL=864000
+    # The interval at which to carry out maintenance tasks 
+    # 1 day = 86400 seconds
+    _APP_MAINTENANCE_INTERVAL=86400
 #ENV _APP_SMTP_SECURE ''
 #ENV _APP_SMTP_USERNAME ''
 #ENV _APP_SMTP_PASSWORD ''
