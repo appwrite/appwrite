@@ -30,7 +30,7 @@ function getConsoleDB() {
 function notifyDeleteExecutionLogs(array $projectIds)
 {
     Resque::enqueue(DELETE_QUEUE_NAME, DELETE_CLASS_NAME, [
-        'type' => DeletesV1::TYPE_DOCUMENT,
+        'type' => DELETE_TYPE_DOCUMENT,
         'document' => new Document([
             '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
             'projectIds' => $projectIds
@@ -38,24 +38,24 @@ function notifyDeleteExecutionLogs(array $projectIds)
     ]);
 }
 
-function notifyDeleteAbuseLogs(array $projectIds, int $timestamp) 
+function notifyDeleteAbuseLogs(array $projectIds, int $interval) 
 {
     Resque::enqueue(DELETE_QUEUE_NAME, DELETE_CLASS_NAME, [
-        'type' =>  DeletesV1::TYPE_ABUSE,
+        'type' =>  DELETE_TYPE_ABUSE,
         'document' => new Document([
             'projectIds' => $projectIds,
-            'timestamp' => $timestamp,
+            'timestamp' => time() - $interval,
         ])
     ]);
 }
 
-function notifyDeleteAuditLogs(array $projectIds, int $timestamp) 
+function notifyDeleteAuditLogs(array $projectIds, int $interval) 
 {
     Resque::enqueue(DELETE_QUEUE_NAME, DELETE_CLASS_NAME, [
-        'type' => DeletesV1::TYPE_AUDIT,
+        'type' => DELETE_TYPE_AUDIT,
         'document' => new Document([
             'projectIds' => $projectIds,
-            'timestamp' => $timestamp
+            'timestamp' => time() - $interval
         ])
     ]);
 }
@@ -67,11 +67,11 @@ $cli
         // # of days in seconds (1 day = 86400s)
         $interval = App::getEnv('_APP_MAINTENANCE_INTERVAL', '') + 0;
         //Convert Seconds to microseconds
-        $interval = $interval * 1000000;
+        $intervalMicroseconds = $interval * 1000000;
 
         $consoleDB = getConsoleDB();
 
-        Console::loop(function() use ($consoleDB){
+        Console::loop(function() use ($consoleDB, $interval){
 
             Authorization::disable();
             $projects = $consoleDB->getCollection([
@@ -86,9 +86,9 @@ $cli
             }, $projects);
 
             notifyDeleteExecutionLogs($projectIds);
-            notifyDeleteAbuseLogs($projectIds);
-            notifyDeleteAuditLogs($projectIds);
+            notifyDeleteAbuseLogs($projectIds, $interval);
+            notifyDeleteAuditLogs($projectIds, $interval);
             
-        }, $interval);
+        }, $intervalMicroseconds);
 
     });

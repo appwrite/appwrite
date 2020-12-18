@@ -20,11 +20,6 @@ use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 class DeletesV1
 {
 
-    // Deletion Types
-    const TYPE_DOCUMENT = 'document';
-    const TYPE_AUDIT = 'audit';
-    const TYPE_ABUSE = 'abuse';
-
     public $args = [];
 
     protected $consoleDB = null;
@@ -38,10 +33,11 @@ class DeletesV1
         $document = $this->args['document'];
         $document = new Document($document);
         $projectId = $this->args['projectId'];
+        
         $type = $this->args['type'];
         
         switch (strval($type)) {
-            case DeletesV1::TYPE_DOCUMENT:
+            case DELETE_TYPE_DOCUMENT:
                 switch (strval($document->getCollection())) {
                     case Database::SYSTEM_COLLECTION_PROJECTS:
                         $this->deleteProject($document);
@@ -63,11 +59,11 @@ class DeletesV1
                         break;
                 }
                 break;
-            case DeletesV1::TYPE_AUDIT:
+            case DELETE_TYPE_AUDIT:
                 $this->deleteAuditLogs($document);
                 break;
 
-            case DeletesV1::TYPE_ABUSE:
+            case DELETE_TYPE_ABUSE:
                 $this->deleteAbuseLogs($document);
                 break;
             }
@@ -137,29 +133,39 @@ class DeletesV1
     {
         global $register;
         $projectIds = $document->getAttribute('projectIds', []);
+        $timestamp = $document->getAttribute('timestamp', 0);
+
+        if($timestamp == 0) {
+            throw new Exception('Failed to delete abuse logs. No timestamp provided');
+        }
 
         foreach ($projectIds as $projectId) {
             $adapter = new AuditAdapter($register->get('db'));
             $adapter->setNamespace('app_'.$projectId);
             $audit = new Audit($adapter);
-            $status = $audit->cleanup();
+            $status = $audit->cleanup($timestamp);
             if (!$status) {
                 throw new Exception('Failed to delete Audit logs for project'.$projectId, 500);
             }
         }
+        
     }
 
     protected function deleteAuditLogs($document)
     {
         global $register;
         $projectIds = $document->getAttribute('projectIds', []);
-        $timestamp = $document->getAttribute('time', 0);
+        $timestamp = $document->getAttribute('timestamp', 0);
+
+        if($timestamp == 0) {
+            throw new Exception('Failed to delete audit logs. No timestamp provided');
+        }
 
         foreach ($projectIds as $projectId) {
             $adapter = new AuditAdapter($register->get('db'));
             $adapter->setNamespace('app_'.$projectId);
             $audit = new Audit($adapter);
-            $status = $audit->cleanup();
+            $status = $audit->cleanup($timestamp);
             if (!$status) {
                 throw new Exception('Failed to delete Audit logs for project'.$projectId, 500);
             }

@@ -253,7 +253,7 @@ App::delete('/v1/database/collections/:collectionId')
 
         $deletes
             ->setParam('document', $collection)
-            ->setParam('type', DeletesV1::TYPE_DOCUMENT)
+            ->setParam('type', DELETE_TYPE_DOCUMENT)
         ;
 
         $events

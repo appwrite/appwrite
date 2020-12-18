@@ -52,7 +52,11 @@ const APP_SOCIAL_INSTAGRAM = 'https://www.instagram.com/appwrite.io';
 const APP_SOCIAL_GITHUB = 'https://github.com/appwrite';
 const APP_SOCIAL_DISCORD = 'https://appwrite.io/discord';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
-const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
+const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite'; 
+// Deletion Types
+const DELETE_TYPE_DOCUMENT = 'document';
+const DELETE_TYPE_AUDIT = 'audit';
+const DELETE_TYPE_ABUSE = 'abuse';
 
 $register = new Registry();
 
