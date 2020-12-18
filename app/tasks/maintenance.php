@@ -9,6 +9,7 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
+use Swoole\FastCGI\Record\Data;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -29,29 +30,32 @@ function getConsoleDB() {
 function notifyDeleteExecutionLogs(array $projectIds)
 {
     Resque::enqueue(DELETE_QUEUE_NAME, DELETE_CLASS_NAME, [
-        'collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
+        'type' => DeletesV1::TYPE_DOCUMENT,
         'document' => new Document([
+            '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
             'projectIds' => $projectIds
         ])
     ]);
 }
 
-function notifyDeleteAbuseLogs(array $projectIds) 
+function notifyDeleteAbuseLogs(array $projectIds, int $timestamp) 
 {
     Resque::enqueue(DELETE_QUEUE_NAME, DELETE_CLASS_NAME, [
-        'collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
+        'type' =>  DeletesV1::TYPE_ABUSE,
         'document' => new Document([
-            'projectIds' => $projectIds
+            'projectIds' => $projectIds,
+            'timestamp' => $timestamp,
         ])
     ]);
 }
 
-function notifyDeleteAuditLogs(array $projectIds) 
+function notifyDeleteAuditLogs(array $projectIds, int $timestamp) 
 {
     Resque::enqueue(DELETE_QUEUE_NAME, DELETE_CLASS_NAME, [
-        'collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
+        'type' => DeletesV1::TYPE_AUDIT,
         'document' => new Document([
-            'projectIds' => $projectIds
+            'projectIds' => $projectIds,
+            'timestamp' => $timestamp
         ])
     ]);
 }

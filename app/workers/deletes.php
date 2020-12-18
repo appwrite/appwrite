@@ -19,6 +19,12 @@ use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 
 class DeletesV1
 {
+
+    // Deletion Types
+    const TYPE_DOCUMENT = 'document';
+    const TYPE_AUDIT = 'audit';
+    const TYPE_ABUSE = 'abuse';
+
     public $args = [];
 
     protected $consoleDB = null;
@@ -32,28 +38,39 @@ class DeletesV1
         $document = $this->args['document'];
         $document = new Document($document);
         $projectId = $this->args['projectId'];
-        $collection = $this->args['collection'];
+        $type = $this->args['type'];
         
-        switch (strval($collection)) {
-            case Database::SYSTEM_COLLECTION_PROJECTS:
-                $this->deleteProject($document);
+        switch (strval($type)) {
+            case DeletesV1::TYPE_DOCUMENT:
+                switch (strval($document->getCollection())) {
+                    case Database::SYSTEM_COLLECTION_PROJECTS:
+                        $this->deleteProject($document);
+                        break;
+                    case Database::SYSTEM_COLLECTION_FUNCTIONS:
+                        $this->deleteFunction($document, $projectId);
+                        break;
+                    case Database::SYSTEM_COLLECTION_EXECUTIONS:
+                        $this->deleteExecutionLogs($document);
+                        break;
+                    case Database::SYSTEM_COLLECTION_USERS:
+                        $this->deleteUser($document, $projectId);
+                        break;
+                    case Database::SYSTEM_COLLECTION_COLLECTIONS:
+                        $this->deleteDocuments($document, $projectId);
+                        break;
+                    default:
+                        Console::error('No lazy delete operation available for document of type: '.$document->getCollection());
+                        break;
+                }
                 break;
-            case Database::SYSTEM_COLLECTION_FUNCTIONS:
-                $this->deleteFunction($document, $projectId);
+            case DeletesV1::TYPE_AUDIT:
+                $this->deleteAuditLogs($document);
                 break;
-            case Database::SYSTEM_COLLECTION_EXECUTIONS:
-                $this->deleteExecutionLogs($document);
+
+            case DeletesV1::TYPE_ABUSE:
+                $this->deleteAbuseLogs($document);
                 break;
-            case Database::SYSTEM_COLLECTION_USERS:
-                $this->deleteUser($document, $projectId);
-                break;
-            case Database::SYSTEM_COLLECTION_COLLECTIONS:
-                $this->deleteDocuments($document, $projectId);
-                break;
-            default:
-                Console::error('No lazy delete operation available for document of type: '.$document->getCollection());
-                break;
-        }
+            }
     }
 
     public function tearDown(): void
@@ -136,6 +153,7 @@ class DeletesV1
     {
         global $register;
         $projectIds = $document->getAttribute('projectIds', []);
+        $timestamp = $document->getAttribute('time', 0);
 
         foreach ($projectIds as $projectId) {
             $adapter = new AuditAdapter($register->get('db'));
