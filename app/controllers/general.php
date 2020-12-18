@@ -283,7 +283,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
         $audits->trigger();
     }
     
-    if (!empty($deletes->getParam('collection'))) {
+    if (!empty($deletes->getParam('collection')) && !empty($deletes->getParam('document'))) {
         $deletes->trigger();
     }
     
