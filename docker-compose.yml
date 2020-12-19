@@ -25,7 +25,7 @@ services:
     ports:
       - 80:80
       - 443:443
-      - 8080:8080
+      - 9500:8080
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-config:/storage/config:ro
