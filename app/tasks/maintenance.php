@@ -9,7 +9,6 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
-use Swoole\FastCGI\Record\Data;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -85,6 +84,8 @@ $cli
                 return $project->getId(); 
             }, $projects);
 
+            Console::info("[ MAINTENANCE ] Notifying deletes workers every {$interval} seconds");
+            
             notifyDeleteExecutionLogs($projectIds);
             notifyDeleteAbuseLogs($projectIds, $interval);
             notifyDeleteAuditLogs($projectIds, $interval);

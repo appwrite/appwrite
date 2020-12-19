@@ -1,11 +1,5 @@
 <?php
 
-require_once __DIR__.'/../init.php';
-
-\cli_set_process_title('Deletes V1 Worker');
-
-echo APP_NAME.' deletes worker v1 has started'."\n";
-
 use Appwrite\Database\Database;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
@@ -18,6 +12,12 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Audit\Audit;
 use Utopia\Audit\Adapters\MySQL as AuditAdapter;
+
+require_once __DIR__.'/../init.php';
+
+\cli_set_process_title('Deletes V1 Worker');
+
+Console::success(APP_NAME.' deletes worker v1 has started'."\n");
 
 class DeletesV1
 {
@@ -68,6 +68,11 @@ class DeletesV1
             case DELETE_TYPE_ABUSE:
                 $this->deleteAbuseLogs($document);
                 break;
+                        
+            default:
+                Console::error('No delete operation for type: '.$type);
+                break;
+            
             }
     }
 
