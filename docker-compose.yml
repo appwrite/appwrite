@@ -55,7 +55,7 @@ services:
       - ./psalm.xml:/usr/src/code/psalm.xml
       - ./tests:/usr/src/code/tests
       - ./app:/usr/src/code/app
-      # - ./vendor:/usr/src/code/vendor
+      - ./vendor:/usr/src/code/vendor
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
@@ -191,6 +191,7 @@ services:
     volumes: 
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
+      - ./vendor:/usr/src/code/vendor
     environment:
       - _APP_ENV
       - _APP_REDIS_HOST
@@ -292,6 +293,11 @@ services:
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_MAINTENANCE_INTERVAL
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
 
   appwrite-schedule:
     entrypoint: schedule

@@ -146,10 +146,12 @@ class DeletesV1
             throw new Exception('Failed to delete abuse logs. No timestamp provided');
         }
 
+        $timeLimit = new TimeLimit("", 0, 1, function () use ($register) {
+            return $register->get('db');
+        });
+        
         foreach ($projectIds as $projectId) {
-            $timeLimit = new TimeLimit("", 0, 0, function () use ($register) {
-                return $register->get('db');
-            });
+            Console::success("Deleting abuse logs for Project: ", $projectId);
             $timeLimit->setNamespace('app_'.$projectId);
             $abuse = new Abuse($timeLimit); 
 

@@ -84,11 +84,11 @@ $cli
                 return $project->getId(); 
             }, $projects);
 
-            Console::info("[ MAINTENANCE ] Notifying deletes workers every {$interval} seconds");
-            
-            notifyDeleteExecutionLogs($projectIds);
+            Console::info("[ MAINTENANCE TASK ] Notifying deletes workers every {$interval} seconds");
+
+            // notifyDeleteExecutionLogs($projectIds);
             notifyDeleteAbuseLogs($projectIds, $interval);
-            notifyDeleteAuditLogs($projectIds, $interval);
+            // notifyDeleteAuditLogs($projectIds, $interval);
             
         }, $intervalMicroseconds);
 
