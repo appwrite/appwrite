@@ -4,7 +4,6 @@
     <br />
     <b>A complete backend solution for your [Flutter / Vue / Angular / React / iOS / Android / *ANY OTHER*] app</b>
     <br />
-    <br />
 </p>
 
 ![Appwrite](public/images/github.png)
