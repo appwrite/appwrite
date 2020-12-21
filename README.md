@@ -7,6 +7,8 @@
     <br />
 </p>
 
+![Appwrite](public/images/github.png)
+
 <!--[![Hacktoberfest](https://badgen.net/badge/hacktoberfest/friendly/pink)](CONTRIBUTING.md)-->
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)
 [![Docker Pulls](https://badgen.net/docker/pulls/appwrite/appwrite)](https://hub.docker.com/r/appwrite/appwrite)
@@ -19,8 +21,6 @@ Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend app
 Using Appwrite, you can easily integrate your app with user authentication & multiple sign-in methods, a database for storing and querying users and team data, storage and file management, image manipulation, schedule CRON tasks, and [more services](https://appwrite.io/docs).
 
 Find out more at: [https://appwrite.io](https://appwrite.io)
-
-![Appwrite](public/images/github.png)
 
 Table of Contents:
 
