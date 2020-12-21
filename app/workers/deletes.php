@@ -47,9 +47,6 @@ class DeletesV1
                     case Database::SYSTEM_COLLECTION_FUNCTIONS:
                         $this->deleteFunction($document, $projectId);
                         break;
-                    case Database::SYSTEM_COLLECTION_EXECUTIONS:
-                        $this->deleteExecutionLogs($document);
-                        break;
                     case Database::SYSTEM_COLLECTION_USERS:
                         $this->deleteUser($document, $projectId);
                         break;
@@ -61,6 +58,11 @@ class DeletesV1
                         break;
                 }
                 break;
+
+            case DELETE_TYPE_EXECUTION_LOGS:
+                $this->deleteExecutionLogs($document);
+                break;
+
             case DELETE_TYPE_AUDIT:
                 $this->deleteAuditLogs($document);
                 break;
@@ -109,7 +111,7 @@ class DeletesV1
 
         foreach ($tokens as $token) {
             if (!$this->getProjectDB($projectId)->deleteDocument($token->getId())) {
-                throw new Exception('Failed to remove token from DB', 500);
+                throw new Exception('Failed to remove token from DB');
             }
         }
 
@@ -122,10 +124,10 @@ class DeletesV1
 
     protected function deleteExecutionLogs(Document $document) 
     {
-        $projectIds = $document->getAttribute('projectIds', []);
+        $projectIds = $this->getProjectIds();
         foreach ($projectIds as $projectId) {
             if (!($projectDB = $this->getProjectDB($projectId))) {
-                throw new Exception('Failed to get projectDB for project '.$projectId, 500);
+                throw new Exception('Failed to get projectDB for project '.$projectId);
             }
 
             // Delete Executions
@@ -139,7 +141,7 @@ class DeletesV1
     protected function deleteAbuseLogs($document) 
     {
         global $register;
-        $projectIds = $document->getAttribute('projectIds', []);
+        $projectIds = $this->getProjectIds();
         $timestamp = $document->getAttribute('timestamp', 0);
 
         if($timestamp == 0) {
@@ -151,13 +153,13 @@ class DeletesV1
         });
         
         foreach ($projectIds as $projectId) {
-            Console::success("Deleting abuse logs for Project: ", $projectId);
+            Console::success("Deleting abuse logs for Project: ".$projectId);
             $timeLimit->setNamespace('app_'.$projectId);
             $abuse = new Abuse($timeLimit); 
 
             $status = $abuse->cleanup($timestamp);
             if (!$status) {
-                throw new Exception('Failed to delete Abuse logs for project '.$projectId, 500);
+                throw new Exception('Failed to delete Abuse logs for project '.$projectId);
             }
         }
         
@@ -166,7 +168,7 @@ class DeletesV1
     protected function deleteAuditLogs($document)
     {
         global $register;
-        $projectIds = $document->getAttribute('projectIds', []);
+        $projectIds = $this->getProjectIds();
         $timestamp = $document->getAttribute('timestamp', 0);
 
         if($timestamp == 0) {
@@ -179,7 +181,7 @@ class DeletesV1
             $audit = new Audit($adapter);
             $status = $audit->cleanup($timestamp);
             if (!$status) {
-                throw new Exception('Failed to delete Audit logs for project'.$projectId, 500);
+                throw new Exception('Failed to delete Audit logs for project'.$projectId);
             }
         }
     }
@@ -229,6 +231,23 @@ class DeletesV1
         }
 
         Authorization::reset();
+    }
+
+    protected function getProjectIds(): array
+    {
+        Authorization::disable();
+        $projects = $this->getConsoleDB()->getCollection([
+            'filters' => [
+                '$collection='.Database::SYSTEM_COLLECTION_PROJECTS,
+            ],
+        ]);
+        Authorization::reset();
+
+        $projectIds = array_map (function ($project) { 
+            return $project->getId(); 
+        }, $projects);
+
+        return $projectIds;
     }
 
     protected function deleteByGroup(array $filters, Database $database, callable $callback = null)

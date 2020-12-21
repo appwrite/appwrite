@@ -516,8 +516,8 @@ App::delete('/v1/users/:userId')
         }
 
         $deletes
-            ->setParam('document', $user)
             ->setParam('type', DELETE_TYPE_DOCUMENT)
+            ->setParam('document', $user)
         ;
 
         $events

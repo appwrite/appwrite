@@ -365,8 +365,8 @@ App::delete('/v1/functions/:functionId')
         }
 
         $deletes
-            ->setParam('document', $function->getArrayCopy())
             ->setParam('type', DELETE_TYPE_DOCUMENT)
+            ->setParam('document', $function->getArrayCopy())
         ;
 
         $response->noContent();

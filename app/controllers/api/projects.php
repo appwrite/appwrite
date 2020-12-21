@@ -430,8 +430,8 @@ App::delete('/v1/projects/:projectId')
         }
 
         $deletes
-            ->setParam('document', $project->getArrayCopy())
             ->setParam('type', DELETE_TYPE_DOCUMENT)
+            ->setParam('document', $project->getArrayCopy())
         ;
 
         foreach (['keys', 'webhooks', 'tasks', 'platforms', 'domains'] as $key) { // Delete all children (keys, webhooks, tasks [stop tasks?], platforms)
