@@ -17,9 +17,9 @@ Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend app
 
 Using Appwrite, you can easily integrate your app with user authentication & multiple sign-in methods, a database for storing and querying users and team data, storage and file management, image manipulation, schedule CRON tasks, and [more services](https://appwrite.io/docs).
 
-Find out more at: [https://appwrite.io](https://appwrite.io)
-
 ![Appwrite](public/images/github.png)
+
+Find out more at: [https://appwrite.io](https://appwrite.io)
 
 Table of Contents:
 
