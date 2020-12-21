@@ -10,7 +10,7 @@
 <!--[![Hacktoberfest](https://badgen.net/badge/hacktoberfest/friendly/pink)](CONTRIBUTING.md)-->
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)
 [![Docker Pulls](https://badgen.net/docker/pulls/appwrite/appwrite)](https://hub.docker.com/r/appwrite/appwrite)
-[![Travis CI](https://badgen.net/travis/appwrite/appwrite?label=build)](https://travis-ci.com/appwrite/appwrite)
+[![Build Status](https://travis-ci.com/appwrite/appwrite.svg?branch=master)](https://travis-ci.com/appwrite/appwrite)
 [![Twitter Account](https://badgen.net/twitter/follow/appwrite_io?label=twitter)](https://twitter.com/appwrite_io)
 [![Follow Appwrite on StackShare](https://badgen.net/badge/follow%20on/stackshare/blue)](https://stackshare.io/appwrite)
 
