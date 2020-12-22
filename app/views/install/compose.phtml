@@ -251,6 +251,27 @@ services:
       - _APP_SMTP_SECURE
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
+      
+  appwrite-maintenance:
+    entrypoint: maintenance
+    container_name: appwrite-maintenance
+    build:
+      context: .
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_MAINTENANCE_INTERVAL
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
 
   appwrite-schedule:
     image: appwrite/appwrite:<?php echo $version."\n"; ?>
