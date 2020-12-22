@@ -13,9 +13,6 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 
-define("DELETE_QUEUE_NAME", "v1-deletes");
-define("DELETE_CLASS_NAME", "DeletesV1");
-
 // TODO: Think of a better way to access consoleDB
 function getConsoleDB() {
     global $register;

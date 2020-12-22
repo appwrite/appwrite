@@ -6,6 +6,19 @@ use Resque;
 
 class Event
 {
+
+    const DELETE_QUEUE_NAME = 'v1-deletes';
+    const DELETE_CLASS_NAME = 'DeletesV1';
+
+    const AUDITS_QUEUE_NAME = 'v1-audits';
+    const AUDITS_CLASS_NAME = 'AuditsV1';
+
+    const USAGE_QUEUE_NAME = 'v1-usage';
+    const USAGE_CLASS_NAME = 'UsageV1';
+
+    const MAILS_QUEUE_NAME = 'v1-mails';
+    const MAILS_CLASS_NAME = 'MailsV1';
+    
     /**
      * @var string
      */

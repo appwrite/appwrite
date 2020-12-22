@@ -303,19 +303,19 @@ App::setResource('events', function($register) {
 }, ['register']);
 
 App::setResource('audits', function($register) {
-    return new Event('v1-audits', 'AuditsV1');
+    return new Event(Event::AUDITS_QUEUE_NAME, Event::AUDITS_CLASS_NAME);
 }, ['register']);
 
 App::setResource('usage', function($register) {
-    return new Event('v1-usage', 'UsageV1');
+    return new Event(Event::USAGE_QUEUE_NAME, Event::USAGE_CLASS_NAME);
 }, ['register']);
 
 App::setResource('mails', function($register) {
-    return new Event('v1-mails', 'MailsV1');
+    return new Event(Event::MAILS_QUEUE_NAME, Event::MAILS_CLASS_NAME);
 }, ['register']);
 
 App::setResource('deletes', function($register) {
-    return new Event('v1-deletes', 'DeletesV1');
+    return new Event(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME);
 }, ['register']);
 
 // Test Mock
