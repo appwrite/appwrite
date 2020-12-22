@@ -6,6 +6,8 @@ use Exception;
 use Utopia\Swoole\Response as SwooleResponse;
 use Swoole\Http\Response as SwooleHTTPResponse;
 use Appwrite\Database\Document;
+use Appwrite\Utopia\Response\Filter;
+use Appwrite\Utopia\Response\Filter\V06;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\None;
 use Appwrite\Utopia\Response\Model\Any;
@@ -111,6 +113,11 @@ class Response extends SwooleResponse
     const MODEL_PLATFORM_LIST = 'platformList';
     const MODEL_DOMAIN = 'domain';
     const MODEL_DOMAIN_LIST = 'domainList';
+
+    /**
+     * @var Filter
+     */
+    private static $filter = null;
 
     /**
      * @var array
@@ -328,5 +335,38 @@ class Response extends SwooleResponse
     public function getPayload():array
     {
         return $this->payload;
+    }
+
+
+    /**
+     * Function to set a response filter
+     * 
+     * @param $filter the response filter to set
+     * 
+     * @return void
+     */
+    public static function setFilter(Filter $filter) 
+    {
+        self::$filter = $filter;
+    }
+
+    /**
+     * Return the currently set filter
+     * 
+     * @return Filter
+     */
+    public static function getFilter(): Filter 
+    {
+        return self::$filter;
+    }
+
+    /**
+     * Check if a filter has been set
+     * 
+     * @return bool
+     */
+    public static function isFilter(): bool 
+    {
+        return self::$filter != null;
     }
 }
