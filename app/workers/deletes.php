@@ -32,14 +32,13 @@ class DeletesV1
 
     public function perform()
     {
-        $document = $this->args['document'];
-        $document = new Document($document);
-        $projectId = $this->args['projectId'];
-        
+        $projectId = $this->args['projectId'];   
         $type = $this->args['type'];
         
         switch (strval($type)) {
             case DELETE_TYPE_DOCUMENT:
+                $document = $this->args['document'];
+                $document = new Document($document);    
                 switch (strval($document->getCollection())) {
                     case Database::SYSTEM_COLLECTION_PROJECTS:
                         $this->deleteProject($document);
@@ -60,15 +59,15 @@ class DeletesV1
                 break;
 
             case DELETE_TYPE_EXECUTION_LOGS:
-                $this->deleteExecutionLogs($document);
+                $this->deleteExecutionLogs();
                 break;
 
             case DELETE_TYPE_AUDIT:
-                $this->deleteAuditLogs($document);
+                $this->deleteAuditLogs($this->args['timestamp']);
                 break;
 
             case DELETE_TYPE_ABUSE:
-                $this->deleteAbuseLogs($document);
+                $this->deleteAbuseLogs($this->args['timestamp']);
                 break;
                         
             default:
@@ -122,38 +121,33 @@ class DeletesV1
         ], $this->getProjectDB($projectId));
     }
 
-    protected function deleteExecutionLogs(Document $document) 
+    protected function deleteExecutionLogs() 
     {
-        $projectIds = $this->getProjectIds();
-        foreach ($projectIds as $projectId) {
+        $this->deleteForProjectIds(function($projectId) {
             if (!($projectDB = $this->getProjectDB($projectId))) {
                 throw new Exception('Failed to get projectDB for project '.$projectId);
             }
 
             // Delete Executions
             $this->deleteByGroup([
-                '$collection='.$document->getCollection(),
+                '$collection='.Database::SYSTEM_COLLECTION_EXECUTIONS,
                 '$projectId='.$projectId
             ], $projectDB);
-        }
+        });
     }
 
-    protected function deleteAbuseLogs($document) 
+    protected function deleteAbuseLogs($timestamp) 
     {
         global $register;
-        $projectIds = $this->getProjectIds();
-        $timestamp = $document->getAttribute('timestamp', 0);
-
         if($timestamp == 0) {
-            throw new Exception('Failed to delete abuse logs. No timestamp provided');
+            throw new Exception('Failed to delete audit logs. No timestamp provided');
         }
 
         $timeLimit = new TimeLimit("", 0, 1, function () use ($register) {
             return $register->get('db');
         });
-        
-        foreach ($projectIds as $projectId) {
-            Console::success("Deleting abuse logs for Project: ".$projectId);
+
+        $this->deleteForProjectIds(function($projectId) use ($timeLimit, $timestamp){
             $timeLimit->setNamespace('app_'.$projectId);
             $abuse = new Abuse($timeLimit); 
 
@@ -161,21 +155,16 @@ class DeletesV1
             if (!$status) {
                 throw new Exception('Failed to delete Abuse logs for project '.$projectId);
             }
-        }
-        
+        });
     }
 
-    protected function deleteAuditLogs($document)
+    protected function deleteAuditLogs($timestamp)
     {
         global $register;
-        $projectIds = $this->getProjectIds();
-        $timestamp = $document->getAttribute('timestamp', 0);
-
         if($timestamp == 0) {
             throw new Exception('Failed to delete audit logs. No timestamp provided');
         }
-
-        foreach ($projectIds as $projectId) {
+        $this->deleteForProjectIds(function($projectId) use ($register, $timestamp){
             $adapter = new AuditAdapter($register->get('db'));
             $adapter->setNamespace('app_'.$projectId);
             $audit = new Audit($adapter);
@@ -183,7 +172,7 @@ class DeletesV1
             if (!$status) {
                 throw new Exception('Failed to delete Audit logs for project'.$projectId);
             }
-        }
+        });
     }
 
     protected function deleteFunction(Document $document, $projectId)
@@ -233,21 +222,47 @@ class DeletesV1
         Authorization::reset();
     }
 
-    protected function getProjectIds(): array
+    protected function deleteForProjectIds(callable $callback)
     {
-        Authorization::disable();
-        $projects = $this->getConsoleDB()->getCollection([
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_PROJECTS,
-            ],
-        ]);
-        Authorization::reset();
+        $count = 0;
+        $chunk = 0;
+        $limit = 50;
+        $projects = [];
+        $sum = $limit;
 
-        $projectIds = array_map (function ($project) { 
-            return $project->getId(); 
-        }, $projects);
+        $executionStart = \microtime(true);
+        
+        while($sum === $limit) {
+            $chunk++;
 
-        return $projectIds;
+            Authorization::disable();
+            $projects = $this->getConsoleDB()->getCollection([
+                'limit' => $limit,
+                'offset' => 0,
+                'orderField' => '$id',
+                'orderType' => 'ASC',
+                'orderCast' => 'string',
+                'filters' => [
+                    '$collection='.Database::SYSTEM_COLLECTION_PROJECTS,
+                ],
+            ]);
+            Authorization::reset();
+
+            $projectIds = array_map (function ($project) { 
+                return $project->getId(); 
+            }, $projects);
+
+            $sum = count($projects);
+
+            Console::info('Executing delete function for chunk #'.$chunk.'. Found '.$sum.' projects');
+            foreach ($projectIds as $projectId) {
+                $callback($projectId);
+                $count++;
+            }
+        }
+
+        $executionEnd = \microtime(true);
+        Console::info("Found {$count} projects " . ($executionEnd - $executionStart) . " seconds");
     }
 
     protected function deleteByGroup(array $filters, Database $database, callable $callback = null)

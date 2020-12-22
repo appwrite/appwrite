@@ -9,6 +9,7 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
+use Appwrite\Event\Event;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -25,17 +26,14 @@ function getConsoleDB() {
 
 function notifyDeleteExecutionLogs()
 {
-    Resque::enqueue(DELETE_QUEUE_NAME, DELETE_CLASS_NAME, [
-        'type' => DELETE_TYPE_EXECUTION_LOGS,
-        'document' => new Document([
-            '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS
-        ])
+    Resque::enqueue(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME, [
+        'type' => DELETE_TYPE_EXECUTION_LOGS
     ]);
 }
 
 function notifyDeleteAbuseLogs(int $interval) 
 {
-    Resque::enqueue(DELETE_QUEUE_NAME, DELETE_CLASS_NAME, [
+    Resque::enqueue(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME, [
         'type' =>  DELETE_TYPE_ABUSE,
         'timestamp' => time() - $interval
     ]);
@@ -43,7 +41,7 @@ function notifyDeleteAbuseLogs(int $interval)
 
 function notifyDeleteAuditLogs(int $interval) 
 {
-    Resque::enqueue(DELETE_QUEUE_NAME, DELETE_CLASS_NAME, [
+    Resque::enqueue(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME, [
         'type' => DELETE_TYPE_AUDIT,
         'timestamp' => time() - $interval
     ]);
@@ -61,9 +59,7 @@ $cli
         $consoleDB = getConsoleDB();
 
         Console::loop(function() use ($consoleDB, $interval){
-
             Console::info("[ MAINTENANCE TASK ] Notifying deletes workers every {$interval} seconds");
-
             notifyDeleteExecutionLogs();
             notifyDeleteAbuseLogs($interval);
             notifyDeleteAuditLogs($interval);
