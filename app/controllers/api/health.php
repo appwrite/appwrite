@@ -164,7 +164,7 @@ App::get('/v1/health/queue/usage')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $response->json(['size' => Resque::size('v1-usage')]);
+        $response->json(['size' => Resque::size(Event::USAGE_QUEUE_NAME)]);
     }, ['response']);
 
 App::get('/v1/health/queue/certificates')
