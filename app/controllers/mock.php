@@ -201,10 +201,10 @@ App::get('/v1/mock/tests/general/redirect')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $response->redirect('/v1/mock/tests/general/redirected');
+        $response->redirect('/v1/mock/tests/general/redirect/done');
     }, ['response']);
 
-App::get('/v1/mock/tests/general/redirected')
+App::get('/v1/mock/tests/general/redirect/done')
     ->desc('Mock a post request for SDK tests')
     ->groups(['mock'])
     ->label('scope', 'public')
