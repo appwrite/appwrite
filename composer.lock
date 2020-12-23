@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "43a23882f28fd91a870f7b9e217b2ec3",
+    "content-hash": "396e46e0a83e8fd5df69d65ba80b16c4",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -1858,11 +1858,11 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.2.1",
+            "version": "0.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "9eb9c298c5db97ea2918bbbf6bd2830312e5330c"
+                "reference": "910d403a1703fc282d069b26af1cf46cd9e65e7d"
             },
             "require": {
                 "ext-curl": "*",
@@ -1892,7 +1892,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2020-12-23T16:00:49+00:00"
+            "time": "2020-12-23T16:48:44+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",
