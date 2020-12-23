@@ -7,6 +7,7 @@ use Utopia\App;
 use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Exception;
+use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 
 App::init(function ($layout) {
@@ -188,7 +189,8 @@ App::get('/specs/:format')
     ->label('docs', false)
     ->param('format', 'swagger2', new WhiteList(['swagger2', 'open-api3'], true), 'Spec format.', true)
     ->param('platform', APP_PLATFORM_CLIENT, new WhiteList([APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER, APP_PLATFORM_CONSOLE], true), 'Choose target platform.', true)
-    ->action(function ($format, $platform, $utopia, $request, $response) {
+    ->param('tests', 0, function () {return new Range(0, 1);}, 'Include only test services.', true)
+    ->action(function ($format, $platform, $tests, $utopia, $request, $response) {
         /** @var Utopia\App $utopia */
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
@@ -277,7 +279,11 @@ App::get('/specs/:format')
                     continue;
                 }
 
-                if ($route->getLabel('sdk.mock', false)) {
+                if ($route->getLabel('sdk.mock', false) && !$tests) {
+                    continue;
+                }
+
+                if (!$route->getLabel('sdk.mock', false) && $tests) {
                     continue;
                 }
 
