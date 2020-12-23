@@ -180,19 +180,22 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 }
                 
                 if($git && !empty($gitUrl)) {
-                    // \exec('rm -rf '.$target.' && \
-                    //     mkdir -p '.$target.' && \
-                    //     cd '.$target.' && \
-                    //     git init && \
-                    //     git remote add origin '.$gitUrl.' && \
-                    //     git fetch && \
-                    //     git pull '.$gitUrl.' && \
-                    //     rm -rf '.$target.'/* && \
-                    //     cp -r '.$result.'/ '.$target.'/ && \
-                    //     git add . && \
-                    //     git commit -m "'.$message.'" && \
-                    //     git push -u origin master
-                    // ');
+                    \exec('rm -rf '.$target.' && \
+                        mkdir -p '.$target.' && \
+                        cd '.$target.' && \
+                        git init && \
+                        git remote add origin '.$gitUrl.' && \
+                        git fetch && \
+                        git pull '.$gitUrl.' && \
+                        rm -rf '.$target.'/* && \
+                        cp -r '.$result.'/ '.$target.'/ && \
+                        git add . && \
+                        git commit -m "'.$message.'" && \
+                        git push -u origin master && \
+                        rm -rf '.$result.'/* && \
+                        mkdir -p '.$result.'/docs/examples && \
+                        cp -r '.$target.$key.'-'.$language['key'].'/docs/examples/ '.$result.'/docs/examples
+                    ');
 
                     Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
                 }
