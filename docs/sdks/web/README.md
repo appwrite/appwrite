@@ -4,7 +4,7 @@ Initialise the Appwrite SDK in your code, and setup your API credentials:
 
 ```js
 
-// Init your JS SDK
+// Init your Web SDK
 var appwrite = new Appwrite();
 
 appwrite
