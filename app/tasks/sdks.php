@@ -194,28 +194,17 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         git push -u origin master && \
                         rm -rf '.$result.'/* && \
                         mkdir -p '.$result.'/docs/examples && \
-                        cp -r '.$target.$key.'-'.$language['key'].'/docs/examples/ '.$result.'/docs/examples
+                        cp -r '.$target.$key.'-'.$language['key'].'/docs/examples '.$result.'/docs/examples
                     ');
 
                     Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
-                }
-                else {
-                    \exec('rm -rf '.$target.' && \
-                        mkdir -p '.$target.' && \
-                        cd '.$target.' && \
-                        rm -rf '.$target.'/* && \
-                        cp -r '.$result.'/ '.$target.'/ && \
-                        rm -rf '.$result.'/* && \
-                        mkdir -p '.$result.'/docs/examples && \
-                        cp -r '.$target.$key.'-'.$language['key'].'/docs/examples/ '.$result.'/docs/examples
-                    ');
-
-                    Console::success("Saved {$language['name']} SDK to {$result}");
+    
+                    \exec('rm -rf '.$target);
+    
+                    Console::success("Remove temp directory '{$target}' for {$language['name']} SDK");
                 }
 
-                \exec('rm -rf '.$target);
 
-                Console::success("Remove temp directory '{$target}' for {$language['name']} SDK");
             }
         }
 
