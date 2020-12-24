@@ -1,3 +1,9 @@
+# WARNING!
+# This is a development version of THE Appwrite docker-compose.yml file.
+# Avoid using this file in your production environment.
+# We're exposing here sensetive ports and mounting code volumes for rapid development and debugging of the server stack.
+# For a production ready compose file please use: https://appwrite.io/docker-compose.yml
+
 version: '3'
 
 services:
@@ -10,6 +16,8 @@ services:
       - --providers.file.directory=/storage/config
       - --providers.file.watch=true
       - --providers.docker=true
+      - --providers.docker.exposedByDefault=false
+      - --providers.docker.constraints=Label(`traefik.constraint-label-stack`,`appwrite`)
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
       - --accesslog=true
@@ -17,7 +25,7 @@ services:
     ports:
       - 80:80
       - 443:443
-      - 8080:8080
+      - 9500:8080
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-config:/storage/config:ro
@@ -41,6 +49,8 @@ services:
     networks:
       - appwrite
     labels:
+      - traefik.enable=true
+      - traefik.constraint-label-stack=appwrite
       - traefik.http.routers.appwrite.rule=PathPrefix(`/`)
       - traefik.http.routers.appwrite-secure.rule=PathPrefix(`/`)
       - traefik.http.routers.appwrite-secure.tls=true
@@ -314,7 +324,7 @@ services:
       - _APP_REDIS_PORT
 
   mariadb:
-    image: appwrite/mariadb:1.1.0 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: appwrite/mariadb:1.2.0 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     restart: unless-stopped
     networks:

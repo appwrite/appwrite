@@ -400,7 +400,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     }
 
     $response->dynamic(new Document($output),
-        $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_LOCALE);
+        $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR);
 }, ['error', 'utopia', 'request', 'response', 'layout', 'project']);
 
 App::get('/manifest.json')

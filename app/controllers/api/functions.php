@@ -88,9 +88,6 @@ App::get('/v1/functions')
         $results = $projectDB->getCollection([
             'limit' => $limit,
             'offset' => $offset,
-            'orderField' => 'dateCreated',
-            'orderType' => $orderType,
-            'orderCast' => 'int',
             'search' => $search,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_FUNCTIONS,
@@ -484,9 +481,6 @@ App::get('/v1/functions/:functionId/tags')
         $results = $projectDB->getCollection([
             'limit' => $limit,
             'offset' => $offset,
-            'orderField' => 'dateCreated',
-            'orderType' => $orderType,
-            'orderCast' => 'int',
             'search' => $search,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_TAGS,
@@ -682,9 +676,6 @@ App::get('/v1/functions/:functionId/executions')
         $results = $projectDB->getCollection([
             'limit' => $limit,
             'offset' => $offset,
-            'orderField' => 'dateCreated',
-            'orderType' => $orderType,
-            'orderCast' => 'int',
             'search' => $search,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_EXECUTIONS,

@@ -110,9 +110,6 @@ App::get('/v1/database/collections')
         $results = $projectDB->getCollection([
             'limit' => $limit,
             'offset' => $offset,
-            'orderField' => 'name',
-            'orderType' => $orderType,
-            'orderCast' => 'string',
             'search' => $search,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_COLLECTIONS,
@@ -401,7 +398,7 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->param('filters', [], new ArrayList(new Text(128)), 'Array of filter strings. Each filter is constructed from a key name, comparison operator (=, !=, >, <, <=, >=) and a value. You can also use a dot (.) separator in attribute names to filter by child document attributes. Examples: \'name=John Doe\' or \'category.$id>=5bed2d152c362\'.', true)
     ->param('limit', 25, new Range(0, 100), 'Maximum number of documents to return in response.  Use this value to manage pagination. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 900000000), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
-    ->param('orderField', '$id', new Text(128), 'Document field that results will be sorted by.', true)
+    ->param('orderField', '', new Text(128), 'Document field that results will be sorted by.', true)
     ->param('orderType', 'ASC', new WhiteList(['DESC', 'ASC'], true), 'Order direction. Possible values are DESC for descending order, or ASC for ascending order.', true)
     ->param('orderCast', 'string', new WhiteList(['int', 'string', 'date', 'time', 'datetime'], true), 'Order field type casting. Possible values are int, string, date, time or datetime. The database will attempt to cast the order field to the value you pass here. The default value is a string.', true)
     ->param('search', '', new Text(256), 'Search query. Enter any free text search. The database will try to find a match against all document attributes and children. Max length: 256 chars.', true)

@@ -97,9 +97,7 @@ App::get('/v1/users')
         $results = $projectDB->getCollection([
             'limit' => $limit,
             'offset' => $offset,
-            'orderField' => 'registration',
             'orderType' => $orderType,
-            'orderCast' => 'int',
             'search' => $search,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_USERS,
