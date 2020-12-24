@@ -130,8 +130,7 @@ class DeletesV1
 
             // Delete Executions
             $this->deleteByGroup([
-                '$collection='.Database::SYSTEM_COLLECTION_EXECUTIONS,
-                '$projectId='.$projectId
+                '$collection='.Database::SYSTEM_COLLECTION_EXECUTIONS
             ], $projectDB);
         });
     }
