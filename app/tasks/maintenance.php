@@ -5,10 +5,8 @@ global $cli;
 require_once __DIR__.'/../init.php';
 
 use Appwrite\Database\Database;
-use Appwrite\Database\Document;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
-use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
 use Utopia\App;
 use Utopia\CLI\Console;

@@ -238,7 +238,7 @@ class DeletesV1
             Authorization::disable();
             $projects = $this->getConsoleDB()->getCollection([
                 'limit' => $limit,
-                'offset' => 0,
+                'offset' => $count,
                 'orderField' => '$id',
                 'orderType' => 'ASC',
                 'orderCast' => 'string',
@@ -282,7 +282,7 @@ class DeletesV1
 
             $results = $database->getCollection([
                 'limit' => $limit,
-                'offset' => 0,
+                'offset' => $count,
                 'orderField' => '$id',
                 'orderType' => 'ASC',
                 'orderCast' => 'string',
