@@ -191,10 +191,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         cp -r '.$result.'/ '.$target.'/ && \
                         git add . && \
                         git commit -m "'.$message.'" && \
-                        git push -u origin master && \
-                        rm -rf '.$result.'/* && \
-                        mkdir -p '.$result.'/docs/examples && \
-                        cp -r '.$target.$key.'-'.$language['key'].'/docs/examples '.$result.'/docs/examples
+                        git push -u origin master
                     ');
 
                     Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
