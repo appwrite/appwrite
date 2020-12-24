@@ -1,6 +1,14 @@
 <?php
 
 use Utopia\App;
+use Appwrite\Database\Database;
+use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
+use Appwrite\Database\Adapter\Redis as RedisAdapter;
+use Appwrite\Template\Template;
+use Appwrite\Template\Inky;
+use Utopia\Config\Config;
+use Utopia\Locale\Locale;
+use Appwrite\Database\Validator\Authorization;
 
 require_once __DIR__.'/../init.php';
 
@@ -23,12 +31,63 @@ class MailsV1
     {
         global $register;
 
+        $locale = new Locale('en');
+        $events = (object) [
+            'account.verification.create' => (object) [
+                'title' => 'account.emails.verification.title', 
+                'body' => 'account.emails.verification.body'
+            ],
+            'account.recovery.create' => (object) [
+                'title' => 'account.emails.recovery.title',
+                'body' => 'account.emails.recovery.body'
+            ],
+            'teams.membership.create' => (object) [
+                'title' => 'account.emails.invitation.title', 
+                'body' => 'account.emails.invitation.body'
+            ]
+        ];
+
+        
+        $consoleDB = new Database();
+        $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+        $consoleDB->setNamespace('app_console'); // Main DB
+        $consoleDB->setMocks(Config::getParam('collections', []));
+
+        $projectId = $this->args['projectId'];
         $event = $this->args['event'];
-        $from = $this->args['from'];
         $recipient = $this->args['recipient'];
         $name = $this->args['name'];
-        $subject = $this->args['subject'];
-        $body = $this->args['body'];
+        $url = $this->args['url'];
+
+        $body = new Inky(__DIR__.'/../config/locale/templates/email-base.tpl');
+        $cta = new Template(__DIR__.'/../config/locale/templates/email-cta.tpl');
+        $current = $events->{$event};
+
+        Authorization::disable();
+        $project = $consoleDB->getDocument($projectId);
+        Authorization::reset();
+
+        $from = ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name'));
+        $subject = $locale->getText($current->title);
+
+        $content = new Template(__DIR__.'/../config/locale/translations/templates/'.$locale->getText($current->body));
+        var_dump($project->getAttribute('name', ['[APP-NAME]']));
+        $body
+            ->setParam('{{content}}', $content->render())
+            ->setParam('{{cta}}', $cta->render())
+            ->setParam('{{title}}', $subject)
+            ->setParam('{{direction}}', $locale->getText('settings.direction'))
+            ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
+            ->setParam('{{name}}', $name)
+            ->setParam('{{redirect}}', $url)
+            ->setParam('{{colorText}}', $project->getAttribute('colorText', ['#000000']))
+            ->setParam('{{colorTextPrimary}}', $project->getAttribute('colorTextPrimary', ['#ffffff']))
+            ->setParam('{{colorBg}}', $project->getAttribute('colorBg', ['#f6f6f6']))
+            ->setParam('{{colorBgContent}}', $project->getAttribute('colorBgContent', ['#ffffff']))
+            ->setParam('{{colorBgPrimary}}', $project->getAttribute('colorBgPrimary', ['#3498db']))
+        ;
+
+        $transpiledBody = $body->transpileInky();
         
         /** @var \PHPMailer\PHPMailer\PHPMailer $mail */
         $mail = $register->get('smtp');
@@ -53,8 +112,8 @@ class MailsV1
         $mail->setFrom(App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), (empty($from) ? \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server')) : $from));
         $mail->addAddress($recipient, $name);
         $mail->Subject = $subject;
-        $mail->Body = $body;
-        $mail->AltBody = \strip_tags($body);
+        $mail->Body = $transpiledBody;
+        $mail->AltBody = \strip_tags($transpiledBody);
 
         try {
             $mail->send();

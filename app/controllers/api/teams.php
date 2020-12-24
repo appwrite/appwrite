@@ -17,7 +17,6 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Exception\Duplicate;
 use Appwrite\Database\Validator\Key;
 use Appwrite\Template\Template;
-use Appwrite\Template\Inky;
 use Appwrite\Utopia\Response;
 use DeviceDetector\DeviceDetector;
 
@@ -375,34 +374,13 @@ App::post('/v1/teams/:teamId/memberships')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['inviteId' => $membership->getId(), 'teamId' => $team->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
         $url = Template::unParseURL($url);
 
-        $body = new Inky(__DIR__.'/../../config/locale/templates/email-base.tpl');
-        $content = new Template(__DIR__.'/../../config/locale/translations/templates/'.$locale->getText('account.emails.invitation.body'));
-        $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
-
-        $body
-            ->setParam('{{content}}', $content->render())
-            ->setParam('{{cta}}', $cta->render())
-            ->setParam('{{title}}', $locale->getText('account.emails.invitation.title'))
-            ->setParam('{{direction}}', $locale->getText('settings.direction'))
-            ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
-            ->setParam('{{team}}', $team->getAttribute('name', '[TEAM-NAME]'))
-            ->setParam('{{owner}}', $user->getAttribute('name', ''))
-            ->setParam('{{redirect}}', $url)
-            ->setParam('{{colorText}}', $project->getAttribute('colorText', ['#000000']))
-            ->setParam('{{colorTextPrimary}}', $project->getAttribute('colorTextPrimary', ['#ffffff']))
-            ->setParam('{{colorBg}}', $project->getAttribute('colorBg', ['#f6f6f6']))
-            ->setParam('{{colorBgContent}}', $project->getAttribute('colorBgContent', ['#ffffff']))
-            ->setParam('{{colorBgPrimary}}', $project->getAttribute('colorBgPrimary', ['#3498db']))
-        ;
-
         if (APP_MODE_ADMIN !== $mode && $user->getId()) { // No need in comfirmation when in admin or app mode
             $mails
                 ->setParam('event', 'teams.membership.create')
-                ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name')))
+                ->setParam('projectId', $project->getId())
                 ->setParam('recipient', $email)
                 ->setParam('name', $name)
-                ->setParam('subject', \sprintf($locale->getText('account.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]'])))
-                ->setParam('body', $body->transpileInky())
+                ->setParam('url', $url)
                 ->trigger();
             ;
         }

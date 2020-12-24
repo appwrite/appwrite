@@ -19,7 +19,6 @@ use Appwrite\Database\Exception\Duplicate;
 use Appwrite\Database\Validator\UID;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Template\Template;
-use Appwrite\Template\Inky;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as URLParser;
 use Appwrite\Utopia\Response;
@@ -1217,32 +1216,12 @@ App::post('/v1/account/recovery')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret]);
         $url = Template::unParseURL($url);
 
-        $body = new Inky(__DIR__.'/../../config/locale/templates/email-base.tpl');
-        $content = new Template(__DIR__.'/../../config/locale/translations/templates/'.$locale->getText('account.emails.recovery.body'));
-        $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
-
-        $body
-            ->setParam('{{content}}', $content->render())
-            ->setParam('{{cta}}', $cta->render())
-            ->setParam('{{title}}', $locale->getText('account.emails.recovery.title'))
-            ->setParam('{{direction}}', $locale->getText('settings.direction'))
-            ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
-            ->setParam('{{name}}', $profile->getAttribute('name'))
-            ->setParam('{{redirect}}', $url)
-            ->setParam('{{colorText}}', $project->getAttribute('colorText', ['#000000']))
-            ->setParam('{{colorTextPrimary}}', $project->getAttribute('colorTextPrimary', ['#ffffff']))
-            ->setParam('{{colorBg}}', $project->getAttribute('colorBg', ['#f6f6f6']))
-            ->setParam('{{colorBgContent}}', $project->getAttribute('colorBgContent', ['#ffffff']))
-            ->setParam('{{colorBgPrimary}}', $project->getAttribute('colorBgPrimary', ['#3498db']))
-        ;
-
         $mails
             ->setParam('event', 'account.recovery.create')
-            ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name')))
             ->setParam('recipient', $profile->getAttribute('email', ''))
             ->setParam('name', $profile->getAttribute('name', ''))
-            ->setParam('subject', $locale->getText('account.emails.recovery.title'))
-            ->setParam('body', $body->transpileInky())
+            ->setParam('projectId', $project->getId())
+            ->setParam('url', $url)
             ->trigger();
         ;
 
@@ -1389,32 +1368,12 @@ App::post('/v1/account/verification')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret]);
         $url = Template::unParseURL($url);
 
-        $body = new Inky(__DIR__.'/../../config/locale/templates/email-base.tpl');
-        $content = new Template(__DIR__.'/../../config/locale/translations/templates/'.$locale->getText('account.emails.verification.body'));
-        $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
-
-        $body
-            ->setParam('{{content}}', $content->render())
-            ->setParam('{{cta}}', $cta->render())
-            ->setParam('{{title}}', $locale->getText('account.emails.verification.title'))
-            ->setParam('{{direction}}', $locale->getText('settings.direction'))
-            ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
-            ->setParam('{{name}}', $user->getAttribute('name'))
-            ->setParam('{{redirect}}', $url)
-            ->setParam('{{colorText}}', $project->getAttribute('colorText', ['#000000']))
-            ->setParam('{{colorTextPrimary}}', $project->getAttribute('colorTextPrimary', ['#ffffff']))
-            ->setParam('{{colorBg}}', $project->getAttribute('colorBg', ['#f6f6f6']))
-            ->setParam('{{colorBgContent}}', $project->getAttribute('colorBgContent', ['#ffffff']))
-            ->setParam('{{colorBgPrimary}}', $project->getAttribute('colorBgPrimary', ['#3498db']))
-        ;
-
         $mails
             ->setParam('event', 'account.verification.create')
-            ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name')))
             ->setParam('recipient', $user->getAttribute('email'))
             ->setParam('name', $user->getAttribute('name'))
-            ->setParam('subject', $locale->getText('account.emails.verification.title'))
-            ->setParam('body', $body->transpileInky())
+            ->setParam('url', $url)
+            ->setParam('projectId', $project->getId())
             ->trigger()
         ;
 
