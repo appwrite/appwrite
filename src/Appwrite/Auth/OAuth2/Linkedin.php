@@ -4,7 +4,7 @@ namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
 
-class LinkedIn extends OAuth2
+class Linkedin extends OAuth2
 {
     /**
      * @var array
@@ -15,7 +15,7 @@ class LinkedIn extends OAuth2
      * @var array
      */
     protected $scopes = [
-        'r_basicprofile',
+        'r_liteprofile',
         'r_emailaddress',
     ];
 
