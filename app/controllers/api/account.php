@@ -292,8 +292,6 @@ App::get('/v1/account/sessions/oauth2/:provider')
         $appId = $project->getAttribute('usersOauth2'.\ucfirst($provider).'Appid', '');
         $appSecret = $project->getAttribute('usersOauth2'.\ucfirst($provider).'Secret', '{}');
 
-        $appSecret = \json_decode($appSecret, true);
-
         if (!empty($appSecret) && isset($appSecret['version'])) {
             $key = App::getEnv('_APP_OPENSSL_KEY_V'.$appSecret['version']);
             $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
@@ -394,8 +392,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $appId = $project->getAttribute('usersOauth2'.\ucfirst($provider).'Appid', '');
         $appSecret = $project->getAttribute('usersOauth2'.\ucfirst($provider).'Secret', '{}');
-
-        $appSecret = \json_decode($appSecret, true);
 
         if (!empty($appSecret) && isset($appSecret['version'])) {
             $key = App::getEnv('_APP_OPENSSL_KEY_V'.$appSecret['version']);

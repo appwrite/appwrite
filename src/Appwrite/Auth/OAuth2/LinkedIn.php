@@ -15,7 +15,7 @@ class LinkedIn extends OAuth2
      * @var array
      */
     protected $scopes = [
-        'r_basicprofile',
+        'r_liteprofile',
         'r_emailaddress',
     ];
 
