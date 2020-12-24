@@ -69,9 +69,8 @@ class MailsV1
 
         $from = ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name'));
         $subject = $locale->getText($current->title);
-
         $content = new Template(__DIR__.'/../config/locale/translations/templates/'.$locale->getText($current->body));
-        var_dump($project->getAttribute('name', ['[APP-NAME]']));
+
         $body
             ->setParam('{{content}}', $content->render())
             ->setParam('{{cta}}', $cta->render())
