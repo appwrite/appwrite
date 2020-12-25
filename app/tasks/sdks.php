@@ -60,7 +60,8 @@ $cli
                 
                 $spec = file_get_contents(__DIR__.'/../config/specs/'.$version.'.'.$language['family'].'.json');
 
-                $result = \realpath(__DIR__.'/..').'/sdks/'.$version.'/'.$key.'-'.$language['key'];
+                $result = \realpath(__DIR__.'/..').'/sdks/'.$key.'-'.$language['key'];
+                $resultExamples = \realpath(__DIR__.'/../..').'/docs/examples/'.$version.'/'.$key.'-'.$language['key'];
                 $target = \realpath(__DIR__.'/..').'/sdks/git/'.$language['key'].'/';
                 $readme = \realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'/README.md');
                 $readme = ($readme) ? \file_get_contents($readme) : '';
@@ -195,13 +196,16 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ');
 
                     Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
-    
+
                     \exec('rm -rf '.$target);
-    
                     Console::success("Remove temp directory '{$target}' for {$language['name']} SDK");
                 }
 
+                \exec('mkdir -p '.$resultExamples.' && cp -r '.$result.'/docs/examples '.$resultExamples);
+                Console::success("Copied code examples for {$language['name']} SDK to: {$resultExamples}");
 
+                \exec('rm -rf '.$result);
+                Console::success("Removed source code directory '{$result}' for {$language['name']} SDK");
             }
         }
 
