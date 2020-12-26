@@ -52,7 +52,7 @@ class V06 extends Filter {
             $parsedContent['oauth2'.ucfirst($key).'AccessToken'] = '';
         }
 
-        $parsedContent['roles'] = Authorization::getRoles();
+        $parsedContent['roles'] = Authorization::getRoles() ?? [];
         return $parsedContent;
     }
 }
