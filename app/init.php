@@ -4,7 +4,7 @@
  * Init
  * 
  * Initializes both Appwrite API entry point, queue workers, and CLI tasks.
- * Set configuration, framework resources, app constants
+ * Set configuration, framework resources & app constants
  * 
  */
 if (\file_exists(__DIR__.'/../vendor/autoload.php')) {
