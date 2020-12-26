@@ -8,7 +8,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Scopes\SideServer;
 
-class HealthCustomClientTest extends Scope
+class HealthCustomServerTest extends Scope
 {
     use HealthBase;
     use ProjectCustom;
