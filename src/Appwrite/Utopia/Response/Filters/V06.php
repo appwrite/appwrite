@@ -39,15 +39,16 @@ class V06 extends Filter {
     private function parseUser(array $content){
         $parsedContent = [];
 
-        $parsedContent['$id'] = $content['$id'];
-        $parsedContent['registration'] = $content['registration'];
-        $parsedContent['name'] = $content['name'];
-        $parsedContent['email'] = $content['email'];
+        $parsedContent['$id'] = $content['$id'] ?? '';
+        $parsedContent['registration'] = $content['registration'] ?? '';
+        $parsedContent['name'] = $content['name'] ?? '';
+        $parsedContent['email'] = $content['email'] ?? '';
 
         foreach (Config::getParam('providers') as $key => $provider) {
             if (!$provider['enabled']) {
                 continue;
             }
+            
             $parsedContent['oauth2'.ucfirst($key)] = '';
             $parsedContent['oauth2'.ucfirst($key).'AccessToken'] = '';
         }
