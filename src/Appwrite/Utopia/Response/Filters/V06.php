@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Response\Filter;
 
+use Appwrite\Auth\Auth;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filter;
@@ -24,6 +25,10 @@ class V06 extends Filter {
                 $parsedResponse = $this->parseUser($content);
                 break;
 
+            case Response::MODEL_SESSION :
+                $parsedResponse = $this->parseSession($content);
+                break;
+
             default:
                 throw new Exception('Recevied invlaid model : '.$model);
         }
@@ -34,6 +39,15 @@ class V06 extends Filter {
     private function parseProject(array $content) 
     {
 
+    }
+
+    private function parseSession(array $content) 
+    {
+        $parsedContent = [];
+        $parsedContent['$id'] = $content['$id'];
+        $parsedContent['type'] = Auth::TOKEN_TYPE_LOGIN;
+        $parsedContent['expire'] = $content['exprire'];
+        return $parsedContent;
     }
 
     private function parseUser(array $content){
