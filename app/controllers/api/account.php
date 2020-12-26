@@ -640,6 +640,8 @@ App::get('/v1/account')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
+    ->inject('response')
+    ->inject('user')
     ->action(function ($response, $user) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
