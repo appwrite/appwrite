@@ -28,6 +28,10 @@ class V06 extends Filter {
             case Response::MODEL_SESSION :
                 $parsedResponse = $this->parseSession($content);
                 break;
+            
+            case Response::MODEL_ANY :
+                $parsedResponse = $content;
+                break;
 
             default:
                 throw new Exception('Recevied invlaid model : '.$model);
@@ -43,30 +47,47 @@ class V06 extends Filter {
 
     private function parseSession(array $content) 
     {
-        $parsedContent = [];
-        $parsedContent['$id'] = $content['$id'];
-        $parsedContent['type'] = Auth::TOKEN_TYPE_LOGIN;
-        $parsedContent['expire'] = $content['exprire'];
-        return $parsedContent;
+        // Handle list of sessions
+        if (isset($content['sum'])) {
+            $sessions = $content['sessions'];
+
+            $parsedResponse = [];
+            foreach($sessions as $session) {
+                
+                // WIP
+                // $parsedResponse['$id'] = $token->getId();
+                // $parsedResponse['OS'] = $dd->getOs();
+                // $parsedResponse['client'] = $dd->getClient();
+                // $parsedResponse['device'] = $dd->getDevice();
+                // $parsedResponse['brand'] = $dd->getBrand();
+                // $parsedResponse['model'] = $dd->getModel();
+                // $parsedResponse['ip'] = $token->getAttribute('ip', '');
+                // $parsedResponse['geo'] = [];
+                // $parsedResponse['current'] = ($current == $token->getId()) ? true : false;
+                // $parsedResponse[$index]['geo']['isoCode'] = '--';
+                // $parsedResponse[$index]['geo']['country'] = Locale::getText('locale.country.unknown');
+
+                $parsedResponse[] = $session;
+            }
+            return $parsedResponse;
+        } else {
+            // Handle single session 
+            $content['type'] = Auth::TOKEN_TYPE_LOGIN;
+            return $content;
+        }
     }
 
-    private function parseUser(array $content){
-        $parsedContent = [];
-        $parsedContent['$id'] = $content['$id'] ?? '';
-        $parsedContent['registration'] = $content['registration'] ?? '';
-        $parsedContent['name'] = $content['name'] ?? '';
-        $parsedContent['email'] = $content['email'] ?? '';
-
+    private function parseUser(array $content)
+    {
         foreach (Config::getParam('providers') as $key => $provider) {
             if (!$provider['enabled']) {
                 continue;
             }
-
-            $parsedContent['oauth2'.ucfirst($key)] = '';
-            $parsedContent['oauth2'.ucfirst($key).'AccessToken'] = '';
+            $content['oauth2'.ucfirst($key)] = '';
+            $content['oauth2'.ucfirst($key).'AccessToken'] = '';
         }
 
-        $parsedContent['roles'] = Authorization::getRoles() ?? [];
-        return $parsedContent;
+        $content['roles'] = Authorization::getRoles() ?? [];
+        return $content;
     }
 }
