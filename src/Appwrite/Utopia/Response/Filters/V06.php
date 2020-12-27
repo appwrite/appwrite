@@ -29,6 +29,14 @@ class V06 extends Filter {
             case Response::MODEL_SESSION :
                 $parsedResponse = $this->parseSession($content);
                 break;
+
+            case Response::MODEL_SESSION_LIST :
+                $parsedResponse = $this->parseSessionList($content);
+                break;
+            
+            case Response::MODEL_LOG_LIST :
+                $parsedResponse = $this->parseLogList($content);
+                break;
             
             case Response::MODEL_ANY :
                 $parsedResponse = $content;
@@ -46,35 +54,58 @@ class V06 extends Filter {
 
     }
 
-    private function parseSession(array $content) 
+    private function parseLogList(array $content)
     {
-        // Handle list of sessions
-        if (isset($content['sum'])) {
-            $sessions = $content['sessions'];
-            $parsedResponse = [];
-            $index = 0;
-            foreach($sessions as $session) {
-                $parsedResponse[$index++] = [
-                    '$id' => $session['$id'],
-                    'OS' => $session['osName'].' '.$session['osVersion'],
-                    'client' => $session['clientName'].' '.$session['clientVersion'],
-                    'device' => $session['deviceName'],
-                    'brand' => $session['deviceBrand'],
-                    'model' => $session['deviceModel'],
-                    'ip' => $session['ip'],
-                    'current' => $session['current'],
-                    'geo' => [
-                        'isoCode' => empty($session['countryCode']) ? '---' : $session['countryCode']  ,
-                        'country' => empty($session['countryName'] ) ? Locale::getText('locale.country.unknown') : $session['countryName']
-                    ],
-                ];
-            }
-            return $parsedResponse;
-        } else {
-            // Handle single session 
-            $content['type'] = Auth::TOKEN_TYPE_LOGIN;
-            return $content;
+        $logs = $content['logs'];
+        $parsedResponse = [];
+        $index = 0;
+        foreach($logs as $log) {
+            $parsedResponse[$index++] = [
+                'event' => $log['event'],
+                'ip' => $log['ip'],
+                'time' => strtotime($log['time']),
+                'OS' => $log['osName'].' '.$log['osVersion'],
+                'client' => $log['clientName'].' '.$log['clientVersion'],
+                'device' => $log['deviceName'],
+                'brand' => $log['deviceBrand'],
+                'model' => $log['deviceModel'],
+                'geo' => [
+                    'isoCode' => empty($log['countryCode']) ? '---' : $log['countryCode']  ,
+                    'country' => empty($log['countryName'] ) ? Locale::getText('locale.country.unknown') : $log['countryName']
+                ]
+            ];
         }
+        return $parsedResponse;
+    }
+
+    private function parseSessionList(array $content)
+    {
+        $sessions = $content['sessions'];
+        $parsedResponse = [];
+        $index = 0;
+        foreach($sessions as $session) {
+            $parsedResponse[$index++] = [
+                '$id' => $session['$id'],
+                'OS' => $session['osName'].' '.$session['osVersion'],
+                'client' => $session['clientName'].' '.$session['clientVersion'],
+                'device' => $session['deviceName'],
+                'brand' => $session['deviceBrand'],
+                'model' => $session['deviceModel'],
+                'ip' => $session['ip'],
+                'current' => $session['current'],
+                'geo' => [
+                    'isoCode' => empty($session['countryCode']) ? '---' : $session['countryCode']  ,
+                    'country' => empty($session['countryName'] ) ? Locale::getText('locale.country.unknown') : $session['countryName']
+                ],
+            ];
+        }
+        return $parsedResponse;
+    }
+
+    private function parseSession(array $content) 
+    {       
+        $content['type'] = Auth::TOKEN_TYPE_LOGIN;
+        return $content;
     }
 
     private function parseUser(array $content)
