@@ -18,6 +18,19 @@ class Event
 
     const MAILS_QUEUE_NAME = 'v1-mails';
     const MAILS_CLASS_NAME = 'MailsV1';
+
+    const FUNCTIONS_QUEUE_NAME = 'v1-functions';
+    const FUNCTIONS_CLASS_NAME = 'FunctionsV1';
+
+    const WEBHOOK_QUEUE_NAME = 'v1-webhooks';
+    const WEBHOOK_CLASS_NAME = 'WebhooksV1';
+
+    const TASK_QUEUE_NAME = 'v1-tasks';
+    const TASK_CLASS_NAME = 'TasksV1';
+
+    const CERTIFICATES_QUEUE_NAME = 'v1-certificates';
+    const CERTIFICATES_CLASS_NAME = 'CertificatesV1';
+    
     
     /**
      * @var string

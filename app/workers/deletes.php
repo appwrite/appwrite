@@ -58,7 +58,7 @@ class DeletesV1
                 }
                 break;
 
-            case DELETE_TYPE_EXECUTION:
+            case DELETE_TYPE_EXECUTIONS:
                 $this->deleteExecutionLogs();
                 break;
 

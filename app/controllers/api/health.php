@@ -5,6 +5,7 @@ use Utopia\Exception;
 use Appwrite\Storage\Device\Local;
 use Appwrite\Storage\Storage;
 use Appwrite\ClamAV\Network;
+use Appwrite\Event\Event;
 
 App::get('/v1/health')
     ->desc('Get HTTP')
@@ -122,7 +123,7 @@ App::get('/v1/health/queue/webhooks')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $response->json(['size' => Resque::size('v1-webhooks')]);
+        $response->json(['size' => Resque::size(Event::WEBHOOK_QUEUE_NAME)]);
     }, ['response']);
 
 App::get('/v1/health/queue/tasks')
@@ -136,7 +137,7 @@ App::get('/v1/health/queue/tasks')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $response->json(['size' => Resque::size('v1-tasks')]);
+        $response->json(['size' => Resque::size(Event::TASK_QUEUE_NAME)]);
     }, ['response']);
 
 App::get('/v1/health/queue/logs')
@@ -150,7 +151,7 @@ App::get('/v1/health/queue/logs')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $response->json(['size' => Resque::size('v1-audit')]);
+        $response->json(['size' => Resque::size(Event::AUDITS_QUEUE_NAME)]);
     }, ['response']);
 
 App::get('/v1/health/queue/usage')
@@ -178,7 +179,7 @@ App::get('/v1/health/queue/certificates')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $response->json(['size' => Resque::size('v1-certificates')]);
+        $response->json(['size' => Resque::size(Event::CERTIFICATES_QUEUE_NAME)]);
     }, ['response']);
 
 App::get('/v1/health/queue/functions')
@@ -192,7 +193,7 @@ App::get('/v1/health/queue/functions')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $response->json(['size' => Resque::size('v1-functions')]);
+        $response->json(['size' => Resque::size(Event::FUNCTIONS_QUEUE_NAME)]);
     }, ['response']);
 
 App::get('/v1/health/storage/local')
