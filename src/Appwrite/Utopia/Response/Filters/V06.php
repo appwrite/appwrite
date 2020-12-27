@@ -8,6 +8,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filter;
 use Exception;
 use Utopia\Config\Config;
+use Utopia\Locale\Locale as Locale;
 
 class V06 extends Filter {
     
@@ -50,24 +51,23 @@ class V06 extends Filter {
         // Handle list of sessions
         if (isset($content['sum'])) {
             $sessions = $content['sessions'];
-
             $parsedResponse = [];
+            $index = 0;
             foreach($sessions as $session) {
-                
-                // WIP
-                // $parsedResponse['$id'] = $token->getId();
-                // $parsedResponse['OS'] = $dd->getOs();
-                // $parsedResponse['client'] = $dd->getClient();
-                // $parsedResponse['device'] = $dd->getDevice();
-                // $parsedResponse['brand'] = $dd->getBrand();
-                // $parsedResponse['model'] = $dd->getModel();
-                // $parsedResponse['ip'] = $token->getAttribute('ip', '');
-                // $parsedResponse['geo'] = [];
-                // $parsedResponse['current'] = ($current == $token->getId()) ? true : false;
-                // $parsedResponse[$index]['geo']['isoCode'] = '--';
-                // $parsedResponse[$index]['geo']['country'] = Locale::getText('locale.country.unknown');
-
-                $parsedResponse[] = $session;
+                $parsedResponse[$index++] = [
+                    '$id' => $session['$id'],
+                    'OS' => $session['osName'].' '.$session['osVersion'],
+                    'client' => $session['clientName'].' '.$session['clientVersion'],
+                    'device' => $session['deviceName'],
+                    'brand' => $session['deviceBrand'],
+                    'model' => $session['deviceModel'],
+                    'ip' => $session['ip'],
+                    'current' => $session['current'],
+                    'geo' => [
+                        'isoCode' => empty($session['countryCode']) ? '---' : $session['countryCode']  ,
+                        'country' => empty($session['countryName'] ) ? Locale::getText('locale.country.unknown') : $session['countryName']
+                    ],
+                ];
             }
             return $parsedResponse;
         } else {
