@@ -55,7 +55,7 @@ const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite'; 
 // Deletion Types
 const DELETE_TYPE_DOCUMENT = 'document';
-const DELETE_TYPE_EXECUTION_LOGS = 'execution_logs';
+const DELETE_TYPE_EXECUTION = 'execution';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
 
