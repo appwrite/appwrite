@@ -38,6 +38,9 @@ class V06 extends Filter {
                 $parsedResponse = $this->parseLogList($content);
                 break;
             
+            case Response::MODEL_TOKEN:
+                $parsedResponse = $this->parseToken($content); 
+                break;
             case Response::MODEL_ANY :
                 $parsedResponse = $content;
                 break;
@@ -52,6 +55,12 @@ class V06 extends Filter {
     private function parseProject(array $content) 
     {
 
+    }
+
+    private function parseToken(array $content)
+    {
+        $content['type'] = Auth::TOKEN_TYPE_RECOVERY;
+        return $content;
     }
 
     private function parseLogList(array $content)
