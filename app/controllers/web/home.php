@@ -41,16 +41,18 @@ App::get('/')
     ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
+    ->inject('response')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
         $response->redirect('/auth/signin');
-    }, ['response']);
+    });
 
 App::get('/auth/signin')
     ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
+    ->inject('layout')
     ->action(function ($layout) {
         /** @var Utopia\View $layout */
 
@@ -59,12 +61,13 @@ App::get('/auth/signin')
         $layout
             ->setParam('title', 'Sign In - '.APP_NAME)
             ->setParam('body', $page);
-    }, ['layout']);
+    });
 
 App::get('/auth/signup')
     ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
+    ->inject('layout')
     ->action(function ($layout) {
         /** @var Utopia\View $layout */
         $page = new View(__DIR__.'/../../views/home/auth/signup.phtml');
@@ -72,12 +75,13 @@ App::get('/auth/signup')
         $layout
             ->setParam('title', 'Sign Up - '.APP_NAME)
             ->setParam('body', $page);
-    }, ['layout']);
+    });
 
 App::get('/auth/recovery')
     ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
+    ->inject('layout')
     ->action(function ($layout) {
         /** @var Utopia\View $layout */
 
@@ -86,12 +90,13 @@ App::get('/auth/recovery')
         $layout
             ->setParam('title', 'Password Recovery - '.APP_NAME)
             ->setParam('body', $page);
-    }, ['layout']);
+    });
 
 App::get('/auth/confirm')
     ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
+    ->inject('layout')
     ->action(function ($layout) {
         /** @var Utopia\View $layout */
 
@@ -100,12 +105,13 @@ App::get('/auth/confirm')
         $layout
             ->setParam('title', 'Account Confirmation - '.APP_NAME)
             ->setParam('body', $page);
-    }, ['layout']);
+    });
 
 App::get('/auth/join')
     ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
+    ->inject('layout')
     ->action(function ($layout) {
         /** @var Utopia\View $layout */
 
@@ -114,12 +120,13 @@ App::get('/auth/join')
         $layout
             ->setParam('title', 'Invitation - '.APP_NAME)
             ->setParam('body', $page);
-    }, ['layout']);
+    });
 
 App::get('/auth/recovery/reset')
     ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
+    ->inject('layout')
     ->action(function ($layout) {
         /** @var Utopia\View $layout */
 
@@ -128,12 +135,13 @@ App::get('/auth/recovery/reset')
         $layout
             ->setParam('title', 'Password Reset - '.APP_NAME)
             ->setParam('body', $page);
-    }, ['layout']);
+    });
 
 App::get('/auth/oauth2/success')
     ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
+    ->inject('layout')
     ->action(function ($layout) {
         /** @var Utopia\View $layout */
 
@@ -145,12 +153,13 @@ App::get('/auth/oauth2/success')
             ->setParam('header', [])
             ->setParam('footer', [])
         ;
-    }, ['layout']);
+    });
 
 App::get('/auth/oauth2/failure')
     ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
+    ->inject('layout')
     ->action(function ($layout) {
         /** @var Utopia\View $layout */
 
@@ -162,13 +171,14 @@ App::get('/auth/oauth2/failure')
             ->setParam('header', [])
             ->setParam('footer', [])
         ;
-    }, ['layout']);
+    });
 
 App::get('/error/:code')
     ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->param('code', null, new \Utopia\Validator\Numeric(), 'Valid status code number', false)
+    ->inject('layout')
     ->action(function ($code, $layout) {
         /** @var Utopia\View $layout */
 
@@ -181,7 +191,7 @@ App::get('/error/:code')
         $layout
             ->setParam('title', 'Error'.' - '.APP_NAME)
             ->setParam('body', $page);
-    }, ['layout']);
+    }, ['']);
 
 App::get('/specs/:format')
     ->groups(['web', 'home'])
@@ -190,6 +200,9 @@ App::get('/specs/:format')
     ->param('format', 'swagger2', new WhiteList(['swagger2', 'open-api3'], true), 'Spec format.', true)
     ->param('platform', APP_PLATFORM_CLIENT, new WhiteList([APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER, APP_PLATFORM_CONSOLE], true), 'Choose target platform.', true)
     ->param('tests', 0, function () {return new Range(0, 1);}, 'Include only test services.', true)
+    ->inject('utopia')
+    ->inject('request')
+    ->inject('response')
     ->action(function ($format, $platform, $tests, $utopia, $request, $response) {
         /** @var Utopia\App $utopia */
         /** @var Utopia\Swoole\Request $request */
@@ -347,4 +360,4 @@ App::get('/specs/:format')
 
         $response
             ->json($specs->parse());
-    }, ['utopia', 'request', 'response']);
+    });

@@ -7,7 +7,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 
-class FunctionsConsoleClientTest extends Scope
+class FunctionsCustomClientTest extends Scope
 {
     use FunctionsBase;
     use ProjectCustom;

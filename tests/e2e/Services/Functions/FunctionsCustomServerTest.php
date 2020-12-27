@@ -8,7 +8,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 
-class FunctionsConsoleServerTest extends Scope
+class FunctionsCustomServerTest extends Scope
 {
     use FunctionsBase;
     use ProjectCustom;
