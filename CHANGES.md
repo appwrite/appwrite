@@ -3,7 +3,7 @@
 ## Features
 
 - Improved Webhooks and New System Events - [Learn more]()
-- New QR code generator library ([#475](https://github.com/appwrite/appwrite/issues/475))
+- New QR code generator library (@PedroCisnerosSantana - [#475](https://github.com/appwrite/appwrite/issues/475))
 - Added response to /locale/languages API with a list of languages (@TorstenDittmann ,[#351](https://github.com/appwrite/appwrite/issues/351))
 - Added API response payload structure info and examples to the docs site ([#381](https://github.com/appwrite/appwrite/issues/381))
 - Added Google Fonts to Appwrite for offline availability 
