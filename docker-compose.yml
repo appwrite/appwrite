@@ -311,7 +311,7 @@ services:
     volumes:
       - appwrite-mariadb:/var/lib/mysql:rw
     ports:
-      - "3306:3306"
+      - "9502:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=password
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
@@ -371,7 +371,7 @@ services:
     container_name: appwrite-maildev
     restart: unless-stopped
     ports:
-      - '1080:80'
+      - '9503:80'
     networks:
       - appwrite
 
@@ -380,7 +380,7 @@ services:
     container_name: appwrite-request-catcher
     restart: unless-stopped
     ports:
-      - '5000:5000'
+      - '9504:5000'
     networks:
       - appwrite
 
