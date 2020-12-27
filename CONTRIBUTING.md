@@ -145,6 +145,10 @@ Each container in Appwrite is a microservice on its own. Each service is an inde
 
 Currently, all of the Appwrite microservices are intended to communicate using the TCP protocol over a private network. You should be aware to not expose any of the services to the public-facing network, besides the public port 80 and 443, who, by default, are used to expose the Appwrite HTTP API.
 
+## Ports
+
+Appwrite dev version uses ports 80 and 443 as an entry point to the Appwrite API and console. We also expose multiple ports in the range of 9500-9504 for debugging some of the Appwrite containers on dev mode. If you have any conflicts with the ports running on your system, you can easily replace them by editing Appwrite's docker-compose.yml file and executing `docker-compose up -d` command.
+
 ## Technology Stack
 
 To start helping us to improve the Appwrite server by submitting code, prior knowledge of Appwrite's technology stack can help you with getting started.
