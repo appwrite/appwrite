@@ -1057,4 +1057,83 @@ trait AccountBase
         
         return $data;
     }
+
+    public function testBlockedAccount():array
+    {
+        $email = uniqid().'user@localhost.test';
+        $password = 'password';
+        $name = 'User Name (blocked)';
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $id = $response['body']['$id'];
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+    
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+
+        $sessionId = $response['body']['$id'];
+        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]));
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $id . '/status', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'status' => 2,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]));
+
+        $this->assertEquals($response['headers']['status-code'], 401);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 401);
+
+        return [];
+    }
 }
