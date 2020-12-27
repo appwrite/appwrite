@@ -25,7 +25,7 @@ function getConsoleDB() {
 function notifyDeleteExecutionLogs()
 {
     Resque::enqueue(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME, [
-        'type' => DELETE_TYPE_EXECUTION_LOGS
+        'type' => DELETE_TYPE_EXECUTION
     ]);
 }
 
