@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ec0368f495f4b9126f378e0057679100",
+    "content-hash": "aa1bf812ee6a45af12cdfbbfb7229471",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -1315,9 +1315,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cli/issues",
-                "source": "https://github.com/utopia-php/cli/tree/0.7.2"
+                "source": "https://github.com/utopia-php/cli/tree/0.7.3"
             },
-            "time": "2020-10-23T13:34:41+00:00"
+            "time": "2020-11-02T07:50:18+00:00"
         },
         {
             "name": "utopia-php/config",
