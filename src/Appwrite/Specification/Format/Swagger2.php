@@ -170,7 +170,7 @@ class Swagger2 extends Format
             $bodyRequired = [];
 
             foreach ($route->getParams() as $name => $param) { // Set params
-                $validator = (\is_callable($param['validator'])) ? call_user_func_array($param['validator'], $this->app->getResources($param['resources'])) : $param['validator']; /* @var $validator \Utopia\Validator */
+                $validator = (\is_callable($param['validator'])) ? call_user_func_array($param['validator'], $this->app->getResources($param['injections'])) : $param['validator']; /* @var $validator \Utopia\Validator */
 
                 $node = [
                     'name' => $name,
