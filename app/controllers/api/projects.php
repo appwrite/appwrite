@@ -40,6 +40,9 @@ App::post('/v1/projects')
     ->param('legalCity', '', new Text(256), 'Project legal City. Max length: 256 chars.', true)
     ->param('legalAddress', '', new Text(256), 'Project legal Address. Max length: 256 chars.', true)
     ->param('legalTaxId', '', new Text(256), 'Project legal Tax ID. Max length: 256 chars.', true)
+    ->inject('response')
+    ->inject('consoleDB')
+    ->inject('projectDB')
     ->action(function ($name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $consoleDB, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -87,7 +90,7 @@ App::post('/v1/projects')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($project, Response::MODEL_PROJECT)
         ;
-    }, ['response', 'consoleDB', 'projectDB']);
+    });
 
 App::get('/v1/projects')
     ->desc('List Projects')
@@ -102,6 +105,8 @@ App::get('/v1/projects')
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($search, $limit, $offset, $orderType, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -119,7 +124,7 @@ App::get('/v1/projects')
             'sum' => $consoleDB->getSum(),
             'projects' => $results
         ]), Response::MODEL_PROJECT_LIST);
-    }, ['response', 'consoleDB']);
+    });
 
 App::get('/v1/projects/:projectId')
     ->desc('Get Project')
@@ -131,6 +136,8 @@ App::get('/v1/projects/:projectId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -142,7 +149,7 @@ App::get('/v1/projects/:projectId')
         }
 
         $response->dynamic($project, Response::MODEL_PROJECT);
-    }, ['response', 'consoleDB']);
+    });
 
 App::get('/v1/projects/:projectId/usage')
     ->desc('Get Project')
@@ -152,6 +159,10 @@ App::get('/v1/projects/:projectId/usage')
     ->label('sdk.method', 'getUsage')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+    ->inject('response')
+    ->inject('consoleDB')
+    ->inject('projectDB')
+    ->inject('register')
     ->action(function ($projectId, $range, $response, $consoleDB, $projectDB, $register) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -330,7 +341,7 @@ App::get('/v1/projects/:projectId/usage')
                 ),
             ],
         ]);
-    }, ['response', 'consoleDB', 'projectDB', 'register']);
+    });
 
 App::patch('/v1/projects/:projectId')
     ->desc('Update Project')
@@ -352,6 +363,8 @@ App::patch('/v1/projects/:projectId')
     ->param('legalCity', '', new Text(256), 'Project legal city. Max length: 256 chars.', true)
     ->param('legalAddress', '', new Text(256), 'Project legal address. Max length: 256 chars.', true)
     ->param('legalTaxId', '', new Text(256), 'Project legal tax ID. Max length: 256 chars.', true)
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $name, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -380,7 +393,7 @@ App::patch('/v1/projects/:projectId')
         }
 
         $response->dynamic($project, Response::MODEL_PROJECT);
-    }, ['response', 'consoleDB']);
+    });
 
 App::patch('/v1/projects/:projectId/oauth2')
     ->desc('Update Project OAuth2')
@@ -395,6 +408,8 @@ App::patch('/v1/projects/:projectId/oauth2')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'Provider Name', false)
     ->param('appId', '', new Text(256), 'Provider app ID. Max length: 256 chars.', true)
     ->param('secret', '', new text(512), 'Provider secret key. Max length: 512 chars.', true)
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $provider, $appId, $secret, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -415,7 +430,7 @@ App::patch('/v1/projects/:projectId/oauth2')
         }
 
         $response->dynamic($project, Response::MODEL_PROJECT);
-    }, ['response', 'consoleDB']);
+    });
 
 App::delete('/v1/projects/:projectId')
     ->desc('Delete Project')
@@ -428,6 +443,10 @@ App::delete('/v1/projects/:projectId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('password', '', new UID(), 'Your user password for confirmation. Must be between 6 to 32 chars.')
+    ->inject('response')
+    ->inject('user')
+    ->inject('consoleDB')
+    ->inject('deletes')
     ->action(function ($projectId, $password, $response, $user, $consoleDB, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
@@ -465,7 +484,7 @@ App::delete('/v1/projects/:projectId')
         }
 
         $response->noContent();
-    }, ['response', 'user', 'consoleDB', 'deletes']);
+    });
 
 // Webhooks
 
@@ -485,6 +504,8 @@ App::post('/v1/projects/:projectId/webhooks')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $name, $events, $url, $security, $httpUser, $httpPass, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -527,7 +548,7 @@ App::post('/v1/projects/:projectId/webhooks')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($webhook, Response::MODEL_WEBHOOK)
         ;
-    }, ['response', 'consoleDB']);
+    });
 
 App::get('/v1/projects/:projectId/webhooks')
     ->desc('List Webhooks')
@@ -539,6 +560,8 @@ App::get('/v1/projects/:projectId/webhooks')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_WEBHOOK_LIST)
     ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -555,7 +578,7 @@ App::get('/v1/projects/:projectId/webhooks')
             'sum' => count($webhooks),
             'webhooks' => $webhooks
         ]), Response::MODEL_WEBHOOK_LIST);
-    }, ['response', 'consoleDB']);
+    });
 
 App::get('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Get Webhook')
@@ -568,6 +591,8 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
     ->label('sdk.response.model', Response::MODEL_WEBHOOK)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('webhookId', null, new UID(), 'Webhook unique ID.')
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $webhookId, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -585,7 +610,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
         }
 
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
-    }, ['response', 'consoleDB']);
+    });
 
 App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Update Webhook')
@@ -604,6 +629,8 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $webhookId, $name, $events, $url, $security, $httpUser, $httpPass, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -636,7 +663,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
         }
 
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
-    }, ['response', 'consoleDB']);
+    });
 
 App::delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Delete Webhook')
@@ -649,6 +676,8 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('webhookId', null, new UID(), 'Webhook unique ID.')
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $webhookId, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -670,7 +699,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
         }
 
         $response->noContent();
-    }, ['response', 'consoleDB']);
+    });
 
 // Keys
 
@@ -686,6 +715,8 @@ App::post('/v1/projects/:projectId/keys')
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
     ->param('scopes', null, new ArrayList(new WhiteList(Config::getParam('scopes'), true)), 'Key scopes list.')
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $name, $scopes, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -723,7 +754,7 @@ App::post('/v1/projects/:projectId/keys')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($key, Response::MODEL_KEY)
         ;
-    }, ['response', 'consoleDB']);
+    });
 
 App::get('/v1/projects/:projectId/keys')
     ->desc('List Keys')
@@ -735,6 +766,8 @@ App::get('/v1/projects/:projectId/keys')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_KEY_LIST)
     ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -751,7 +784,7 @@ App::get('/v1/projects/:projectId/keys')
             'sum' => count($keys),
             'keys' => $keys
         ]), Response::MODEL_KEY_LIST);
-    }, ['response', 'consoleDB']);
+    });
 
 App::get('/v1/projects/:projectId/keys/:keyId')
     ->desc('Get Key')
@@ -764,6 +797,8 @@ App::get('/v1/projects/:projectId/keys/:keyId')
     ->label('sdk.response.model', Response::MODEL_KEY)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('keyId', null, new UID(), 'Key unique ID.')
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $keyId, $response, $consoleDB) {
         $project = $consoleDB->getDocument($projectId);
 
@@ -778,7 +813,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
         }
 
         $response->dynamic($key, Response::MODEL_KEY);
-    }, ['response', 'consoleDB']);
+    });
 
 App::put('/v1/projects/:projectId/keys/:keyId')
     ->desc('Update Key')
@@ -793,6 +828,8 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->param('keyId', null, new UID(), 'Key unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
     ->param('scopes', null, new ArrayList(new WhiteList(Config::getParam('scopes'), true)), 'Key scopes list')
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $keyId, $name, $scopes, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -819,7 +856,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
         }
 
         $response->dynamic($key, Response::MODEL_KEY);
-    }, ['response', 'consoleDB']);
+    });
 
 App::delete('/v1/projects/:projectId/keys/:keyId')
     ->desc('Delete Key')
@@ -832,6 +869,8 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('keyId', null, new UID(), 'Key unique ID.')
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $keyId, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -853,7 +892,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
         }
 
         $response->noContent();
-    }, ['response', 'consoleDB']);
+    });
 
 // Tasks
 
@@ -876,6 +915,8 @@ App::post('/v1/projects/:projectId/tasks')
     ->param('httpHeaders', null, new ArrayList(new Text(256)), 'Task HTTP headers list.', true)
     ->param('httpUser', '', new Text(256), 'Task HTTP user. Max length: 256 chars.', true)
     ->param('httpPass', '', new Text(256), 'Task HTTP password. Max length: 256 chars.', true)
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -933,7 +974,7 @@ App::post('/v1/projects/:projectId/tasks')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($task, Response::MODEL_TASK)
         ;
-    }, ['response', 'consoleDB']);
+    });
 
 App::get('/v1/projects/:projectId/tasks')
     ->desc('List Tasks')
@@ -945,6 +986,8 @@ App::get('/v1/projects/:projectId/tasks')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TASK_LIST)
     ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -962,7 +1005,7 @@ App::get('/v1/projects/:projectId/tasks')
             'tasks' => $tasks
         ]), Response::MODEL_TASK_LIST);
 
-    }, ['response', 'consoleDB']);
+    });
 
 App::get('/v1/projects/:projectId/tasks/:taskId')
     ->desc('Get Task')
@@ -975,6 +1018,8 @@ App::get('/v1/projects/:projectId/tasks/:taskId')
     ->label('sdk.response.model', Response::MODEL_TASK)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('taskId', null, new UID(), 'Task unique ID.')
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $taskId, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -992,7 +1037,7 @@ App::get('/v1/projects/:projectId/tasks/:taskId')
         }
 
         $response->dynamic($task, Response::MODEL_TASK);
-    }, ['response', 'consoleDB']);
+    });
 
 App::put('/v1/projects/:projectId/tasks/:taskId')
     ->desc('Update Task')
@@ -1014,6 +1059,8 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
     ->param('httpHeaders', null, new ArrayList(new Text(256)), 'Task HTTP headers list.', true)
     ->param('httpUser', '', new Text(256), 'Task HTTP user. Max length: 256 chars.', true)
     ->param('httpPass', '', new Text(256), 'Task HTTP password. Max length: 256 chars.', true)
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $taskId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1058,7 +1105,7 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
         }
 
         $response->dynamic($task, Response::MODEL_TASK);
-    }, ['response', 'consoleDB']);
+    });
 
 App::delete('/v1/projects/:projectId/tasks/:taskId')
     ->desc('Delete Task')
@@ -1071,6 +1118,8 @@ App::delete('/v1/projects/:projectId/tasks/:taskId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('taskId', null, new UID(), 'Task unique ID.')
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $taskId, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1092,7 +1141,7 @@ App::delete('/v1/projects/:projectId/tasks/:taskId')
         }
 
         $response->noContent();
-    }, ['response', 'consoleDB']);
+    });
 
 // Platforms
 
@@ -1111,6 +1160,8 @@ App::post('/v1/projects/:projectId/platforms')
     ->param('key', '', new Text(256), 'Package name for android or bundle ID for iOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
     ->param('hostname', '', new Text(256), 'Platform client hostname. Max length: 256 chars.', true)
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $type, $name, $key, $store, $hostname, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1152,7 +1203,7 @@ App::post('/v1/projects/:projectId/platforms')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($platform, Response::MODEL_PLATFORM)
         ;
-    }, ['response', 'consoleDB']);
+    });
     
 App::get('/v1/projects/:projectId/platforms')
     ->desc('List Platforms')
@@ -1164,6 +1215,8 @@ App::get('/v1/projects/:projectId/platforms')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PLATFORM_LIST)
     ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1180,7 +1233,7 @@ App::get('/v1/projects/:projectId/platforms')
             'sum' => count($platforms),
             'platforms' => $platforms
         ]), Response::MODEL_PLATFORM_LIST);
-    }, ['response', 'consoleDB']);
+    });
 
 App::get('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Get Platform')
@@ -1193,6 +1246,8 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
     ->label('sdk.response.model', Response::MODEL_PLATFORM)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('platformId', null, new UID(), 'Platform unique ID.')
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $platformId, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1210,7 +1265,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
         }
 
         $response->dynamic($platform, Response::MODEL_PLATFORM);
-    }, ['response', 'consoleDB']);
+    });
 
 App::put('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Update Platform')
@@ -1227,6 +1282,8 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
     ->param('key', '', new Text(256), 'Package name for android or bundle ID for iOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
     ->param('hostname', '', new Text(256), 'Platform client URL. Max length: 256 chars.', true)
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $platformId, $name, $key, $store, $hostname, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1256,7 +1313,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
         }
 
         $response->dynamic($platform, Response::MODEL_PLATFORM);
-    }, ['response', 'consoleDB']);
+    });
 
 App::delete('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Delete Platform')
@@ -1269,6 +1326,8 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('platformId', null, new UID(), 'Platform unique ID.')
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $platformId, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1290,7 +1349,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
         }
 
         $response->noContent();
-    }, ['response', 'consoleDB']);
+    });
 
 // Domains
 
@@ -1305,6 +1364,8 @@ App::post('/v1/projects/:projectId/domains')
     ->label('sdk.response.model', Response::MODEL_DOMAIN)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('domain', null, new DomainValidator(), 'Domain name.')
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $domain, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1359,7 +1420,7 @@ App::post('/v1/projects/:projectId/domains')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($domain, Response::MODEL_DOMAIN)
         ;
-    }, ['response', 'consoleDB']);
+    });
 
 App::get('/v1/projects/:projectId/domains')
     ->desc('List Domains')
@@ -1371,6 +1432,8 @@ App::get('/v1/projects/:projectId/domains')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOMAIN_LIST)
     ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1387,7 +1450,7 @@ App::get('/v1/projects/:projectId/domains')
             'sum' => count($domains),
             'domains' => $domains
         ]), Response::MODEL_DOMAIN_LIST);
-    }, ['response', 'consoleDB']);
+    });
 
 App::get('/v1/projects/:projectId/domains/:domainId')
     ->desc('Get Domain')
@@ -1400,6 +1463,8 @@ App::get('/v1/projects/:projectId/domains/:domainId')
     ->label('sdk.response.model', Response::MODEL_DOMAIN)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('domainId', null, new UID(), 'Domain unique ID.')
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $domainId, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1417,7 +1482,7 @@ App::get('/v1/projects/:projectId/domains/:domainId')
         }
 
         $response->dynamic($domain, Response::MODEL_DOMAIN);
-    }, ['response', 'consoleDB']);
+    });
 
 App::patch('/v1/projects/:projectId/domains/:domainId/verification')
     ->desc('Update Domain Verification Status')
@@ -1430,6 +1495,8 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
     ->label('sdk.response.model', Response::MODEL_DOMAIN)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('domainId', null, new UID(), 'Domain unique ID.')
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $domainId, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1478,7 +1545,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         ]);
 
         $response->dynamic($domain, Response::MODEL_DOMAIN);
-    }, ['response', 'consoleDB']);
+    });
 
 App::delete('/v1/projects/:projectId/domains/:domainId')
     ->desc('Delete Domain')
@@ -1491,6 +1558,8 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('domainId', null, new UID(), 'Domain unique ID.')
+    ->inject('response')
+    ->inject('consoleDB')
     ->action(function ($projectId, $domainId, $response, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1512,4 +1581,4 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
         }
 
         $response->noContent();
-    }, ['response', 'consoleDB']);
+    });

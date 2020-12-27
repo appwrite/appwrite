@@ -419,6 +419,7 @@ App::get('/manifest.json')
     ->desc('Progressive app manifest file')
     ->label('scope', 'public')
     ->label('docs', false)
+    ->inject('response')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
@@ -439,30 +440,34 @@ App::get('/manifest.json')
                 ],
             ],
         ]);
-    }, ['response']);
+    });
 
 App::get('/robots.txt')
     ->desc('Robots.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
+    ->inject('response')
     ->action(function ($response) {
         $template = new View(__DIR__.'/../views/general/robots.phtml');
         $response->text($template->render(false));
-    }, ['response']);
+    });
 
 App::get('/humans.txt')
     ->desc('Humans.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
+    ->inject('response')
     ->action(function ($response) {
         $template = new View(__DIR__.'/../views/general/humans.phtml');
         $response->text($template->render(false));
-    }, ['response']);
+    });
 
 App::get('/.well-known/acme-challenge')
     ->desc('SSL Verification')
     ->label('scope', 'public')
     ->label('docs', false)
+    ->inject('request')
+    ->inject('response')
     ->action(function ($request, $response) {
         $base = \realpath(APP_STORAGE_CERTIFICATES);
         $path = \str_replace('/.well-known/acme-challenge/', '', $request->getParam('q'));
@@ -491,7 +496,7 @@ App::get('/.well-known/acme-challenge')
         }
 
         $response->text($content);
-    }, ['request', 'response']);
+    });
 
 include_once __DIR__ . '/shared/api.php';
 include_once __DIR__ . '/shared/web.php';
