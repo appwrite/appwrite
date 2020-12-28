@@ -10,15 +10,10 @@ class JWT extends Model
     public function __construct()
     {
         $this
-            ->addRule('$id', [
+            ->addRule('jwt', [
                 'type' => self::TYPE_STRING,
-                'description' => 'User ID.',
-                'example' => '5e5ea5c16897e',
-            ])
-            ->addRule('name', [
-                'type' => self::TYPE_STRING,
-                'description' => 'User name.',
-                'example' => 'John Doe',
+                'description' => 'JWT encoded string.',
+                'example' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
             ])
         ;
     }
