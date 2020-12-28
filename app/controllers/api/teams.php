@@ -490,7 +490,6 @@ App::get('/v1/teams/:teamId/memberships')
                 'teamId='.$teamId,
             ],
         ]);
-
         $users = [];
 
         foreach ($memberships as $membership) {

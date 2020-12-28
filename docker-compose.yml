@@ -55,7 +55,6 @@ services:
       - traefik.http.routers.appwrite-secure.rule=PathPrefix(`/`)
       - traefik.http.routers.appwrite-secure.tls=true
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-config:/storage/config:rw
@@ -102,6 +101,9 @@ services:
       - _APP_STORAGE_LIMIT
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_FUNCTIONS_CONTAINERS
+      - _APP_FUNCTIONS_CPUS
+      - _APP_FUNCTIONS_MEMORY
+      - _APP_FUNCTIONS_MEMORY_SWAP
 
   appwrite-worker-usage:
     entrypoint: worker-usage
@@ -111,6 +113,9 @@ services:
     restart: unless-stopped
     networks:
       - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - telegraf
@@ -129,6 +134,9 @@ services:
     restart: unless-stopped
     networks:
       - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
@@ -150,6 +158,9 @@ services:
     restart: unless-stopped
     networks:
       - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
@@ -173,6 +184,9 @@ services:
     restart: unless-stopped
     networks:
       - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
@@ -195,12 +209,15 @@ services:
     restart: unless-stopped
     networks:
       - appwrite
-    depends_on:
-      - redis
-      - mariadb
     volumes: 
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
+      - appwrite-functions:/storage/functions:rw
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      - redis
+      - mariadb
     environment:
       - _APP_ENV
       - _APP_REDIS_HOST
@@ -219,12 +236,14 @@ services:
     restart: unless-stopped
     networks:
       - appwrite
-    depends_on:
-      - redis
-      - mariadb
     volumes: 
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      - redis
+      - mariadb
     environment:
       - _APP_ENV
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
@@ -244,13 +263,15 @@ services:
     restart: unless-stopped
     networks:
       - appwrite
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - appwrite-functions:/storage/functions:rw
+      - /tmp:/tmp:rw
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /tmp:/tmp:rw
-      - appwrite-functions:/storage/functions:rw
     environment:
       - _APP_ENV
       - _APP_REDIS_HOST
@@ -262,6 +283,9 @@ services:
       - _APP_DB_PASS
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_FUNCTIONS_CONTAINERS
+      - _APP_FUNCTIONS_CPUS
+      - _APP_FUNCTIONS_MEMORY
+      - _APP_FUNCTIONS_MEMORY_SWAP
 
   appwrite-worker-mails:
     entrypoint: worker-mails
@@ -271,6 +295,9 @@ services:
     restart: unless-stopped
     networks:
       - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - maildev
@@ -295,6 +322,9 @@ services:
     restart: unless-stopped
     networks:
       - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
     depends_on:
       - redis
     environment:

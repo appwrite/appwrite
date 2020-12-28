@@ -228,10 +228,17 @@ bash ./build.sh X.X.X
 
 Before running the command, make sure you have proper write permissions to the Appwrite docker hub team.
 
-**Build for multicore**
+**Build for Multicore**
 
 ```bash
 docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x -t appwrite/appwrite:dev --push .
+```
+**Build Functions Envs**
+
+Build envs for all supported cloud functions (multicore builds)
+
+```bash
+bash ./docker/environments/build.sh
 ```
 
 ## Tests

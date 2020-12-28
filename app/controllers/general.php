@@ -33,6 +33,8 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     /** @var Appwrite\Event\Event $audits */
     /** @var Appwrite\Event\Event $usage */
     /** @var Appwrite\Event\Event $deletes */
+    /** @var Appwrite\Event\Event $functions */
+
     /** @var bool $mode */
     /** @var array $clients */
 
@@ -220,11 +222,15 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     /*
      * Background Jobs
      */
+
     $events
         ->setParam('projectId', $project->getId())
         ->setParam('userId', $user->getId())
         ->setParam('event', $route->getLabel('event', ''))
         ->setParam('payload', [])
+        ->setParam('functionId', null)	
+        ->setParam('executionId', null)	
+        ->setParam('trigger', 'event')
     ;
 
     $audits
@@ -250,6 +256,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     $deletes
         ->setParam('projectId', $project->getId())
     ;
+
 }, ['utopia', 'request', 'response', 'console', 'project', 'user', 'locale', 'events', 'audits', 'usage', 'deletes', 'clients']);
 
 App::shutdown(function ($utopia, $request, $response, $project, $events, $audits, $usage, $deletes, $mode) {
@@ -261,6 +268,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
     /** @var Appwrite\Event\Event $audits */
     /** @var Appwrite\Event\Event $usage */
     /** @var Appwrite\Event\Event $deletes */
+    /** @var Appwrite\Event\Event $functions */
     /** @var bool $mode */
 
     if (!empty($events->getParam('event'))) {
@@ -268,12 +276,15 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
             $events->setParam('payload', $response->getPayload());
         }
 
-        $events
+        $webhooks = clone $events;
+        $functions = clone $events;
+
+        $webhooks
             ->setQueue('v1-webhooks')
             ->setClass('WebhooksV1')
             ->trigger();
 
-        $events
+        $functions
             ->setQueue('v1-functions')
             ->setClass('FunctionsV1')
             ->trigger();
@@ -299,6 +310,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
             ->trigger()
         ;
     }
+
 }, ['utopia', 'request', 'response', 'project', 'events', 'audits', 'usage', 'deletes', 'mode']);
 
 App::options(function ($request, $response) {
@@ -377,7 +389,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
         ->addHeader('Pragma', 'no-cache')
         ->setStatusCode($code)
     ;
-    
+
     if ($template) {
         $comp = new View($template);
 
