@@ -2,7 +2,6 @@
 
 require_once __DIR__.'/../init.php';
 
-use Ahc\Jwt\JWT;
 use Utopia\App;
 use Utopia\Swoole\Request;
 use Appwrite\Utopia\Response;
@@ -161,9 +160,9 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     $roles = Config::getParam('roles', []);
     $scope = $route->getLabel('scope', 'none'); // Allowed scope for chosen route
     $scopes = $roles[$role]['scopes']; // Allowed scopes for user role
+
     $authKey = $request->getHeader('x-appwrite-key', '');
-    $authJWT = $request->getHeader('x-appwrite-jwt', '');
-    
+
     if (!empty($authKey)) { // API Key authentication
         // Check if given key match project API keys
         $key = $project->search('secret', $authKey, $project->getAttribute('keys', []));
@@ -188,11 +187,6 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         }
     }
 
-    if (!empty($authJWT)) { // JWT authentication
-        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 10); // Instantiate with key, algo, maxAge and leeway.
-        $payload = $jwt->decode($authJWT);
-    }
-    
     if ($user->getId()) {
         Authorization::setRole('user:'.$user->getId());
     }
