@@ -179,6 +179,10 @@ App::post('/v1/account/sessions')
             throw new Exception('Invalid credentials', 401); // Wrong password or username
         }
 
+        if (Auth::USER_STATUS_BLOCKED == $profile->getAttribute('status')) { // Account is blocked
+            throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
+        }
+
         $dd = new DeviceDetector($request->getUserAgent('UNKNOWN'));
 
         $dd->parse();
@@ -522,6 +526,10 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     throw new Exception('Failed saving user to DB', 500);
                 }
             }
+        }
+
+        if (Auth::USER_STATUS_BLOCKED == $user->getAttribute('status')) { // Account is blocked
+            throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
         }
 
         // Create session token, verify user account and update OAuth2 ID and Access Token
@@ -1261,6 +1269,10 @@ App::post('/v1/account/recovery')
 
         if (empty($profile)) {
             throw new Exception('User not found', 404); // TODO maybe hide this
+        }
+
+        if (Auth::USER_STATUS_BLOCKED == $profile->getAttribute('status')) { // Account is blocked
+            throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
         }
 
         $secret = Auth::tokenGenerator();
