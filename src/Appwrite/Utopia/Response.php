@@ -20,6 +20,7 @@ use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
 use Appwrite\Utopia\Response\Model\File;
 use Appwrite\Utopia\Response\Model\Func;
+use Appwrite\Utopia\Response\Model\JWT;
 use Appwrite\Utopia\Response\Model\Key;
 use Appwrite\Utopia\Response\Model\Language;
 use Appwrite\Utopia\Response\Model\User;
@@ -64,7 +65,8 @@ class Response extends SwooleResponse
     const MODEL_USER_LIST = 'userList';
     const MODEL_SESSION = 'session';
     const MODEL_SESSION_LIST = 'sessionList';
-    const MODEL_TOKEN = 'token'; // - Missing
+    const MODEL_TOKEN = 'token';
+    const MODEL_JWT = 'jwt';
     
     // Storage
     const MODEL_FILE = 'file';
@@ -161,6 +163,7 @@ class Response extends SwooleResponse
             ->setModel(new User())
             ->setModel(new Session())
             ->setModel(new Token())
+            ->setModel(new JWT())
             ->setModel(new Locale())
             ->setModel(new File())
             ->setModel(new Team())
