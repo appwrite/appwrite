@@ -2,6 +2,7 @@
 
 require_once __DIR__.'/../init.php';
 
+use Ahc\Jwt\JWT;
 use Utopia\App;
 use Utopia\Swoole\Request;
 use Appwrite\Utopia\Response;
@@ -34,7 +35,6 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     /** @var Appwrite\Event\Event $usage */
     /** @var Appwrite\Event\Event $deletes */
     /** @var Appwrite\Event\Event $functions */
-
     /** @var bool $mode */
     /** @var array $clients */
 
@@ -111,7 +111,6 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     $response
         ->addHeader('Server', 'Appwrite')
         ->addHeader('X-XSS-Protection', '1; mode=block; report=/v1/xss?url='.\urlencode($request->getURI()))
-        //->addHeader('X-Frame-Options', ($refDomain == 'http://localhost') ? 'SAMEORIGIN' : 'ALLOW-FROM ' . $refDomain)
         ->addHeader('X-Content-Type-Options', 'nosniff')
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
         ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-SDK-Version, Cache-Control, Expires, Pragma')
@@ -162,29 +161,38 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     $roles = Config::getParam('roles', []);
     $scope = $route->getLabel('scope', 'none'); // Allowed scope for chosen route
     $scopes = $roles[$role]['scopes']; // Allowed scopes for user role
+    $authKey = $request->getHeader('x-appwrite-key', '');
+    $authJWT = $request->getHeader('x-appwrite-jwt', '');
     
-    // Check if given key match project API keys
-    $key = $project->search('secret', $request->getHeader('x-appwrite-key', ''), $project->getAttribute('keys', []));
-    
-    /*
-     * Try app auth when we have project key and no user
-     *  Mock user to app and grant API key scopes in addition to default app scopes
-     */
-    if (null !== $key && $user->isEmpty()) {
-        $user = new Document([
-            '$id' => '',
-            'status' => Auth::USER_STATUS_ACTIVATED,
-            'email' => 'app.'.$project->getId().'@service.'.$request->getHostname(),
-            'password' => '',
-            'name' => $project->getAttribute('name', 'Untitled'),
-        ]);
+    if (!empty($authKey)) { // API Key authentication
+        // Check if given key match project API keys
+        $key = $project->search('secret', $authKey, $project->getAttribute('keys', []));
+            
+        /*
+         * Try app auth when we have project key and no user
+         *  Mock user to app and grant API key scopes in addition to default app scopes
+         */
+        if (null !== $key && $user->isEmpty()) {
+            $user = new Document([
+                '$id' => '',
+                'status' => Auth::USER_STATUS_ACTIVATED,
+                'email' => 'app.'.$project->getId().'@service.'.$request->getHostname(),
+                'password' => '',
+                'name' => $project->getAttribute('name', 'Untitled'),
+            ]);
 
-        $role = Auth::USER_ROLE_APP;
-        $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
+            $role = Auth::USER_ROLE_APP;
+            $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
 
-        Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
+            Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
+        }
     }
 
+    if (!empty($authJWT)) { // JWT authentication
+        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 10); // Instantiate with key, algo, maxAge and leeway.
+        $payload = $jwt->decode($authJWT);
+    }
+    
     if ($user->getId()) {
         Authorization::setRole('user:'.$user->getId());
     }
