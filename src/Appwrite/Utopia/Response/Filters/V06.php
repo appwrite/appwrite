@@ -38,6 +38,10 @@ class V06 extends Filter {
             case Response::MODEL_MEMBERSHIP:
                 $parsedResponse = $content;
                 break;
+            
+            case Response::MODEL_MEMBERSHIP_LIST:
+                $parsedResponse = $content['memberships'];
+                break;
 
             case Response::MODEL_SESSION :
                 $parsedResponse = $this->parseSession($content);
