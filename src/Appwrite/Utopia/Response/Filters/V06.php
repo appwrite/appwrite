@@ -18,9 +18,6 @@ class V06 extends Filter {
         $parsedResponse = array();
 
         switch($model) {            
-            case Response::MODEL_PROJECT :
-                $parsedResponse = $this->parseProject($content);
-                break;
 
             case Response::MODEL_USER :
                 $parsedResponse = $this->parseUser($content);
@@ -28,6 +25,18 @@ class V06 extends Filter {
 
             case Response::MODEL_USER_LIST:
                 $parsedResponse = $this->parseUserList($content);
+                break;
+            
+            case Response::MODEL_TEAM:
+                $parsedResponse = $content;
+                break;
+
+            case Response::MODEL_TEAM_LIST:
+                $parsedResponse = $content['teams'];
+                break;
+
+            case Response::MODEL_MEMBERSHIP:
+                $parsedResponse = $content;
                 break;
 
             case Response::MODEL_SESSION :
@@ -75,11 +84,6 @@ class V06 extends Filter {
         }
 
         return $parsedResponse;
-    }
-
-    private function parseProject(array $content) 
-    {
-
     }
 
     private function parseCurrencyList(array  $content) 
