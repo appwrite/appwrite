@@ -3,7 +3,9 @@
 namespace Appwrite\Utopia\Response\Filter;
 
 use Appwrite\Auth\Auth;
+use Appwrite\Database\Database;
 use Appwrite\Database\Validator\Authorization;
+use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filter;
 use Exception;
@@ -18,6 +20,10 @@ class V06 extends Filter {
         $parsedResponse = array();
 
         switch($model) {            
+
+            case Response::MODEL_FILE :
+                $parsedResponse = $this->parseFile($content);
+                break;
 
             case Response::MODEL_USER :
                 $parsedResponse = $this->parseUser($content);
@@ -88,6 +94,22 @@ class V06 extends Filter {
         }
 
         return $parsedResponse;
+    }
+
+    private function parseFile(array $content)
+    {
+        $content['$collection'] = Database::SYSTEM_COLLECTION_FILES;
+        $content['algorithm'] = 'gzip';
+        $content['comment'] = '';
+        $content['fileOpenSSLCipher'] = OpenSSL::CIPHER_AES_128_GCM;
+        $content['fileOpenSSLIV'] = '';
+        $content['fileOpenSSLTag'] = '';
+        $content['fileOpenSSLVersion'] = '';
+        $content['folderId'] = '';
+        $content['path'] = '';
+        $content['sizeActual'] = $content['sizeOriginal'];
+        $content['token'] = '';
+        return $content;
     }
 
     private function parseCurrencyList(array  $content) 
