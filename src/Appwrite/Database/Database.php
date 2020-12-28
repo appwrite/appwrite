@@ -149,7 +149,7 @@ class Database
             'limit' => 15,
             'search' => '',
             'relations' => true,
-            'orderField' => '$id',
+            'orderField' => '',
             'orderType' => 'ASC',
             'orderCast' => 'int',
             'filters' => [],
@@ -455,13 +455,28 @@ class Database
 
         foreach ($rules as $key => $rule) {
             $key = $rule->getAttribute('key', null);
-            $filters = $rule->getAttribute('filter', null);
+            $type = $rule->getAttribute('type', null);
+            $array = $rule->getAttribute('array', false);
+            $filters = $rule->getAttribute('filter', []);
             $value = $document->getAttribute($key, null);
 
-            if (($value !== null) && is_array($filters)) {
-                foreach ($filters as $filter) {
-                    $value = $this->encodeAttribute($filter, $value);
-                    $document->setAttribute($key, $value);
+            if (($value !== null)) {
+                if ($type === self::SYSTEM_VAR_TYPE_DOCUMENT) {
+                    if($array) {
+                        $list = [];
+                        foreach ($value as $child) {
+                            $list[] = $this->encode($child);
+                        }
+
+                        $document->setAttribute($key, $list);
+                    } else {
+                        $document->setAttribute($key, $this->encode($value));
+                    }
+                } else {
+                    foreach ($filters as $filter) {
+                        $value = $this->encodeAttribute($filter, $value);
+                        $document->setAttribute($key, $value);
+                    }
                 }
             }
         }
@@ -476,13 +491,28 @@ class Database
 
         foreach ($rules as $key => $rule) {
             $key = $rule->getAttribute('key', null);
-            $filters = $rule->getAttribute('filter', null);
+            $type = $rule->getAttribute('type', null);
+            $array = $rule->getAttribute('array', false);
+            $filters = $rule->getAttribute('filter', []);
             $value = $document->getAttribute($key, null);
 
-            if (($value !== null) && is_array($filters)) {
-                foreach (array_reverse($filters) as $filter) {
-                    $value = $this->decodeAttribute($filter, $value);
-                    $document->setAttribute($key, $value);
+            if (($value !== null)) {
+                if ($type === self::SYSTEM_VAR_TYPE_DOCUMENT) {
+                    if($array) {
+                        $list = [];
+                        foreach ($value as $child) {
+                            $list[] = $this->decode($child);
+                        }
+
+                        $document->setAttribute($key, $list);
+                    } else {
+                        $document->setAttribute($key, $this->decode($value));
+                    }
+                } else {
+                    foreach (array_reverse($filters) as $filter) {
+                        $value = $this->decodeAttribute($filter, $value);
+                        $document->setAttribute($key, $value);
+                    }
                 }
             }
         }
@@ -499,6 +529,7 @@ class Database
     static protected function encodeAttribute(string $name, $value)
     {
         if (!isset(self::$filters[$name])) {
+            return $value;
             throw new Exception('Filter not found');
         }
 
@@ -520,6 +551,7 @@ class Database
     static protected function decodeAttribute(string $name, $value)
     {
         if (!isset(self::$filters[$name])) {
+            return $value;
             throw new Exception('Filter not found');
         }
 

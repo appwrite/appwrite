@@ -11,100 +11,100 @@ class Log extends Model
     {
         $this
             ->addRule('event', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Event name.',
                 'example' => 'account.sessions.create',
             ])
             ->addRule('ip', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'IP session in use when the session was created.',
                 'example' => '127.0.0.1',
             ])
             ->addRule('time', [
-                'type' => 'integer',
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Log creation time in Unix timestamp.',
                 'example' => 1592981250,
             ])
             ->addRule('osCode', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Operating system code name. View list of [available options](https://github.com/appwrite/appwrite/blob/master/docs/lists/os.json).',
                 'default' => '',
                 'example' => 'Mac',
             ])
             ->addRule('osName', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Operating system name.',
                 'default' => '',
                 'example' => 'Mac',
             ])
             ->addRule('osVersion', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Operating system version.',
                 'default' => '',
                 'example' => 'Mac',
             ])
             ->addRule('clientType', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Client type.',
                 'default' => '',
                 'example' => 'browser',
             ])
             ->addRule('clientCode', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Client code name. View list of [available options](https://github.com/appwrite/appwrite/blob/master/docs/lists/clients.json).',
                 'default' => '',
                 'example' => 'CM',
             ])
             ->addRule('clientName', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Client name.',
                 'default' => '',
                 'example' => 'Chrome Mobile iOS',
             ])
             ->addRule('clientVersion', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Client version.',
                 'default' => '',
                 'example' => '84.0',
             ])
             ->addRule('clientEngine', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Client engine name.',
                 'default' => '',
                 'example' => 'WebKit',
             ])
             ->addRule('clientEngineVersion', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Client engine name.',
                 'default' => '',
                 'example' => '605.1.15',
             ])
             ->addRule('deviceName', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Device name.',
                 'default' => '',
                 'example' => 'smartphone',
             ])
             ->addRule('deviceBrand', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Device brand name.',
                 'default' => '',
                 'example' => 'Google',
             ])
             ->addRule('deviceModel', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Device model name.',
                 'default' => '',
                 'example' => 'Nexus 5',
             ])
             ->addRule('countryCode', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Country two-character ISO 3166-1 alpha code.',
                 'default' => '',
                 'example' => 'US',
             ])
             ->addRule('countryName', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Country name.',
                 'default' => '',
                 'example' => 'United States',

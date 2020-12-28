@@ -34,6 +34,42 @@ class Event
     }
 
     /**
+     * @param string $queue
+     * return $this
+     */
+    public function setQueue(string $queue): self
+    {
+        $this->queue = $queue;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getQueue()
+    {
+        return $this->queue;
+    }
+
+    /**
+     * @param string $class
+     * return $this
+     */
+    public function setClass(string $class): self
+    {
+        $this->class = $class;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getClass()
+    {
+        return $this->class;
+    }
+
+    /**
      * @param string $key
      * @param mixed  $value
      *

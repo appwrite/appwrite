@@ -11,13 +11,13 @@ class Permissions extends Model
     {
         $this
             ->addRule('read', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Read permissions.',
                 'example' => ['*', 'user:5e5ea5c16897e'],
                 'array' => true,
             ])
             ->addRule('write', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Write permissions.',
                 'example' => ['*', 'user:5e5ea5c16897e'],
                 'array' => true,

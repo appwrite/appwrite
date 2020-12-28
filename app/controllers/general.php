@@ -22,21 +22,21 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $webhooks, $audits, $usage, $deletes, $clients) {
+App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $events, $audits, $usage, $deletes, $clients) {
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Database\Document $console */
     /** @var Appwrite\Database\Document $project */
     /** @var Appwrite\Database\Document $user */
     /** @var Utopia\Locale\Locale $locale */
-    /** @var Appwrite\Event\Event $webhooks */
+    /** @var Appwrite\Event\Event $events */
     /** @var Appwrite\Event\Event $audits */
     /** @var Appwrite\Event\Event $usage */
     /** @var Appwrite\Event\Event $deletes */
+    /** @var Appwrite\Event\Event $functions */
+
     /** @var bool $mode */
     /** @var array $clients */
-    
-    Authorization::$roles = ['*'];
 
     $localeParam = (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
 
@@ -172,7 +172,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
      */
     if (null !== $key && $user->isEmpty()) {
         $user = new Document([
-            '$id' => 0,
+            '$id' => '',
             'status' => Auth::USER_STATUS_ACTIVATED,
             'email' => 'app.'.$project->getId().'@service.'.$request->getHostname(),
             'password' => '',
@@ -222,10 +222,15 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     /*
      * Background Jobs
      */
-    $webhooks
+
+    $events
         ->setParam('projectId', $project->getId())
+        ->setParam('userId', $user->getId())
         ->setParam('event', $route->getLabel('event', ''))
         ->setParam('payload', [])
+        ->setParam('functionId', null)	
+        ->setParam('executionId', null)	
+        ->setParam('trigger', 'event')
     ;
 
     $audits
@@ -251,25 +256,38 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     $deletes
         ->setParam('projectId', $project->getId())
     ;
-}, ['utopia', 'request', 'response', 'console', 'project', 'user', 'locale', 'webhooks', 'audits', 'usage', 'deletes', 'clients']);
 
-App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audits, $usage, $deletes, $mode) {
+}, ['utopia', 'request', 'response', 'console', 'project', 'user', 'locale', 'events', 'audits', 'usage', 'deletes', 'clients']);
+
+App::shutdown(function ($utopia, $request, $response, $project, $events, $audits, $usage, $deletes, $mode) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Database\Document $project */
-    /** @var Appwrite\Event\Event $webhooks */
+    /** @var Appwrite\Event\Event $events */
     /** @var Appwrite\Event\Event $audits */
     /** @var Appwrite\Event\Event $usage */
     /** @var Appwrite\Event\Event $deletes */
+    /** @var Appwrite\Event\Event $functions */
     /** @var bool $mode */
 
-    if (!empty($webhooks->getParam('event'))) {
-        if(empty($webhooks->getParam('payload'))) {
-            $webhooks->setParam('payload', $response->getPayload());
+    if (!empty($events->getParam('event'))) {
+        if(empty($events->getParam('payload'))) {
+            $events->setParam('payload', $response->getPayload());
         }
 
-        $webhooks->trigger();
+        $webhooks = clone $events;
+        $functions = clone $events;
+
+        $webhooks
+            ->setQueue('v1-webhooks')
+            ->setClass('WebhooksV1')
+            ->trigger();
+
+        $functions
+            ->setQueue('v1-functions')
+            ->setClass('FunctionsV1')
+            ->trigger();
     }
     
     if (!empty($audits->getParam('event'))) {
@@ -283,8 +301,8 @@ App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audi
     $route = $utopia->match($request);
     
     if ($project->getId()
-        && $mode !== APP_MODE_ADMIN
-        && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage and admin mode
+        && $mode !== APP_MODE_ADMIN //TODO: add check to make sure user is admin
+        && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage on admin mode
         
         $usage
             ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
@@ -292,7 +310,8 @@ App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audi
             ->trigger()
         ;
     }
-}, ['utopia', 'request', 'response', 'project', 'webhooks', 'audits', 'usage', 'deletes', 'mode']);
+
+}, ['utopia', 'request', 'response', 'project', 'events', 'audits', 'usage', 'deletes', 'mode']);
 
 App::options(function ($request, $response) {
     /** @var Utopia\Swoole\Request $request */
@@ -370,7 +389,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
         ->addHeader('Pragma', 'no-cache')
         ->setStatusCode($code)
     ;
-    
+
     if ($template) {
         $comp = new View($template);
 
@@ -393,13 +412,14 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     }
 
     $response->dynamic(new Document($output),
-        $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_LOCALE);
+        $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR);
 }, ['error', 'utopia', 'request', 'response', 'layout', 'project']);
 
 App::get('/manifest.json')
     ->desc('Progressive app manifest file')
     ->label('scope', 'public')
     ->label('docs', false)
+    ->inject('response')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
@@ -420,30 +440,34 @@ App::get('/manifest.json')
                 ],
             ],
         ]);
-    }, ['response']);
+    });
 
 App::get('/robots.txt')
     ->desc('Robots.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
+    ->inject('response')
     ->action(function ($response) {
         $template = new View(__DIR__.'/../views/general/robots.phtml');
         $response->text($template->render(false));
-    }, ['response']);
+    });
 
 App::get('/humans.txt')
     ->desc('Humans.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
+    ->inject('response')
     ->action(function ($response) {
         $template = new View(__DIR__.'/../views/general/humans.phtml');
         $response->text($template->render(false));
-    }, ['response']);
+    });
 
 App::get('/.well-known/acme-challenge')
     ->desc('SSL Verification')
     ->label('scope', 'public')
     ->label('docs', false)
+    ->inject('request')
+    ->inject('response')
     ->action(function ($request, $response) {
         $base = \realpath(APP_STORAGE_CERTIFICATES);
         $path = \str_replace('/.well-known/acme-challenge/', '', $request->getParam('q'));
@@ -472,7 +496,7 @@ App::get('/.well-known/acme-challenge')
         }
 
         $response->text($content);
-    }, ['request', 'response']);
+    });
 
 include_once __DIR__ . '/shared/api.php';
 include_once __DIR__ . '/shared/web.php';

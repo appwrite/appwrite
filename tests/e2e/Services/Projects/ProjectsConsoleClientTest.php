@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\Teams;
+namespace Tests\E2E\Services\Projects;
 
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectConsole;
@@ -221,10 +221,10 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals('Project Test 2', $response['body']['name']);
-        // $this->assertArrayHasKey('platforms', $response['body']); // TODO enable when response model is enabled
-        // $this->assertArrayHasKey('webhooks', $response['body']); // TODO enable when response model is enabled
-        // $this->assertArrayHasKey('keys', $response['body']); // TODO enable when response model is enabled
-        // $this->assertArrayHasKey('tasks', $response['body']); // TODO enable when response model is enabled
+        $this->assertArrayHasKey('platforms', $response['body']);
+        $this->assertArrayHasKey('webhooks', $response['body']);
+        $this->assertArrayHasKey('keys', $response['body']);
+        $this->assertArrayHasKey('tasks', $response['body']);
 
         $projectId = $response['body']['$id'];
 
@@ -443,7 +443,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertIsBool($response['body']['security']);
         $this->assertEquals(false, $response['body']['security']);
         $this->assertEquals('', $response['body']['httpUser']);
-        // $this->assertEquals('', $response['body']['httpPass']); // TODO add after encrypt refactor
+        $this->assertEquals('', $response['body']['httpPass']);
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/webhooks/'.$webhookId, array_merge([
             'content-type' => 'application/json',
@@ -462,7 +462,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertIsBool($response['body']['security']);
         $this->assertEquals(false, $response['body']['security']);
         $this->assertEquals('', $response['body']['httpUser']);
-        // $this->assertEquals('', $response['body']['httpPass']); // TODO add after encrypt refactor
+        $this->assertEquals('', $response['body']['httpPass']);
         
         /**
          * Test for FAILURE
@@ -759,7 +759,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('demo:value', $response['body']['httpHeaders']);
         $this->assertCount(1, $response['body']['httpHeaders']);
         $this->assertEquals('username', $response['body']['httpUser']);
-        // $this->assertEquals('password', $response['body']['httpPass']); // TODO add after encrypt refactor
+        $this->assertEquals('password', $response['body']['httpPass']);
         
         $data = array_merge($data, ['taskId' => $response['body']['$id']]);
 
@@ -901,7 +901,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('demo:value', $response['body']['httpHeaders']);
         $this->assertCount(1, $response['body']['httpHeaders']);
         $this->assertEquals('username', $response['body']['httpUser']);
-        // $this->assertEquals('password', $response['body']['httpPass']); // TODO add after encrypt refactor
+        $this->assertEquals('password', $response['body']['httpPass']);
         
         /**
          * Test for FAILURE
@@ -952,7 +952,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('demo2:value2', $response['body']['httpHeaders']);
         $this->assertCount(2, $response['body']['httpHeaders']);
         $this->assertEquals('username1', $response['body']['httpUser']);
-        // $this->assertEquals('password1', $response['body']['httpPass']); // TODO add after encrypt refactor
+        $this->assertEquals('password1', $response['body']['httpPass']);
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/tasks/'.$taskId, array_merge([
             'content-type' => 'application/json',
@@ -972,7 +972,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('demo2:value2', $response['body']['httpHeaders']);
         $this->assertCount(2, $response['body']['httpHeaders']);
         $this->assertEquals('username1', $response['body']['httpUser']);
-        // $this->assertEquals('password1', $response['body']['httpPass']); // TODO add after encrypt refactor
+        $this->assertEquals('password1', $response['body']['httpPass']);
         
         /**
          * Test for FAILURE

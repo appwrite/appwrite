@@ -9,6 +9,30 @@ class Token extends Model
 {
     public function __construct()
     {
+        $this
+            ->addRule('$id', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Token ID.',
+                'example' => 'bb8ea5c16897e',
+            ])
+            ->addRule('userId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'User ID.',
+                'example' => '5e5ea5c168bb8',
+            ])
+            ->addRule('secret', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Token secret key. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
+                'default' => 0,
+                'example' => '',
+            ])
+            ->addRule('expire', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Token expiration date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
+        ;
     }
 
     /**
@@ -18,7 +42,7 @@ class Token extends Model
      */
     public function getName():string
     {
-        return 'User';
+        return 'Token';
     }
 
     /**
@@ -28,6 +52,6 @@ class Token extends Model
      */
     public function getType():string
     {
-        return Response::MODEL_LOCALE;
+        return Response::MODEL_TOKEN;
     }
 }

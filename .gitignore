@@ -5,3 +5,4 @@
 /.idea/
 .DS_Store
 .php_cs.cache
+debug/

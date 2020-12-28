@@ -29,12 +29,17 @@ App::post('/v1/functions')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'create')
     ->label('sdk.description', '/docs/references/functions/create-function.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
     ->param('env', '', new WhiteList(array_keys(Config::getParam('environments')), true), 'Execution enviornment.')
     ->param('vars', [], new Assoc(), 'Key-value JSON object.', true)
     ->param('events', [], new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)), 'Events list.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, 900), 'Function maximum execution time in seconds.', true)
+    ->inject('response')
+    ->inject('projectDB')
     ->action(function ($name, $env, $vars, $events, $schedule, $timeout, $response, $projectDB) {
         $function = $projectDB->createDocument([
             '$collection' => Database::SYSTEM_COLLECTION_FUNCTIONS,
@@ -64,7 +69,7 @@ App::post('/v1/functions')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($function, Response::MODEL_FUNCTION)
         ;
-    }, ['response', 'projectDB']);
+    });
 
 App::get('/v1/functions')
     ->groups(['api', 'functions'])
@@ -74,17 +79,19 @@ App::get('/v1/functions')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'list')
     ->label('sdk.description', '/docs/references/functions/list-functions.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_FUNCTION_LIST)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->inject('response')
+    ->inject('projectDB')
     ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
         $results = $projectDB->getCollection([
             'limit' => $limit,
             'offset' => $offset,
-            'orderField' => 'dateCreated',
-            'orderType' => $orderType,
-            'orderCast' => 'int',
             'search' => $search,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_FUNCTIONS,
@@ -95,7 +102,7 @@ App::get('/v1/functions')
             'sum' => $projectDB->getSum(),
             'functions' => $results
         ]), Response::MODEL_FUNCTION_LIST);
-    }, ['response', 'projectDB']);
+    });
 
 App::get('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
@@ -105,7 +112,12 @@ App::get('/v1/functions/:functionId')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/functions/get-function.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new UID(), 'Function unique ID.')
+    ->inject('response')
+    ->inject('projectDB')
     ->action(function ($functionId, $response, $projectDB) {
         $function = $projectDB->getDocument($functionId);
 
@@ -114,7 +126,7 @@ App::get('/v1/functions/:functionId')
         }
 
         $response->dynamic($function, Response::MODEL_FUNCTION);
-    }, ['response', 'projectDB']);
+    });
 
 App::get('/v1/functions/:functionId/usage')
     ->desc('Get Function Usage')
@@ -125,6 +137,10 @@ App::get('/v1/functions/:functionId/usage')
     ->label('sdk.method', 'getUsage')
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d']), 'Date range.', true)
+    ->inject('response')
+    ->inject('project')
+    ->inject('projectDB')
+    ->inject('register')
     ->action(function ($functionId, $range, $response, $project, $projectDB, $register) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
@@ -227,7 +243,7 @@ App::get('/v1/functions/:functionId/usage')
                 }, $compute)),
             ],
         ]);
-    }, ['response', 'project', 'projectDB', 'register']);
+    });
 
 App::put('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
@@ -237,12 +253,17 @@ App::put('/v1/functions/:functionId')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'update')
     ->label('sdk.description', '/docs/references/functions/update-function.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
     ->param('vars', [], new Assoc(), 'Key-value JSON object.', true)
     ->param('events', [], new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)), 'Events list.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, 900), 'Function maximum execution time in seconds.', true)
+    ->inject('response')
+    ->inject('projectDB')
     ->action(function ($functionId, $name, $vars, $events, $schedule, $timeout, $response, $projectDB) {
         $function = $projectDB->getDocument($functionId);
 
@@ -282,7 +303,7 @@ App::put('/v1/functions/:functionId')
         }
 
         $response->dynamic($function, Response::MODEL_FUNCTION);
-    }, ['response', 'projectDB']);
+    });
 
 App::patch('/v1/functions/:functionId/tag')
     ->groups(['api', 'functions'])
@@ -292,8 +313,13 @@ App::patch('/v1/functions/:functionId/tag')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'updateTag')
     ->label('sdk.description', '/docs/references/functions/update-tag.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('tag', '', new UID(), 'Tag unique ID.')
+    ->inject('response')
+    ->inject('projectDB')
     ->action(function ($functionId, $tag, $response, $projectDB) {
         $function = $projectDB->getDocument($functionId);
         $tag = $projectDB->getDocument($tag);
@@ -320,7 +346,7 @@ App::patch('/v1/functions/:functionId/tag')
         }
 
         $response->dynamic($function, Response::MODEL_FUNCTION);
-    }, ['response', 'projectDB']);
+    });
 
 App::delete('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
@@ -330,7 +356,13 @@ App::delete('/v1/functions/:functionId')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', '/docs/references/functions/delete-function.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('functionId', '', new UID(), 'Function unique ID.')
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('deletes')
     ->action(function ($functionId, $response, $projectDB, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -351,7 +383,7 @@ App::delete('/v1/functions/:functionId')
         ;
 
         $response->noContent();
-    }, ['response', 'projectDB', 'deletes']);
+    });
 
 App::post('/v1/functions/:functionId/tags')
     ->groups(['api', 'functions'])
@@ -361,10 +393,18 @@ App::post('/v1/functions/:functionId/tags')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'createTag')
     ->label('sdk.description', '/docs/references/functions/create-tag.md')
+    ->label('sdk.request.type', 'multipart/form-data')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TAG)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('command', '', new Text('1028'), 'Code execution command.')
     ->param('code', [], new File(), 'Gzip file containing your code.', false)
     // ->param('code', '', new Text(128), 'Code package. Use the '.APP_NAME.' code packager to create a deployable package file.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('usage')
     ->action(function ($functionId, $command, $code, $request, $response, $projectDB, $usage) {
         $function = $projectDB->getDocument($functionId);
 
@@ -433,7 +473,7 @@ App::post('/v1/functions/:functionId/tags')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($tag, Response::MODEL_TAG)
         ;
-    }, ['request', 'response', 'projectDB', 'usage']);
+    });
 
 App::get('/v1/functions/:functionId/tags')
     ->groups(['api', 'functions'])
@@ -443,11 +483,16 @@ App::get('/v1/functions/:functionId/tags')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'listTags')
     ->label('sdk.description', '/docs/references/functions/list-tags.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TAG_LIST)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->inject('response')
+    ->inject('projectDB')
     ->action(function ($functionId, $search, $limit, $offset, $orderType, $response, $projectDB) {
         $function = $projectDB->getDocument($functionId);
 
@@ -458,9 +503,6 @@ App::get('/v1/functions/:functionId/tags')
         $results = $projectDB->getCollection([
             'limit' => $limit,
             'offset' => $offset,
-            'orderField' => 'dateCreated',
-            'orderType' => $orderType,
-            'orderCast' => 'int',
             'search' => $search,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_TAGS,
@@ -472,7 +514,7 @@ App::get('/v1/functions/:functionId/tags')
             'sum' => $projectDB->getSum(),
             'tags' => $results
         ]), Response::MODEL_TAG_LIST);
-    }, ['response', 'projectDB']);
+    });
 
 App::get('/v1/functions/:functionId/tags/:tagId')
     ->groups(['api', 'functions'])
@@ -482,8 +524,13 @@ App::get('/v1/functions/:functionId/tags/:tagId')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getTag')
     ->label('sdk.description', '/docs/references/functions/get-tag.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TAG)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('tagId', '', new UID(), 'Tag unique ID.')
+    ->inject('response')
+    ->inject('projectDB')
     ->action(function ($functionId, $tagId, $response, $projectDB) {
         $function = $projectDB->getDocument($functionId);
 
@@ -502,7 +549,7 @@ App::get('/v1/functions/:functionId/tags/:tagId')
         }
 
         $response->dynamic($tag, Response::MODEL_TAG);
-    }, ['response', 'projectDB']);
+    });
 
 App::delete('/v1/functions/:functionId/tags/:tagId')
     ->groups(['api', 'functions'])
@@ -512,8 +559,14 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'deleteTag')
     ->label('sdk.description', '/docs/references/functions/delete-tag.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('tagId', '', new UID(), 'Tag unique ID.')
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('usage')
     ->action(function ($functionId, $tagId, $response, $projectDB, $usage) {
         $function = $projectDB->getDocument($functionId);
 
@@ -554,7 +607,7 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
         ;
 
         $response->noContent();
-    }, ['response', 'projectDB', 'usage']);
+    });
 
 App::post('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
@@ -564,8 +617,14 @@ App::post('/v1/functions/:functionId/executions')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'createExecution')
     ->label('sdk.description', '/docs/references/functions/create-execution.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_EXECUTION)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     // ->param('async', 1, new Range(0, 1), 'Execute code asynchronously. Pass 1 for true, 0 for false. Default value is 1.', true)
+    ->inject('response')
+    ->inject('project')
+    ->inject('projectDB')
     ->action(function ($functionId, /*$async,*/ $response, $project, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
@@ -607,7 +666,6 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception('Failed saving execution to DB', 500);
         }
     
-        // Issue a TLS certificate when domain is verified
         Resque::enqueue('v1-functions', 'FunctionsV1', [
             'projectId' => $project->getId(),
             'functionId' => $function->getId(),
@@ -619,7 +677,7 @@ App::post('/v1/functions/:functionId/executions')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($execution, Response::MODEL_EXECUTION)
         ;
-    }, ['response', 'project', 'projectDB']);
+    });
 
 App::get('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
@@ -629,11 +687,16 @@ App::get('/v1/functions/:functionId/executions')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'listExecutions')
     ->label('sdk.description', '/docs/references/functions/list-executions.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_EXECUTION_LIST)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->inject('response')
+    ->inject('projectDB')
     ->action(function ($functionId, $search, $limit, $offset, $orderType, $response, $projectDB) {
         $function = $projectDB->getDocument($functionId);
 
@@ -644,9 +707,6 @@ App::get('/v1/functions/:functionId/executions')
         $results = $projectDB->getCollection([
             'limit' => $limit,
             'offset' => $offset,
-            'orderField' => 'dateCreated',
-            'orderType' => $orderType,
-            'orderCast' => 'int',
             'search' => $search,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_EXECUTIONS,
@@ -658,7 +718,7 @@ App::get('/v1/functions/:functionId/executions')
             'sum' => $projectDB->getSum(),
             'executions' => $results
         ]), Response::MODEL_EXECUTION_LIST);
-    }, ['response', 'projectDB']);
+    });
 
 App::get('/v1/functions/:functionId/executions/:executionId')
     ->groups(['api', 'functions'])
@@ -668,8 +728,13 @@ App::get('/v1/functions/:functionId/executions/:executionId')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getExecution')
     ->label('sdk.description', '/docs/references/functions/get-execution.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_EXECUTION)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('executionId', '', new UID(), 'Execution unique ID.')
+    ->inject('response')
+    ->inject('projectDB')
     ->action(function ($functionId, $executionId, $response, $projectDB) {
         $function = $projectDB->getDocument($functionId);
 
@@ -688,4 +753,4 @@ App::get('/v1/functions/:functionId/executions/:executionId')
         }
 
         $response->dynamic($execution, Response::MODEL_EXECUTION);
-    }, ['response', 'projectDB']);
+    });

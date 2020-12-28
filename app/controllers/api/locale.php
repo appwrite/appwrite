@@ -13,6 +13,13 @@ App::get('/v1/locale')
     ->label('sdk.namespace', 'locale')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/locale/get-locale.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_LOCALE)
+    ->inject('request')
+    ->inject('response')
+    ->inject('locale')
+    ->inject('geodb')
     ->action(function ($request, $response, $locale, $geodb) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
@@ -61,7 +68,7 @@ App::get('/v1/locale')
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time).' GMT') // 45 days cache
         ;
         $response->dynamic(new Document($output), Response::MODEL_LOCALE);
-    }, ['request', 'response', 'locale', 'geodb']);
+    });
 
 App::get('/v1/locale/countries')
     ->desc('List Countries')
@@ -71,6 +78,11 @@ App::get('/v1/locale/countries')
     ->label('sdk.namespace', 'locale')
     ->label('sdk.method', 'getCountries')
     ->label('sdk.description', '/docs/references/locale/get-countries.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_COUNTRY_LIST)
+    ->inject('response')
+    ->inject('locale')
     ->action(function ($response, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
@@ -88,7 +100,7 @@ App::get('/v1/locale/countries')
         }
 
         $response->dynamic(new Document(['countries' => $output, 'sum' => \count($output)]), Response::MODEL_COUNTRY_LIST);
-    }, ['response', 'locale']);
+    });
 
 App::get('/v1/locale/countries/eu')
     ->desc('List EU Countries')
@@ -98,6 +110,11 @@ App::get('/v1/locale/countries/eu')
     ->label('sdk.namespace', 'locale')
     ->label('sdk.method', 'getCountriesEU')
     ->label('sdk.description', '/docs/references/locale/get-countries-eu.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_COUNTRY_LIST)
+    ->inject('response')
+    ->inject('locale')
     ->action(function ($response, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
@@ -118,7 +135,7 @@ App::get('/v1/locale/countries/eu')
         }
 
         $response->dynamic(new Document(['countries' => $output, 'sum' => \count($output)]), Response::MODEL_COUNTRY_LIST);
-    }, ['response', 'locale']);
+    });
 
 App::get('/v1/locale/countries/phones')
     ->desc('List Countries Phone Codes')
@@ -128,6 +145,11 @@ App::get('/v1/locale/countries/phones')
     ->label('sdk.namespace', 'locale')
     ->label('sdk.method', 'getCountriesPhones')
     ->label('sdk.description', '/docs/references/locale/get-countries-phones.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PHONE_LIST)
+    ->inject('response')
+    ->inject('locale')
     ->action(function ($response, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
@@ -149,7 +171,7 @@ App::get('/v1/locale/countries/phones')
         }
 
         $response->dynamic(new Document(['phones' => $output, 'sum' => \count($output)]), Response::MODEL_PHONE_LIST);
-    }, ['response', 'locale']);
+    });
 
 App::get('/v1/locale/continents')
     ->desc('List Continents')
@@ -159,6 +181,11 @@ App::get('/v1/locale/continents')
     ->label('sdk.namespace', 'locale')
     ->label('sdk.method', 'getContinents')
     ->label('sdk.description', '/docs/references/locale/get-continents.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_CONTINENT_LIST)
+    ->inject('response')
+    ->inject('locale')
     ->action(function ($response, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
@@ -175,7 +202,7 @@ App::get('/v1/locale/continents')
         }
 
         $response->dynamic(new Document(['continents' => $output, 'sum' => \count($output)]), Response::MODEL_CONTINENT_LIST);
-    }, ['response', 'locale']);
+    });
 
 App::get('/v1/locale/currencies')
     ->desc('List Currencies')
@@ -185,6 +212,10 @@ App::get('/v1/locale/currencies')
     ->label('sdk.namespace', 'locale')
     ->label('sdk.method', 'getCurrencies')
     ->label('sdk.description', '/docs/references/locale/get-currencies.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_CURRENCY_LIST)
+    ->inject('response')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
@@ -195,7 +226,7 @@ App::get('/v1/locale/currencies')
         }, $list);
 
         $response->dynamic(new Document(['currencies' => $list, 'sum' => \count($list)]), Response::MODEL_CURRENCY_LIST);
-    }, ['response']);
+    });
 
 
 App::get('/v1/locale/languages')
@@ -206,6 +237,10 @@ App::get('/v1/locale/languages')
     ->label('sdk.namespace', 'locale')
     ->label('sdk.method', 'getLanguages')
     ->label('sdk.description', '/docs/references/locale/get-languages.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_LANGUAGE_LIST)
+    ->inject('response')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
@@ -216,4 +251,4 @@ App::get('/v1/locale/languages')
         }, $list);
 
         $response->dynamic(new Document(['languages' => $list, 'sum' => \count($list)]), Response::MODEL_LANGUAGE_LIST);
-    }, ['response']);
+    });

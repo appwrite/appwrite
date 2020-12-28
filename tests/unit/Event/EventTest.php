@@ -32,6 +32,28 @@ class EventTest extends TestCase
     {
     }
 
+    public function testQueue()
+    {
+        $this->assertEquals($this->queue, $this->object->getQueue());
+
+        $this->object->setQueue('demo');
+        
+        $this->assertEquals('demo', $this->object->getQueue());
+        
+        $this->object->setQueue($this->queue);
+    }
+
+    public function testClass()
+    {
+        $this->assertEquals('TestsV1', $this->object->getClass());
+
+        $this->object->setClass('TestsV2');
+        
+        $this->assertEquals('TestsV2', $this->object->getClass());
+        
+        $this->object->setClass('TestsV1');
+    }
+
     public function testParams()
     {
         $this->object

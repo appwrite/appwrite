@@ -11,12 +11,12 @@ class Continent extends Model
     {
         $this
             ->addRule('name', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Continent name.',
                 'example' => 'Europe',
             ])
             ->addRule('code', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Continent two letter code.',
                 'example' => 'EU',
             ])
