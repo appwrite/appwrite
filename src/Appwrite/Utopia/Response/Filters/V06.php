@@ -46,6 +46,9 @@ class V06 extends Filter {
                 $parsedResponse = $this->parseLocale($content);
                 break;
 
+            case Response::MODEL_COUNTRY_LIST:
+                $parsedResponse = $this->parseCountryList($content);
+                break;
 
             case Response::MODEL_ANY :
                 $parsedResponse = $content;
@@ -61,6 +64,17 @@ class V06 extends Filter {
     private function parseProject(array $content) 
     {
 
+    }
+
+    private function parseCountryList(array $content) 
+    {
+        $countries = $content['country'];
+        $parsedResponse = [];
+        foreach($countries as $country) {
+            $parsedResponse['code'] = $country['name'];
+        }
+        
+        return $parsedResponse;
     }
 
     private function parseLocale(array $content) 
