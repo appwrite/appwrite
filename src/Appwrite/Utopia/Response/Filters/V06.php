@@ -50,6 +50,10 @@ class V06 extends Filter {
                 $parsedResponse = $this->parseCountryList($content);
                 break;
 
+            case Response::MODEL_PHONE_LIST:
+                $parsedResponse = $this->parsePhoneList($content);
+                break;
+
             case Response::MODEL_ANY :
                 $parsedResponse = $content;
                 break;
@@ -66,14 +70,25 @@ class V06 extends Filter {
 
     }
 
+    private function parsePhoneList(array $content)
+    {
+        $phones = $content['phones'];
+        $parsedResponse = [];
+        foreach($phones as $phone) {
+            $parsedResponse['countryCode'] = $phone['code'];
+        }
+
+        return $parsedResponse;
+    }
+
     private function parseCountryList(array $content) 
     {
-        $countries = $content['country'];
+        $countries = $content['countries'];
         $parsedResponse = [];
         foreach($countries as $country) {
             $parsedResponse['code'] = $country['name'];
         }
-        
+
         return $parsedResponse;
     }
 
