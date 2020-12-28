@@ -638,7 +638,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         ;
     });
 
-App::get('/v1/account/jwt')
+App::post('/v1/account/jwt')
     ->desc('Create Account JWT')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
