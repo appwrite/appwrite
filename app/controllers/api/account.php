@@ -648,24 +648,38 @@ App::get('/v1/account/jwt')
     ->label('sdk.description', '/docs/references/account/create-jwt.md')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
-    ->action(function ($request, $response, $projectDB) {
-        /** @var Appwrite\Swoole\Request $request */
+    ->inject('response')
+    ->inject('user')
+    ->action(function ($response, $user) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
-        
-        // Instantiate with key, algo, maxAge and leeway.
-        $jwt = new JWT('secret', 'HS256', 3600, 10);
+        /** @var Appwrite\Database\Document $user */
+            
+        $tokens = $user->getAttribute('tokens', []);
+        $session = new Document();
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        foreach ($tokens as $token) { /** @var Appwrite\Database\Document $token */
+            if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                $session = $token;
+            }
+        }
+
+        if($session->isEmpty()) {
+            throw new Exception('No valid session found', 401);
+        }
         
-        // $response->dynamic(new Document(['jwt' => $jwt]), Response::MODEL_SESSION);
-        $response->json(['jwt' => $jwt->encode([
-            'uid'    => 1,
-            'aud'    => 'http://site.com',
-            'scopes' => ['user'],
-            'iss'    => 'http://api.mysite.com',
-        ])]);
-    }, ['request', 'response', 'projectDB', 'webhooks', 'audits']);
+        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 10); // Instantiate with key, algo, maxAge and leeway.
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic(new Document(['jwt' => $jwt->encode([
+                // 'uid'    => 1,
+                // 'aud'    => 'http://site.com',
+                // 'scopes' => ['user'],
+                // 'iss'    => 'http://api.mysite.com',
+                'userId' => $user->getId(),
+                'sessionId' => $session->getId(),
+            ])]), Response::MODEL_JWT);
+    });
 
 App::get('/v1/account')
     ->desc('Get Account')
