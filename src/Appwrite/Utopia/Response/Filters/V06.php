@@ -58,6 +58,10 @@ class V06 extends Filter {
                 $parsedResponse = $this->parseContinentList($content);
                 break;
 
+            case Response::MODEL_CURRENCY_LIST:
+                $parsedResponse = $this->parseCurrencyList($content);
+                break;
+
             case Response::MODEL_ANY :
                 $parsedResponse = $content;
                 break;
@@ -72,6 +76,12 @@ class V06 extends Filter {
     private function parseProject(array $content) 
     {
 
+    }
+
+    private function parseCurrencyList(array  $content) 
+    {
+        $content['locations'] = [];
+        return $content;
     }
 
     private function parseContinentList(array $content)
