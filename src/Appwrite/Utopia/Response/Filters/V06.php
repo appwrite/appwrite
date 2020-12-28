@@ -26,6 +26,10 @@ class V06 extends Filter {
                 $parsedResponse = $this->parseUser($content);
                 break;
 
+            case Response::MODEL_USER_LIST:
+                $parsedResponse = $this->parseUserList($content);
+                break;
+
             case Response::MODEL_SESSION :
                 $parsedResponse = $this->parseSession($content);
                 break;
@@ -187,6 +191,16 @@ class V06 extends Filter {
     {       
         $content['type'] = Auth::TOKEN_TYPE_LOGIN;
         return $content;
+    }
+
+    private function parseUserList(array $content)
+    {
+        $users = $content['users'];
+        $parsedResponse = [];
+        foreach($users as $user) {
+            $parsedResponse[] = $this->parseUser($user);
+        }
+        return $parsedResponse;
     }
 
     private function parseUser(array $content)
