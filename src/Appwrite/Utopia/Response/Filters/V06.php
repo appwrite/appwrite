@@ -54,6 +54,10 @@ class V06 extends Filter {
                 $parsedResponse = $this->parsePhoneList($content);
                 break;
 
+            case Response::MODEL_CONTINENT_LIST:
+                $parsedResponse = $this->parseContinentList($content);
+                break;
+
             case Response::MODEL_ANY :
                 $parsedResponse = $content;
                 break;
@@ -68,6 +72,17 @@ class V06 extends Filter {
     private function parseProject(array $content) 
     {
 
+    }
+
+    private function parseContinentList(array $content)
+    {
+        $continents = $content['continents'];
+        $parsedResponse = [];
+        foreach($continents as $continent) {
+            $parsedResponse['code'] = $continent['name'];
+        }
+
+        return $parsedResponse;
     }
 
     private function parsePhoneList(array $content)
