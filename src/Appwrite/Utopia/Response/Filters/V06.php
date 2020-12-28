@@ -25,6 +25,10 @@ class V06 extends Filter {
                 $parsedResponse = $this->parseFile($content);
                 break;
 
+            case Response::MODEL_FILE_LIST :
+                $parsedResponse = $content;
+                break;
+
             case Response::MODEL_USER :
                 $parsedResponse = $this->parseUser($content);
                 break;
