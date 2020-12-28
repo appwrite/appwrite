@@ -1,9 +1,0 @@
-#!/bin/sh
-
-mv /tmp/code.tar.gz /usr/local/src/code.tar.gz
-
-tar -zxf /usr/local/src/code.tar.gz --strip 1
-
-rm /usr/local/src/code.tar.gz
-
-php /usr/src/code/app/http.php
