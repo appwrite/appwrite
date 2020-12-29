@@ -171,7 +171,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
          * Try app auth when we have project key and no user
          *  Mock user to app and grant API key scopes in addition to default app scopes
          */
-        if (null !== $key && $user->isEmpty()) {
+        if ($key && $user->isEmpty()) {
             $user = new Document([
                 '$id' => '',
                 'status' => Auth::USER_STATUS_ACTIVATED,
