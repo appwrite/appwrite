@@ -26,7 +26,7 @@ Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
 function mapResponseFormatToClass(string $responseFormat): Filter {
     switch($responseFormat) {
-        case preg_match($responseFormat, "/0\.[0-6]\.\d/"):
+        case preg_match($responseFormat, "/0\.[0-6]\.\d?/"):
             return new V06();
         default:
             return null;
