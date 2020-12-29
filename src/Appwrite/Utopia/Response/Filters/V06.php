@@ -21,6 +21,10 @@ class V06 extends Filter {
 
         switch($model) {            
 
+            case Response::MODEL_COLLECTION:
+                $parsedResponse = $this->parseCollection($content);
+                break;
+
             case Response::MODEL_FILE :
                 $parsedResponse = $this->parseFile($content);
                 break;
@@ -98,6 +102,13 @@ class V06 extends Filter {
         }
 
         return $parsedResponse;
+    }
+
+    private function parseCollection(array $content)
+    {
+        $content['$collection'] = Database::SYSTEM_COLLECTION_COLLECTIONS;
+        $content['structure'] = true;
+        return $content;
     }
 
     private function parseFile(array $content)
