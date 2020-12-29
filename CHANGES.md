@@ -30,6 +30,9 @@
 - Added pagination for projects list on the console home page.
 - Updated storage calculation to match IEC standards
 - Now using Alpine as base Docker image
+- Upgraded device detctor to version 3.12.6
+- Upgraded MariaDB to version 10.5.5
+- Switch standard ports to 95xx prefix ([#780](https://github.com/appwrite/appwrite/pull/780))
 - User & Team name max length is now 128 chars and not 100 for better API consistency
 - Collection name max length is now 128 chars and not 256 for better API consistency
 - Project name max length is now 128 chars and not 100 for better API consistency
@@ -37,6 +40,7 @@
 - API Key name max length is now 128 chars and not 256 for better API consistency
 - Task name max length is now 128 chars and not 256 for better API consistency
 - Platform name max length is now 128 chars and not 256 for better API consistency
+- Webhooks payloads are now exactly the same as any of the API response objects
 - Added new locale: Marathi -mr (@spielers)
 - New and consistent response format for all API object + new response examples in the docs
   - Removed user roles attribute from user object (can be fetched from /v1/teams/memberships) **
@@ -58,6 +62,7 @@
 
 ## Bug Fixes
 
+- Fixed a bug that caused blocked users to be able to create sessions ([#777](https://github.com/appwrite/appwrite/pull/781))
 - Fixed an issue where Special characters in _APP_OPENSSL_KEY_V1_ env caused an error ([#732](https://github.com/appwrite/appwrite/issues/732))
 - Fixed an issue where Account webhook doesn't trigger through the console ([#493](https://github.com/appwrite/appwrite/issues/493))
 - Fixed case sensitive country flag code ([#526](https://github.com/appwrite/appwrite/issues/526))

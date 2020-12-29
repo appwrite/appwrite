@@ -667,7 +667,6 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception('Failed saving execution to DB', 500);
         }
     
-        // Issue a TLS certificate when domain is verified
         Resque::enqueue('v1-functions', 'FunctionsV1', [
             'projectId' => $project->getId(),
             'functionId' => $function->getId(),

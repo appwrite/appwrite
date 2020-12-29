@@ -8,5 +8,5 @@ RUN mkdir /usr/local/src
 
 WORKDIR /usr/local/src/
 
-ENV GEM_PATH=/usr/local/src/.appwrite/2.1.0
+ENV GEM_PATH=/usr/local/src/.appwrite
 ENV GEM_SPEC_CACHE=/usr/local/src/.appwrite/specs
