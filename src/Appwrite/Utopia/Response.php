@@ -293,6 +293,10 @@ class Response extends SwooleResponse
                         }
 
                         $item = $this->output($item, $rule['type']);
+                        // If filter is set, parse the item
+                        if(self::isFilter()){
+                            $item = self::getFilter()->parse($item, $rule['type']);
+                        }
                     }
                 }
             }
