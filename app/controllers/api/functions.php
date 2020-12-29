@@ -2,6 +2,7 @@
 
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
+use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Validator\UID;
 use Appwrite\Storage\Storage;
 use Appwrite\Storage\Validator\File;
@@ -18,6 +19,7 @@ use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Config\Config;
 use Cron\CronExpression;
+use Utopia\Exception;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -33,6 +35,7 @@ App::post('/v1/functions')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
+    ->param('execute', [], new ArrayList(new Text(64)), 'An array of strings with execution permissions. By default no user is granted with any execute permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('env', '', new WhiteList(array_keys(Config::getParam('environments')), true), 'Execution enviornment.')
     ->param('vars', [], new Assoc(), 'Key-value JSON object.', true)
     ->param('events', [], new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)), 'Events list.', true)
@@ -40,12 +43,13 @@ App::post('/v1/functions')
     ->param('timeout', 15, new Range(1, 900), 'Function maximum execution time in seconds.', true)
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($name, $env, $vars, $events, $schedule, $timeout, $response, $projectDB) {
+    ->action(function ($name, $execute, $env, $vars, $events, $schedule, $timeout, $response, $projectDB) {
         $function = $projectDB->createDocument([
             '$collection' => Database::SYSTEM_COLLECTION_FUNCTIONS,
             '$permissions' => [
                 'read' => [],
                 'write' => [],
+                'execute' => $execute,
             ],
             'dateCreated' => time(),
             'dateUpdated' => time(),
@@ -613,7 +617,7 @@ App::post('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('Create Execution')
     ->label('scope', 'functions.write')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'createExecution')
     ->label('sdk.description', '/docs/references/functions/create-execution.md')
@@ -630,6 +634,8 @@ App::post('/v1/functions/:functionId/executions')
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
 
+        Authorization::disable();
+
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
@@ -645,11 +651,17 @@ App::post('/v1/functions/:functionId/executions')
         if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
             throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
         }
-        
+
+        $validator = new Authorization($function, 'execute');
+
+        if (!$validator->isValid($function->getPermissions())) { // Check if user has write access to execute function
+            throw new Exception($validator->getDescription(), 401);
+        }
+
         $execution = $projectDB->createDocument([
             '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
             '$permissions' => [
-                'read' => [],
+                'read' => $function->getPermissions(),
                 'write' => [],
             ],
             'dateCreated' => time(),
@@ -661,6 +673,8 @@ App::post('/v1/functions/:functionId/executions')
             'stderr' => '',
             'time' => 0,
         ]);
+
+        Authorization::reset();
 
         if (false === $execution) {
             throw new Exception('Failed saving execution to DB', 500);
@@ -683,7 +697,7 @@ App::get('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('List Executions')
     ->label('scope', 'functions.read')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'listExecutions')
     ->label('sdk.description', '/docs/references/functions/list-executions.md')
@@ -724,7 +738,7 @@ App::get('/v1/functions/:functionId/executions/:executionId')
     ->groups(['api', 'functions'])
     ->desc('Get Execution')
     ->label('scope', 'functions.read')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getExecution')
     ->label('sdk.description', '/docs/references/functions/get-execution.md')
