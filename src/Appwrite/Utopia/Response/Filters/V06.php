@@ -25,6 +25,10 @@ class V06 extends Filter {
                 $parsedResponse = $this->parseCollection($content);
                 break;
 
+            case Response::MODEL_COLLECTION_LIST:
+                $parsedResponse = $this->parseCollectionList($content);
+                break;
+
             case Response::MODEL_FILE :
                 $parsedResponse = $this->parseFile($content);
                 break;
@@ -102,6 +106,14 @@ class V06 extends Filter {
         }
 
         return $parsedResponse;
+    }
+
+    private function parseCollectionList(array $content)
+    {
+        foreach($content['collections'] as $key => $collection){
+            $content['collections'][$key] = $this->parseCollection($collection);
+        }
+        return $content;
     }
 
     private function parseCollection(array $content)
