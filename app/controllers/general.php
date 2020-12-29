@@ -16,11 +16,22 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Storage\Device\Local;
 use Appwrite\Storage\Storage;
+use Appwrite\Utopia\Response\Filter;
+use Appwrite\Utopia\Response\Filter\V06;
 use Utopia\CLI\Console;
 
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
+
+function mapResponseFormatToClass(string $responseFormat): Filter {
+    switch($responseFormat) {
+        case preg_match($responseFormat, "/0\.[0-6]\.\d/"):
+            return new V06();
+        default:
+            return null;
+    }
+}
 
 App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $events, $audits, $usage, $deletes, $clients) {
     /** @var Utopia\Swoole\Request $request */
@@ -91,6 +102,18 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
 
     Storage::setDevice('files', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
     Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId()));
+
+    /* 
+    * Response format
+    */
+    $responseFormatEnvVar = App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', '');
+    $responseFormatHeader = $request->getHeader('x-appwrite-response-format', '');
+    $responseFormat = empty($responseFormatHeader) ? $responseFormatEnvVar : $responseFormatHeader;
+    if (empty($responseFormat) || ($filter = mapResponseFormatToClass($responseFormat)) == null) {
+        throw new Exception('No filter available for response format : '.$responseFormat, 404);
+    } else {
+        Response::setFilter($filter);   
+    }
 
     /*
      * Security Headers
