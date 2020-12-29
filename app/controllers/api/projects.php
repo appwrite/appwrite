@@ -114,6 +114,7 @@ App::get('/v1/projects')
         $results = $consoleDB->getCollection([
             'limit' => $limit,
             'offset' => $offset,
+            'orderType' => $orderType,
             'search' => $search,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_PROJECTS,
