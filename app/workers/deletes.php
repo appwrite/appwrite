@@ -238,7 +238,6 @@ class DeletesV1
             $projects = $this->getConsoleDB()->getCollection([
                 'limit' => $limit,
                 'offset' => $count,
-                'orderField' => '$id',
                 'orderType' => 'ASC',
                 'orderCast' => 'string',
                 'filters' => [

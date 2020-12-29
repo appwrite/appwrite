@@ -50,7 +50,7 @@ $cli
     ->desc('Schedules maintenance tasks and publishes them to resque')
     ->action(function () {
         // # of days in seconds (1 day = 86400s)
-        $interval = App::getEnv('_APP_MAINTENANCE_INTERVAL', '') + 0;
+        $interval = (int) App::getEnv('_APP_MAINTENANCE_INTERVAL', '86400');
         //Convert Seconds to microseconds
         $intervalMicroseconds = $interval * 1000000;
 
