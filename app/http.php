@@ -23,6 +23,7 @@ error_reporting(E_ALL);
 $http = new Server("0.0.0.0", 80);
 
 $payloadSize = max(4000000 /* 4mb */, App::getEnv('_APP_STORAGE_LIMIT', 10000000 /* 10mb */));
+$responseFormat = App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', null);
 
 $http
     ->set([
@@ -48,6 +49,12 @@ $http->on('AfterReload', function($serv, $workerId) {
 });
 
 $http->on('start', function (Server $http) use ($payloadSize) {
+
+    if(empty($responseFormat)) {
+        Console::error('Missing value for environment variable _APP_SYSTEM_RESPONSE_FORMAT. Exiting ...');
+        exit(1);
+    }
+
     Console::success('Server started succefully (max payload is '.number_format($payloadSize).' bytes)');
 
     Console::info("Master pid {$http->master_pid}, manager pid {$http->manager_pid}");

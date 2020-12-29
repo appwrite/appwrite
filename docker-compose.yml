@@ -102,6 +102,7 @@ services:
       - _APP_STORAGE_LIMIT
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_FUNCTIONS_CONTAINERS
+      - _APP_SYSTEM_RESPONSE_FORMAT
 
   appwrite-worker-usage:
     entrypoint: worker-usage
