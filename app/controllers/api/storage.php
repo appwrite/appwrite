@@ -425,10 +425,9 @@ App::get('/v1/storage/files/:fileId/view')
     ->label('sdk.response.type', '*/*')
     ->label('sdk.methodType', 'location')
     ->param('fileId', '', new UID(), 'File unique ID.')
-    ->param('as', '', new WhiteList(['pdf', /*'html',*/ 'text'], true), 'Choose a file format to convert your file to. Currently you can only convert word and pdf files to pdf or txt. This option is currently experimental only, use at your own risk.', true)
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($fileId, $as, $response, $projectDB) {
+    ->action(function ($fileId, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
@@ -469,13 +468,6 @@ App::get('/v1/storage/files/:fileId/view')
 
         $output = $compressor->decompress($source);
         $fileName = $file->getAttribute('name', '');
-
-        $contentTypes = [
-            'pdf' => 'application/pdf',
-            'text' => 'text/plain',
-        ];
-
-        $contentType = (\array_key_exists($as, $contentTypes)) ? $contentTypes[$as] : $contentType;
 
         // Response
         $response
