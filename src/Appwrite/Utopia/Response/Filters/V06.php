@@ -21,6 +21,10 @@ class V06 extends Filter {
 
         switch($model) {            
 
+            case Response::MODEL_DOCUMENT_LIST:
+                $parsedResponse = $content; 
+                break;
+
             case Response::MODEL_COLLECTION:
                 $parsedResponse = $this->parseCollection($content);
                 break;
