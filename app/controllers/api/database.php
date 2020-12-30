@@ -115,6 +115,7 @@ App::get('/v1/database/collections')
         $results = $projectDB->getCollection([
             'limit' => $limit,
             'offset' => $offset,
+            'orderType' => $orderType,
             'search' => $search,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_COLLECTIONS,
