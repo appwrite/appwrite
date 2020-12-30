@@ -545,6 +545,7 @@ App::delete('/v1/users/:userId')
         }
 
         $deletes
+            ->setParam('type', DELETE_TYPE_DOCUMENT)
             ->setParam('document', $user)
         ;
 

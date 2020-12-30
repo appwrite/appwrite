@@ -169,4 +169,10 @@ return [
         'required' => false,
         'question' => '',
     ],
+    [
+        'name' => '_APP_MAINTENANCE_INTERVAL',
+        'default' => '86400',
+        'required' => false,
+        'question' => '',
+    ],
 ];

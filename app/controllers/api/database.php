@@ -265,6 +265,7 @@ App::delete('/v1/database/collections/:collectionId')
         }
 
         $deletes
+            ->setParam('type', DELETE_TYPE_DOCUMENT)
             ->setParam('document', $collection)
         ;
 
