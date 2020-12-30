@@ -47,8 +47,6 @@ App::post('/v1/functions')
         $function = $projectDB->createDocument([
             '$collection' => Database::SYSTEM_COLLECTION_FUNCTIONS,
             '$permissions' => [
-                'read' => [],
-                'write' => [],
                 'execute' => $execute,
             ],
             'dateCreated' => time(),
@@ -263,13 +261,14 @@ App::put('/v1/functions/:functionId')
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
+    ->param('execute', [], new ArrayList(new Text(64)), 'An array of strings with execution permissions. By default no user is granted with any execute permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('vars', [], new Assoc(), 'Key-value JSON object.', true)
     ->param('events', [], new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)), 'Events list.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, 900), 'Function maximum execution time in seconds.', true)
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($functionId, $name, $vars, $events, $schedule, $timeout, $response, $projectDB) {
+    ->action(function ($functionId, $name, $execute, $vars, $events, $schedule, $timeout, $response, $projectDB) {
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
@@ -280,6 +279,9 @@ App::put('/v1/functions/:functionId')
         $next = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : null;
 
         $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
+            '$permissions' => [
+                'execute' => $execute,
+            ],
             'dateUpdated' => time(),
             'name' => $name,
             'vars' => $vars,
