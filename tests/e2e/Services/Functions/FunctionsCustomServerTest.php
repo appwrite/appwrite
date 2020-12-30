@@ -680,6 +680,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $executionId = $execution['body']['$id'] ?? '';
+        
         $this->assertEquals(201, $execution['headers']['status-code']);
 
         sleep(15);

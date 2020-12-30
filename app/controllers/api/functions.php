@@ -618,7 +618,7 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
 App::post('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('Create Execution')
-    ->label('scope', 'functions.write')
+    ->label('scope', 'execution.write')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'createExecution')
@@ -654,16 +654,20 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
         }
 
+        Authorization::reset();
+
         $validator = new Authorization($function, 'execute');
 
         if (!$validator->isValid($function->getPermissions())) { // Check if user has write access to execute function
             throw new Exception($validator->getDescription(), 401);
         }
 
+        Authorization::disable();
+
         $execution = $projectDB->createDocument([
             '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
             '$permissions' => [
-                'read' => $function->getPermissions(),
+                'read' => $function->getPermissions()['execute'] ?? [],
                 'write' => [],
             ],
             'dateCreated' => time(),
@@ -698,7 +702,7 @@ App::post('/v1/functions/:functionId/executions')
 App::get('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('List Executions')
-    ->label('scope', 'functions.read')
+    ->label('scope', 'execution.read')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'listExecutions')
@@ -740,7 +744,7 @@ App::get('/v1/functions/:functionId/executions')
 App::get('/v1/functions/:functionId/executions/:executionId')
     ->groups(['api', 'functions'])
     ->desc('Get Execution')
-    ->label('scope', 'functions.read')
+    ->label('scope', 'execution.read')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getExecution')
