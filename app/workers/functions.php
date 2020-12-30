@@ -489,15 +489,6 @@ class FunctionsV1
         if(\count($list) > $max) {
             Console::info('Starting containers cleanup');
 
-            // $sorted = [];
-            
-            // foreach($list as $env) {
-            //     $sorted[] = [
-            //         'name' => $env['name'],
-            //         'created' => (int)($env['appwrite-created'] ?? 0)
-            //     ];
-            // }
-
             \usort($list, function ($item1, $item2) {
                 return (int)($item1['appwrite-created'] ?? 0) <=> (int)($item2['appwrite-created'] ?? 0);
             });
