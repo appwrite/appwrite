@@ -114,17 +114,17 @@ For the complete API documentation, visit [https://appwrite.io/docs](https://app
 Below is a list of currently supported platforms and languages. If you wish to help us add support to your platform of choice, you can go over to our [SDK Generator](https://github.com/appwrite/sdk-generator) project and view our [contribution guide](https://github.com/appwrite/sdk-generator/blob/master/CONTRIBUTING.md).
 
 #### Client
-* ✅  [Web](https://github.com/appwrite/sdk-for-js) (Maintained by the Appwrite Team)
-* ✅  [Flutter](https://github.com/appwrite/sdk-for-flutter) (Maintained by the Appwrite Team)
+* ✅  &nbsp; [Web](https://github.com/appwrite/sdk-for-js) (Maintained by the Appwrite Team)
+* ✅  &nbsp; [Flutter](https://github.com/appwrite/sdk-for-flutter) (Maintained by the Appwrite Team)
 
 #### Server
-* ✅  [NodeJS](https://github.com/appwrite/sdk-for-node) (Maintained by the Appwrite Team)
-* ✅  [PHP](https://github.com/appwrite/sdk-for-php) (Maintained by the Appwrite Team)
-* ✅  [Deno](https://github.com/appwrite/sdk-for-deno) - **Beta** (Maintained by the Appwrite Team)
-* ✅  [Ruby](https://github.com/appwrite/sdk-for-ruby) - **Beta** (Maintained by the Appwrite Team)
-* ✅  [Python](https://github.com/appwrite/sdk-for-python) - **Beta** (Maintained by the Appwrite Team)
-* ✅  [Go](https://github.com/appwrite/sdk-for-go) **Work in progress** (Maintained by the Appwrite Team)
-* ✅  [Dart](https://github.com/appwrite/sdk-for-dart) **Work in progress** (Maintained by the Appwrite Team)
+* ✅  &nbsp; [NodeJS](https://github.com/appwrite/sdk-for-node) (Maintained by the Appwrite Team)
+* ✅  &nbsp; [PHP](https://github.com/appwrite/sdk-for-php) (Maintained by the Appwrite Team)
+* ✅  &nbsp; [Deno](https://github.com/appwrite/sdk-for-deno) - **Beta** (Maintained by the Appwrite Team)
+* ✅  &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby) - **Beta** (Maintained by the Appwrite Team)
+* ✅  &nbsp; [Python](https://github.com/appwrite/sdk-for-python) - **Beta** (Maintained by the Appwrite Team)
+* ✅  &nbsp; [Go](https://github.com/appwrite/sdk-for-go) **Work in progress** (Maintained by the Appwrite Team)
+* ✅  &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart) **Work in progress** (Maintained by the Appwrite Team)
 
 Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
 
