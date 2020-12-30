@@ -16,8 +16,8 @@ class V06 extends Filter {
     
     // Convert 0.7 Data format to 0.6 format
     public function parse(array $content, string $model): array {
-
-        $parsedResponse = array();
+        
+        $parsedResponse = [];
 
         switch($model) {            
 
