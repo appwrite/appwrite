@@ -24,15 +24,6 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-function mapResponseFormatToClass(string $responseFormat): Filter {
-    switch($responseFormat) {
-        case preg_match($responseFormat, "/0\.[0-6]\.\d?/"):
-            return new V06();
-        default:
-            return null;
-    }
-}
-
 App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $events, $audits, $usage, $deletes, $clients) {
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
@@ -108,14 +99,15 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     /* 
     * Response format
     */
-    $responseFormatEnvVar = App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', '');
-    $responseFormatHeader = $request->getHeader('x-appwrite-response-format', '');
-    $responseFormat = empty($responseFormatHeader) ? $responseFormatEnvVar : $responseFormatHeader;
-    if (empty($responseFormat) || ($filter = mapResponseFormatToClass($responseFormat)) == null) {
-        throw new Exception('No filter available for response format : '.$responseFormat, 404);
-    } else {
-        Response::setFilter($filter);   
+    $responseFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+    switch($responseFormat) {
+        case version_compare ($responseFormat , '0.6.2', '=<') :
+            Response::setFilter(new V06());
+            break;
+        default:
+            throw new Exception('No filter available for response format : '.$responseFormat, 404);
     }
+    
 
     /*
      * Security Headers
