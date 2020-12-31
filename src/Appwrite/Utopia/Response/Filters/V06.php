@@ -176,7 +176,7 @@ class V06 extends Filter {
         $countries = $content['countries'];
         $parsedResponse = [];
         foreach($countries as $country) {
-            $parsedResponse['code'] = $country['name'];
+            $parsedResponse[$country['code']] = $country['name'];
         }
 
         return $parsedResponse;

@@ -233,5 +233,54 @@ class V06Test extends TestCase
 
         $model = Response::MODEL_TOKEN;
         $parsedResponse = $this->filter->parse($content, $model);
+
+        $this->assertEquals($parsedResponse['$id'], 'bb8ea5c16897e');
+        $this->assertEquals($parsedResponse['userId'], '5e5ea5c168bb8');
+        $this->assertEquals($parsedResponse['expire'], 1592981250);
+        $this->assertEquals($parsedResponse['secret'], '');
+        $this->assertEquals($parsedResponse['type'], Auth::TOKEN_TYPE_RECOVERY);
+    }
+
+    public function testParseLocale()
+    {
+        $content = [
+            'ip' => '127.0.0.1',
+            'countryCode' => 'US',
+            'country' => 'United States',
+            'continentCode' => 'NA',
+            'continent' => 'North America',
+            'eu' => false,
+            'currency' => 'USD'
+        ];
+
+        $model = Response::MODEL_LOCALE;
+        $parsedResponse = $this->filter->parse($content, $model);
+
+        $this->assertEquals($parsedResponse['ip'], '127.0.0.1');
+        $this->assertEquals($parsedResponse['contryCode'], 'US');
+        $this->assertEquals($parsedResponse['country'], 'United States');
+        $this->assertEquals($parsedResponse['continentCode'], 'NA');
+        $this->assertEquals($parsedResponse['continent'], 'North America');
+        $this->assertEquals($parsedResponse['eu'], false);
+        $this->assertEquals($parsedResponse['currency'], 'USD');
+    }
+
+    public function testParseCountryList()
+    {
+        $content = [
+            'sum' => 1,
+            'countries' => [
+                0 => [
+                    'name' => 'United States',
+                    'code' => 'US'
+                ]
+            ]
+        ];
+
+        $model = Response::MODEL_COUNTRY_LIST;
+        $parsedResponse = $this->filter->parse($content, $model);
+
+        $this->assertEquals($parsedResponse['sum'], 1);
+        $this->assertEquals($parsedResponse['countries']['US'], 'United States');
     }
 }
