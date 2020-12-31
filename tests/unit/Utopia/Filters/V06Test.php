@@ -418,5 +418,31 @@ class V06Test extends TestCase
     public function testParseCollectionList()
     {
 
+        $content = [
+            'sum' => 1,
+            'collections' => [
+                0 => [
+                    '$id' => '5e5ea5c16897e',
+                    '$permissions' => ['read' => ['*'], 'write' => ['*']],
+                    'name' => 'Movies',
+                    'dateCreated' => 1592981250,
+                    'dateUpdated' => '5d529fd02b544198ae075bd57c1762bb',
+                    'rules' => []
+                ]
+            ]
+        ];
+
+        $model = Response::MODEL_COLLECTION_LIST;
+        $parsedResponse = $this->filter->parse($content, $model);
+
+        $this->assertEquals($parsedResponse['sum'], 1);
+        $this->assertEquals($parsedResponse['collections'][0]['$id'], '5e5ea5c16897e');
+        $this->assertEquals($parsedResponse['collections'][0]['$permissions'], ['read' => ['*'], 'write' => ['*']]);
+        $this->assertEquals($parsedResponse['collections'][0]['name'], 'Movies');
+        $this->assertEquals($parsedResponse['collections'][0]['dateCreated'], 1592981250);
+        $this->assertEquals($parsedResponse['collections'][0]['dateUpdated'], '5d529fd02b544198ae075bd57c1762bb');
+        $this->assertEquals($parsedResponse['collections'][0]['rules'], []);
+        $this->assertEquals($parsedResponse['collections'][0]['$collection'], Database::SYSTEM_COLLECTION_COLLECTIONS);
+        $this->assertEquals($parsedResponse['collections'][0]['structure'], true);
     }
 }
