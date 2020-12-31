@@ -3,7 +3,9 @@
 namespace Appwrite\Tests;
 
 use Appwrite\Auth\Auth;
+use Appwrite\Database\Database;
 use Appwrite\Database\Validator\Authorization;
+use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filter\V06;
 use PHPUnit\Framework\TestCase;
@@ -282,5 +284,139 @@ class V06Test extends TestCase
 
         $this->assertEquals($parsedResponse['sum'], 1);
         $this->assertEquals($parsedResponse['countries']['US'], 'United States');
+    }
+
+    public function testParsePhoneList()
+    {
+        $content = [
+            'sum' => 1,
+            'phones' => [
+                0 => [
+                    'code' => '+1',
+                    'countryCode' => 'US',
+                    'countryName' => 'United States'
+                ]
+            ]
+        ];
+
+        $model = Response::MODEL_PHONE_LIST;
+        $parsedResponse = $this->filter->parse($content, $model);
+
+        $this->assertEquals($parsedResponse['sum'], 1);
+        $this->assertEquals($parsedResponse['phones']['US'], '+1');
+    }
+
+    public function testParseContinentList()
+    {
+        $content = [
+            'sum' => 1,
+            'continents' => [
+                0 => [
+                    'name' => 'Europe',
+                    'code' => 'EU',
+                ]
+            ]
+        ];
+
+        $model = Response::MODEL_CONTINENT_LIST;
+        $parsedResponse = $this->filter->parse($content, $model);
+
+        $this->assertEquals($parsedResponse['sum'], 1);
+        $this->assertEquals($parsedResponse['continents']['EU'], 'Europe');   
+    }
+
+    public function testParseCurrencyList()
+    {
+        $content = [
+            'sum' => 1,
+            'currencies' => [
+                0 => [
+                    'symbol' => '$',
+                    'name' => 'US dollar',
+                    'symbolNative' => '$',
+                    'decimalDigits' => 2,
+                    'rounding' => 0,
+                    'code' => 'USD',
+                    'namePlural' => 'US Dollars' 
+                ]
+            ]
+        ];
+
+        $model = Response::MODEL_CURRENCY_LIST;
+        $parsedResponse = $this->filter->parse($content, $model);
+
+        $this->assertEquals($parsedResponse['sum'], 1);
+        $this->assertEquals($parsedResponse['currencies'][0]['symbol'], '$'); 
+        $this->assertEquals($parsedResponse['currencies'][0]['name'], 'US dollar'); 
+        $this->assertEquals($parsedResponse['currencies'][0]['symbolNative'], '$'); 
+        $this->assertEquals($parsedResponse['currencies'][0]['decimalDigits'], 2); 
+        $this->assertEquals($parsedResponse['currencies'][0]['rounding'], 0); 
+        $this->assertEquals($parsedResponse['currencies'][0]['code'], 'USD');
+        $this->assertEquals($parsedResponse['currencies'][0]['namePlural'], 'US Dollars');
+        $this->assertEquals($parsedResponse['currencies'][0]['locations'], []);  
+    }
+
+    public function testParseFile()
+    {
+        $content = [
+            '$id' => '5e5ea5c16897e',
+            '$permissions' => ['read' => ['*'], 'write' => ['*']],
+            'name' => 'Pink.png',
+            'dateCreated' => 1592981250,
+            'signature' => '5d529fd02b544198ae075bd57c1762bb',
+            'mimeType' => 'image/png',
+            'sizeOriginal' => 17890
+        ];
+
+        $model = Response::MODEL_FILE;
+        $parsedResponse = $this->filter->parse($content, $model);
+
+        $this->assertEquals($parsedResponse['$id'], '5e5ea5c16897e');
+        $this->assertEquals($parsedResponse['$permissions'], ['read' => ['*'], 'write' => ['*']]);
+        $this->assertEquals($parsedResponse['name'], 'Pink.png');
+        $this->assertEquals($parsedResponse['dateCreated'], 1592981250);
+        $this->assertEquals($parsedResponse['signature'], '5d529fd02b544198ae075bd57c1762bb');
+        $this->assertEquals($parsedResponse['mimeType'], 'image/png');
+        $this->assertEquals($parsedResponse['sizeOriginal'], 17890);
+        $this->assertEquals($parsedResponse['$collection'], Database::SYSTEM_COLLECTION_FILES);
+        $this->assertEquals($parsedResponse['algorithm'], 'gzip');
+        $this->assertEquals($parsedResponse['comment'], '');
+        $this->assertEquals($parsedResponse['fileOpenSSLCipher'], OpenSSL::CIPHER_AES_128_GCM);
+        $this->assertEquals($parsedResponse['fileOpenSSLIV'], '');
+        $this->assertEquals($parsedResponse['fileOpenSSLTag'], '');
+        $this->assertEquals($parsedResponse['fileOpenSSLVersion'], '');
+        $this->assertEquals($parsedResponse['folderId'], '');
+        $this->assertEquals($parsedResponse['path'], '');
+        $this->assertEquals($parsedResponse['sizeActual'], $content['sizeOriginal']);
+        $this->assertEquals($parsedResponse['token'], '');
+    }
+
+    public function testParseCollection()
+    {
+        $content = [
+            '$id' => '5e5ea5c16897e',
+            '$permissions' => ['read' => ['*'], 'write' => ['*']],
+            'name' => 'Movies',
+            'dateCreated' => 1592981250,
+            'dateUpdated' => '5d529fd02b544198ae075bd57c1762bb',
+            'rules' => []
+        ];
+
+        $model = Response::MODEL_COLLECTION;
+        $parsedResponse = $this->filter->parse($content, $model);
+
+        $this->assertEquals($parsedResponse['$id'], '5e5ea5c16897e');
+        $this->assertEquals($parsedResponse['$permissions'], ['read' => ['*'], 'write' => ['*']]);
+        $this->assertEquals($parsedResponse['name'], 'Movies');
+        $this->assertEquals($parsedResponse['dateCreated'], 1592981250);
+        $this->assertEquals($parsedResponse['dateUpdated'], '5d529fd02b544198ae075bd57c1762bb');
+        $this->assertEquals($parsedResponse['rules'], []);
+        $this->assertEquals($parsedResponse['$collection'], Database::SYSTEM_COLLECTION_COLLECTIONS);
+        $this->assertEquals($parsedResponse['structure'], true);
+    }
+
+    public function testParseCollectionList()
+    {
+
     }
 }

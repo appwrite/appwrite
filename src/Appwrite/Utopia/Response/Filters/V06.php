@@ -146,7 +146,15 @@ class V06 extends Filter {
     private function parseCurrencyList(array  $content) 
     {
         $content['locations'] = [];
-        return $content;
+
+        $currencies = $content['currencies'];
+        $parsedResponse = [];
+        foreach($currencies as $currency) {
+            $currency['locations'] = [];
+            $parsedResponse[] = $currency;
+        }
+
+        return $parsedResponse;
     }
 
     private function parseContinentList(array $content)
@@ -154,7 +162,7 @@ class V06 extends Filter {
         $continents = $content['continents'];
         $parsedResponse = [];
         foreach($continents as $continent) {
-            $parsedResponse['code'] = $continent['name'];
+            $parsedResponse[$continent['code']] = $continent['name'];
         }
 
         return $parsedResponse;
@@ -165,7 +173,7 @@ class V06 extends Filter {
         $phones = $content['phones'];
         $parsedResponse = [];
         foreach($phones as $phone) {
-            $parsedResponse['countryCode'] = $phone['code'];
+            $parsedResponse[$phone['countryCode']] = $phone['code'];
         }
 
         return $parsedResponse;
@@ -204,9 +212,8 @@ class V06 extends Filter {
     {
         $logs = $content['logs'];
         $parsedResponse = [];
-        $index = 0;
         foreach($logs as $log) {
-            $parsedResponse[$index++] = [
+            $parsedResponse[] = [
                 'event' => $log['event'],
                 'ip' => $log['ip'],
                 'time' => strtotime($log['time']),
@@ -228,9 +235,8 @@ class V06 extends Filter {
     {
         $sessions = $content['sessions'];
         $parsedResponse = [];
-        $index = 0;
         foreach($sessions as $session) {
-            $parsedResponse[$index++] = [
+            $parsedResponse[] = [
                 '$id' => $session['$id'],
                 'OS' => $session['osName'].' '.$session['osVersion'],
                 'client' => $session['clientName'].' '.$session['clientVersion'],
