@@ -1,1 +1,1 @@
-Update user preferences by its unique ID. You can pass only the specific settings you wish to update.
+Update the user preferences by its unique ID. You can pass only the specific settings you wish to update.

@@ -115,8 +115,9 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         if(App::isDevelopment()) {
             $swooleResponse->end('error: '.$th->getMessage());
         }
-        
-        $swooleResponse->end('500: Server Error');
+        else {
+            $swooleResponse->end('500: Server Error');
+        }
     }
 });
 

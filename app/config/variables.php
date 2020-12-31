@@ -151,4 +151,28 @@ return [
         'required' => false,
         'question' => '',
     ],
+    [
+        'name' => '_APP_FUNCTIONS_CPUS',
+        'default' => '1',
+        'required' => false,
+        'question' => '',
+    ],
+    [
+        'name' => '_APP_FUNCTIONS_MEMORY',
+        'default' => '128',
+        'required' => false,
+        'question' => '',
+    ],
+    [
+        'name' => '_APP_FUNCTIONS_MEMORY_SWAP',
+        'default' => '128',
+        'required' => false,
+        'question' => '',
+    ],
+    [
+        'name' => '_APP_MAINTENANCE_INTERVAL',
+        'default' => '86400',
+        'required' => false,
+        'question' => '',
+    ],
 ];

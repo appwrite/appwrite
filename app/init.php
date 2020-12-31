@@ -4,7 +4,7 @@
  * Init
  * 
  * Initializes both Appwrite API entry point, queue workers, and CLI tasks.
- * Set configuration, framework resources, app constants
+ * Set configuration, framework resources & app constants
  * 
  */
 if (\file_exists(__DIR__.'/../vendor/autoload.php')) {
@@ -37,7 +37,7 @@ const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
 const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
-const APP_CACHE_BUSTER = 141;
+const APP_CACHE_BUSTER = 142;
 const APP_VERSION_STABLE = '0.7.0';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
@@ -52,7 +52,12 @@ const APP_SOCIAL_INSTAGRAM = 'https://www.instagram.com/appwrite.io';
 const APP_SOCIAL_GITHUB = 'https://github.com/appwrite';
 const APP_SOCIAL_DISCORD = 'https://appwrite.io/discord';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
-const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
+const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite'; 
+// Deletion Types
+const DELETE_TYPE_DOCUMENT = 'document';
+const DELETE_TYPE_EXECUTIONS = 'executions';
+const DELETE_TYPE_AUDIT = 'audit';
+const DELETE_TYPE_ABUSE = 'abuse';
 
 $register = new Registry();
 
@@ -298,19 +303,19 @@ App::setResource('events', function($register) {
 }, ['register']);
 
 App::setResource('audits', function($register) {
-    return new Event('v1-audits', 'AuditsV1');
+    return new Event(Event::AUDITS_QUEUE_NAME, Event::AUDITS_CLASS_NAME);
 }, ['register']);
 
 App::setResource('usage', function($register) {
-    return new Event('v1-usage', 'UsageV1');
+    return new Event(Event::USAGE_QUEUE_NAME, Event::USAGE_CLASS_NAME);
 }, ['register']);
 
 App::setResource('mails', function($register) {
-    return new Event('v1-mails', 'MailsV1');
+    return new Event(Event::MAILS_QUEUE_NAME, Event::MAILS_CLASS_NAME);
 }, ['register']);
 
 App::setResource('deletes', function($register) {
-    return new Event('v1-deletes', 'DeletesV1');
+    return new Event(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME);
 }, ['register']);
 
 // Test Mock

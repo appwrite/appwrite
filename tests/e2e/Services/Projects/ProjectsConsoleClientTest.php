@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\Teams;
+namespace Tests\E2E\Services\Projects;
 
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectConsole;

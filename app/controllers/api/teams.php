@@ -34,6 +34,9 @@ App::post('/v1/teams')
     ->label('sdk.response.model', Response::MODEL_TEAM)
     ->param('name', null, new Text(128), 'Team name. Max length: 128 chars.')
     ->param('roles', ['owner'], new ArrayList(new Key()), 'Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.', true)
+    ->inject('response')
+    ->inject('user')
+    ->inject('projectDB')
     ->action(function ($name, $roles, $response, $user, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
@@ -91,7 +94,7 @@ App::post('/v1/teams')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($team, Response::MODEL_TEAM)
         ;
-    }, ['response', 'user', 'projectDB']);
+    });
 
 App::get('/v1/teams')
     ->desc('List Teams')
@@ -108,6 +111,8 @@ App::get('/v1/teams')
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->inject('response')
+    ->inject('projectDB')
     ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -126,7 +131,7 @@ App::get('/v1/teams')
             'sum' => $projectDB->getSum(),
             'teams' => $results
         ]), Response::MODEL_TEAM_LIST);
-    }, ['response', 'projectDB']);
+    });
 
 App::get('/v1/teams/:teamId')
     ->desc('Get Team')
@@ -140,6 +145,8 @@ App::get('/v1/teams/:teamId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TEAM)
     ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->inject('response')
+    ->inject('projectDB')
     ->action(function ($teamId, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -151,7 +158,7 @@ App::get('/v1/teams/:teamId')
         }
 
         $response->dynamic($team, Response::MODEL_TEAM);
-    }, ['response', 'projectDB']);
+    });
 
 App::put('/v1/teams/:teamId')
     ->desc('Update Team')
@@ -167,6 +174,8 @@ App::put('/v1/teams/:teamId')
     ->label('sdk.response.model', Response::MODEL_TEAM)
     ->param('teamId', '', new UID(), 'Team unique ID.')
     ->param('name', null, new Text(128), 'Team name. Max length: 128 chars.')
+    ->inject('response')
+    ->inject('projectDB')
     ->action(function ($teamId, $name, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -186,7 +195,7 @@ App::put('/v1/teams/:teamId')
         }
         
         $response->dynamic($team, Response::MODEL_TEAM);
-    }, ['response', 'projectDB']);
+    });
 
 App::delete('/v1/teams/:teamId')
     ->desc('Delete Team')
@@ -201,6 +210,9 @@ App::delete('/v1/teams/:teamId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('events')
     ->action(function ($teamId, $response, $projectDB, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -236,7 +248,7 @@ App::delete('/v1/teams/:teamId')
         ;
 
         $response->noContent();
-    }, ['response', 'projectDB', 'events']);
+    });
 
 App::post('/v1/teams/:teamId/memberships')
     ->desc('Create Team Membership')
@@ -255,6 +267,13 @@ App::post('/v1/teams/:teamId/memberships')
     ->param('name', '', new Text(128), 'New team member name. Max length: 128 chars.', true)
     ->param('roles', [], new ArrayList(new Key()), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add our own built-in confirm page
+    ->inject('response')
+    ->inject('project')
+    ->inject('user')
+    ->inject('projectDB')
+    ->inject('locale')
+    ->inject('audits')
+    ->inject('mails')
     ->action(function ($teamId, $email, $name, $roles, $url, $response, $project, $user, $projectDB, $locale, $audits, $mails) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
@@ -431,7 +450,7 @@ App::post('/v1/teams/:teamId/memberships')
                 'name' => $name,
             ])), Response::MODEL_MEMBERSHIP)
         ;
-    }, ['response', 'project', 'user', 'projectDB', 'locale', 'audits', 'mails']);
+    });
 
 App::get('/v1/teams/:teamId/memberships')
     ->desc('Get Team Memberships')
@@ -449,6 +468,8 @@ App::get('/v1/teams/:teamId/memberships')
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->inject('response')
+    ->inject('projectDB')
     ->action(function ($teamId, $search, $limit, $offset, $orderType, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -469,7 +490,6 @@ App::get('/v1/teams/:teamId/memberships')
                 'teamId='.$teamId,
             ],
         ]);
-
         $users = [];
 
         foreach ($memberships as $membership) {
@@ -483,7 +503,7 @@ App::get('/v1/teams/:teamId/memberships')
         }
 
         $response->dynamic(new Document(['sum' => $projectDB->getSum(), 'memberships' => $users]), Response::MODEL_MEMBERSHIP_LIST);
-    }, ['response', 'projectDB']);
+    });
 
 App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
     ->desc('Update Team Membership Status')
@@ -501,6 +521,12 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
     ->param('inviteId', '', new UID(), 'Invite unique ID.')
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('secret', '', new Text(256), 'Secret key.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('user')
+    ->inject('projectDB')
+    ->inject('geodb')
+    ->inject('audits')
     ->action(function ($teamId, $inviteId, $userId, $secret, $request, $response, $user, $projectDB, $geodb, $audits) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
@@ -663,7 +689,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
             'email' => $user->getAttribute('email'),
             'name' => $user->getAttribute('name'),
         ])), Response::MODEL_MEMBERSHIP);
-    }, ['request', 'response', 'user', 'projectDB', 'geodb', 'audits']);
+    });
 
 App::delete('/v1/teams/:teamId/memberships/:inviteId')
     ->desc('Delete Team Membership')
@@ -679,6 +705,10 @@ App::delete('/v1/teams/:teamId/memberships/:inviteId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('teamId', '', new UID(), 'Team unique ID.')
     ->param('inviteId', '', new UID(), 'Invite unique ID.')
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('audits')
+    ->inject('events')
     ->action(function ($teamId, $inviteId, $response, $projectDB, $audits, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -726,4 +756,4 @@ App::delete('/v1/teams/:teamId/memberships/:inviteId')
         ;
 
         $response->noContent();
-    }, ['response', 'projectDB', 'audits', 'events']);
+    });

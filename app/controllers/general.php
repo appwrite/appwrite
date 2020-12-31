@@ -44,6 +44,8 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     /** @var Appwrite\Event\Event $audits */
     /** @var Appwrite\Event\Event $usage */
     /** @var Appwrite\Event\Event $deletes */
+    /** @var Appwrite\Event\Event $functions */
+
     /** @var bool $mode */
     /** @var array $clients */
 
@@ -243,11 +245,15 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     /*
      * Background Jobs
      */
+
     $events
         ->setParam('projectId', $project->getId())
         ->setParam('userId', $user->getId())
         ->setParam('event', $route->getLabel('event', ''))
         ->setParam('payload', [])
+        ->setParam('functionId', null)	
+        ->setParam('executionId', null)	
+        ->setParam('trigger', 'event')
     ;
 
     $audits
@@ -273,6 +279,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     $deletes
         ->setParam('projectId', $project->getId())
     ;
+
 }, ['utopia', 'request', 'response', 'console', 'project', 'user', 'locale', 'events', 'audits', 'usage', 'deletes', 'clients']);
 
 App::shutdown(function ($utopia, $request, $response, $project, $events, $audits, $usage, $deletes, $mode) {
@@ -284,6 +291,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
     /** @var Appwrite\Event\Event $audits */
     /** @var Appwrite\Event\Event $usage */
     /** @var Appwrite\Event\Event $deletes */
+    /** @var Appwrite\Event\Event $functions */
     /** @var bool $mode */
 
     if (!empty($events->getParam('event'))) {
@@ -291,12 +299,15 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
             $events->setParam('payload', $response->getPayload());
         }
 
-        $events
+        $webhooks = clone $events;
+        $functions = clone $events;
+
+        $webhooks
             ->setQueue('v1-webhooks')
             ->setClass('WebhooksV1')
             ->trigger();
 
-        $events
+        $functions
             ->setQueue('v1-functions')
             ->setClass('FunctionsV1')
             ->trigger();
@@ -306,7 +317,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
         $audits->trigger();
     }
     
-    if (!empty($deletes->getParam('document'))) {
+    if (!empty($deletes->getParam('type')) && !empty($deletes->getParam('document'))) {
         $deletes->trigger();
     }
     
@@ -322,6 +333,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
             ->trigger()
         ;
     }
+
 }, ['utopia', 'request', 'response', 'project', 'events', 'audits', 'usage', 'deletes', 'mode']);
 
 App::options(function ($request, $response) {
@@ -400,7 +412,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
         ->addHeader('Pragma', 'no-cache')
         ->setStatusCode($code)
     ;
-    
+
     if ($template) {
         $comp = new View($template);
 
@@ -423,13 +435,14 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     }
 
     $response->dynamic(new Document($output),
-        $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_LOCALE);
+        $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR);
 }, ['error', 'utopia', 'request', 'response', 'layout', 'project']);
 
 App::get('/manifest.json')
     ->desc('Progressive app manifest file')
     ->label('scope', 'public')
     ->label('docs', false)
+    ->inject('response')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
@@ -450,30 +463,34 @@ App::get('/manifest.json')
                 ],
             ],
         ]);
-    }, ['response']);
+    });
 
 App::get('/robots.txt')
     ->desc('Robots.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
+    ->inject('response')
     ->action(function ($response) {
         $template = new View(__DIR__.'/../views/general/robots.phtml');
         $response->text($template->render(false));
-    }, ['response']);
+    });
 
 App::get('/humans.txt')
     ->desc('Humans.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
+    ->inject('response')
     ->action(function ($response) {
         $template = new View(__DIR__.'/../views/general/humans.phtml');
         $response->text($template->render(false));
-    }, ['response']);
+    });
 
 App::get('/.well-known/acme-challenge')
     ->desc('SSL Verification')
     ->label('scope', 'public')
     ->label('docs', false)
+    ->inject('request')
+    ->inject('response')
     ->action(function ($request, $response) {
         $base = \realpath(APP_STORAGE_CERTIFICATES);
         $path = \str_replace('/.well-known/acme-challenge/', '', $request->getParam('q'));
@@ -502,7 +519,7 @@ App::get('/.well-known/acme-challenge')
         }
 
         $response->text($content);
-    }, ['request', 'response']);
+    });
 
 include_once __DIR__ . '/shared/api.php';
 include_once __DIR__ . '/shared/web.php';
