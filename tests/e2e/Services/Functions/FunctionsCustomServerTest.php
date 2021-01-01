@@ -455,6 +455,8 @@ class FunctionsCustomServerTest extends Scope
 
     public function testENVS():array
     {
+        sleep(20);
+
         /**
          * Test for SUCCESS
          */
@@ -591,7 +593,7 @@ class FunctionsCustomServerTest extends Scope
             $executionId = $execution['body']['$id'] ?? '';
             $this->assertEquals(201, $execution['headers']['status-code']);
 
-            sleep(15);
+            sleep(5);
 
             $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
                 'content-type' => 'application/json',
