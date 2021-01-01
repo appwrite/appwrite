@@ -461,16 +461,18 @@ class FunctionsCustomServerTest extends Scope
 
         $exitCode = Console::execute('docker logs appwrite-worker-functions', '', $stdout, $stderr, 30);
 
+        var_dump('-------------------------');
         var_dump($stdout);
         var_dump($stderr);
 
-        sleep(20);
+        sleep(60);
 
         $stdout = '';
         $stderr = '';
 
         $exitCode = Console::execute('docker logs appwrite-worker-functions', '', $stdout, $stderr, 30);
 
+        var_dump('-------------------------');
         var_dump($stdout);
         var_dump($stderr);
 
