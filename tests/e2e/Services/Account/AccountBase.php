@@ -288,7 +288,7 @@ trait AccountBase
         $this->assertNotEmpty($response['body']['logs']);
         $this->assertCount(2, $response['body']['logs']);
         
-        $this->assertEquals('account.sessions.create', $response['body']['logs'][0]['event']);
+        $this->assertContains($response['body']['logs'][0]['event'], ['account.create', 'account.sessions.create']);
         $this->assertEquals($response['body']['logs'][0]['ip'], filter_var($response['body']['logs'][0]['ip'], FILTER_VALIDATE_IP));
         $this->assertIsNumeric($response['body']['logs'][0]['time']);
 
@@ -298,7 +298,7 @@ trait AccountBase
 
         $this->assertEquals('browser', $response['body']['logs'][0]['clientType']);
         $this->assertEquals('Chrome', $response['body']['logs'][0]['clientName']);
-        $this->assertEquals('CH', $response['body']['logs'][0]['clientCode']); // FIXME (v1) key name should be camelcase
+        $this->assertEquals('CH', $response['body']['logs'][0]['clientCode']);
         $this->assertEquals('70.0', $response['body']['logs'][0]['clientVersion']);
         $this->assertEquals('Blink', $response['body']['logs'][0]['clientEngine']);
 
@@ -310,7 +310,7 @@ trait AccountBase
         $this->assertEquals('--', $response['body']['logs'][0]['countryCode']);
         $this->assertEquals('Unknown', $response['body']['logs'][0]['countryName']);
 
-        $this->assertEquals('account.create', $response['body']['logs'][1]['event']);
+        $this->assertContains($response['body']['logs'][1]['event'], ['account.create', 'account.sessions.create']);
         $this->assertEquals($response['body']['logs'][1]['ip'], filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP));
         $this->assertIsNumeric($response['body']['logs'][1]['time']);
 
@@ -320,7 +320,7 @@ trait AccountBase
 
         $this->assertEquals('browser', $response['body']['logs'][1]['clientType']);
         $this->assertEquals('Chrome', $response['body']['logs'][1]['clientName']);
-        $this->assertEquals('CH', $response['body']['logs'][1]['clientCode']); // FIXME (v1) key name should be camelcase
+        $this->assertEquals('CH', $response['body']['logs'][1]['clientCode']);
         $this->assertEquals('70.0', $response['body']['logs'][1]['clientVersion']);
         $this->assertEquals('Blink', $response['body']['logs'][1]['clientEngine']);
 
