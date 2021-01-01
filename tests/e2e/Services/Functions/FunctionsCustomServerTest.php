@@ -599,6 +599,7 @@ class FunctionsCustomServerTest extends Scope
             ], $this->getHeaders()));
 
             if($executions['body']['executions'][0]['status'] !== 'completed') {
+                var_dump($env);
                 var_dump($executions['body']['executions'][0]);
             }
     
