@@ -459,18 +459,20 @@ class FunctionsCustomServerTest extends Scope
         $stdout = '';
         $stderr = '';
 
-        $exitCode = Console::execute('docker-compose logs appwrite-worker-functions', '', $stdout, $stderr, 30);
+        $exitCode = Console::execute('docker logs appwrite-worker-functions', '', $stdout, $stderr, 30);
 
         var_dump($stdout);
+        var_dump($stderr);
 
         sleep(20);
 
         $stdout = '';
         $stderr = '';
 
-        $exitCode = Console::execute('docker-compose logs appwrite-worker-functions', '', $stdout, $stderr, 30);
+        $exitCode = Console::execute('docker logs appwrite-worker-functions', '', $stdout, $stderr, 30);
 
         var_dump($stdout);
+        var_dump($stderr);
 
         /**
          * Test for SUCCESS
