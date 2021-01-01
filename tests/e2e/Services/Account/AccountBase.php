@@ -49,8 +49,6 @@ trait AccountBase
 
         $this->assertEquals($response['headers']['status-code'], 409);
 
-        sleep(5);
-
         return [
             'id' => $id,
             'email' => $email,
@@ -64,7 +62,6 @@ trait AccountBase
      */
     public function testCreateAccountSession($data):array
     {
-        sleep(10);
         $email = $data['email'] ?? '';
         $password = $data['password'] ?? '';
 
