@@ -269,6 +269,7 @@ services:
       - appwrite-functions:/storage/functions:rw
       - /tmp:/tmp:rw
       - ./app:/usr/src/code/app
+      - ./docker:/usr/src/code/docker
       - ./src:/usr/src/code/src
     depends_on:
       - redis
