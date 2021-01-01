@@ -455,7 +455,24 @@ class FunctionsCustomServerTest extends Scope
 
     public function testENVS():array
     {
+        
+        $stdout = '';
+        $stderr = '';
+
+        $exitCode = Console::execute('docker ps --all'
+            , '', $stdout, $stderr, 30);
+
+        var_dump($stdout);
+        
         sleep(20);
+
+        $stdout = '';
+        $stderr = '';
+
+        $exitCode = Console::execute('docker ps --all'
+            , '', $stdout, $stderr, 30);
+
+        var_dump($stdout);
 
         /**
          * Test for SUCCESS
