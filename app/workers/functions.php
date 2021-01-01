@@ -109,8 +109,6 @@ $stdout = \explode("\n", $stdout);
     }
 }, $stdout);
 
-var_dump(json_encode($list));
-
 Console::info(count($list)." functions listed in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
 
 /*
