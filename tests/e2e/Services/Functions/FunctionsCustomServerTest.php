@@ -591,14 +591,15 @@ class FunctionsCustomServerTest extends Scope
             $executionId = $execution['body']['$id'] ?? '';
             $this->assertEquals(201, $execution['headers']['status-code']);
 
-            sleep(15);
+            sleep(20);
 
             $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
 
-            if($executions['body']['executions'][0]['status'] === 'failed') {
+            if($executions['body']['executions'][0]['status'] !== 'completed') {
+                var_dump($env);
                 var_dump($executions['body']['executions'][0]);
             }
     
@@ -680,6 +681,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $executionId = $execution['body']['$id'] ?? '';
+        
         $this->assertEquals(201, $execution['headers']['status-code']);
 
         sleep(15);
