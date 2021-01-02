@@ -100,14 +100,15 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     * Response format
     */
     $responseFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
-    switch($responseFormat) {
-        case version_compare ($responseFormat , '0.6.2', '=<') :
-            Response::setFilter(new V06());
-            break;
-        default:
-            throw new Exception('No filter available for response format : '.$responseFormat, 404);
+    if (!empty($responseFormat)) {
+        switch($responseFormat) {
+            case version_compare ($responseFormat , '0.6.2', '=<') :
+                Response::setFilter(new V06());
+                break;
+            default:
+                throw new Exception('No filter available for response format : '.$responseFormat, 400);
+        }
     }
-    
 
     /*
      * Security Headers

@@ -50,11 +50,6 @@ $http->on('AfterReload', function($serv, $workerId) {
 
 $http->on('start', function (Server $http) use ($payloadSize) {
 
-    if(empty($responseFormat)) {
-        Console::error('Missing value for environment variable _APP_SYSTEM_RESPONSE_FORMAT. Exiting ...');
-        exit(1);
-    }
-
     Console::success('Server started succefully (max payload is '.number_format($payloadSize).' bytes)');
 
     Console::info("Master pid {$http->master_pid}, manager pid {$http->manager_pid}");
