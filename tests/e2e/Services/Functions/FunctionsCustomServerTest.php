@@ -683,7 +683,7 @@ class FunctionsCustomServerTest extends Scope
         $executionId = $execution['body']['$id'] ?? '';
         $this->assertEquals(201, $execution['headers']['status-code']);
 
-        sleep(7);
+        sleep(15);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
             'content-type' => 'application/json',
