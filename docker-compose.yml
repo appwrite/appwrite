@@ -357,8 +357,8 @@ services:
       - appwrite
 
   maildev: # used mainly for dev tests
-    image: djfarrelly/maildev
-    container_name: appwrite-maildev
+    image: appwrite/mailcatcher:1.0.0
+    container_name: appwrite-mailcatcher
     restart: unless-stopped
     ports:
       - '1080:80'
@@ -366,8 +366,8 @@ services:
       - appwrite
 
   request-catcher: # used mainly for dev tests
-    image: smarterdm/http-request-catcher
-    container_name: appwrite-request-catcher
+    image: appwrite/requestcatcher:1.0.0
+    container_name: appwrite-requestcatcher
     restart: unless-stopped
     ports:
       - '5000:5000'
