@@ -464,7 +464,10 @@ App::delete('/v1/projects/:projectId')
             throw new Exception('Project not found', 404);
         }
 
-        $deletes->setParam('document', $project->getArrayCopy());
+        $deletes
+            ->setParam('type', DELETE_TYPE_DOCUMENT)
+            ->setParam('document', $project->getArrayCopy())
+        ;
 
         foreach (['keys', 'webhooks', 'tasks', 'platforms', 'domains'] as $key) { // Delete all children (keys, webhooks, tasks [stop tasks?], platforms)
             $list = $project->getAttribute('webhooks', []);
@@ -715,7 +718,7 @@ App::post('/v1/projects/:projectId/keys')
     ->label('sdk.response.model', Response::MODEL_KEY)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
-    ->param('scopes', null, new ArrayList(new WhiteList(Config::getParam('scopes'), true)), 'Key scopes list.')
+    ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true)), 'Key scopes list.')
     ->inject('response')
     ->inject('consoleDB')
     ->action(function ($projectId, $name, $scopes, $response, $consoleDB) {
@@ -828,7 +831,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('keyId', null, new UID(), 'Key unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
-    ->param('scopes', null, new ArrayList(new WhiteList(Config::getParam('scopes'), true)), 'Key scopes list')
+    ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true)), 'Key scopes list')
     ->inject('response')
     ->inject('consoleDB')
     ->action(function ($projectId, $keyId, $name, $scopes, $response, $consoleDB) {

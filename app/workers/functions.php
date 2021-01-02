@@ -39,7 +39,12 @@ Co\run(function() use ($environments) {  // Warmup: make sure images are ready t
         
             Console::info('Warming up '.$environment['name'].' environment...');
         
-            Console::execute('docker pull '.$environment['image'], '', $stdout, $stderr);
+            if(App::isDevelopment()) {
+                Console::execute('docker build '.$environment['build'].' -t '.$environment['image'], '', $stdout, $stderr);
+            }
+            else {
+                Console::execute('docker pull '.$environment['image'], '', $stdout, $stderr);
+            }
         
             if(!empty($stdout)) {
                 Console::log($stdout);
@@ -108,8 +113,6 @@ $stdout = \explode("\n", $stdout);
         $list[$container['name']] = $container;
     }
 }, $stdout);
-
-var_dump(json_encode($list));
 
 Console::info(count($list)." functions listed in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
 
@@ -283,7 +286,7 @@ class FunctionsV1
      */
     public function execute(string $trigger, string $projectId, string $executionId, Database $database, Document $function, string $event = '', string $payload = ''): void
     {
-        global $register, $list;
+        global $list;
 
         $environments = Config::getParam('environments');
 
@@ -489,29 +492,21 @@ class FunctionsV1
         if(\count($list) > $max) {
             Console::info('Starting containers cleanup');
 
-            $sorted = [];
-            
-            foreach($list as $env) {
-                $sorted[] = [
-                    'name' => $env['name'],
-                    'created' => (int)($env['appwrite-created'] ?? 0)
-                ];
-            }
-
-            \usort($sorted, function ($item1, $item2) {
-                return $item1['created'] <=> $item2['created'];
+            \usort($list, function ($item1, $item2) {
+                return (int)($item1['appwrite-created'] ?? 0) <=> (int)($item2['appwrite-created'] ?? 0);
             });
 
-            while(\count($sorted) > $max) {
-                $first = \array_shift($sorted);
+            while(\count($list) > $max) {
+                $first = \array_shift($list);
                 $stdout = '';
                 $stderr = '';
 
-                if(Console::execute("docker stop {$first['name']}", '', $stdout, $stderr, 30) !== 0) {
+                if(Console::execute("docker rm -f {$first['name']}", '', $stdout, $stderr, 30) !== 0) {
                     Console::error('Failed to remove container: '.$stderr);
                 }
-
-                Console::info('Removed container: '.$first['name']);
+                else {
+                    Console::info('Removed container: '.$first['name']);
+                }
             }
         }
     }

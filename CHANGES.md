@@ -51,6 +51,8 @@
 - Upgraded Influxdb Docker image to version 1.8 (alpine)
 - Added option to disable mail sending by setting empty SMTP host
 - Upgraded installation script ([#490](https://github.com/appwrite/appwrite/issues/490))
+- Added new environment variables for ClamAV hostname and port ([#780](https://github.com/appwrite/appwrite/pull/780))
+- Added toggle to hide/show secret keys and passwords inside the dashboard (@kodumbeats, [#535](https://github.com/appwrite/appwrite/issues/535))
 
 ## Breaking Changes (Read before upgrading!)
 - **Deprecated** `first` and `last` query params for documents list route in the database API

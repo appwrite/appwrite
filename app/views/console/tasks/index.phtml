@@ -189,7 +189,7 @@
                                         </div>
                                         <div class="col span-6 margin-bottom">
                                             <label data-ls-attrs="for=httpPass-{{task.$id}}">Password</label>
-                                            <input type="password" class="full-width margin-bottom-no" data-ls-attrs="id=httpPass-{{task.$id}}" name="httpPass" autocomplete="off" data-ls-bind="{{task.httpPass}}" />
+                                            <input data-forms-show-secret type="password" class="full-width margin-bottom-no" data-ls-attrs="id=httpPass-{{task.$id}}" name="httpPass" autocomplete="off" data-ls-bind="{{task.httpPass}}" />
                                         </div>
                                     </div>
                                 </div>
@@ -335,7 +335,7 @@
                         </div>
                         <div class="col span-6 margin-bottom">
                             <label for="httpPass">Password</label>
-                            <input type="password" class="full-width margin-bottom-no" id="httpPass" name="httpPass" autocomplete="off" />
+                            <input type="password" data-forms-show-secret class="full-width margin-bottom-no" id="httpPass" name="httpPass" autocomplete="off" />
                         </div>
                     </div>
                 </div>

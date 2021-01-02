@@ -140,6 +140,24 @@ return [
         'question' => '',
     ],
     [
+        'name' => '_APP_STORAGE_ANTIVIRUS',
+        'default' => 'enabled',
+        'required' => false,
+        'question' => '',
+    ],
+    [
+        'name' => '_APP_STORAGE_ANTIVIRUS_HOST',
+        'default' => 'clamav',
+        'required' => false,
+        'question' => '',
+    ],
+    [
+        'name' => '_APP_STORAGE_ANTIVIRUS_PORT',
+        'default' => '3310',
+        'required' => false,
+        'question' => '',
+    ],
+    [
         'name' => '_APP_FUNCTIONS_TIMEOUT',
         'default' => '900',
         'required' => false,
@@ -166,6 +184,12 @@ return [
     [
         'name' => '_APP_FUNCTIONS_MEMORY_SWAP',
         'default' => '128',
+        'required' => false,
+        'question' => '',
+    ],
+    [
+        'name' => '_APP_MAINTENANCE_INTERVAL',
+        'default' => '86400',
         'required' => false,
         'question' => '',
     ],

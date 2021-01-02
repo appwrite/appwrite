@@ -77,6 +77,8 @@ ENV _APP_SERVER=swoole \
     _APP_OPENSSL_KEY_V1=your-secret-key \
     _APP_STORAGE_LIMIT=10000000 \
     _APP_STORAGE_ANTIVIRUS=enabled \
+    _APP_STORAGE_ANTIVIRUS_HOST=clamav \
+    _APP_STORAGE_ANTIVIRUS_PORT=3310 \
     _APP_REDIS_HOST=redis \
     _APP_REDIS_PORT=6379 \
     _APP_DB_HOST=mariadb \
@@ -96,7 +98,9 @@ ENV _APP_SERVER=swoole \
     _APP_FUNCTIONS_MEMORY=128 \
     _APP_FUNCTIONS_MEMORY_SWAP=128 \
     _APP_SETUP=self-hosted \
-    _APP_VERSION=$VERSION
+    _APP_VERSION=$VERSION \
+    # 1 Day = 86400 s
+    _APP_MAINTENANCE_INTERVAL=86400
 #ENV _APP_SMTP_SECURE ''
 #ENV _APP_SMTP_USERNAME ''
 #ENV _APP_SMTP_PASSWORD ''
@@ -158,6 +162,7 @@ RUN mkdir -p /storage/uploads && \
 
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
+    chmod +x /usr/local/bin/maintenance && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/migrate && \
     chmod +x /usr/local/bin/schedule && \

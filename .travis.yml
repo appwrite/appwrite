@@ -19,20 +19,10 @@ before_install:
   - echo '{"experimental":"enabled"}' | sudo tee $HOME/.docker/config.json
   - sudo service docker start
 
-# cache:
-#   directories:
-#   - docker_images
-
-# before_install:
-# - docker load -i docker_images/images.tar || true
-
-# before_cache:
-# - docker save -o docker_images/images.tar appwrite_appwrite
-
 install:
 - docker --version
 - docker-compose up -d
-- sleep 90
+- sleep 10
 
 script:
 - docker ps

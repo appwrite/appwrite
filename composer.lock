@@ -1112,16 +1112,16 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.2.2",
+            "version": "0.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "8e65890a6d7afa9f57992f1eca9fe64508f9822e"
+                "reference": "23c2eb533bca8f3ef5548ae265398fa7d4d39a1c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/8e65890a6d7afa9f57992f1eca9fe64508f9822e",
-                "reference": "8e65890a6d7afa9f57992f1eca9fe64508f9822e",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/23c2eb533bca8f3ef5548ae265398fa7d4d39a1c",
+                "reference": "23c2eb533bca8f3ef5548ae265398fa7d4d39a1c",
                 "shasum": ""
             },
             "require": {
@@ -1164,16 +1164,16 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "0.3.2",
+            "version": "0.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "544ecff78788d11f60992a721f102cafc22ab084"
+                "reference": "154a850170a58667a15e4b65fbabb6cd0b709dd9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/544ecff78788d11f60992a721f102cafc22ab084",
-                "reference": "544ecff78788d11f60992a721f102cafc22ab084",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/154a850170a58667a15e4b65fbabb6cd0b709dd9",
+                "reference": "154a850170a58667a15e4b65fbabb6cd0b709dd9",
                 "shasum": ""
             },
             "require": {
@@ -1268,16 +1268,16 @@
         },
         {
             "name": "utopia-php/cli",
-            "version": "0.7.3",
+            "version": "0.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "0337918242278e0cf98f8dcab2e75b5a3153b856"
+                "reference": "090c7ae22b53a175d962e8f9601d36350496153c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/0337918242278e0cf98f8dcab2e75b5a3153b856",
-                "reference": "0337918242278e0cf98f8dcab2e75b5a3153b856",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/090c7ae22b53a175d962e8f9601d36350496153c",
+                "reference": "090c7ae22b53a175d962e8f9601d36350496153c",
                 "shasum": ""
             },
             "require": {
@@ -1875,6 +1875,7 @@
             "require-dev": {
                 "phpunit/phpunit": "^7.0"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
