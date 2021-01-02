@@ -455,27 +455,6 @@ class FunctionsCustomServerTest extends Scope
 
     public function testENVS():array
     {
-        
-        $stdout = '';
-        $stderr = '';
-
-        $exitCode = Console::execute('docker logs appwrite-worker-functions', '', $stdout, $stderr, 30);
-
-        var_dump('-------------------------');
-        var_dump($stdout);
-        var_dump($stderr);
-
-        sleep(60);
-
-        $stdout = '';
-        $stderr = '';
-
-        $exitCode = Console::execute('docker logs appwrite-worker-functions', '', $stdout, $stderr, 30);
-
-        var_dump('-------------------------');
-        var_dump($stdout);
-        var_dump($stderr);
-
         /**
          * Test for SUCCESS
          */
@@ -612,7 +591,7 @@ class FunctionsCustomServerTest extends Scope
             $executionId = $execution['body']['$id'] ?? '';
             $this->assertEquals(201, $execution['headers']['status-code']);
 
-            sleep(5);
+            sleep(20);
 
             $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
                 'content-type' => 'application/json',
