@@ -598,7 +598,8 @@ class FunctionsCustomServerTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
 
-            if($executions['body']['executions'][0]['status'] === 'failed') {
+            if($executions['body']['executions'][0]['status'] !== 'completed') {
+                var_dump($env);
                 var_dump($executions['body']['executions'][0]);
             }
     

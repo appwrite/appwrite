@@ -55,6 +55,7 @@ services:
       - traefik.http.routers.appwrite-secure.rule=PathPrefix(`/`)
       - traefik.http.routers.appwrite-secure.tls=true
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-config:/storage/config:rw
@@ -268,6 +269,7 @@ services:
       - appwrite-functions:/storage/functions:rw
       - /tmp:/tmp:rw
       - ./app:/usr/src/code/app
+      - ./docker:/usr/src/code/docker
       - ./src:/usr/src/code/src
     depends_on:
       - redis
