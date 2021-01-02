@@ -9,6 +9,7 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filter\V06;
 use PHPUnit\Framework\TestCase;
+use Utopia\Config\Config;
 
 class V06Test extends TestCase
 {

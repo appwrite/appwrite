@@ -359,7 +359,7 @@ class Response extends SwooleResponse
      * 
      * @return Filter
      */
-    public static function getFilter(): Filter 
+    public static function getFilter(): ?Filter 
     {
         return self::$filter;
     }
