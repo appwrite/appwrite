@@ -175,4 +175,10 @@ return [
         'required' => false,
         'question' => '',
     ],
+    [
+        'name' => '_APP_SYSTEM_RESPONSE_FORMAT',
+        'default' => '0.7',
+        'required' => false,
+        'question' => '',
+    ],
 ];
