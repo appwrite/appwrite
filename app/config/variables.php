@@ -140,6 +140,24 @@ return [
         'question' => '',
     ],
     [
+        'name' => '_APP_STORAGE_ANTIVIRUS',
+        'default' => 'enabled',
+        'required' => false,
+        'question' => '',
+    ],
+    [
+        'name' => '_APP_STORAGE_ANTIVIRUS_HOST',
+        'default' => 'clamav',
+        'required' => false,
+        'question' => '',
+    ],
+    [
+        'name' => '_APP_STORAGE_ANTIVIRUS_PORT',
+        'default' => '3310',
+        'required' => false,
+        'question' => '',
+    ],
+    [
         'name' => '_APP_FUNCTIONS_TIMEOUT',
         'default' => '900',
         'required' => false,
