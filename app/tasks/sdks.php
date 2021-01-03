@@ -5,7 +5,7 @@ use Utopia\CLI\Console;
 use Appwrite\Spec\Swagger2;
 use Appwrite\SDK\SDK;
 use Appwrite\SDK\Language\PHP;
-use Appwrite\SDK\Language\JS;
+use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\Language\Node;
 use Appwrite\SDK\Language\Python;
 use Appwrite\SDK\Language\Ruby;
@@ -36,8 +36,9 @@ $cli
         $platforms = Config::getParam('platforms');
         $selected = \strtolower(Console::confirm('Choose SDK ("*" for all):'));
         $version = Console::confirm('Choose an Appwrite version');
-        $message = Console::confirm('Please enter your commit message:');
-        $production = (Console::confirm('Type "Appwrite" to deploy for production') == 'Appwrite');
+        $git = (Console::confirm('Should we use git push? (yes/no)') == 'yes');
+        $production = ($git) ? (Console::confirm('Type "Appwrite" to push code to production git repos') == 'Appwrite') : false;
+        $message = ($git) ? Console::confirm('Please enter your commit message:') : '';
         $warning = '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check previous releases.**';
 
         if(!in_array($version, ['0.6.2', '0.7.0'])) {
@@ -60,6 +61,7 @@ $cli
                 $spec = file_get_contents(__DIR__.'/../config/specs/'.$version.'.'.$language['family'].'.json');
 
                 $result = \realpath(__DIR__.'/..').'/sdks/'.$key.'-'.$language['key'];
+                $resultExamples = \realpath(__DIR__.'/../..').'/docs/examples/'.$version.'/'.$key.'-'.$language['key'];
                 $target = \realpath(__DIR__.'/..').'/sdks/git/'.$language['key'].'/';
                 $readme = \realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'/README.md');
                 $readme = ($readme) ? \file_get_contents($readme) : '';
@@ -84,7 +86,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                 switch ($language['key']) {
                     case 'web':
-                        $config = new JS();
+                        $config = new Web();
                         $config->setNPMPackage('appwrite');
                         $config->setBowerPackage('appwrite');
                         break;
@@ -173,33 +175,37 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 }
 
                 $gitUrl = $language['gitUrl'];
-
-                if(empty($gitUrl)) {
-                    continue;
-                }
-
+                
                 if(!$production) {
                     $gitUrl = 'git@github.com:aw-tests/'.$language['gitRepoName'].'.git';
                 }
+                
+                if($git && !empty($gitUrl)) {
+                    \exec('rm -rf '.$target.' && \
+                        mkdir -p '.$target.' && \
+                        cd '.$target.' && \
+                        git init && \
+                        git remote add origin '.$gitUrl.' && \
+                        git fetch && \
+                        git pull '.$gitUrl.' && \
+                        rm -rf '.$target.'/* && \
+                        cp -r '.$result.'/ '.$target.'/ && \
+                        git add . && \
+                        git commit -m "'.$message.'" && \
+                        git push -u origin master
+                    ');
 
-                \exec('rm -rf '.$target.' && \
-                    mkdir -p '.$target.' && \
-                    cd '.$target.' && \
-                    git init && \
-                    git remote add origin '.$gitUrl.' && \
-                    git fetch && \
-                    git pull '.$gitUrl.' && \
-                    rm -rf '.$target.'/* && \
-                    cp -r '.$result.'/ '.$target.'/ && \
-                    git add . && \
-                    git commit -m "'.$message.'" && \
-                    git push -u origin master');
+                    Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
 
-                Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
-         
-                \exec('rm -rf '.$target);
+                    \exec('rm -rf '.$target);
+                    Console::success("Remove temp directory '{$target}' for {$language['name']} SDK");
+                }
 
-                Console::success("Remove temp directory '{$target}' for {$language['name']} SDK");
+                \exec('mkdir -p '.$resultExamples.' && cp -r '.$result.'/docs/examples '.$resultExamples);
+                Console::success("Copied code examples for {$language['name']} SDK to: {$resultExamples}");
+
+                \exec('rm -rf '.$result);
+                Console::success("Removed source code directory '{$result}' for {$language['name']} SDK");
             }
         }
 

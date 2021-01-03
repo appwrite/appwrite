@@ -506,6 +506,10 @@ $timeout = $this->getParam('timeout', 900);
                                     </div>
                                 </section>
 
+                                <label for="execute">Execute Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
+                                <input type="hidden" id="execute" name="execute" data-forms-tags data-cast-to="json" data-ls-bind="{{project-function.$permissions.execute}}" placeholder="User ID, Team ID or Role" />
+                                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
+
                                 <section class="margin-bottom-large">
                                     <label for="schedule">Schedule (CRON Syntax) <span class="tooltip small" data-tooltip="Set a CRON schedule to trigger this function."><i class="icon-info-circled"></i></span></label>
                                     <input type="text" class="full-width" name="schedule" autocomplete="off" data-ls-bind="{{project-function.schedule}}" placeholder="* * * * *" />

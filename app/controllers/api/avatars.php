@@ -95,9 +95,10 @@ App::get('/v1/avatars/credit-cards/:code')
     ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
+    ->inject('response')
     ->action(function ($code, $width, $height, $quality, $response) use ($avatarCallback) {
         return $avatarCallback('credit-cards', $code, $width, $height, $quality, $response);
-    }, ['response']);
+    });
 
 App::get('/v1/avatars/browsers/:code')
     ->desc('Get Browser Icon')
@@ -114,9 +115,10 @@ App::get('/v1/avatars/browsers/:code')
     ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
+    ->inject('response')
     ->action(function ($code, $width, $height, $quality, $response) use ($avatarCallback) {
         return $avatarCallback('browsers', $code, $width, $height, $quality, $response);
-    }, ['response']);
+    });
 
 App::get('/v1/avatars/flags/:code')
     ->desc('Get Country Flag')
@@ -133,9 +135,10 @@ App::get('/v1/avatars/flags/:code')
     ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
+    ->inject('response')
     ->action(function ($code, $width, $height, $quality, $response) use ($avatarCallback) {
         return $avatarCallback('flags', $code, $width, $height, $quality, $response);
-    }, ['response']);
+    });
 
 App::get('/v1/avatars/image')
     ->desc('Get Image from URL')
@@ -151,6 +154,7 @@ App::get('/v1/avatars/image')
     ->param('url', '', new URL(), 'Image URL which you want to crop.')
     ->param('width', 400, new Range(0, 2000), 'Resize preview image width, Pass an integer between 0 to 2000.', true)
     ->param('height', 400, new Range(0, 2000), 'Resize preview image height, Pass an integer between 0 to 2000.', true)
+    ->inject('response')
     ->action(function ($url, $width, $height, $response) {
         /** @var Appwrite\Utopia\Response $response */
 
@@ -203,7 +207,7 @@ App::get('/v1/avatars/image')
         ;
 
         unset($resize);
-    }, ['response']);
+    });
 
 App::get('/v1/avatars/favicon')
     ->desc('Get Favicon')
@@ -217,6 +221,7 @@ App::get('/v1/avatars/favicon')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE)
     ->param('url', '', new URL(), 'Website URL which you want to fetch the favicon from.')
+    ->inject('response')
     ->action(function ($url, $response) {
         /** @var Appwrite\Utopia\Response $response */
 
@@ -355,7 +360,7 @@ App::get('/v1/avatars/favicon')
             ->send($data);
 
         unset($resize);
-    }, ['response']);
+    });
 
 App::get('/v1/avatars/qr')
     ->desc('Get QR Code')
@@ -372,6 +377,7 @@ App::get('/v1/avatars/qr')
     ->param('size', 400, new Range(0, 1000), 'QR code size. Pass an integer between 0 to 1000. Defaults to 400.', true)
     ->param('margin', 1, new Range(0, 10), 'Margin from edge. Pass an integer between 0 to 10. Defaults to 1.', true)
     ->param('download', false, new Boolean(true), 'Return resulting image with \'Content-Disposition: attachment \' headers for the browser to start downloading it. Pass 0 for no header, or 1 for otherwise. Default value is set to 0.', true)
+    ->inject('response')
     ->action(function ($text, $size, $margin, $download, $response) {
         /** @var Appwrite\Utopia\Response $response */
 
@@ -392,7 +398,7 @@ App::get('/v1/avatars/qr')
             ->setContentType('image/png')
             ->send($qrcode->render($text))
         ;
-    }, ['response']);
+    });
 
 App::get('/v1/avatars/initials')
     ->desc('Get User Initials')
@@ -410,6 +416,8 @@ App::get('/v1/avatars/initials')
     ->param('height', 500, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('color', '', new HexColor(), 'Changes text color. By default a random color will be picked and stay will persistent to the given name.', true)
     ->param('background', '', new HexColor(), 'Changes background color. By default a random color will be picked and stay will persistent to the given name.', true)
+    ->inject('response')
+    ->inject('user')
     ->action(function ($name, $width, $height, $color, $background, $response, $user) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
@@ -472,4 +480,4 @@ App::get('/v1/avatars/initials')
             ->setContentType('image/png')
             ->send($image->getImageBlob())
         ;
-    }, ['response', 'user']);
+    });

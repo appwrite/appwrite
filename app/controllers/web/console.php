@@ -43,6 +43,7 @@ App::get('/error/:code')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->param('code', null, new \Utopia\Validator\Numeric(), 'Valid status code number', false)
+    ->inject('layout')
     ->action(function ($code, $layout) {
         /** @var Utopia\View $layout */
 
@@ -55,12 +56,13 @@ App::get('/error/:code')
         $layout
             ->setParam('title', APP_NAME.' - Error')
             ->setParam('body', $page);
-    }, ['layout']);
+    });
 
 App::get('/console')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
+    ->inject('layout')
     ->action(function ($layout) {
         /** @var Utopia\View $layout */
 
@@ -73,12 +75,13 @@ App::get('/console')
         $layout
             ->setParam('title', APP_NAME.' - Console')
             ->setParam('body', $page);
-    }, ['layout']);
+    });
 
 App::get('/console/account')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
+    ->inject('layout')
     ->action(function ($layout) {
         /** @var Utopia\View $layout */
 
@@ -93,12 +96,13 @@ App::get('/console/account')
         $layout
             ->setParam('title', 'Account - '.APP_NAME)
             ->setParam('body', $page);
-    }, ['layout']);
+    });
 
 App::get('/console/notifications')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
+    ->inject('layout')
     ->action(function ($layout) {
         /** @var Utopia\View $layout */
 
@@ -107,12 +111,13 @@ App::get('/console/notifications')
         $layout
             ->setParam('title', APP_NAME.' - Notifications')
             ->setParam('body', $page);
-    }, ['layout']);
+    });
 
 App::get('/console/home')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
+    ->inject('layout')
     ->action(function ($layout) {
         /** @var Utopia\View $layout */
 
@@ -121,12 +126,13 @@ App::get('/console/home')
         $layout
             ->setParam('title', APP_NAME.' - Console')
             ->setParam('body', $page);
-    }, ['layout']);
+    });
 
 App::get('/console/settings')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
+    ->inject('layout')
     ->action(function ($layout) {
         /** @var Utopia\View $layout */
 
@@ -142,12 +148,13 @@ App::get('/console/settings')
         $layout
             ->setParam('title', APP_NAME.' - Settings')
             ->setParam('body', $page);
-    }, ['layout']);
+    });
 
 App::get('/console/webhooks')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
+    ->inject('layout')
     ->action(function ($layout) {
         /** @var Utopia\View $layout */
 
@@ -160,16 +167,17 @@ App::get('/console/webhooks')
         $layout
             ->setParam('title', APP_NAME.' - Webhooks')
             ->setParam('body', $page);
-    }, ['layout']);
+    });
 
 App::get('/console/keys')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
+    ->inject('layout')
     ->action(function ($layout) {
         /** @var Utopia\View $layout */
 
-        $scopes = Config::getParam('scopes');
+        $scopes = array_keys(Config::getParam('scopes'));
         $page = new View(__DIR__.'/../../views/console/keys/index.phtml');
 
         $page->setParam('scopes', $scopes);
@@ -177,12 +185,13 @@ App::get('/console/keys')
         $layout
             ->setParam('title', APP_NAME.' - API Keys')
             ->setParam('body', $page);
-    }, ['layout']);
+    });
 
 App::get('/console/tasks')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
+    ->inject('layout')
     ->action(function ($layout) {
         /** @var Utopia\View $layout */
 
@@ -191,12 +200,13 @@ App::get('/console/tasks')
         $layout
             ->setParam('title', APP_NAME.' - Tasks')
             ->setParam('body', $page);
-    }, ['layout']);
+    });
 
 App::get('/console/database')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
+    ->inject('layout')
     ->action(function ($layout) {
         /** @var Utopia\View $layout */
 
@@ -205,13 +215,16 @@ App::get('/console/database')
         $layout
             ->setParam('title', APP_NAME.' - Database')
             ->setParam('body', $page);
-    }, ['layout']);
+    });
 
 App::get('/console/database/collection')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->param('id', '', new UID(), 'Collection unique ID.')
+    ->inject('response')
+    ->inject('layout')
+    ->inject('projectDB')
     ->action(function ($id, $response, $layout, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\View $layout */
@@ -241,13 +254,15 @@ App::get('/console/database/collection')
             ->addHeader('Expires', 0)
             ->addHeader('Pragma', 'no-cache')
         ;
-    }, ['response', 'layout', 'projectDB']);
+    });
 
 App::get('/console/database/document')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->param('collection', '', new UID(), 'Collection unique ID.')
+    ->inject('layout')
+    ->inject('projectDB')
     ->action(function ($collection, $layout, $projectDB) {
         /** @var Utopia\View $layout */
         /** @var Appwrite\Database\Database $projectDB */
@@ -274,12 +289,13 @@ App::get('/console/database/document')
         $layout
             ->setParam('title', APP_NAME.' - Database Document')
             ->setParam('body', $page);
-    }, ['layout', 'projectDB']);
+    });
 
 App::get('/console/storage')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
+    ->inject('layout')
     ->action(function ($layout) {
         /** @var Utopia\View $layout */
         $page = new View(__DIR__.'/../../views/console/storage/index.phtml');
@@ -293,12 +309,13 @@ App::get('/console/storage')
         $layout
             ->setParam('title', APP_NAME.' - Storage')
             ->setParam('body', $page);
-    }, ['layout']);
+    });
 
 App::get('/console/users')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
+    ->inject('layout')
     ->action(function ($layout) {
         /** @var Utopia\View $layout */
 
@@ -309,12 +326,13 @@ App::get('/console/users')
         $layout
             ->setParam('title', APP_NAME.' - Users')
             ->setParam('body', $page);
-    }, ['layout']);
+    });
 
 App::get('/console/users/user')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
+    ->inject('layout')
     ->action(function ($layout) {
         /** @var Utopia\View $layout */
 
@@ -323,12 +341,13 @@ App::get('/console/users/user')
         $layout
             ->setParam('title', APP_NAME.' - User')
             ->setParam('body', $page);
-    }, ['layout']);
+    });
 
 App::get('/console/users/teams/team')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
+    ->inject('layout')
     ->action(function ($layout) {
         /** @var Utopia\View $layout */
 
@@ -337,13 +356,14 @@ App::get('/console/users/teams/team')
         $layout
             ->setParam('title', APP_NAME.' - Team')
             ->setParam('body', $page);
-    }, ['layout']);
+    });
 
 App::get('/console/functions')
     ->groups(['web', 'console'])
     ->desc('Platform console project functions')
     ->label('permission', 'public')
     ->label('scope', 'console')
+    ->inject('layout')
     ->action(function ($layout) {
         $page = new View(__DIR__.'/../../views/console/functions/index.phtml');
 
@@ -354,13 +374,14 @@ App::get('/console/functions')
         $layout
             ->setParam('title', APP_NAME.' - Functions')
             ->setParam('body', $page);
-    }, ['layout']);
+    });
 
 App::get('/console/functions/function')
     ->groups(['web', 'console'])
     ->desc('Platform console project function')
     ->label('permission', 'public')
     ->label('scope', 'console')
+    ->inject('layout')
     ->action(function ($layout) {
         $page = new View(__DIR__.'/../../views/console/functions/function.phtml');
 
@@ -374,13 +395,14 @@ App::get('/console/functions/function')
         $layout
             ->setParam('title', APP_NAME.' - Function')
             ->setParam('body', $page);
-    }, ['layout']);
+    });
 
 App::get('/console/version')
     ->groups(['web', 'console'])
     ->desc('Check for new version')
     ->label('permission', 'public')
     ->label('scope', 'console')
+    ->inject('response')
     ->action(function ($response) {
         try {
             $version = \json_decode(@\file_get_contents(App::getEnv('_APP_HOME', 'http://localhost').'/v1/health/version'), true);
@@ -393,4 +415,4 @@ App::get('/console/version')
         } catch (\Throwable $th) {
             throw new Exception('Failed to check for a newer version', 500);
         }
-    }, ['response']);
+    });
