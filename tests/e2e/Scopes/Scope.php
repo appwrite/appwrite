@@ -35,7 +35,7 @@ abstract class Scope extends TestCase
     {
         sleep(10);
         
-        $emails = json_decode(file_get_contents('http://maildev:9503/email'), true);
+        $emails = json_decode(file_get_contents('http://maildev:1080/email'), true);
 
         if ($emails && is_array($emails)) {
             return end($emails);
@@ -48,7 +48,7 @@ abstract class Scope extends TestCase
     {
         sleep(5);
         
-        $resquest = json_decode(file_get_contents('http://request-catcher:9504/__last_request__'), true);
+        $resquest = json_decode(file_get_contents('http://request-catcher:5000/__last_request__'), true);
         $resquest['data'] = json_decode($resquest['data'], true);
         
         return $resquest;
