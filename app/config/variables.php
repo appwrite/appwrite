@@ -177,7 +177,7 @@ return [
     ],
     [
         'name' => '_APP_SYSTEM_RESPONSE_FORMAT',
-        'default' => '0.7',
+        'default' => '',
         'required' => false,
         'question' => '',
     ],

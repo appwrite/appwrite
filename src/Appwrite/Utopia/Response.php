@@ -250,7 +250,15 @@ class Response extends SwooleResponse
      */
     public function dynamic(Document $document, string $model): void
     {
-        $this->json($this->output($document, $model));
+        $output = $this->output($document, $model);
+
+        // If filter is set, parse the item
+        if(self::isFilter()){
+            $item = self::getFilter()->parse($output, $model);
+        }
+
+        $this->json($output);
+
     }
 
     /**
@@ -293,10 +301,6 @@ class Response extends SwooleResponse
                         }
 
                         $item = $this->output($item, $rule['type']);
-                        // If filter is set, parse the item
-                        if(self::isFilter()){
-                            $item = self::getFilter()->parse($item, $rule['type']);
-                        }
                     }
                 }
             }
