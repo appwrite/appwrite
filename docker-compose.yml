@@ -427,7 +427,7 @@ services:
     container_name: appwrite-mailcatcher
     restart: unless-stopped
     ports:
-      - '9503:80'
+      - '9503:1080'
     networks:
       - appwrite
 
