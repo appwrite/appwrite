@@ -1,22 +1,27 @@
 <?php
 
-require_once __DIR__.'/../init.php';
-
-\cli_set_process_title('Deletes V1 Worker');
-
-echo APP_NAME.' deletes worker v1 has started'."\n";
-
 use Appwrite\Database\Database;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Storage\Device\Local;
+use Utopia\Abuse\Abuse;
+use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Audit\Audit;
+use Utopia\Audit\Adapters\MySQL as AuditAdapter;
+
+require_once __DIR__.'/../init.php';
+
+\cli_set_process_title('Deletes V1 Worker');
+
+Console::success(APP_NAME.' deletes worker v1 has started'."\n");
 
 class DeletesV1
 {
+
     public $args = [];
 
     protected $consoleDB = null;
@@ -27,28 +32,49 @@ class DeletesV1
 
     public function perform()
     {
-        $projectId = $this->args['projectId'];
-        $document = $this->args['document'];
-
-        $document = new Document($document);
+        $projectId = $this->args['projectId'];   
+        $type = $this->args['type'];
         
-        switch (strval($document->getCollection())) {
-            case Database::SYSTEM_COLLECTION_PROJECTS:
-                $this->deleteProject($document);
+        switch (strval($type)) {
+            case DELETE_TYPE_DOCUMENT:
+                $document = $this->args['document'];
+                $document = new Document($document);    
+                switch (strval($document->getCollection())) {
+                    case Database::SYSTEM_COLLECTION_PROJECTS:
+                        $this->deleteProject($document);
+                        break;
+                    case Database::SYSTEM_COLLECTION_FUNCTIONS:
+                        $this->deleteFunction($document, $projectId);
+                        break;
+                    case Database::SYSTEM_COLLECTION_USERS:
+                        $this->deleteUser($document, $projectId);
+                        break;
+                    case Database::SYSTEM_COLLECTION_COLLECTIONS:
+                        $this->deleteDocuments($document, $projectId);
+                        break;
+                    default:
+                        Console::error('No lazy delete operation available for document of type: '.$document->getCollection());
+                        break;
+                }
                 break;
-            case Database::SYSTEM_COLLECTION_FUNCTIONS:
-                $this->deleteFunction($document, $projectId);
+
+            case DELETE_TYPE_EXECUTIONS:
+                $this->deleteExecutionLogs();
                 break;
-            case Database::SYSTEM_COLLECTION_USERS:
-                $this->deleteUser($document, $projectId);
+
+            case DELETE_TYPE_AUDIT:
+                $this->deleteAuditLogs($this->args['timestamp']);
                 break;
-            case Database::SYSTEM_COLLECTION_COLLECTIONS:
-                $this->deleteDocuments($document, $projectId);
+
+            case DELETE_TYPE_ABUSE:
+                $this->deleteAbuseLogs($this->args['timestamp']);
                 break;
+                        
             default:
-                Console::error('No lazy delete operation available for document of type: '.$document->getCollection());
+                Console::error('No delete operation for type: '.$type);
                 break;
-        }
+            
+            }
     }
 
     public function tearDown(): void
@@ -84,7 +110,7 @@ class DeletesV1
 
         foreach ($tokens as $token) {
             if (!$this->getProjectDB($projectId)->deleteDocument($token->getId())) {
-                throw new Exception('Failed to remove token from DB', 500);
+                throw new Exception('Failed to remove token from DB');
             }
         }
 
@@ -93,6 +119,59 @@ class DeletesV1
             '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
             'userId='.$document->getId(),
         ], $this->getProjectDB($projectId));
+    }
+
+    protected function deleteExecutionLogs() 
+    {
+        $this->deleteForProjectIds(function($projectId) {
+            if (!($projectDB = $this->getProjectDB($projectId))) {
+                throw new Exception('Failed to get projectDB for project '.$projectId);
+            }
+
+            // Delete Executions
+            $this->deleteByGroup([
+                '$collection='.Database::SYSTEM_COLLECTION_EXECUTIONS
+            ], $projectDB);
+        });
+    }
+
+    protected function deleteAbuseLogs($timestamp) 
+    {
+        global $register;
+        if($timestamp == 0) {
+            throw new Exception('Failed to delete audit logs. No timestamp provided');
+        }
+
+        $timeLimit = new TimeLimit("", 0, 1, function () use ($register) {
+            return $register->get('db');
+        });
+
+        $this->deleteForProjectIds(function($projectId) use ($timeLimit, $timestamp){
+            $timeLimit->setNamespace('app_'.$projectId);
+            $abuse = new Abuse($timeLimit); 
+
+            $status = $abuse->cleanup($timestamp);
+            if (!$status) {
+                throw new Exception('Failed to delete Abuse logs for project '.$projectId);
+            }
+        });
+    }
+
+    protected function deleteAuditLogs($timestamp)
+    {
+        global $register;
+        if($timestamp == 0) {
+            throw new Exception('Failed to delete audit logs. No timestamp provided');
+        }
+        $this->deleteForProjectIds(function($projectId) use ($register, $timestamp){
+            $adapter = new AuditAdapter($register->get('db'));
+            $adapter->setNamespace('app_'.$projectId);
+            $audit = new Audit($adapter);
+            $status = $audit->cleanup($timestamp);
+            if (!$status) {
+                throw new Exception('Failed to delete Audit logs for project'.$projectId);
+            }
+        });
     }
 
     protected function deleteFunction(Document $document, $projectId)
@@ -142,6 +221,48 @@ class DeletesV1
         Authorization::reset();
     }
 
+    protected function deleteForProjectIds(callable $callback)
+    {
+        $count = 0;
+        $chunk = 0;
+        $limit = 50;
+        $projects = [];
+        $sum = $limit;
+
+        $executionStart = \microtime(true);
+        
+        while($sum === $limit) {
+            $chunk++;
+
+            Authorization::disable();
+            $projects = $this->getConsoleDB()->getCollection([
+                'limit' => $limit,
+                'offset' => $count,
+                'orderType' => 'ASC',
+                'orderCast' => 'string',
+                'filters' => [
+                    '$collection='.Database::SYSTEM_COLLECTION_PROJECTS,
+                ],
+            ]);
+            Authorization::reset();
+
+            $projectIds = array_map (function ($project) { 
+                return $project->getId(); 
+            }, $projects);
+
+            $sum = count($projects);
+
+            Console::info('Executing delete function for chunk #'.$chunk.'. Found '.$sum.' projects');
+            foreach ($projectIds as $projectId) {
+                $callback($projectId);
+                $count++;
+            }
+        }
+
+        $executionEnd = \microtime(true);
+        Console::info("Found {$count} projects " . ($executionEnd - $executionStart) . " seconds");
+    }
+
     protected function deleteByGroup(array $filters, Database $database, callable $callback = null)
     {
         $count = 0;
@@ -159,7 +280,7 @@ class DeletesV1
 
             $results = $database->getCollection([
                 'limit' => $limit,
-                'offset' => 0,
+                'offset' => $count,
                 'orderField' => '$id',
                 'orderType' => 'ASC',
                 'orderCast' => 'string',

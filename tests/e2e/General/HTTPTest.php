@@ -1,14 +1,12 @@
 <?php
 
-namespace Tests\E2E\Services\Account;
+namespace Tests\E2E\General;
 
-use CURLFile;
 use Exception;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectNone;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideNone;
-use Utopia\CLI\Console;
 
 class HTTPTest extends Scope
 {

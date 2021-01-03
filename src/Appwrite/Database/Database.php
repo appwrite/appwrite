@@ -149,7 +149,7 @@ class Database
             'limit' => 15,
             'search' => '',
             'relations' => true,
-            'orderField' => '$id',
+            'orderField' => '',
             'orderType' => 'ASC',
             'orderCast' => 'int',
             'filters' => [],

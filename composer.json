@@ -34,11 +34,11 @@
 
         "appwrite/php-clamav": "1.0.*",
 
-        "utopia-php/framework": "0.9.8",
-        "utopia-php/abuse": "0.2.*",
-        "utopia-php/audit": "0.3.*",
+        "utopia-php/framework": "0.10.0",
+        "utopia-php/abuse": "0.3.*",
+        "utopia-php/audit": "0.5.*",
         "utopia-php/cache": "0.2.*",
-        "utopia-php/cli": "0.7.2",
+        "utopia-php/cli": "0.8.0",
         "utopia-php/config": "0.2.*",
         "utopia-php/locale": "0.3.*",
         "utopia-php/registry": "0.2.*",
@@ -56,7 +56,7 @@
     },
     "require-dev": {
         "swoole/ide-helper": "4.5.5",
-        "appwrite/sdk-generator": "master",
+        "appwrite/sdk-generator": "0.2.3",
         "phpunit/phpunit": "9.4.2",
         "vimeo/psalm": "4.1.1"
     },
