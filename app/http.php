@@ -23,7 +23,6 @@ error_reporting(E_ALL);
 $http = new Server("0.0.0.0", 80);
 
 $payloadSize = max(4000000 /* 4mb */, App::getEnv('_APP_STORAGE_LIMIT', 10000000 /* 10mb */));
-$responseFormat = App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', '');
 
 $http
     ->set([

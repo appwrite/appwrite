@@ -108,6 +108,8 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
             default:
                 throw new Exception('No filter available for response format : '.$responseFormat, 400);
         }
+    } else {
+        Response::setFilter(null);
     }
 
     /*
