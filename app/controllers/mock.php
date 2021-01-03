@@ -308,7 +308,7 @@ App::get('/v1/mock/tests/general/oauth2/token')
     ->param('client_secret', '', new Text(100), 'OAuth2 scope list.')
     ->param('code', '', new Text(100), 'OAuth2 state.')
     ->inject('response')
-    ->action(function ($client_id, $redirectURI, $clientSecret, $code, $response) {
+    ->action(function ($client_id, $redirectURI, $client_secret, $code, $response) {
         /** @var Appwrite\Utopia\Response $response */
 
         if ($client_id != '1') {
