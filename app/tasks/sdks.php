@@ -11,6 +11,7 @@ use Appwrite\SDK\Language\Python;
 use Appwrite\SDK\Language\Ruby;
 use Appwrite\SDK\Language\Dart;
 use Appwrite\SDK\Language\Deno;
+use Appwrite\SDK\Language\DotNet;
 use Appwrite\SDK\Language\Flutter;
 use Appwrite\SDK\Language\Go;
 use Appwrite\SDK\Language\Java;
@@ -131,6 +132,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         break;
                     case 'swift':
                         $config = new Swift();
+                        break;
+                    case 'dotnet':
+                        $config = new DotNet();
                         break;
                     default:
                         throw new Exception('Language "'.$language['key'].'" not supported');
