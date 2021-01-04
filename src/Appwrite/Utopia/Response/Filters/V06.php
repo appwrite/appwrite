@@ -146,15 +146,14 @@ class V06 extends Filter {
     private function parseCurrencyList(array  $content) 
     {
         $content['locations'] = [];
-
         $currencies = $content['currencies'];
         $parsedResponse = [];
         foreach($currencies as $currency) {
             $currency['locations'] = [];
             $parsedResponse[] = $currency;
         }
-
-        return $parsedResponse;
+        $content['currencies'] = $parsedResponse;
+        return $content;
     }
 
     private function parseContinentList(array $content)
@@ -164,8 +163,8 @@ class V06 extends Filter {
         foreach($continents as $continent) {
             $parsedResponse[$continent['code']] = $continent['name'];
         }
-
-        return $parsedResponse;
+        $content['continents'] = $parsedResponse;
+        return $content;
     }
 
     private function parsePhoneList(array $content)
@@ -175,8 +174,8 @@ class V06 extends Filter {
         foreach($phones as $phone) {
             $parsedResponse[$phone['countryCode']] = $phone['code'];
         }
-
-        return $parsedResponse;
+        $content['phones'] = $parsedResponse;
+        return $content;
     }
 
     private function parseCountryList(array $content) 
@@ -186,8 +185,8 @@ class V06 extends Filter {
         foreach($countries as $country) {
             $parsedResponse[$country['code']] = $country['name'];
         }
-
-        return $parsedResponse;
+        $content['countries'] = $parsedResponse;
+        return $content;
     }
 
     private function parseLocale(array $content) 
@@ -216,7 +215,7 @@ class V06 extends Filter {
             $parsedResponse[] = [
                 'event' => $log['event'],
                 'ip' => $log['ip'],
-                'time' => strtotime($log['time']),
+                'time' => $log['time'],
                 'OS' => $log['osName'].' '.$log['osVersion'],
                 'client' => $log['clientName'].' '.$log['clientVersion'],
                 'device' => $log['deviceName'],
@@ -228,7 +227,8 @@ class V06 extends Filter {
                 ]
             ];
         }
-        return $parsedResponse;
+        $content['logs'] = $parsedResponse;
+        return $content;
     }
 
     private function parseSessionList(array $content)
@@ -251,7 +251,8 @@ class V06 extends Filter {
                 ],
             ];
         }
-        return $parsedResponse;
+        $content['sessions'] = $parsedResponse;
+        return $content;
     }
 
     private function parseSession(array $content) 
@@ -267,12 +268,13 @@ class V06 extends Filter {
         foreach($users as $user) {
             $parsedResponse[] = $this->parseUser($user);
         }
-        return $parsedResponse;
+        $content['users'] = $parsedResponse;
+        return $content;
     }
 
     private function parseUser(array $content)
     {
-        foreach (Config::getParam('providers') as $key => $provider) {
+        foreach (Config::getParam('providers', []) as $key => $provider) {
             if (!$provider['enabled']) {
                 continue;
             }

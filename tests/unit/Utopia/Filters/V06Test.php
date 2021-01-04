@@ -39,6 +39,8 @@ class V06Test extends TestCase
             ]
         ];
 
+        Config::load('providers', __DIR__.'/../../../../app/config/providers.php');
+
         $model = Response::MODEL_USER;
         $parsedResponse = $this->filter->parse($content, $model);
 
@@ -72,6 +74,8 @@ class V06Test extends TestCase
                 ]
             ]
         ];
+
+        Config::load('providers', __DIR__.'/../../../../app/config/providers.php');
 
         $model = Response::MODEL_USER_LIST;
         $parsedResponse = $this->filter->parse($content, $model);
@@ -260,7 +264,7 @@ class V06Test extends TestCase
         $parsedResponse = $this->filter->parse($content, $model);
 
         $this->assertEquals($parsedResponse['ip'], '127.0.0.1');
-        $this->assertEquals($parsedResponse['contryCode'], 'US');
+        $this->assertEquals($parsedResponse['countryCode'], 'US');
         $this->assertEquals($parsedResponse['country'], 'United States');
         $this->assertEquals($parsedResponse['continentCode'], 'NA');
         $this->assertEquals($parsedResponse['continent'], 'North America');
