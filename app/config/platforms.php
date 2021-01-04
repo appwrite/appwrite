@@ -242,7 +242,7 @@ return [
                 'name' => '.NET',
                 'version' => '0.0.1',
                 'url' => 'https://github.com/appwrite/sdk-for-dotnet',
-                'package' => '',
+                'package' => 'https://www.nuget.org/packages/Appwrite',
                 'enabled' => true,
                 'beta' => true,
                 'family' => APP_PLATFORM_SERVER,
