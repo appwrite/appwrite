@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "57a43a1cab8459494f031551fe83ffb5",
+    "content-hash": "30a8a58c868d3546fc22511b46431564",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -1858,11 +1858,11 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.3.0",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "f0a6ecf92869012dd546ec503c69177dce0f9d90"
+                "reference": "7d762df83f2539ca89605e40541afbdb20941542"
             },
             "require": {
                 "ext-curl": "*",
@@ -1875,6 +1875,7 @@
             "require-dev": {
                 "phpunit/phpunit": "^7.0"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -1892,7 +1893,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2021-01-03T21:23:24+00:00"
+            "time": "2021-01-04T16:19:42+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",
@@ -5603,7 +5604,9 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": [],
+    "stability-flags": {
+        "appwrite/sdk-generator": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

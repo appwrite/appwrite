@@ -61,6 +61,7 @@ $cli
                 
                 $spec = file_get_contents(__DIR__.'/../config/specs/'.$version.'.'.$language['family'].'.json');
 
+                $cover = 'https://appwrite.io/images/github.png';
                 $result = \realpath(__DIR__.'/..').'/sdks/'.$key.'-'.$language['key'];
                 $resultExamples = \realpath(__DIR__.'/../..').'/docs/examples/'.$version.'/'.$key.'-'.$language['key'];
                 $target = \realpath(__DIR__.'/..').'/sdks/git/'.$language['key'].'/';
@@ -134,6 +135,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config = new Swift();
                         break;
                     case 'dotnet':
+                        $cover = '';
                         $config = new DotNet();
                         break;
                     default:
@@ -158,7 +160,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setGitRepo($language['gitUrl'])
                     ->setGitRepoName($language['gitRepoName'])
                     ->setGitUserName($language['gitUserName'])
-                    ->setLogo('https://appwrite.io/images/github.png')
+                    ->setLogo($cover)
                     ->setURL('https://appwrite.io')
                     ->setShareText('Appwrite is a backend as a service for building web or mobile apps')
                     ->setShareURL('http://appwrite.io')
