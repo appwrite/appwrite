@@ -520,14 +520,14 @@ class FunctionsCustomServerTest extends Scope
                 'command' => 'ruby app.rb',
                 'timeout' => 15,
             ],
-            [
-                'language' => 'Deno',
-                'version' => '1.5',
-                'name' => 'deno-1.5',
-                'code' => $functions.'/deno.tar.gz',
-                'command' => 'deno run --allow-env index.ts',
-                'timeout' => 15,
-            ],
+            // [
+            //     'language' => 'Deno',
+            //     'version' => '1.5',
+            //     'name' => 'deno-1.5',
+            //     'code' => $functions.'/deno.tar.gz',
+            //     'command' => 'deno run --allow-env index.ts',
+            //     'timeout' => 15,
+            // ],
         ];
 
         foreach ($envs as $key => $env) {
