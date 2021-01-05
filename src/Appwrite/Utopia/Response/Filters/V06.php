@@ -215,17 +215,28 @@ class V06 extends Filter {
         $parsedResponse = [];
         foreach($logs as $log) {
             $parsedResponse[] = [
+                'brand' => $log['deviceBrand'],
+                'device' => $log['deviceName'],
                 'event' => $log['event'],
                 'ip' => $log['ip'],
-                'time' => $log['time'],
-                'OS' => $log['osName'].' '.$log['osVersion'],
-                'client' => $log['clientName'].' '.$log['clientVersion'],
-                'device' => $log['deviceName'],
-                'brand' => $log['deviceBrand'],
                 'model' => $log['deviceModel'],
+                'time' => $log['time'],
                 'geo' => [
                     'isoCode' => empty($log['countryCode']) ? '---' : $log['countryCode']  ,
                     'country' => empty($log['countryName'] ) ? Locale::getText('locale.country.unknown') : $log['countryName']
+                ],
+                'OS' => [
+                    'name' => $log['osName'],
+                    'platform' =>  '',
+                    'short_name' => $log['osCode'],
+                    'version' => $log['osVersion']
+                ],
+                'client' => [
+                    'engine' => $log['clientEngine'],
+                    'name' => $log['clientName'],
+                    'short_name' => $log['clientCode'],
+                    'type' => $log['clientType'],
+                    'version' => $log['clientVersion']
                 ]
             ];
         }

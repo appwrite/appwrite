@@ -184,7 +184,7 @@ class V06Test extends TestCase
         $this->assertEquals($parsedResponse['sessions'][0]['OS']['name'], 'Mac');
         $this->assertEquals($parsedResponse['sessions'][0]['OS']['platform'], '');
         $this->assertEquals($parsedResponse['sessions'][0]['OS']['short_name'], 'Mac');
-        $this->assertEquals($parsedResponse['sessions'][0]['OS']['version'], '');
+        $this->assertEquals($parsedResponse['sessions'][0]['OS']['version'], 'Mac');
 
         $this->assertEquals($parsedResponse['sessions'][0]['client']['engine'], 'WebKit');
         $this->assertEquals($parsedResponse['sessions'][0]['client']['name'], 'Chrome Mobile iOS');
@@ -227,16 +227,26 @@ class V06Test extends TestCase
         $parsedResponse = $this->filter->parse($content, $model);
 
         $this->assertEquals($parsedResponse['sum'], 1);
+        $this->assertEquals($parsedResponse['logs'][0]['brand'], 'Google');
+        $this->assertEquals($parsedResponse['logs'][0]['device'], 'smartphone');
         $this->assertEquals($parsedResponse['logs'][0]['event'], 'account.sessions.create');
         $this->assertEquals($parsedResponse['logs'][0]['ip'], '127.0.0.1');
-        $this->assertEquals($parsedResponse['logs'][0]['time'], 1592981250);
-        $this->assertEquals($parsedResponse['logs'][0]['OS'], 'Mac Mac');
-        $this->assertEquals($parsedResponse['logs'][0]['client'], 'Chrome Mobile iOS 84.0');
-        $this->assertEquals($parsedResponse['logs'][0]['device'], 'smartphone');
-        $this->assertEquals($parsedResponse['logs'][0]['brand'], 'Google');
         $this->assertEquals($parsedResponse['logs'][0]['model'], 'Nexus 5');
-        $this->assertEquals($parsedResponse['logs'][0]['geo']['isoCode'], 'US');
-        $this->assertEquals($parsedResponse['logs'][0]['geo']['country'], 'United States');
+        $this->assertEquals($parsedResponse['logs'][0]['time'], 1592981250);
+
+        $this->assertEquals($parsedResponse['sessions'][0]['OS']['name'], 'Mac');
+        $this->assertEquals($parsedResponse['sessions'][0]['OS']['platform'], '');
+        $this->assertEquals($parsedResponse['sessions'][0]['OS']['short_name'], 'Mac');
+        $this->assertEquals($parsedResponse['sessions'][0]['OS']['version'], 'Mac');
+
+        $this->assertEquals($parsedResponse['sessions'][0]['client']['engine'], 'WebKit');
+        $this->assertEquals($parsedResponse['sessions'][0]['client']['name'], 'Chrome Mobile iOS');
+        $this->assertEquals($parsedResponse['sessions'][0]['client']['short_name'], 'CM');
+        $this->assertEquals($parsedResponse['sessions'][0]['client']['type'], 'browser');
+        $this->assertEquals($parsedResponse['sessions'][0]['client']['version'], '84.0');
+
+        $this->assertEquals($parsedResponse['sessions'][0]['geo']['isoCode'], 'US');
+        $this->assertEquals($parsedResponse['sessions'][0]['geo']['country'], 'United States');
     }
 
     public function testParseToken()
