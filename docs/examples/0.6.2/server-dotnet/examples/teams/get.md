@@ -3,11 +3,11 @@ use Appwrite;
 Client client = new Client();
 
 client
-  .SetEndPoint("https://[HOSTNAME_OR_IP]/v1") # Your API Endpoint
-  .SetProject("5df5acd0d48c2") # Your project ID
-  .SetKey("919c2d18fb5d4...a2ae413da83346ad2") # Your secret API key
+  .SetEndPoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
+  .SetProject("5df5acd0d48c2") // Your project ID
+  .SetKey("919c2d18fb5d4...a2ae413da83346ad2") // Your secret API key
 ;
 
 Teams teams = new Teams(client);
 
-result = teams.get("[TEAM_ID]");
+HttpResponseMessage result = await teams.Get("[TEAM_ID]");
