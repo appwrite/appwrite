@@ -249,6 +249,53 @@ class V06Test extends TestCase
         $this->assertEquals($parsedResponse['sessions'][0]['geo']['country'], 'United States');
     }
 
+    public function testParseTeam()
+    {
+        $content = [
+            '$id' => '5ff45ef261829',
+            'name' => 'test',
+            'dateCreated' => 1592981250,
+            'sum' => 7
+        ];
+
+        $model = Response::MODEL_TEAM;
+        $parsedResponse = $this->filter->parse($content, $model);
+
+        $this->assertEquals($parsedResponse['$id'], '5ff45ef261829');
+        $this->assertEquals($parsedResponse['name'], 'test');
+        $this->assertEquals($parsedResponse['dateCreated'], 1592981250);
+        $this->assertEquals($parsedResponse['sum'], 7);
+        $this->assertEquals($parsedResponse['$collection'], 'teams');
+        $this->assertEquals($parsedResponse['$permissions'], []);
+    }
+
+    public function testParseTeamList()
+    {
+        $content = [
+            'sum' => 1,
+            'teams' => [
+                0 => [
+                    '$id' => '5ff45ef261829',
+                    'name' => 'test',
+                    'dateCreated' => 1592981250,
+                    'sum' => 7
+                ]
+            ]
+        ];
+
+        $model = Response::MODEL_TEAM_LIST;
+        $parsedResponse = $this->filter->parse($content, $model);
+
+        $this->assertEquals($parsedResponse['sum'], 1);
+        $this->assertEquals($parsedResponse['teams'][0]['$id'], '5ff45ef261829');
+        $this->assertEquals($parsedResponse['teams'][0]['name'], 'test');
+        $this->assertEquals($parsedResponse['teams'][0]['dateCreated'], 1592981250);
+        $this->assertEquals($parsedResponse['teams'][0]['sum'], 7);
+        $this->assertEquals($parsedResponse['teams'][0]['$collection'], 'teams');
+        $this->assertEquals($parsedResponse['teams'][0]['$permissions'], []);
+
+    }
+
     public function testParseToken()
     {
         $content = [

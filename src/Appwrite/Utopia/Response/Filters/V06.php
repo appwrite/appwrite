@@ -52,11 +52,11 @@ class V06 extends Filter {
                 break;
             
             case Response::MODEL_TEAM:
-                $parsedResponse = $content;
+                $parsedResponse = $this->parseTeam($content);
                 break;
 
             case Response::MODEL_TEAM_LIST:
-                $parsedResponse = $content['teams'];
+                $parsedResponse = $this->parseTeamList($content);
                 break;
 
             case Response::MODEL_MEMBERSHIP:
@@ -206,6 +206,24 @@ class V06 extends Filter {
     private function parseToken(array $content)
     {
         $content['type'] = Auth::TOKEN_TYPE_RECOVERY;
+        return $content;
+    }
+
+    private function parseTeam(array $content)
+    {
+        $content['$collection'] = Database::SYSTEM_COLLECTION_TEAMS; 
+        $content['$permissions'] = [];
+        return $content;
+    }
+
+    private function parseTeamList(array $content)
+    {
+        $teams = $content['teams'];
+        $parsedResponse = [];
+        foreach($teams as $team) {
+            $parsedResponse[] = $this->parseTeam($team);
+        }
+        $content['teams'] = $parsedResponse;
         return $content;
     }
 
