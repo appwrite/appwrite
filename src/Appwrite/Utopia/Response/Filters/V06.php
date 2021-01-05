@@ -12,6 +12,8 @@ use Exception;
 use Utopia\Config\Config;
 use Utopia\Locale\Locale as Locale;
 
+use function PHPSTORM_META\map;
+
 class V06 extends Filter {
     
     // Convert 0.7 Data format to 0.6 format
@@ -238,17 +240,28 @@ class V06 extends Filter {
         foreach($sessions as $session) {
             $parsedResponse[] = [
                 '$id' => $session['$id'],
-                'OS' => $session['osName'].' '.$session['osVersion'],
-                'client' => $session['clientName'].' '.$session['clientVersion'],
-                'device' => $session['deviceName'],
                 'brand' => $session['deviceBrand'],
-                'model' => $session['deviceModel'],
-                'ip' => $session['ip'],
                 'current' => $session['current'],
+                'device' => $session['deviceName'],
+                'ip' => $session['ip'],
+                'model' => $session['deviceModel'],
                 'geo' => [
                     'isoCode' => empty($session['countryCode']) ? '---' : $session['countryCode']  ,
                     'country' => empty($session['countryName'] ) ? Locale::getText('locale.country.unknown') : $session['countryName']
                 ],
+                'OS' => [
+                    'name' => $session['osName'],
+                    'platform' =>  $session[''],
+                    'short_name' => $session['osCode'],
+                    'version' => $session['osVersion']
+                ],
+                'client' => [
+                    'engine' => $session['clientEngine'],
+                    'name' => $session['clientName'],
+                    'short_name' => $session['clientCode'],
+                    'type' => $session['clientType'],
+                    'version' => $session['clientVersion']
+                ]
             ];
         }
         $content['sessions'] = $parsedResponse;
