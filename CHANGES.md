@@ -2,10 +2,7 @@
 
 ## Features
 
-- Improved Webhooks and New System Events - [Learn more]()
-
-
-### New APIs
+- Improved Webhooks and added new system events - [Learn more]()
 - Added response to /locale/languages API with a list of languages (@TorstenDittmann ,[#351](https://github.com/appwrite/appwrite/issues/351))
 - Added a new route in the Avatars API to get user initials avatar ([#386](https://github.com/appwrite/appwrite/issues/386))
 - Added API response payload structure info and examples to the docs site ([#381](https://github.com/appwrite/appwrite/issues/381))
