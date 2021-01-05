@@ -100,7 +100,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     * Response format
     */
     $responseFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
-    if (!empty($responseFormat)) {
+    if ($responseFormat) {
         switch($responseFormat) {
             case version_compare ($responseFormat , '0.6.2', '<=') :
                 Response::setFilter(new V06());
