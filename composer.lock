@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "229bcebe0c03153ab739cd324fb4eb43",
+    "content-hash": "2dee8b75780ba88fd7da28d08d691998",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -1858,11 +1858,11 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.3.2",
+            "version": "0.3.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "7d762df83f2539ca89605e40541afbdb20941542"
+                "reference": "7530820a1ee824874d89749c51b0e49d15595abc"
             },
             "require": {
                 "ext-curl": "*",
@@ -1892,7 +1892,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2021-01-04T16:19:42+00:00"
+            "time": "2021-01-05T17:58:17+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",
@@ -4513,12 +4513,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "5a8ebe413fbd4091d5b3c5b70e298141681c59c7"
+                "reference": "af2bafc13cb92e182bf634285346925e09888d23"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/5a8ebe413fbd4091d5b3c5b70e298141681c59c7",
-                "reference": "5a8ebe413fbd4091d5b3c5b70e298141681c59c7",
+                "url": "https://api.github.com/repos/symfony/console/zipball/af2bafc13cb92e182bf634285346925e09888d23",
+                "reference": "af2bafc13cb92e182bf634285346925e09888d23",
                 "shasum": ""
             },
             "require": {
@@ -4603,7 +4603,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-01-01T09:27:20+00:00"
+            "time": "2021-01-05T19:51:30+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -5318,12 +5318,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "846ebbd7c8e780913fa5731d9c6139522111b56f"
+                "reference": "a0e2cc25723f3cdb6bbaf617664c4e228f1e9886"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/846ebbd7c8e780913fa5731d9c6139522111b56f",
-                "reference": "846ebbd7c8e780913fa5731d9c6139522111b56f",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/a0e2cc25723f3cdb6bbaf617664c4e228f1e9886",
+                "reference": "a0e2cc25723f3cdb6bbaf617664c4e228f1e9886",
                 "shasum": ""
             },
             "require": {
@@ -5389,7 +5389,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-01-01T14:57:43+00:00"
+            "time": "2021-01-05T15:39:16+00:00"
         },
         {
             "name": "vimeo/psalm",
