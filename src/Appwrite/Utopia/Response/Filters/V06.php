@@ -251,7 +251,7 @@ class V06 extends Filter {
                 ],
                 'OS' => [
                     'name' => $session['osName'],
-                    'platform' =>  $session[''],
+                    'platform' =>  '',
                     'short_name' => $session['osCode'],
                     'version' => $session['osVersion']
                 ],

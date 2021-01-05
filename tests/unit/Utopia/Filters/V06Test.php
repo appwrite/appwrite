@@ -175,13 +175,23 @@ class V06Test extends TestCase
 
         $this->assertEquals($parsedResponse['sum'], 1);
         $this->assertEquals($parsedResponse['sessions'][0]['$id'], '5e5ea5c16897e');
-        $this->assertEquals($parsedResponse['sessions'][0]['OS'], 'Mac Mac');
-        $this->assertEquals($parsedResponse['sessions'][0]['client'], 'Chrome Mobile iOS 84.0');
-        $this->assertEquals($parsedResponse['sessions'][0]['device'], 'smartphone');
         $this->assertEquals($parsedResponse['sessions'][0]['brand'], 'Google');
-        $this->assertEquals($parsedResponse['sessions'][0]['model'], 'Nexus 5');
-        $this->assertEquals($parsedResponse['sessions'][0]['ip'], '127.0.0.1');
         $this->assertEquals($parsedResponse['sessions'][0]['current'], true);
+        $this->assertEquals($parsedResponse['sessions'][0]['device'], 'smartphone');
+        $this->assertEquals($parsedResponse['sessions'][0]['ip'], '127.0.0.1');
+        $this->assertEquals($parsedResponse['sessions'][0]['model'], 'Nexus 5');
+
+        $this->assertEquals($parsedResponse['sessions'][0]['OS']['name'], 'Mac');
+        $this->assertEquals($parsedResponse['sessions'][0]['OS']['platform'], '');
+        $this->assertEquals($parsedResponse['sessions'][0]['OS']['short_name'], 'Mac');
+        $this->assertEquals($parsedResponse['sessions'][0]['OS']['version'], '');
+
+        $this->assertEquals($parsedResponse['sessions'][0]['client']['engine'], 'WebKit');
+        $this->assertEquals($parsedResponse['sessions'][0]['client']['name'], 'Chrome Mobile iOS');
+        $this->assertEquals($parsedResponse['sessions'][0]['client']['short_name'], 'CM');
+        $this->assertEquals($parsedResponse['sessions'][0]['client']['type'], 'browser');
+        $this->assertEquals($parsedResponse['sessions'][0]['client']['version'], '84.0');
+
         $this->assertEquals($parsedResponse['sessions'][0]['geo']['isoCode'], 'US');
         $this->assertEquals($parsedResponse['sessions'][0]['geo']['country'], 'United States');
     }
