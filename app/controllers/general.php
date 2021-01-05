@@ -14,27 +14,19 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\Origin;
-use Appwrite\Storage\Device\Local;
-use Appwrite\Storage\Storage;
 use Utopia\CLI\Console;
 
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $events, $audits, $usage, $deletes, $clients) {
+App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $clients) {
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Database\Document $console */
     /** @var Appwrite\Database\Document $project */
     /** @var Appwrite\Database\Document $user */
     /** @var Utopia\Locale\Locale $locale */
-    /** @var Appwrite\Event\Event $events */
-    /** @var Appwrite\Event\Event $audits */
-    /** @var Appwrite\Event\Event $usage */
-    /** @var Appwrite\Event\Event $deletes */
-    /** @var Appwrite\Event\Event $functions */
-
     /** @var bool $mode */
     /** @var array $clients */
 
@@ -91,9 +83,6 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         : '.'.$request->getHostname()
     );
 
-    Storage::setDevice('files', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
-    Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId()));
-
     /*
      * Security Headers
      *
@@ -110,8 +99,6 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
 
     $response
         ->addHeader('Server', 'Appwrite')
-        ->addHeader('X-XSS-Protection', '1; mode=block; report=/v1/xss?url='.\urlencode($request->getURI()))
-        //->addHeader('X-Frame-Options', ($refDomain == 'http://localhost') ? 'SAMEORIGIN' : 'ALLOW-FROM ' . $refDomain)
         ->addHeader('X-Content-Type-Options', 'nosniff')
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
         ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-SDK-Version, Cache-Control, Expires, Pragma')
@@ -123,7 +110,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     /*
      * Validate Client Domain - Check to avoid CSRF attack
      *  Adding Appwrite API domains to allow XDOMAIN communication
-     *  Skip this check for non-web platforms which are not requiredto send an origin header
+     *  Skip this check for non-web platforms which are not required to send an origin header
      */
     $origin = $request->getOrigin($request->getReferer(''));
     $originValidator = new Origin(\array_merge($project->getAttribute('platforms', []), $console->getAttribute('platforms', [])));
@@ -219,99 +206,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         throw new Exception('Password reset is required', 412);
     }
 
-    /*
-     * Background Jobs
-     */
-
-    $events
-        ->setParam('projectId', $project->getId())
-        ->setParam('userId', $user->getId())
-        ->setParam('event', $route->getLabel('event', ''))
-        ->setParam('payload', [])
-        ->setParam('functionId', null)	
-        ->setParam('executionId', null)	
-        ->setParam('trigger', 'event')
-    ;
-
-    $audits
-        ->setParam('projectId', $project->getId())
-        ->setParam('userId', $user->getId())
-        ->setParam('event', '')
-        ->setParam('resource', '')
-        ->setParam('userAgent', $request->getUserAgent(''))
-        ->setParam('ip', $request->getIP())
-        ->setParam('data', [])
-    ;
-
-    $usage
-        ->setParam('projectId', $project->getId())
-        ->setParam('httpRequest', 1)
-        ->setParam('httpUrl', $request->getHostname().$request->getURI())
-        ->setParam('httpMethod', $request->getMethod())
-        ->setParam('networkRequestSize', 0)
-        ->setParam('networkResponseSize', 0)
-        ->setParam('storage', 0)
-    ;
-    
-    $deletes
-        ->setParam('projectId', $project->getId())
-    ;
-
-}, ['utopia', 'request', 'response', 'console', 'project', 'user', 'locale', 'events', 'audits', 'usage', 'deletes', 'clients']);
-
-App::shutdown(function ($utopia, $request, $response, $project, $events, $audits, $usage, $deletes, $mode) {
-    /** @var Utopia\App $utopia */
-    /** @var Utopia\Swoole\Request $request */
-    /** @var Appwrite\Utopia\Response $response */
-    /** @var Appwrite\Database\Document $project */
-    /** @var Appwrite\Event\Event $events */
-    /** @var Appwrite\Event\Event $audits */
-    /** @var Appwrite\Event\Event $usage */
-    /** @var Appwrite\Event\Event $deletes */
-    /** @var Appwrite\Event\Event $functions */
-    /** @var bool $mode */
-
-    if (!empty($events->getParam('event'))) {
-        if(empty($events->getParam('payload'))) {
-            $events->setParam('payload', $response->getPayload());
-        }
-
-        $webhooks = clone $events;
-        $functions = clone $events;
-
-        $webhooks
-            ->setQueue('v1-webhooks')
-            ->setClass('WebhooksV1')
-            ->trigger();
-
-        $functions
-            ->setQueue('v1-functions')
-            ->setClass('FunctionsV1')
-            ->trigger();
-    }
-    
-    if (!empty($audits->getParam('event'))) {
-        $audits->trigger();
-    }
-    
-    if (!empty($deletes->getParam('type')) && !empty($deletes->getParam('document'))) {
-        $deletes->trigger();
-    }
-    
-    $route = $utopia->match($request);
-    
-    if ($project->getId()
-        && $mode !== APP_MODE_ADMIN //TODO: add check to make sure user is admin
-        && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage on admin mode
-        
-        $usage
-            ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
-            ->setParam('networkResponseSize', $response->getSize())
-            ->trigger()
-        ;
-    }
-
-}, ['utopia', 'request', 'response', 'project', 'events', 'audits', 'usage', 'deletes', 'mode']);
+}, ['utopia', 'request', 'response', 'console', 'project', 'user', 'locale', 'clients']);
 
 App::options(function ($request, $response) {
     /** @var Utopia\Swoole\Request $request */

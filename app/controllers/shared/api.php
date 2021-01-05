@@ -4,14 +4,24 @@ use Utopia\App;
 use Utopia\Exception;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
+use Appwrite\Storage\Device\Local;
+use Appwrite\Storage\Storage;
 
-App::init(function ($utopia, $request, $response, $project, $user, $register) {
+App::init(function ($utopia, $request, $response, $project, $user, $register, $events, $audits, $usage, $deletes) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Database\Document $project */
     /** @var Appwrite\Database\Document $user */
     /** @var Utopia\Registry\Registry $register */
+    /** @var Appwrite\Event\Event $events */
+    /** @var Appwrite\Event\Event $audits */
+    /** @var Appwrite\Event\Event $usage */
+    /** @var Appwrite\Event\Event $deletes */
+    /** @var Appwrite\Event\Event $functions */
+
+    Storage::setDevice('files', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
+    Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId()));
 
     $route = $utopia->match($request);
 
@@ -52,4 +62,96 @@ App::init(function ($utopia, $request, $response, $project, $user, $register) {
     if ($abuse->check() && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
         throw new Exception('Too many requests', 429);
     }
-}, ['utopia', 'request', 'response', 'project', 'user', 'register'], 'api');
+
+    /*
+     * Background Jobs
+     */
+    $events
+        ->setParam('projectId', $project->getId())
+        ->setParam('userId', $user->getId())
+        ->setParam('event', $route->getLabel('event', ''))
+        ->setParam('payload', [])
+        ->setParam('functionId', null)	
+        ->setParam('executionId', null)	
+        ->setParam('trigger', 'event')
+    ;
+
+    $audits
+        ->setParam('projectId', $project->getId())
+        ->setParam('userId', $user->getId())
+        ->setParam('event', '')
+        ->setParam('resource', '')
+        ->setParam('userAgent', $request->getUserAgent(''))
+        ->setParam('ip', $request->getIP())
+        ->setParam('data', [])
+    ;
+
+    $usage
+        ->setParam('projectId', $project->getId())
+        ->setParam('httpRequest', 1)
+        ->setParam('httpUrl', $request->getHostname().$request->getURI())
+        ->setParam('httpMethod', $request->getMethod())
+        ->setParam('networkRequestSize', 0)
+        ->setParam('networkResponseSize', 0)
+        ->setParam('storage', 0)
+    ;
+    
+    $deletes
+        ->setParam('projectId', $project->getId())
+    ;
+
+}, ['utopia', 'request', 'response', 'project', 'user', 'register', 'events', 'audits', 'usage', 'deletes'], 'api');
+
+App::shutdown(function ($utopia, $request, $response, $project, $events, $audits, $usage, $deletes, $mode) {
+    /** @var Utopia\App $utopia */
+    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Response $response */
+    /** @var Appwrite\Database\Document $project */
+    /** @var Appwrite\Event\Event $events */
+    /** @var Appwrite\Event\Event $audits */
+    /** @var Appwrite\Event\Event $usage */
+    /** @var Appwrite\Event\Event $deletes */
+    /** @var Appwrite\Event\Event $functions */
+    /** @var bool $mode */
+
+    if (!empty($events->getParam('event'))) {
+        if(empty($events->getParam('payload'))) {
+            $events->setParam('payload', $response->getPayload());
+        }
+
+        $webhooks = clone $events;
+        $functions = clone $events;
+
+        $webhooks
+            ->setQueue('v1-webhooks')
+            ->setClass('WebhooksV1')
+            ->trigger();
+
+        $functions
+            ->setQueue('v1-functions')
+            ->setClass('FunctionsV1')
+            ->trigger();
+    }
+    
+    if (!empty($audits->getParam('event'))) {
+        $audits->trigger();
+    }
+    
+    if (!empty($deletes->getParam('type')) && !empty($deletes->getParam('document'))) {
+        $deletes->trigger();
+    }
+    
+    $route = $utopia->match($request);
+    
+    if ($project->getId()
+        && $mode !== APP_MODE_ADMIN //TODO: add check to make sure user is admin
+        && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage on admin mode
+        
+        $usage
+            ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
+            ->setParam('networkResponseSize', $response->getSize())
+            ->trigger()
+        ;
+    }
+
+}, ['utopia', 'request', 'response', 'project', 'events', 'audits', 'usage', 'deletes', 'mode'], 'api');
