@@ -13,23 +13,26 @@ Init your Appwrite client:
 
 ```
 
-Create a new user and session:
+Create a new user:
 
 ```dart
-Account account = Account(client);
+Users users = Users(client);
 
-Response user = await account.create(email: 'me@appwrite.io', password: 'password', name: 'My Name');
+Response result = await users.create(
+    email: 'email@example.com',
+    password: 'password',
+);
  
-Response session = await account.createSession(email: 'me@appwrite.io', password: 'password');
-
 ```
 
 Fetch user profile:
 
 ```dart
-Account account = Account(client);
+Users users = Users(client);
 
-Response profile = await account.get();
+Response profile = await users.get(
+    userId: '[USER_ID]',
+);
 ```
 
 Upload File:
