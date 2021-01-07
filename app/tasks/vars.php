@@ -13,7 +13,6 @@ $cli
         $config = Config::getParam('variables', []);
         $vars = [];
 
-
         foreach($config as $category) {
             foreach($category['variables'] ?? [] as $var) {
                 $vars[] = $var;
