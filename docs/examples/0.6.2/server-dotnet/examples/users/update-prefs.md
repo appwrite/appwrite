@@ -10,4 +10,4 @@ client
 
 Users users = new Users(client);
 
-HttpResponseMessage result = await users.UpdatePrefs("[USER_ID]", {});
+HttpResponseMessage result = await users.UpdatePrefs("[USER_ID]", [object]);

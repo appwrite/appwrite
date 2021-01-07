@@ -10,4 +10,4 @@ client
 
 Database database = new Database(client);
 
-HttpResponseMessage result = await database.UpdateDocument("[COLLECTION_ID]", "[DOCUMENT_ID]", {}, {}, {});
+HttpResponseMessage result = await database.UpdateDocument("[COLLECTION_ID]", "[DOCUMENT_ID]", [object], [List<object>], [List<object>]);

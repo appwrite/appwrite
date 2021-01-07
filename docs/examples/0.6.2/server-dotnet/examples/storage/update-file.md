@@ -10,4 +10,4 @@ client
 
 Storage storage = new Storage(client);
 
-HttpResponseMessage result = await storage.UpdateFile("[FILE_ID]", {}, {});
+HttpResponseMessage result = await storage.UpdateFile("[FILE_ID]", [List<object>], [List<object>]);

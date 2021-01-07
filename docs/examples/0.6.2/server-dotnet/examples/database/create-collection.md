@@ -10,4 +10,4 @@ client
 
 Database database = new Database(client);
 
-HttpResponseMessage result = await database.CreateCollection("[NAME]", {}, {}, {});
+HttpResponseMessage result = await database.CreateCollection("[NAME]", [List<object>], [List<object>], [List<object>]);

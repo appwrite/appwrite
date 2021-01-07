@@ -10,4 +10,4 @@ client
 
 Storage storage = new Storage(client);
 
-HttpResponseMessage result = await storage.CreateFile(new File("./path-to-files/image.jpg"), {}, {});
+HttpResponseMessage result = await storage.CreateFile(new File("./path-to-files/image.jpg"), [List<object>], [List<object>]);
