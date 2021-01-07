@@ -97,7 +97,7 @@ return [
     ],
     [
         'category' => 'Redis',
-        'description' => '',
+        'description' => 'Appwrite uses a Redis server for managing cache, queues and scheduled tasks. The Redis env vars are used to allow Appwrite server to connect to the Redis container.',
         'variables' => [
             [
                 'name' => '_APP_REDIS_HOST',
@@ -119,7 +119,7 @@ return [
     ],
     [
         'category' => 'MariaDB',
-        'description' => '',
+        'description' => 'Appwrite is using a MariaDB server for managing persistent database data. The MariaDB env vars are used to allow Appwrite server to connect to the MariaDB container.',
         'variables' => [
             [
                 'name' => '_APP_DB_HOST',
@@ -165,7 +165,7 @@ return [
     ],
     [
         'category' => 'InfluxDB',
-        'description' => '',
+        'description' => 'Appwrite uses an InfluxDB server for managing time-series data and server stats. The InfluxDB env vars are used to allow Appwrite server to connect to the InfluxDB container.',
         'variables' => [
             [
                 'name' => '_APP_INFLUXDB_HOST',
@@ -187,7 +187,7 @@ return [
     ],
     [
         'category' => 'StatsD',
-        'description' => '',
+        'description' => 'Appwrite uses a StatsD server for aggregating and sending stats data over a fast UDP connection. The StatsD env vars are used to allow Appwrite server to connect to the StatsD container.',
         'variables' => [
             [
                 'name' => '_APP_STATSD_HOST',
@@ -209,7 +209,7 @@ return [
     ],
     [
         'category' => 'SMTP',
-        'description' => '',
+        'description' => "Appwrite is using an SMTP server for emailing your projects users and server admins. The SMTP env vars are used to allow Appwrite server to connect to the SMTP container.\n\nIf running in production, it might be easier to use a 3rd party SMTP server as it might be a little more difficult to set up a production SMTP server that will not send all your emails into your user's SPAM folder.",
         'variables' => [
             [
                 'name' => '_APP_SMTP_HOST',
