@@ -40,7 +40,6 @@ $cli
         $git = (Console::confirm('Should we use git push? (yes/no)') == 'yes');
         $production = ($git) ? (Console::confirm('Type "Appwrite" to push code to production git repos') == 'Appwrite') : false;
         $message = ($git) ? Console::confirm('Please enter your commit message:') : '';
-        $warning = '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check previous releases.**';
 
         if(!in_array($version, ['0.6.2', '0.7.0'])) {
             throw new Exception('Unknown version given');
@@ -71,9 +70,9 @@ $cli
                 $examples = ($examples) ? \file_get_contents($examples) : '';
                 $changelog = \realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'/CHANGELOG.md');
                 $changelog = ($changelog) ? \file_get_contents($changelog) : '# Change Log';
-                $warning = ($language['beta']) ? '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check previous releases.**' : '';
+                $warning = '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check [previous releases]('.$language['url'].'/releases).**';
                 $license = 'BSD-3-Clause';
-                $licenseContent = 'Copyright (c) 2019 Appwrite (https://appwrite.io) and individual contributors.
+                $licenseContent = 'Copyright (c) ' . date('Y') . ' Appwrite (https://appwrite.io) and individual contributors.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -124,6 +123,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         break;
                     case 'dart':
                         $config = new Dart();
+                        $config->setPackageName('dart_appwrite');
                         break;
                     case 'go':
                         $config = new Go();

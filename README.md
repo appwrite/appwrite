@@ -104,7 +104,7 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 * [**Teams**](https://appwrite.io/docs/client/teams) - Manage and group users in teams. Manage memberships, invites, and user roles within a team.
 * [**Database**](https://appwrite.io/docs/client/database) - Manage database collections and documents. Read, create, update, and delete documents and filter lists of documents collections using an advanced filter with graph-like capabilities.
 * [**Storage**](https://appwrite.io/docs/client/storage) - Manage storage files. Read, create, delete, and preview files. Manipulate the preview of your files to fit your app perfectly. All files are scanned by ClamAV and stored in a secure and encrypted way.
-* [**Functions**](https://appwrite.io/docs/server/functions) - Customize your Appwrite server by executing your custom code in an isolate environment, you can trigger your code on any Appwrite system event, manually or using a CRON schedule.
+* [**Functions**](https://appwrite.io/docs/server/functions) - Customize your Appwrite server by executing your custom code in a secure, isolated environment. You can trigger your code on any Appwrite system event, manually or using a CRON schedule.
 * [**Locale**](https://appwrite.io/docs/client/locale) - Track your user's location, and manage your app locale-based data.
 * [**Avatars**](https://appwrite.io/docs/client/avatars) - Manage your users' avatars, countries' flags, browser icons, credit card symbols, and generate QR codes.
 
@@ -125,8 +125,8 @@ Below is a list of currently supported platforms and languages. If you wish to h
 * ✅  &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby) - **Beta** (Maintained by the Appwrite Team)
 * ✅  &nbsp; [Python](https://github.com/appwrite/sdk-for-python) - **Beta** (Maintained by the Appwrite Team)
 * ✅  &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet) - **Experimental** (Maintained by the Appwrite Team)
+* ✅  &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart) **Experimental** (Maintained by the Appwrite Team)
 * ✅  &nbsp; [Go](https://github.com/appwrite/sdk-for-go) **Work in progress** (Maintained by the Appwrite Team)
-* ✅  &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart) **Work in progress** (Maintained by the Appwrite Team)
 
 Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
 
