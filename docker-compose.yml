@@ -125,9 +125,10 @@ services:
       context: .
     restart: unless-stopped
     ports: 
-      - 9502:80
+      - 9505:80
     labels:
       - "traefik.enable=true"
+      - "traefik.constraint-label-stack=appwrite"
       - "traefik.docker.network=appwrite"
       - "traefik.http.services.appwrite_realtime.loadbalancer.server.port=80"
       #ws
