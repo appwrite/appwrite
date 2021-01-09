@@ -258,6 +258,7 @@ return [
                 'package' => '',
                 'enabled' => true,
                 'beta' => true,
+                'dev' => true,
                 'family' => APP_PLATFORM_SERVER,
                 'prism' => 'dart',
                 'source' => \realpath(__DIR__ . '/../sdks/server-dart'),
