@@ -2,6 +2,7 @@
 
 require_once __DIR__.'/../vendor/autoload.php';
 
+use Appwrite\Database\Validator\Authorization;
 use Utopia\Swoole\Files;
 use Utopia\Swoole\Request;
 use Appwrite\Utopia\Response;
@@ -18,8 +19,6 @@ ini_set('memory_limit','512M');
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-
-sleep(2);
 
 $http = new Server("0.0.0.0", 80);
 
@@ -49,6 +48,7 @@ $http->on('AfterReload', function($serv, $workerId) {
 });
 
 $http->on('start', function (Server $http) use ($payloadSize) {
+
     Console::success('Server started succefully (max payload is '.number_format($payloadSize).' bytes)');
 
     Console::info("Master pid {$http->master_pid}, manager pid {$http->manager_pid}");
@@ -96,6 +96,9 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     $app = new App('America/New_York');
     
     try {
+        Authorization::cleanRoles();
+        Authorization::setRole('*');
+
         $app->run($request, $response);
     } catch (\Throwable $th) {
         Console::error('[Error] Type: '.get_class($th));
@@ -106,8 +109,9 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         if(App::isDevelopment()) {
             $swooleResponse->end('error: '.$th->getMessage());
         }
-        
-        $swooleResponse->end('500: Server Error');
+        else {
+            $swooleResponse->end('500: Server Error');
+        }
     }
 });
 

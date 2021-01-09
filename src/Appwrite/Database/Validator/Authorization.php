@@ -10,7 +10,7 @@ class Authorization extends Validator
     /**
      * @var array
      */
-    static $roles = ['*'];
+    static $roles = ['*' => true];
 
     /**
      * @var Document
@@ -77,12 +77,12 @@ class Authorization extends Validator
         foreach ($permissions[$this->action] as $permission) {
             $permission = \str_replace(':{self}', ':'.$this->document->getId(), $permission);
 
-            if (\in_array($permission, self::getRoles())) {
+            if (\array_key_exists($permission, self::$roles)) {
                 return true;
             }
         }
 
-        $this->message = 'User is missing '.$this->action.' for "'.$permission.'" permission. Only this scopes "'.\json_encode(self::getRoles()).'" is given and only this are allowed "'.\json_encode($permissions[$this->action]).'".';
+        $this->message = 'Missing "'.$this->action.'" permission for role "'.$permission.'". Only this scopes "'.\json_encode(self::getRoles()).'" are given and only this are allowed "'.\json_encode($permissions[$this->action]).'".';
 
         return false;
     }
@@ -92,17 +92,45 @@ class Authorization extends Validator
      *
      * @return void
      */
-    public static function setRole($role): void
+    public static function setRole(string $role): void
     {
-        self::$roles[] = $role;
+        self::$roles[$role] = true;
+    }
+
+    /**
+     * @param string $role
+     *
+     * @return void
+     */
+    public static function unsetRole(string $role): void
+    {
+        unset(self::$roles[$role]);
     }
 
     /**
      * @return array
      */
-    public static function getRoles()
+    public static function getRoles(): array
     {
-        return self::$roles;
+        return \array_keys(self::$roles);
+    }
+
+    /**
+     * @return void
+     */
+    public static function cleanRoles(): void
+    {
+        self::$roles = [];
+    }
+
+    /**
+     * @param string $role
+     * 
+     * @return bool
+     */
+    public static function isRole(string $role): bool
+    {
+        return (\array_key_exists($role, self::$roles));
     }
 
     /**

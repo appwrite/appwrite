@@ -27,10 +27,16 @@ App::post('/v1/database/collections')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.method', 'createCollection')
     ->label('sdk.description', '/docs/references/database/create-collection.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_COLLECTION)
     ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
     ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('rules', [], function ($projectDB) { return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES], ['$collection' => Database::SYSTEM_COLLECTION_RULES, '$permissions' => ['read' => [], 'write' => []]])); }, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation.', false, ['projectDB'])
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('audits')
     ->action(function ($name, $read, $write, $rules, $response, $projectDB, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -83,7 +89,7 @@ App::post('/v1/database/collections')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($data, Response::MODEL_COLLECTION)
         ;
-    }, ['response', 'projectDB', 'audits']);
+    });
 
 App::get('/v1/database/collections')
     ->desc('List Collections')
@@ -93,10 +99,15 @@ App::get('/v1/database/collections')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.method', 'listCollections')
     ->label('sdk.description', '/docs/references/database/list-collections.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_COLLECTION_LIST)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 40000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->inject('response')
+    ->inject('projectDB')
     ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -104,9 +115,7 @@ App::get('/v1/database/collections')
         $results = $projectDB->getCollection([
             'limit' => $limit,
             'offset' => $offset,
-            'orderField' => 'name',
             'orderType' => $orderType,
-            'orderCast' => 'string',
             'search' => $search,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_COLLECTIONS,
@@ -117,7 +126,7 @@ App::get('/v1/database/collections')
             'sum' => $projectDB->getSum(),
             'collections' => $results
         ]), Response::MODEL_COLLECTION_LIST);
-    }, ['response', 'projectDB']);
+    });
 
 App::get('/v1/database/collections/:collectionId')
     ->desc('Get Collection')
@@ -127,7 +136,12 @@ App::get('/v1/database/collections/:collectionId')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.method', 'getCollection')
     ->label('sdk.description', '/docs/references/database/get-collection.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_COLLECTION)
     ->param('collectionId', '', new UID(), 'Collection unique ID.')
+    ->inject('response')
+    ->inject('projectDB')
     ->action(function ($collectionId, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -139,7 +153,7 @@ App::get('/v1/database/collections/:collectionId')
         }
 
         $response->dynamic($collection, Response::MODEL_COLLECTION);
-    }, ['response', 'projectDB']);
+    });
 
 App::put('/v1/database/collections/:collectionId')
     ->desc('Update Collection')
@@ -150,11 +164,17 @@ App::put('/v1/database/collections/:collectionId')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.method', 'updateCollection')
     ->label('sdk.description', '/docs/references/database/update-collection.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_COLLECTION)
     ->param('collectionId', '', new UID(), 'Collection unique ID.')
     ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.')
     ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions(/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('rules', [], function ($projectDB) { return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES], ['$collection' => Database::SYSTEM_COLLECTION_RULES, '$permissions' => ['read' => [], 'write' => []]])); }, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation.', true, ['projectDB'])
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('audits')
     ->action(function ($collectionId, $name, $read, $write, $rules, $response, $projectDB, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -208,7 +228,7 @@ App::put('/v1/database/collections/:collectionId')
         ;
 
         $response->dynamic($collection, Response::MODEL_COLLECTION);
-    }, ['response', 'projectDB', 'audits']);
+    });
 
 App::delete('/v1/database/collections/:collectionId')
     ->desc('Delete Collection')
@@ -219,11 +239,19 @@ App::delete('/v1/database/collections/:collectionId')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.method', 'deleteCollection')
     ->label('sdk.description', '/docs/references/database/delete-collection.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('collectionId', '', new UID(), 'Collection unique ID.')
-    ->action(function ($collectionId, $response, $projectDB, $webhooks, $audits) {
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('events')
+    ->inject('audits')
+    ->inject('deletes')
+    ->action(function ($collectionId, $response, $projectDB, $events, $audits, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
 
         $collection = $projectDB->getDocument($collectionId, false);
@@ -235,8 +263,13 @@ App::delete('/v1/database/collections/:collectionId')
         if (!$projectDB->deleteDocument($collectionId)) {
             throw new Exception('Failed to remove collection from DB', 500);
         }
-        
-        $webhooks
+
+        $deletes
+            ->setParam('type', DELETE_TYPE_DOCUMENT)
+            ->setParam('document', $collection)
+        ;
+
+        $events
             ->setParam('payload', $response->output($collection, Response::MODEL_COLLECTION))
         ;
 
@@ -247,7 +280,7 @@ App::delete('/v1/database/collections/:collectionId')
         ;
 
         $response->noContent();
-    }, ['response', 'projectDB', 'webhooks', 'audits']);
+    });
 
 App::post('/v1/database/collections/:collectionId/documents')
     ->desc('Create Document')
@@ -258,6 +291,9 @@ App::post('/v1/database/collections/:collectionId/documents')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.method', 'createDocument')
     ->label('sdk.description', '/docs/references/database/create-document.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ANY)
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
     ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
@@ -265,6 +301,9 @@ App::post('/v1/database/collections/:collectionId/documents')
     ->param('parentDocument', '', new UID(), 'Parent document unique ID. Use when you want your new document to be a child of a parent document.', true)
     ->param('parentProperty', '', new Key(), 'Parent document property name. Use when you want your new document to be a child of a parent document.', true)
     ->param('parentPropertyType', Document::SET_TYPE_ASSIGN, new WhiteList([Document::SET_TYPE_ASSIGN, Document::SET_TYPE_APPEND, Document::SET_TYPE_PREPEND], true), 'Parent document property connection type. You can set this value to **assign**, **append** or **prepend**, default value is assign. Use when you want your new document to be a child of a parent document.', true)
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('audits')
     ->action(function ($collectionId, $data, $read, $write, $parentDocument, $parentProperty, $parentPropertyType, $response, $projectDB, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -361,7 +400,7 @@ App::post('/v1/database/collections/:collectionId/documents')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($data, Response::MODEL_ANY)
         ;
-    }, ['response', 'projectDB', 'audits']);
+    });
 
 App::get('/v1/database/collections/:collectionId/documents')
     ->desc('List Documents')
@@ -371,14 +410,19 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.method', 'listDocuments')
     ->label('sdk.description', '/docs/references/database/list-documents.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_DOCUMENT_LIST)
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('filters', [], new ArrayList(new Text(128)), 'Array of filter strings. Each filter is constructed from a key name, comparison operator (=, !=, >, <, <=, >=) and a value. You can also use a dot (.) separator in attribute names to filter by child document attributes. Examples: \'name=John Doe\' or \'category.$id>=5bed2d152c362\'.', true)
-    ->param('limit', 25, new Range(0, 1000), 'Maximum number of documents to return in response.  Use this value to manage pagination.', true)
-    ->param('offset', 0, new Range(0, 900000000), 'Offset value. Use this value to manage pagination.', true)
-    ->param('orderField', '$id', new Text(128), 'Document field that results will be sorted by.', true)
+    ->param('limit', 25, new Range(0, 100), 'Maximum number of documents to return in response.  Use this value to manage pagination. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, 900000000), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
+    ->param('orderField', '', new Text(128), 'Document field that results will be sorted by.', true)
     ->param('orderType', 'ASC', new WhiteList(['DESC', 'ASC'], true), 'Order direction. Possible values are DESC for descending order, or ASC for ascending order.', true)
     ->param('orderCast', 'string', new WhiteList(['int', 'string', 'date', 'time', 'datetime'], true), 'Order field type casting. Possible values are int, string, date, time or datetime. The database will attempt to cast the order field to the value you pass here. The default value is a string.', true)
     ->param('search', '', new Text(256), 'Search query. Enter any free text search. The database will try to find a match against all document attributes and children. Max length: 256 chars.', true)
+    ->inject('response')
+    ->inject('projectDB')
     ->action(function ($collectionId, $filters, $limit, $offset, $orderField, $orderType, $orderCast, $search, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -419,7 +463,7 @@ App::get('/v1/database/collections/:collectionId/documents')
         ;
 
         $response->dynamic($collection, Response::MODEL_DOCUMENT_LIST);
-    }, ['response', 'projectDB']);
+    });
 
 App::get('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Get Document')
@@ -429,10 +473,14 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.method', 'getDocument')
     ->label('sdk.description', '/docs/references/database/get-document.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ANY)
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, new UID(), 'Document unique ID.')
-    ->action(function ($collectionId, $documentId, $request, $response, $projectDB) {
-        /** @var Utopia\Swoole\Request $request */
+    ->inject('response')
+    ->inject('projectDB')
+    ->action(function ($collectionId, $documentId, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
@@ -444,7 +492,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
         }
 
         $response->dynamic($document, Response::MODEL_ANY);
-    }, ['request', 'response', 'projectDB']);
+    });
 
 App::patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Update Document')
@@ -455,11 +503,17 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.method', 'updateDocument')
     ->label('sdk.description', '/docs/references/database/update-document.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ANY)
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, new UID(), 'Document unique ID.')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
     ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('audits')
     ->action(function ($collectionId, $documentId, $data, $read, $write, $response, $projectDB, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -518,7 +572,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         ;
 
         $response->dynamic($data, Response::MODEL_ANY);
-    }, ['response', 'projectDB', 'audits']);
+    });
 
 App::delete('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Delete Document')
@@ -529,12 +583,19 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.method', 'deleteDocument')
     ->label('sdk.description', '/docs/references/database/delete-document.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, new UID(), 'Document unique ID.')
-    ->action(function ($collectionId, $documentId, $response, $projectDB, $webhooks, $audits) {
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('events')
+    ->inject('audits')
+    ->action(function ($collectionId, $documentId, $response, $projectDB, $events, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
 
         $collection = $projectDB->getDocument($collectionId, false);
@@ -558,7 +619,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
             throw new Exception('Failed to remove document from DB', 500);
         }
 
-        $webhooks
+        $events
             ->setParam('payload', $response->output($document, Response::MODEL_ANY))
         ;
         
@@ -569,4 +630,4 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         ;
 
         $response->noContent();
-    }, ['response', 'projectDB', 'webhooks', 'audits']);
+    });

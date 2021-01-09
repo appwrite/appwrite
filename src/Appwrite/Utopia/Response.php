@@ -6,7 +6,10 @@ use Exception;
 use Utopia\Swoole\Response as SwooleResponse;
 use Swoole\Http\Response as SwooleHTTPResponse;
 use Appwrite\Database\Document;
+use Appwrite\Utopia\Response\Filter;
+use Appwrite\Utopia\Response\Filter\V06;
 use Appwrite\Utopia\Response\Model;
+use Appwrite\Utopia\Response\Model\None;
 use Appwrite\Utopia\Response\Model\Any;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Collection;
@@ -27,12 +30,14 @@ use Appwrite\Utopia\Response\Model\Team;
 use Appwrite\Utopia\Response\Model\Locale;
 use Appwrite\Utopia\Response\Model\Log;
 use Appwrite\Utopia\Response\Model\Membership;
+use Appwrite\Utopia\Response\Model\Permissions;
 use Appwrite\Utopia\Response\Model\Phone;
 use Appwrite\Utopia\Response\Model\Platform;
 use Appwrite\Utopia\Response\Model\Project;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Tag;
 use Appwrite\Utopia\Response\Model\Task;
+use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
 
 /**
@@ -41,6 +46,7 @@ use Appwrite\Utopia\Response\Model\Webhook;
 class Response extends SwooleResponse
 {
     // General
+    const MODEL_NONE = 'none';
     const MODEL_ANY = 'any';
     const MODEL_LOG = 'log';
     const MODEL_LOG_LIST = 'logList';
@@ -109,6 +115,11 @@ class Response extends SwooleResponse
     const MODEL_DOMAIN_LIST = 'domainList';
 
     /**
+     * @var Filter
+     */
+    private static $filter = null;
+
+    /**
      * @var array
      */
     protected $payload = [];
@@ -122,6 +133,8 @@ class Response extends SwooleResponse
     {
         $this
             // General
+            ->setModel(new None())
+            ->setModel(new Any())
             ->setModel(new Error())
             ->setModel(new ErrorDev())
             // Lists
@@ -136,24 +149,25 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Functions List', self::MODEL_FUNCTION_LIST, 'functions', self::MODEL_FUNCTION))
             ->setModel(new BaseList('Tags List', self::MODEL_TAG_LIST, 'tags', self::MODEL_TAG))
             ->setModel(new BaseList('Executions List', self::MODEL_EXECUTION_LIST, 'executions', self::MODEL_EXECUTION))
-            ->setModel(new BaseList('Projects List', self::MODEL_PROJECT_LIST, 'projects', self::MODEL_PROJECT))
-            ->setModel(new BaseList('Webhooks List', self::MODEL_WEBHOOK_LIST, 'webhooks', self::MODEL_WEBHOOK))
-            ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY))
-            ->setModel(new BaseList('Tasks List', self::MODEL_TASK_LIST, 'tasks', self::MODEL_TASK))
-            ->setModel(new BaseList('Platforms List', self::MODEL_PLATFORM_LIST, 'platforms', self::MODEL_PLATFORM))
-            ->setModel(new BaseList('Domains List', self::MODEL_DOMAIN_LIST, 'domains', self::MODEL_DOMAIN))
+            ->setModel(new BaseList('Projects List', self::MODEL_PROJECT_LIST, 'projects', self::MODEL_PROJECT, true, false))
+            ->setModel(new BaseList('Webhooks List', self::MODEL_WEBHOOK_LIST, 'webhooks', self::MODEL_WEBHOOK, true, false))
+            ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY, true, false))
+            ->setModel(new BaseList('Tasks List', self::MODEL_TASK_LIST, 'tasks', self::MODEL_TASK, true, false))
+            ->setModel(new BaseList('Platforms List', self::MODEL_PLATFORM_LIST, 'platforms', self::MODEL_PLATFORM, true, false))
+            ->setModel(new BaseList('Domains List', self::MODEL_DOMAIN_LIST, 'domains', self::MODEL_DOMAIN, true, false))
             ->setModel(new BaseList('Countries List', self::MODEL_COUNTRY_LIST, 'countries', self::MODEL_COUNTRY))
             ->setModel(new BaseList('Continents List', self::MODEL_CONTINENT_LIST, 'continents', self::MODEL_CONTINENT))
             ->setModel(new BaseList('Languages List', self::MODEL_LANGUAGE_LIST, 'languages', self::MODEL_LANGUAGE))
             ->setModel(new BaseList('Currencies List', self::MODEL_CURRENCY_LIST, 'currencies', self::MODEL_CURRENCY))
             ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
             // Entities
-            ->setModel(new Any())
+            ->setModel(new Permissions())
             ->setModel(new Collection())
             ->setModel(new Rule())
             ->setModel(new Log())
             ->setModel(new User())
             ->setModel(new Session())
+            ->setModel(new Token())
             ->setModel(new Locale())
             ->setModel(new File())
             ->setModel(new Team())
@@ -216,6 +230,16 @@ class Response extends SwooleResponse
     }
 
     /**
+     * Get Models List
+     * 
+     * @return Model[]
+     */
+    public function getModels(): array
+    {
+        return $this->models;
+    }
+
+    /**
      * Validate response objects and outputs
      *  the response according to given format type
      * 
@@ -226,7 +250,15 @@ class Response extends SwooleResponse
      */
     public function dynamic(Document $document, string $model): void
     {
-        $this->json($this->output($document, $model));
+        $output = $this->output($document, $model);
+
+        // If filter is set, parse the item
+        if(self::isFilter()){
+            $item = self::getFilter()->parse($output, $model);
+        }
+
+        $this->json($output);
+
     }
 
     /**
@@ -244,7 +276,8 @@ class Response extends SwooleResponse
         $output     = [];
 
         if ($model->isAny()) {
-            return $document->getArrayCopy();
+            $this->payload = $document->getArrayCopy();
+            return $this->payload;
         }
 
         foreach ($model->getRules() as $key => $rule) {
@@ -277,7 +310,7 @@ class Response extends SwooleResponse
 
         $this->payload = $output;
 
-        return $output;
+        return $this->payload;
     }
 
     /**
@@ -310,5 +343,38 @@ class Response extends SwooleResponse
     public function getPayload():array
     {
         return $this->payload;
+    }
+
+
+    /**
+     * Function to set a response filter
+     * 
+     * @param $filter the response filter to set
+     * 
+     * @return void
+     */
+    public static function setFilter(?Filter $filter) 
+    {
+        self::$filter = $filter;
+    }
+
+    /**
+     * Return the currently set filter
+     * 
+     * @return Filter
+     */
+    public static function getFilter(): ?Filter 
+    {
+        return self::$filter;
+    }
+
+    /**
+     * Check if a filter has been set
+     * 
+     * @return bool
+     */
+    public static function isFilter(): bool 
+    {
+        return self::$filter != null;
     }
 }

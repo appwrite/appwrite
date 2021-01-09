@@ -11,7 +11,7 @@ class Collection extends Model
     {
         $this
             ->addRule('$id', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Collection ID.',
                 'example' => '5e5ea5c16897e',
             ])
@@ -22,24 +22,23 @@ class Collection extends Model
                 'array' => false,
             ])
             ->addRule('name', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Collection name.',
                 'example' => 'Movies',
             ])
             ->addRule('dateCreated', [
-                'type' => 'integer',
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Collection creation date in Unix timestamp.',
                 'example' => 1592981250,
             ])
             ->addRule('dateUpdated', [
-                'type' => 'integer',
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Collection creation date in Unix timestamp.',
                 'example' => 1592981550,
             ])
             ->addRule('rules', [
                 'type' => Response::MODEL_RULE,
                 'description' => 'Collection rules.',
-                'example' => [],
                 'default' => [],
                 'array' => true,
             ])

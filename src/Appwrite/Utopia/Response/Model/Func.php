@@ -11,74 +11,80 @@ class Func extends Model
     {
         $this
             ->addRule('$id', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Function ID.',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('$permissions', [
+                'type' => Response::MODEL_PERMISSIONS,
+                'description' => 'Function permissions.',
+                'example' => new \stdClass,
+                'array' => false,
+            ])
             ->addRule('name', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Function name.',
                 'example' => 'My Function',
             ])
             ->addRule('dateCreated', [
-                'type' => 'integer',
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Function creation date in Unix timestamp.',
                 'example' => 1592981250,
             ])
             ->addRule('dateUpdated', [
-                'type' => 'integer',
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Function update date in Unix timestamp.',
                 'example' => 1592981257,
             ])
             ->addRule('status', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Function status. Possible values: disabled, enabled',
                 'example' => 'enabled',
             ])
             ->addRule('env', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Function execution environment.',
                 'example' => 'python-3.8',
             ])
             ->addRule('tag', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Function active tag ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('vars', [
-                'type' => 'json',
+                'type' => self::TYPE_JSON,
                 'description' => 'Function environment variables.',
                 'default' => new \stdClass,
                 'example' => ['key' => 'value'],
             ])
             ->addRule('events', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Function trigger events.',
                 'default' => [],
                 'example' => ['account.create'],
                 'array' => true,
             ])
             ->addRule('schedule', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Function execution schedult in CRON format.',
                 'default' => '',
                 'example' => '5 4 * * *',
             ])
             ->addRule('scheduleNext', [
-                'type' => 'integer',
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Function next scheduled execution date in Unix timestamp.',
                 'example' => 1592981292,
                 'default' => 0,
             ])
             ->addRule('schedulePrevious', [
-                'type' => 'integer',
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Function next scheduled execution date in Unix timestamp.',
                 'example' => 1592981237,
                 'default' => 0,
             ])
             ->addRule('timeout', [
-                'type' => 'integer',
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Function execution timeout in seconds.',
                 'default' => 15,
                 'example' => 1592981237,

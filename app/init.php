@@ -4,7 +4,7 @@
  * Init
  * 
  * Initializes both Appwrite API entry point, queue workers, and CLI tasks.
- * Set configuration, framework resources, app constants
+ * Set configuration, framework resources & app constants
  * 
  */
 if (\file_exists(__DIR__.'/../vendor/autoload.php')) {
@@ -34,9 +34,10 @@ const APP_DOMAIN = 'appwrite.io';
 const APP_EMAIL_TEAM = 'team@localhost.test'; // Default email address
 const APP_EMAIL_SECURITY = 'security@localhost.test'; // Default security email address
 const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
+const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
-const APP_CACHE_BUSTER = 138;
+const APP_CACHE_BUSTER = 142;
 const APP_VERSION_STABLE = '0.7.0';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
@@ -51,7 +52,12 @@ const APP_SOCIAL_INSTAGRAM = 'https://www.instagram.com/appwrite.io';
 const APP_SOCIAL_GITHUB = 'https://github.com/appwrite';
 const APP_SOCIAL_DISCORD = 'https://appwrite.io/discord';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
-const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
+const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite'; 
+// Deletion Types
+const DELETE_TYPE_DOCUMENT = 'document';
+const DELETE_TYPE_EXECUTIONS = 'executions';
+const DELETE_TYPE_AUDIT = 'audit';
+const DELETE_TYPE_ABUSE = 'abuse';
 
 $register = new Registry();
 
@@ -202,24 +208,6 @@ $register->set('smtp', function () {
 $register->set('geodb', function () {
     return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2020-01.mmdb');
 });
-$register->set('queue-webhooks', function () {
-    return new Event('v1-webhooks', 'WebhooksV1');
-});
-$register->set('queue-audits', function () {
-    return new Event('v1-audits', 'AuditsV1');
-});
-$register->set('queue-usage', function () {
-    return new Event('v1-usage', 'UsageV1');
-});
-$register->set('queue-mails', function () {
-    return new Event('v1-mails', 'MailsV1');
-});
-$register->set('queue-deletes', function () {
-    return new Event('v1-deletes', 'DeletesV1');
-});
-$register->set('queue-functions', function () {
-    return new Event('v1-functions', 'FunctionsV1');
-});
 
 /*
  * Localization
@@ -310,28 +298,24 @@ App::setResource('locale', function() {
 });
 
 // Queues
-App::setResource('webhooks', function($register) {
-    return $register->get('queue-webhooks');
+App::setResource('events', function($register) {
+    return new Event('', '');
 }, ['register']);
 
 App::setResource('audits', function($register) {
-    return $register->get('queue-audits');
+    return new Event(Event::AUDITS_QUEUE_NAME, Event::AUDITS_CLASS_NAME);
 }, ['register']);
 
 App::setResource('usage', function($register) {
-    return $register->get('queue-usage');
+    return new Event(Event::USAGE_QUEUE_NAME, Event::USAGE_CLASS_NAME);
 }, ['register']);
 
 App::setResource('mails', function($register) {
-    return $register->get('queue-mails');
+    return new Event(Event::MAILS_QUEUE_NAME, Event::MAILS_CLASS_NAME);
 }, ['register']);
 
 App::setResource('deletes', function($register) {
-    return $register->get('queue-deletes');
-}, ['register']);
-
-App::setResource('functions', function($register) {
-    return $register->get('queue-functions');
+    return new Event(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME);
 }, ['register']);
 
 // Test Mock
@@ -381,8 +365,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
 
     $session = Auth::decodeSession(
         $request->getCookie(Auth::$cookieName, // Get sessions
-            $request->getCookie(Auth::$cookieName.'_legacy', // Get fallback session from old clients (no SameSite support)
-                $request->getHeader('x-appwrite-key', '')))); // Get API Key
+            $request->getCookie(Auth::$cookieName.'_legacy', '')));// Get fallback session from old clients (no SameSite support)
 
     // Get fallback session from clients who block 3rd-party cookies
     if($response) $response->addHeader('X-Debug-Fallback', 'false');
@@ -464,7 +447,7 @@ App::setResource('projectDB', function($register, $project) {
 
 App::setResource('mode', function($request) {
     /** @var Utopia\Swoole\Request $request */
-    return $request->getParam('mode', $request->getHeader('x-appwrite-mode', 'default'));
+    return $request->getParam('mode', $request->getHeader('x-appwrite-mode', APP_MODE_DEFAULT));
 }, ['request']);
 
 App::setResource('geodb', function($register) {

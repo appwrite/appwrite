@@ -27,9 +27,14 @@ App::post('/v1/users')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'create')
     ->label('sdk.description', '/docs/references/users/create-user.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->inject('response')
+    ->inject('projectDB')
     ->action(function ($email, $password, $name, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -70,7 +75,7 @@ App::post('/v1/users')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($user, Response::MODEL_USER)
         ;
-    }, ['response', 'projectDB']);
+    });
 
 App::get('/v1/users')
     ->desc('List Users')
@@ -80,10 +85,15 @@ App::get('/v1/users')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'list')
     ->label('sdk.description', '/docs/references/users/list-users.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER_LIST)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->inject('response')
+    ->inject('projectDB')
     ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -91,9 +101,7 @@ App::get('/v1/users')
         $results = $projectDB->getCollection([
             'limit' => $limit,
             'offset' => $offset,
-            'orderField' => 'registration',
             'orderType' => $orderType,
-            'orderCast' => 'int',
             'search' => $search,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_USERS,
@@ -104,7 +112,7 @@ App::get('/v1/users')
             'sum' => $projectDB->getSum(),
             'users' => $results
         ]), Response::MODEL_USER_LIST);
-    }, ['response', 'projectDB']);
+    });
 
 App::get('/v1/users/:userId')
     ->desc('Get User')
@@ -114,7 +122,12 @@ App::get('/v1/users/:userId')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/users/get-user.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User unique ID.')
+    ->inject('response')
+    ->inject('projectDB')
     ->action(function ($userId, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -126,7 +139,7 @@ App::get('/v1/users/:userId')
         }
 
         $response->dynamic($user, Response::MODEL_USER);
-    }, ['response', 'projectDB']);
+    });
 
 App::get('/v1/users/:userId/prefs')
     ->desc('Get User Preferences')
@@ -136,7 +149,12 @@ App::get('/v1/users/:userId/prefs')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getPrefs')
     ->label('sdk.description', '/docs/references/users/get-user-prefs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ANY)
     ->param('userId', '', new UID(), 'User unique ID.')
+    ->inject('response')
+    ->inject('projectDB')
     ->action(function ($userId, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -149,8 +167,8 @@ App::get('/v1/users/:userId/prefs')
 
         $prefs = $user->getAttribute('prefs', '');
 
-        $response->json($prefs);
-    }, ['response', 'projectDB']);
+        $response->dynamic(new Document($prefs), Response::MODEL_ANY);
+    });
 
 App::get('/v1/users/:userId/sessions')
     ->desc('Get User Sessions')
@@ -160,7 +178,13 @@ App::get('/v1/users/:userId/sessions')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getSessions')
     ->label('sdk.description', '/docs/references/users/get-user-sessions.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SESSION_LIST)
     ->param('userId', '', new UID(), 'User unique ID.')
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('locale')
     ->action(function ($userId, $response, $projectDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -203,7 +227,16 @@ App::get('/v1/users/:userId/logs')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getLogs')
     ->label('sdk.description', '/docs/references/users/get-user-logs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('userId', '', new UID(), 'User unique ID.')
+    ->inject('response')
+    ->inject('register')
+    ->inject('project')
+    ->inject('projectDB')
+    ->inject('locale')
+    ->inject('geodb')
     ->action(function ($userId, $response, $register, $project, $projectDB, $locale, $geodb) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Registry\Registry $register */
@@ -298,7 +331,7 @@ App::get('/v1/users/:userId/logs')
         }
 
         $response->dynamic(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
-    }, ['response', 'register', 'project', 'projectDB', 'locale', 'geodb']);
+    });
 
 App::patch('/v1/users/:userId/status')
     ->desc('Update User Status')
@@ -309,8 +342,13 @@ App::patch('/v1/users/:userId/status')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updateStatus')
     ->label('sdk.description', '/docs/references/users/update-user-status.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('status', '', new WhiteList([Auth::USER_STATUS_ACTIVATED, Auth::USER_STATUS_BLOCKED, Auth::USER_STATUS_UNACTIVATED], true), 'User Status code. To activate the user pass '.Auth::USER_STATUS_ACTIVATED.', to block the user pass '.Auth::USER_STATUS_BLOCKED.' and for disabling the user pass '.Auth::USER_STATUS_UNACTIVATED)
+    ->inject('response')
+    ->inject('projectDB')
     ->action(function ($userId, $status, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -330,7 +368,7 @@ App::patch('/v1/users/:userId/status')
         }
 
         $response->dynamic($user, Response::MODEL_USER);
-    }, ['response', 'projectDB']);
+    });
 
 App::patch('/v1/users/:userId/prefs')
     ->desc('Update User Preferences')
@@ -340,8 +378,13 @@ App::patch('/v1/users/:userId/prefs')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updatePrefs')
     ->label('sdk.description', '/docs/references/users/update-user-prefs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ANY)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
+    ->inject('response')
+    ->inject('projectDB')
     ->action(function ($userId, $prefs, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -360,8 +403,8 @@ App::patch('/v1/users/:userId/prefs')
             throw new Exception('Failed saving user to DB', 500);
         }
 
-        $response->json($prefs);
-    }, ['response', 'projectDB']);
+        $response->dynamic(new Document($prefs), Response::MODEL_ANY);
+    });
 
 App::delete('/v1/users/:userId/sessions/:sessionId')
     ->desc('Delete User Session')
@@ -372,13 +415,19 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'deleteSession')
     ->label('sdk.description', '/docs/references/users/delete-user-session.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
     ->label('abuse-limit', 100)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('sessionId', null, new UID(), 'User unique session ID.')
-    ->action(function ($userId, $sessionId, $response, $projectDB, $webhooks) {
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('events')
+    ->action(function ($userId, $sessionId, $response, $projectDB, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $events */
 
         $user = $projectDB->getDocument($userId);
 
@@ -394,14 +443,15 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
                     throw new Exception('Failed to remove token from DB', 500);
                 }
 
-                $webhooks
+                $events
                     ->setParam('payload', $response->output($user, Response::MODEL_USER))
                 ;
             }
         }
 
+        // TODO : Response filter implementation
         $response->noContent();
-    }, ['response', 'projectDB', 'webhooks']);
+    });
 
 App::delete('/v1/users/:userId/sessions')
     ->desc('Delete User Sessions')
@@ -412,12 +462,18 @@ App::delete('/v1/users/:userId/sessions')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'deleteSessions')
     ->label('sdk.description', '/docs/references/users/delete-user-sessions.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
     ->label('abuse-limit', 100)
     ->param('userId', '', new UID(), 'User unique ID.')
-    ->action(function ($userId, $response, $projectDB, $webhooks) {
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('events')
+    ->action(function ($userId, $response, $projectDB, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $events */
 
         $user = $projectDB->getDocument($userId);
 
@@ -433,12 +489,13 @@ App::delete('/v1/users/:userId/sessions')
             }
         }
 
-        $webhooks
+        $events
             ->setParam('payload', $response->output($user, Response::MODEL_USER))
         ;
 
+        // TODO : Response filter implementation
         $response->noContent();
-    }, ['response', 'projectDB', 'webhooks']);
+    });
 
 App::delete('/v1/users/:userId')
     ->desc('Delete User')
@@ -449,12 +506,19 @@ App::delete('/v1/users/:userId')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'deleteUser')
     ->label('sdk.description', '/docs/references/users/delete-user.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
     ->label('abuse-limit', 100)
     ->param('userId', '', function () {return new UID();}, 'User unique ID.')
-    ->action(function ($userId, $response, $projectDB, $webhooks, $deletes) {
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('events')
+    ->inject('deletes')
+    ->action(function ($userId, $response, $projectDB, $events, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $deletes */
         
         $user = $projectDB->getDocument($userId);
@@ -483,12 +547,14 @@ App::delete('/v1/users/:userId')
         }
 
         $deletes
+            ->setParam('type', DELETE_TYPE_DOCUMENT)
             ->setParam('document', $user)
         ;
 
-        $webhooks
+        $events
             ->setParam('payload', $response->output($user, Response::MODEL_USER))
         ;
 
+        // TODO : Response filter implementation
         $response->noContent();
-    }, ['response', 'projectDB', 'webhooks', 'deletes']);
+    });
