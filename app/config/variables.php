@@ -351,4 +351,10 @@ return [
             ],
         ],
     ],
+    [
+        'name' => '_APP_SYSTEM_RESPONSE_FORMAT',
+        'default' => '',
+        'required' => false,
+        'question' => '',
+    ],
 ];

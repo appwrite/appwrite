@@ -16,6 +16,8 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Storage\Device\Local;
 use Appwrite\Storage\Storage;
+use Appwrite\Utopia\Response\Filter;
+use Appwrite\Utopia\Response\Filter\V06;
 use Utopia\CLI\Console;
 
 Config::setParam('domainVerification', false);
@@ -93,6 +95,22 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
 
     Storage::setDevice('files', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
     Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId()));
+
+    /* 
+    * Response format
+    */
+    $responseFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+    if ($responseFormat) {
+        switch($responseFormat) {
+            case version_compare ($responseFormat , '0.6.2', '<=') :
+                Response::setFilter(new V06());
+                break;
+            default:
+                throw new Exception('No filter available for response format : '.$responseFormat, 400);
+        }
+    } else {
+        Response::setFilter(null);
+    }
 
     /*
      * Security Headers
