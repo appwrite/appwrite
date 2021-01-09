@@ -16,8 +16,7 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Storage\Device\Local;
 use Appwrite\Storage\Storage;
-use Appwrite\Utopia\Response\Filter;
-use Appwrite\Utopia\Response\Filter\V06;
+use Appwrite\Utopia\Response\Filters\V06;
 use Utopia\CLI\Console;
 
 Config::setParam('domainVerification', false);

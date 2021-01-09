@@ -7,7 +7,6 @@ use Utopia\Swoole\Response as SwooleResponse;
 use Swoole\Http\Response as SwooleHTTPResponse;
 use Appwrite\Database\Document;
 use Appwrite\Utopia\Response\Filter;
-use Appwrite\Utopia\Response\Filter\V06;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\None;
 use Appwrite\Utopia\Response\Model\Any;
