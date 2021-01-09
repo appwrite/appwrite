@@ -193,13 +193,13 @@ class V06 extends Filter {
 
     private function parseLocale(array $content) 
     {
-        $content['ip'] = empty($content['ip']) ?? '';
-        $content['countryCode'] = empty($content['countryCode']) ?? '--';
-        $content['country'] = empty($content['country']) ??  Locale::getText('locale.country.unknown');
-        $content['continent'] = empty($content['continent']) ?? Locale::getText('locale.country.unknown');
-        $content['continentCode'] = empty($content['continentCode']) ?? '--';
-        $content['eu'] = empty($content['eu']) ?? false;
-        $content['currency'] = empty($content['currency']) ?? null;
+        $content['ip'] = $content['ip'] ?? '';
+        $content['countryCode'] = $content['countryCode'] ?? '--';
+        $content['country'] = $content['country'] ??  Locale::getText('locale.country.unknown');
+        $content['continent'] = $content['continent'] ?? Locale::getText('locale.country.unknown');
+        $content['continentCode'] = $content['continentCode'] ?? '--';
+        $content['eu'] = $content['eu'] ?? false;
+        $content['currency'] = $content['currency'] ?? null;
         return $content;
     }
 

@@ -234,19 +234,19 @@ class V06Test extends TestCase
         $this->assertEquals($parsedResponse['logs'][0]['model'], 'Nexus 5');
         $this->assertEquals($parsedResponse['logs'][0]['time'], 1592981250);
 
-        $this->assertEquals($parsedResponse['sessions'][0]['OS']['name'], 'Mac');
-        $this->assertEquals($parsedResponse['sessions'][0]['OS']['platform'], '');
-        $this->assertEquals($parsedResponse['sessions'][0]['OS']['short_name'], 'Mac');
-        $this->assertEquals($parsedResponse['sessions'][0]['OS']['version'], 'Mac');
+        $this->assertEquals($parsedResponse['logs'][0]['OS']['name'], 'Mac');
+        $this->assertEquals($parsedResponse['logs'][0]['OS']['platform'], '');
+        $this->assertEquals($parsedResponse['logs'][0]['OS']['short_name'], 'Mac');
+        $this->assertEquals($parsedResponse['logs'][0]['OS']['version'], 'Mac');
 
-        $this->assertEquals($parsedResponse['sessions'][0]['client']['engine'], 'WebKit');
-        $this->assertEquals($parsedResponse['sessions'][0]['client']['name'], 'Chrome Mobile iOS');
-        $this->assertEquals($parsedResponse['sessions'][0]['client']['short_name'], 'CM');
-        $this->assertEquals($parsedResponse['sessions'][0]['client']['type'], 'browser');
-        $this->assertEquals($parsedResponse['sessions'][0]['client']['version'], '84.0');
+        $this->assertEquals($parsedResponse['logs'][0]['client']['engine'], 'WebKit');
+        $this->assertEquals($parsedResponse['logs'][0]['client']['name'], 'Chrome Mobile iOS');
+        $this->assertEquals($parsedResponse['logs'][0]['client']['short_name'], 'CM');
+        $this->assertEquals($parsedResponse['logs'][0]['client']['type'], 'browser');
+        $this->assertEquals($parsedResponse['logs'][0]['client']['version'], '84.0');
 
-        $this->assertEquals($parsedResponse['sessions'][0]['geo']['isoCode'], 'US');
-        $this->assertEquals($parsedResponse['sessions'][0]['geo']['country'], 'United States');
+        $this->assertEquals($parsedResponse['logs'][0]['geo']['isoCode'], 'US');
+        $this->assertEquals($parsedResponse['logs'][0]['geo']['country'], 'United States');
     }
 
     public function testParseTeam()
