@@ -272,7 +272,7 @@ return [
                 'name' => 'Dart',
                 'version' => '0.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-dart',
-                'package' => '',
+                'package' => 'https://pub.dev/packages/dart_appwrite',
                 'enabled' => true,
                 'beta' => true,
                 'dev' => true,
