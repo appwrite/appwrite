@@ -383,8 +383,10 @@ App::get('/v1/avatars/qr')
 
         $download = ($download === '1' || $download === 'true' || $download === 1 || $download === true);
         $options = new QROptions([
-            'quietzone' => $size,
-            'outputType' => QRCode::OUTPUT_IMAGICK
+            'addQuietzone' => true,
+            'quietzoneSize' => $margin,
+            'outputType' => QRCode::OUTPUT_IMAGICK,
+            'pngCompression' => 9,
         ]);
 
         $qrcode = new QRCode($options);
