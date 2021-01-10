@@ -7,7 +7,7 @@ use Utopia\Validator;
 class CNAME extends Validator
 {
     /**
-     * @var int
+     * @var string
      */
     protected $target;
 
@@ -19,6 +19,9 @@ class CNAME extends Validator
         $this->target = $target;
     }
 
+    /**
+     * @return string
+     */
     public function getDescription()
     {
         return 'Invalid CNAME record';
@@ -27,19 +30,19 @@ class CNAME extends Validator
     /**
      * Check if CNAME record target value matches selected target
      *
-     * @param string $domain
+     * @param mixed $domain
      *
      * @return bool
      */
     public function isValid($domain)
     {
-        try {
-            $records = \dns_get_record($domain, DNS_CNAME);
-        } catch (\Throwable $th) {
+        if (!is_string($domain)) {
             return false;
         }
 
-        if (!$records || !\is_array($records)) {
+        try {
+            $records = \dns_get_record($domain, DNS_CNAME);
+        } catch (\Throwable $th) {
             return false;
         }
 

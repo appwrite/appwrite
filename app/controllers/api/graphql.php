@@ -1,14 +1,10 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 
 use GraphQL\GraphQL;
 use GraphQL\Type\Schema;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
-
-global $utopia, $request, $response;
+use Utopia\App;
 
 /**
  * TODO:
@@ -37,7 +33,7 @@ global $utopia, $request, $response;
  *  - Objects
  */
 
-$utopia->post('/v1/graphql')
+App::post('/v1/graphql')
     ->desc('GraphQL Endpoint')
     ->groups(['api', 'graphql'])
     ->label('scope', 'public')

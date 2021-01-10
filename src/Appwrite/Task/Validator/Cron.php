@@ -30,6 +30,10 @@ class Cron extends Validator
      */
     public function isValid($value)
     {
+        if (empty($value)) {
+            return true;
+        }
+
         if (!CronExpression::isValidExpression($value)) {
             return false;
         }

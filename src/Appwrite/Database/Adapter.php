@@ -54,7 +54,7 @@ abstract class Adapter
     /**
      * Get Document.
      *
-     * @param int $id
+     * @param string $id
      *
      * @return array
      */
@@ -68,7 +68,7 @@ abstract class Adapter
      *
      * @return array
      */
-    abstract public function createDocument(array $data, array $unique);
+    abstract public function createDocument(array $data = [], array $unique = []);
 
     /**
      * Update Document.
@@ -77,16 +77,25 @@ abstract class Adapter
      *
      * @return array
      */
-    abstract public function updateDocument(array $data);
+    abstract public function updateDocument(array $data = []);
 
     /**
      * Delete Node.
      *
-     * @param int $id
+     * @param string $id
      *
      * @return array
      */
-    abstract public function deleteDocument($id);
+    abstract public function deleteDocument(string $id);
+
+    /**
+     * Delete Unique Key.
+     *
+     * @param int $key
+     *
+     * @return array
+     */
+    abstract public function deleteUniqueKey($key);
 
     /**
      * Create Namespace.

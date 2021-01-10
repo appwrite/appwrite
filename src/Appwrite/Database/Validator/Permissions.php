@@ -15,7 +15,7 @@ class Permissions extends Validator
     /**
      * @var Document
      */
-    protected $document = null;
+    protected $document;
 
     /**
      * Structure constructor.
@@ -44,7 +44,7 @@ class Permissions extends Validator
      *
      * Returns true if valid or false if not.
      *
-     * @param array $value
+     * @param mixed $value
      *
      * @return bool
      */
@@ -57,7 +57,7 @@ class Permissions extends Validator
         }
 
         foreach ($value as $action => $roles) {
-            if (!\in_array($action, ['read', 'write'])) {
+            if (!\in_array($action, ['read', 'write', 'execute'])) {
                 $this->message = 'Unknown action ("'.$action.'")';
 
                 return false;
@@ -65,7 +65,7 @@ class Permissions extends Validator
 
             foreach ($roles as $role) {
                 if (!\is_string($role)) {
-                    $this->message = 'Permissions role must be a string';
+                    $this->message = 'Permissions role must be of type string.';
 
                     return false;
                 }

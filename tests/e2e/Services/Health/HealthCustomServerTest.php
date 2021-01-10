@@ -8,7 +8,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Scopes\SideServer;
 
-class HealthCustomClientTest extends Scope
+class HealthCustomServerTest extends Scope
 {
     use HealthBase;
     use ProjectCustom;
@@ -59,7 +59,7 @@ class HealthCustomClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/health/db', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/health/cache', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -173,7 +173,7 @@ class HealthCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsInt($response['body']['size']);
-        $this->assertLessThan(120, $response['body']['size']);
+        $this->assertLessThan(160, $response['body']['size']);
 
         /**
          * Test for FAILURE

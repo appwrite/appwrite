@@ -1,0 +1,1 @@
+Delete a code tag by its unique ID.

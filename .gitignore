@@ -1,12 +1,8 @@
 /.vscode/
 /vendor/
 /node_modules/
-/storage/uploads/
-/storage/cache
-/storage/db
-/storage/influxdb
 /tests/resources/storage/
 /.idea/
 .DS_Store
 .php_cs.cache
-.env
+debug/

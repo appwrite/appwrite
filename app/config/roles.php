@@ -24,6 +24,8 @@ $logged = [
     'projects.write',
     'locale.read',
     'avatars.read',
+    'execution.read',
+    'execution.write',
 ];
 
 $admins = [
@@ -48,6 +50,10 @@ $admins = [
     'locale.read',
     'avatars.read',
     'health.read',
+    'functions.read',
+    'functions.write',
+    'execution.read',
+    'execution.write',
 ];
 
 return [
@@ -61,6 +67,8 @@ return [
             'files.read',
             'locale.read',
             'avatars.read',
+            'execution.read',
+            'execution.write',
         ],
     ],
     ROLE_MEMBER => [
