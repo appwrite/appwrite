@@ -674,7 +674,7 @@ App::get('/v1/account/prefs')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
 
-        $prefs = $user->getAttribute('prefs', new \stdClass);
+        $prefs = $user->getAttribute('prefs', new \stdClass());
 
         $response->dynamic(new Document($prefs), Response::MODEL_ANY);
     });
