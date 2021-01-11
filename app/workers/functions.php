@@ -39,7 +39,12 @@ Co\run(function() use ($environments) {  // Warmup: make sure images are ready t
         
             Console::info('Warming up '.$environment['name'].' environment...');
         
-            Console::execute('docker pull '.$environment['image'], '', $stdout, $stderr);
+            if(App::isDevelopment()) {
+                Console::execute('docker build '.$environment['build'].' -t '.$environment['image'], '', $stdout, $stderr);
+            }
+            else {
+                Console::execute('docker pull '.$environment['image'], '', $stdout, $stderr);
+            }
         
             if(!empty($stdout)) {
                 Console::log($stdout);
@@ -108,8 +113,6 @@ $stdout = \explode("\n", $stdout);
         $list[$container['name']] = $container;
     }
 }, $stdout);
-
-var_dump(json_encode($list));
 
 Console::info(count($list)." functions listed in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
 

@@ -243,12 +243,29 @@ bash ./docker/environments/build.sh
 
 ## Tests
 
-To run tests manually, use the Appwrite Docker CLI from your terminal:
+To run all tests manually, use the Appwrite Docker CLI from your terminal:
 
 ```bash
 docker-compose exec appwrite test
 ```
 
+To run unit tests use:
+
+```bash
+docker-compose exec appwrite test /usr/src/code/tests/unit
+```
+
+To run end-2-end tests use:
+
+```bash
+docker-compose exec appwrite test /usr/src/code/tests/e2e
+```
+
+To run end-2-end tests for a spcific service use:
+
+```bash
+docker-compose exec appwrite test /usr/src/code/tests/e2e/Services/[ServiceName]
+```
 ## Benchmarking
 
 You can use WRK Docker image to benchmark the server performance. Benchmarking is extremely useful when you want to compare how the server behaves before and after a change has been applied. Replace [APPWRITE_HOSTNAME_OR_IP] with your Appwrite server hostname or IP. Note that localhost is not accessible from inside the WRK container.

@@ -165,7 +165,7 @@ App::get('/v1/users/:userId/prefs')
             throw new Exception('User not found', 404);
         }
 
-        $prefs = $user->getAttribute('prefs', '');
+        $prefs = $user->getAttribute('prefs', new \stdClass());
 
         $response->dynamic(new Document($prefs), Response::MODEL_ANY);
     });

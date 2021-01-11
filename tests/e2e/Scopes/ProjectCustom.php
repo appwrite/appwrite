@@ -75,6 +75,8 @@ trait ProjectCustom
                 'files.write',
                 'functions.read',
                 'functions.write',
+                'execution.read',
+                'execution.write',
                 'locale.read',
                 'avatars.read',
                 'health.read',
