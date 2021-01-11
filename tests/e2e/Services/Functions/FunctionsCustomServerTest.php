@@ -601,6 +601,11 @@ class FunctionsCustomServerTest extends Scope
             if($executions['body']['executions'][0]['status'] !== 'completed') {
                 var_dump($env);
                 var_dump($executions['body']['executions'][0]);
+                $stdout = '';
+                $stderr = '';
+                Console::execute('docker logs appwrite-worker-functions', '', $stdout, $stderr);
+                var_dump($stdout);
+                var_dump($stderr);
             }
     
             $this->assertEquals($executions['headers']['status-code'], 200);
