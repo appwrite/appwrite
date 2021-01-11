@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6594e4d32da0196d0bb2e5a1794ea89d",
+    "content-hash": "249dc088c5f9f74a1c0e91661f93f96b",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -57,16 +57,16 @@
         },
         {
             "name": "chillerlan/php-qrcode",
-            "version": "4.2.0",
+            "version": "4.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/chillerlan/php-qrcode.git",
-                "reference": "1972af7af51b203bc239d8fb94243f6ed2a1067a"
+                "reference": "4968063fb3baeedb658293f89f9673fbf2499a3e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/chillerlan/php-qrcode/zipball/1972af7af51b203bc239d8fb94243f6ed2a1067a",
-                "reference": "1972af7af51b203bc239d8fb94243f6ed2a1067a",
+                "url": "https://api.github.com/repos/chillerlan/php-qrcode/zipball/4968063fb3baeedb658293f89f9673fbf2499a3e",
+                "reference": "4968063fb3baeedb658293f89f9673fbf2499a3e",
                 "shasum": ""
             },
             "require": {
@@ -119,15 +119,19 @@
             ],
             "support": {
                 "issues": "https://github.com/chillerlan/php-qrcode/issues",
-                "source": "https://github.com/chillerlan/php-qrcode/tree/4.2.0"
+                "source": "https://github.com/chillerlan/php-qrcode/tree/4.3.0"
             },
             "funding": [
+                {
+                    "url": "https://www.paypal.com/donate?hosted_button_id=WLYUNAT9ZTJZ4",
+                    "type": "custom"
+                },
                 {
                     "url": "https://ko-fi.com/codemasher",
                     "type": "ko_fi"
                 }
             ],
-            "time": "2020-10-07T14:41:07+00:00"
+            "time": "2020-11-18T20:49:20+00:00"
         },
         {
             "name": "chillerlan/php-settings-container",
