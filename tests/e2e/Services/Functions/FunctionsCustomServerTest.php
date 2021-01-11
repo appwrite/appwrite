@@ -530,8 +530,6 @@ class FunctionsCustomServerTest extends Scope
             ],
         ];
 
-        sleep(20);
-
         foreach ($envs as $key => $env) {
             $language = $env['language'] ?? '';
             $version = $env['version'] ?? '';
@@ -593,7 +591,7 @@ class FunctionsCustomServerTest extends Scope
             $executionId = $execution['body']['$id'] ?? '';
             $this->assertEquals(201, $execution['headers']['status-code']);
 
-            sleep(20);
+            sleep(30);
 
             $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
                 'content-type' => 'application/json',
