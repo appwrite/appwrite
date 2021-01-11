@@ -252,9 +252,9 @@ class Response extends SwooleResponse
     {
         $output = $this->output($document, $model);
 
-        // If filter is set, parse the item
+        // If filter is set, parse the output
         if(self::isFilter()){
-            $item = self::getFilter()->parse($output, $model);
+            $output = self::getFilter()->parse($output, $model);
         }
 
         $this->json(!empty($output) ? $output : new stdClass());

@@ -149,4 +149,41 @@ class HTTPTest extends Scope
 
         unlink(realpath(__DIR__ . '/../../resources/open-api3.json'));
     }
+
+    public function testResponseHeader() {
+
+        /**
+         * Test without header
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/locale/continents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], $this->getHeaders()));
+
+        $body = $response['body'];
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($body['sum'], 7);
+        $this->assertEquals($body['continents'][0]['name'], 'Africa');
+        $this->assertEquals($body['continents'][0]['code'], 'AF');
+        $this->assertEquals($body['continents'][1]['name'], 'Antarctica');
+        $this->assertEquals($body['continents'][1]['code'], 'AN');
+        $this->assertEquals($body['continents'][2]['name'], 'Asia');
+        $this->assertEquals($body['continents'][2]['code'], 'AS');
+
+         /**
+         * Test with header
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/locale/continents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'x-appwrite-response-format' => '0.6.2'
+        ], $this->getHeaders()));
+
+        $body = $response['body'];
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($body['sum'], 7);
+        $this->assertEquals($body['continents']['AF'], 'Africa');
+        $this->assertEquals($body['continents']['AN'], 'Antarctica');
+        $this->assertEquals($body['continents']['AS'], 'Asia');
+    }
 }
