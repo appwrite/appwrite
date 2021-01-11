@@ -455,6 +455,7 @@ class FunctionsCustomServerTest extends Scope
 
     public function testENVS():array
     {
+        sleep(120);
         /**
          * Test for SUCCESS
          */
