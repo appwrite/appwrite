@@ -7,7 +7,7 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Filter\V06;
+use Appwrite\Utopia\Response\Filters\V06;
 use PHPUnit\Framework\TestCase;
 use Utopia\Config\Config;
 
