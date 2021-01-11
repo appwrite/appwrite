@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * List of Appwrite Cloud Functions supported environments
+ */
 return [
     'node-14' => [
         'name' => 'Node.js',

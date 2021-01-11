@@ -165,7 +165,7 @@ App::get('/v1/users/:userId/prefs')
             throw new Exception('User not found', 404);
         }
 
-        $prefs = $user->getAttribute('prefs', '');
+        $prefs = $user->getAttribute('prefs', new \stdClass());
 
         $response->dynamic(new Document($prefs), Response::MODEL_ANY);
     });
@@ -449,6 +449,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
             }
         }
 
+        // TODO : Response filter implementation
         $response->noContent();
     });
 
@@ -492,6 +493,7 @@ App::delete('/v1/users/:userId/sessions')
             ->setParam('payload', $response->output($user, Response::MODEL_USER))
         ;
 
+        // TODO : Response filter implementation
         $response->noContent();
     });
 
@@ -553,5 +555,6 @@ App::delete('/v1/users/:userId')
             ->setParam('payload', $response->output($user, Response::MODEL_USER))
         ;
 
+        // TODO : Response filter implementation
         $response->noContent();
     });

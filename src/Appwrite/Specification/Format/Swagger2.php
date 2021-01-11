@@ -4,6 +4,7 @@ namespace Appwrite\Specification\Format;
 
 use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
+use stdClass;
 
 class Swagger2 extends Format
 {
@@ -205,7 +206,7 @@ class Swagger2 extends Format
                     case 'Utopia\Validator\Mock':
                     case 'Utopia\Validator\Assoc':
                         $node['type'] = 'object';
-                        $node['type'] = 'object';
+                        $param['default'] = (empty($param['default'])) ? new stdClass() : $param['default'];
                         $node['x-example'] = '{}';
                         //$node['format'] = 'json';
                         break;

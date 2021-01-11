@@ -10,9 +10,16 @@ $cli
     ->task('vars')
     ->desc('List all the server environment variables')
     ->action(function () {
-        $variables = Config::getParam('variables', []);
+        $config = Config::getParam('variables', []);
+        $vars = [];
 
-        foreach ($variables as $key => $value) {
+        foreach($config as $category) {
+            foreach($category['variables'] ?? [] as $var) {
+                $vars[] = $var;
+            }
+        }
+
+        foreach ($vars as $key => $value) {
             Console::log('- '.$value['name'].'='.App::getEnv($value['name'], ''));
         }
     });
