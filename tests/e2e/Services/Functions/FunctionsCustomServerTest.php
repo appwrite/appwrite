@@ -530,6 +530,8 @@ class FunctionsCustomServerTest extends Scope
             ],
         ];
 
+        sleep(20);
+
         foreach ($envs as $key => $env) {
             $language = $env['language'] ?? '';
             $version = $env['version'] ?? '';
