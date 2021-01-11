@@ -257,7 +257,7 @@ class Response extends SwooleResponse
             $item = self::getFilter()->parse($output, $model);
         }
 
-        $this->json($output);
+        $this->json($item);
 
     }
 
