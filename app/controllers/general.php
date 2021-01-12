@@ -51,13 +51,6 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         throw new Exception('Missing or unknown project ID', 400);
     }
 
-    $console->setAttribute('platforms', [ // Allways allow current host
-        '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
-        'name' => 'Current Host',
-        'type' => 'web',
-        'hostname' => $request->getHostname(),
-    ], Document::SET_TYPE_APPEND);
-
     $referrer = $request->getReferer();
     $origin = \parse_url($request->getOrigin($referrer), PHP_URL_HOST);
     $protocol = \parse_url($request->getOrigin($referrer), PHP_URL_SCHEME);

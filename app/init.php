@@ -319,7 +319,14 @@ App::setResource('deletes', function($register) {
 }, ['register']);
 
 // Test Mock
-App::setResource('clients', function($console, $project) {
+App::setResource('clients', function($request, $console, $project) {
+    $console->setAttribute('platforms', [ // Allways allow current host
+        '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+        'name' => 'Current Host',
+        'type' => 'web',
+        'hostname' => $request->getHostname(),
+    ], Document::SET_TYPE_APPEND);
+    
     /**
      * Get All verified client URLs for both console and current projects
      * + Filter for duplicated entries
@@ -345,7 +352,7 @@ App::setResource('clients', function($console, $project) {
     }))));
 
     return $clients;
-}, ['console', 'project']);
+}, ['request', 'console', 'project']);
 
 App::setResource('user', function($mode, $project, $console, $request, $response, $projectDB, $consoleDB) {
     /** @var Utopia\Swoole\Request $request */
