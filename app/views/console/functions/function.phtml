@@ -3,6 +3,7 @@ $fileLimit = $this->getParam('fileLimit', 0);
 $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 $events = array_keys($this->getParam('events', []));
 $timeout = $this->getParam('timeout', 900);
+$usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 ?>
 <div
     data-service="functions.get"
@@ -281,6 +282,7 @@ $timeout = $this->getParam('timeout', 900);
                     data-event="load"
                     data-name="usage"
                     data-param-function-id="{{router.params.id}}">
+                    <?php if($usageStatsEnabled) : ?>
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart margin-bottom-no">
@@ -316,6 +318,9 @@ $timeout = $this->getParam('timeout', 900);
                     <ul class="chart-notes margin-bottom-large">
                         <li class="red">Errors <span data-ls-bind="({{usage.failures.total}})"></span></li>
                     </ul>
+                    <?php else: ?>
+                        <p>Usage stats is disabled.</p>
+                    <?php endif; ?>
                 </div>
             </li>
             <li data-state="/console/functions/function/logs?id={{router.params.id}}&project={{router.params.project}}">
