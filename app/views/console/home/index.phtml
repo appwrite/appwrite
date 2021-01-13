@@ -69,7 +69,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
         data-param-project-id="{{router.params.project}}"
         data-param-range="30d">
 
-        <?php if (!$graph && $usageStatsEnabled) : ?>
+        <?php if (!$graph && $usageStatsEnabled): ?>
             <div class="box dashboard">
                 <div class="row responsive">
                     <div class="col span-9">
