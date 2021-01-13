@@ -1,5 +1,7 @@
 <?php
 
+use Appwrite\Auth\Auth;
+use Appwrite\Database\Validator\Authorization;
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Abuse\Abuse;
@@ -49,7 +51,13 @@ App::init(function ($utopia, $request, $response, $project, $user, $register) {
         ;
     }
 
-    if ($abuse->check() && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
+    $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
+    $isAppUser = Auth::isAppUser(Authorization::$roles);
+
+    if (($abuse->check() // Route is rate-limited
+        && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') // Abuse is not diabled
+        && (!$isAppUser && !$isPreviliggedUser)) // User is not an admin or API key
+        {
         throw new Exception('Too many requests', 429);
     }
 }, ['utopia', 'request', 'response', 'project', 'user', 'register'], 'api');
