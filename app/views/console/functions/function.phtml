@@ -241,6 +241,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                     </div>
                 </div>
             </li>
+            <?php if($usageStatsEnabled): ?>
             <li data-state="/console/functions/function/monitors?id={{router.params.id}}&project={{router.params.project}}">
                 
                 <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '90d'"
@@ -282,7 +283,6 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                     data-event="load"
                     data-name="usage"
                     data-param-function-id="{{router.params.id}}">
-                    <?php if($usageStatsEnabled): ?>
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart margin-bottom-no">
@@ -318,11 +318,9 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                     <ul class="chart-notes margin-bottom-large">
                         <li class="red">Errors <span data-ls-bind="({{usage.failures.total}})"></span></li>
                     </ul>
-                    <?php else: ?>
-                        <p>Usage stats is disabled.</p>
-                    <?php endif; ?>
                 </div>
             </li>
+            <?php endif; ?>
             <li data-state="/console/functions/function/logs?id={{router.params.id}}&project={{router.params.project}}">
 
                 <div class="text-fade text-size-small pull-end margin-top" data-ls-bind="{{project-function-executions.sum}} executions found"></div>
