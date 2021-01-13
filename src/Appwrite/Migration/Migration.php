@@ -26,7 +26,7 @@ abstract class Migration
   /**
    * Set project for migration.
    */
-  public function setProject(Document $project, Database $projectDB)
+  public function setProject(Document $project, Database $projectDB): Migration
   {
     $this->project = $project;
     $this->projectDB = $projectDB;
