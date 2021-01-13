@@ -23,6 +23,7 @@ class Auth
     const USER_ROLE_OWNER = 'owner';
     const USER_ROLE_APP = 'app';
     const USER_ROLE_SYSTEM = 'system';
+    const USER_ROLE_ALL = '*';
 
     /**
      * Token Types.
