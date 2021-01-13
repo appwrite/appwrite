@@ -50,7 +50,7 @@ class File extends Model
             ->addRule('sizeOriginal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'File original size in bytes.',
-                'default' => '',
+                'default' => 0,
                 'example' => 17890,
             ])
         ;
