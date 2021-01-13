@@ -19,7 +19,7 @@ class File extends Model
             ->addRule('$permissions', [
                 'type' => Response::MODEL_PERMISSIONS,
                 'description' => 'File permissions.',
-                'default' => '',
+                'default' => new \stdClass,
                 'example' => new \stdClass,
                 'array' => false,
             ])

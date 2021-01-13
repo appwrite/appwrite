@@ -61,7 +61,7 @@ class Execution extends Model
             ->addRule('time', [
                 'type' => self::TYPE_FLOAT,
                 'description' => 'The script execution time in seconds.',
-                'default' => '',
+                'default' => 0,
                 'example' => 0.400,
             ])
         ;
