@@ -76,6 +76,7 @@ services:
       - _APP_SMTP_SECURE
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
+      - _APP_USAGE_STATS
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
       - _APP_STORAGE_LIMIT
@@ -239,6 +240,7 @@ services:
       - _APP_FUNCTIONS_CPUS
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
+      - _APP_USAGE_STATS
 
   appwrite-worker-mails:
     image: appwrite/appwrite:<?php echo $version."\n"; ?>
