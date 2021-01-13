@@ -176,7 +176,7 @@ App::get('/v1/projects/:projectId/usage')
             throw new Exception('Project not found', 404);
         }
 
-        if($App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
 
             $period = [
                 '24h' => [
