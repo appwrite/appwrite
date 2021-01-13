@@ -156,9 +156,8 @@ App::get('/v1/functions/:functionId/usage')
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
         }
-        //check if stats is disabled
-        $appUsageStatsEnabled = App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled';
-        if($appUsageStatsEnabled) {
+        
+        if($App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $period = [
                 '24h' => [
                     'start' => DateTime::createFromFormat('U', \strtotime('-24 hours')),
