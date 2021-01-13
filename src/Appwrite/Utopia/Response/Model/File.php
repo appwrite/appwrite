@@ -32,7 +32,7 @@ class File extends Model
             ->addRule('dateCreated', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'File creation date in Unix timestamp.',
-                'default' => '',
+                'default' => 0,
                 'example' => 1592981250,
             ])
             ->addRule('signature', [
