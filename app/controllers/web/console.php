@@ -122,7 +122,7 @@ App::get('/console/home')
         /** @var Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/console/home/index.phtml');
-
+        $page->setParam('usageStatsEnabled',App::getEnv('_APP_USAGE_STATS','enabled') == 'enabled');
         $layout
             ->setParam('title', APP_NAME.' - Console')
             ->setParam('body', $page);
