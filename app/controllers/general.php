@@ -316,16 +316,18 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
     }
     
     $route = $utopia->match($request);
-    
-    if ($project->getId()
-        && $mode !== APP_MODE_ADMIN //TODO: add check to make sure user is admin
-        && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage on admin mode
-        
-        $usage
-            ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
-            ->setParam('networkResponseSize', $response->getSize())
-            ->trigger()
-        ;
+    $appUsageStatsEnabled = App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled';
+    if($appUsageStatsEnabled) {
+        if ($project->getId()
+            && $mode !== APP_MODE_ADMIN //TODO: add check to make sure user is admin
+            && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage on admin mode
+            
+            $usage
+                ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
+                ->setParam('networkResponseSize', $response->getSize())
+                ->trigger()
+            ;
+        }
     }
 
 }, ['utopia', 'request', 'response', 'project', 'events', 'audits', 'usage', 'deletes', 'mode']);
