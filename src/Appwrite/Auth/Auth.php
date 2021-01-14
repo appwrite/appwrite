@@ -16,13 +16,14 @@ class Auth
     /**
      * User Roles.
      */
-    const USER_ROLE_GUEST = 0;
-    const USER_ROLE_MEMBER = 1;
-    const USER_ROLE_ADMIN = 2;
-    const USER_ROLE_DEVELOPER = 3;
-    const USER_ROLE_OWNER = 4;
-    const USER_ROLE_APP = 5;
-    const USER_ROLE_SYSTEM = 6;
+    const USER_ROLE_GUEST = 'guest';
+    const USER_ROLE_MEMBER = 'member';
+    const USER_ROLE_ADMIN = 'admin';
+    const USER_ROLE_DEVELOPER = 'developer';
+    const USER_ROLE_OWNER = 'owner';
+    const USER_ROLE_APP = 'app';
+    const USER_ROLE_SYSTEM = 'system';
+    const USER_ROLE_ALL = '*';
 
     /**
      * Token Types.

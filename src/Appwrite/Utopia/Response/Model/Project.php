@@ -19,6 +19,7 @@ class Project extends Model
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Project ID.',
+                'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('name', [
@@ -36,6 +37,7 @@ class Project extends Model
             ->addRule('teamId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Project team ID.',
+                'default' => '',
                 'example' => '1592981250',
             ])
             ->addRule('logo', [

@@ -13,6 +13,7 @@ class Team extends Model
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Team ID.',
+                'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('name', [
@@ -24,11 +25,13 @@ class Team extends Model
             ->addRule('dateCreated', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Team creation date in Unix timestamp.',
+                'default' => 0,
                 'example' => 1592981250,
             ])
             ->addRule('sum', [ // TODO change key name?
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total sum of team members.',
+                'default' => 0,
                 'example' => 7,
             ])
         ;
