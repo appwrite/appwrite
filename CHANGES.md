@@ -37,8 +37,11 @@
 - Added new environment variables for ClamAV hostname and port ([#780](https://github.com/appwrite/appwrite/pull/780))
 - New OAuth adapter for Box.com (@armino-dev - [#420](https://github.com/appwrite/appwrite/issues/410))
 - New OAuth adapter for PayPal sandbox  (@armino-dev - [#420](https://github.com/appwrite/appwrite/issues/410))
+- Introducing new permssion types: role:guest, role:member, role:app
+- Disabled rate-limits on server side integrations
 
 ### User Interface
+
 - Updated grid for OAuth2 providers list in the console ([#413](https://github.com/appwrite/appwrite/issues/413))
 - Added Google Fonts to Appwrite for offline availability 
 - Added option to delete user from the console (@PineappleIOnic - [#538](https://github.com/appwrite/appwrite/issues/538))
@@ -53,6 +56,7 @@
 - Added toggle to hide/show secret keys and passwords inside the dashboard (@kodumbeats, [#535](https://github.com/appwrite/appwrite/issues/535))
 
 ### Upgrades
+
 - Upgraded QR codes generator library (@PedroCisnerosSantana - [#475](https://github.com/appwrite/appwrite/issues/475))
 - Upgraded Traefik image to version 2.3
 - Upgraded MariaDB to version 10.5.5
@@ -63,6 +67,7 @@
 - Upgraded device detctor to version 3.12.6
 
 ## Breaking Changes (Read before upgrading!)
+
 - **Deprecated** `first` and `last` query params for documents list route in the database API
 - **Deprecated** Deprectaed Pubjabi Translations ('pn')
 - **Deprecated** `PATCH /account/prefs` is now updating the prefs payload and not just merging it
@@ -100,6 +105,7 @@
 - Fixed OAuth redirect when using the self-hosted instance default success URL ([#454](https://github.com/appwrite/appwrite/issues/454))
 - Fixed bug denying authentication with Github OAuth provider
 - Fixed a bug making read permission overwrite write permission in some cases
+
 ## Security
 
 - Access to Health API now requires authentication with an API Key with access to `health.read` scope allowed

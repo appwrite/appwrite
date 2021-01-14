@@ -156,96 +156,100 @@ App::get('/v1/functions/:functionId/usage')
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
         }
-
-        $period = [
-            '24h' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('-24 hours')),
-                'end' => DateTime::createFromFormat('U', \strtotime('+1 hour')),
-                'group' => '30m',
-            ],
-            '7d' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('-7 days')),
-                'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                'group' => '1d',
-            ],
-            '30d' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('-30 days')),
-                'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                'group' => '1d',
-            ],
-            '90d' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('-90 days')),
-                'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                'group' => '1d',
-            ],
-        ];
-
-        $client = $register->get('influxdb');
-
-        $executions = [];
-        $failures = [];
-        $compute = [];
-
-        if ($client) {
-            $start = $period[$range]['start']->format(DateTime::RFC3339);
-            $end = $period[$range]['end']->format(DateTime::RFC3339);
-            $database = $client->selectDB('telegraf');
-
-            // Executions
-            $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-            $points = $result->getPoints();
-
-            foreach ($points as $point) {
-                $executions[] = [
-                    'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                    'date' => \strtotime($point['time']),
-                ];
+        
+        if($App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+            $period = [
+                '24h' => [
+                    'start' => DateTime::createFromFormat('U', \strtotime('-24 hours')),
+                    'end' => DateTime::createFromFormat('U', \strtotime('+1 hour')),
+                    'group' => '30m',
+                ],
+                '7d' => [
+                    'start' => DateTime::createFromFormat('U', \strtotime('-7 days')),
+                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
+                    'group' => '1d',
+                ],
+                '30d' => [
+                    'start' => DateTime::createFromFormat('U', \strtotime('-30 days')),
+                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
+                    'group' => '1d',
+                ],
+                '90d' => [
+                    'start' => DateTime::createFromFormat('U', \strtotime('-90 days')),
+                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
+                    'group' => '1d',
+                ],
+            ];
+    
+            $client = $register->get('influxdb');
+    
+            $executions = [];
+            $failures = [];
+            $compute = [];
+    
+            if ($client) {
+                $start = $period[$range]['start']->format(DateTime::RFC3339);
+                $end = $period[$range]['end']->format(DateTime::RFC3339);
+                $database = $client->selectDB('telegraf');
+    
+                // Executions
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+                $points = $result->getPoints();
+    
+                foreach ($points as $point) {
+                    $executions[] = [
+                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
+                        'date' => \strtotime($point['time']),
+                    ];
+                }
+    
+                // Failures
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' AND "functionStatus"=\'failed\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+                $points = $result->getPoints();
+    
+                foreach ($points as $point) {
+                    $failures[] = [
+                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
+                        'date' => \strtotime($point['time']),
+                    ];
+                }
+    
+                // Compute
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_time" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+                $points = $result->getPoints();
+    
+                foreach ($points as $point) {
+                    $compute[] = [
+                        'value' => round((!empty($point['value'])) ? $point['value'] / 1000 : 0, 2), // minutes
+                        'date' => \strtotime($point['time']),
+                    ];
+                }
             }
-
-            // Failures
-            $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' AND "functionStatus"=\'failed\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-            $points = $result->getPoints();
-
-            foreach ($points as $point) {
-                $failures[] = [
-                    'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                    'date' => \strtotime($point['time']),
-                ];
-            }
-
-            // Compute
-            $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_time" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-            $points = $result->getPoints();
-
-            foreach ($points as $point) {
-                $compute[] = [
-                    'value' => round((!empty($point['value'])) ? $point['value'] / 1000 : 0, 2), // minutes
-                    'date' => \strtotime($point['time']),
-                ];
-            }
+    
+            $response->json([
+                'range' => $range,
+                'executions' => [
+                    'data' => $executions,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $executions)),
+                ],
+                'failures' => [
+                    'data' => $failures,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $failures)),
+                ],
+                'compute' => [
+                    'data' => $compute,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $compute)),
+                ],
+            ]);
+        } else {
+            $response->json([]);
         }
-
-        $response->json([
-            'range' => $range,
-            'executions' => [
-                'data' => $executions,
-                'total' => \array_sum(\array_map(function ($item) {
-                    return $item['value'];
-                }, $executions)),
-            ],
-            'failures' => [
-                'data' => $failures,
-                'total' => \array_sum(\array_map(function ($item) {
-                    return $item['value'];
-                }, $failures)),
-            ],
-            'compute' => [
-                'data' => $compute,
-                'total' => \array_sum(\array_map(function ($item) {
-                    return $item['value'];
-                }, $compute)),
-            ],
-        ]);
     });
 
 App::put('/v1/functions/:functionId')
@@ -629,6 +633,8 @@ App::post('/v1/functions/:functionId/executions')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_EXECUTION)
+    ->label('abuse-limit', 60)
+    ->label('abuse-time', 60)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     // ->param('async', 1, new Range(0, 1), 'Execute code asynchronously. Pass 1 for true, 0 for false. Default value is 1.', true)
     ->inject('response')

@@ -13,16 +13,19 @@ class Phone extends Model
             ->addRule('code', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Phone code.',
+                'default' => '',
                 'example' => '+1',
             ])
             ->addRule('countryCode', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Country two-character ISO 3166-1 alpha code.',
+                'default' => '',
                 'example' => 'US',
             ])
             ->addRule('countryName', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Country name.',
+                'default' => '',
                 'example' => 'United States',
             ])
         ;
