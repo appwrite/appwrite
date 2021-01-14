@@ -12,8 +12,7 @@ abstract class Migration
     protected \PDO $db;
 
     protected int $limit = 30;
-    protected int $sum = 30;
-    protected int $offset = 0;
+
     protected Document $project;
     protected Database $projectDB;
 
@@ -43,16 +42,19 @@ abstract class Migration
      */
     public function forEachDocument(callable $callback)
     {
-        while ($this->sum >= 30) {
+        $sum = 30;
+        $offset = 0;
+
+        while ($sum >= 30) {
             $all = $this->projectDB->getCollection([
                 'limit' => $this->limit,
-                'offset' => $this->offset,
+                'offset' => $offset,
                 'orderType' => 'DESC',
             ]);
 
-            $this->sum = \count($all);
+            $sum = \count($all);
 
-            Console::log('Migrating: ' . $this->offset . ' / ' . $this->projectDB->getSum());
+            Console::log('Migrating: ' . $offset . ' / ' . $this->projectDB->getSum());
 
             foreach ($all as $document) {
 
@@ -75,7 +77,7 @@ abstract class Migration
                 }
             }
 
-            $this->offset = $this->offset + $this->limit;
+            $offset += $this->limit;
         }
     }
 
