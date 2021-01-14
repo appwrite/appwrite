@@ -39,7 +39,7 @@ abstract class Migration
     /**
      * Iterates through every document.
      * 
-     * @param function(Document): Document $callback
+     * @param callable(Document):Document $callback
      */
     public function forEachDocument(callable $callback)
     {
