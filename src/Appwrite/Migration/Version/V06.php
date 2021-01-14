@@ -44,7 +44,7 @@ class V06 extends Migration
                 break;
             case Database::SYSTEM_COLLECTION_PROJECTS:
                 foreach ($providers as $key => $provider) {
-                    if ($document->getAttribute('usersOauth' . \ucfirst($key) . 'Secret')) {
+                    if ($document->getAttribute('usersOauth' . \ucfirst($key) . 'Secret', null)) {
                         //TODO: take care of filter ['encrypt]
                     }
                 }
