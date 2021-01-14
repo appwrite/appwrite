@@ -38,7 +38,7 @@ $cli
 
         $migration = new Version\V06($register->get('db')); //TODO: remove hardcoded version and move to dynamic migration
 
-        while ($sum >= 30) {
+        while ($sum > 0) {
             foreach ($projects as $project) {
                 try {
                     $migration
@@ -61,8 +61,10 @@ $cli
             $sum = \count($projects);
             $offset = $offset + $limit;
             $count = $count + $sum;
-
-            Console::log('Fetched ' . $count . '/' . $consoleDB->getSum() . ' projects...');
+            
+            if ($sum > 0) {
+                Console::log('Fetched ' . $count . '/' . $consoleDB->getSum() . ' projects...');
+            }
         }
 
         Console::success('Data Migration Completed');
