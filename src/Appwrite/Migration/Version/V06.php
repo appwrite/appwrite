@@ -24,8 +24,6 @@ class V06 extends Migration
     {
         switch ($document->getAttribute('$collection')) {
             case Database::SYSTEM_COLLECTION_USERS:
-                var_dump($this->applyFilterEncrypt($document->getAttribute("email")));
-
                 if ($document->getAttribute('password-update', null)) {
                     $document
                         ->setAttribute('passwordUpdate', $document->getAttribute('password-update', $document->getAttribute('passwordUpdate', '')))
@@ -36,13 +34,9 @@ class V06 extends Migration
                 }
                 break;
             case Database::SYSTEM_COLLECTION_WEBHOOKS:
-                if ($document->getAttribute('httpPass', null)) {
-                    //TODO: take care of filter ['encrypt']
-                }
-                break;
             case Database::SYSTEM_COLLECTION_TASKS:
                 if ($document->getAttribute('httpPass', null)) {
-                    //TODO: take care of filter ['encrypt']
+                    $document->setAttribute('httpPass', $this->applyFilterEncrypt($document->getAttribute('httpPass')));
                 }
                 break;
             case Database::SYSTEM_COLLECTION_PROJECTS:
@@ -50,7 +44,7 @@ class V06 extends Migration
 
                 foreach ($providers as $key => $provider) {
                     if ($document->getAttribute('usersOauth' . \ucfirst($key) . 'Secret', null)) {
-                        //TODO: take care of filter ['encrypt]
+                        $document->getAttribute('usersOauth' . \ucfirst($key) . 'Secret', $this->applyFilterEncrypt($document->getAttribute('usersOauth' . \ucfirst($key) . 'Secret')));
                     }
                 }
                 break;
