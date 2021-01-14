@@ -7,8 +7,8 @@ use Appwrite\Migration\Migration;
 
 class V04 extends Migration
 {
-  public function execute(): void
-  {
-    Console::log('I got nothing to do.');
-  }
+    public function execute(): void
+    {
+        Console::log('I got nothing to do.');
+    }
 }
