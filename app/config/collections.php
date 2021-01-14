@@ -228,7 +228,7 @@ $collections = [
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Password Update Date',
-                'key' => 'password-update',
+                'key' => 'passwordUpdate',
                 'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,
                 'default' => '',
                 'required' => true,
