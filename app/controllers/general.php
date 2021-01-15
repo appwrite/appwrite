@@ -164,27 +164,31 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     $roles = Config::getParam('roles', []);
     $scope = $route->getLabel('scope', 'none'); // Allowed scope for chosen route
     $scopes = $roles[$role]['scopes']; // Allowed scopes for user role
-    
-    // Check if given key match project API keys
-    $key = $project->search('secret', $request->getHeader('x-appwrite-key', ''), $project->getAttribute('keys', []));
-    
-    /*
-     * Try app auth when we have project key and no user
-     *  Mock user to app and grant API key scopes in addition to default app scopes
-     */
-    if (null !== $key && $user->isEmpty()) {
-        $user = new Document([
-            '$id' => '',
-            'status' => Auth::USER_STATUS_ACTIVATED,
-            'email' => 'app.'.$project->getId().'@service.'.$request->getHostname(),
-            'password' => '',
-            'name' => $project->getAttribute('name', 'Untitled'),
-        ]);
 
-        $role = Auth::USER_ROLE_APP;
-        $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
+    $authKey = $request->getHeader('x-appwrite-key', '');
 
-        Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
+    if (!empty($authKey)) { // API Key authentication
+        // Check if given key match project API keys
+        $key = $project->search('secret', $authKey, $project->getAttribute('keys', []));
+            
+        /*
+         * Try app auth when we have project key and no user
+         *  Mock user to app and grant API key scopes in addition to default app scopes
+         */
+        if ($key && $user->isEmpty()) {
+            $user = new Document([
+                '$id' => '',
+                'status' => Auth::USER_STATUS_ACTIVATED,
+                'email' => 'app.'.$project->getId().'@service.'.$request->getHostname(),
+                'password' => '',
+                'name' => $project->getAttribute('name', 'Untitled'),
+            ]);
+
+            $role = Auth::USER_ROLE_APP;
+            $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
+
+            Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
+        }
     }
 
     if ($user->getId()) {
