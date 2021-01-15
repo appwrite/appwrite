@@ -157,7 +157,7 @@ App::get('/v1/functions/:functionId/usage')
             throw new Exception('Function not found', 404);
         }
         
-        if($App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $period = [
                 '24h' => [
                     'start' => DateTime::createFromFormat('U', \strtotime('-24 hours')),
