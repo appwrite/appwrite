@@ -11,6 +11,8 @@ if (\file_exists(__DIR__.'/../vendor/autoload.php')) {
     require_once __DIR__.'/../vendor/autoload.php';
 }
 
+use Ahc\Jwt\JWT;
+use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
 use Appwrite\Database\Database;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
@@ -408,6 +410,29 @@ App::setResource('user', function($mode, $project, $console, $request, $response
         if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         } else {
+            $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+        }
+    }
+
+    $authJWT = $request->getHeader('x-appwrite-jwt', '');
+
+    if (!empty($authJWT)) { // JWT authentication
+        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+
+        try {
+            $payload = $jwt->decode($authJWT);
+        } catch (JWTException $error) {
+            throw new Exception('Failed to verify JWT. '.$error->getMessage(), 401);
+        }
+        
+        $jwtUserId = $payload['userId'] ?? '';
+        $jwtSessionId = $payload['sessionId'] ?? '';
+
+        if($jwtUserId && $jwtSessionId) {
+            $user = $projectDB->getDocument($jwtUserId);
+        }
+
+        if (empty($user->search('$id', $jwtSessionId, $user->getAttribute('tokens')))) { // Match JWT to active token
             $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
         }
     }
