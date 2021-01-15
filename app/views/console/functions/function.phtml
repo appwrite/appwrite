@@ -3,6 +3,7 @@ $fileLimit = $this->getParam('fileLimit', 0);
 $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 $events = array_keys($this->getParam('events', []));
 $timeout = $this->getParam('timeout', 900);
+$usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 ?>
 <div
     data-service="functions.get"
@@ -240,6 +241,7 @@ $timeout = $this->getParam('timeout', 900);
                     </div>
                 </div>
             </li>
+            <?php if($usageStatsEnabled): ?>
             <li data-state="/console/functions/function/monitors?id={{router.params.id}}&project={{router.params.project}}">
                 
                 <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '90d'"
@@ -318,6 +320,7 @@ $timeout = $this->getParam('timeout', 900);
                     </ul>
                 </div>
             </li>
+            <?php endif; ?>
             <li data-state="/console/functions/function/logs?id={{router.params.id}}&project={{router.params.project}}">
 
                 <div class="text-fade text-size-small pull-end margin-top" data-ls-bind="{{project-function-executions.sum}} executions found"></div>
@@ -505,6 +508,10 @@ $timeout = $this->getParam('timeout', 900);
                                         <?php endforeach; ?>
                                     </div>
                                 </section>
+
+                                <label for="execute">Execute Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
+                                <input type="hidden" id="execute" name="execute" data-forms-tags data-cast-to="json" data-ls-bind="{{project-function.$permissions.execute}}" placeholder="User ID, Team ID or Role" />
+                                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
 
                                 <section class="margin-bottom-large">
                                     <label for="schedule">Schedule (CRON Syntax) <span class="tooltip small" data-tooltip="Set a CRON schedule to trigger this function."><i class="icon-info-circled"></i></span></label>

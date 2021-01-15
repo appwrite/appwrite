@@ -56,6 +56,7 @@ const configApp  = {
         'public/scripts/views/forms/remove.js',
         'public/scripts/views/forms/run.js',
         'public/scripts/views/forms/select-all.js',
+        'public/scripts/views/forms/show-secret.js',
         'public/scripts/views/forms/switch.js',
         'public/scripts/views/forms/tags.js',
         'public/scripts/views/forms/text-count.js',

@@ -114,6 +114,7 @@ App::get('/v1/projects')
         $results = $consoleDB->getCollection([
             'limit' => $limit,
             'offset' => $offset,
+            'orderType' => $orderType,
             'search' => $search,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_PROJECTS,
@@ -175,73 +176,81 @@ App::get('/v1/projects/:projectId/usage')
             throw new Exception('Project not found', 404);
         }
 
-        $period = [
-            '24h' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('-24 hours')),
-                'end' => DateTime::createFromFormat('U', \strtotime('+1 hour')),
-                'group' => '30m',
-            ],
-            '7d' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('-7 days')),
-                'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                'group' => '1d',
-            ],
-            '30d' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('-30 days')),
-                'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                'group' => '1d',
-            ],
-            '90d' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('-90 days')),
-                'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                'group' => '1d',
-            ],
-        ];
+        if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
 
-        $client = $register->get('influxdb');
-
-        $requests = [];
-        $network = [];
-        $functions = [];
-
-        if ($client) {
-            $start = $period[$range]['start']->format(DateTime::RFC3339);
-            $end = $period[$range]['end']->format(DateTime::RFC3339);
-            $database = $client->selectDB('telegraf');
-
-            // Requests
-            $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_requests_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-            $points = $result->getPoints();
-
-            foreach ($points as $point) {
-                $requests[] = [
-                    'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                    'date' => \strtotime($point['time']),
-                ];
+            $period = [
+                '24h' => [
+                    'start' => DateTime::createFromFormat('U', \strtotime('-24 hours')),
+                    'end' => DateTime::createFromFormat('U', \strtotime('+1 hour')),
+                    'group' => '30m',
+                ],
+                '7d' => [
+                    'start' => DateTime::createFromFormat('U', \strtotime('-7 days')),
+                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
+                    'group' => '1d',
+                ],
+                '30d' => [
+                    'start' => DateTime::createFromFormat('U', \strtotime('-30 days')),
+                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
+                    'group' => '1d',
+                ],
+                '90d' => [
+                    'start' => DateTime::createFromFormat('U', \strtotime('-90 days')),
+                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
+                    'group' => '1d',
+                ],
+            ];
+    
+            $client = $register->get('influxdb');
+    
+            $requests = [];
+            $network = [];
+            $functions = [];
+    
+            if ($client) {
+                $start = $period[$range]['start']->format(DateTime::RFC3339);
+                $end = $period[$range]['end']->format(DateTime::RFC3339);
+                $database = $client->selectDB('telegraf');
+    
+                // Requests
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_requests_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+                $points = $result->getPoints();
+    
+                foreach ($points as $point) {
+                    $requests[] = [
+                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
+                        'date' => \strtotime($point['time']),
+                    ];
+                }
+    
+                // Network
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_network_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+                $points = $result->getPoints();
+    
+                foreach ($points as $point) {
+                    $network[] = [
+                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
+                        'date' => \strtotime($point['time']),
+                    ];
+                }
+    
+                // Functions
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+                $points = $result->getPoints();
+    
+                foreach ($points as $point) {
+                    $functions[] = [
+                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
+                        'date' => \strtotime($point['time']),
+                    ];
+                }
             }
-
-            // Network
-            $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_network_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-            $points = $result->getPoints();
-
-            foreach ($points as $point) {
-                $network[] = [
-                    'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                    'date' => \strtotime($point['time']),
-                ];
-            }
-
-            // Functions
-            $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-            $points = $result->getPoints();
-
-            foreach ($points as $point) {
-                $functions[] = [
-                    'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                    'date' => \strtotime($point['time']),
-                ];
-            }
+        } else {
+            $requests = [];
+            $network = [];
+            $functions = [];
         }
+
 
         // Users
 
@@ -463,7 +472,10 @@ App::delete('/v1/projects/:projectId')
             throw new Exception('Project not found', 404);
         }
 
-        $deletes->setParam('document', $project->getArrayCopy());
+        $deletes
+            ->setParam('type', DELETE_TYPE_DOCUMENT)
+            ->setParam('document', $project->getArrayCopy())
+        ;
 
         foreach (['keys', 'webhooks', 'tasks', 'platforms', 'domains'] as $key) { // Delete all children (keys, webhooks, tasks [stop tasks?], platforms)
             $list = $project->getAttribute('webhooks', []);
@@ -714,7 +726,7 @@ App::post('/v1/projects/:projectId/keys')
     ->label('sdk.response.model', Response::MODEL_KEY)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
-    ->param('scopes', null, new ArrayList(new WhiteList(Config::getParam('scopes'), true)), 'Key scopes list.')
+    ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true)), 'Key scopes list.')
     ->inject('response')
     ->inject('consoleDB')
     ->action(function ($projectId, $name, $scopes, $response, $consoleDB) {
@@ -827,7 +839,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('keyId', null, new UID(), 'Key unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
-    ->param('scopes', null, new ArrayList(new WhiteList(Config::getParam('scopes'), true)), 'Key scopes list')
+    ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true)), 'Key scopes list')
     ->inject('response')
     ->inject('consoleDB')
     ->action(function ($projectId, $keyId, $name, $scopes, $response, $consoleDB) {

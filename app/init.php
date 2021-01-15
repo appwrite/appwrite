@@ -54,7 +54,12 @@ const APP_SOCIAL_INSTAGRAM = 'https://www.instagram.com/appwrite.io';
 const APP_SOCIAL_GITHUB = 'https://github.com/appwrite';
 const APP_SOCIAL_DISCORD = 'https://appwrite.io/discord';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
-const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
+const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite'; 
+// Deletion Types
+const DELETE_TYPE_DOCUMENT = 'document';
+const DELETE_TYPE_EXECUTIONS = 'executions';
+const DELETE_TYPE_AUDIT = 'audit';
+const DELETE_TYPE_ABUSE = 'abuse';
 
 $register = new Registry();
 
@@ -300,23 +305,30 @@ App::setResource('events', function($register) {
 }, ['register']);
 
 App::setResource('audits', function($register) {
-    return new Event('v1-audits', 'AuditsV1');
+    return new Event(Event::AUDITS_QUEUE_NAME, Event::AUDITS_CLASS_NAME);
 }, ['register']);
 
 App::setResource('usage', function($register) {
-    return new Event('v1-usage', 'UsageV1');
+    return new Event(Event::USAGE_QUEUE_NAME, Event::USAGE_CLASS_NAME);
 }, ['register']);
 
 App::setResource('mails', function($register) {
-    return new Event('v1-mails', 'MailsV1');
+    return new Event(Event::MAILS_QUEUE_NAME, Event::MAILS_CLASS_NAME);
 }, ['register']);
 
 App::setResource('deletes', function($register) {
-    return new Event('v1-deletes', 'DeletesV1');
+    return new Event(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME);
 }, ['register']);
 
 // Test Mock
-App::setResource('clients', function($console, $project) {
+App::setResource('clients', function($request, $console, $project) {
+    $console->setAttribute('platforms', [ // Allways allow current host
+        '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+        'name' => 'Current Host',
+        'type' => 'web',
+        'hostname' => $request->getHostname(),
+    ], Document::SET_TYPE_APPEND);
+    
     /**
      * Get All verified client URLs for both console and current projects
      * + Filter for duplicated entries
@@ -342,7 +354,7 @@ App::setResource('clients', function($console, $project) {
     }))));
 
     return $clients;
-}, ['console', 'project']);
+}, ['request', 'console', 'project']);
 
 App::setResource('user', function($mode, $project, $console, $request, $response, $projectDB, $consoleDB) {
     /** @var Utopia\Swoole\Request $request */

@@ -2,6 +2,7 @@
 
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
+use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Validator\UID;
 use Appwrite\Storage\Storage;
 use Appwrite\Storage\Validator\File;
@@ -18,6 +19,7 @@ use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Config\Config;
 use Cron\CronExpression;
+use Utopia\Exception;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -33,6 +35,7 @@ App::post('/v1/functions')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
+    ->param('execute', [], new ArrayList(new Text(64)), 'An array of strings with execution permissions. By default no user is granted with any execute permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('env', '', new WhiteList(array_keys(Config::getParam('environments')), true), 'Execution enviornment.')
     ->param('vars', [], new Assoc(), 'Key-value JSON object.', true)
     ->param('events', [], new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)), 'Events list.', true)
@@ -40,12 +43,11 @@ App::post('/v1/functions')
     ->param('timeout', 15, new Range(1, 900), 'Function maximum execution time in seconds.', true)
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($name, $env, $vars, $events, $schedule, $timeout, $response, $projectDB) {
+    ->action(function ($name, $execute, $env, $vars, $events, $schedule, $timeout, $response, $projectDB) {
         $function = $projectDB->createDocument([
             '$collection' => Database::SYSTEM_COLLECTION_FUNCTIONS,
             '$permissions' => [
-                'read' => [],
-                'write' => [],
+                'execute' => $execute,
             ],
             'dateCreated' => time(),
             'dateUpdated' => time(),
@@ -92,6 +94,7 @@ App::get('/v1/functions')
         $results = $projectDB->getCollection([
             'limit' => $limit,
             'offset' => $offset,
+            'orderType' => $orderType,
             'search' => $search,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_FUNCTIONS,
@@ -153,96 +156,100 @@ App::get('/v1/functions/:functionId/usage')
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
         }
-
-        $period = [
-            '24h' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('-24 hours')),
-                'end' => DateTime::createFromFormat('U', \strtotime('+1 hour')),
-                'group' => '30m',
-            ],
-            '7d' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('-7 days')),
-                'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                'group' => '1d',
-            ],
-            '30d' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('-30 days')),
-                'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                'group' => '1d',
-            ],
-            '90d' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('-90 days')),
-                'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                'group' => '1d',
-            ],
-        ];
-
-        $client = $register->get('influxdb');
-
-        $executions = [];
-        $failures = [];
-        $compute = [];
-
-        if ($client) {
-            $start = $period[$range]['start']->format(DateTime::RFC3339);
-            $end = $period[$range]['end']->format(DateTime::RFC3339);
-            $database = $client->selectDB('telegraf');
-
-            // Executions
-            $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-            $points = $result->getPoints();
-
-            foreach ($points as $point) {
-                $executions[] = [
-                    'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                    'date' => \strtotime($point['time']),
-                ];
+        
+        if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+            $period = [
+                '24h' => [
+                    'start' => DateTime::createFromFormat('U', \strtotime('-24 hours')),
+                    'end' => DateTime::createFromFormat('U', \strtotime('+1 hour')),
+                    'group' => '30m',
+                ],
+                '7d' => [
+                    'start' => DateTime::createFromFormat('U', \strtotime('-7 days')),
+                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
+                    'group' => '1d',
+                ],
+                '30d' => [
+                    'start' => DateTime::createFromFormat('U', \strtotime('-30 days')),
+                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
+                    'group' => '1d',
+                ],
+                '90d' => [
+                    'start' => DateTime::createFromFormat('U', \strtotime('-90 days')),
+                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
+                    'group' => '1d',
+                ],
+            ];
+    
+            $client = $register->get('influxdb');
+    
+            $executions = [];
+            $failures = [];
+            $compute = [];
+    
+            if ($client) {
+                $start = $period[$range]['start']->format(DateTime::RFC3339);
+                $end = $period[$range]['end']->format(DateTime::RFC3339);
+                $database = $client->selectDB('telegraf');
+    
+                // Executions
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+                $points = $result->getPoints();
+    
+                foreach ($points as $point) {
+                    $executions[] = [
+                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
+                        'date' => \strtotime($point['time']),
+                    ];
+                }
+    
+                // Failures
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' AND "functionStatus"=\'failed\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+                $points = $result->getPoints();
+    
+                foreach ($points as $point) {
+                    $failures[] = [
+                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
+                        'date' => \strtotime($point['time']),
+                    ];
+                }
+    
+                // Compute
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_time" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+                $points = $result->getPoints();
+    
+                foreach ($points as $point) {
+                    $compute[] = [
+                        'value' => round((!empty($point['value'])) ? $point['value'] / 1000 : 0, 2), // minutes
+                        'date' => \strtotime($point['time']),
+                    ];
+                }
             }
-
-            // Failures
-            $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' AND "functionStatus"=\'failed\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-            $points = $result->getPoints();
-
-            foreach ($points as $point) {
-                $failures[] = [
-                    'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                    'date' => \strtotime($point['time']),
-                ];
-            }
-
-            // Compute
-            $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_time" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-            $points = $result->getPoints();
-
-            foreach ($points as $point) {
-                $compute[] = [
-                    'value' => round((!empty($point['value'])) ? $point['value'] / 1000 : 0, 2), // minutes
-                    'date' => \strtotime($point['time']),
-                ];
-            }
+    
+            $response->json([
+                'range' => $range,
+                'executions' => [
+                    'data' => $executions,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $executions)),
+                ],
+                'failures' => [
+                    'data' => $failures,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $failures)),
+                ],
+                'compute' => [
+                    'data' => $compute,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $compute)),
+                ],
+            ]);
+        } else {
+            $response->json([]);
         }
-
-        $response->json([
-            'range' => $range,
-            'executions' => [
-                'data' => $executions,
-                'total' => \array_sum(\array_map(function ($item) {
-                    return $item['value'];
-                }, $executions)),
-            ],
-            'failures' => [
-                'data' => $failures,
-                'total' => \array_sum(\array_map(function ($item) {
-                    return $item['value'];
-                }, $failures)),
-            ],
-            'compute' => [
-                'data' => $compute,
-                'total' => \array_sum(\array_map(function ($item) {
-                    return $item['value'];
-                }, $compute)),
-            ],
-        ]);
     });
 
 App::put('/v1/functions/:functionId')
@@ -258,13 +265,14 @@ App::put('/v1/functions/:functionId')
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
+    ->param('execute', [], new ArrayList(new Text(64)), 'An array of strings with execution permissions. By default no user is granted with any execute permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('vars', [], new Assoc(), 'Key-value JSON object.', true)
     ->param('events', [], new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)), 'Events list.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, 900), 'Function maximum execution time in seconds.', true)
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($functionId, $name, $vars, $events, $schedule, $timeout, $response, $projectDB) {
+    ->action(function ($functionId, $name, $execute, $vars, $events, $schedule, $timeout, $response, $projectDB) {
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
@@ -275,6 +283,9 @@ App::put('/v1/functions/:functionId')
         $next = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : null;
 
         $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
+            '$permissions' => [
+                'execute' => $execute,
+            ],
             'dateUpdated' => time(),
             'name' => $name,
             'vars' => $vars,
@@ -312,7 +323,7 @@ App::patch('/v1/functions/:functionId/tag')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'updateTag')
-    ->label('sdk.description', '/docs/references/functions/update-tag.md')
+    ->label('sdk.description', '/docs/references/functions/update-function-tag.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
@@ -379,6 +390,7 @@ App::delete('/v1/functions/:functionId')
         }
 
         $deletes
+            ->setParam('type', DELETE_TYPE_DOCUMENT)
             ->setParam('document', $function->getArrayCopy())
         ;
 
@@ -503,6 +515,7 @@ App::get('/v1/functions/:functionId/tags')
         $results = $projectDB->getCollection([
             'limit' => $limit,
             'offset' => $offset,
+            'orderType' => $orderType,
             'search' => $search,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_TAGS,
@@ -612,14 +625,16 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
 App::post('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('Create Execution')
-    ->label('scope', 'functions.write')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('scope', 'execution.write')
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'createExecution')
     ->label('sdk.description', '/docs/references/functions/create-execution.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_EXECUTION)
+    ->label('abuse-limit', 60)
+    ->label('abuse-time', 60)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     // ->param('async', 1, new Range(0, 1), 'Execute code asynchronously. Pass 1 for true, 0 for false. Default value is 1.', true)
     ->inject('response')
@@ -629,6 +644,8 @@ App::post('/v1/functions/:functionId/executions')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
+
+        Authorization::disable();
 
         $function = $projectDB->getDocument($functionId);
 
@@ -645,11 +662,21 @@ App::post('/v1/functions/:functionId/executions')
         if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
             throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
         }
-        
+
+        Authorization::reset();
+
+        $validator = new Authorization($function, 'execute');
+
+        if (!$validator->isValid($function->getPermissions())) { // Check if user has write access to execute function
+            throw new Exception($validator->getDescription(), 401);
+        }
+
+        Authorization::disable();
+
         $execution = $projectDB->createDocument([
             '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
             '$permissions' => [
-                'read' => [],
+                'read' => $function->getPermissions()['execute'] ?? [],
                 'write' => [],
             ],
             'dateCreated' => time(),
@@ -661,6 +688,8 @@ App::post('/v1/functions/:functionId/executions')
             'stderr' => '',
             'time' => 0,
         ]);
+
+        Authorization::reset();
 
         if (false === $execution) {
             throw new Exception('Failed saving execution to DB', 500);
@@ -682,8 +711,8 @@ App::post('/v1/functions/:functionId/executions')
 App::get('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('List Executions')
-    ->label('scope', 'functions.read')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('scope', 'execution.read')
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'listExecutions')
     ->label('sdk.description', '/docs/references/functions/list-executions.md')
@@ -707,6 +736,7 @@ App::get('/v1/functions/:functionId/executions')
         $results = $projectDB->getCollection([
             'limit' => $limit,
             'offset' => $offset,
+            'orderType' => $orderType,
             'search' => $search,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_EXECUTIONS,
@@ -723,8 +753,8 @@ App::get('/v1/functions/:functionId/executions')
 App::get('/v1/functions/:functionId/executions/:executionId')
     ->groups(['api', 'functions'])
     ->desc('Get Execution')
-    ->label('scope', 'functions.read')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('scope', 'execution.read')
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getExecution')
     ->label('sdk.description', '/docs/references/functions/get-execution.md')

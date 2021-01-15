@@ -455,6 +455,7 @@ class FunctionsCustomServerTest extends Scope
 
     public function testENVS():array
     {
+        sleep(120);
         /**
          * Test for SUCCESS
          */
@@ -591,15 +592,21 @@ class FunctionsCustomServerTest extends Scope
             $executionId = $execution['body']['$id'] ?? '';
             $this->assertEquals(201, $execution['headers']['status-code']);
 
-            sleep(15);
+            sleep(30);
 
             $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
 
-            if($executions['body']['executions'][0]['status'] === 'failed') {
+            if($executions['body']['executions'][0]['status'] !== 'completed') {
+                var_dump($env);
                 var_dump($executions['body']['executions'][0]);
+                $stdout = '';
+                $stderr = '';
+                Console::execute('docker logs appwrite-worker-functions', '', $stdout, $stderr);
+                var_dump($stdout);
+                var_dump($stderr);
             }
     
             $this->assertEquals($executions['headers']['status-code'], 200);
@@ -680,6 +687,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $executionId = $execution['body']['$id'] ?? '';
+        
         $this->assertEquals(201, $execution['headers']['status-code']);
 
         sleep(15);

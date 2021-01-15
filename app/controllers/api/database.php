@@ -115,6 +115,7 @@ App::get('/v1/database/collections')
         $results = $projectDB->getCollection([
             'limit' => $limit,
             'offset' => $offset,
+            'orderType' => $orderType,
             'search' => $search,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_COLLECTIONS,
@@ -264,6 +265,7 @@ App::delete('/v1/database/collections/:collectionId')
         }
 
         $deletes
+            ->setParam('type', DELETE_TYPE_DOCUMENT)
             ->setParam('document', $collection)
         ;
 

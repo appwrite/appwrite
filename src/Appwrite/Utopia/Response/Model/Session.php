@@ -13,6 +13,7 @@ class Session extends Model
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Session ID.',
+                'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('userId', [
