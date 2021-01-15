@@ -827,6 +827,7 @@ $collections = [
                 'type' => Database::SYSTEM_VAR_TYPE_TEXT,
                 'default' => '',
                 'required' => false,
+                'filter' => ['encrypt'],
             ],
         ],
     ],
