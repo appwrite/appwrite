@@ -46,7 +46,7 @@ $cli
                         ->execute();
                 } catch (\Throwable $th) {
                     throw $th;
-                    Console::error('Failed to update project ("' . $project->getId() . '") version with error: ' . $th->getMessage());
+                    Console::error('Failed to update project ("'.$project->getId().'") version with error: '.$th->getMessage());
                 }
             }
 
@@ -54,7 +54,7 @@ $cli
                 'limit' => $limit,
                 'offset' => $offset,
                 'filters' => [
-                    '$collection=' . Database::SYSTEM_COLLECTION_PROJECTS,
+                    '$collection='.Database::SYSTEM_COLLECTION_PROJECTS,
                 ],
             ]);
 
@@ -63,7 +63,7 @@ $cli
             $count = $count + $sum;
             
             if ($sum > 0) {
-                Console::log('Fetched ' . $count . '/' . $consoleDB->getSum() . ' projects...');
+                Console::log('Fetched '.$count.'/'.$consoleDB->getSum().' projects...');
             }
         }
 
