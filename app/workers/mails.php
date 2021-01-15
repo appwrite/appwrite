@@ -5,7 +5,7 @@ use Utopia\CLI\Console;
 
 require_once __DIR__.'/../init.php';
 
-\cli_set_process_title('Mails V1 Worker');
+Console::title('Mails V1 Worker');
 
 Console::success(APP_NAME.' mails worker v1 has started'."\n");
 
