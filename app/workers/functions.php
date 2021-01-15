@@ -471,7 +471,7 @@ class FunctionsV1
             ->setParam('networkResponseSize', 0)
         ;
         
-        if($App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $usage->trigger();
         }
 
