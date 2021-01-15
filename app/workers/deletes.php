@@ -15,7 +15,7 @@ use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 
 require_once __DIR__.'/../init.php';
 
-\cli_set_process_title('Deletes V1 Worker');
+Console::title('Deletes V1 Worker');
 
 Console::success(APP_NAME.' deletes worker v1 has started'."\n");
 
