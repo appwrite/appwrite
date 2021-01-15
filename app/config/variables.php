@@ -94,6 +94,13 @@ return [
                 'question' => '',
             ],
             [
+                'name' => '_APP_SYSTEM_RESPONSE_FORMAT',
+                'description' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
                 'name' => '_APP_USAGE_STATS',
                 'description' => 'This variable allows you to disable the collection and displaying of usage stats. This value is set to \'enabled\' by default, to disable the usage stats set the value to \'disabled\'. When disabled, it\'s recommended to turn off the Worker Usage, Influxdb and Telegraf containers for better resource usage.',
                 'introduction' => '0.7.0',
@@ -358,11 +365,5 @@ return [
                 ],
             ],
         ],
-    ],
-    [
-        'name' => '_APP_SYSTEM_RESPONSE_FORMAT',
-        'default' => '',
-        'required' => false,
-        'question' => '',
     ],
 ];
