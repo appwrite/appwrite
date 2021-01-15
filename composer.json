@@ -50,13 +50,13 @@
         "matomo/device-detector": "3.13.0",
         "dragonmantank/cron-expression": "3.0.1",
         "domnikl/statsd": "3.0.2",
-        "influxdb/influxdb-php": "1.15.1",
+        "influxdb/influxdb-php": "1.15.2",
         "phpmailer/phpmailer": "6.1.7",
         "chillerlan/php-qrcode": "4.3.0",
         "adhocore/jwt": "1.1.0"
     },
     "require-dev": {
-        "swoole/ide-helper": "4.5.5",
+        "swoole/ide-helper": "4.6.1",
         "appwrite/sdk-generator": "0.4.4",
         "phpunit/phpunit": "9.4.2",
         "vimeo/psalm": "4.1.1"
