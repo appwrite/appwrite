@@ -410,7 +410,7 @@ services:
 
   # Dev Tools Start ------------------------------------------------------------------------------------------
   # 
-  # The Appwrite Team uses the following tools to help debug, monitor and diagnose the Appwrite stack 🪛
+  # The Appwrite Team uses the following tools to help debug, monitor and diagnose the Appwrite stack
   #
   # Here is a description of the different tools and why are we using them:
   #
