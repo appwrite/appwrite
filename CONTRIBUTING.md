@@ -232,7 +232,7 @@ For us to find the right balance, please open an issue explaining your ideas bef
 
 This will allow the Appwrite community to have sufficient discussion about the new feature value and how it fits in the product roadmap and vision.
 
-This is also important for the Appwrite lead developers to be able to give technical input and different emphasis regarding the feature design and architecture.
+This is also important for the Appwrite lead developers to be able to give technical input and different emphasis regarding the feature design and architecture. Some bigger features might need to go through our [RFC process](https://github.com/appwrite/rfc).
 
 ## Build
 
