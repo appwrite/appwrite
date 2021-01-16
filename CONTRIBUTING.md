@@ -72,7 +72,23 @@ cd appwrite
 docker-compose up -d
 ```
 
-After finishing the installation process, you can start writing and editing code. To compile new CSS and JS distribution files, use 'less' and 'build' tasks using gulp as a task manager.
+### Code Autocompletion
+
+To get proper autocompletion for all the different functions and classes in the codebase, you'll need to install Appwrite dependencies on your local machine. You can easily do that with PHP's package manager, [Composer](https://getcomposer.org/). If you don't have Composer installed, you can use the Docker Hub image to get the same result:
+
+```bash
+docker run --rm --interactive --tty \
+  --volume $PWD:/app \
+  composer install
+```
+
+### User Interface
+
+Appwrite uses an internal micro-framework called Litespeed.js to build simple UI components in vanilla JS and [less](http://lesscss.org/) for compiling CSS code. To apply any of your changes to the UI, use the `gulp build` or `gulp less` commands, and restart the Appwrite main container to load the new static files to memory using `docker-compose restart appwrite`.
+
+### Get Started
+
+After finishing the installation process, you can start writing and editing code.
 
 ## Architecture
 
