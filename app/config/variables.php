@@ -95,7 +95,7 @@ return [
             ],
             [
                 'name' => '_APP_SYSTEM_RESPONSE_FORMAT',
-                'description' => 'Use this environment variable to set the default Appwrite HTTP response format to support an older version of Appwrite. This option is useful to overcome breaking changes between versions. You can also use the `X-Appwrite-Response-Format` HTTP request header to overwrite the response for a specific request. The var accepts any valid Appwrite version. To use the current version format, leave the value of the variable empty.',
+                'description' => 'Use this environment variable to set the default Appwrite HTTP response format to support an older version of Appwrite. This option is useful to overcome breaking changes between versions. You can also use the `X-Appwrite-Response-Format` HTTP request header to overwrite the response for a specific request. This variable accepts any valid Appwrite version. To use the current version format, leave the value of the variable empty.',
                 'introduction' => '0.7.0',
                 'default' => '',
                 'required' => false,
