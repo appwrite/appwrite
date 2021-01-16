@@ -357,7 +357,7 @@ services:
     volumes:
       - appwrite-mariadb:/var/lib/mysql:rw
     ports:
-      - "9502:3306"
+      - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=password
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
@@ -408,6 +408,19 @@ services:
     networks:
       - appwrite
 
+  # Dev Tools Start ------------------------------------------------------------------------------------------
+  # 
+  # The Appwrite Team uses the following tools to help debug, monitor and diagnose the Appwrite stack 🪛
+  #
+  # Here is a description of the different tools and why are we using them:
+  #
+  # MailCatcher - An SMTP server. Catches all system emails and displays them in a nice UI.
+  # RequestCatcher - An HTTP server. Catches all system https calls and displays them using a simple HTTP API. Used to debug & tests webhooks and HTTP tasks
+  # RedisCommander - A nice UI for exploring Redis data
+  # Resque - A nice UI for exploring Reddis pub/sub, view the different queues workloads, pending and failed tasks
+  # Chronograf - A nice UI for exploring InfluxDB data
+  # Webgrind - A nice UI for exploring and debugging code-level stuff
+
   maildev: # used mainly for dev tests
     image: djfarrelly/maildev
     container_name: appwrite-maildev
@@ -421,6 +434,14 @@ services:
     container_name: appwrite-request-catcher
     ports:
       - '9504:5000'
+    networks:
+      - appwrite
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 9505:8080
     networks:
       - appwrite
 
@@ -472,6 +493,8 @@ services:
   #     - './debug:/tmp'
   #   ports:
   #     - '3001:80'
+  
+  # Dev Tools End   ------------------------------------------------------------------------------------------
 
 networks:
   gateway:
