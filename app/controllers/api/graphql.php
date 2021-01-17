@@ -11,9 +11,10 @@ use Utopia\App;
  *  1. Map all objects, object-params, object-fields
  *  2. Parse GraphQL request payload (use: https://github.com/webonyx/graphql-php)
  *  3. Route request to relevant controllers (of REST API?) / resolvers and aggergate data
- *  4. Handle errors if any
- *  5. Returen JSON response
- *  6. Write tests!
+ *  4. Handle scope authentication
+ *  5. Handle errors
+ *  6. Return response
+ *  7. Write tests!
  * 
  * Demo
  *  curl -H "Content-Type: application/json" http://localhost/v1/graphql -d '{"query": "query { echo(message: \"Hello World\") }" }'
