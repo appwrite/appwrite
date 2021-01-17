@@ -254,7 +254,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     $route = $utopia->match($request);
     $template = ($route) ? $route->getLabel('error', null) : null;
 
-    if (php_sapi_name() === 'cli') {
+    if (php_sapi_name() === 'cli' && $route) {
         Console::error('[Error] Method: '.$route->getMethod());
         Console::error('[Error] URL: '.$route->getURL());
         Console::error('[Error] Type: '.get_class($error));
