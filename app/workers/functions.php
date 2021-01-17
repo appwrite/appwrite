@@ -226,9 +226,13 @@ class FunctionsV1
                     ->setAttribute('schedulePrevious', \time())
                 ;
 
+                Authorization::disable();
+
                 $function = $database->updateDocument(array_merge($function->getArrayCopy(), [
                     'scheduleNext' => $next,
                 ]));
+
+                Authorization::reset();
 
                 ResqueScheduler::enqueueAt($next, 'v1-functions', 'FunctionsV1', [
                     'projectId' => $projectId,

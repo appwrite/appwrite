@@ -293,6 +293,7 @@ App::put('/v1/functions/:functionId')
             throw new Exception('Function not found', 404);
         }
 
+        $original = $function->getAttribute('schedule', '');
         $cron = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? CronExpression::factory($schedule) : null;
         $next = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : null;
 
@@ -313,7 +314,7 @@ App::put('/v1/functions/:functionId')
             throw new Exception('Failed saving function to DB', 500);
         }
 
-        if ($next) {
+        if ($next && $schedule !== $original) {
             ResqueScheduler::enqueueAt($next, 'v1-functions', 'FunctionsV1', [
                 'projectId' => $project->getId(),
                 'functionId' => $function->getId(),
@@ -358,8 +359,9 @@ App::patch('/v1/functions/:functionId/tag')
         }
 
         $schedule = $function->getAttribute('schedule', '');
-        $cron = (empty($function->getAttribute('tag') && !empty($schedule))) ? CronExpression::factory($schedule) : null;
-        $next = (empty($function->getAttribute('tag') && !empty($schedule))) ? $cron->getNextRunDate()->format('U') : null;
+        var_dump($schedule);
+        $cron = (empty($function->getAttribute('tag')) && !empty($schedule)) ? CronExpression::factory($schedule) : null;
+        $next = (empty($function->getAttribute('tag')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : null;
 
         $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
             'tag' => $tag->getId(),
