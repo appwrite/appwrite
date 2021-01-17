@@ -359,7 +359,6 @@ App::patch('/v1/functions/:functionId/tag')
         }
 
         $schedule = $function->getAttribute('schedule', '');
-        var_dump($schedule);
         $cron = (empty($function->getAttribute('tag')) && !empty($schedule)) ? CronExpression::factory($schedule) : null;
         $next = (empty($function->getAttribute('tag')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : null;
 
