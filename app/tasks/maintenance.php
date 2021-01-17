@@ -4,23 +4,13 @@ global $cli;
 
 require_once __DIR__.'/../init.php';
 
-use Appwrite\Database\Database;
-use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
-use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Event\Event;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Config\Config;
 
-// TODO: Think of a better way to access consoleDB
-function getConsoleDB() {
-    global $register;
-    $consoleDB = new Database();
-    $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
-    $consoleDB->setNamespace('app_console'); // Main DB
-    $consoleDB->setMocks(Config::getParam('collections', []));
-    return $consoleDB;
-}
+Console::title('Maintenance V1');
+
+Console::success(APP_NAME.' maintenance process v1 has started');
 
 function notifyDeleteExecutionLogs()
 {
@@ -54,10 +44,9 @@ $cli
         //Convert Seconds to microseconds
         $intervalMicroseconds = $interval * 1000000;
 
-        $consoleDB = getConsoleDB();
-
-        Console::loop(function() use ($consoleDB, $interval){
-            Console::info("[ MAINTENANCE TASK ] Notifying deletes workers every {$interval} seconds");
+        Console::loop(function() use ($interval){
+            $time = date('d-m-Y H:i:s', time());
+            Console::info("[{$time}] Notifying deletes workers every {$interval} seconds");
             notifyDeleteExecutionLogs();
             notifyDeleteAbuseLogs($interval);
             notifyDeleteAuditLogs($interval);
