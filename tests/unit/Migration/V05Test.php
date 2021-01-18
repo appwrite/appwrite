@@ -9,7 +9,7 @@ use Appwrite\Database\Document;
 use PHPUnit\Framework\TestCase;
 use Utopia\Config\Config;
 
-class V05Test extends TestCase
+class MigrationV05Test extends TestCase
 {
     /**
      * @var PDO
