@@ -4,35 +4,36 @@
   window.ls.container.get("view").add({
     selector: "data-forms-show-secret",
     controller: function (element, document) {
-      let button = document.createElement("a");
-      button.type = "button";
-      button.className = "icon-eye";
-      button.innerHTML = "show/hide";
-      button.style.cursor = "pointer";
-      button.style.fontSize = "10px";
+      let button = document.createElement('span');
+      button.className = "link pull-end text-size-small margin-top-negative icon-eye";
+      button.innerHTML = (element.type == 'password') ? 'Show Secret' : 'Hide Secret';
+      button.style.visibility = (element.value == '') ? 'hidden' : 'visible';
 
-      if (element.attributes.getNamedItem("data-forms-show-secret-above")) {
-        element.insertAdjacentElement("beforebegin", button);
-      } else {
-        element.parentNode.insertBefore(button, element.nextSibling);
-      }
+      element.insertAdjacentElement("beforebegin", button);
 
-      const toggle = function (event) {
+      button.addEventListener("click", function (event) {
         switch (element.type) {
           case "password":
             element.type = "text";
+            button.innerHTML = 'Hide Secret';
             break;
           case "text":
             element.type = "password";
+            button.innerHTML = 'Show Secret';
             break;
           default:
             console.warn(
               "data-forms-show-secret: element.type NOT text NOR password"
             );
         }
+      });
+
+      let sync = function(event) {
+        button.style.visibility = (element.value == '') ? 'hidden' : 'visible';
       };
 
-      button.addEventListener("click", toggle);
+      element.addEventListener("keyup", sync);
+      element.addEventListener("change", sync);
     },
   });
 })(window);
