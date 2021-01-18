@@ -153,7 +153,7 @@
                                 data-failure-param-alert-text="Failed to block user"
                                 data-failure-param-alert-classname="error">
 
-                                <button name="status" type="submit" class="danger fill" value="<?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>">Block Account</button>
+                                <button name="status" type="submit" class="danger fill" value="<?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>" data-cast-to="integer">Block Account</button>
                             </form>
                         </div>
 
@@ -174,7 +174,7 @@
                                 data-failure-param-alert-text="Failed to activate user"
                                 data-failure-param-alert-classname="error">
 
-                                <button name="status" type="submit" class="fill" value="<?php echo \Appwrite\Auth\Auth::USER_STATUS_ACTIVATED; ?>">Activate Account</button>
+                                <button name="status" type="submit" class="fill" value="<?php echo \Appwrite\Auth\Auth::USER_STATUS_ACTIVATED; ?>" data-cast-to="integer">Activate Account</button>
                             </form>
                         </div>
                     </div>
