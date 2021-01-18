@@ -52,6 +52,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
 
     $refDomain = (!empty($protocol) ? $protocol : $request->getProtocol()).'://'.((\in_array($origin, $clients))
         ? $origin : 'localhost') . (!empty($port) ? ':'.$port : '');
+    $refDomain = (!$route->getLabel('origin', false)) ? $refDomain : $origin; // This route is publicly accessible
 
     $selfDomain = new Domain($request->getHostname());
     $endDomain = new Domain((string)$origin);
@@ -110,7 +111,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         }
 
         $response->addHeader('Strict-Transport-Security', 'max-age='.(60 * 60 * 24 * 126)); // 126 days
-    }    
+    }
 
     $response
         ->addHeader('Server', 'Appwrite')
