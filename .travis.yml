@@ -25,15 +25,15 @@ before_install:
 - docker --version
 
 install:
-- docker-compose up -d
-- sleep 10
+# - docker-compose up -d
+# - sleep 10
 
 script:
 - docker ps
-- docker-compose logs appwrite
-- docker-compose exec appwrite doctor
-- docker-compose exec appwrite vars
-- docker-compose exec appwrite test
+# - docker-compose logs appwrite
+# - docker-compose exec appwrite doctor
+# - docker-compose exec appwrite vars
+# - docker-compose exec appwrite test
 
 deploy:
   - provider: script
