@@ -193,7 +193,11 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
     </div>
 
     <div class="pull-end desktops-only tablets-only">
-        <a data-ls-attrs="href=/console/keys?project={{router.params.project}}">Manage Your Server API Keys</a>
+        <a data-analytics
+            data-analytics-event="click"
+            data-analytics-category="console"
+            data-analytics-label="API Keys Link"
+            data-ls-attrs="href=/console/keys?project={{router.params.project}}">Manage Your Server API Keys</a>
     </div>
 
     <div class="drop-list pull-start" data-ls-ui-open="" data-button-aria="Choose Platform" data-button-text="Add Platform" data-button-class="button" data-blur="1">
