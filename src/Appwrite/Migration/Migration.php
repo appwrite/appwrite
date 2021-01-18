@@ -6,26 +6,45 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Database;
 use Utopia\CLI\Console;
 use Utopia\Exception;
+use PDO;
 
 abstract class Migration
 {
-    protected \PDO $db;
+    /**
+     * @var PDO
+     */
+    protected PDO $db;
 
+    /**
+     * @var int
+     */
     protected int $limit = 30;
 
+    /**
+     * @var Document
+     */
     protected Document $project;
+
+    /**
+     * @var Database
+     */
     protected Database $projectDB;
 
     /**
      * Migration constructor.
+     * 
+     * @param PDO $pdo
      */
-    public function __construct(\PDO $db)
+    public function __construct(PDO $db)
     {
         $this->db = $db;
     }
 
     /**
      * Set project for migration.
+     * 
+     * @param Document $project
+     * @param Database $projectDB
      */
     public function setProject(Document $project, Database $projectDB): Migration
     {
@@ -38,7 +57,7 @@ abstract class Migration
     /**
      * Iterates through every document.
      * 
-     * @param callable(Document):Document $callback
+     * @param callable $callback
      */
     public function forEachDocument(callable $callback)
     {
