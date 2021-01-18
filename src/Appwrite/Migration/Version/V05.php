@@ -65,11 +65,11 @@ class V05 extends Migration
                             ->removeAttribute('usersOauth' . \ucfirst($key) . 'Secret');
                     }
                 }
+                $document->setAttribute('security', $document->getAttribute('security') ? true : false);
                 break;
 
-            case Database::SYSTEM_COLLECTION_PROJECTS:
             case Database::SYSTEM_COLLECTION_TASKS:
-                $document->setAttribute('security', ($document->getAttribute('security')) ? true : false);
+                $document->setAttribute('security', $document->getAttribute('security') ? true : false);
                 break;
 
             case Database::SYSTEM_COLLECTION_USERS:
