@@ -514,6 +514,14 @@ class FunctionsCustomServerTest extends Scope
                 'timeout' => 15,
             ],
             [
+                'language' => 'Node.js',
+                'version' => '15.6',
+                'name' => 'node-15.6',
+                'code' => $functions.'/node.tar.gz',
+                'command' => 'node index.js',
+                'timeout' => 15,
+            ],
+            [
                 'language' => 'Ruby',
                 'version' => '2.7',
                 'name' => 'ruby-2.7',
