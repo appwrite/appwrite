@@ -23,6 +23,7 @@ before_install:
     echo "${DOCKERHUB_PULL_PASSWORD}" | docker login --username "${DOCKERHUB_PULL_USERNAME}" --password-stdin
   fi
 - docker --version
+- docker buildx create --use
 - chmod u+x ./deploy.sh
 
 install:
