@@ -23,6 +23,7 @@ before_install:
     echo "${DOCKERHUB_PULL_PASSWORD}" | docker login --username "${DOCKERHUB_PULL_USERNAME}" --password-stdin
   fi
 - docker --version
+- chmod u+x ./deploy.sh
 
 install:
 # - docker-compose up -d
@@ -38,6 +39,6 @@ script:
 deploy:
   - provider: script
     edge: true
-    script: deploy.sh
+    script: ./deploy.sh
     on:
       branch: feat-new-node-version
