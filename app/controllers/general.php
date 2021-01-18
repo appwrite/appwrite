@@ -233,6 +233,10 @@ App::options(function ($request, $response) {
 
     $origin = $request->getOrigin();
 
+    var_dump('-----------');
+    var_dump($origin);
+    var_dump('-----------');
+
     $response
         ->addHeader('Server', 'Appwrite')
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')

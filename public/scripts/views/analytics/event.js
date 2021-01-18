@@ -2,7 +2,7 @@
   "use strict";
 
   window.ls.container.get("view").add({
-    selector: "data-analytics-event",
+    selector: "data-analytics",
     controller: function(element) {
       var action = element.getAttribute("data-analytics-event") || "click";
 
