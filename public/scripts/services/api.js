@@ -3,10 +3,10 @@
 
     window.ls.container.set('appwrite', function (window, env) {
         let config = {
-            endpoint: 'http://localhost:2080/v1',
+            endpoint: 'https://appwrite.io/v1',
         };
 
-        let http = function (document) {
+        let http = function (document, env) {
             let globalParams = [],
                 globalHeaders = [];
 
@@ -186,7 +186,9 @@
                     id: id,
                     source: source,
                     activity: activity,
-                    url: url
+                    url: url,
+                    version: env.VERSION,
+                    setup: env.SETUP
                 });
             },
         };

@@ -32,7 +32,7 @@
 
         element.blur();
 
-        alerts.add({ text: "Copied to clipboard", class: "" }, 3000);
+        alerts.add({ text: "Copied to clipboard", class: "" });
       };
 
       button.addEventListener("click", copy);
