@@ -8,7 +8,7 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use PHPUnit\Framework\TestCase;
 
-class MigrationV05Test extends TestCase
+class MigrationV06Test extends TestCase
 {
     /**
      * @var PDO
