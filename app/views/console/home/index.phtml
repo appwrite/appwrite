@@ -30,6 +30,10 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
         <div class="pull-end">
 
             <form class="margin-start-small inline" data-ls-if="{{usage.range}} !== '24h'"
+                data-analytics
+                data-analytics-event="click"
+                data-analytics-category="console"
+                data-analytics-label="Usage 24h"
                 data-service="projects.getUsage"
                 data-event="submit"
                 data-name="usage"
@@ -41,6 +45,10 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
             <button class="tick margin-start-small" data-ls-if="{{usage.range}} === '24h'" disabled>24h</button>
 
             <form class="margin-start-small inline" data-ls-if="{{usage.range}} !== '30d'"
+                data-analytics
+                data-analytics-event="click"
+                data-analytics-category="console"
+                data-analytics-label="Usage 30d"
                 data-service="projects.getUsage"
                 data-event="submit"
                 data-name="usage"
@@ -51,6 +59,10 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
             <button class="tick margin-start-small" data-ls-if="{{usage.range}} === '30d'" disabled>30d</button>
 
             <form class="margin-start-small inline" data-ls-if="{{usage.range}} !== '90d'"
+                data-analytics
+                data-analytics-event="click"
+                data-analytics-category="console"
+                data-analytics-label="Usage 90d"
                 data-service="projects.getUsage"
                 data-event="submit"
                 data-name="usage"
