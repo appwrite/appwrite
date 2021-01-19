@@ -537,6 +537,14 @@ class FunctionsCustomServerTest extends Scope
                 'command' => 'deno run --allow-env index.ts',
                 'timeout' => 15,
             ],
+            [
+                'language' => 'Deno',
+                'version' => '1.6',
+                'name' => 'deno-1.6',
+                'code' => $functions.'/deno.tar.gz',
+                'command' => 'deno run --allow-env index.ts',
+                'timeout' => 15,
+            ],
         ];
 
         foreach ($envs as $key => $env) {

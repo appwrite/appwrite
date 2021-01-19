@@ -67,6 +67,14 @@ return [
         'build' => '/usr/src/code/docker/environments/deno-1.5',
         'logo' => 'deno.png',
     ],
+    'deno-1.6' => [
+        'name' => 'Deno',
+        'version' => '1.6',
+        'base' => 'hayd/deno:alpine-1.6.0',
+        'image' => 'appwrite/env-deno-1.6:1.0.0',
+        'build' => '/usr/src/code/docker/environments/deno-1.6',
+        'logo' => 'deno.png',
+    ],
     // 'dart-2.8' => [
     //     'name' => 'Dart',
     //     'version' => '2.8',
