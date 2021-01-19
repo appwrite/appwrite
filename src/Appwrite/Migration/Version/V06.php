@@ -34,6 +34,13 @@ class V06 extends Migration
                 break;
             case Database::SYSTEM_COLLECTION_KEYS:
                 if ($document->getAttribute('secret', null)) {
+                    $json = \json_decode($document->getAttribute('secret'));
+                    if ($json->{'data'} || $json->{'method'} || $json->{'iv'} || $json->{'tag'} || $json->{'version'})
+                    {
+                        Console::log('Secret already encrypted. Skipped: ' . $document->getId());
+                        break;
+                    }
+
                     $key = App::getEnv('_APP_OPENSSL_KEY_V1');
                     $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
                     $tag = null;

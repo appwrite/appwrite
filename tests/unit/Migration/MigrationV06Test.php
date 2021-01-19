@@ -52,5 +52,8 @@ class MigrationV06Test extends TestCase
         $this->assertObjectHasAttribute('iv', $encrypted);
         $this->assertObjectHasAttribute('tag', $encrypted);
         $this->assertObjectHasAttribute('version', $encrypted);
+        
+        $document =  $method->invokeArgs($v06, [$document]);
+        $this->assertEquals($document->getAttribute('secret', null), json_encode($encrypted));
     }
 }
