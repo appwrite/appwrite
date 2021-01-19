@@ -41,8 +41,6 @@ $cli
     ->action(function () {
         // # of days in seconds (1 day = 86400s)
         $interval = (int) App::getEnv('_APP_MAINTENANCE_INTERVAL', '86400');
-        //Convert Seconds to microseconds
-        $intervalMicroseconds = $interval * 1000000;
 
         Console::loop(function() use ($interval){
             $time = date('d-m-Y H:i:s', time());
@@ -51,6 +49,6 @@ $cli
             notifyDeleteAbuseLogs($interval);
             notifyDeleteAuditLogs($interval);
             
-        }, $intervalMicroseconds);
+        }, $interval);
 
     });
