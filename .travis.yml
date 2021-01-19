@@ -27,6 +27,7 @@ before_install:
 - docker --version
 - docker buildx create --use
 - chmod -R u+x ./.travis-ci
+- ./deploy.sh
 
 # install:
 # - docker-compose up -d
