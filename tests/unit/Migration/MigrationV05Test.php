@@ -6,39 +6,29 @@ use ReflectionClass;
 use Appwrite\Migration\Version\V05;
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
-use PHPUnit\Framework\TestCase;
 use Utopia\Config\Config;
 
-class MigrationV05Test extends TestCase
+class MigrationV05Test extends MigrationTest
 {
-    /**
-     * @var PDO
-     */
-    protected \PDO $pdo;
-
     public function setUp(): void
     {
+        Config::load('providers', __DIR__ . '/../../../app/config/providers.php');
+
         $this->pdo = new \PDO('sqlite::memory:');
+        $this->migration = new V05($this->pdo);
+        $reflector = new ReflectionClass('Appwrite\Migration\Version\V05');
+        $this->method = $reflector->getMethod('fixDocument');
+        $this->method->setAccessible(true);
     }
 
     public function testMigration()
     {
-        Config::load('providers', __DIR__ . '/../../../app/config/providers.php');
-
-        $v05 = new V05($this->pdo);
-
-        $reflector = new ReflectionClass('Appwrite\Migration\Version\V05');
-        $method = $reflector->getMethod('fixDocument');
-        $method->setAccessible(true);
-
-        $document =  $method->invokeArgs($v05, [
-            new Document([
-                '$uid' => 'unique',
-                '$collection' => Database::SYSTEM_COLLECTION_PROJECTS,
-                'usersOauthGithubAppid' => 123,
-                'usersOauthGithubSecret' => 456
-            ])
-        ]);
+        $document = $this->fixDocument(new Document([
+            '$uid' => 'unique',
+            '$collection' => Database::SYSTEM_COLLECTION_PROJECTS,
+            'usersOauthGithubAppid' => 123,
+            'usersOauthGithubSecret' => 456
+        ]));
 
         $this->assertEquals($document->getAttribute('$uid', null), null);
         $this->assertEquals($document->getAttribute('$id', null), 'unique');
@@ -51,27 +41,23 @@ class MigrationV05Test extends TestCase
 
         $this->assertEquals($document->getAttribute('security', true), false);
 
-        $document =  $method->invokeArgs($v05, [
-            new Document([
-                '$uid' => 'unique',
-                '$collection' => Database::SYSTEM_COLLECTION_TASKS
-            ])
-        ]);
+        $document = $this->fixDocument(new Document([
+            '$uid' => 'unique',
+            '$collection' => Database::SYSTEM_COLLECTION_TASKS
+        ]));
 
         $this->assertEquals($document->getAttribute('$uid', null), null);
         $this->assertEquals($document->getAttribute('$id', null), 'unique');
 
         $this->assertEquals($document->getAttribute('security', true), false);
 
-        $document =  $method->invokeArgs($v05, [
-            new Document([
-                '$uid' => 'unique',
-                '$collection' => Database::SYSTEM_COLLECTION_USERS,
-                'oauthGithub' => 'id',
-                'oauthGithubAccessToken' => 'token',
-                'confirm' => false
-            ])
-        ]);
+        $document = $this->fixDocument(new Document([
+            '$uid' => 'unique',
+            '$collection' => Database::SYSTEM_COLLECTION_USERS,
+            'oauthGithub' => 'id',
+            'oauthGithubAccessToken' => 'token',
+            'confirm' => false
+        ]));
 
         $this->assertEquals($document->getAttribute('$uid', null), null);
         $this->assertEquals($document->getAttribute('$id', null), 'unique');
@@ -85,13 +71,11 @@ class MigrationV05Test extends TestCase
         $this->assertEquals($document->getAttribute('oauthGithubAccessToken', null), null);
         $this->assertEquals($document->getAttribute('oauth2GithubAccessToken', null), 'token');
 
-        $document =  $method->invokeArgs($v05, [
-            new Document([
-                '$uid' => 'unique',
-                '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
-                'url' => 'https://appwrite.io'
-            ])
-        ]);
+        $document = $this->fixDocument(new Document([
+            '$uid' => 'unique',
+            '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+            'url' => 'https://appwrite.io'
+        ]));
 
         $this->assertEquals($document->getAttribute('$uid', null), null);
         $this->assertEquals($document->getAttribute('$id', null), 'unique');
