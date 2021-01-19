@@ -522,6 +522,14 @@ class FunctionsCustomServerTest extends Scope
                 'timeout' => 15,
             ],
             [
+                'language' => 'Ruby',
+                'version' => '3.0',
+                'name' => 'ruby-3.0',
+                'code' => $functions.'/ruby.tar.gz',
+                'command' => 'ruby app.rb',
+                'timeout' => 15,
+            ],
+            [
                 'language' => 'Deno',
                 'version' => '1.5',
                 'name' => 'deno-1.5',
