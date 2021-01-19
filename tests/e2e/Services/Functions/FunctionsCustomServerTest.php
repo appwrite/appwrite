@@ -508,7 +508,7 @@ class FunctionsCustomServerTest extends Scope
             [
                 'language' => 'Node.js',
                 'version' => '14.5',
-                'name' => 'node-14',
+                'name' => 'node-14.5',
                 'code' => $functions.'/node.tar.gz',
                 'command' => 'node index.js',
                 'timeout' => 15,
