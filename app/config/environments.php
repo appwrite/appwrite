@@ -3,12 +3,20 @@
  * List of Appwrite Cloud Functions supported environments
  */
 return [
-    'node-14' => [
+    'node-14.5' => [
         'name' => 'Node.js',
         'version' => '14.5',
         'base' => 'node:14.5-alpine',
         'image' => 'appwrite/env-node-14.5:1.0.0',
         'build' => '/usr/src/code/docker/environments/node-14.5',
+        'logo' => 'node.png',
+    ],
+    'node-15.5' => [
+        'name' => 'Node.js',
+        'version' => '15.5',
+        'base' => 'node:15.5-alpine',
+        'image' => 'appwrite/env-node-15.5:1.0.0',
+        'build' => '/usr/src/code/docker/environments/node-15.5',
         'logo' => 'node.png',
     ],
     'php-7.4' => [

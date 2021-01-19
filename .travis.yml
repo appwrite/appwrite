@@ -42,7 +42,7 @@ script:
 deploy:
   - provider: script
     edge: true
-    script: ./deploy.sh
+    script: ./.travis-ci/deploy.sh
     on:
       repo: appwrite/appwrite
       branch: deploy
