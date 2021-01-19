@@ -3,7 +3,7 @@ arch:
 
 os: linux
 
-language: minimal
+language: shell
 
 notifications:
   email:
@@ -23,6 +23,8 @@ before_install:
     echo "${DOCKERHUB_PULL_PASSWORD}" | docker login --username "${DOCKERHUB_PULL_USERNAME}" --password-stdin
   fi
 - docker --version
+- docker buildx create --use
+- chmod -R u+x ./.travis-ci
 
 install:
 - docker-compose up -d
@@ -34,3 +36,11 @@ script:
 - docker-compose exec appwrite doctor
 - docker-compose exec appwrite vars
 - docker-compose exec appwrite test
+
+deploy:
+  - provider: script
+    edge: true
+    script: ./deploy.sh
+    on:
+      repo: appwrite/appwrite
+      branch: deploy
