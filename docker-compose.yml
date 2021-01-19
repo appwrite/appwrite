@@ -319,6 +319,9 @@ services:
       context: .
     networks:
       - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
     depends_on:
       - redis
     environment:
@@ -326,11 +329,6 @@ services:
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_MAINTENANCE_INTERVAL
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
 
   appwrite-schedule:
     entrypoint: schedule
