@@ -28,16 +28,16 @@ before_install:
 - docker buildx create --use
 - chmod -R u+x ./.travis-ci
 
-install:
-- docker-compose up -d
-- sleep 10
+# install:
+# - docker-compose up -d
+# - sleep 10
 
-script:
-- docker ps
-- docker-compose logs appwrite
-- docker-compose exec appwrite doctor
-- docker-compose exec appwrite vars
-- docker-compose exec appwrite test
+# script:
+# - docker ps
+# - docker-compose logs appwrite
+# - docker-compose exec appwrite doctor
+# - docker-compose exec appwrite vars
+# - docker-compose exec appwrite test
 
 deploy:
   - provider: script
@@ -45,4 +45,4 @@ deploy:
     script: ./deploy.sh
     on:
       repo: appwrite/appwrite
-      branch: deploy
+      # branch: deploy
