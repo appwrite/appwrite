@@ -1,3 +1,5 @@
+dist: xenial
+
 arch:
   - amd64
 
