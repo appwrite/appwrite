@@ -45,4 +45,4 @@ deploy:
     script: ./deploy.sh
     on:
       repo: appwrite/appwrite
-      # branch: deploy
+      branch: feat-new-ruby-version
