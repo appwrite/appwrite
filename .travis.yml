@@ -27,23 +27,22 @@ before_install:
 - docker --version
 - docker buildx create --use
 - chmod -R u+x ./.travis-ci
-- ./.travis-ci/deploy.sh
 
-# install:
-# - docker-compose up -d
-# - sleep 10
+install:
+- docker-compose up -d
+- sleep 10
 
-# script:
-# - docker ps
-# - docker-compose logs appwrite
-# - docker-compose exec appwrite doctor
-# - docker-compose exec appwrite vars
-# - docker-compose exec appwrite test
+script:
+- docker ps
+- docker-compose logs appwrite
+- docker-compose exec appwrite doctor
+- docker-compose exec appwrite vars
+- docker-compose exec appwrite test
 
 deploy:
   - provider: script
     edge: true
-    script: ./deploy.sh
+    script: ./.travis-ci/deploy.sh
     on:
       repo: appwrite/appwrite
-      branch: feat-new-ruby-version
+      branch: deploy
