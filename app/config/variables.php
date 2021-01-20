@@ -357,8 +357,16 @@ return [
             'description' => '',
             'variables' => [
                 [
+                    'name' => '_APP_MAINTENANCE_INTERVAL',
+                    'description' => 'Interval value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 86400 seconds (1 day).',
+                    'introduction' => '0.7.0',
+                    'default' => '86400',
+                    'required' => false,
+                    'question' => '',
+                ],
+                [
                     'name' => '_APP_MAINTENANCE_EXECUTION_LOG_RETENTION',
-                    'description' => 'Interval value containing the number of seconds that the Appwrite maintenance process should wait before cleaning up the execution logs. The default value is 1209600 seconds (14 days).',
+                    'description' => 'The maximum time period . The default value is 1209600 seconds (14 days).',
                     'introduction' => '0.7.0',
                     'default' => '1209600',
                     'required' => false,
