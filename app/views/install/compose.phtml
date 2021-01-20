@@ -279,11 +279,10 @@ services:
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_MAINTENANCE_INTERVAL
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
+      - _APP_MAINTENANCE_RETENTION_EXECUTION
+      - _APP_MAINTENANCE_RETENTION_ABUSE
+      - _APP_MAINTENANCE_RETENTION_AUDIT
+
 
   appwrite-schedule:
     image: appwrite/appwrite:<?php echo $version."\n"; ?>
