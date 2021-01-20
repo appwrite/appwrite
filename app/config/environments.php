@@ -43,6 +43,14 @@ return [
         'build' => '/usr/src/code/docker/environments/ruby-2.7',
         'logo' => 'ruby.png',
     ],
+    'ruby-3.0' => [
+        'name' => 'Ruby',
+        'version' => '3.0',
+        'base' => 'ruby:3.0-alpine',
+        'image' => 'appwrite/env-ruby-3.0:1.0.0',
+        'build' => '/usr/src/code/docker/environments/ruby-3.0',
+        'logo' => 'ruby.png',
+    ],
     'python-3.8' => [
         'name' => 'Python',
         'version' => '3.8',

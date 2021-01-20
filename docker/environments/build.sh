@@ -26,3 +26,6 @@ docker buildx build --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64
 
 echo 'Ruby 2.7...'
 docker buildx build --platform linux/amd64,linux/arm64,linux/386,linux/ppc64le -t appwrite/env-ruby-2.7:1.0.2 ./docker/environments/ruby-2.7/ --push
+
+echo 'Ruby 3.0...'
+docker buildx build --platform linux/amd64,linux/arm64,linux/386,linux/ppc64le -t appwrite/env-ruby-3.0:1.0.0 ./docker/environments/ruby-3.0/ --push
