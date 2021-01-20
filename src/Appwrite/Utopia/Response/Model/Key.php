@@ -18,11 +18,13 @@ class Key extends Model
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Key ID.',
+                'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Key name.',
+                'default' => '',
                 'example' => 'My API Key',
             ])
             ->addRule('scopes', [
@@ -35,6 +37,7 @@ class Key extends Model
             ->addRule('secret', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Secret key.',
+                'default' => '',
                 'example' => '919c2d18fb5d4...a2ae413da83346ad2',
             ])
         ;

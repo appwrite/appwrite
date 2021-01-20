@@ -13,26 +13,31 @@ class User extends Model
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
                 'description' => 'User ID.',
+                'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
                 'description' => 'User name.',
+                'default' => '',
                 'example' => 'John Doe',
             ])
             ->addRule('registration', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'User registration date in Unix timestamp.',
+                'default' => 0,
                 'example' => 1592981250,
             ])
             ->addRule('status', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'User status. 0 for Unavtivated, 1 for active and 2 is blocked.',
+                'description' => 'User status. 0 for Unactivated, 1 for active and 2 is blocked.',
+                'default' => 0,
                 'example' => 0,
             ])
             ->addRule('email', [
                 'type' => self::TYPE_STRING,
                 'description' => 'User email address.',
+                'default' => '',
                 'example' => 'john@appwrite.io',
             ])
             ->addRule('emailVerification', [

@@ -30,10 +30,17 @@ $cli
          * 5. Run docker-compose up -d - DONE
          * 6. Run data migration
          */
-        $vars = Config::getParam('variables');
+        $config = Config::getParam('variables');
         $path = '/usr/src/code/appwrite';
         $defaultHTTPPort = '80';
         $defaultHTTPSPort = '443';
+        $vars = [];
+
+        foreach($config as $category) {
+            foreach($category['variables'] ?? [] as $var) {
+                $vars[] = $var;
+            }
+        }
 
         Console::success('Starting Appwrite installation...');
 

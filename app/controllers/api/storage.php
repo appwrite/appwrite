@@ -96,7 +96,8 @@ App::post('/v1/storage/files')
         $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
 
         if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
-            $antiVirus = new Network('clamav', 3310);
+            $antiVirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
+                (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
 
             if (!$antiVirus->fileScan($path)) {
                 $device->delete($path);

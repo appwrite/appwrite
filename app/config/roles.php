@@ -1,15 +1,8 @@
 <?php
 
-const ROLE_GUEST = 0;
-const ROLE_MEMBER = 1;
-const ROLE_ADMIN = 2;
-const ROLE_DEVELOPER = 3;
-const ROLE_OWNER = 4;
-const ROLE_APP = 5;
-const ROLE_SYSTEM = 6;
-const ROLE_ALL = '*';
+use Appwrite\Auth\Auth;
 
-$logged = [
+$member = [
     'public',
     'home',
     'console',
@@ -57,7 +50,7 @@ $admins = [
 ];
 
 return [
-    ROLE_GUEST => [
+    Auth::USER_ROLE_GUEST => [
         'label' => 'Guest',
         'scopes' => [
             'public',
@@ -71,23 +64,23 @@ return [
             'execution.write',
         ],
     ],
-    ROLE_MEMBER => [
+    Auth::USER_ROLE_MEMBER => [
         'label' => 'Member',
-        'scopes' => \array_merge($logged, []),
+        'scopes' => \array_merge($member, []),
     ],
-    ROLE_ADMIN => [
+    Auth::USER_ROLE_ADMIN => [
         'label' => 'Admin',
         'scopes' => \array_merge($admins, []),
     ],
-    ROLE_DEVELOPER => [
+    Auth::USER_ROLE_DEVELOPER => [
         'label' => 'Developer',
         'scopes' => \array_merge($admins, []),
     ],
-    ROLE_OWNER => [
+    Auth::USER_ROLE_OWNER => [
         'label' => 'Owner',
-        'scopes' => \array_merge($logged, $admins, []),
+        'scopes' => \array_merge($member, $admins, []),
     ],
-    ROLE_APP => [
+    Auth::USER_ROLE_APP => [
         'label' => 'Application',
         'scopes' => ['health.read'],
     ],

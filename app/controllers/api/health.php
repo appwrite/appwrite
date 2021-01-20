@@ -257,7 +257,8 @@ App::get('/v1/health/anti-virus')
             throw new Exception('Anitvirus is disabled');
         }
 
-        $antiVirus = new Network('clamav', 3310);
+        $antiVirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
+            (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
 
         $response->json([
             'status' => (@$antiVirus->ping()) ? 'online' : 'offline',
@@ -286,10 +287,6 @@ App::get('/v1/health/stats') // Currently only used internally
 
         $response
             ->json([
-                'server' => [
-                    'name' => 'nginx',
-                    'version' => \shell_exec('nginx -v 2>&1'),
-                ],
                 'storage' => [
                     'used' => Storage::human($device->getDirectorySize($device->getRoot().'/')),
                     'partitionTotal' => Storage::human($device->getPartitionTotalSpace()),

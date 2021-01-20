@@ -37,6 +37,8 @@ $events = array_keys($this->getParam('events', []));
                     <h1>Update Webhook</h1>
 
                     <form
+                        data-analytics
+                        data-analytics-activity
                         data-analytics-event="submit"
                         data-analytics-category="console"
                         data-analytics-label="Update Project Webhook"
@@ -104,7 +106,7 @@ $events = array_keys($this->getParam('events', []));
                                 </div>
                                 <div class="col span-6 margin-bottom">
                                     <label data-ls-attrs="for=httpPass-{{webhook.$id}}">Password</label>
-                                    <input type="password" class="full-width margin-bottom-no" data-ls-attrs="id=httpPass-{{webhook.$id}}" name="httpPass" autocomplete="off" data-ls-bind="{{webhook.httpPass}}" />
+                                    <input type="password" data-forms-show-secret class="full-width margin-bottom-no" data-ls-attrs="id=httpPass-{{webhook.$id}}" name="httpPass" autocomplete="off" data-ls-bind="{{webhook.httpPass}}" />
                                 </div>
                             </div>
                         </div>
@@ -116,6 +118,8 @@ $events = array_keys($this->getParam('events', []));
                 </div>
 
                 <form class="pull-end margin-end"
+                    data-analytics
+                    data-analytics-activity
                     data-analytics-event="submit"
                     data-analytics-category="console"
                     data-analytics-label="Delete Project Webhook"
@@ -154,6 +158,8 @@ $events = array_keys($this->getParam('events', []));
             <h1>Add Webhook</h1>
 
             <form
+                data-analytics
+                data-analytics-activity
                 data-analytics-event="submit"
                 data-analytics-category="console"
                 data-analytics-label="Create Project Webhook"
@@ -220,7 +226,7 @@ $events = array_keys($this->getParam('events', []));
                         </div>
                         <div class="col span-6 margin-bottom">
                             <label for="httpPass">Password</label>
-                            <input type="password" class="full-width margin-bottom-no" id="httpPass" name="httpPass" autocomplete="off" />
+                            <input type="password" data-forms-show-secret class="full-width margin-bottom-no" id="httpPass" name="httpPass" autocomplete="off" />
                         </div>
                     </div>
                 </div>

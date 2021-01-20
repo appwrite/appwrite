@@ -13,6 +13,7 @@ class Rule extends Model
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Rule ID.',
+                'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$collection', [ // TODO remove this from public response
@@ -23,32 +24,37 @@ class Rule extends Model
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Rule type. Possible values: ',
+                'default' => '',
                 'example' => 'title',
             ])
             ->addRule('key', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Rule key.',
+                'default' => '',
                 'example' => 'title',
             ])
             ->addRule('label', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Rule label.',
+                'default' => '',
                 'example' => 'Title',
             ])
             ->addRule('default', [ // TODO should be of mixed types
                 'type' => self::TYPE_STRING,
                 'description' => 'Rule default value.',
-                'example' => 'Movie Name',
                 'default' => '',
+                'example' => 'Movie Name',
             ])
             ->addRule('array', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Is array?',
+                'default' => false,
                 'example' => false,
             ])
             ->addRule('required', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Is required?',
+                'default' => false,
                 'example' => true,
             ])
             ->addRule('list', [
