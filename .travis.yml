@@ -34,7 +34,6 @@ install:
 
 script:
 - docker ps
-- docker stop appwrite-maintenance
 - docker-compose logs appwrite
 - docker-compose exec appwrite doctor
 - docker-compose exec appwrite vars
