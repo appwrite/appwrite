@@ -366,7 +366,7 @@ return [
                 ],
                 [
                     'name' => '_APP_MAINTENANCE_EXECUTION_LOG_RETENTION',
-                    'description' => 'The maximum time period . The default value is 1209600 seconds (14 days).',
+                    'description' => 'The maximum duration (in seconds) upto which to retain execution logs. The default value is 1209600 seconds (14 days).',
                     'introduction' => '0.7.0',
                     'default' => '1209600',
                     'required' => false,
@@ -374,7 +374,7 @@ return [
                 ],
                 [
                     'name' => '_APP_MAINTENANCE_AUDIT_LOG_RETENTION',
-                    'description' => 'Interval value containing the number of seconds that the Appwrite maintenance process should wait before cleaning up the audit logs. The default value is 1209600 seconds (14 days).',
+                    'description' => 'IThe maximum duration (in seconds) upto which to retain audit logs. The default value is 1209600 seconds (14 days).',
                     'introduction' => '0.7.0',
                     'default' => '1209600',
                     'required' => false,
@@ -382,7 +382,7 @@ return [
                 ],
                 [
                     'name' => '_APP_MAINTENANCE_ABUSE_LOG_RETENTION',
-                    'description' => 'Interval value containing the number of seconds that the Appwrite maintenance process should wait before cleaning up the abuse logs. The default value is 86400 seconds (1 day).',
+                    'description' => 'The maximum duration (in seconds) upto which to retain abuse logs. The default value is 86400 seconds (1 day).',
                     'introduction' => '0.7.0',
                     'default' => '86400',
                     'required' => false,
