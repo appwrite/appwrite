@@ -278,8 +278,8 @@ class FunctionsV1
             'time' => 0,
         ]);
 
-        if(false === $execution || ($execution instanceof Document && $execution->isEmpty())) {
-            throw new Exception('Failed to create or read execution');
+        if(false === $execution) {
+            throw new Exception('Failed to create execution');
         }
         
         Authorization::reset();
