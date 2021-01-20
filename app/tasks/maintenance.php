@@ -42,9 +42,9 @@ $cli
     ->action(function () {
         // # of days in seconds (1 day = 86400s)
         $interval = (int) App::getEnv('_APP_MAINTENANCE_INTERVAL', '86400');
-        $executionLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_EXECUTION_LOG_RETENTION', '1209600');
-        $auditLogRetention = (int) App::getEnv('_APP_MAINTENANCE_AUDIT_LOG_RETENTION', '1209600');
-        $abuseLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_ABUSE_LOG_RETENTION', '86400');
+        $executionLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', '1209600');
+        $auditLogRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', '1209600');
+        $abuseLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', '86400');
 
         Console::loop(function() use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention){
             $time = date('d-m-Y H:i:s', time());
