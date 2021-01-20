@@ -29,3 +29,6 @@ docker buildx build --platform linux/amd64,linux/arm64,linux/386,linux/ppc64le -
 
 echo 'Ruby 3.0...'
 docker buildx build --platform linux/amd64,linux/arm64,linux/386,linux/ppc64le -t appwrite/env-ruby-3.0:1.0.0 ./docker/environments/ruby-3.0/ --push
+
+echo 'Dart 2.10.4...'
+docker buildx build --platform linux/amd64,linux/arm64,linux/386,linux/ppc64le -t appwrite/env-dart-2.10.4:1.0.0 ./docker/environments/dart-2.10.4/ 

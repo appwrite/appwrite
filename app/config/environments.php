@@ -83,12 +83,12 @@ return [
         'build' => '/usr/src/code/docker/environments/deno-1.6',
         'logo' => 'deno.png',
     ],
-    // 'dart-2.8' => [
-    //     'name' => 'Dart',
-    //     'version' => '2.8',
-    //     'base' => 'google/dart:2.8',
-    //     'image' => 'appwrite/env-dart:2.8',
-    //     'build' => '/usr/src/code/docker/environments/dart-2.8',
-    //     'logo' => 'dart.png',
-    // ],
+    'dart-2.10.4' => [
+        'name' => 'Dart',
+        'version' => '2.10.4',
+        'base' => 'google/dart:2.10.4',
+        'image' => 'google/dart:2.10.4',
+        'build' => '/usr/src/code/docker/environments/dart-2.10.4',
+        'logo' => 'dart.png',
+    ],
 ];
