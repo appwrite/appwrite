@@ -12,26 +12,27 @@ Console::title('Maintenance V1');
 
 Console::success(APP_NAME.' maintenance process v1 has started');
 
-function notifyDeleteExecutionLogs()
+function notifyDeleteExecutionLogs(int $retention)
 {
     Resque::enqueue(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME, [
-        'type' => DELETE_TYPE_EXECUTIONS
+        'type' => DELETE_TYPE_EXECUTIONS,
+        'timestamp' => time() - $retention
     ]);
 }
 
-function notifyDeleteAbuseLogs(int $interval) 
+function notifyDeleteAbuseLogs(int $retention) 
 {
     Resque::enqueue(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME, [
         'type' =>  DELETE_TYPE_ABUSE,
-        'timestamp' => time() - $interval
+        'timestamp' => time() - $retention
     ]);
 }
 
-function notifyDeleteAuditLogs(int $interval) 
+function notifyDeleteAuditLogs(int $retention) 
 {
     Resque::enqueue(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME, [
         'type' => DELETE_TYPE_AUDIT,
-        'timestamp' => time() - $interval
+        'timestamp' => time() - $retention
     ]);
 }
 
@@ -40,15 +41,30 @@ $cli
     ->desc('Schedules maintenance tasks and publishes them to resque')
     ->action(function () {
         // # of days in seconds (1 day = 86400s)
-        $interval = (int) App::getEnv('_APP_MAINTENANCE_INTERVAL', '86400');
+        // $executionLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_EXECUTION_LOG_RETENTION', '60');
+        $executionLogsRetention = 120;
+        $abuseLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_ABUSE_LOG_RETENTION', '60');
+        $auditLogRetention = (int) App::getEnv('_APP_MAINTENANCE_AUDIT_LOG_RETENTION', '60');
 
-        Console::loop(function() use ($interval){
+        // Schedule delete execution logs
+        Console::loop(function() use ($executionLogsRetention){
             $time = date('d-m-Y H:i:s', time());
-            Console::info("[{$time}] Notifying deletes workers every {$interval} seconds");
-            notifyDeleteExecutionLogs();
-            notifyDeleteAbuseLogs($interval);
-            notifyDeleteAuditLogs($interval);
-            
-        }, $interval);
+            Console::info("[{$time}] Notifying deletes workers every {$executionLogsRetention} seconds");
+            notifyDeleteExecutionLogs($executionLogsRetention);
+        }, $executionLogsRetention);
+
+        // // Schedule delete abuse logs
+        // Console::loop(function() use ($abuseLogsRetention){
+        //     $time = date('d-m-Y H:i:s', time());
+        //     Console::info("[{$time}] Notifying deletes workers every {$abuseLogsRetention} seconds");
+        //     notifyDeleteAbuseLogs($abuseLogsRetention);
+        // }, $abuseLogsRetention);
+
+        // // Schedule delete audit logs
+        // Console::loop(function() use ($auditLogRetention){
+        //     $time = date('d-m-Y H:i:s', time());
+        //     Console::info("[{$time}] Notifying deletes workers every {$auditLogRetention} seconds");
+        //     notifyDeleteAuditLogs($auditLogRetention);
+        // }, $auditLogRetention);
 
     });
