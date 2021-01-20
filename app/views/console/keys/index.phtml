@@ -33,6 +33,8 @@ $scopes = $this->getParam('scopes', []);
                     <h1>Update API Key</h1>
 
                     <form
+                        data-analytics
+                        data-analytics-activity
                         data-analytics-event="submit"
                         data-analytics-category="console"
                         data-analytics-label="Update Project Key"
@@ -75,6 +77,8 @@ $scopes = $this->getParam('scopes', []);
                 </div>
 
                 <form class="pull-end margin-end"
+                    data-analytics
+                    data-analytics-activity
                     data-analytics-event="submit"
                     data-analytics-category="console"
                     data-analytics-label="Delete Project Key"
@@ -131,9 +135,11 @@ $scopes = $this->getParam('scopes', []);
             <h1>Add API Keys</h1>
 
             <form
+                data-analytics
+                data-analytics-activity
                 data-analytics-event="submit"
                 data-analytics-category="console"
-                data-analytics-label="Create Project Platform"
+                data-analytics-label="Create Project Key"
                 data-service="projects.createKey"
                 data-scope="console"
                 data-event="submit"

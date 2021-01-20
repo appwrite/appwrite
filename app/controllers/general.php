@@ -51,7 +51,11 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     $port = \parse_url($request->getOrigin($referrer), PHP_URL_PORT);
 
     $refDomain = (!empty($protocol) ? $protocol : $request->getProtocol()).'://'.((\in_array($origin, $clients))
-        ? $origin : 'localhost') . (!empty($port) ? ':'.$port : '');
+        ? $origin : 'localhost').(!empty($port) ? ':'.$port : '');
+    
+    $refDomain = (!$route->getLabel('origin', false))  // This route is publicly accessible
+        ? $refDomain
+        : (!empty($protocol) ? $protocol : $request->getProtocol()).'://'.$origin.(!empty($port) ? ':'.$port : '');
 
     $selfDomain = new Domain($request->getHostname());
     $endDomain = new Domain((string)$origin);
@@ -110,7 +114,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         }
 
         $response->addHeader('Strict-Transport-Security', 'max-age='.(60 * 60 * 24 * 126)); // 126 days
-    }    
+    }
 
     $response
         ->addHeader('Server', 'Appwrite')
