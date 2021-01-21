@@ -45,6 +45,8 @@ abstract class Migration
      * 
      * @param Document $project
      * @param Database $projectDB
+     * 
+     * @return Migration 
      */
     public function setProject(Document $project, Database $projectDB): Migration
     {
@@ -59,12 +61,13 @@ abstract class Migration
      * 
      * @param callable $callback
      */
-    public function forEachDocument(callable $callback)
+    public function forEachDocument(callable $callback): void
     {
-        $sum = 30;
+        
+        $sum = $this->limit;
         $offset = 0;
 
-        while ($sum >= 30) {
+        while ($sum >= $this->limit) {
             $all = $this->projectDB->getCollection([
                 'limit' => $this->limit,
                 'offset' => $offset,
@@ -86,7 +89,6 @@ abstract class Migration
                 try {
                     $new = $this->projectDB->overwriteDocument($document->getArrayCopy());
                 } catch (\Throwable $th) {
-                    var_dump($document);
                     Console::error('Failed to update document: ' . $th->getMessage());
                     continue;
                 }
