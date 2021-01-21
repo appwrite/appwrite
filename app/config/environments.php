@@ -87,7 +87,7 @@ return [
         'name' => 'Dart',
         'version' => '2.10.4',
         'base' => 'google/dart:2.10.4',
-        'image' => 'google/dart:2.10.4',
+        'image' => 'appwrite/env-deno-dart-2.10.4:1.0.0',
         'build' => '/usr/src/code/docker/environments/dart-2.10.4',
         'logo' => 'dart.png',
     ],
