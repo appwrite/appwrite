@@ -535,6 +535,14 @@ class FunctionsCustomServerTest extends Scope
                 'command' => 'deno run --allow-env index.ts',
                 'timeout' => 15,
             ],
+            [
+                'language' => 'Dart',
+                'version' => '2.10.4',
+                'name' => 'dart-2.10.4',
+                'code' => $functions.'/dart.tar.gz',
+                'command' => 'dart run main.dart',
+                'timeout' => 15,
+            ],
         ];
 
         sleep(count($envs) * 25);
