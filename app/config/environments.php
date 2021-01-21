@@ -1,8 +1,12 @@
 <?php
+use Utopia\App;
+
+$allowList = empty(App::getEnv('_APP_FUNCTIONS_ENV_ALLOWLIST', null)) ? false : \explode(',', App::getEnv('_APP_FUNCTIONS_ENV_ALLOWLIST', null));
+
 /**
  * List of Appwrite Cloud Functions supported environments
  */
-return [
+$environments = [
     'node-14.5' => [
         'name' => 'Node.js',
         'version' => '14.5',
@@ -92,3 +96,10 @@ return [
         'logo' => 'dart.png',
     ],
 ];
+
+
+if ($allowList) {
+    $environments = array_intersect_key($environments, array_flip($allowList));
+}
+
+return $environments;
