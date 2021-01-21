@@ -7,3 +7,5 @@ RUN apk add tar
 RUN mkdir /usr/local/src
 
 WORKDIR /usr/local/src/
+
+ENV PUB_CACHE=/usr/local/src/.appwrite

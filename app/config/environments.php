@@ -1,7 +1,7 @@
 <?php
 use Utopia\App;
 
-$allowList = empty(App::getEnv('_APP_FUNCTIONS_ENV_ALLOWLIST', null)) ? false : \explode(',', App::getEnv('_APP_FUNCTIONS_ENV_ALLOWLIST', null));
+$allowList = empty(App::getEnv('_APP_FUNCTIONS_ENVS', null)) ? false : \explode(',', App::getEnv('_APP_FUNCTIONS_ENVS', null));
 
 /**
  * List of Appwrite Cloud Functions supported environments
