@@ -218,7 +218,7 @@ class OpenAPI3 extends Format
                         $node['schema']['x-example'] = '{}';
                         //$node['schema']['format'] = 'json';
                         break;
-                    case 'Appwrite\Storage\Validator\File':
+                    case 'Utopia\Storage\Validator\File':
                         $consumes = ['multipart/form-data'];
                         $node['schema']['type'] = 'string';
                         $node['schema']['format'] = 'binary';

@@ -210,7 +210,7 @@ class Swagger2 extends Format
                         $node['x-example'] = '{}';
                         //$node['format'] = 'json';
                         break;
-                    case 'Appwrite\Storage\Validator\File':
+                    case 'Utopia\Storage\Validator\File':
                         $consumes = ['multipart/form-data'];
                         $node['type'] = 'file';
                         break;
