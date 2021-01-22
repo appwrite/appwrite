@@ -2,7 +2,7 @@
 
 namespace Appwrite\Tests;
 
-use Appwrite\Storage\Validator\Upload;
+use Utopia\Storage\Validator\Upload;
 use PHPUnit\Framework\TestCase;
 
 class UploadTest extends TestCase

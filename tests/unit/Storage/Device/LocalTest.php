@@ -2,7 +2,7 @@
 
 namespace Appwrite\Tests;
 
-use Appwrite\Storage\Device\Local;
+use Utopia\Storage\Device\Local;
 use PHPUnit\Framework\TestCase;
 
 class LocalTest extends TestCase

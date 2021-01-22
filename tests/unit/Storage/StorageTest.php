@@ -3,8 +3,8 @@
 namespace Appwrite\Tests;
 
 use Exception;
-use Appwrite\Storage\Storage;
-use Appwrite\Storage\Device\Local;
+use Utopia\Storage\Storage;
+use Utopia\Storage\Device\Local;
 use PHPUnit\Framework\TestCase;
 
 Storage::setDevice('disk-a', new Local(__DIR__ . '/../../resources/disk-a'));
@@ -22,8 +22,8 @@ class StorageTest extends TestCase
 
     public function testGetters()
     {
-        $this->assertEquals(get_class(Storage::getDevice('disk-a')), 'Appwrite\Storage\Device\Local');
-        $this->assertEquals(get_class(Storage::getDevice('disk-b')), 'Appwrite\Storage\Device\Local');
+        $this->assertEquals(get_class(Storage::getDevice('disk-a')), 'Utopia\Storage\Device\Local');
+        $this->assertEquals(get_class(Storage::getDevice('disk-b')), 'Utopia\Storage\Device\Local');
 
         try {
             get_class(Storage::getDevice('disk-c'));

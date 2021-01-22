@@ -3,8 +3,8 @@
 global $cli;
 
 use Appwrite\ClamAV\Network;
-use Appwrite\Storage\Device\Local;
-use Appwrite\Storage\Storage;
+use Utopia\Storage\Device\Local;
+use Utopia\Storage\Storage;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Domains\Domain;

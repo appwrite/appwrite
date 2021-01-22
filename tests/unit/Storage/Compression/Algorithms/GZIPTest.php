@@ -2,7 +2,7 @@
 
 namespace Appwrite\Tests;
 
-use Appwrite\Storage\Compression\Algorithms\GZIP;
+use Utopia\Storage\Compression\Algorithms\GZIP;
 use PHPUnit\Framework\TestCase;
 
 class GZIPTest extends TestCase

@@ -6,8 +6,8 @@ use Utopia\App;
 use Utopia\Exception;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
-use Appwrite\Storage\Device\Local;
-use Appwrite\Storage\Storage;
+use Utopia\Storage\Device\Local;
+use Utopia\Storage\Storage;
 
 App::init(function ($utopia, $request, $response, $project, $user, $register, $events, $audits, $usage, $deletes) {
     /** @var Utopia\App $utopia */
