@@ -537,8 +537,8 @@ class FunctionsCustomServerTest extends Scope
             ],
             [
                 'language' => 'Dart',
-                'version' => '2.10.4',
-                'name' => 'dart-2.10.4',
+                'version' => '2.10',
+                'name' => 'dart-2.10',
                 'code' => $functions.'/dart.tar.gz',
                 'command' => 'dart run main.dart',
                 'timeout' => 15,

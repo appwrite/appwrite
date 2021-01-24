@@ -1,8 +1,8 @@
-FROM google/dart:2.10.4
+FROM google/dart:2.10
 
 LABEL maintainer="team@appwrite.io"
 
-RUN apk add tar
+RUN apt-get update -y && apt-get install -y tar
 
 RUN mkdir /usr/local/src
 

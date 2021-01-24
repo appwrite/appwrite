@@ -87,12 +87,12 @@ $environments = [
         'build' => '/usr/src/code/docker/environments/deno-1.6',
         'logo' => 'deno.png',
     ],
-    'dart-2.10.4' => [
+    'dart-2.10' => [
         'name' => 'Dart',
-        'version' => '2.10.4',
-        'base' => 'google/dart:2.10.4',
-        'image' => 'appwrite/env-deno-dart-2.10.4:1.0.0',
-        'build' => '/usr/src/code/docker/environments/dart-2.10.4',
+        'version' => '2.10',
+        'base' => 'google/dart:2.10',
+        'image' => 'appwrite/env-deno-dart-2.10:1.0.0',
+        'build' => '/usr/src/code/docker/environments/dart-2.10',
         'logo' => 'dart.png',
     ],
 ];
