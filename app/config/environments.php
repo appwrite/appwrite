@@ -91,7 +91,7 @@ $environments = [
         'name' => 'Dart',
         'version' => '2.10',
         'base' => 'google/dart:2.10',
-        'image' => 'appwrite/env-deno-dart-2.10:1.0.0',
+        'image' => 'appwrite/env-deno-2.10:1.0.0',
         'build' => '/usr/src/code/docker/environments/dart-2.10',
         'logo' => 'dart.png',
     ],
