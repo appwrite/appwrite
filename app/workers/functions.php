@@ -1,7 +1,4 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
@@ -16,7 +13,7 @@ use Utopia\Config\Config;
 
 require_once __DIR__.'/../init.php';
 
-\cli_set_process_title('Functions V1 Worker');
+Console::title('Functions V1 Worker');
 
 Runtime::setHookFlags(SWOOLE_HOOK_ALL);
 
@@ -37,14 +34,9 @@ Co\run(function() use ($environments) {  // Warmup: make sure images are ready t
             $stdout = '';
             $stderr = '';
         
-            Console::info('Warming up '.$environment['name'].' environment...');
+            Console::info('Warming up '.$environment['name'].' '.$environment['version'].' environment...');
         
-            if(App::isDevelopment()) {
-                Console::execute('docker build '.$environment['build'].' -t '.$environment['image'], '', $stdout, $stderr);
-            }
-            else {
-                Console::execute('docker pull '.$environment['image'], '', $stdout, $stderr);
-            }
+            Console::execute('docker pull '.$environment['image'], '', $stdout, $stderr);
         
             if(!empty($stdout)) {
                 Console::log($stdout);
@@ -116,19 +108,6 @@ $stdout = \explode("\n", $stdout);
 
 Console::info(count($list)." functions listed in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
 
-/*
- * 1. Get Original Task
- * 2. Check for updates
- *  If has updates skip task and don't reschedule
- *  If status not equal to play skip task
- * 3. Check next run date, update task and add new job at the given date
- * 4. Execute task (set optional timeout)
- * 5. Update task response to log
- *      On success reset error count
- *      On failure add error count
- *      If error count bigger than allowed change status to pause
- */
-
 /**
  * 1. Get event args - DONE
  * 2. Unpackage code in the isolated container - DONE
@@ -143,23 +122,6 @@ Console::info(count($list)." functions listed in " . ($executionEnd - $execution
  */
 
 //TODO aviod scheduled execution if delay is bigger than X offest
-
-/**
- * Limit CPU Usage - DONE
- * Limit Memory Usage - DONE
- * Limit Network Usage
- * Limit Storage Usage (//--storage-opt size=120m \)
- * Make sure no access to redis, mariadb, influxdb or other system services
- * Make sure no access to NFS server / storage volumes
- * Access Appwrite REST from internal network for improved performance
- */
-
-/**
- * Get Usage Stats
- *  -> Network (docker stats --no-stream --format="{{.NetIO}}" appwrite)
- *  -> CPU Time - DONE
- *  -> Invoctions (+1) - DONE
- */
 
 class FunctionsV1
 {
@@ -380,6 +342,15 @@ class FunctionsV1
             unset($list[$container]);
         }
 
+        /**
+         * Limit CPU Usage - DONE
+         * Limit Memory Usage - DONE
+         * Limit Network Usage
+         * Limit Storage Usage (//--storage-opt size=120m \)
+         * Make sure no access to redis, mariadb, influxdb or other system services
+         * Make sure no access to NFS server / storage volumes
+         * Access Appwrite REST from internal network for improved performance
+         */
         if(!isset($list[$container])) { // Create contianer if not ready
             $stdout = '';
             $stderr = '';

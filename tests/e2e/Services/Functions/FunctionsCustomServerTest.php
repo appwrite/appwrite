@@ -455,24 +455,6 @@ class FunctionsCustomServerTest extends Scope
 
     public function testENVS():array
     {
-        sleep(120);
-        /**
-         * Test for SUCCESS
-         */
-        $file = $this->client->call(Client::METHOD_POST, '/storage/files', array_merge([
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
-            'read' => ['*'],
-            'write' => ['*'],
-            'folderId' => 'xyz',
-        ]);
-
-        $this->assertEquals($file['headers']['status-code'], 201);
-        $this->assertNotEmpty($file['body']['$id']);
-
-        $fileId = $file['body']['$id'] ?? '';
 
         $functions = realpath(__DIR__ . '/../../../resources/functions');
 
@@ -508,7 +490,15 @@ class FunctionsCustomServerTest extends Scope
             [
                 'language' => 'Node.js',
                 'version' => '14.5',
-                'name' => 'node-14',
+                'name' => 'node-14.5',
+                'code' => $functions.'/node.tar.gz',
+                'command' => 'node index.js',
+                'timeout' => 15,
+            ],
+            [
+                'language' => 'Node.js',
+                'version' => '15.5',
+                'name' => 'node-15.5',
                 'code' => $functions.'/node.tar.gz',
                 'command' => 'node index.js',
                 'timeout' => 15,
@@ -522,6 +512,14 @@ class FunctionsCustomServerTest extends Scope
                 'timeout' => 15,
             ],
             [
+                'language' => 'Ruby',
+                'version' => '3.0',
+                'name' => 'ruby-3.0',
+                'code' => $functions.'/ruby.tar.gz',
+                'command' => 'ruby app.rb',
+                'timeout' => 15,
+            ],
+            [
                 'language' => 'Deno',
                 'version' => '1.5',
                 'name' => 'deno-1.5',
@@ -529,7 +527,35 @@ class FunctionsCustomServerTest extends Scope
                 'command' => 'deno run --allow-env index.ts',
                 'timeout' => 15,
             ],
+            [
+                'language' => 'Deno',
+                'version' => '1.6',
+                'name' => 'deno-1.6',
+                'code' => $functions.'/deno.tar.gz',
+                'command' => 'deno run --allow-env index.ts',
+                'timeout' => 15,
+            ],
         ];
+
+        sleep(count($envs) * 25);
+
+        /**
+         * Test for SUCCESS
+         */
+        $file = $this->client->call(Client::METHOD_POST, '/storage/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'read' => ['*'],
+            'write' => ['*'],
+            'folderId' => 'xyz',
+        ]);
+
+        $this->assertEquals($file['headers']['status-code'], 201);
+        $this->assertNotEmpty($file['body']['$id']);
+
+        $fileId = $file['body']['$id'] ?? '';
 
         foreach ($envs as $key => $env) {
             $language = $env['language'] ?? '';

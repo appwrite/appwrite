@@ -3,12 +3,20 @@
  * List of Appwrite Cloud Functions supported environments
  */
 return [
-    'node-14' => [
+    'node-14.5' => [
         'name' => 'Node.js',
         'version' => '14.5',
         'base' => 'node:14.5-alpine',
         'image' => 'appwrite/env-node-14.5:1.0.0',
         'build' => '/usr/src/code/docker/environments/node-14.5',
+        'logo' => 'node.png',
+    ],
+    'node-15.5' => [
+        'name' => 'Node.js',
+        'version' => '15.5',
+        'base' => 'node:15.5-alpine',
+        'image' => 'appwrite/env-node-15.5:1.0.0',
+        'build' => '/usr/src/code/docker/environments/node-15.5',
         'logo' => 'node.png',
     ],
     'php-7.4' => [
@@ -35,6 +43,14 @@ return [
         'build' => '/usr/src/code/docker/environments/ruby-2.7',
         'logo' => 'ruby.png',
     ],
+    'ruby-3.0' => [
+        'name' => 'Ruby',
+        'version' => '3.0',
+        'base' => 'ruby:3.0-alpine',
+        'image' => 'appwrite/env-ruby-3.0:1.0.0',
+        'build' => '/usr/src/code/docker/environments/ruby-3.0',
+        'logo' => 'ruby.png',
+    ],
     'python-3.8' => [
         'name' => 'Python',
         'version' => '3.8',
@@ -57,6 +73,14 @@ return [
         'base' => 'hayd/deno:alpine-1.5.0',
         'image' => 'appwrite/env-deno-1.5:1.0.0',
         'build' => '/usr/src/code/docker/environments/deno-1.5',
+        'logo' => 'deno.png',
+    ],
+    'deno-1.6' => [
+        'name' => 'Deno',
+        'version' => '1.6',
+        'base' => 'hayd/deno:alpine-1.6.0',
+        'image' => 'appwrite/env-deno-1.6:1.0.0',
+        'build' => '/usr/src/code/docker/environments/deno-1.6',
         'logo' => 'deno.png',
     ],
     // 'dart-2.8' => [

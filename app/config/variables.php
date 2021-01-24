@@ -94,6 +94,14 @@ return [
                 'question' => '',
             ],
             [
+                'name' => '_APP_SYSTEM_RESPONSE_FORMAT',
+                'description' => 'Use this environment variable to set the default Appwrite HTTP response format to support an older version of Appwrite. This option is useful to overcome breaking changes between versions. You can also use the `X-Appwrite-Response-Format` HTTP request header to overwrite the response for a specific request. This variable accepts any valid Appwrite version. To use the current version format, leave the value of the variable empty.',
+                'introduction' => '0.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
                 'name' => '_APP_USAGE_STATS',
                 'description' => 'This variable allows you to disable the collection and displaying of usage stats. This value is set to \'enabled\' by default, to disable the usage stats set the value to \'disabled\'. When disabled, it\'s recommended to turn off the Worker Usage, Influxdb and Telegraf containers for better resource usage.',
                 'introduction' => '0.7.0',
@@ -356,13 +364,31 @@ return [
                     'required' => false,
                     'question' => '',
                 ],
+                [
+                    'name' => '_APP_MAINTENANCE_RETENTION_EXECUTION',
+                    'description' => 'The maximum duration (in seconds) upto which to retain execution logs. The default value is 1209600 seconds (14 days).',
+                    'introduction' => '0.7.0',
+                    'default' => '1209600',
+                    'required' => false,
+                    'question' => '',
+                ],
+                [
+                    'name' => '_APP_MAINTENANCE_RETENTION_AUDIT',
+                    'description' => 'IThe maximum duration (in seconds) upto which to retain audit logs. The default value is 1209600 seconds (14 days).',
+                    'introduction' => '0.7.0',
+                    'default' => '1209600',
+                    'required' => false,
+                    'question' => '',
+                ],
+                [
+                    'name' => '_APP_MAINTENANCE_RETENTION_ABUSE',
+                    'description' => 'The maximum duration (in seconds) upto which to retain abuse logs. The default value is 86400 seconds (1 day).',
+                    'introduction' => '0.7.0',
+                    'default' => '86400',
+                    'required' => false,
+                    'question' => '',
+                ]
             ],
         ],
-    ],
-    [
-        'name' => '_APP_SYSTEM_RESPONSE_FORMAT',
-        'default' => '',
-        'required' => false,
-        'question' => '',
     ],
 ];

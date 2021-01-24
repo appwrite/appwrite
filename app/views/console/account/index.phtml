@@ -29,6 +29,8 @@
                         <div class="box margin-bottom-xl">
                             <div>
                                 <form name="account.update"
+                                    data-analytics
+                                    data-analytics-activity
                                     data-analytics-event="submit"
                                     data-analytics-category="console"
                                     data-analytics-label="Update Account Name"
@@ -58,6 +60,8 @@
                             <hr />
 
                             <form name="update-email"
+                                data-analytics
+                                data-analytics-activity
                                 data-analytics-event="submit"
                                 data-analytics-category="console"
                                 data-analytics-label="Update Account Email"
@@ -99,6 +103,8 @@
                                 <h1>Update Password</h1>
 
                                 <form name="update-password"
+                                    data-analytics
+                                    data-analytics-activity
                                     data-analytics-event="submit"
                                     data-analytics-category="console"
                                     data-analytics-label="Update Account Password"
@@ -129,6 +135,8 @@
                             <hr />
 
                             <form class="margin-top"
+                                data-analytics
+                                data-analytics-activity
                                 data-analytics-event="submit"
                                 data-analytics-category="console"
                                 data-analytics-label="Delete Account Current Session"
@@ -163,6 +171,8 @@
                             <p>PLEASE NOTE: Account deletion is irreversible.</p>
 
                             <form class="inline"
+                                data-analytics
+                                data-analytics-activity
                                 data-analytics-event="submit"
                                 data-analytics-category="console"
                                 data-analytics-label="Delete Account"
@@ -197,6 +207,8 @@
                         <span data-ls-if="true != {{session.current}}">
                             <!-- From remote session (-logout event) -->
                             <form class="pull-end"
+                                data-analytics
+                                data-analytics-activity
                                 data-analytics-event="submit"
                                 data-analytics-category="console"
                                 data-analytics-label="Delete Account Session"
@@ -218,6 +230,8 @@
                         <span data-ls-if="true == {{session.current}}">
                             <!-- From current session (+logout event) -->
                             <form class="pull-end"
+                                data-analytics
+                                data-analytics-activity
                                 data-analytics-event="submit"
                                 data-analytics-category="console"
                                 data-analytics-label="Delete Account Current Session"
@@ -254,6 +268,8 @@
             </div>
 
             <form class="inline margin-bottom-large"
+                data-analytics
+                data-analytics-activity
                 data-analytics-event="submit"
                 data-analytics-category="console"
                 data-analytics-label="Delete Account Sessions"

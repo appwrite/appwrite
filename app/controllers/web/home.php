@@ -191,7 +191,7 @@ App::get('/error/:code')
         $layout
             ->setParam('title', 'Error'.' - '.APP_NAME)
             ->setParam('body', $page);
-    }, ['']);
+    });
 
 App::get('/specs/:format')
     ->groups(['web', 'home'])

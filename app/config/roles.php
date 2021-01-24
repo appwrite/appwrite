@@ -2,7 +2,7 @@
 
 use Appwrite\Auth\Auth;
 
-$logged = [
+$member = [
     'public',
     'home',
     'console',
@@ -66,7 +66,7 @@ return [
     ],
     Auth::USER_ROLE_MEMBER => [
         'label' => 'Member',
-        'scopes' => \array_merge($logged, []),
+        'scopes' => \array_merge($member, []),
     ],
     Auth::USER_ROLE_ADMIN => [
         'label' => 'Admin',
@@ -78,7 +78,7 @@ return [
     ],
     Auth::USER_ROLE_OWNER => [
         'label' => 'Owner',
-        'scopes' => \array_merge($logged, $admins, []),
+        'scopes' => \array_merge($member, $admins, []),
     ],
     Auth::USER_ROLE_APP => [
         'label' => 'Application',
