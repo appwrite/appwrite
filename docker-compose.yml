@@ -330,6 +330,9 @@ services:
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_MAINTENANCE_INTERVAL
+      - _APP_MAINTENANCE_RETENTION_EXECUTION
+      - _APP_MAINTENANCE_RETENTION_ABUSE
+      - _APP_MAINTENANCE_RETENTION_AUDIT
 
   appwrite-schedule:
     entrypoint: schedule

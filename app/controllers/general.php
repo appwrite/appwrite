@@ -14,8 +14,8 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\Origin;
-use Appwrite\Storage\Device\Local;
-use Appwrite\Storage\Storage;
+use Utopia\Storage\Device\Local;
+use Utopia\Storage\Storage;
 use Appwrite\Utopia\Response\Filters\V06;
 use Utopia\CLI\Console;
 
@@ -82,9 +82,6 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         ? null
         : '.'.$request->getHostname()
     );
-
-    Storage::setDevice('files', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
-    Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId()));
 
     /* 
     * Response format

@@ -5,7 +5,7 @@ use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
-use Appwrite\Storage\Device\Local;
+use Utopia\Storage\Device\Local;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\CLI\Console;
@@ -59,7 +59,7 @@ class DeletesV1
                 break;
 
             case DELETE_TYPE_EXECUTIONS:
-                $this->deleteExecutionLogs();
+                $this->deleteExecutionLogs($this->args['timestamp']);
                 break;
 
             case DELETE_TYPE_AUDIT:
@@ -121,16 +121,17 @@ class DeletesV1
         ], $this->getProjectDB($projectId));
     }
 
-    protected function deleteExecutionLogs() 
+    protected function deleteExecutionLogs($timestamp) 
     {
-        $this->deleteForProjectIds(function($projectId) {
+        $this->deleteForProjectIds(function($projectId) use ($timestamp) {
             if (!($projectDB = $this->getProjectDB($projectId))) {
                 throw new Exception('Failed to get projectDB for project '.$projectId);
             }
 
             // Delete Executions
             $this->deleteByGroup([
-                '$collection='.Database::SYSTEM_COLLECTION_EXECUTIONS
+                '$collection='.Database::SYSTEM_COLLECTION_EXECUTIONS,
+                'dateCreated<'.$timestamp
             ], $projectDB);
         });
     }

@@ -1696,6 +1696,58 @@
             "time": "2020-10-24T08:51:37+00:00"
         },
         {
+            "name": "utopia-php/storage",
+            "version": "0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/storage.git",
+                "reference": "00e9045cee6bd1ec1d1f27329c329494ef420c19"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/00e9045cee6bd1ec1d1f27329c329494ef420c19",
+                "reference": "00e9045cee6bd1ec1d1f27329c329494ef420c19",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.4",
+                "utopia-php/framework": "0.10.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.3",
+                "vimeo/psalm": "4.0.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Storage\\": "src/Storage"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "eldad@appwrite.io"
+                }
+            ],
+            "description": "A simple Storage library to manage application storage",
+            "keywords": [
+                "framework",
+                "php",
+                "storage",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/storage/issues",
+                "source": "https://github.com/utopia-php/storage/tree/0.1.0"
+            },
+            "time": "2021-01-22T07:27:20+00:00"
+        },
+        {
             "name": "utopia-php/swoole",
             "version": "0.2.0",
             "source": {
