@@ -83,9 +83,6 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         : '.'.$request->getHostname()
     );
 
-    Storage::setDevice('files', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
-    Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId()));
-
     /* 
     * Response format
     */
