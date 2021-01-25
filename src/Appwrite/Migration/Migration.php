@@ -4,9 +4,10 @@ namespace Appwrite\Migration;
 
 use Appwrite\Database\Document;
 use Appwrite\Database\Database;
+use PDO;
+use Swoole\Runtime;
 use Utopia\CLI\Console;
 use Utopia\Exception;
-use PDO;
 
 abstract class Migration
 {
@@ -18,7 +19,7 @@ abstract class Migration
     /**
      * @var int
      */
-    protected int $limit = 30;
+    protected int $limit = 50;
 
     /**
      * @var Document
@@ -63,7 +64,6 @@ abstract class Migration
      */
     public function forEachDocument(callable $callback): void
     {
-        
         $sum = $this->limit;
         $offset = 0;
 
@@ -75,28 +75,38 @@ abstract class Migration
             ]);
 
             $sum = \count($all);
+            Runtime::setHookFlags(SWOOLE_HOOK_ALL);
 
             Console::log('Migrating: ' . $offset . ' / ' . $this->projectDB->getSum());
+            \Co\run(function () use ($all, $callback) {
+                Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
-            foreach ($all as $document) {
+                foreach ($all as $document) {
+                    go(function () use ($document, $callback) {
 
-                $document = call_user_func($callback, $document);
+                        $old = $document->getArrayCopy();
+                        $new = call_user_func($callback, $document);
 
-                if (empty($document->getId())) {
-                    throw new Exception('Missing ID');
+                        if (empty($new->getId())) {
+                            throw new Exception('Missing ID');
+                        }
+                        if (!array_diff($new->getArrayCopy(), $old)) {
+                            return;
+                        }
+
+                        try {
+                            $new = $this->projectDB->overwriteDocument($document->getArrayCopy());
+                        } catch (\Throwable $th) {
+                            Console::error('Failed to update document: ' . $th->getMessage());
+                            return;
+
+                            if ($document && $new->getId() !== $document->getId()) {
+                                throw new Exception('Duplication Error');
+                            }
+                        }
+                    });
                 }
-
-                try {
-                    $new = $this->projectDB->overwriteDocument($document->getArrayCopy());
-                } catch (\Throwable $th) {
-                    Console::error('Failed to update document: ' . $th->getMessage());
-                    continue;
-                }
-
-                if ($new->getId() !== $document->getId()) {
-                    throw new Exception('Duplication Error');
-                }
-            }
+            });
 
             $offset += $this->limit;
         }
