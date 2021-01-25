@@ -18,6 +18,7 @@ use Utopia\CLI\Console;
 ini_set('memory_limit','512M');
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
+ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80));

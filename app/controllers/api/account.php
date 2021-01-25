@@ -100,7 +100,7 @@ App::post('/v1/account')
                 'emailVerification' => false,
                 'status' => Auth::USER_STATUS_UNACTIVATED,
                 'password' => Auth::passwordHash($password),
-                'password-update' => \time(),
+                'passwordUpdate' => \time(),
                 'registration' => \time(),
                 'reset' => false,
                 'name' => $name,
@@ -512,7 +512,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'emailVerification' => true,
                         'status' => Auth::USER_STATUS_ACTIVATED, // Email should already be authenticated by OAuth2 provider
                         'password' => Auth::passwordHash(Auth::passwordGenerator()),
-                        'password-update' => \time(),
+                        'passwordUpdate' => \time(),
                         'registration' => \time(),
                         'reset' => false,
                         'name' => $name,
@@ -1456,7 +1456,7 @@ App::put('/v1/account/recovery')
 
         $profile = $projectDB->updateDocument(\array_merge($profile->getArrayCopy(), [
             'password' => Auth::passwordHash($password),
-            'password-update' => \time(),
+            'passwordUpdate' => \time(),
             'emailVerification' => true,
         ]));
 
