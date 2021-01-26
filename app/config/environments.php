@@ -106,6 +106,24 @@ $environments = [
         'logo' => 'dart.png',
         'supports' => [System::X86],
     ],
+    'dotnet-3.1' => [
+        'name' => '.NET',
+        'version' => '3.1',
+        'base' => 'mcr.microsoft.com/dotnet/runtime:3.1-alpine',
+        'image' => 'appwrite/env-dotnet-3.1:1.0.0',
+        'build' => '/usr/src/code/docker/environments/dotnet-3.1',
+        'logo' => 'dotnet.png',
+        'supports' => [System::X86, System::ARM],
+    ],
+    'dotnet-5.0' => [
+        'name' => '.NET',
+        'version' => '5.0',
+        'base' => 'mcr.microsoft.com/dotnet/runtime:5.0-alpine',
+        'image' => 'appwrite/env-dotnet-5.0:1.0.0',
+        'build' => '/usr/src/code/docker/environments/dotnet-5.0',
+        'logo' => 'dotnet.png',
+        'supports' => [System::X86, System::ARM],
+    ],
 ];
 
 $allowList = empty(App::getEnv('_APP_FUNCTIONS_ENVS', null)) ? false : \explode(',', App::getEnv('_APP_FUNCTIONS_ENVS', null));

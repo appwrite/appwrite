@@ -543,6 +543,22 @@ class FunctionsCustomServerTest extends Scope
                 'command' => 'dart run main.dart',
                 'timeout' => 15,
             ],
+            [
+                'language' => '.NET',
+                'version' => '3.1',
+                'name' => 'dotnet-3.1',
+                'code' => $functions.'/dotnet-3.1.tar.gz',
+                'command' => 'dotnet dotnet.dll',
+                'timeout' => 15,
+            ],
+            [
+                'language' => '.NET',
+                'version' => '5.0',
+                'name' => 'dotnet-5.0',
+                'code' => $functions.'/dotnet-5.0.tar.gz',
+                'command' => 'dotnet dotnet.dll',
+                'timeout' => 15,
+            ],
         ];
 
         sleep(count($envs) * 25);
