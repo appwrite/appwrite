@@ -60,7 +60,7 @@
 
                         <br />
                     
-                        <span data-ls-if="undefined !== {{task.previous}}">
+                        <span data-ls-if="undefined !== {{task.previous}} && {{task.previous}}">
                             <span data-ls-bind="Prev: {{task.previous|dateTime}}"></span>
 
                             <!-- <span data-ls-if="undefined !== {{task.delay}} && 59 < {{task.delay}}" class="text-danger margin-top-tiny">
@@ -78,6 +78,8 @@
                             <h1>Update Task</h1>
 
                             <form
+                                data-analytics
+                                data-analytics-activity
                                 data-analytics-event="submit"
                                 data-analytics-category="console"
                                 data-analytics-label="Update Project Task"
@@ -202,6 +204,8 @@
                         </div>
 
                         <form
+                            data-analytics
+                            data-analytics-activity
                             data-analytics-event="submit"
                             data-analytics-category="console"
                             data-analytics-label="Delete Project Task"
@@ -238,6 +242,8 @@
             <h1>Add Task</h1>
 
             <form
+                data-analytics
+                data-analytics-activity
                 data-analytics-event="submit"
                 data-analytics-category="console"
                 data-analytics-label="Create Project Task"

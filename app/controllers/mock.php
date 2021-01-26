@@ -8,7 +8,7 @@ use Utopia\Validator\Numeric;
 use Utopia\Validator\Text;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Host;
-use Appwrite\Storage\Validator\File;
+use Utopia\Storage\Validator\File;
 
 App::get('/v1/mock/tests/foo')
     ->desc('Mock a get request for SDK tests')

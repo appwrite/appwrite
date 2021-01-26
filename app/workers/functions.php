@@ -35,7 +35,7 @@ Co\run(function() use ($environments) {  // Warmup: make sure images are ready t
             $stdout = '';
             $stderr = '';
         
-            Console::info('Warming up '.$environment['name'].' environment...');
+            Console::info('Warming up '.$environment['name'].' '.$environment['version'].' environment...');
         
             Console::execute('docker pull '.$environment['image'], '', $stdout, $stderr);
         

@@ -52,6 +52,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                                 </p>
 
                                 <form data-ls-if="{{project-function.tag}} !== ''" name="functions.createExecution" class="margin-top"
+                                    data-analytics
+                                    data-analytics-activity
                                     data-analytics-event="submit"
                                     data-analytics-category="console"
                                     data-analytics-label="Create Function Execution"
@@ -94,6 +96,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                                     <ul data-ls-loop="project-function-tags.tags" data-ls-as="tag" class="list">
                                         <li class="clear">
                                             <form data-ls-if="{{tag.$id}} !== {{project-function.tag}}" name="functions.updateTag" class="pull-end"
+                                                data-analytics
+                                                data-analytics-activity
                                                 data-analytics-event="submit"
                                                 data-analytics-category="console"
                                                 data-analytics-label="Create Function Execution"
@@ -116,6 +120,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                                                 <span class="pull-start" data-ls-bind="Created {{tag.dateCreated|timeSince}} &nbsp; | &nbsp; {{tag.size|humanFileSize}}"></span>
 
                                                 <form data-ls-if="{{tag.$id}} !== {{project-function.tag}}" name="functions.deleteTag" class="pull-start"
+                                                    data-analytics
+                                                    data-analytics-activity
                                                     data-analytics-event="submit"
                                                     data-analytics-category="console"
                                                     data-analytics-label="Delete Function Tag"
@@ -147,6 +153,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                                 <h1>Deploy a New Tag</h1>
 
                                 <form
+                                    data-analytics
+                                    data-analytics-activity
                                     data-analytics-event="submit"
                                     data-analytics-category="console"
                                     data-analytics-label="Create Function Tag"
@@ -221,6 +229,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                         </ul>
 
                         <form name="functions.delete" class="margin-bottom"
+                            data-analytics
+                            data-analytics-activity
                             data-analytics-event="submit"
                             data-analytics-category="console"
                             data-analytics-label="Delete Function"
@@ -469,6 +479,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                         <label>&nbsp;</label>
 
                         <form
+                            data-analytics
+                            data-analytics-activity
                             data-analytics-event="submit"
                             data-analytics-category="console"
                             data-analytics-label="Update Function"
@@ -525,7 +537,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                                     <hr class="margin-bottom margin-top-no" />
 
                                     <fieldset name="vars" data-cast-to="object">
-                                        <div data-ls-loop="project-function.vars" data-ls-as="var" id="project-vars">
+                                        <div data-ls-loop="project-function.vars" data-ls-as="var" id="project-vars" style="visibility: visible;">
                                             <div class="margin-bottom-small">
                                                 <div data-forms-remove class="row thin">
                                                     <div class="col span-10">
@@ -571,6 +583,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                         </ul>
 
                         <form name="functions.delete" class="margin-bottom"
+                            data-analytics
+                            data-analytics-activity
                             data-analytics-event="submit"
                             data-analytics-category="console"
                             data-analytics-label="Delete Function"

@@ -39,6 +39,7 @@
 - New OAuth adapter for PayPal sandbox  (@armino-dev - [#420](https://github.com/appwrite/appwrite/issues/410))
 - Introducing new permssion types: role:guest, role:member, role:app
 - Disabled rate-limits on server side integrations
+- Refactored migration script 
 
 ### User Interface
 
@@ -105,6 +106,7 @@
 - Fixed OAuth redirect when using the self-hosted instance default success URL ([#454](https://github.com/appwrite/appwrite/issues/454))
 - Fixed bug denying authentication with Github OAuth provider
 - Fixed a bug making read permission overwrite write permission in some cases
+- Fixed consistent property names in databases by enforcing camel case
 
 ## Security
 
@@ -113,6 +115,7 @@
 - Now using your `_APP_SYSTEM_EMAIL_ADDRESS` as the email address for issuing and renewing SSL certificates
 - Block iframe access to Appwrite console using the `X-Frame-Options` header.
 - Fixed `roles` param input validator
+- API Keys are now stored encrypted 
 
 # Version 0.6.2 (PRE-RELEASE)
 

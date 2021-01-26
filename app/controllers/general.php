@@ -14,8 +14,8 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\Origin;
-use Appwrite\Storage\Device\Local;
-use Appwrite\Storage\Storage;
+use Utopia\Storage\Device\Local;
+use Utopia\Storage\Storage;
 use Appwrite\Utopia\Response\Filters\V06;
 use Utopia\CLI\Console;
 
@@ -51,7 +51,11 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     $port = \parse_url($request->getOrigin($referrer), PHP_URL_PORT);
 
     $refDomain = (!empty($protocol) ? $protocol : $request->getProtocol()).'://'.((\in_array($origin, $clients))
-        ? $origin : 'localhost') . (!empty($port) ? ':'.$port : '');
+        ? $origin : 'localhost').(!empty($port) ? ':'.$port : '');
+    
+    $refDomain = (!$route->getLabel('origin', false))  // This route is publicly accessible
+        ? $refDomain
+        : (!empty($protocol) ? $protocol : $request->getProtocol()).'://'.$origin.(!empty($port) ? ':'.$port : '');
 
     $selfDomain = new Domain($request->getHostname());
     $endDomain = new Domain((string)$origin);
@@ -78,9 +82,6 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         ? null
         : '.'.$request->getHostname()
     );
-
-    Storage::setDevice('files', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
-    Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId()));
 
     /* 
     * Response format
@@ -110,7 +111,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         }
 
         $response->addHeader('Strict-Transport-Security', 'max-age='.(60 * 60 * 24 * 126)); // 126 days
-    }    
+    }
 
     $response
         ->addHeader('Server', 'Appwrite')
@@ -255,8 +256,11 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     $template = ($route) ? $route->getLabel('error', null) : null;
 
     if (php_sapi_name() === 'cli') {
-        Console::error('[Error] Method: '.$route->getMethod());
-        Console::error('[Error] URL: '.$route->getURL());
+        if($route) {
+            Console::error('[Error] Method: '.$route->getMethod());
+            Console::error('[Error] URL: '.$route->getURL());
+        }
+        
         Console::error('[Error] Type: '.get_class($error));
         Console::error('[Error] Message: '.$error->getMessage());
         Console::error('[Error] File: '.$error->getFile());
