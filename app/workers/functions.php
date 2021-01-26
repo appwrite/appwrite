@@ -184,9 +184,7 @@ class FunctionsV1
 
                         Console::success('Triggered function: '.$event);
 
-                        Swoole\Coroutine\run(function () use ($projectId, $database, $function, $event, $payload) {
-                            $this->execute('event', $projectId, '', $database, $function, $event, $payload);
-                        });
+                        $this->execute('event', $projectId, '', $database, $function, $event, $payload);
                     }
                 }
                 break;
@@ -242,9 +240,7 @@ class FunctionsV1
                     'scheduleOriginal' => $function->getAttribute('schedule', ''),
                 ]);  // Async task rescheduale
 
-                Swoole\Coroutine\run(function () use ($trigger, $projectId, $executionId, $database, $function) {
-                    $this->execute($trigger, $projectId, $executionId, $database, $function);
-                });
+                $this->execute($trigger, $projectId, $executionId, $database, $function);
                 
                 break;
 
@@ -257,9 +253,7 @@ class FunctionsV1
                     throw new Exception('Function not found ('.$functionId.')');
                 }
 
-                Swoole\Coroutine\run(function () use ($trigger, $projectId, $executionId, $database, $function) {
-                    $this->execute($trigger, $projectId, $executionId, $database, $function);
-                });
+                $this->execute($trigger, $projectId, $executionId, $database, $function);
                 break;
             
             default:
