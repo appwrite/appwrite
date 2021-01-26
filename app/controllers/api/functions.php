@@ -440,9 +440,9 @@ App::post('/v1/functions/:functionId/tags')
         $file['size'] = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
         // Check if file type is allowed (feature for project settings?)
-        // if (!$fileType->isValid($file['tmp_name'])) {
-        //     throw new Exception('File type not allowed', 400);
-        // }
+        if (!$fileType->isValid($file['tmp_name'])) {
+            throw new Exception('File type not allowed', 400);
+        }
 
         if (!$fileSize->isValid($file['size'])) { // Check if file size is exceeding allowed limit
             throw new Exception('File size not allowed', 400);
