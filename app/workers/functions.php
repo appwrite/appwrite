@@ -391,7 +391,7 @@ class FunctionsV1
                 " -d".
                 " --entrypoint=\"\"".
                 " --cpus=".App::getEnv('_APP_FUNCTIONS_CPUS', '1').
-                " --memory=".App::getEnv('_APP_FUNCTIONS_MEMORY', '128')."m".
+                " --memory=".App::getEnv('_APP_FUNCTIONS_MEMORY', '256')."m".
                 " --memory-swap=".App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '256')."m".
                 " --name={$container}".
                 " --label appwrite-type=function".
