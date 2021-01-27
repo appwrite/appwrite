@@ -439,7 +439,7 @@ App::post('/v1/functions/:functionId/tags')
         $file['tmp_name'] = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
         $file['size'] = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
-        if (!$$fileExt->isValid($file['tmp_name'])) { // Check if file type is allowed
+        if (!$fileExt->isValid($file['name'])) { // Check if file type is allowed
             throw new Exception('File type not allowed', 400);
         }
 
