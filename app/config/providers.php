@@ -163,6 +163,24 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false,
     ],
+    'tradeshift' => [
+        'name' => 'Tradeshift',
+        'developers' => 'https://developers.tradeshift.com/docs/api',
+        'icon' => 'icon-tradeshift',
+        'enabled' => true,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+    ],
+    'tradeshiftBox' => [
+        'name' => 'Tradeshift Sandbox',
+        'developers' => 'https://developers.tradeshift.com/docs/api',
+        'icon' => 'icon-tradeshiftbox',
+        'enabled' => true,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+    ],
     'twitch' => [
         'name' => 'Twitch',
         'developers' => 'https://dev.twitch.tv/docs/authentication',
@@ -215,6 +233,15 @@ return [ // Ordered by ABC.
     //     'beta' => false,
     //     'mock' => false,
     // ],
+    'wordpress' => [
+        'name' => 'WordPress',
+        'developers' => 'https://developer.wordpress.com/docs/oauth2/',
+        'icon' => 'icon-wordpress',
+        'enabled' => true,
+        'form' => false,
+        'beta' => false,
+        'mock' => false
+    ],
     // Keep Last
     'mock' => [
         'name' => 'Mock',
@@ -225,13 +252,4 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => true,
     ],
-    'wordpress' => [
-        'name' => 'WordPress',
-        'developers' => 'https://developer.wordpress.com/docs/oauth2/',
-        'icon' => 'icon-wordpress',
-        'enabled' => true,
-        'form' => false,
-        'beta' => false,
-        'mock' => false
-    ]
 ];
