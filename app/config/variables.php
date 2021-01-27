@@ -349,7 +349,7 @@ return [
                 'name' => '_APP_FUNCTIONS_MEMORY_SWAP',
                 'description' => 'The maximum amount of swap memory a single cloud function is allowed to use in megabytes. The default value is 128.',
                 'introduction' => '0.7.0',
-                'default' => '128',
+                'default' => '256',
                 'required' => false,
                 'question' => '',
             ],
