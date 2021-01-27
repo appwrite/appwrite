@@ -219,7 +219,7 @@ class Database
     /**
      * @param array $data
      *
-     * @return Document|bool
+     * @return Document
      *
      * @throws AuthorizationException
      * @throws StructureException

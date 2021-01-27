@@ -537,7 +537,7 @@ class FunctionsCustomServerTest extends Scope
             ],
         ];
 
-        sleep(count($envs) * 25);
+        sleep(count($envs) * 20);
 
         /**
          * Test for SUCCESS
