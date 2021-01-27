@@ -463,7 +463,7 @@ class FunctionsCustomServerTest extends Scope
          *  bash tests/resources/functions/package-*.sh
          */
         $envs = [
-            /*[
+            [
                 'language' => 'PHP',
                 'version' => '7.4',
                 'name' => 'php-7.4',
@@ -534,7 +534,7 @@ class FunctionsCustomServerTest extends Scope
                 'code' => $functions.'/deno.tar.gz',
                 'command' => 'deno run --allow-env index.ts',
                 'timeout' => 15,
-            ],*/
+            ],
             [
                 'language' => 'Dart',
                 'version' => '2.10',
@@ -543,7 +543,7 @@ class FunctionsCustomServerTest extends Scope
                 'command' => 'dart main.dart',
                 'timeout' => 15,
             ],
-            /*[
+            [
                 'language' => '.NET',
                 'version' => '3.1',
                 'name' => 'dotnet-3.1',
@@ -558,7 +558,7 @@ class FunctionsCustomServerTest extends Scope
                 'code' => $functions.'/dotnet-5.0.tar.gz',
                 'command' => 'dotnet dotnet.dll',
                 'timeout' => 15,
-            ],*/
+            ],
         ];
 
         sleep(count($envs) * 30);
