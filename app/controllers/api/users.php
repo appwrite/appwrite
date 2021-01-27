@@ -62,7 +62,7 @@ App::post('/v1/users')
                 'emailVerification' => false,
                 'status' => Auth::USER_STATUS_UNACTIVATED,
                 'password' => Auth::passwordHash($password),
-                'password-update' => \time(),
+                'passwordUpdate' => \time(),
                 'registration' => \time(),
                 'reset' => false,
                 'name' => $name,

@@ -6,6 +6,7 @@ use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
+use Cron\CronExpression;
 use Swoole\Runtime;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -27,7 +28,7 @@ $environments = Config::getParam('environments');
 $warmupStart = \microtime(true);
 
 Co\run(function() use ($environments) {  // Warmup: make sure images are ready to run fast 🚀
-    Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+    Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
     
     foreach($environments as $environment) {
         go(function() use ($environment) {
@@ -79,14 +80,6 @@ $stdout = \explode("\n", $stdout);
     \parse_str($value, $container);
 
     if(isset($container['name'])) {
-        // $labels = [];
-        // $temp = explode(',', $container['labels'] ?? []);
-
-        // foreach($temp as &$label) {
-        //     $label = explode('=', $label);
-        //     $labels[$label[0] || 0] = $label[1] || '';
-        // }
-
         $container = [
             'name' => $container['name'],
             'online' => (\substr($container['status'], 0, 2) === 'Up'),
@@ -142,6 +135,7 @@ class FunctionsV1
         $executionId = $this->args['executionId'] ?? '';
         $trigger = $this->args['trigger'] ?? '';
         $event = $this->args['event'] ?? '';
+        $scheduleOriginal = $this->args['scheduleOriginal'] ?? '';
         $payload = (!empty($this->args['payload'])) ? json_encode($this->args['payload']) : '';
 
         $database = new Database();
@@ -190,9 +184,7 @@ class FunctionsV1
 
                         Console::success('Triggered function: '.$event);
 
-                        Swoole\Coroutine\run(function () use ($projectId, $database, $function, $event, $payload) {
-                            $this->execute('event', $projectId, '', $database, $function, $event, $payload);
-                        });
+                        $this->execute('event', $projectId, '', $database, $function, $event, $payload);
                     }
                 }
                 break;
@@ -210,6 +202,45 @@ class FunctionsV1
                  *      On failure add error count
                  *      If error count bigger than allowed change status to pause
                  */
+
+                // Reschedule
+                Authorization::disable();
+                $function = $database->getDocument($functionId);
+                Authorization::reset();
+
+                if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+                    throw new Exception('Function not found ('.$functionId.')');
+                }
+
+                if($scheduleOriginal && $scheduleOriginal !== $function->getAttribute('schedule')) { // Schedule has changed from previous run, ignore this run.
+                    return;
+                }
+
+                $cron = CronExpression::factory($function->getAttribute('schedule'));
+                $next = (int) $cron->getNextRunDate()->format('U');
+
+                $function
+                    ->setAttribute('scheduleNext', $next)
+                    ->setAttribute('schedulePrevious', \time())
+                ;
+
+                Authorization::disable();
+
+                $function = $database->updateDocument(array_merge($function->getArrayCopy(), [
+                    'scheduleNext' => $next,
+                ]));
+
+                Authorization::reset();
+
+                ResqueScheduler::enqueueAt($next, 'v1-functions', 'FunctionsV1', [
+                    'projectId' => $projectId,
+                    'functionId' => $function->getId(),
+                    'executionId' => null,
+                    'trigger' => 'schedule',
+                    'scheduleOriginal' => $function->getAttribute('schedule', ''),
+                ]);  // Async task rescheduale
+
+                $this->execute($trigger, $projectId, $executionId, $database, $function);
                 
                 break;
 
@@ -222,9 +253,7 @@ class FunctionsV1
                     throw new Exception('Function not found ('.$functionId.')');
                 }
 
-                Swoole\Coroutine\run(function () use ($trigger, $projectId, $executionId, $database, $function) {
-                    $this->execute($trigger, $projectId, $executionId, $database, $function);
-                });
+                $this->execute($trigger, $projectId, $executionId, $database, $function);
                 break;
             
             default:
@@ -278,8 +307,8 @@ class FunctionsV1
             'time' => 0,
         ]);
 
-        if(false === $execution) {
-            throw new Exception('Failed to create execution');
+        if(false === $execution || ($execution instanceof Document && $execution->isEmpty())) {
+            throw new Exception('Failed to create or read execution');
         }
         
         Authorization::reset();

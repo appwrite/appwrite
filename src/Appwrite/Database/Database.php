@@ -58,6 +58,11 @@ class Database
     static protected $filters = [];
 
     /**
+     * @var bool
+     */
+    static protected $statusFilters = true;
+
+    /**
      * @var array
      */
     protected $mocks = [];
@@ -214,7 +219,7 @@ class Database
     /**
      * @param array $data
      *
-     * @return Document|bool
+     * @return Document
      *
      * @throws AuthorizationException
      * @throws StructureException
@@ -448,6 +453,26 @@ class Database
         ];
     }
 
+    /**
+     * Disable Attribute decoding
+     *
+     * @return void
+     */
+    public static function disableFilters(): void
+    {
+        self::$statusFilters = false;
+    }
+
+    /**
+     * Enable Attribute decoding
+     *
+     * @return void
+     */
+    public static function enableFilters(): void
+    {
+        self::$statusFilters = true;
+    }
+
     public function encode(Document $document):Document
     {
         $collection = $this->getDocument($document->getCollection(), true , false);
@@ -550,6 +575,10 @@ class Database
      */
     static protected function decodeAttribute(string $name, $value)
     {
+        if (!self::$statusFilters) {
+            return $value;
+        }
+        
         if (!isset(self::$filters[$name])) {
             return $value;
             throw new Exception('Filter not found');
