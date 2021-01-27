@@ -216,6 +216,7 @@ App::get('/specs/:format')
 
         $routes = [];
         $models = [];
+        $services = [];
 
         $keys = [
             APP_PLATFORM_CLIENT => [
@@ -317,6 +318,20 @@ App::get('/specs/:format')
             }
         }
 
+        foreach (Config::getParam('services', []) as $key => $service) {
+            if(!isset($service['docs']) // Skip service if not part of the public API
+                || !isset($service['sdk'])
+                || !$service['docs']
+                || !$service['sdk']) {
+                continue;
+            }
+
+            $services[] = [
+                'name' => $service['key'] ?? '',
+                'description' => (!empty($service['description'])) ? file_get_contents(realpath(__DIR__.'/../../..'.$service['description'])) : '',
+            ];
+        }
+
         $models = $response->getModels();
 
         foreach ($models as $key => $value) {
@@ -327,11 +342,11 @@ App::get('/specs/:format')
 
         switch ($format) {
             case 'swagger2':
-                $format = new Swagger2($utopia, $routes, $models, $keys[$platform], $security[$platform]);
+                $format = new Swagger2($utopia, $services, $routes, $models, $keys[$platform], $security[$platform]);
                 break;
 
             case 'open-api3':
-                $format = new OpenAPI3($utopia, $routes, $models, $keys[$platform], $security[$platform]);
+                $format = new OpenAPI3($utopia, $services, $routes, $models, $keys[$platform], $security[$platform]);
                 break;
             
             default:

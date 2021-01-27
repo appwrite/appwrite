@@ -56,6 +56,7 @@ class OpenAPI3 extends Format
                 ],
             ],
             'paths' => [],
+            'tags' => $this->services,
             'components' => [
                 'schemas' => [],
                 'securitySchemes' => $this->keys,

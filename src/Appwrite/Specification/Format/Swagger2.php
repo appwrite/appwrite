@@ -57,6 +57,7 @@ class Swagger2 extends Format
             'produces' => ['application/json'],
             'securityDefinitions' => $this->keys,
             'paths' => [],
+            'tags' => $this->services,
             'definitions' => [],
             'externalDocs' => [
                 'description' => $this->getParam('docs.description'),
