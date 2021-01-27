@@ -7,7 +7,7 @@ use Utopia\System\System;
  * List of Appwrite Cloud Functions supported environments
  */
 $environments = [
-    'node-14.5' => [
+    /*'node-14.5' => [
         'name' => 'Node.js',
         'version' => '14.5',
         'base' => 'node:14.5-alpine',
@@ -96,7 +96,7 @@ $environments = [
         'build' => '/usr/src/code/docker/environments/deno-1.6',
         'logo' => 'deno.png',
         'supports' => [System::X86, System::PPC, System::ARM],
-    ],
+    ],*/
     'dart-2.10' => [
         'name' => 'Dart',
         'version' => '2.10',
@@ -106,7 +106,7 @@ $environments = [
         'logo' => 'dart.png',
         'supports' => [System::X86],
     ],
-    'dotnet-3.1' => [
+    /*'dotnet-3.1' => [
         'name' => '.NET',
         'version' => '3.1',
         'base' => 'mcr.microsoft.com/dotnet/runtime:3.1-alpine',
@@ -123,7 +123,7 @@ $environments = [
         'build' => '/usr/src/code/docker/environments/dotnet-5.0',
         'logo' => 'dotnet.png',
         'supports' => [System::X86, System::ARM],
-    ],
+    ],*/
 ];
 
 $allowList = empty(App::getEnv('_APP_FUNCTIONS_ENVS', null)) ? false : \explode(',', App::getEnv('_APP_FUNCTIONS_ENVS', null));
