@@ -561,8 +561,8 @@ class FunctionsCustomServerTest extends Scope
             ],
         ];
 
-        sleep(count($envs) * 5);
-
+        sleep(count($envs) * 20);
+        fwrite(STDERR, ".");
         /**
          * Test for SUCCESS
          */
@@ -677,6 +677,7 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals($stdout[4], $language);
             $this->assertEquals($stdout[5], $version);
             // $this->assertEquals($stdout[6], $fileId);
+            fwrite(STDERR, ".");
         }
 
         return [
