@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "dfdd9cb73ec7817c0d94d126b9a2173b",
+    "content-hash": "f83cd9bbcc8c8361622aba6313f81e28",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1697,16 +1697,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.1.0",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "00e9045cee6bd1ec1d1f27329c329494ef420c19"
+                "reference": "27bfd663c9b2a17ac0911522a87f42bee834df95"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/00e9045cee6bd1ec1d1f27329c329494ef420c19",
-                "reference": "00e9045cee6bd1ec1d1f27329c329494ef420c19",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/27bfd663c9b2a17ac0911522a87f42bee834df95",
+                "reference": "27bfd663c9b2a17ac0911522a87f42bee834df95",
                 "shasum": ""
             },
             "require": {
@@ -1743,9 +1743,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.1.0"
+                "source": "https://github.com/utopia-php/storage/tree/0.2.0"
             },
-            "time": "2021-01-22T07:27:20+00:00"
+            "time": "2021-01-27T12:21:27+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -1802,6 +1802,61 @@
                 "source": "https://github.com/utopia-php/swoole/tree/0.2.0"
             },
             "time": "2020-10-29T12:42:38+00:00"
+        },
+        {
+            "name": "utopia-php/system",
+            "version": "0.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/system.git",
+                "reference": "63a4f2ea06a60ed82b8904e24b4754df0f77fef2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/system/zipball/63a4f2ea06a60ed82b8904e24b4754df0f77fef2",
+                "reference": "63a4f2ea06a60ed82b8904e24b4754df0f77fef2",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.3",
+                "vimeo/psalm": "4.0.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\System\\": "src/System"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "eldad@appwrite.io"
+                },
+                {
+                    "name": "Torsten Dittmann",
+                    "email": "torsten@appwrite.io"
+                }
+            ],
+            "description": "A simple library for obtaining information about the host's system.",
+            "keywords": [
+                "framework",
+                "php",
+                "system",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/system/issues",
+                "source": "https://github.com/utopia-php/system/tree/0.3.0"
+            },
+            "time": "2021-01-24T11:28:55+00:00"
         }
     ],
     "packages-dev": [
@@ -3782,12 +3837,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/comparator.git",
-                "reference": "5a39e6c8994048403e326298f0b1bda7eb1ea127"
+                "reference": "66776aea976481264dbaeef1b80c72845711473c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/comparator/zipball/5a39e6c8994048403e326298f0b1bda7eb1ea127",
-                "reference": "5a39e6c8994048403e326298f0b1bda7eb1ea127",
+                "url": "https://api.github.com/repos/sebastianbergmann/comparator/zipball/66776aea976481264dbaeef1b80c72845711473c",
+                "reference": "66776aea976481264dbaeef1b80c72845711473c",
                 "shasum": ""
             },
             "require": {
@@ -3849,7 +3904,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-01-27T14:14:42+00:00"
+            "time": "2021-01-27T12:55:14+00:00"
         },
         {
             "name": "sebastian/complexity",

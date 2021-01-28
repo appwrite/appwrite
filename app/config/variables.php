@@ -1,5 +1,7 @@
 <?php
 
+use Utopia\Config\Config;
+
 return [
     [
         'category' => 'General',
@@ -22,7 +24,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_OPTIONS_FORCE_HTTPS', 
+                'name' => '_APP_OPTIONS_FORCE_HTTPS',
                 'description' => 'Allows you to force HTTPS connection to your API. This feature redirects any HTTP call to HTTPS and adds the \'Strict-Transport-Security\' header to all HTTP responses. By default, set to \'disabled\'. To enable, set to \'enabled\'. This feature will work only when your ports are set to default 80 and 443.',
                 'introduction' => '',
                 'default' => 'enabled',
@@ -51,7 +53,7 @@ return [
                 'introduction' => '',
                 'default' => 'localhost',
                 'required' => true,
-                'question' => "Enter a DNS A record hostname to serve as a CNAME for your custom domains.\nYou can use the same value as used for the Appwrite hostname.",
+                'question' => 'Enter a DNS A record hostname to serve as a CNAME for your custom domains.\nYou can use the same value as used for the Appwrite hostname.',
             ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_EMAILS',
@@ -63,7 +65,7 @@ return [
             ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_DOMAINS',
-                'description' => "This option allows you to limit creation of users to Appwrite console for users sharing the same email domains. This option is very useful for team working with company emails domain.\n\nTo enable this option, pass a list of allowed email domains separated by a comma.",
+                'description' => 'This option allows you to limit creation of users to Appwrite console for users sharing the same email domains. This option is very useful for team working with company emails domain.\n\nTo enable this option, pass a list of allowed email domains separated by a comma.',
                 'introduction' => '',
                 'default' => '',
                 'required' => false,
@@ -71,7 +73,7 @@ return [
             ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_IPS',
-                'description' => "This last option allows you to limit creation of users in Appwrite console for users sharing the same set of IP addresses. This option is very useful for team working with a VPN service or a company IP.\n\nTo enable/activate this option, pass a list of allowed IP addresses separated by a comma.",
+                'description' => 'This last option allows you to limit creation of users in Appwrite console for users sharing the same set of IP addresses. This option is very useful for team working with a VPN service or a company IP.\n\nTo enable/activate this option, pass a list of allowed IP addresses separated by a comma.',
                 'introduction' => '',
                 'default' => '',
                 'required' => false,
@@ -225,7 +227,7 @@ return [
     ],
     [
         'category' => 'SMTP',
-        'description' => "Appwrite is using an SMTP server for emailing your projects users and server admins. The SMTP env vars are used to allow Appwrite server to connect to the SMTP container.\n\nIf running in production, it might be easier to use a 3rd party SMTP server as it might be a little more difficult to set up a production SMTP server that will not send all your emails into your user's SPAM folder.",
+        'description' => 'Appwrite is using an SMTP server for emailing your projects users and server admins. The SMTP env vars are used to allow Appwrite server to connect to the SMTP container.\n\nIf running in production, it might be easier to use a 3rd party SMTP server as it might be a little more difficult to set up a production SMTP server that will not send all your emails into your user\'s SPAM folder.',
         'variables' => [
             [
                 'name' => '_APP_SMTP_HOST',
@@ -347,7 +349,15 @@ return [
                 'name' => '_APP_FUNCTIONS_MEMORY_SWAP',
                 'description' => 'The maximum amount of swap memory a single cloud function is allowed to use in megabytes. The default value is 128.',
                 'introduction' => '0.7.0',
-                'default' => '128',
+                'default' => '256',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_FUNCTIONS_ENVS',
+                'description' => 'This option allows you to limit the available environments for cloud functions. This option is very useful for low-cost servers to safe disk space.\n\nTo enable/activate this option, pass a list of allowed environments separated by a comma.\n\nCurrently, supported environments are: ' . \implode(', ', \array_keys(Config::getParam('providers'))),
+                'introduction' => '0.7.0',
+                'default' => 'node-14.5,deno-1.6,php-7.4,python-3.8,ruby-3.0,dotnet-5.0',
                 'required' => false,
                 'question' => '',
             ],

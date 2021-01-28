@@ -335,7 +335,7 @@ class FunctionsV1
         \array_walk($vars, function (&$value, $key) {
             $key = $this->filterEnvKey($key);
             $value = \escapeshellarg((empty($value)) ? 'null' : $value);
-            $value = "\t\t\t--env {$key}={$value} \\";
+            $value = "--env {$key}={$value}";
         });
 
         $tagPath = $tag->getAttribute('path', '');
@@ -387,20 +387,20 @@ class FunctionsV1
             $executionStart = \microtime(true);
             $executionTime = \time();
 
-            $exitCode = Console::execute("docker run \
-                -d \
-                --entrypoint=\"\" \
-                --cpus=".App::getEnv('_APP_FUNCTIONS_CPUS', '1')." \
-                --memory=".App::getEnv('_APP_FUNCTIONS_MEMORY', '128')."m \
-                --memory-swap=".App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '128')."m \
-                --name={$container} \
-                --label appwrite-type=function \
-                --label appwrite-created=".$executionTime." \
-                --volume {$tagPathTargetDir}:/tmp:rw \
-                --workdir /usr/local/src \
-                ".\implode("\n", $vars)."
-                {$environment['image']} \
-                sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'"
+            $exitCode = Console::execute("docker run ".
+                " -d".
+                " --entrypoint=\"\"".
+                " --cpus=".App::getEnv('_APP_FUNCTIONS_CPUS', '1').
+                " --memory=".App::getEnv('_APP_FUNCTIONS_MEMORY', '256')."m".
+                " --memory-swap=".App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '256')."m".
+                " --name={$container}".
+                " --label appwrite-type=function".
+                " --label appwrite-created={$executionTime}".
+                " --volume {$tagPathTargetDir}:/tmp:rw".
+                " --workdir /usr/local/src".
+                " ".\implode(" ", $vars).
+                " {$environment['image']}".
+                " sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'"
             , '', $stdout, $stderr, 30);
 
             $executionEnd = \microtime(true);
@@ -430,11 +430,8 @@ class FunctionsV1
 
         $executionStart = \microtime(true);
         
-        $exitCode = Console::execute("docker exec \
-        ".\implode("\n", $vars)."
-        {$container} \
-        {$command}"
-        , '', $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
+        $exitCode = Console::execute("docker exec ".\implode(" ", $vars)." {$container} {$command}"
+            , '', $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
 
         $executionEnd = \microtime(true);
         $executionTime = ($executionEnd - $executionStart);
