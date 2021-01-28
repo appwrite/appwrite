@@ -1802,6 +1802,61 @@
                 "source": "https://github.com/utopia-php/swoole/tree/0.2.0"
             },
             "time": "2020-10-29T12:42:38+00:00"
+        },
+        {
+            "name": "utopia-php/system",
+            "version": "0.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/system.git",
+                "reference": "63a4f2ea06a60ed82b8904e24b4754df0f77fef2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/system/zipball/63a4f2ea06a60ed82b8904e24b4754df0f77fef2",
+                "reference": "63a4f2ea06a60ed82b8904e24b4754df0f77fef2",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.3",
+                "vimeo/psalm": "4.0.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\System\\": "src/System"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "eldad@appwrite.io"
+                },
+                {
+                    "name": "Torsten Dittmann",
+                    "email": "torsten@appwrite.io"
+                }
+            ],
+            "description": "A simple library for obtaining information about the host's system.",
+            "keywords": [
+                "framework",
+                "php",
+                "system",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/system/issues",
+                "source": "https://github.com/utopia-php/system/tree/0.3.0"
+            },
+            "time": "2021-01-24T11:28:55+00:00"
         }
     ],
     "packages-dev": [

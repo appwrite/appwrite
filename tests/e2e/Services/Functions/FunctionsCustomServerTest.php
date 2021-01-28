@@ -535,9 +535,34 @@ class FunctionsCustomServerTest extends Scope
                 'command' => 'deno run --allow-env index.ts',
                 'timeout' => 15,
             ],
+            [
+                'language' => 'Dart',
+                'version' => '2.10',
+                'name' => 'dart-2.10',
+                'code' => $functions.'/dart.tar.gz',
+                'command' => 'dart main.dart',
+                'timeout' => 15,
+            ],
+            [
+                'language' => '.NET',
+                'version' => '3.1',
+                'name' => 'dotnet-3.1',
+                'code' => $functions.'/dotnet-3.1.tar.gz',
+                'command' => 'dotnet dotnet.dll',
+                'timeout' => 15,
+            ],
+            [
+                'language' => '.NET',
+                'version' => '5.0',
+                'name' => 'dotnet-5.0',
+                'code' => $functions.'/dotnet-5.0.tar.gz',
+                'command' => 'dotnet dotnet.dll',
+                'timeout' => 15,
+            ],
         ];
 
         sleep(count($envs) * 20);
+        fwrite(STDERR, ".");
 
         /**
          * Test for SUCCESS
@@ -617,7 +642,7 @@ class FunctionsCustomServerTest extends Scope
 
             $executionId = $execution['body']['$id'] ?? '';
             $this->assertEquals(201, $execution['headers']['status-code']);
-
+            
             sleep(30);
 
             $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
@@ -653,6 +678,7 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals($stdout[4], $language);
             $this->assertEquals($stdout[5], $version);
             // $this->assertEquals($stdout[6], $fileId);
+            fwrite(STDERR, ".");
         }
 
         return [
