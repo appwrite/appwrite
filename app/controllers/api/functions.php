@@ -6,8 +6,8 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Validator\UID;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Validator\File;
+use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
-use Utopia\Storage\Validator\FileType;
 use Utopia\Storage\Validator\Upload;
 use Appwrite\Utopia\Response;
 use Appwrite\Task\Validator\Cron;
@@ -455,7 +455,7 @@ App::post('/v1/functions/:functionId/tags')
 
         $file = $request->getFiles('code');
         $device = Storage::getDevice('functions');
-        $fileType = new FileType([FileType::FILE_TYPE_GZIP]);
+        $fileExt = new FileExt([FileExt::TYPE_GZIP]);
         $fileSize = new FileSize(App::getEnv('_APP_STORAGE_LIMIT', 0));
         $upload = new Upload();
 
@@ -468,10 +468,9 @@ App::post('/v1/functions/:functionId/tags')
         $file['tmp_name'] = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
         $file['size'] = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
-        // Check if file type is allowed (feature for project settings?)
-        // if (!$fileType->isValid($file['tmp_name'])) {
-        //     throw new Exception('File type not allowed', 400);
-        // }
+        if (!$fileExt->isValid($file['name'])) { // Check if file type is allowed
+            throw new Exception('File type not allowed', 400);
+        }
 
         if (!$fileSize->isValid($file['size'])) { // Check if file size is exceeding allowed limit
             throw new Exception('File size not allowed', 400);
