@@ -140,6 +140,22 @@ return [
         'beta' => false,
         'languages' => [ // TODO change key to 'sdks'
             [
+                'key' => 'cli',
+                'name' => 'Command Line',
+                'version' => '0.1.0',
+                'url' => 'https://github.com/appwrite/sdk-for-cli',
+                'package' => 'https://github.com/appwrite/sdk-for-cli',
+                'enabled' => true,
+                'beta' => true,
+                'dev' => true,
+                'family' => APP_PLATFORM_SERVER,
+                'prism' => 'bash',
+                'source' => \realpath(__DIR__ . '/../sdks/server-cli'),
+                'gitUrl' => 'git@github.com:appwrite/sdk-for-cli.git',
+                'gitRepoName' => 'sdk-for-cli',
+                'gitUserName' => 'appwrite',
+            ],
+            [
                 'key' => 'nodejs',
                 'name' => 'Node.js',
                 'version' => '1.1.0',
