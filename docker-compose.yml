@@ -510,5 +510,5 @@ volumes:
   appwrite-certificates:
   appwrite-functions:
   appwrite-influxdb:
-  appwrite-chronograf:
   appwrite-config:
+  # appwrite-chronograf:

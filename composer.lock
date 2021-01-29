@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f83cd9bbcc8c8361622aba6313f81e28",
+    "content-hash": "be6adbd12397d629ee420d11eed43b1f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2030,11 +2030,11 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.4.4",
+            "version": "0.4.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "ebb51e404a4e5b89f74428296b81ea347362dd33"
+                "reference": "9c04ed7ff34a723c3c226941b9f9a844738c595e"
             },
             "require": {
                 "ext-curl": "*",
@@ -2064,7 +2064,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2021-01-11T09:34:56+00:00"
+            "time": "2021-01-28T08:03:13+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",
@@ -3837,12 +3837,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/comparator.git",
-                "reference": "66776aea976481264dbaeef1b80c72845711473c"
+                "reference": "5a39e6c8994048403e326298f0b1bda7eb1ea127"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/comparator/zipball/66776aea976481264dbaeef1b80c72845711473c",
-                "reference": "66776aea976481264dbaeef1b80c72845711473c",
+                "url": "https://api.github.com/repos/sebastianbergmann/comparator/zipball/5a39e6c8994048403e326298f0b1bda7eb1ea127",
+                "reference": "5a39e6c8994048403e326298f0b1bda7eb1ea127",
                 "shasum": ""
             },
             "require": {
@@ -3904,7 +3904,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-01-27T12:55:14+00:00"
+            "time": "2021-01-27T14:14:42+00:00"
         },
         {
             "name": "sebastian/complexity",
@@ -5275,12 +5275,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/service-contracts.git",
-                "reference": "cea83947622b432b60b809d14c7b42df9f0f5823"
+                "reference": "bf99754c6182a126968b1c2709d18548489f27eb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/service-contracts/zipball/cea83947622b432b60b809d14c7b42df9f0f5823",
-                "reference": "cea83947622b432b60b809d14c7b42df9f0f5823",
+                "url": "https://api.github.com/repos/symfony/service-contracts/zipball/bf99754c6182a126968b1c2709d18548489f27eb",
+                "reference": "bf99754c6182a126968b1c2709d18548489f27eb",
                 "shasum": ""
             },
             "require": {
@@ -5293,7 +5293,6 @@
             "default-branch": true,
             "type": "library",
             "extra": {
-                "branch-version": "2.3",
                 "branch-alias": {
                     "dev-main": "2.3-dev"
                 },
@@ -5348,7 +5347,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-01-11T09:51:46+00:00"
+            "time": "2021-01-27T16:27:53+00:00"
         },
         {
             "name": "symfony/string",
