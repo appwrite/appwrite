@@ -133,6 +133,14 @@ return [
                 'required' => false,
                 'question' => '',
             ],
+            [
+                'name' => '_APP_REDIS_AUTH',
+                'description' => 'Redis server auth.',
+                'introduction' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
         ],
     ],
     [

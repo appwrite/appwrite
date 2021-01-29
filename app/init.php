@@ -91,7 +91,7 @@ Config::load('storage-inputs', __DIR__.'/config/storage/inputs.php');
 Config::load('storage-outputs', __DIR__.'/config/storage/outputs.php'); 
 
 Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '')
-    .':'.App::getEnv('_APP_REDIS_PORT', ''));
+    .':'.App::getEnv('_APP_REDIS_PORT', ''), 0, App::getEnv('_APP_REDIS_AUTH',null));
 
 /**
  * DB Filters
@@ -175,6 +175,10 @@ $register->set('statsd', function () { // Register DB connection
 $register->set('cache', function () { // Register cache connection
     $redis = new Redis();
     $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
+    $auth = App::getEnv('_APP_REDIS_AUTH',null);
+    if($auth != null) {
+        $redis->auth($auth);
+    }
     $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
     return $redis;
