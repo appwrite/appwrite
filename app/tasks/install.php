@@ -132,6 +132,7 @@ $cli
             ->setParam('httpPort', $httpPort)
             ->setParam('httpsPort', $httpsPort)
             ->setParam('version', $version)
+            ->setParam('vars', $input)
         ;
         
         $templateForEnv
