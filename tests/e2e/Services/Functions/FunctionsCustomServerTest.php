@@ -586,7 +586,7 @@ class FunctionsCustomServerTest extends Scope
             $language = $env['language'] ?? '';
             $version = $env['version'] ?? '';
             $name = $env['name'] ?? '';
-            $code = $env['code'] ?? '';
+            $code = $env['file'] ?? '';
             $command = $env['command'] ?? '';
             $timeout = $env['timeout'] ?? 15;
 
