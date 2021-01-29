@@ -115,7 +115,7 @@ For the complete API documentation, visit [https://appwrite.io/docs](https://app
 Below is a list of currently supported platforms and languages. If you wish to help us add support to your platform of choice, you can go over to our [SDK Generator](https://github.com/appwrite/sdk-generator) project and view our [contribution guide](https://github.com/appwrite/sdk-generator/blob/master/CONTRIBUTING.md).
 
 #### Client
-* ✅  &nbsp; [Web](https://github.com/appwrite/sdk-for-js) (Maintained by the Appwrite Team)
+* ✅  &nbsp; [Web](https://github.com/appwrite/sdk-for-web) (Maintained by the Appwrite Team)
 * ✅  &nbsp; [Flutter](https://github.com/appwrite/sdk-for-flutter) (Maintained by the Appwrite Team)
 
 #### Server
