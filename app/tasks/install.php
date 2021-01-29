@@ -12,8 +12,7 @@ use Utopia\View;
 $cli
     ->task('install')
     ->desc('Install Appwrite')
-    ->param('version', APP_VERSION_STABLE, new Mock(), 'Appwrite version', true)
-    ->action(function ($version) {
+    ->action(function () {
         /**
          * 1. Start - DONE
          * 2. Check for older setup and get older version - DONE
@@ -130,7 +129,7 @@ $cli
         $templateForCompose
             ->setParam('httpPort', $httpPort)
             ->setParam('httpsPort', $httpsPort)
-            ->setParam('version', $version)
+            ->setParam('version', APP_VERSION_STABLE)
             ->setParam('vars', $input)
         ;
         
