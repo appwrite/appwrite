@@ -6,7 +6,6 @@ use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Validator\Mock;
 use Utopia\View;
 
 $cli
@@ -130,7 +129,6 @@ $cli
             ->setParam('httpPort', $httpPort)
             ->setParam('httpsPort', $httpsPort)
             ->setParam('version', APP_VERSION_STABLE)
-            ->setParam('vars', $input)
         ;
         
         $templateForEnv
