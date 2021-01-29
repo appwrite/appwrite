@@ -48,7 +48,7 @@ $cli
         if (null !== $path && !\file_exists(\dirname($path))) {
             if (!@\mkdir(\dirname($path), 0755, true)) {
                 Console::error('Can\'t create directory '.\dirname($path));
-                exit(1);
+                Console::exit(1);
             }
         }
 
@@ -139,12 +139,12 @@ $cli
 
         if(!file_put_contents($path.'/docker-compose.yml', $templateForCompose->render(false))) {
             Console::error('Failed to save Docker Compose file');
-            exit(1);
+            Console::exit(1);
         }
 
         if(!file_put_contents($path.'/.env', $templateForEnv->render(false))) {
             Console::error('Failed to save environment variables file');
-            exit(1);
+            Console::exit(1);
         }
 
         $stdout = '';
@@ -157,7 +157,7 @@ $cli
         if ($exit !== 0) {
             Console::error("Failed to install Appwrite dockers");
             Console::error($stderr);
-            exit($exit);
+            Console::exit($exit);
         } else {
             Console::success("Appwrite installed successfully");
         }
