@@ -118,6 +118,7 @@ class OpenAPI3 extends Format
                     'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
                     'scope' => $route->getLabel('scope', ''),
                     'platforms' => $route->getLabel('sdk.platform', []),
+                    'packaging' => $route->getLabel('sdk.packaging', false),
                 ],
             ];
 
