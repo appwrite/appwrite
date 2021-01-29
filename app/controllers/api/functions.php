@@ -435,13 +435,12 @@ App::post('/v1/functions/:functionId/tags')
     ->label('sdk.response.model', Response::MODEL_TAG)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('command', '', new Text('1028'), 'Code execution command.')
-    ->param('code', [], new File(), 'Gzip file containing your code.', false)
-    // ->param('code', '', new Text(128), 'Code package. Use the '.APP_NAME.' code packager to create a deployable package file.')
+    ->param('file', null, new File(), 'Gzip file with your code package.', false)
     ->inject('request')
     ->inject('response')
     ->inject('projectDB')
     ->inject('usage')
-    ->action(function ($functionId, $command, $code, $request, $response, $projectDB, $usage) {
+    ->action(function ($functionId, $command, $file, $request, $response, $projectDB, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -453,7 +452,7 @@ App::post('/v1/functions/:functionId/tags')
             throw new Exception('Function not found', 404);
         }
 
-        $file = $request->getFiles('code');
+        $file = $request->getFiles('file');
         $device = Storage::getDevice('functions');
         $fileExt = new FileExt([FileExt::TYPE_GZIP]);
         $fileSize = new FileSize(App::getEnv('_APP_STORAGE_LIMIT', 0));
