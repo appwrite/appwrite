@@ -30,7 +30,6 @@ $cli
          * 5. Run docker-compose up -d - DONE
          * 6. Run data migration
          */
-        $version = "0.7.0";
         $config = Config::getParam('variables');
         $path = '/usr/src/code/appwrite';
         $defaultHTTPPort = '80';
@@ -149,12 +148,19 @@ $cli
             Console::exit(1);
         }
 
+        $env = '';
         $stdout = '';
         $stderr = '';
 
-        Console::log("Running \"docker-compose -f {$path}/docker-compose.yml up -d --env-file={$path}/.env --remove-orphans --renew-anon-volumes\"");
+        foreach ($input as $key => $value) {
+            if($value) {
+                $env .= $key.'='.$value.' ';
+            }
+        }
 
-        $exit = Console::execute("docker-compose -f {$path}/docker-compose.yml up -d --env-file={$path}/.env --remove-orphans --renew-anon-volumes", '', $stdout, $stderr);
+        Console::log("Running \"docker-compose -f {$path}/docker-compose.yml up -d --remove-orphans --renew-anon-volumes\"");
+
+        $exit = Console::execute("${env} docker-compose -f {$path}/docker-compose.yml up -d --remove-orphans --renew-anon-volumes", '', $stdout, $stderr);
 
         if ($exit !== 0) {
             Console::error("Failed to install Appwrite dockers");
