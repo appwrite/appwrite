@@ -1,1 +1,1 @@
-Update collection by its unique ID.
+Update a collection by its unique ID.

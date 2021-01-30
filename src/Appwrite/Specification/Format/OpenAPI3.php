@@ -56,6 +56,7 @@ class OpenAPI3 extends Format
                 ],
             ],
             'paths' => [],
+            'tags' => $this->services,
             'components' => [
                 'schemas' => [],
                 'securitySchemes' => $this->keys,
@@ -117,6 +118,7 @@ class OpenAPI3 extends Format
                     'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
                     'scope' => $route->getLabel('scope', ''),
                     'platforms' => $route->getLabel('sdk.platform', []),
+                    'packaging' => $route->getLabel('sdk.packaging', false),
                 ],
             ];
 
@@ -218,7 +220,7 @@ class OpenAPI3 extends Format
                         $node['schema']['x-example'] = '{}';
                         //$node['schema']['format'] = 'json';
                         break;
-                    case 'Appwrite\Storage\Validator\File':
+                    case 'Utopia\Storage\Validator\File':
                         $consumes = ['multipart/form-data'];
                         $node['schema']['type'] = 'string';
                         $node['schema']['format'] = 'binary';

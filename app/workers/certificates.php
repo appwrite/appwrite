@@ -12,7 +12,7 @@ use Appwrite\Network\Validator\CNAME;
 
 require_once __DIR__.'/../init.php';
 
-\cli_set_process_title('Certificates V1 Worker');
+Console::title('Certificates V1 Worker');
 
 Console::success(APP_NAME.' certificates worker v1 has started');
 

@@ -324,7 +324,7 @@ App::post('/v1/teams/:teamId/memberships')
                     'emailVerification' => false,
                     'status' => Auth::USER_STATUS_UNACTIVATED,
                     'password' => Auth::passwordHash(Auth::passwordGenerator()),
-                    'password-update' => \time(),
+                    'passwordUpdate' => \time(),
                     'registration' => \time(),
                     'reset' => false,
                     'name' => $name,

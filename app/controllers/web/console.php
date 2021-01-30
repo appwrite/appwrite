@@ -7,7 +7,7 @@ use Utopia\Domains\Domain;
 use Appwrite\Database\Database;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Validator\UID;
-use Appwrite\Storage\Storage;
+use Utopia\Storage\Storage;
 
 App::init(function ($layout) {
     /** @var Utopia\View $layout */

@@ -14,6 +14,11 @@ abstract class Format
     protected $app;
     
     /**
+     * @var array
+     */
+    protected $services;
+    
+    /**
      * @var Route[]
      */
     protected $routes;
@@ -53,14 +58,16 @@ abstract class Format
 
     /**
      * @param App $app
+     * @param array $services
      * @param Route[] $routes
      * @param Model[] $models
      * @param array $keys
      * @param array $security
      */
-    public function __construct(App $app, array $routes, array $models, array $keys, array $security)
+    public function __construct(App $app, array $services, array $routes, array $models, array $keys, array $security)
     {
         $this->app = $app;
+        $this->services = $services;
         $this->routes = $routes;
         $this->models = $models;
         $this->keys = $keys;

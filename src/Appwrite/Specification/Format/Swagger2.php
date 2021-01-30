@@ -57,6 +57,7 @@ class Swagger2 extends Format
             'produces' => ['application/json'],
             'securityDefinitions' => $this->keys,
             'paths' => [],
+            'tags' => $this->services,
             'definitions' => [],
             'externalDocs' => [
                 'description' => $this->getParam('docs.description'),
@@ -115,6 +116,7 @@ class Swagger2 extends Format
                     'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
                     'scope' => $route->getLabel('scope', ''),
                     'platforms' => $route->getLabel('sdk.platform', []),
+                    'packaging' => $route->getLabel('sdk.packaging', false),
                 ],
             ];
 
@@ -210,7 +212,7 @@ class Swagger2 extends Format
                         $node['x-example'] = '{}';
                         //$node['format'] = 'json';
                         break;
-                    case 'Appwrite\Storage\Validator\File':
+                    case 'Utopia\Storage\Validator\File':
                         $consumes = ['multipart/form-data'];
                         $node['type'] = 'file';
                         break;

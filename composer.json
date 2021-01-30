@@ -38,13 +38,15 @@
         "utopia-php/abuse": "0.3.*",
         "utopia-php/audit": "0.5.*",
         "utopia-php/cache": "0.2.*",
-        "utopia-php/cli": "0.8.0",
+        "utopia-php/cli": "0.9.0",
         "utopia-php/config": "0.2.*",
         "utopia-php/locale": "0.3.*",
         "utopia-php/registry": "0.2.*",
         "utopia-php/preloader": "0.2.*",
         "utopia-php/domains": "0.2.*",
         "utopia-php/swoole": "0.2.*",
+        "utopia-php/system": "0.3.*",
+        "utopia-php/storage": "0.2.*",
 
         "resque/php-resque": "1.3.6",
         "matomo/device-detector": "3.13.0",
@@ -57,7 +59,7 @@
     },
     "require-dev": {
         "swoole/ide-helper": "4.6.1",
-        "appwrite/sdk-generator": "0.4.4",
+        "appwrite/sdk-generator": "0.4.5",
         "phpunit/phpunit": "9.4.2",
         "vimeo/psalm": "4.1.1"
     },

@@ -10,7 +10,7 @@ use Appwrite\Database\Validator\Authorization;
 
 require_once __DIR__.'/../init.php';
 
-\cli_set_process_title('Webhooks V1 Worker');
+Console::title('Webhooks V1 Worker');
 
 Console::success(APP_NAME.' webhooks worker v1 has started');
 

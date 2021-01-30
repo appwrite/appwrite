@@ -5,7 +5,7 @@ use Utopia\CLI\Console;
 
 require_once __DIR__.'/../init.php';
 
-\cli_set_process_title('Usage V1 Worker');
+Console::title('Usage V1 Worker');
 
 Console::success(APP_NAME.' usage worker v1 has started');
 
