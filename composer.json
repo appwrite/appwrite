@@ -58,7 +58,7 @@
         "adhocore/jwt": "1.1.0"
     },
     "require-dev": {
-        "swoole/ide-helper": "4.6.1",
+        "swoole/ide-helper": "4.6.2",
         "appwrite/sdk-generator": "0.4.5",
         "phpunit/phpunit": "9.4.2",
         "vimeo/psalm": "4.1.1"
