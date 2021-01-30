@@ -6,6 +6,7 @@ use Exception;
 use Utopia\Swoole\Response as SwooleResponse;
 use Swoole\Http\Response as SwooleHTTPResponse;
 use Appwrite\Database\Document;
+use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\None;
 use Appwrite\Utopia\Response\Model\Any;
@@ -20,6 +21,7 @@ use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
 use Appwrite\Utopia\Response\Model\File;
 use Appwrite\Utopia\Response\Model\Func;
+use Appwrite\Utopia\Response\Model\JWT;
 use Appwrite\Utopia\Response\Model\Key;
 use Appwrite\Utopia\Response\Model\Language;
 use Appwrite\Utopia\Response\Model\User;
@@ -37,6 +39,7 @@ use Appwrite\Utopia\Response\Model\Tag;
 use Appwrite\Utopia\Response\Model\Task;
 use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
+use stdClass;
 
 /**
  * @method public function setStatusCode(int $code = 200): Response
@@ -64,7 +67,8 @@ class Response extends SwooleResponse
     const MODEL_USER_LIST = 'userList';
     const MODEL_SESSION = 'session';
     const MODEL_SESSION_LIST = 'sessionList';
-    const MODEL_TOKEN = 'token'; // - Missing
+    const MODEL_TOKEN = 'token';
+    const MODEL_JWT = 'jwt';
     
     // Storage
     const MODEL_FILE = 'file';
@@ -111,6 +115,11 @@ class Response extends SwooleResponse
     const MODEL_PLATFORM_LIST = 'platformList';
     const MODEL_DOMAIN = 'domain';
     const MODEL_DOMAIN_LIST = 'domainList';
+
+    /**
+     * @var Filter
+     */
+    private static $filter = null;
 
     /**
      * @var array
@@ -161,6 +170,7 @@ class Response extends SwooleResponse
             ->setModel(new User())
             ->setModel(new Session())
             ->setModel(new Token())
+            ->setModel(new JWT())
             ->setModel(new Locale())
             ->setModel(new File())
             ->setModel(new Team())
@@ -243,7 +253,14 @@ class Response extends SwooleResponse
      */
     public function dynamic(Document $document, string $model): void
     {
-        $this->json($this->output($document, $model));
+        $output = $this->output($document, $model);
+
+        // If filter is set, parse the output
+        if(self::isFilter()){
+            $output = self::getFilter()->parse($output, $model);
+        }
+
+        $this->json(!empty($output) ? $output : new stdClass());
     }
 
     /**
@@ -328,5 +345,38 @@ class Response extends SwooleResponse
     public function getPayload():array
     {
         return $this->payload;
+    }
+
+
+    /**
+     * Function to set a response filter
+     * 
+     * @param $filter the response filter to set
+     * 
+     * @return void
+     */
+    public static function setFilter(?Filter $filter) 
+    {
+        self::$filter = $filter;
+    }
+
+    /**
+     * Return the currently set filter
+     * 
+     * @return Filter
+     */
+    public static function getFilter(): ?Filter 
+    {
+        return self::$filter;
+    }
+
+    /**
+     * Check if a filter has been set
+     * 
+     * @return bool
+     */
+    public static function isFilter(): bool 
+    {
+        return self::$filter != null;
     }
 }

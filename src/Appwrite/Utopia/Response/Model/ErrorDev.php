@@ -19,16 +19,19 @@ class ErrorDev extends Error
             ->addRule('file', [
                 'type' => self::TYPE_STRING,
                 'description' => 'File path.',
+                'default' => '',
                 'example' => '/usr/code/vendor/utopia-php/framework/src/App.php',
             ])
             ->addRule('line', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Line number.',
+                'default' => 0,
                 'example' => 209,
             ])
             ->addRule('trace', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Error trace.',
+                'default' => [],
                 'example' => [
                     ''
                 ],

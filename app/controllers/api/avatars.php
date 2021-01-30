@@ -383,8 +383,9 @@ App::get('/v1/avatars/qr')
 
         $download = ($download === '1' || $download === 'true' || $download === 1 || $download === true);
         $options = new QROptions([
-            'quietzone' => $size,
-            'outputType' => QRCode::OUTPUT_IMAGICK
+            'addQuietzone' => true,
+            'quietzoneSize' => $margin,
+            'outputType' => QRCode::OUTPUT_IMAGICK,
         ]);
 
         $qrcode = new QRCode($options);
@@ -393,10 +394,14 @@ App::get('/v1/avatars/qr')
             $response->addHeader('Content-Disposition', 'attachment; filename="qr.png"');
         }
 
+        $resize = new Resize($qrcode->render($text));
+
+        $resize->crop((int) $size, (int) $size);
+
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
             ->setContentType('image/png')
-            ->send($qrcode->render($text))
+            ->send($resize->output('png', 9))
         ;
     });
 

@@ -18,16 +18,19 @@ class Webhook extends Model
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Webhook ID.',
+                'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Webhook name.',
+                'default' => '',
                 'example' => 'My Webhook',
             ])
             ->addRule('url', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Webhook URL endpoint.',
+                'default' => '',
                 'example' => 'https://example.com/webhook',
             ])
             ->addRule('events', [
@@ -40,6 +43,7 @@ class Webhook extends Model
             ->addRule('security', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Indicated if SSL / TLS Certificate verification is enabled.',
+                'default' => true,
                 'example' => true,
             ])
             ->addRule('httpUser', [

@@ -18,26 +18,31 @@ class Task extends Model
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Task ID.',
+                'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Task name.',
+                'default' => '',
                 'example' => 'My Task',
             ])
             ->addRule('security', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Indicated if SSL / TLS Certificate verification is enabled.',
+                'default' => true,
                 'example' => true,
             ])
             ->addRule('httpMethod', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Task HTTP Method.',
+                'default' => '',
                 'example' => 'POST',
             ])
             ->addRule('httpUrl', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Task HTTP URL.',
+                'default' => '',
                 'example' => 'https://example.com/task',
             ])
             ->addRule('httpHeaders', [
@@ -80,11 +85,13 @@ class Task extends Model
             ->addRule('schedule', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Task schedule in CRON syntax.',
+                'default' => '',
                 'example' => '* * * * *',
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Task status. Possible values: play, pause', // TODO - change to enabled disabled
+                'default' => '',
                 'example' => 'enabled',
             ])
             ->addRule('updated', [

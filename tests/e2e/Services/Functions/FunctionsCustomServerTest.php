@@ -184,7 +184,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'command' => 'php function.php',
-            'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
         ]);
 
         $tagId = $tag['body']['$id'] ?? '';
@@ -455,6 +455,115 @@ class FunctionsCustomServerTest extends Scope
 
     public function testENVS():array
     {
+
+        $functions = realpath(__DIR__ . '/../../../resources/functions');
+
+        /**
+         * Command for rebuilding code packages:
+         *  bash tests/resources/functions/package-*.sh
+         */
+        $envs = [
+            [
+                'language' => 'PHP',
+                'version' => '7.4',
+                'name' => 'php-7.4',
+                'file' => $functions.'/php.tar.gz',
+                'command' => 'php index.php',
+                'timeout' => 15,
+            ],
+            [
+                'language' => 'PHP',
+                'version' => '8.0',
+                'name' => 'php-8.0',
+                'file' => $functions.'/php.tar.gz',
+                'command' => 'php index.php',
+                'timeout' => 15,
+            ],
+            [
+                'language' => 'Python',
+                'version' => '3.8',
+                'name' => 'python-3.8',
+                'file' => $functions.'/python.tar.gz',
+                'command' => 'python main.py',
+                'timeout' => 15,
+            ],
+            [
+                'language' => 'Node.js',
+                'version' => '14.5',
+                'name' => 'node-14.5',
+                'file' => $functions.'/node.tar.gz',
+                'command' => 'node index.js',
+                'timeout' => 15,
+            ],
+            [
+                'language' => 'Node.js',
+                'version' => '15.5',
+                'name' => 'node-15.5',
+                'file' => $functions.'/node.tar.gz',
+                'command' => 'node index.js',
+                'timeout' => 15,
+            ],
+            [
+                'language' => 'Ruby',
+                'version' => '2.7',
+                'name' => 'ruby-2.7',
+                'file' => $functions.'/ruby.tar.gz',
+                'command' => 'ruby app.rb',
+                'timeout' => 15,
+            ],
+            [
+                'language' => 'Ruby',
+                'version' => '3.0',
+                'name' => 'ruby-3.0',
+                'file' => $functions.'/ruby.tar.gz',
+                'command' => 'ruby app.rb',
+                'timeout' => 15,
+            ],
+            [
+                'language' => 'Deno',
+                'version' => '1.5',
+                'name' => 'deno-1.5',
+                'file' => $functions.'/deno.tar.gz',
+                'command' => 'deno run --allow-env index.ts',
+                'timeout' => 15,
+            ],
+            [
+                'language' => 'Deno',
+                'version' => '1.6',
+                'name' => 'deno-1.6',
+                'file' => $functions.'/deno.tar.gz',
+                'command' => 'deno run --allow-env index.ts',
+                'timeout' => 15,
+            ],
+            [
+                'language' => 'Dart',
+                'version' => '2.10',
+                'name' => 'dart-2.10',
+                'file' => $functions.'/dart.tar.gz',
+                'command' => 'dart main.dart',
+                'timeout' => 15,
+            ],
+            [
+                'language' => '.NET',
+                'version' => '3.1',
+                'name' => 'dotnet-3.1',
+                'file' => $functions.'/dotnet-3.1.tar.gz',
+                'command' => 'dotnet dotnet.dll',
+                'timeout' => 15,
+            ],
+            [
+                'language' => '.NET',
+                'version' => '5.0',
+                'name' => 'dotnet-5.0',
+                'file' => $functions.'/dotnet-5.0.tar.gz',
+                'command' => 'dotnet dotnet.dll',
+                'timeout' => 15,
+            ],
+        ];
+
+        sleep(count($envs) * 20);
+        fwrite(STDERR, ".");
+
         /**
          * Test for SUCCESS
          */
@@ -473,68 +582,11 @@ class FunctionsCustomServerTest extends Scope
 
         $fileId = $file['body']['$id'] ?? '';
 
-        $functions = realpath(__DIR__ . '/../../../resources/functions');
-
-        /**
-         * Command for rebuilding code packages:
-         *  bash tests/resources/functions/package-*.sh
-         */
-        $envs = [
-            [
-                'language' => 'PHP',
-                'version' => '7.4',
-                'name' => 'php-7.4',
-                'code' => $functions.'/php.tar.gz',
-                'command' => 'php index.php',
-                'timeout' => 15,
-            ],
-            [
-                'language' => 'PHP',
-                'version' => '8.0',
-                'name' => 'php-8.0',
-                'code' => $functions.'/php.tar.gz',
-                'command' => 'php index.php',
-                'timeout' => 15,
-            ],
-            [
-                'language' => 'Python',
-                'version' => '3.8',
-                'name' => 'python-3.8',
-                'code' => $functions.'/python.tar.gz',
-                'command' => 'python main.py',
-                'timeout' => 15,
-            ],
-            [
-                'language' => 'Node.js',
-                'version' => '14.5',
-                'name' => 'node-14',
-                'code' => $functions.'/node.tar.gz',
-                'command' => 'node index.js',
-                'timeout' => 15,
-            ],
-            [
-                'language' => 'Ruby',
-                'version' => '2.7',
-                'name' => 'ruby-2.7',
-                'code' => $functions.'/ruby.tar.gz',
-                'command' => 'ruby app.rb',
-                'timeout' => 15,
-            ],
-            // [
-            //     'language' => 'Deno',
-            //     'version' => '1.5',
-            //     'name' => 'deno-1.5',
-            //     'code' => $functions.'/deno.tar.gz',
-            //     'command' => 'deno run --allow-env index.ts',
-            //     'timeout' => 15,
-            // ],
-        ];
-
         foreach ($envs as $key => $env) {
             $language = $env['language'] ?? '';
             $version = $env['version'] ?? '';
             $name = $env['name'] ?? '';
-            $code = $env['code'] ?? '';
+            $code = $env['file'] ?? '';
             $command = $env['command'] ?? '';
             $timeout = $env['timeout'] ?? 15;
 
@@ -566,7 +618,7 @@ class FunctionsCustomServerTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
                 'command' => $command,
-                'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
+                'file' => new CURLFile($code, 'application/x-gzip', basename($code)),
             ]);
 
             $tagId = $tag['body']['$id'] ?? '';
@@ -590,8 +642,8 @@ class FunctionsCustomServerTest extends Scope
 
             $executionId = $execution['body']['$id'] ?? '';
             $this->assertEquals(201, $execution['headers']['status-code']);
-
-            sleep(20);
+            
+            sleep(30);
 
             $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
                 'content-type' => 'application/json',
@@ -601,6 +653,11 @@ class FunctionsCustomServerTest extends Scope
             if($executions['body']['executions'][0]['status'] !== 'completed') {
                 var_dump($env);
                 var_dump($executions['body']['executions'][0]);
+                $stdout = '';
+                $stderr = '';
+                Console::execute('docker logs appwrite-worker-functions', '', $stdout, $stderr);
+                var_dump($stdout);
+                var_dump($stderr);
             }
     
             $this->assertEquals($executions['headers']['status-code'], 200);
@@ -621,6 +678,7 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals($stdout[4], $language);
             $this->assertEquals($stdout[5], $version);
             // $this->assertEquals($stdout[6], $fileId);
+            fwrite(STDERR, ".");
         }
 
         return [
@@ -658,7 +716,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'command' => $command,
-            'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
+            'file' => new CURLFile($code, 'application/x-gzip', basename($code)),
         ]);
 
         $tagId = $tag['body']['$id'] ?? '';

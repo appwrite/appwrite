@@ -13,36 +13,43 @@ class Currency extends Model
             ->addRule('symbol', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Currency symbol.',
+                'default' => '',
                 'example' => '$',
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Currency name.',
+                'default' => '',
                 'example' => 'US dollar',
             ])
             ->addRule('symbolNative', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Currency native symbol.',
+                'default' => '',
                 'example' => '$',
             ])
             ->addRule('decimalDigits', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of decimal digits.',
+                'default' => 0,
                 'example' => 2,
             ])
             ->addRule('rounding', [
                 'type' => self::TYPE_FLOAT,
                 'description' => 'Currency digit rounding.',
+                'default' => 0,
                 'example' => 0,
             ])
             ->addRule('code', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Currency code in [ISO 4217-1](http://en.wikipedia.org/wiki/ISO_4217) three-character format.',
+                'default' => '',
                 'example' => 'USD',
             ])
             ->addRule('namePlural', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Currency plural name',
+                'default' => '',
                 'example' => 'US dollars',
             ])
             // ->addRule('locations', [

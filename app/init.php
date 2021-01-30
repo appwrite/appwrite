@@ -11,6 +11,8 @@ if (\file_exists(__DIR__.'/../vendor/autoload.php')) {
     require_once __DIR__.'/../vendor/autoload.php';
 }
 
+use Ahc\Jwt\JWT;
+use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
 use Appwrite\Database\Database;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
@@ -319,7 +321,14 @@ App::setResource('deletes', function($register) {
 }, ['register']);
 
 // Test Mock
-App::setResource('clients', function($console, $project) {
+App::setResource('clients', function($request, $console, $project) {
+    $console->setAttribute('platforms', [ // Allways allow current host
+        '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+        'name' => 'Current Host',
+        'type' => 'web',
+        'hostname' => $request->getHostname(),
+    ], Document::SET_TYPE_APPEND);
+    
     /**
      * Get All verified client URLs for both console and current projects
      * + Filter for duplicated entries
@@ -345,7 +354,7 @@ App::setResource('clients', function($console, $project) {
     }))));
 
     return $clients;
-}, ['console', 'project']);
+}, ['request', 'console', 'project']);
 
 App::setResource('user', function($mode, $project, $console, $request, $response, $projectDB, $consoleDB) {
     /** @var Utopia\Swoole\Request $request */
@@ -401,6 +410,29 @@ App::setResource('user', function($mode, $project, $console, $request, $response
         if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         } else {
+            $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+        }
+    }
+
+    $authJWT = $request->getHeader('x-appwrite-jwt', '');
+
+    if (!empty($authJWT)) { // JWT authentication
+        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+
+        try {
+            $payload = $jwt->decode($authJWT);
+        } catch (JWTException $error) {
+            throw new Exception('Failed to verify JWT. '.$error->getMessage(), 401);
+        }
+        
+        $jwtUserId = $payload['userId'] ?? '';
+        $jwtSessionId = $payload['sessionId'] ?? '';
+
+        if($jwtUserId && $jwtSessionId) {
+            $user = $projectDB->getDocument($jwtUserId);
+        }
+
+        if (empty($user->search('$id', $jwtSessionId, $user->getAttribute('tokens')))) { // Match JWT to active token
             $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
         }
     }

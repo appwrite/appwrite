@@ -76,7 +76,7 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'command' => 'php function.php',
-            'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
         ]);
 
         $tagId = $tag['body']['$id'] ?? '';

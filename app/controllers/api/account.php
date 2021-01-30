@@ -1,5 +1,6 @@
 <?php
 
+use Ahc\Jwt\JWT;
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Config\Config;
@@ -99,7 +100,7 @@ App::post('/v1/account')
                 'emailVerification' => false,
                 'status' => Auth::USER_STATUS_UNACTIVATED,
                 'password' => Auth::passwordHash($password),
-                'password-update' => \time(),
+                'passwordUpdate' => \time(),
                 'registration' => \time(),
                 'reset' => false,
                 'name' => $name,
@@ -511,7 +512,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'emailVerification' => true,
                         'status' => Auth::USER_STATUS_ACTIVATED, // Email should already be authenticated by OAuth2 provider
                         'password' => Auth::passwordHash(Auth::passwordGenerator()),
-                        'password-update' => \time(),
+                        'passwordUpdate' => \time(),
                         'registration' => \time(),
                         'reset' => false,
                         'name' => $name,
@@ -637,6 +638,49 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         ;
     });
 
+App::post('/v1/account/jwt')
+    ->desc('Create Account JWT')
+    ->groups(['api', 'account'])
+    ->label('scope', 'account')
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'createJWT')
+    ->label('sdk.description', '/docs/references/account/create-jwt.md')
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'url:{url},userId:{param-userId}')
+    ->inject('response')
+    ->inject('user')
+    ->action(function ($response, $user) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Document $user */
+            
+        $tokens = $user->getAttribute('tokens', []);
+        $session = new Document();
+
+        foreach ($tokens as $token) { /** @var Appwrite\Database\Document $token */
+            if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                $session = $token;
+            }
+        }
+
+        if($session->isEmpty()) {
+            throw new Exception('No valid session found', 401);
+        }
+        
+        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic(new Document(['jwt' => $jwt->encode([
+                // 'uid'    => 1,
+                // 'aud'    => 'http://site.com',
+                // 'scopes' => ['user'],
+                // 'iss'    => 'http://api.mysite.com',
+                'userId' => $user->getId(),
+                'sessionId' => $session->getId(),
+            ])]), Response::MODEL_JWT);
+    });
+
 App::get('/v1/account')
     ->desc('Get Account')
     ->groups(['api', 'account'])
@@ -674,7 +718,7 @@ App::get('/v1/account/prefs')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
 
-        $prefs = $user->getAttribute('prefs', new \stdClass);
+        $prefs = $user->getAttribute('prefs', new \stdClass());
 
         $response->dynamic(new Document($prefs), Response::MODEL_ANY);
     });
@@ -1412,7 +1456,7 @@ App::put('/v1/account/recovery')
 
         $profile = $projectDB->updateDocument(\array_merge($profile->getArrayCopy(), [
             'password' => Auth::passwordHash($password),
-            'password-update' => \time(),
+            'passwordUpdate' => \time(),
             'emailVerification' => true,
         ]));
 

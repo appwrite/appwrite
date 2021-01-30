@@ -4,6 +4,7 @@ namespace Appwrite\Specification\Format;
 
 use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
+use stdClass;
 
 class OpenAPI3 extends Format
 {
@@ -55,6 +56,7 @@ class OpenAPI3 extends Format
                 ],
             ],
             'paths' => [],
+            'tags' => $this->services,
             'components' => [
                 'schemas' => [],
                 'securitySchemes' => $this->keys,
@@ -116,6 +118,7 @@ class OpenAPI3 extends Format
                     'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
                     'scope' => $route->getLabel('scope', ''),
                     'platforms' => $route->getLabel('sdk.platform', []),
+                    'packaging' => $route->getLabel('sdk.packaging', false),
                 ],
             ];
 
@@ -212,12 +215,12 @@ class OpenAPI3 extends Format
                     case 'Utopia\Validator\JSON':
                     case 'Utopia\Validator\Mock':
                     case 'Utopia\Validator\Assoc':
-                        $node['schema']['type'] = 'object';
+                        $param['default'] = (empty($param['default'])) ? new stdClass() : $param['default'];
                         $node['schema']['type'] = 'object';
                         $node['schema']['x-example'] = '{}';
                         //$node['schema']['format'] = 'json';
                         break;
-                    case 'Appwrite\Storage\Validator\File':
+                    case 'Utopia\Storage\Validator\File':
                         $consumes = ['multipart/form-data'];
                         $node['schema']['type'] = 'string';
                         $node['schema']['format'] = 'binary';

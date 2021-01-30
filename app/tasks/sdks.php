@@ -11,6 +11,7 @@ use Appwrite\SDK\Language\Python;
 use Appwrite\SDK\Language\Ruby;
 use Appwrite\SDK\Language\Dart;
 use Appwrite\SDK\Language\Deno;
+use Appwrite\SDK\Language\DotNet;
 use Appwrite\SDK\Language\Flutter;
 use Appwrite\SDK\Language\Go;
 use Appwrite\SDK\Language\Java;
@@ -39,7 +40,6 @@ $cli
         $git = (Console::confirm('Should we use git push? (yes/no)') == 'yes');
         $production = ($git) ? (Console::confirm('Type "Appwrite" to push code to production git repos') == 'Appwrite') : false;
         $message = ($git) ? Console::confirm('Please enter your commit message:') : '';
-        $warning = '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check previous releases.**';
 
         if(!in_array($version, ['0.6.2', '0.7.0'])) {
             throw new Exception('Unknown version given');
@@ -60,6 +60,7 @@ $cli
                 
                 $spec = file_get_contents(__DIR__.'/../config/specs/'.$version.'.'.$language['family'].'.json');
 
+                $cover = 'https://appwrite.io/images/github.png';
                 $result = \realpath(__DIR__.'/..').'/sdks/'.$key.'-'.$language['key'];
                 $resultExamples = \realpath(__DIR__.'/../..').'/docs/examples/'.$version.'/'.$key.'-'.$language['key'];
                 $target = \realpath(__DIR__.'/..').'/sdks/git/'.$language['key'].'/';
@@ -69,9 +70,9 @@ $cli
                 $examples = ($examples) ? \file_get_contents($examples) : '';
                 $changelog = \realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'/CHANGELOG.md');
                 $changelog = ($changelog) ? \file_get_contents($changelog) : '# Change Log';
-                $warning = ($language['beta']) ? '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check previous releases.**' : '';
+                $warning = '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check [previous releases]('.$language['url'].'/releases).**';
                 $license = 'BSD-3-Clause';
-                $licenseContent = 'Copyright (c) 2019 Appwrite (https://appwrite.io) and individual contributors.
+                $licenseContent = 'Copyright (c) ' . date('Y') . ' Appwrite (https://appwrite.io) and individual contributors.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -99,6 +100,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config = new Node();
                         $config->setNPMPackage('node-appwrite');
                         $config->setBowerPackage('appwrite');
+                        $warning = $warning."\n\n > This is the Node.js SDK for integrating with Appwrite from your Node.js server-side code.
+                            If you're looking to integrate from the browser, you should check [appwrite/sdk-for-web](https://github.com/appwrite/sdk-for-web)";
                         break;
                     case 'deno':
                         $config = new Deno();
@@ -122,6 +125,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         break;
                     case 'dart':
                         $config = new Dart();
+                        $config->setPackageName('dart_appwrite');
+                        $warning = $warning."\n\n > This is the Dart SDK for integrating with Appwrite from your Dart server-side code.
+                            If you're looking for the Flutter SDK you should check [appwrite/sdk-for-flutter](https://github.com/appwrite/sdk-for-flutter)";
                         break;
                     case 'go':
                         $config = new Go();
@@ -131,6 +137,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         break;
                     case 'swift':
                         $config = new Swift();
+                        break;
+                    case 'dotnet':
+                        $cover = '';
+                        $config = new DotNet();
                         break;
                     default:
                         throw new Exception('Language "'.$language['key'].'" not supported');
@@ -154,7 +164,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setGitRepo($language['gitUrl'])
                     ->setGitRepoName($language['gitRepoName'])
                     ->setGitUserName($language['gitUserName'])
-                    ->setLogo('https://appwrite.io/images/github.png')
+                    ->setLogo($cover)
                     ->setURL('https://appwrite.io')
                     ->setShareText('Appwrite is a backend as a service for building web or mobile apps')
                     ->setShareURL('http://appwrite.io')
@@ -209,5 +219,5 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             }
         }
 
-        exit();
+        Console::exit();
     });

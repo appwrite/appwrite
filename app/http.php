@@ -18,9 +18,10 @@ use Utopia\CLI\Console;
 ini_set('memory_limit','512M');
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
+ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
-$http = new Server("0.0.0.0", 80);
+$http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
 $payloadSize = max(4000000 /* 4mb */, App::getEnv('_APP_STORAGE_LIMIT', 10000000 /* 10mb */));
 
@@ -48,6 +49,7 @@ $http->on('AfterReload', function($serv, $workerId) {
 });
 
 $http->on('start', function (Server $http) use ($payloadSize) {
+
     Console::success('Server started succefully (max payload is '.number_format($payloadSize).' bytes)');
 
     Console::info("Master pid {$http->master_pid}, manager pid {$http->manager_pid}");

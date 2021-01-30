@@ -4,11 +4,11 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Validator\UID;
-use Appwrite\Storage\Storage;
-use Appwrite\Storage\Validator\File;
-use Appwrite\Storage\Validator\FileSize;
-use Appwrite\Storage\Validator\FileType;
-use Appwrite\Storage\Validator\Upload;
+use Utopia\Storage\Storage;
+use Utopia\Storage\Validator\File;
+use Utopia\Storage\Validator\FileExt;
+use Utopia\Storage\Validator\FileSize;
+use Utopia\Storage\Validator\Upload;
 use Appwrite\Utopia\Response;
 use Appwrite\Task\Validator\Cron;
 use Utopia\App;
@@ -44,6 +44,9 @@ App::post('/v1/functions')
     ->inject('response')
     ->inject('projectDB')
     ->action(function ($name, $execute, $env, $vars, $events, $schedule, $timeout, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+
         $function = $projectDB->createDocument([
             '$collection' => Database::SYSTEM_COLLECTION_FUNCTIONS,
             '$permissions' => [
@@ -91,6 +94,9 @@ App::get('/v1/functions')
     ->inject('response')
     ->inject('projectDB')
     ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+
         $results = $projectDB->getCollection([
             'limit' => $limit,
             'offset' => $offset,
@@ -122,6 +128,9 @@ App::get('/v1/functions/:functionId')
     ->inject('response')
     ->inject('projectDB')
     ->action(function ($functionId, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
@@ -156,96 +165,100 @@ App::get('/v1/functions/:functionId/usage')
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
         }
-
-        $period = [
-            '24h' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('-24 hours')),
-                'end' => DateTime::createFromFormat('U', \strtotime('+1 hour')),
-                'group' => '30m',
-            ],
-            '7d' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('-7 days')),
-                'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                'group' => '1d',
-            ],
-            '30d' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('-30 days')),
-                'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                'group' => '1d',
-            ],
-            '90d' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('-90 days')),
-                'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                'group' => '1d',
-            ],
-        ];
-
-        $client = $register->get('influxdb');
-
-        $executions = [];
-        $failures = [];
-        $compute = [];
-
-        if ($client) {
-            $start = $period[$range]['start']->format(DateTime::RFC3339);
-            $end = $period[$range]['end']->format(DateTime::RFC3339);
-            $database = $client->selectDB('telegraf');
-
-            // Executions
-            $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-            $points = $result->getPoints();
-
-            foreach ($points as $point) {
-                $executions[] = [
-                    'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                    'date' => \strtotime($point['time']),
-                ];
+        
+        if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+            $period = [
+                '24h' => [
+                    'start' => DateTime::createFromFormat('U', \strtotime('-24 hours')),
+                    'end' => DateTime::createFromFormat('U', \strtotime('+1 hour')),
+                    'group' => '30m',
+                ],
+                '7d' => [
+                    'start' => DateTime::createFromFormat('U', \strtotime('-7 days')),
+                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
+                    'group' => '1d',
+                ],
+                '30d' => [
+                    'start' => DateTime::createFromFormat('U', \strtotime('-30 days')),
+                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
+                    'group' => '1d',
+                ],
+                '90d' => [
+                    'start' => DateTime::createFromFormat('U', \strtotime('-90 days')),
+                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
+                    'group' => '1d',
+                ],
+            ];
+    
+            $client = $register->get('influxdb');
+    
+            $executions = [];
+            $failures = [];
+            $compute = [];
+    
+            if ($client) {
+                $start = $period[$range]['start']->format(DateTime::RFC3339);
+                $end = $period[$range]['end']->format(DateTime::RFC3339);
+                $database = $client->selectDB('telegraf');
+    
+                // Executions
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+                $points = $result->getPoints();
+    
+                foreach ($points as $point) {
+                    $executions[] = [
+                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
+                        'date' => \strtotime($point['time']),
+                    ];
+                }
+    
+                // Failures
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' AND "functionStatus"=\'failed\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+                $points = $result->getPoints();
+    
+                foreach ($points as $point) {
+                    $failures[] = [
+                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
+                        'date' => \strtotime($point['time']),
+                    ];
+                }
+    
+                // Compute
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_time" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+                $points = $result->getPoints();
+    
+                foreach ($points as $point) {
+                    $compute[] = [
+                        'value' => round((!empty($point['value'])) ? $point['value'] / 1000 : 0, 2), // minutes
+                        'date' => \strtotime($point['time']),
+                    ];
+                }
             }
-
-            // Failures
-            $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' AND "functionStatus"=\'failed\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-            $points = $result->getPoints();
-
-            foreach ($points as $point) {
-                $failures[] = [
-                    'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                    'date' => \strtotime($point['time']),
-                ];
-            }
-
-            // Compute
-            $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_time" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-            $points = $result->getPoints();
-
-            foreach ($points as $point) {
-                $compute[] = [
-                    'value' => round((!empty($point['value'])) ? $point['value'] / 1000 : 0, 2), // minutes
-                    'date' => \strtotime($point['time']),
-                ];
-            }
+    
+            $response->json([
+                'range' => $range,
+                'executions' => [
+                    'data' => $executions,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $executions)),
+                ],
+                'failures' => [
+                    'data' => $failures,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $failures)),
+                ],
+                'compute' => [
+                    'data' => $compute,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $compute)),
+                ],
+            ]);
+        } else {
+            $response->json([]);
         }
-
-        $response->json([
-            'range' => $range,
-            'executions' => [
-                'data' => $executions,
-                'total' => \array_sum(\array_map(function ($item) {
-                    return $item['value'];
-                }, $executions)),
-            ],
-            'failures' => [
-                'data' => $failures,
-                'total' => \array_sum(\array_map(function ($item) {
-                    return $item['value'];
-                }, $failures)),
-            ],
-            'compute' => [
-                'data' => $compute,
-                'total' => \array_sum(\array_map(function ($item) {
-                    return $item['value'];
-                }, $compute)),
-            ],
-        ]);
     });
 
 App::put('/v1/functions/:functionId')
@@ -268,13 +281,19 @@ App::put('/v1/functions/:functionId')
     ->param('timeout', 15, new Range(1, 900), 'Function maximum execution time in seconds.', true)
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($functionId, $name, $execute, $vars, $events, $schedule, $timeout, $response, $projectDB) {
+    ->inject('project')
+    ->action(function ($functionId, $name, $execute, $vars, $events, $schedule, $timeout, $response, $projectDB, $project) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Database\Document $project */
+
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
         }
 
+        $original = $function->getAttribute('schedule', '');
         $cron = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? CronExpression::factory($schedule) : null;
         $next = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : null;
 
@@ -287,26 +306,21 @@ App::put('/v1/functions/:functionId')
             'vars' => $vars,
             'events' => $events,
             'schedule' => $schedule,
-            'schedulePrevious' => null,
             'scheduleNext' => $next,
-            'timeout' => $timeout,   
+            'timeout' => $timeout,
         ]));
-
-        if ($next) {
-            ResqueScheduler::enqueueAt($next, 'v1-functions', 'FunctionsV1', [
-
-            ]);
-
-            // ->setParam('projectId', $project->getId())
-            // ->setParam('event', $route->getLabel('event', ''))
-            // ->setParam('payload', [])
-            // ->setParam('functionId', null)
-            // ->setParam('executionId', null)
-            // ->setParam('trigger', 'event')
-        }
 
         if (false === $function) {
             throw new Exception('Failed saving function to DB', 500);
+        }
+
+        if ($next && $schedule !== $original) {
+            ResqueScheduler::enqueueAt($next, 'v1-functions', 'FunctionsV1', [
+                'projectId' => $project->getId(),
+                'functionId' => $function->getId(),
+                'executionId' => null,
+                'trigger' => 'schedule',
+            ]);  // Async task rescheduale
         }
 
         $response->dynamic($function, Response::MODEL_FUNCTION);
@@ -327,7 +341,12 @@ App::patch('/v1/functions/:functionId/tag')
     ->param('tag', '', new UID(), 'Tag unique ID.')
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($functionId, $tag, $response, $projectDB) {
+    ->inject('project')
+    ->action(function ($functionId, $tag, $response, $projectDB, $project) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Database\Document $project */
+
         $function = $projectDB->getDocument($functionId);
         $tag = $projectDB->getDocument($tag);
 
@@ -340,13 +359,22 @@ App::patch('/v1/functions/:functionId/tag')
         }
 
         $schedule = $function->getAttribute('schedule', '');
-        $cron = (!empty($function->getAttribute('tag')&& !empty($schedule))) ? CronExpression::factory($schedule) : null;
-        $next = (!empty($function->getAttribute('tag')&& !empty($schedule))) ? $cron->getNextRunDate()->format('U') : null;
+        $cron = (empty($function->getAttribute('tag')) && !empty($schedule)) ? CronExpression::factory($schedule) : null;
+        $next = (empty($function->getAttribute('tag')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : null;
 
         $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
             'tag' => $tag->getId(),
             'scheduleNext' => $next,
         ]));
+
+        if ($next) { // Init first schedule
+            ResqueScheduler::enqueueAt($next, 'v1-functions', 'FunctionsV1', [
+                'projectId' => $project->getId(),
+                'functionId' => $function->getId(),
+                'executionId' => null,
+                'trigger' => 'schedule',
+            ]);  // Async task rescheduale
+        }
 
         if (false === $function) {
             throw new Exception('Failed saving function to DB', 500);
@@ -401,28 +429,33 @@ App::post('/v1/functions/:functionId/tags')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'createTag')
     ->label('sdk.description', '/docs/references/functions/create-tag.md')
+    ->label('sdk.packaging', true)
     ->label('sdk.request.type', 'multipart/form-data')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TAG)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('command', '', new Text('1028'), 'Code execution command.')
-    ->param('code', [], new File(), 'Gzip file containing your code.', false)
-    // ->param('code', '', new Text(128), 'Code package. Use the '.APP_NAME.' code packager to create a deployable package file.')
+    ->param('file', null, new File(), 'Gzip file with your code package.', false)
     ->inject('request')
     ->inject('response')
     ->inject('projectDB')
     ->inject('usage')
-    ->action(function ($functionId, $command, $code, $request, $response, $projectDB, $usage) {
+    ->action(function ($functionId, $command, $file, $request, $response, $projectDB, $usage) {
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $usage */
+
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
         }
 
-        $file = $request->getFiles('code');
+        $file = $request->getFiles('file');
         $device = Storage::getDevice('functions');
-        $fileType = new FileType([FileType::FILE_TYPE_GZIP]);
+        $fileExt = new FileExt([FileExt::TYPE_GZIP]);
         $fileSize = new FileSize(App::getEnv('_APP_STORAGE_LIMIT', 0));
         $upload = new Upload();
 
@@ -435,10 +468,9 @@ App::post('/v1/functions/:functionId/tags')
         $file['tmp_name'] = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
         $file['size'] = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
-        // Check if file type is allowed (feature for project settings?)
-        // if (!$fileType->isValid($file['tmp_name'])) {
-        //     throw new Exception('File type not allowed', 400);
-        // }
+        if (!$fileExt->isValid($file['name'])) { // Check if file type is allowed
+            throw new Exception('File type not allowed', 400);
+        }
 
         if (!$fileSize->isValid($file['size'])) { // Check if file size is exceeding allowed limit
             throw new Exception('File size not allowed', 400);
@@ -502,6 +534,9 @@ App::get('/v1/functions/:functionId/tags')
     ->inject('response')
     ->inject('projectDB')
     ->action(function ($functionId, $search, $limit, $offset, $orderType, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
@@ -541,6 +576,9 @@ App::get('/v1/functions/:functionId/tags/:tagId')
     ->inject('response')
     ->inject('projectDB')
     ->action(function ($functionId, $tagId, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
@@ -577,6 +615,10 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
     ->inject('projectDB')
     ->inject('usage')
     ->action(function ($functionId, $tagId, $response, $projectDB, $usage) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $usage */
+
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
@@ -629,6 +671,8 @@ App::post('/v1/functions/:functionId/executions')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_EXECUTION)
+    ->label('abuse-limit', 60)
+    ->label('abuse-time', 60)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     // ->param('async', 1, new Range(0, 1), 'Execute code asynchronously. Pass 1 for true, 0 for false. Default value is 1.', true)
     ->inject('response')
@@ -721,6 +765,9 @@ App::get('/v1/functions/:functionId/executions')
     ->inject('response')
     ->inject('projectDB')
     ->action(function ($functionId, $search, $limit, $offset, $orderType, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
@@ -760,6 +807,9 @@ App::get('/v1/functions/:functionId/executions/:executionId')
     ->inject('response')
     ->inject('projectDB')
     ->action(function ($functionId, $executionId, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {

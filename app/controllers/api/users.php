@@ -62,7 +62,7 @@ App::post('/v1/users')
                 'emailVerification' => false,
                 'status' => Auth::USER_STATUS_UNACTIVATED,
                 'password' => Auth::passwordHash($password),
-                'password-update' => \time(),
+                'passwordUpdate' => \time(),
                 'registration' => \time(),
                 'reset' => false,
                 'name' => $name,
@@ -165,7 +165,7 @@ App::get('/v1/users/:userId/prefs')
             throw new Exception('User not found', 404);
         }
 
-        $prefs = $user->getAttribute('prefs', '');
+        $prefs = $user->getAttribute('prefs', new \stdClass());
 
         $response->dynamic(new Document($prefs), Response::MODEL_ANY);
     });
@@ -418,7 +418,6 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->label('abuse-limit', 100)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('sessionId', null, new UID(), 'User unique session ID.')
     ->inject('response')
@@ -449,6 +448,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
             }
         }
 
+        // TODO : Response filter implementation
         $response->noContent();
     });
 
@@ -464,7 +464,6 @@ App::delete('/v1/users/:userId/sessions')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->label('abuse-limit', 100)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->inject('response')
     ->inject('projectDB')
@@ -492,6 +491,7 @@ App::delete('/v1/users/:userId/sessions')
             ->setParam('payload', $response->output($user, Response::MODEL_USER))
         ;
 
+        // TODO : Response filter implementation
         $response->noContent();
     });
 
@@ -507,7 +507,6 @@ App::delete('/v1/users/:userId')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->label('abuse-limit', 100)
     ->param('userId', '', function () {return new UID();}, 'User unique ID.')
     ->inject('response')
     ->inject('projectDB')
@@ -553,5 +552,6 @@ App::delete('/v1/users/:userId')
             ->setParam('payload', $response->output($user, Response::MODEL_USER))
         ;
 
+        // TODO : Response filter implementation
         $response->noContent();
     });

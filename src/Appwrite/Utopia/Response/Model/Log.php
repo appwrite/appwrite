@@ -13,16 +13,19 @@ class Log extends Model
             ->addRule('event', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Event name.',
+                'default' => '',
                 'example' => 'account.sessions.create',
             ])
             ->addRule('ip', [
                 'type' => self::TYPE_STRING,
                 'description' => 'IP session in use when the session was created.',
+                'default' => '',
                 'example' => '127.0.0.1',
             ])
             ->addRule('time', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Log creation time in Unix timestamp.',
+                'default' => 0,
                 'example' => 1592981250,
             ])
             ->addRule('osCode', [
