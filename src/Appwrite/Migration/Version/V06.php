@@ -26,7 +26,7 @@ class V06 extends Migration
     {
         switch ($document->getAttribute('$collection')) {
             case Database::SYSTEM_COLLECTION_USERS:
-                if ($document->getAttribute('password-update', null)) {
+                if ($document->isSet('password-update')) {
                     $document
                         ->setAttribute('passwordUpdate', $document->getAttribute('password-update', $document->getAttribute('passwordUpdate', '')))
                         ->removeAttribute('password-update');
