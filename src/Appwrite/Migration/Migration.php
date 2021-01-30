@@ -90,7 +90,8 @@ abstract class Migration
                         if (empty($new->getId())) {
                             throw new Exception('Missing ID');
                         }
-                        if (!array_diff($new->getArrayCopy(), $old)) {
+                        
+                        if (!array_diff_assoc($new->getArrayCopy(), $old)) {
                             return;
                         }
 
