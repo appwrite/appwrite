@@ -368,7 +368,8 @@ class Swagger2 extends Format
                         'description' => $rule['description'] ?? '',
                         'items' => [
                             'type' => $type,
-                        ]
+                        ],
+                        'x-example' => $rule['example'] ?? null,
                     ];
 
                     if($format) {

@@ -370,7 +370,8 @@ class OpenAPI3 extends Format
                         'description' => $rule['description'] ?? '',
                         'items' => [
                             'type' => $type,
-                        ]
+                        ],
+                        'x-example' => $rule['example'] ?? null,
                     ];
 
                     if($format) {
