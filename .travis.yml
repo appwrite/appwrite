@@ -32,16 +32,19 @@ install:
 - docker-compose up -d
 - sleep 10
 
-env:
-- TEST=/usr/src/code/tests/unit
-- TEST=/usr/src/code/tests/e2e
-
-script:
-- docker ps
-- docker-compose logs appwrite
-- docker-compose exec appwrite doctor
-- docker-compose exec appwrite vars
-- docker-compose exec appwrite test $TEST
+jobs:
+  include:
+    - stage: ps
+      script: docker ps
+    - stage: logs
+      script: docker-compose logs appwrite
+    - stage: doctor
+      script: docker-compose exec appwrite doctor
+    - stage: vars
+      script: docker-compose exec appwrite vars
+    - stage: tests
+      script: docker-compose exec appwrite test /usr/src/code/tests/unit
+      script: docker-compose exec appwrite test /usr/src/code/tests/e2e
 
 deploy:
   - provider: script
