@@ -1,3 +1,13 @@
 #!/bin/sh
 
-QUEUE='v1-mails' APP_INCLUDE='/usr/src/code/app/workers/mails.php' REDIS_BACKEND="${_APP_REDIS_HOST}:${_APP_REDIS_PORT}" php /usr/src/code/vendor/bin/resque -dopcache.preload=opcache.preload=/usr/src/code/app/preload.php
+if [ -z "$_APP_REDIS_AUTH" ]
+then
+    REDIS_BACKEND="${_APP_REDIS_HOST}:${_APP_REDIS_PORT}"
+else
+    REDIS_BACKEND="redis://${_APP_REDIS_AUTH}@${_APP_REDIS_HOST}:${_APP_REDIS_PORT}"
+fi
+
+QUEUE='v1-mails'
+APP_INCLUDE='/usr/src/code/app/workers/mails.php'
+
+php /usr/src/code/vendor/bin/resque -dopcache.preload=opcache.preload=/usr/src/code/app/preload.php

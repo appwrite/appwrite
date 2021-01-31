@@ -90,9 +90,12 @@ Config::load('storage-mimes', __DIR__.'/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__.'/config/storage/inputs.php'); 
 Config::load('storage-outputs', __DIR__.'/config/storage/outputs.php'); 
 
-Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '')
-    .':'.App::getEnv('_APP_REDIS_PORT', ''), 0, App::getEnv('_APP_REDIS_AUTH',null));
-
+$auth = App::getEnv('_APP_REDIS_AUTH',null);
+if($auth != null) {
+    Resque::setBackend('redis://'.App::getEnv('_APP_REDIS_AUTH', '').'@'.App::getEnv('_APP_REDIS_HOST', '').':'.App::getEnv('_APP_REDIS_PORT', ''));
+} else {
+    Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '').':'.App::getEnv('_APP_REDIS_PORT', ''));
+}
 /**
  * DB Filters
  */
@@ -177,7 +180,12 @@ $register->set('cache', function () { // Register cache connection
     $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
     $auth = App::getEnv('_APP_REDIS_AUTH',null);
     if($auth != null) {
-        $redis->auth($auth);
+        $auth = explode(':',$auth);
+        if(!empty(trim($auth[0]))) {
+            $redis->auth($auth);
+        }else{
+            $redis->auth([$auth[1]]);
+        }
     }
     $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
