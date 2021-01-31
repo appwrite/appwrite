@@ -86,7 +86,7 @@ App::post('/v1/storage/files')
         }
 
         // Save to storage
-        $size = $device->getFileSize($file['tmp_name']);
+        $size = Storage::getDevice('self')->getFileSize($file['tmp_name']);
         $path = $device->getPath(\uniqid().'.'.\pathinfo($file['name'], PATHINFO_EXTENSION));
         
         if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
@@ -94,14 +94,16 @@ App::post('/v1/storage/files')
         }
 
         $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
-
-        if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
-            $antiVirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
-                (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
-
-            if (!$antiVirus->fileScan($path)) {
-                $device->delete($path);
-                throw new Exception('Invalid file', 403);
+        
+        if(App::getEnv('_APP_STORAGE_DEVICE',Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
+            if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
+                $antiVirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
+                    (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
+    
+                if (!$antiVirus->fileScan($path)) {
+                    $device->delete($path);
+                    throw new Exception('Invalid file', 403);
+                }
             }
         }
 
@@ -113,11 +115,11 @@ App::post('/v1/storage/files')
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
         $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
 
-        if (!$device->write($path, $data)) {
+        if (!$device->write($path, $data, $mimeType)) {
             throw new Exception('Failed to save file', 500);
         }
 
-        $sizeActual = $device->getFileSize($path);
+        $sizeActual = Storage::getDevice('self')->getFileSize($path);
         
         $file = $projectDB->createDocument([
             '$collection' => Database::SYSTEM_COLLECTION_FILES,
@@ -297,7 +299,7 @@ App::get('/v1/storage/files/:fileId/preview')
         $compressor = new GZIP();
         $device = Storage::getDevice('files');
 
-        if (!\file_exists($path)) {
+        if (!$device->exists($path)) {
             throw new Exception('File not found', 404);
         }
 
@@ -380,14 +382,15 @@ App::get('/v1/storage/files/:fileId/download')
             throw new Exception('File not found', 404);
         }
 
+        
+        $device = Storage::getDevice('files');
+        
         $path = $file->getAttribute('path', '');
-
-        if (!\file_exists($path)) {
+        if (!$device->exists($path)) {
             throw new Exception('File not found in '.$path, 404);
         }
 
         $compressor = new GZIP();
-        $device = Storage::getDevice('files');
 
         $source = $device->read($path);
 
@@ -439,14 +442,14 @@ App::get('/v1/storage/files/:fileId/view')
             throw new Exception('File not found', 404);
         }
 
+        $device = Storage::getDevice('files');
+        
         $path = $file->getAttribute('path', '');
-
-        if (!\file_exists($path)) {
+        if (!$device->exists($path)) {
             throw new Exception('File not found in '.$path, 404);
         }
 
         $compressor = new GZIP();
-        $device = Storage::getDevice('files');
 
         $contentType = 'text/plain';
 

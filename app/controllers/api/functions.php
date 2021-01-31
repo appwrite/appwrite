@@ -482,7 +482,7 @@ App::post('/v1/functions/:functionId/tags')
         }
 
         // Save to storage
-        $size = $device->getFileSize($file['tmp_name']);
+        $size = Storage::getDevice('self')->$device->getFileSize($file['tmp_name']);
         $path = $device->getPath(\uniqid().'.'.\pathinfo($file['name'], PATHINFO_EXTENSION));
         
         if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'

@@ -7,6 +7,7 @@ use Utopia\Exception;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Storage\Device\Local;
+use Utopia\Storage\Device\S3;
 use Utopia\Storage\Storage;
 
 App::init(function ($utopia, $request, $response, $project, $user, $register, $events, $audits, $usage, $deletes) {
@@ -22,8 +23,22 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     /** @var Appwrite\Event\Event $deletes */
     /** @var Appwrite\Event\Event $functions */
 
-    Storage::setDevice('files', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
-    Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId()));
+    Storage::setDevice('self', new Local());
+    switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
+        case Storage::DEVICE_LOCAL:default:
+            Storage::setDevice('files', new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId()));
+            Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId()));
+            break;
+        case Storage::DEVICE_S3:
+            $accessKey = App::getEnv('_APP_STORAGE_DEVICE_S3_ACCESS_KEY', '');
+            $secretKey = App::getEnv('_APP_STORAGE_DEVICE_S3_SECRET', '');
+            $region = App::getEnv('_APP_STORAGE_DEVICE_S3_REGION', '');
+            $bucket = App::getEnv('_APP_STORAGE_DEVICE_S3_BUCKET', '');
+            $acl = 'private';
+            Storage::setDevice('files', new S3(APP_STORAGE_UPLOADS . '/app-' . $project->getId(), $accessKey, $secretKey, $bucket, $region, $acl));
+            Storage::setDevice('functions', new S3(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId(), $accessKey, $secretKey, $bucket, $region, $acl));
+
+    }
 
     $route = $utopia->match($request);
 
@@ -37,18 +52,18 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     $timeLimit = new TimeLimit($route->getLabel('abuse-key', 'url:{url},ip:{ip}'), $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), function () use ($register) {
         return $register->get('db');
     });
-    $timeLimit->setNamespace('app_'.$project->getId());
+    $timeLimit->setNamespace('app_' . $project->getId());
     $timeLimit
         ->setParam('{userId}', $user->getId())
         ->setParam('{userAgent}', $request->getUserAgent(''))
         ->setParam('{ip}', $request->getIP())
-        ->setParam('{url}', $request->getHostname().$route->getURL())
+        ->setParam('{url}', $request->getHostname() . $route->getURL())
     ;
 
     //TODO make sure we get array here
 
     foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
-        $timeLimit->setParam('{param-'.$key.'}', (\is_array($value)) ? \json_encode($value) : $value);
+        $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
     }
 
     $abuse = new Abuse($timeLimit);
@@ -65,9 +80,9 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     $isAppUser = Auth::isAppUser(Authorization::$roles);
 
     if (($abuse->check() // Route is rate-limited
-        && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') // Abuse is not diabled
-        && (!$isAppUser && !$isPreviliggedUser)) // User is not an admin or API key
-        {
+         && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') // Abuse is not diabled
+         && (!$isAppUser && !$isPreviliggedUser)) // User is not an admin or API key
+    {
         throw new Exception('Too many requests', 429);
     }
 
@@ -79,8 +94,8 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
         ->setParam('userId', $user->getId())
         ->setParam('event', $route->getLabel('event', ''))
         ->setParam('payload', [])
-        ->setParam('functionId', null)	
-        ->setParam('executionId', null)	
+        ->setParam('functionId', null)
+        ->setParam('executionId', null)
         ->setParam('trigger', 'event')
     ;
 
@@ -97,13 +112,13 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     $usage
         ->setParam('projectId', $project->getId())
         ->setParam('httpRequest', 1)
-        ->setParam('httpUrl', $request->getHostname().$request->getURI())
+        ->setParam('httpUrl', $request->getHostname() . $request->getURI())
         ->setParam('httpMethod', $request->getMethod())
         ->setParam('networkRequestSize', 0)
         ->setParam('networkResponseSize', 0)
         ->setParam('storage', 0)
     ;
-    
+
     $deletes
         ->setParam('projectId', $project->getId())
     ;
@@ -123,7 +138,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
     /** @var bool $mode */
 
     if (!empty($events->getParam('event'))) {
-        if(empty($events->getParam('payload'))) {
+        if (empty($events->getParam('payload'))) {
             $events->setParam('payload', $response->getPayload());
         }
 
@@ -140,21 +155,21 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
             ->setClass('FunctionsV1')
             ->trigger();
     }
-    
+
     if (!empty($audits->getParam('event'))) {
         $audits->trigger();
     }
-    
+
     if (!empty($deletes->getParam('type')) && !empty($deletes->getParam('document'))) {
         $deletes->trigger();
     }
-    
+
     $route = $utopia->match($request);
-    if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled' 
+    if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
         && $project->getId()
-        && $mode !== APP_MODE_ADMIN //TODO: add check to make sure user is admin
-        && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage on admin mode
-        
+        && $mode !== APP_MODE_ADMIN//TODO: add check to make sure user is admin
+         && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage on admin mode
+
         $usage
             ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
             ->setParam('networkResponseSize', $response->getSize())
