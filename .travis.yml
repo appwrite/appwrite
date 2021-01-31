@@ -44,7 +44,7 @@ jobs:
       script: docker-compose exec appwrite vars
     - stage: tests
       script: docker-compose exec appwrite test /usr/src/code/tests/unit
-      script: docker-compose exec appwrite test /usr/src/code/tests/e2e
+    - script: docker-compose exec appwrite test /usr/src/code/tests/e2e
 
 deploy:
   - provider: script
