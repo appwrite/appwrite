@@ -307,15 +307,15 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DEVICE',
-                'description' => 'Select default storage device',
+                'description' => 'Select default storage device. The default value is \'Local\'. List of supported adapters are \'Local\' and \'S3\'.',
                 'introduction' => '0.7.0',
-                'default' => 'local',
+                'default' => 'Local',
                 'required' => false,
                 'question' => '',
             ],
             [
                 'name' => '_APP_STORAGE_DEVICE_S3_ACCESS_KEY',
-                'description' => 'AWS S3 storage access key',
+                'description' => 'AWS S3 storage access key. Required when the storage adapter is set to S3. You can get your access key from your AWS console',
                 'introduction' => '0.7.0',
                 'default' => '',
                 'required' => true,
@@ -323,7 +323,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DEVICE_S3_SECRET',
-                'description' => 'AWS S3 storage secret key',
+                'description' => 'AWS S3 storage secret key. Required when the storage adapter is set to S3. You can get your secret key from your AWS console.',
                 'introduction' => '0.7.0',
                 'default' => '',
                 'required' => true,
@@ -331,7 +331,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DEVICE_S3_REGION',
-                'description' => 'AWS S3 storage region',
+                'description' => 'AWS S3 storage region. Required when storage adapter is set to S3. You can find your region info for your bucket from AWS console.',
                 'introduction' => '0.7.0',
                 'default' => 'us-eas-1',
                 'required' => false,
@@ -339,7 +339,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DEVICE_S3_BUCKET',
-                'description' => 'AWS S3 storage bucket',
+                'description' => 'AWS S3 storage bucket. Required when storage adapter is set to S3. You can create buckets in your AWS console.',
                 'introduction' => '0.7.0',
                 'default' => '',
                 'required' => true,
