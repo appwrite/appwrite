@@ -553,6 +553,10 @@ class Database
      */
     static protected function encodeAttribute(string $name, $value)
     {
+        if (!self::$statusFilters) {
+            return $value;
+        }
+        
         if (!isset(self::$filters[$name])) {
             return $value;
             throw new Exception('Filter not found');
