@@ -6,14 +6,12 @@ use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Validator\Mock;
 use Utopia\View;
 
 $cli
     ->task('install')
     ->desc('Install Appwrite')
-    ->param('version', APP_VERSION_STABLE, new Mock(), 'Appwrite version', true)
-    ->action(function ($version) {
+    ->action(function () {
         /**
          * 1. Start - DONE
          * 2. Check for older setup and get older version - DONE
@@ -48,7 +46,7 @@ $cli
         if (null !== $path && !\file_exists(\dirname($path))) {
             if (!@\mkdir(\dirname($path), 0755, true)) {
                 Console::error('Can\'t create directory '.\dirname($path));
-                exit(1);
+                Console::exit(1);
             }
         }
 
@@ -130,7 +128,7 @@ $cli
         $templateForCompose
             ->setParam('httpPort', $httpPort)
             ->setParam('httpsPort', $httpsPort)
-            ->setParam('version', $version)
+            ->setParam('version', APP_VERSION_STABLE)
         ;
         
         $templateForEnv
@@ -139,25 +137,32 @@ $cli
 
         if(!file_put_contents($path.'/docker-compose.yml', $templateForCompose->render(false))) {
             Console::error('Failed to save Docker Compose file');
-            exit(1);
+            Console::exit(1);
         }
 
         if(!file_put_contents($path.'/.env', $templateForEnv->render(false))) {
             Console::error('Failed to save environment variables file');
-            exit(1);
+            Console::exit(1);
         }
 
+        $env = '';
         $stdout = '';
         $stderr = '';
 
+        foreach ($input as $key => $value) {
+            if($value) {
+                $env .= $key.'='.$value.' ';
+            }
+        }
+
         Console::log("Running \"docker-compose -f {$path}/docker-compose.yml up -d --remove-orphans --renew-anon-volumes\"");
 
-        $exit = Console::execute("docker-compose -f {$path}/docker-compose.yml up -d --remove-orphans --renew-anon-volumes", '', $stdout, $stderr);
+        $exit = Console::execute("${env} docker-compose -f {$path}/docker-compose.yml up -d --remove-orphans --renew-anon-volumes", '', $stdout, $stderr);
 
         if ($exit !== 0) {
             Console::error("Failed to install Appwrite dockers");
             Console::error($stderr);
-            exit($exit);
+            Console::exit($exit);
         } else {
             Console::success("Appwrite installed successfully");
         }
