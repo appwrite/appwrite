@@ -52,12 +52,6 @@ class Currency extends Model
                 'default' => '',
                 'example' => 'US dollars',
             ])
-            // ->addRule('locations', [
-            //     'type' => self::TYPE_STRING,
-            //     'description' => 'Currency locations list. List of location in two-character ISO 3166-1 alpha code.',
-            //     'example' => ['US'],
-            //     'array' => true,
-            // ])
         ;
     }
 
