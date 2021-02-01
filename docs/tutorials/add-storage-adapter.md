@@ -32,7 +32,7 @@ Run tests using `vendor/bin/phpunit --configuration phpunit.xml` and verify that
 If everything goes well, create a new pull request in [utopia-php/storage](https://github.com/utopia-php/storage) library.
 
 ### Phase 2
-In this phase we will add support to new storage adapter in Appwrite.
+In this phase we will add support to the new storage adapter in Appwrite.
 
 * Note for this to happen, your PR in the first phase should have been merged and new version of [utopia-php/storage](https://github.com/utopia-php/storage) library released.
 
