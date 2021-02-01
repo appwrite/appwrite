@@ -92,7 +92,7 @@ Config::load('storage-outputs', __DIR__.'/config/storage/outputs.php');
 
 $user = App::getEnv('_APP_REDIS_USER','');
 $pass = App::getEnv('_APP_REDIS_PASS','');
-if(!empty($pass)) {
+if(!empty($user) || !empty($pass)) {
     Resque::setBackend('redis://'.$user.':'.$pass.'@'.App::getEnv('_APP_REDIS_HOST', '').':'.App::getEnv('_APP_REDIS_PORT', ''));
 } else {
     Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '').':'.App::getEnv('_APP_REDIS_PORT', ''));
@@ -179,14 +179,17 @@ $register->set('statsd', function () { // Register DB connection
 $register->set('cache', function () { // Register cache connection
     $redis = new Redis();
     $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
-    $user = App::getEnv('_APP_REDIS_USER','') ?? '';
-    $pass = App::getEnv('_APP_REDIS_PASS','') ?? '';
+    $user = App::getEnv('_APP_REDIS_USER','');
+    $pass = App::getEnv('_APP_REDIS_PASS','');
+    $auth = [];
+    if(!empty($user)) {
+        $auth["user"] = $user;
+    }
     if(!empty($pass)) {
-        if(!empty(trim($user))) {
-            $redis->auth([$user,$pass]);
-        }else{
-            $redis->auth([$pass]);
-        }
+        $auth["pass"] = $pass;
+    }
+    if(!empty($auth)) {
+        $redis->auth($auth);
     }
     $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
