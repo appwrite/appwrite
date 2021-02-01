@@ -8,10 +8,10 @@ This document is part of the Appwrite contributors' guide. Before you continue r
 
 Storage providers help us use various storage services to store our Appwrite data. As of the writing of these lines we already support Local storage, AWS S3 storage and Digitalocean Spaces Storage.
 
-As the storage library is separated into utopia-php/storage, adding new storage adapter will consist of two phases. First adding and implementing the new adapter in the utopia-php/storage and then adding support to new storage adapter in Appwrite.
+As the storage library is separated into [utopia-php/storage](https://github.com/utopia-php/storage), adding new storage adapter will consist of two phases. First adding and implementing the new adapter in the [utopia-php/storage](https://github.com/utopia-php/storage) and then adding support to new storage adapter in Appwrite.
 
 ### Phase 1
-In phase 1, we will introduce and implement the new device adapter in utopia-php/storage library.
+In phase 1, we will introduce and implement the new device adapter in [utopia-php/storage](https://github.com/utopia-php/storage) library.
 
 ### Add new adapter
 Add new storage inside `src/Storage/Device/` folder. Use one of the existing ones as a reference. The new adapter class should extend `Device` class and implement all the required methods.
@@ -29,12 +29,12 @@ Add test for the newly added device adapter inside `tests/Storage/Device`. Use t
 ### Run and verify tests
 Run tests using `vendor/bin/phpunit --configuration phpunit.xml` and verify that everything is working correctly.
 
-If everything goes well, create a new pull request in utopia-php/storage library.
+If everything goes well, create a new pull request in [utopia-php/storage](https://github.com/utopia-php/storage) library.
 
 ### Phase 2
 In this phase we will add support to new storage adapter in Appwrite.
 
-* Note for this to happen, your PR in the first phase should have been merged and new version of utopia-php/storage library released.
+* Note for this to happen, your PR in the first phase should have been merged and new version of [utopia-php/storage](https://github.com/utopia-php/storage) library released.
 
 ### Upgrade the utopia-php/storage dependency
 Upgrade the utopia-php/sotrage dependency in `composer.json` file.
