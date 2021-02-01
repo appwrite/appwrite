@@ -284,10 +284,9 @@ services:
       - _APP_SMTP_PASSWORD
       
   appwrite-maintenance:
+    image: appwrite/appwrite:<?php echo $version."\n"; ?>
     entrypoint: maintenance
     container_name: appwrite-maintenance
-    build:
-      context: .
     restart: unless-stopped
     networks:
       - appwrite
@@ -329,8 +328,6 @@ services:
       - appwrite
     volumes:
       - appwrite-mariadb:/var/lib/mysql:rw
-    ports:
-      - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=rootsecretpassword
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}

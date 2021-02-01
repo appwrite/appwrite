@@ -181,7 +181,7 @@ return [
             ],
             [
                 'name' => '_APP_DB_USER',
-                'description' => 'MariaDB server user name. Default value is: \'root\'.',
+                'description' => 'MariaDB server user name. Default value is: \'user\'.',
                 'introduction' => '',
                 'default' => 'user',
                 'required' => false,
@@ -357,7 +357,7 @@ return [
                 'name' => '_APP_FUNCTIONS_MEMORY',
                 'description' => 'The maximum amount of memory a single cloud function is allowed to use in megabytes. The default value is 128.',
                 'introduction' => '0.7.0',
-                'default' => '128',
+                'default' => '256',
                 'required' => false,
                 'question' => '',
             ],

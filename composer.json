@@ -59,7 +59,7 @@
     },
     "require-dev": {
         "swoole/ide-helper": "4.5.5",
-        "appwrite/sdk-generator": "0.4.4",
+        "appwrite/sdk-generator": "0.4.5",
         "phpunit/phpunit": "9.4.2",
         "vimeo/psalm": "4.1.1"
     },
