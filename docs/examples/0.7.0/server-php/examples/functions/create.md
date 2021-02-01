@@ -13,4 +13,4 @@ $client
 
 $functions = new Functions($client);
 
-$result = $functions->create('[NAME]', 'node-14');
+$result = $functions->create('[NAME]', [], 'node-14.5');
