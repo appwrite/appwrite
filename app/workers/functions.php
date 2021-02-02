@@ -27,6 +27,17 @@ $environments = Config::getParam('environments');
  */
 $warmupStart = \microtime(true);
 
+$dockerUser = App::getEnv('DOCKERHUB_PULL_USERNAME', null);
+$dockerPass = App::getEnv('DOCKERHUB_PULL_PASSWORD', null);
+
+if($dockerUser) {
+    $stdout = '';
+    $stderr = '';
+
+    Console::execute('echo '.$dockerPass.' | docker login --username '.$dockerUser.' --password-stdin', '', $stdout, $stderr);
+    Console::log('Docker Login'. $stdout.$stderr);
+}
+
 Co\run(function() use ($environments) {  // Warmup: make sure images are ready to run fast 🚀
     Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
     
