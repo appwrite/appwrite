@@ -388,7 +388,7 @@ App::get('/.well-known/acme-challenge')
     ->inject('response')
     ->action(function ($request, $response) {
         $base = \realpath(APP_STORAGE_CERTIFICATES);
-        $path = \str_replace('/.well-known/acme-challenge/', '', $request->getParam('q'));
+        $path = \str_replace('/.well-known/acme-challenge/', '', $request->getURI());
         $absolute = \realpath($base.'/.well-known/acme-challenge/'.$path);
 
         if (!$base) {

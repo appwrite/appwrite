@@ -1397,7 +1397,7 @@ App::post('/v1/projects/:projectId/domains')
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception('Unreachable CNAME target ('.$target->get().'), plesse use a domain with a public suffix.', 500);
+            throw new Exception('Unreachable CNAME target ('.$target->get().'), please use a domain with a public suffix.', 500);
         }
 
         $domain = new Domain($domain);
@@ -1528,7 +1528,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception('Unreachable CNAME target ('.$target->get().'), plesse use a domain with a public suffix.', 500);
+            throw new Exception('Unreachable CNAME target ('.$target->get().'), please use a domain with a public suffix.', 500);
         }
 
         if ($domain->getAttribute('verification') === true) {
