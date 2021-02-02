@@ -105,7 +105,7 @@ return [
             ],
             [
                 'name' => '_APP_SYSTEM_SECURITY_EMAIL_ADDRESS',
-                'description' => 'This is the email address that used to issue SSL certificates for the domains or the user agent in webhooks. The default value is \'security@localhost.test\'.',
+                'description' => 'This is the email address used to issue SSL certificates for custom domains or the user agent in webhooks. The default value is \'security@localhost.test\'.',
                 'introduction' => '0.7.0',
                 'default' => 'security@localhost.test',
                 'required' => false,
