@@ -514,7 +514,9 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                                     <div class="row responsive thin margin-top-small">
                                         <?php foreach ($events as $i => $event) : ?>
                                             <div class="col span-6 text-one-liner margin-bottom text-height-large text-size-small" title="<?php echo $event; ?>">
-                                                <input type="checkbox" name="events" data-ls-bind="{{project-function.events}}" value="<?php echo $event; ?>" /> &nbsp; <?php echo $event; ?>
+                                                <input type="checkbox" name="events" data-ls-bind="{{project-function.events}}" id="<?php echo $event; ?>" value="<?php echo $event; ?>" />
+                                                &nbsp;
+                                                <label class="inline" for="<?php echo $event; ?>"><?php echo $event; ?></label>
                                             </div>
                                             <?php if (($i + 1) % 2 === 0) : ?>
                                             </div>
