@@ -408,10 +408,10 @@
 
   .dashboard {
     padding: 20px;
-    min-height: 95px;
     overflow: hidden;
     position: relative;
     z-index: 1;
+    margin-bottom: 2px;
 
     .chart {
       width: 80%;
@@ -422,7 +422,7 @@
     }
 
     hr {
-      margin: 20px -20px;
+      margin: 20px -25px;
       height: 2px;
       background: var(--config-console-background);
 
@@ -452,7 +452,6 @@
         display: block;
         width: 2px;
         background: var(--config-console-background);
-        height: ~"calc(100% + 110px)";
         position: absolute;
         top: -20px;
         bottom: -20px;
@@ -473,11 +472,20 @@
       vertical-align: bottom;
       line-height: 45px;
 
+      &.small {
+        line-height: 35px;
+      }
+
       .sum {
         font-size: 45px;
         line-height: 45px;
         font-weight: 700;
         vertical-align: bottom;
+
+        &.small {
+          font-size: 25px;
+          line-height: 25px;
+        }
       }
     }
 
@@ -578,7 +586,7 @@
         vertical-align: middle;
       }
 
-      &:nth-child(1) {
+      &:nth-child(1), &.blue {
         color: #29b5d9;
 
         &::before {
@@ -586,7 +594,7 @@
         }
       }
 
-      &:nth-child(2) {
+      &:nth-child(2), &.green {
         color: #4eb55b;
 
         &::before {
@@ -594,11 +602,19 @@
         }
       }
 
-      &:nth-child(3) {
+      &:nth-child(3), &.orange {
         color: #ec9323;
 
         &::before {
           background: #ec9323;
+        }
+      }
+
+      &:nth-child(4), &.red {
+        color: #dc3232;
+
+        &::before {
+          background: #dc3232;
         }
       }
     }

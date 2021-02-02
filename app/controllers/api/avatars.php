@@ -11,15 +11,14 @@ use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Filesystem;
 use Appwrite\Resize\Resize;
 use Appwrite\URL\URL as URLParse;
-use BaconQrCode\Renderer\ImageRenderer;
-use BaconQrCode\Renderer\Image\ImagickImageBackEnd;
-use BaconQrCode\Renderer\RendererStyle\RendererStyle;
-use BaconQrCode\Writer;
+use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Validator\HexColor;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
 
 $avatarCallback = function ($type, $code, $width, $height, $quality, $response) {
-    /** @var Utopia\Response $response */
+    /** @var Appwrite\Utopia\Response $response */
 
     $code = \strtolower($code);
     $type = \strtolower($type);
@@ -90,13 +89,16 @@ App::get('/v1/avatars/credit-cards/:code')
     ->label('sdk.method', 'getCreditCard')
     ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-credit-card.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE_PNG)
     ->param('code', '', new WhiteList(\array_keys(Config::getParam('avatar-credit-cards'))), 'Credit Card Code. Possible values: '.\implode(', ', \array_keys(Config::getParam('avatar-credit-cards'))).'.')
     ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
+    ->inject('response')
     ->action(function ($code, $width, $height, $quality, $response) use ($avatarCallback) {
         return $avatarCallback('credit-cards', $code, $width, $height, $quality, $response);
-    }, ['response']);
+    });
 
 App::get('/v1/avatars/browsers/:code')
     ->desc('Get Browser Icon')
@@ -107,13 +109,16 @@ App::get('/v1/avatars/browsers/:code')
     ->label('sdk.method', 'getBrowser')
     ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-browser.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE_PNG)
     ->param('code', '', new WhiteList(\array_keys(Config::getParam('avatar-browsers'))), 'Browser Code.')
     ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
+    ->inject('response')
     ->action(function ($code, $width, $height, $quality, $response) use ($avatarCallback) {
         return $avatarCallback('browsers', $code, $width, $height, $quality, $response);
-    }, ['response']);
+    });
 
 App::get('/v1/avatars/flags/:code')
     ->desc('Get Country Flag')
@@ -124,13 +129,16 @@ App::get('/v1/avatars/flags/:code')
     ->label('sdk.method', 'getFlag')
     ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-flag.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE_PNG)
     ->param('code', '', new WhiteList(\array_keys(Config::getParam('avatar-flags'))), 'Country Code. ISO Alpha-2 country code format.')
     ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
+    ->inject('response')
     ->action(function ($code, $width, $height, $quality, $response) use ($avatarCallback) {
         return $avatarCallback('flags', $code, $width, $height, $quality, $response);
-    }, ['response']);
+    });
 
 App::get('/v1/avatars/image')
     ->desc('Get Image from URL')
@@ -141,11 +149,14 @@ App::get('/v1/avatars/image')
     ->label('sdk.method', 'getImage')
     ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-image.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE)
     ->param('url', '', new URL(), 'Image URL which you want to crop.')
     ->param('width', 400, new Range(0, 2000), 'Resize preview image width, Pass an integer between 0 to 2000.', true)
     ->param('height', 400, new Range(0, 2000), 'Resize preview image height, Pass an integer between 0 to 2000.', true)
+    ->inject('response')
     ->action(function ($url, $width, $height, $response) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $quality = 80;
         $output = 'png';
@@ -196,7 +207,7 @@ App::get('/v1/avatars/image')
         ;
 
         unset($resize);
-    }, ['response']);
+    });
 
 App::get('/v1/avatars/favicon')
     ->desc('Get Favicon')
@@ -207,9 +218,12 @@ App::get('/v1/avatars/favicon')
     ->label('sdk.method', 'getFavicon')
     ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-favicon.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE)
     ->param('url', '', new URL(), 'Website URL which you want to fetch the favicon from.')
+    ->inject('response')
     ->action(function ($url, $response) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $width = 56;
         $height = 56;
@@ -346,7 +360,7 @@ App::get('/v1/avatars/favicon')
             ->send($data);
 
         unset($resize);
-    }, ['response']);
+    });
 
 App::get('/v1/avatars/qr')
     ->desc('Get QR Code')
@@ -357,32 +371,39 @@ App::get('/v1/avatars/qr')
     ->label('sdk.method', 'getQR')
     ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-qr.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE_PNG)
     ->param('text', '', new Text(512), 'Plain text to be converted to QR code image.')
     ->param('size', 400, new Range(0, 1000), 'QR code size. Pass an integer between 0 to 1000. Defaults to 400.', true)
     ->param('margin', 1, new Range(0, 10), 'Margin from edge. Pass an integer between 0 to 10. Defaults to 1.', true)
     ->param('download', false, new Boolean(true), 'Return resulting image with \'Content-Disposition: attachment \' headers for the browser to start downloading it. Pass 0 for no header, or 1 for otherwise. Default value is set to 0.', true)
+    ->inject('response')
     ->action(function ($text, $size, $margin, $download, $response) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $download = ($download === '1' || $download === 'true' || $download === 1 || $download === true);
+        $options = new QROptions([
+            'addQuietzone' => true,
+            'quietzoneSize' => $margin,
+            'outputType' => QRCode::OUTPUT_IMAGICK,
+        ]);
 
-        $renderer = new ImageRenderer(
-            new RendererStyle($size, $margin),
-            new ImagickImageBackEnd('png', 100)
-        );
-
-        $writer = new Writer($renderer);
+        $qrcode = new QRCode($options);
 
         if ($download) {
             $response->addHeader('Content-Disposition', 'attachment; filename="qr.png"');
         }
 
+        $resize = new Resize($qrcode->render($text));
+
+        $resize->crop((int) $size, (int) $size);
+
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
             ->setContentType('image/png')
-            ->send($writer->writeString($text))
+            ->send($resize->output('png', 9))
         ;
-    }, ['response']);
+    });
 
 App::get('/v1/avatars/initials')
     ->desc('Get User Initials')
@@ -393,13 +414,17 @@ App::get('/v1/avatars/initials')
     ->label('sdk.method', 'getInitials')
     ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-initials.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE_PNG)
     ->param('name', '', new Text(128), 'Full Name. When empty, current user name or email will be used. Max length: 128 chars.', true)
     ->param('width', 500, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 500, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('color', '', new HexColor(), 'Changes text color. By default a random color will be picked and stay will persistent to the given name.', true)
     ->param('background', '', new HexColor(), 'Changes background color. By default a random color will be picked and stay will persistent to the given name.', true)
+    ->inject('response')
+    ->inject('user')
     ->action(function ($name, $width, $height, $color, $background, $response, $user) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
 
         $themes = [
@@ -460,4 +485,4 @@ App::get('/v1/avatars/initials')
             ->setContentType('image/png')
             ->send($image->getImageBlob())
         ;
-    }, ['response', 'user']);
+    });

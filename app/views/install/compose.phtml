@@ -13,6 +13,8 @@ services:
       - --providers.file.directory=/storage/config
       - --providers.file.watch=true
       - --providers.docker=true
+      - --providers.docker.exposedByDefault=false
+      - --providers.docker.constraints=Label(`traefik.constraint-label-stack`,`appwrite`)
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
     restart: unless-stopped
@@ -36,6 +38,8 @@ services:
     networks:
       - appwrite
     labels:
+      - traefik.enable=true
+      - traefik.constraint-label-stack=appwrite
       - traefik.http.routers.appwrite.rule=PathPrefix(`/`)
       - traefik.http.routers.appwrite-secure.rule=PathPrefix(`/`)
       - traefik.http.routers.appwrite-secure.tls=true
@@ -67,11 +71,21 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_SMTP_HOST
+      - _APP_SMTP_PORT
+      - _APP_SMTP_SECURE
+      - _APP_SMTP_USERNAME
+      - _APP_SMTP_PASSWORD
+      - _APP_USAGE_STATS
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
       - _APP_STORAGE_LIMIT
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_FUNCTIONS_CONTAINERS
+      - _APP_FUNCTIONS_CPUS
+      - _APP_FUNCTIONS_MEMORY
+      - _APP_FUNCTIONS_MEMORY_SWAP
+      - _APP_FUNCTIONS_ENVS
 
   appwrite-worker-usage:
     image: appwrite/appwrite:<?php echo $version."\n"; ?>
@@ -211,8 +225,8 @@ services:
       - mariadb
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /tmp:/tmp:rw
       - appwrite-functions:/storage/functions:rw
+      - /tmp:/tmp:rw
     environment:
       - _APP_ENV
       - _APP_REDIS_HOST
@@ -224,6 +238,10 @@ services:
       - _APP_DB_PASS
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_FUNCTIONS_CONTAINERS
+      - _APP_FUNCTIONS_CPUS
+      - _APP_FUNCTIONS_MEMORY
+      - _APP_FUNCTIONS_MEMORY_SWAP
+      - _APP_USAGE_STATS
 
   appwrite-worker-mails:
     image: appwrite/appwrite:<?php echo $version."\n"; ?>
@@ -243,6 +261,28 @@ services:
       - _APP_REDIS_PORT
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
+      - _APP_SMTP_SECURE
+      - _APP_SMTP_USERNAME
+      - _APP_SMTP_PASSWORD
+      
+  appwrite-maintenance:
+    image: appwrite/appwrite:<?php echo $version."\n"; ?>
+    entrypoint: maintenance
+    container_name: appwrite-maintenance
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_MAINTENANCE_INTERVAL
+      - _APP_MAINTENANCE_RETENTION_EXECUTION
+      - _APP_MAINTENANCE_RETENTION_ABUSE
+      - _APP_MAINTENANCE_RETENTION_AUDIT
+
 
   appwrite-schedule:
     image: appwrite/appwrite:<?php echo $version."\n"; ?>
@@ -259,15 +299,13 @@ services:
       - _APP_REDIS_PORT
 
   mariadb:
-    image: appwrite/mariadb:1.0.3 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: appwrite/mariadb:1.2.0 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     restart: unless-stopped
     networks:
       - appwrite
     volumes:
       - appwrite-mariadb:/var/lib/mysql:rw
-    ports:
-      - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=rootsecretpassword
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
@@ -331,5 +369,4 @@ volumes:
   appwrite-certificates:
   appwrite-functions:
   appwrite-influxdb:
-  appwrite-chronograf:
   appwrite-config:

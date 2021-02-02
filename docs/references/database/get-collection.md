@@ -1,1 +1,1 @@
-Get collection by its unique ID. This endpoint response returns a JSON object with the collection metadata.
+Get a collection by its unique ID. This endpoint response returns a JSON object with the collection metadata.

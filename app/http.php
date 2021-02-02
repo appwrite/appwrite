@@ -2,9 +2,10 @@
 
 require_once __DIR__.'/../vendor/autoload.php';
 
-use Appwrite\Swoole\Files;
-use Appwrite\Swoole\Request;
-use Appwrite\Swoole\Response;
+use Appwrite\Database\Validator\Authorization;
+use Utopia\Swoole\Files;
+use Utopia\Swoole\Request;
+use Appwrite\Utopia\Response;
 use Swoole\Process;
 use Swoole\Http\Server;
 use Swoole\Http\Request as SwooleRequest;
@@ -17,13 +18,12 @@ use Utopia\CLI\Console;
 ini_set('memory_limit','512M');
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
+ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
-sleep(2);
+$http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
-$http = new Server("0.0.0.0", 80);
-
-$payloadSize = max(4000000 /* 4mb */, App::getEnv('_APP_STORAGE_LIMIT', 100000000));
+$payloadSize = max(4000000 /* 4mb */, App::getEnv('_APP_STORAGE_LIMIT', 10000000 /* 10mb */));
 
 $http
     ->set([
@@ -49,7 +49,8 @@ $http->on('AfterReload', function($serv, $workerId) {
 });
 
 $http->on('start', function (Server $http) use ($payloadSize) {
-    Console::success('Server started succefully (max payload is '.$payloadSize.' bytes)');
+
+    Console::success('Server started succefully (max payload is '.number_format($payloadSize).' bytes)');
 
     Console::info("Master pid {$http->master_pid}, manager pid {$http->manager_pid}");
 
@@ -93,9 +94,12 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         return;
     }
 
-    $app = new App('Asia/Tel_Aviv');
+    $app = new App('America/New_York');
     
     try {
+        Authorization::cleanRoles();
+        Authorization::setRole('*');
+
         $app->run($request, $response);
     } catch (\Throwable $th) {
         Console::error('[Error] Type: '.get_class($th));
@@ -106,8 +110,9 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         if(App::isDevelopment()) {
             $swooleResponse->end('error: '.$th->getMessage());
         }
-        
-        $swooleResponse->end('500: Server Error');
+        else {
+            $swooleResponse->end('500: Server Error');
+        }
     }
 });
 

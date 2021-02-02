@@ -192,6 +192,8 @@ $collections = [];
                 <div class="row responsive margin-top-negative">
                     <div class="col span-8 margin-bottom">
                         <form
+                            data-analytics
+                            data-analytics-activity
                             data-analytics-event="submit"
                             data-analytics-category="console"
                             data-analytics-label="Update Database Document"
@@ -288,6 +290,8 @@ $collections = [];
 
                         <div data-ls-if="({{project-document.$id}})">
                             <form name="database.deleteDocument" class="margin-bottom"
+                                data-analytics
+                                data-analytics-activity
                                 data-analytics-event="submit"
                                 data-analytics-category="console"
                                 data-analytics-label="Delete Collection Document"

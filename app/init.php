@@ -4,13 +4,15 @@
  * Init
  * 
  * Initializes both Appwrite API entry point, queue workers, and CLI tasks.
- * Set configuration, framework resources, app constants
+ * Set configuration, framework resources & app constants
  * 
  */
 if (\file_exists(__DIR__.'/../vendor/autoload.php')) {
     require_once __DIR__.'/../vendor/autoload.php';
 }
 
+use Ahc\Jwt\JWT;
+use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
 use Appwrite\Database\Database;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
@@ -34,9 +36,10 @@ const APP_DOMAIN = 'appwrite.io';
 const APP_EMAIL_TEAM = 'team@localhost.test'; // Default email address
 const APP_EMAIL_SECURITY = 'security@localhost.test'; // Default security email address
 const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
+const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
-const APP_CACHE_BUSTER = 127;
+const APP_CACHE_BUSTER = 142;
 const APP_VERSION_STABLE = '0.7.0';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
@@ -51,7 +54,12 @@ const APP_SOCIAL_INSTAGRAM = 'https://www.instagram.com/appwrite.io';
 const APP_SOCIAL_GITHUB = 'https://github.com/appwrite';
 const APP_SOCIAL_DISCORD = 'https://appwrite.io/discord';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
-const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
+const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite'; 
+// Deletion Types
+const DELETE_TYPE_DOCUMENT = 'document';
+const DELETE_TYPE_EXECUTIONS = 'executions';
+const DELETE_TYPE_AUDIT = 'audit';
+const DELETE_TYPE_ABUSE = 'abuse';
 
 $register = new Registry();
 
@@ -199,23 +207,8 @@ $register->set('smtp', function () {
 
     return $mail;
 });
-$register->set('queue-webhooks', function () {
-    return new Event('v1-webhooks', 'WebhooksV1');
-});
-$register->set('queue-audits', function () {
-    return new Event('v1-audits', 'AuditsV1');
-});
-$register->set('queue-usage', function () {
-    return new Event('v1-usage', 'UsageV1');
-});
-$register->set('queue-mails', function () {
-    return new Event('v1-mails', 'MailsV1');
-});
-$register->set('queue-deletes', function () {
-    return new Event('v1-deletes', 'DeletesV1');
-});
-$register->set('queue-functions', function () {
-    return new Event('v1-functions', 'FunctionsV1');
+$register->set('geodb', function () {
+    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2020-01.mmdb');
 });
 
 /*
@@ -307,32 +300,35 @@ App::setResource('locale', function() {
 });
 
 // Queues
-App::setResource('webhooks', function($register) {
-    return $register->get('queue-webhooks');
+App::setResource('events', function($register) {
+    return new Event('', '');
 }, ['register']);
 
 App::setResource('audits', function($register) {
-    return $register->get('queue-audits');
+    return new Event(Event::AUDITS_QUEUE_NAME, Event::AUDITS_CLASS_NAME);
 }, ['register']);
 
 App::setResource('usage', function($register) {
-    return $register->get('queue-usage');
+    return new Event(Event::USAGE_QUEUE_NAME, Event::USAGE_CLASS_NAME);
 }, ['register']);
 
 App::setResource('mails', function($register) {
-    return $register->get('queue-mails');
+    return new Event(Event::MAILS_QUEUE_NAME, Event::MAILS_CLASS_NAME);
 }, ['register']);
 
 App::setResource('deletes', function($register) {
-    return $register->get('queue-deletes');
-}, ['register']);
-
-App::setResource('functions', function($register) {
-    return $register->get('queue-functions');
+    return new Event(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME);
 }, ['register']);
 
 // Test Mock
-App::setResource('clients', function($console, $project) {
+App::setResource('clients', function($request, $console, $project) {
+    $console->setAttribute('platforms', [ // Allways allow current host
+        '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+        'name' => 'Current Host',
+        'type' => 'web',
+        'hostname' => $request->getHostname(),
+    ], Document::SET_TYPE_APPEND);
+    
     /**
      * Get All verified client URLs for both console and current projects
      * + Filter for duplicated entries
@@ -358,11 +354,11 @@ App::setResource('clients', function($console, $project) {
     }))));
 
     return $clients;
-}, ['console', 'project']);
+}, ['request', 'console', 'project']);
 
 App::setResource('user', function($mode, $project, $console, $request, $response, $projectDB, $consoleDB) {
-    /** @var Utopia\Request $request */
-    /** @var Utopia\Response $response */
+    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Database\Document $project */
     /** @var Appwrite\Database\Database $consoleDB */
     /** @var Appwrite\Database\Database $projectDB */
@@ -378,8 +374,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
 
     $session = Auth::decodeSession(
         $request->getCookie(Auth::$cookieName, // Get sessions
-            $request->getCookie(Auth::$cookieName.'_legacy', // Get fallback session from old clients (no SameSite support)
-                $request->getHeader('x-appwrite-key', '')))); // Get API Key
+            $request->getCookie(Auth::$cookieName.'_legacy', '')));// Get fallback session from old clients (no SameSite support)
 
     // Get fallback session from clients who block 3rd-party cookies
     $response->addHeader('X-Debug-Fallback', 'false');
@@ -419,11 +414,34 @@ App::setResource('user', function($mode, $project, $console, $request, $response
         }
     }
 
+    $authJWT = $request->getHeader('x-appwrite-jwt', '');
+
+    if (!empty($authJWT)) { // JWT authentication
+        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+
+        try {
+            $payload = $jwt->decode($authJWT);
+        } catch (JWTException $error) {
+            throw new Exception('Failed to verify JWT. '.$error->getMessage(), 401);
+        }
+        
+        $jwtUserId = $payload['userId'] ?? '';
+        $jwtSessionId = $payload['sessionId'] ?? '';
+
+        if($jwtUserId && $jwtSessionId) {
+            $user = $projectDB->getDocument($jwtUserId);
+        }
+
+        if (empty($user->search('$id', $jwtSessionId, $user->getAttribute('tokens')))) { // Match JWT to active token
+            $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+        }
+    }
+
     return $user;
 }, ['mode', 'project', 'console', 'request', 'response', 'projectDB', 'consoleDB']);
 
 App::setResource('project', function($consoleDB, $request) {
-    /** @var Appwrite\Swoole\Request $request */
+    /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Database\Database $consoleDB */
 
     Authorization::disable();
@@ -444,7 +462,6 @@ App::setResource('consoleDB', function($register) {
     $consoleDB = new Database();
     $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
     $consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
-    
     $consoleDB->setMocks(Config::getParam('collections', []));
 
     return $consoleDB;
@@ -460,11 +477,11 @@ App::setResource('projectDB', function($register, $project) {
 }, ['register', 'project']);
 
 App::setResource('mode', function($request) {
-    /** @var Utopia\Request $request */
-    return $request->getParam('mode', $request->getHeader('x-appwrite-mode', 'default'));
+    /** @var Utopia\Swoole\Request $request */
+    return $request->getParam('mode', $request->getHeader('x-appwrite-mode', APP_MODE_DEFAULT));
 }, ['request']);
 
-App::setResource('geodb', function($request) {
-    /** @var Utopia\Request $request */
-    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2020-01.mmdb');
-}, ['request']);
+App::setResource('geodb', function($register) {
+    /** @var Utopia\Registry\Registry $register */
+    return $register->get('geodb');
+}, ['register']);

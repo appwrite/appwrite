@@ -24,17 +24,10 @@ trait StorageBase
 
         $this->assertEquals($file['headers']['status-code'], 201);
         $this->assertNotEmpty($file['body']['$id']);
-        $this->assertEquals('files', $file['body']['$collection']);
         $this->assertIsInt($file['body']['dateCreated']);
         $this->assertEquals('logo.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
-        $this->assertEquals(54944, $file['body']['sizeActual']);
-        $this->assertEquals('gzip', $file['body']['algorithm']);
-        $this->assertEquals('1', $file['body']['fileOpenSSLVersion']);
-        $this->assertEquals('aes-128-gcm', $file['body']['fileOpenSSLCipher']);
-        $this->assertNotEmpty($file['body']['fileOpenSSLTag']);
-        $this->assertNotEmpty($file['body']['fileOpenSSLIV']);
 
         /**
          * Test for FAILURE

@@ -53,7 +53,7 @@ class Microsoft extends OAuth2
      */
     public function getAccessToken(string $code): string
     {
-        $headers[] = 'Content-Type: application/x-www-form-urlencoded';
+        $headers = ['Content-Type: application/x-www-form-urlencoded'];
 
         $accessToken = $this->request(
             'POST',
@@ -134,7 +134,7 @@ class Microsoft extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $headers[] = 'Authorization: Bearer '. \urlencode($accessToken);
+            $headers = ['Authorization: Bearer '. \urlencode($accessToken)];
             $user = $this->request('GET', 'https://graph.microsoft.com/v1.0/me', $headers);
             $this->user = \json_decode($user, true);
         }

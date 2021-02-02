@@ -58,7 +58,7 @@ class Apple extends OAuth2
      */
     public function getAccessToken(string $code): string
     {
-        $headers[] = 'Content-Type: application/x-www-form-urlencoded';
+        $headers = ['Content-Type: application/x-www-form-urlencoded'];
         $accessToken = $this->request(
             'POST',
             'https://appleid.apple.com/auth/token',
@@ -175,8 +175,10 @@ class Apple extends OAuth2
 
     /**
      * @param string $data
+     *
+     * @return string
      */
-    protected function encode($data)
+    protected function encode($data): string
     {
         return \str_replace(['+', '/', '='], ['-', '_', ''], \base64_encode($data));
     }

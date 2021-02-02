@@ -48,7 +48,7 @@ class Bitbucket extends OAuth2
     public function getAccessToken(string $code): string
     {
         // Required as per Bitbucket Spec.
-        $headers[] = 'Content-Type: application/x-www-form-urlencoded';
+        $headers = ['Content-Type: application/x-www-form-urlencoded'];
         
         $accessToken = $this->request(
             'POST',

@@ -13,9 +13,11 @@
           key.type = "text";
           key.className = "margin-bottom-no";
           key.placeholder = "Key";
+          key.required = true;
           value.type = "text";
           value.className = "margin-bottom-no";
           value.placeholder = "Value";
+          value.required = true;
     
           wrap.className = "row thin margin-bottom-small";
           cell1.className = "col span-6";

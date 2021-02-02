@@ -17,11 +17,11 @@ class Document extends ArrayObject
      *
      * @see ArrayObject::__construct
      *
-     * @param null   $input
+     * @param array $input
      * @param int    $flags
      * @param string $iterator_class
      */
-    public function __construct($input = null, $flags = 0, $iterator_class = 'ArrayIterator')
+    public function __construct($input = [], $flags = 0, $iterator_class = 'ArrayIterator')
     {
         foreach ($input as $key => &$value) {
             if (\is_array($value)) {
@@ -49,7 +49,7 @@ class Document extends ArrayObject
     }
 
     /**
-     * @return int|null
+     * @return string
      */
     public function getCollection()
     {
@@ -196,8 +196,8 @@ class Document extends ArrayObject
     /**
      * Checks if a document key is set.
      *
-     * @param $key
-     * 
+     * @param string $key
+     *
      * @return bool
      */
     public function isSet($key)
@@ -219,7 +219,7 @@ class Document extends ArrayObject
     {
         $array = parent::getArrayCopy();
 
-        $output = array();
+        $output = [];
 
         foreach ($array as $key => &$value) {
             if (!empty($whitelist) && !\in_array($key, $whitelist)) { // Export only whitelisted fields

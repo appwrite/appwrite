@@ -11,51 +11,46 @@ class User extends Model
     {
         $this
             ->addRule('$id', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'User ID.',
+                'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('name', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'User name.',
                 'default' => '',
                 'example' => 'John Doe',
             ])
             ->addRule('registration', [
-                'type' => 'integer',
+                'type' => self::TYPE_INTEGER,
                 'description' => 'User registration date in Unix timestamp.',
+                'default' => 0,
                 'example' => 1592981250,
             ])
             ->addRule('status', [
-                'type' => 'integer',
-                'description' => 'User status. 0 for Unavtivated, 1 for active and 2 is blocked.',
-                'default' => false,
-                'example' => true,
+                'type' => self::TYPE_INTEGER,
+                'description' => 'User status. 0 for Unactivated, 1 for active and 2 is blocked.',
+                'default' => 0,
+                'example' => 0,
             ])
             ->addRule('email', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'User email address.',
                 'default' => '',
                 'example' => 'john@appwrite.io',
             ])
             ->addRule('emailVerification', [
-                'type' => 'boolean',
+                'type' => self::TYPE_BOOLEAN,
                 'description' => 'Email verification status.',
                 'default' => false,
                 'example' => true,
             ])
             ->addRule('prefs', [
-                'type' => 'json',
+                'type' => self::TYPE_JSON,
                 'description' => 'User preferences as a key-value object',
                 'default' => new \stdClass,
-                'example' => ['theme' => 'dark', 'timezone' => 'UTC'],
-            ])
-            ->addRule('roles', [
-                'type' => 'string',
-                'description' => 'User list of roles',
-                'default' => [],
-                'example' => [],
-                'array' => true,
+                'example' => ['theme' => 'pink', 'timezone' => 'UTC'],
             ])
         ;
     }

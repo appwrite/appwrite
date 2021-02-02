@@ -13,6 +13,12 @@ input:-moz-placeholder {
   text-align: @config-start;
 }
 
+form {
+  &.inline {
+    display: inline-block;
+  }
+}
+
 input, textarea {
   background: var(--config-color-background-input);
 }
@@ -96,6 +102,22 @@ button,
     height: 40px;
     line-height: 36px;
     font-size: 13px;
+  }
+
+  &.tick {
+    background: var(--config-color-fade-light);
+    color: var(--config-color-dark);
+    border-radius: 20px;
+    padding: 0 10px;
+    line-height: 30px;
+    height: 30px;
+    font-size: 12px;
+    display: inline-block;
+
+    &.selected {
+      background: var(--config-color-dark);
+      color: var(--config-color-fade);
+    }
   }
 
   &.round {
@@ -221,6 +243,10 @@ label {
   margin-bottom: 15px;
   display: block;
   line-height: normal;
+
+  &.inline {
+    display: inline;
+  }
 }
 
 .input,

@@ -35,7 +35,7 @@ $home = $this->getParam('home', '');
             <p class="margin-bottom-no">No Projects Found, Create your first project now.</p>
         </div>
 
-        <ul data-ls-loop="console-projects.projects" data-ls-as="project" data-ls-append="" class="tiles cell-3" style="visibility: hidden">
+        <ul data-ls-loop="console-projects.projects" data-ls-as="project" data-ls-append="" class="tiles cell-3">
             <li class="margin-bottom">
                 <a data-ls-attrs="href=/console/home?project={{project.$id}}" class="box">
                     <div data-ls-bind="{{project.name}}" class="text-one-liner margin-bottom-tiny text-bold">&nbsp;</div>
@@ -93,23 +93,28 @@ $home = $this->getParam('home', '');
                 <p class="text-fade">Join Appwrite growing developers community channels.</p>
         
                 <a href="<?php echo APP_SOCIAL_TWITTER; ?>" target="_blank" rel="noopener" title="<?php echo APP_NAME;?> on Twitter"
+                    data-analytics
                     data-analytics-event="click"
                     data-analytics-category="console/home"
                     data-analytics-label="Twitter Link"><i class="icon-twitter"></i></a>
                 <a href="<?php echo APP_SOCIAL_FACEBOOK; ?>" target="_blank" rel="noopener" title="<?php echo APP_NAME;?> on Facebook"
+                    data-analytics
                     data-analytics-event="click"
                     data-analytics-category="console/home"
                     data-analytics-label="Facebook Link"><i class="icon-facebook"></i></a>
                 <a href="<?php echo APP_SOCIAL_LINKEDIN; ?>" target="_blank" rel="noopener" title="<?php echo APP_NAME;?> on Linkedin"
+                    data-analytics
                     data-analytics-event="click"
                     data-analytics-category="console/home"
                     data-analytics-label="Linkedin Link"><i class="icon-linkedin"></i></a>
                 <a href="<?php echo APP_SOCIAL_DISCORD; ?>" target="_blank" rel="noopener" title="<?php echo APP_NAME;?> Discord Server"
+                    data-analytics
                     data-analytics-event="click"
                     data-analytics-category="console/home"
                     data-analytics-label="Discord Link"><i class="icon-discord"></i></a>
                 <a href="<?php echo APP_SOCIAL_GITHUB; ?>" target="_blank" rel="noopener" title="<?php echo APP_NAME;?> on Github"
-                    data-analytics-event="click"
+                    data-analytics
+                    data-analytics-type="click"
                     data-analytics-category="console/home"
                     data-analytics-label="GitHub Link"><i class="icon-github-circled"></i></a>
             </div>

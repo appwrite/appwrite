@@ -11,52 +11,58 @@ class Membership extends Model
     {
         $this
             ->addRule('$id', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Membership ID.',
+                'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('userId', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'User ID.',
+                'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('teamId', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Team ID.',
+                'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('name', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'User name.',
                 'default' => '',
                 'example' => 'VIP',
             ])
             ->addRule('email', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'User email address.',
                 'default' => '',
                 'example' => 'john@appwrite.io',
             ])
             ->addRule('invited', [
-                'type' => 'integer',
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Date, the user has been invited to join the team in Unix timestamp.',
+                'default' => 0,
                 'example' => 1592981250,
             ])
             ->addRule('joined', [
-                'type' => 'integer',
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Date, the user has accepted the invitation to join the team in Unix timestamp.',
+                'default' => 0,
                 'example' => 1592981250,
             ])
             ->addRule('confirm', [
-                'type' => 'boolean',
+                'type' => self::TYPE_BOOLEAN,
                 'description' => 'User confirmation status, true if the user has joined the team or false otherwise.',
+                'default' => false,
                 'example' => false,
             ])
             ->addRule('roles', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'User list of roles',
                 'default' => [],
-                'example' => [],
+                'example' => 'admin',
                 'array' => true,
             ])
         ;

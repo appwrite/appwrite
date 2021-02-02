@@ -12,7 +12,7 @@ use Appwrite\Network\Validator\CNAME;
 
 require_once __DIR__.'/../init.php';
 
-\cli_set_process_title('Certificates V1 Worker');
+Console::title('Certificates V1 Worker');
 
 Console::success(APP_NAME.' certificates worker v1 has started');
 
@@ -88,9 +88,6 @@ class CertificatesV1
         $certificate = $consoleDB->getCollectionFirst([
             'limit' => 1,
             'offset' => 0,
-            'orderField' => 'id',
-            'orderType' => 'ASC',
-            'orderCast' => 'string',
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_CERTIFICATES,
                 'domain='.$domain->get(),

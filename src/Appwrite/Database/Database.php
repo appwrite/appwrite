@@ -58,6 +58,11 @@ class Database
     static protected $filters = [];
 
     /**
+     * @var bool
+     */
+    static protected $statusFilters = true;
+
+    /**
      * @var array
      */
     protected $mocks = [];
@@ -116,7 +121,7 @@ class Database
     /**
      * Create Namespace.
      *
-     * @param int $namespace
+     * @param string $namespace
      *
      * @return bool
      */
@@ -128,7 +133,7 @@ class Database
     /**
      * Delete Namespace.
      *
-     * @param int $namespace
+     * @param string $namespace
      *
      * @return bool
      */
@@ -149,7 +154,7 @@ class Database
             'limit' => 15,
             'search' => '',
             'relations' => true,
-            'orderField' => '$id',
+            'orderField' => '',
             'orderType' => 'ASC',
             'orderCast' => 'int',
             'filters' => [],
@@ -158,7 +163,7 @@ class Database
         $results = $this->adapter->getCollection($options);
 
         foreach ($results as &$node) {
-            $node = new Document($node);
+            $node = $this->decode(new Document($node));
         }
 
         return $results;
@@ -187,22 +192,23 @@ class Database
     }
 
     /**
-     * @param int  $id
+     * @param string $id
      * @param bool $mock is mocked data allowed?
+     * @param bool $decode enable decoding?
      *
      * @return Document
      */
-    public function getDocument($id, $mock = true, $decode = true)
+    public function getDocument($id, bool $mock = true, bool $decode = true)
     {
         if (\is_null($id)) {
-            return new Document([]);
+            return new Document();
         }
 
         $document = new Document((isset($this->mocks[$id]) && $mock) ? $this->mocks[$id] : $this->adapter->getDocument($id));
         $validator = new Authorization($document, 'read');
 
         if (!$validator->isValid($document->getPermissions())) { // Check if user has read access to this document
-            return new Document([]);
+            return new Document();
         }
 
         $document = ($decode) ? $this->decode($document) : $document;
@@ -213,7 +219,7 @@ class Database
     /**
      * @param array $data
      *
-     * @return Document|bool
+     * @return Document
      *
      * @throws AuthorizationException
      * @throws StructureException
@@ -316,23 +322,29 @@ class Database
             throw new AuthorizationException($validator->getDescription()); // var_dump($validator->getDescription()); return false;
         }
 
+        $new = $this->encode($new);
+
         $validator = new Structure($this);
 
         if (!$validator->isValid($new)) { // Make sure updated structure still apply collection rules (if any)
             throw new StructureException($validator->getDescription()); // var_dump($validator->getDescription()); return false;
         }
 
-        return new Document($this->adapter->updateDocument($data));
+        $new = new Document($this->adapter->updateDocument($new->getArrayCopy()));
+
+        $new = $this->decode($new);
+
+        return $new;
     }
 
     /**
-     * @param int $id
+     * @param string $id
      *
      * @return Document|false
      *
      * @throws AuthorizationException
      */
-    public function deleteDocument($id)
+    public function deleteDocument(string $id)
     {
         $document = $this->getDocument($id);
 
@@ -395,9 +407,9 @@ class Database
      * @param string $key
      * @param string $value
      *
-     * @return array
+     * @return self
      */
-    public function setMock($key, $value)
+    public function setMock($key, $value): self
     {
         $this->mocks[$key] = $value;
 
@@ -405,11 +417,11 @@ class Database
     }
 
     /**
-     * @param string $mocks
+     * @param array $mocks
      *
-     * @return array
+     * @return self
      */
-    public function setMocks(array $mocks)
+    public function setMocks(array $mocks): self
     {
         $this->mocks = $mocks;
 
@@ -426,14 +438,14 @@ class Database
 
     /**
      * Add Attribute Filter
-     * 
+     *
      * @param string $name
      * @param callable $encode
      * @param callable $decode
-     * 
-     * return $this
+     *
+     * @return void
      */
-    static public function addFilter(string $name, callable $encode, callable $decode)
+    static public function addFilter(string $name, callable $encode, callable $decode): void
     {
         self::$filters[$name] = [
             'encode' => $encode,
@@ -441,20 +453,59 @@ class Database
         ];
     }
 
+    /**
+     * Disable Attribute decoding
+     *
+     * @return void
+     */
+    public static function disableFilters(): void
+    {
+        self::$statusFilters = false;
+    }
+
+    /**
+     * Enable Attribute decoding
+     *
+     * @return void
+     */
+    public static function enableFilters(): void
+    {
+        self::$statusFilters = true;
+    }
+
     public function encode(Document $document):Document
     {
+        if (!self::$statusFilters) {
+            return $document;
+        }
+
         $collection = $this->getDocument($document->getCollection(), true , false);
         $rules = $collection->getAttribute('rules', []);
 
         foreach ($rules as $key => $rule) {
             $key = $rule->getAttribute('key', null);
-            $filters = $rule->getAttribute('filter', null);
+            $type = $rule->getAttribute('type', null);
+            $array = $rule->getAttribute('array', false);
+            $filters = $rule->getAttribute('filter', []);
             $value = $document->getAttribute($key, null);
 
-            if(($value !== null) && is_array($filters)) {
-                foreach ($filters as $filter) {
-                    $value = $this->encodeAttribute($filter, $value);
-                    $document->setAttribute($key, $value);
+            if (($value !== null)) {
+                if ($type === self::SYSTEM_VAR_TYPE_DOCUMENT) {
+                    if($array) {
+                        $list = [];
+                        foreach ($value as $child) {
+                            $list[] = $this->encode($child);
+                        }
+
+                        $document->setAttribute($key, $list);
+                    } else {
+                        $document->setAttribute($key, $this->encode($value));
+                    }
+                } else {
+                    foreach ($filters as $filter) {
+                        $value = $this->encodeAttribute($filter, $value);
+                        $document->setAttribute($key, $value);
+                    }
                 }
             }
         }
@@ -464,18 +515,37 @@ class Database
 
     public function decode(Document $document):Document
     {
+        if (!self::$statusFilters) {
+            return $document;
+        }
+
         $collection = $this->getDocument($document->getCollection(), true , false);
         $rules = $collection->getAttribute('rules', []);
 
         foreach ($rules as $key => $rule) {
             $key = $rule->getAttribute('key', null);
-            $filters = $rule->getAttribute('filter', null);
+            $type = $rule->getAttribute('type', null);
+            $array = $rule->getAttribute('array', false);
+            $filters = $rule->getAttribute('filter', []);
             $value = $document->getAttribute($key, null);
 
-            if(($value !== null) && is_array($filters)) {
-                foreach (array_reverse($filters) as $filter) {
-                    $value = $this->decodeAttribute($filter, $value);
-                    $document->setAttribute($key, $value);
+            if (($value !== null)) {
+                if ($type === self::SYSTEM_VAR_TYPE_DOCUMENT) {
+                    if($array) {
+                        $list = [];
+                        foreach ($value as $child) {
+                            $list[] = $this->decode($child);
+                        }
+
+                        $document->setAttribute($key, $list);
+                    } else {
+                        $document->setAttribute($key, $this->decode($value));
+                    }
+                } else {
+                    foreach (array_reverse($filters) as $filter) {
+                        $value = $this->decodeAttribute($filter, $value);
+                        $document->setAttribute($key, $value);
+                    }
                 }
             }
         }
@@ -491,7 +561,8 @@ class Database
      */
     static protected function encodeAttribute(string $name, $value)
     {
-        if(!isset(self::$filters[$name])) {
+        if (!isset(self::$filters[$name])) {
+            return $value;
             throw new Exception('Filter not found');
         }
 
@@ -512,7 +583,8 @@ class Database
      */
     static protected function decodeAttribute(string $name, $value)
     {
-        if(!isset(self::$filters[$name])) {
+        if (!isset(self::$filters[$name])) {
+            return $value;
             throw new Exception('Filter not found');
         }
 

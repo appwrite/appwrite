@@ -2,53 +2,96 @@
 
 ## Features
 
-- New route in Locale API to fetch a list of languages (@TorstenDittmann)
-- Added Google Fonts to Appwrite for offline availability
-- Added a new route in the Avatars API to get user initials avatar
-- Added option to delete team from the console
-- Added option to view team members from the console
-- Added option to join a user to any team from the console
-- Added option to delete user from the API (@TorstenDittmann - #378)
-- Added option to delete user from the console (@PineappleIOnic - #538)
-- Added support for Brotli compression (@PedroCisnerosSantana, @Rohitub222)
-- New UI micro-interactions and CSS fixes (@AnatoleLucet)
-- UI performance & accessibility improvements (#406)
+- Improved Webhooks and added new system events - [Learn more]()
+- Added response to /locale/languages API with a list of languages (@TorstenDittmann ,[#351](https://github.com/appwrite/appwrite/issues/351))
+- Added a new route in the Avatars API to get user initials avatar ([#386](https://github.com/appwrite/appwrite/issues/386))
+- Added API response payload structure info and examples to the docs site ([#381](https://github.com/appwrite/appwrite/issues/381))
+- Added support for Brotli compression (@PedroCisnerosSantana, @Rohitub222, [#310](https://github.com/appwrite/appwrite/issues/310))
+- New deletion worker ([#521](https://github.com/appwrite/appwrite/issues/521))
+- New maintenance worker - cleaning up system logs and other optimizations ([#766](https://github.com/appwrite/appwrite/pull/766))
+- New email worker - all emails are now sent asynchronously for improved performance (@TorstenDittmann ,[#402](https://github.com/appwrite/appwrite/pull/402))
+- Moved all Appwrite container logs to STDOUT & STDERR ([#389](https://github.com/appwrite/appwrite/issues/389))
 - New Doctor CLI to debug the Appwrite server ([#415](https://github.com/appwrite/appwrite/issues/415))
-- All emails are now sent asynchronously for improved performance (@TorstenDittmann)
-- Updated grid for OAuth2 providers list in the console
-- Upgraded Redis Resque queue library to version 1.3.6
 - Added container names to docker-compose.yml (@drandell)
-- Upgraded ClamAV container image to version 1.0.11 ([#412](https://github.com/appwrite/appwrite/issues/412))
 - Optimised function execution by using fully-qualified function calls
 - Added support for boolean 'true' and 'false' in query strings alongside 1 and 0
-- Added pagination for projects list on the console home page.
 - Updated storage calculation to match IEC standards
 - Now using Alpine as base Docker image
-- User name max length is now 128 chars and not 100 for better API consistency
-- Team name max length is now 128 chars and not 100 for better API consistency
+- Switch standard dev ports to 95xx prefix ([#780](https://github.com/appwrite/appwrite/pull/780))
+- User & Team name max length is now 128 chars and not 100 for better API consistency
 - Collection name max length is now 128 chars and not 256 for better API consistency
 - Project name max length is now 128 chars and not 100 for better API consistency
 - Webhook name max length is now 128 chars and not 256 for better API consistency
 - API Key name max length is now 128 chars and not 256 for better API consistency
 - Task name max length is now 128 chars and not 256 for better API consistency
 - Platform name max length is now 128 chars and not 256 for better API consistency
+- Webhooks payloads are now exactly the same as any of the API response objects, documentation added
 - Added new locale: Marathi -mr (@spielers)
 - New and consistent response format for all API object + new response examples in the docs
   - Removed user roles attribute from user object (can be fetched from /v1/teams/memberships) **
   - Removed type attribute from session object response (used only internally)
   - ** - might be changed before merging to master
+  - Added fallback option to 0.6 format for backward compatibility with any changes (@christyjacob4 [#772](https://github.com/appwrite/appwrite/pull/772))
+- Added option to disable mail sending by setting an empty SMTP host value ([#730](https://github.com/appwrite/appwrite/issues/730))
+- Upgraded installation script ([#490](https://github.com/appwrite/appwrite/issues/490))
+- Added new environment variables for ClamAV hostname and port ([#780](https://github.com/appwrite/appwrite/pull/780))
+- New OAuth adapter for Box.com (@armino-dev - [#420](https://github.com/appwrite/appwrite/issues/410))
+- New OAuth adapter for PayPal sandbox  (@armino-dev - [#420](https://github.com/appwrite/appwrite/issues/410))
+- New OAuth adapter for Tradeshift  (@armino-dev - [#855](https://github.com/appwrite/appwrite/pull/855))
+- New OAuth adapter for Tradeshift sandbox  (@armino-dev - [#855](https://github.com/appwrite/appwrite/pull/855))
+- Introducing new permssion types: role:guest, role:member, role:app
+- Disabled rate-limits on server side integrations
+- Refactored migration script 
+
+### User Interface
+
+- Updated grid for OAuth2 providers list in the console ([#413](https://github.com/appwrite/appwrite/issues/413))
+- Added Google Fonts to Appwrite for offline availability 
+- Added option to delete user from the console (@PineappleIOnic - [#538](https://github.com/appwrite/appwrite/issues/538))
+- Added option to delete team from the console ([#380](https://github.com/appwrite/appwrite/issues/380))
+- Added option to view team members from the console ([#378](https://github.com/appwrite/appwrite/issues/378))
+- Add option to assign new team members to a team from the console and the API ([#379](https://github.com/appwrite/appwrite/issues/379))
+- Added Select All Checkbox for on Console API key Scopes Screen ([#477](https://github.com/appwrite/appwrite/issues/477))
+- Added pagination and search for team memberships route ([#387](https://github.com/appwrite/appwrite/issues/387))
+- Added pagination for projects list on the console home page.
+- UI performance & accessibility improvements ([#406](https://github.com/appwrite/appwrite/pull/406))
+- New UI micro-interactions and CSS fixes (@AnatoleLucet)
+- Added toggle to hide/show secret keys and passwords inside the dashboard (@kodumbeats, [#535](https://github.com/appwrite/appwrite/issues/535))
+
+### Upgrades
+
+- Upgraded QR codes generator library (@PedroCisnerosSantana - [#475](https://github.com/appwrite/appwrite/issues/475))
 - Upgraded Traefik image to version 2.3
+- Upgraded MariaDB to version 10.5.5
 - Upgraded Redis Docker image to version 6.0 (alpine)
 - Upgraded Influxdb Docker image to version 1.8 (alpine)
+- Upgraded Redis Resque queue library to version 1.3.6 ([#319](https://github.com/appwrite/appwrite/issues/319))
+- Upgraded ClamAV container image to version 1.0.11 ([#412](https://github.com/appwrite/appwrite/issues/412))
+- Upgraded device detctor to version 3.12.6
 
 ## Breaking Changes (Read before upgrading!)
+
 - **Deprecated** `first` and `last` query params for documents list route in the database API
 - **Deprecated** Deprectaed Pubjabi Translations ('pn')
+- **Deprecated** `PATCH /account/prefs` is now updating the prefs payload and not just merging it
+- **Deprecated** `PATCH /users/:userId/prefs` is now updating the prefs payload and not just merging it
 - Switched order of limit and offset params in all the SDKs `listDocuments` method for better consistency
 - Default `limit` param value in all the SDKs `listDocuments` method is now 25 for better consistency
 
 ## Bug Fixes
 
+- Fixed a bug that caused blocked users to be able to create sessions ([#777](https://github.com/appwrite/appwrite/pull/781))
+- Fixed an issue where Special characters in _APP_OPENSSL_KEY_V1_ env caused an error ([#732](https://github.com/appwrite/appwrite/issues/732))
+- Fixed an issue where Account webhook doesn't trigger through the console ([#493](https://github.com/appwrite/appwrite/issues/493))
+- Fixed case sensitive country flag code ([#526](https://github.com/appwrite/appwrite/issues/526))
+- Fixed redirect to Appwrite login page when deep link is provided ([#427](https://github.com/appwrite/appwrite/issues/427))
+- Fixed an issue where Creating documents fails for parent documents would result in an error ([#514](https://github.com/appwrite/appwrite/issues/514))
+- Fixed an issue with Email Sending Problem using external smtp ([#707](https://github.com/appwrite/appwrite/issues/707))
+- Fixed an issue where you could not remove a key from User Prefs ([#316](https://github.com/appwrite/appwrite/issues/316))
+- Fixed an issue where events are not fully visible in the console ([#492](https://github.com/appwrite/appwrite/issues/492))
+- Fixed an issue where UI would wrongly validate integers ([#394](https://github.com/appwrite/appwrite/issues/394))
+- Fixed an issue where graphs were cut in mobile view ([#376](https://github.com/appwrite/appwrite/issues/376))
+- Fixed URL issue where console/ would not display list of projects ([#372](https://github.com/appwrite/appwrite/issues/372))
 - Fixed output of /v1/health/queue/certificates returning wrong data
 - Fixed bug where team members count was wrong in some cases
 - Fixed network calculation for uploaded files
@@ -64,13 +107,8 @@
 - Fixed Bug when trying to overwrite OAuth cookie in the Flutter SDK
 - Fixed OAuth redirect when using the self-hosted instance default success URL ([#454](https://github.com/appwrite/appwrite/issues/454))
 - Fixed bug denying authentication with Github OAuth provider
-- New OAuth adapter for Box.com
-- New OAuth adapter for PayPal sandbox
 - Fixed a bug making read permission overwrite write permission in some cases
-
-## Breaking Changes
-- **Deprecated** `first` and `last` query params for documents list route in the database API
-- **Deprecated** Deprecated Punjabi Translations ('pn')
+- Fixed consistent property names in databases by enforcing camel case
 
 ## Security
 
@@ -79,6 +117,7 @@
 - Now using your `_APP_SYSTEM_EMAIL_ADDRESS` as the email address for issuing and renewing SSL certificates
 - Block iframe access to Appwrite console using the `X-Frame-Options` header.
 - Fixed `roles` param input validator
+- API Keys are now stored encrypted 
 
 # Version 0.6.2 (PRE-RELEASE)
 

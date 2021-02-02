@@ -218,7 +218,7 @@ class Client
             case 'application/json':
                 $json = json_decode($responseBody, true);
 
-                if($json === null) {
+                if ($json === null) {
                     throw new Exception('Failed to parse response: '.$responseBody);
                 }
 
@@ -235,8 +235,8 @@ class Client
 
         $responseHeaders['status-code'] = $responseStatus;
 
-        if($responseStatus === 500) {
-            echo 'Server error(!): '.json_encode($responseBody)."\n";
+        if ($responseStatus === 500) {
+            echo 'Server error('.$method.': '.$path.'. Params: '.json_encode($params).'): '.json_encode($responseBody)."\n";
         }
 
         return [

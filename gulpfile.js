@@ -17,6 +17,7 @@ const configApp  = {
         'public/scripts/init.js',
 
         'public/scripts/services/alerts.js',
+        'public/scripts/services/api.js',
         'public/scripts/services/console.js',
         'public/scripts/services/date.js',
         'public/scripts/services/env.js',
@@ -34,6 +35,7 @@ const configApp  = {
         'public/scripts/views/service.js',
 
         'public/scripts/views/analytics/event.js',
+        'public/scripts/views/analytics/activity.js',
         'public/scripts/views/analytics/pageview.js',
 
         'public/scripts/views/forms/clone.js',
@@ -55,6 +57,8 @@ const configApp  = {
         'public/scripts/views/forms/pell.js',
         'public/scripts/views/forms/remove.js',
         'public/scripts/views/forms/run.js',
+        'public/scripts/views/forms/select-all.js',
+        'public/scripts/views/forms/show-secret.js',
         'public/scripts/views/forms/switch.js',
         'public/scripts/views/forms/tags.js',
         'public/scripts/views/forms/text-count.js',

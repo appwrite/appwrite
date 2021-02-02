@@ -60,6 +60,5 @@ class OriginTest extends TestCase
 
         $this->assertEquals($validator->isValid('appwrite-windows://com.company.appname'), false);
         $this->assertEquals($validator->getDescription(), 'Invalid Origin. Register your new client (com.company.appname) as a new Windows platform on your project console dashboard');
-
     }
 }

@@ -47,8 +47,7 @@ $environments = $this->getParam('environments', []);
 
                                 <span data-ls-bind="{{function.name}}"></span>
 
-                                <div class="text-fade" data-ls-if="({{function.events.length}})"><span data-ls-bind="{{function.events.length}}"></span> events assigned</div>
-                                <div class="text-fade" data-ls-if="(!{{function.events.length}})">&nbsp;</div>
+                                <p class="text-fade margin-bottom-no" data-ls-bind="{{function.env|envName}} {{function.env|envVersion}}"></p>
                             </li>
                         </ul>
                     </div>
@@ -91,6 +90,8 @@ $environments = $this->getParam('environments', []);
                         <h1>Add Function</h1>
 
                         <form
+                            data-analytics
+                            data-analytics-activity
                             data-analytics-event="submit"
                             data-analytics-category="console"
                             data-analytics-label="Create Project Function"

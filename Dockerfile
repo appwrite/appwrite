@@ -14,9 +14,9 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
 
 FROM php:7.4-cli-alpine as step1
 
-ENV TZ=Asia/Tel_Aviv \
-    PHP_REDIS_VERSION=5.3.0 \
-    PHP_SWOOLE_VERSION=4.5.5 \
+ENV PHP_REDIS_VERSION=5.3.0 \
+    PHP_SWOOLE_VERSION=v4.5.8 \
+    PHP_MAXMINDDB_VERSION=v1.8.0 \
     PHP_XDEBUG_VERSION=sdebug_2_9-beta
 
 RUN \
@@ -26,8 +26,6 @@ RUN \
   autoconf \
   gcc \
   g++ \
-  tar \
-  wget \
   git \
   zlib-dev \
   brotli-dev \
@@ -37,9 +35,9 @@ RUN docker-php-ext-install sockets
 
 RUN \
   # Redis Extension
-  wget -q https://github.com/phpredis/phpredis/archive/$PHP_REDIS_VERSION.tar.gz && \
-  tar -xf $PHP_REDIS_VERSION.tar.gz && \
-  cd phpredis-$PHP_REDIS_VERSION && \
+  git clone https://github.com/phpredis/phpredis.git && \
+  cd phpredis && \
+  git checkout $PHP_REDIS_VERSION && \
   phpize && \
   ./configure && \
   make && make install && \
@@ -47,14 +45,16 @@ RUN \
   ## Swoole Extension
   git clone https://github.com/swoole/swoole-src.git && \
   cd swoole-src && \
-  git checkout v$PHP_SWOOLE_VERSION && \
+  git checkout $PHP_SWOOLE_VERSION && \
   phpize && \
   ./configure --enable-sockets --enable-http2 && \
   make && make install && \
   cd .. && \
   ## Maxminddb extension
   git clone https://github.com/maxmind/MaxMind-DB-Reader-php.git && \
-  cd MaxMind-DB-Reader-php/ext && \
+  cd MaxMind-DB-Reader-php && \
+  git checkout $PHP_MAXMINDDB_VERSION && \
+  cd ext && \
   phpize && \
   ./configure && \
   make && make install && \
@@ -66,8 +66,7 @@ LABEL maintainer="team@appwrite.io"
 
 ARG VERSION=dev
 
-ENV TZ=Asia/Tel_Aviv \
-    _APP_SERVER=swoole \
+ENV _APP_SERVER=swoole \
     _APP_ENV=production \
     _APP_DOMAIN=localhost \
     _APP_DOMAIN_TARGET=localhost \
@@ -76,8 +75,10 @@ ENV TZ=Asia/Tel_Aviv \
     _APP_OPTIONS_ABUSE=enabled \
     _APP_OPTIONS_FORCE_HTTPS=disabled \
     _APP_OPENSSL_KEY_V1=your-secret-key \
-    _APP_STORAGE_LIMIT=100000000 \
+    _APP_STORAGE_LIMIT=10000000 \
     _APP_STORAGE_ANTIVIRUS=enabled \
+    _APP_STORAGE_ANTIVIRUS_HOST=clamav \
+    _APP_STORAGE_ANTIVIRUS_PORT=3310 \
     _APP_REDIS_HOST=redis \
     _APP_REDIS_PORT=6379 \
     _APP_DB_HOST=mariadb \
@@ -93,8 +94,18 @@ ENV TZ=Asia/Tel_Aviv \
     _APP_SMTP_PORT=25 \
     _APP_FUNCTIONS_TIMEOUT=900 \
     _APP_FUNCTIONS_CONTAINERS=10 \
+    _APP_FUNCTIONS_CPUS=1 \
+    _APP_FUNCTIONS_MEMORY=128 \
+    _APP_FUNCTIONS_MEMORY_SWAP=128 \
     _APP_SETUP=self-hosted \
-    _APP_VERSION=$VERSION
+    _APP_VERSION=$VERSION \
+    _APP_USAGE_STATS=enabled \
+    # 14 Days = 1209600 s
+    _APP_MAINTENANCE_RETENTION_EXECUTION=1209600 \
+    _APP_MAINTENANCE_RETENTION_AUDIT=1209600 \
+    # 1 Day = 86400 s
+    _APP_MAINTENANCE_RETENTION_ABUSE=86400 \
+    _APP_MAINTENANCE_INTERVAL=86400
 #ENV _APP_SMTP_SECURE ''
 #ENV _APP_SMTP_USERNAME ''
 #ENV _APP_SMTP_PASSWORD ''
@@ -156,9 +167,11 @@ RUN mkdir -p /storage/uploads && \
 
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
+    chmod +x /usr/local/bin/maintenance && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/migrate && \
     chmod +x /usr/local/bin/schedule && \
+    chmod +x /usr/local/bin/sdks && \
     chmod +x /usr/local/bin/ssl && \
     chmod +x /usr/local/bin/test && \
     chmod +x /usr/local/bin/vars && \
@@ -181,7 +194,7 @@ RUN echo extension=maxminddb.so >> /usr/local/etc/php/conf.d/maxminddb.ini
 
 RUN echo "opcache.preload_user=www-data" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.preload=/usr/src/code/app/preload.php" >> /usr/local/etc/php/conf.d/appwrite.ini
-RUN echo "opcache.enable_cli = 1" >> /usr/local/etc/php/conf.d/appwrite.ini
+RUN echo "opcache.enable_cli=1" >> /usr/local/etc/php/conf.d/appwrite.ini
 
 EXPOSE 80
 

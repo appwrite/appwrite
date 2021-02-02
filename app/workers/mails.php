@@ -1,12 +1,13 @@
 <?php
 
 use Utopia\App;
+use Utopia\CLI\Console;
 
 require_once __DIR__.'/../init.php';
 
-\cli_set_process_title('Mails V1 Worker');
+Console::title('Mails V1 Worker');
 
-echo APP_NAME.' mails worker v1 has started'."\n";
+Console::success(APP_NAME.' mails worker v1 has started'."\n");
 
 class MailsV1
 {
@@ -22,6 +23,11 @@ class MailsV1
     public function perform()
     {
         global $register;
+
+        if(empty(App::getEnv('_APP_SMTP_HOST'))) {
+            Console::info('Skipped mail processing. No SMTP server hostname has been set.');
+            return;
+        }
 
         $event = $this->args['event'];
         $from = $this->args['from'];

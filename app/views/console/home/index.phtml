@@ -1,5 +1,6 @@
 <?php
 $graph = $this->getParam('graph', false);
+$usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 ?>
 
 <div class="cover margin-bottom-small">
@@ -13,69 +14,117 @@ $graph = $this->getParam('graph', false);
             <span class="title" data-ls-bind="{{console-project.name}}">&nbsp;</span>&nbsp;&nbsp;
         </h1>
 
-        <ul class="margin-top-negative-small margin-bottom clear">
+        <ul class="desktops-only margin-top-negative-small margin-bottom clear">
             <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/settings?project={{router.params.project}}" class="link-animation-enabled"><i class="icon-cog"></i> &nbsp;Settings</a> &nbsp;&nbsp;</li>
             <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/keys?project={{router.params.project}}" class="link-animation-enabled"><i class="icon-key-inv"></i> &nbsp;API Keys</a> &nbsp;&nbsp;</li>
             <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/webhooks?project={{router.params.project}}" class="link-animation-enabled"><i class="icon-link"></i> &nbsp;Webhooks</a> &nbsp;&nbsp;</li>
             <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/tasks?project={{router.params.project}}" class="link-animation-enabled"><i class="icon-clock"></i> &nbsp;Tasks</a> &nbsp;&nbsp;</li>
-            <!-- <li class="pull-end margin-start margin-bottom-small text-size-small margin-top-tiny"><a data-ls-attrs="href=/console/tasks?project={{router.params.project}}">May 2020 &nbsp; <i class="icon-down-dir"></i></a></li> -->
         </ul>
+
+        <div class="margin-bottom phones-only">&nbsp;</div>
     </div>
 </div>
 
-<div class="zone xl margin-top-negative-xxl">
-    <div class="box margin-bottom dashboard">
-        <div
-            data-service="projects.getUsage"
-            data-event="load"
-            data-name="usage"
-            data-param-project-id="{{router.params.project}}"
-            data-param-range="last30">
+<div class="zone xxl margin-top-negative-xxxl">
+    <div class="clear margin-bottom-small margin-top-negative">
+        <div class="pull-end">
 
-            <?php if (!$graph) : ?>
+            <form class="margin-start-small inline" data-ls-if="{{usage.range}} !== '24h'"
+                data-analytics
+                data-analytics-event="click"
+                data-analytics-category="console"
+                data-analytics-label="Usage 24h"
+                data-service="projects.getUsage"
+                data-event="submit"
+                data-name="usage"
+                data-param-project-id="{{router.params.project}}"
+                data-param-range="24h">
+                <button class="tick">24h</button>
+            </form>
+
+            <button class="tick margin-start-small" data-ls-if="{{usage.range}} === '24h'" disabled>24h</button>
+
+            <form class="margin-start-small inline" data-ls-if="{{usage.range}} !== '30d'"
+                data-analytics
+                data-analytics-event="click"
+                data-analytics-category="console"
+                data-analytics-label="Usage 30d"
+                data-service="projects.getUsage"
+                data-event="submit"
+                data-name="usage"
+                data-param-project-id="{{router.params.project}}">
+                <button class="tick">30d</button>
+            </form>
+
+            <button class="tick margin-start-small" data-ls-if="{{usage.range}} === '30d'" disabled>30d</button>
+
+            <form class="margin-start-small inline" data-ls-if="{{usage.range}} !== '90d'"
+                data-analytics
+                data-analytics-event="click"
+                data-analytics-category="console"
+                data-analytics-label="Usage 90d"
+                data-service="projects.getUsage"
+                data-event="submit"
+                data-name="usage"
+                data-param-project-id="{{router.params.project}}"
+                data-param-range="90d">
+                <button class="tick">90d</button>
+            </form>
+
+            <button class="tick margin-start-small" data-ls-if="{{usage.range}} === '90d'" disabled>90d</button>
+        </div>
+    </div>
+    <div
+        data-service="projects.getUsage"
+        data-event="load"
+        data-name="usage"
+        data-param-project-id="{{router.params.project}}"
+        data-param-range="30d">
+
+        <?php if (!$graph && $usageStatsEnabled): ?>
+            <div class="box dashboard">
                 <div class="row responsive">
                     <div class="col span-9">
                         <div class="chart pull-end">
-                            <div class="content" data-forms-chart="Requests=usage.requests.data"></div>
+                            <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Requests=usage.requests.data" />
                         </div>
 
                         <div class="chart-metric">
                             <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.requests.total|statsTotal}}">N/A</span></div>
                             <div class="metric margin-bottom-small">Requests <span class="tooltip" data-tooltip="Total number of API requests last 30 days"><i class="icon-info-circled"></i></span></div>
-                            <div class="range">Last 30 days</div>
                         </div>
                     </div>
                     <div class="col span-3">
                         <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.network.total|humanFileSize}}" data-default="0">0</span></div>
                         <div class="metric margin-bottom-small">Bandwidth</div>
-                        <div class="range">Last 30 days</div>
-                        <!-- <div class="margin-top dev-feature">
-                            <a href="">Full Usage Report <i class="icon-right-open"></i></a>
-                        </div> -->
+
+                        <div class="margin-top-large value small">
+                            <b class="text-size-small sum small" data-ls-bind="{{usage.functions.total|statsTotal}}" data-default="0"></b>
+                            <br />
+                            <b>Func. Executions</b>
+                        </div>
                     </div>
                 </div>
+            </div>
+        <?php endif; ?>
 
-                <hr />
-            <?php endif; ?>
-
-            <div>
-                <div class="row responsive">
-                    <div class="col span-3">
-                        <div class="value"><span class="sum" data-ls-bind="{{usage.documents.total|statsTotal}}" data-default="0">0</span></div>
-                        <div class="margin-top-small"><b class="text-size-small unit">Documents</b></div>
-                    </div>
-                    <div class="col span-3">
-                        <div class="value"><span class="sum" data-ls-bind="{{usage.storage.total|humanFileSize}}" data-default="0">0</span></div>
-                        <div class="margin-top-small"><b class="text-size-small unit">Storage</b></div>
-                    </div>
-                    <div class="col span-3">
-                        <div class="value"><span class="sum" data-ls-bind="{{usage.users.total}}" data-default="0">0</span></div>
-                        <div class="margin-top-small"><b class="text-size-small unit">Users</b></div>
-                    </div>
-                    <div class="col span-3">
-                        <div class="value"><span class="sum" data-ls-bind="{{usage.tasks.total}}" data-default="0">0</span></div>
-                        <div class="margin-top-small"><b class="text-size-small unit">Tasks</b></div>
-                    </div>
+        <div class="box dashboard">
+            <div class="row responsive">
+                <div class="col span-3">
+                    <div class="value"><span class="sum" data-ls-bind="{{usage.documents.total|statsTotal}}" data-default="0">0</span></div>
+                    <div class="margin-top-small"><b class="text-size-small unit">Documents</b></div>
+                </div>
+                <div class="col span-3">
+                    <div class="value"><span class="sum" data-ls-bind="{{usage.storage.total|humanFileSize}}" data-default="0">0</span></div>
+                    <div class="margin-top-small"><b class="text-size-small unit">Storage</b></div>
+                </div>
+                <div class="col span-3">
+                    <div class="value"><span class="sum" data-ls-bind="{{usage.users.total}}" data-default="0">0</span></div>
+                    <div class="margin-top-small"><b class="text-size-small unit">Users</b></div>
+                </div>
+                <div class="col span-3">
+                    <div class="value"><span class="sum" data-ls-bind="{{usage.tasks.total}}" data-default="0">0</span></div>
+                    <div class="margin-top-small"><b class="text-size-small unit">Tasks</b></div>
                 </div>
             </div>
         </div>
@@ -103,6 +152,8 @@ $graph = $this->getParam('graph', false);
                 </div>
 
                 <form class="pull-end margin-end"
+                    data-analytics
+                    data-analytics-activity
                     data-analytics-event="submit"
                     data-analytics-category="console"
                     data-analytics-label="Delete Project Platform"
@@ -122,22 +173,22 @@ $graph = $this->getParam('graph', false);
 
                 <div>
                     <div class="pull-start margin-end avatar-container">
-                        <img src="" data-ls-attrs="src=/images/clients/{{platform.type}}.png?v=<?php echo APP_CACHE_BUSTER; ?>" class="avatar" loading="lazy" width="60" height="60" />
+                        <img src="" data-ls-attrs="src=/images/clients/{{platform.type}}.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Platform Logo" class="avatar" loading="lazy" width="60" height="60" />
                         
                         <div data-ls-if="{{platform.type}} === 'flutter-ios'" class="corner">
-                            <img src="" data-ls-attrs="src=/images/clients/ios.png?v=<?php echo APP_CACHE_BUSTER; ?>" class="avatar xs" loading="lazy" width="30" height="30" />
+                            <img src="" data-ls-attrs="src=/images/clients/ios.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="iOS Logo" class="avatar xs" loading="lazy" width="30" height="30" />
                         </div>
                         
                         <div data-ls-if="{{platform.type}} === 'flutter-android'" class="corner">
-                            <img src="" data-ls-attrs="src=/images/clients/android.png?v=<?php echo APP_CACHE_BUSTER; ?>" class="avatar xs" loading="lazy" width="30" height="30" />
+                            <img src="" data-ls-attrs="src=/images/clients/android.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Android Logo" class="avatar xs" loading="lazy" width="30" height="30" />
                         </div>
                     </div>
-                    <span data-ls-bind="{{platform.name}}"></span>
+                    <span class="text-one-liner" data-ls-bind="{{platform.name}}"></span>
                 </div>
 
                 <p class="margin-bottom-no"><small data-ls-bind="{{platform.hostname}}{{platform.key}}"></small></p>
 
-                <div class="phones-only-inline tablets-only-inline margin-top-tiny">
+                <div class="phones-only-inline tablets-only-inline margin-top-small">
                     <button class="link" data-ls-ui-trigger="platform-update-{{platform.$id}}">Update</button>
                     <button class="link danger" data-ls-ui-trigger="platform-delete-{{platform.$id}}">Delete</button>
                 </div>
@@ -154,7 +205,11 @@ $graph = $this->getParam('graph', false);
     </div>
 
     <div class="pull-end desktops-only tablets-only">
-        <a data-ls-attrs="href=/console/keys?project={{router.params.project}}">Manage Your Server API Keys</a>
+        <a data-analytics
+            data-analytics-event="click"
+            data-analytics-category="console"
+            data-analytics-label="API Keys Link"
+            data-ls-attrs="href=/console/keys?project={{router.params.project}}">Manage Your Server API Keys</a>
     </div>
 
     <div class="drop-list pull-start" data-ls-ui-open="" data-button-aria="Choose Platform" data-button-text="Add Platform" data-button-class="button" data-blur="1">
@@ -166,13 +221,13 @@ $graph = $this->getParam('graph', false);
                 <div class="link flutter-new"><img src="/images/clients/flutter.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Flutter Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Flutter App &nbsp;<span class="text-size-tiny">(beta)</span></div>
             </li>
             <li class="disabled">
-                <div class="link ios-new"><img src="/images/clients/ios.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="iOS Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New iOS App</div>
+                <div class="link ios-new"><img src="/images/clients/ios.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="iOS Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New iOS App <span class="text-fade text-size-small">(soon)</span></div>
             </li>
             <li class="disabled">
-                <div class="link android-new"><img src="/images/clients/android.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Android Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Android App</div>
+                <div class="link android-new"><img src="/images/clients/android.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Android Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Android App  <span class="text-fade text-size-small">(soon)</span></div>
             </li>
             <li class="disabled">
-                <div class="link unity-new"><img src="/images/clients/unity.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Unity Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Unity Game</div>
+                <div class="link unity-new"><img src="/images/clients/unity.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Unity Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Unity Game  <span class="text-fade text-size-small">(soon)</span></div>
             </li>
         </ul>
     </div>
@@ -184,6 +239,8 @@ $graph = $this->getParam('graph', false);
     <h1>New Web App</h1>
 
     <form
+        data-analytics
+        data-analytics-activity
         data-analytics-event="submit"
         data-analytics-category="console"
         data-analytics-label="Create Project Platform (Web)"
@@ -209,7 +266,7 @@ $graph = $this->getParam('graph', false);
         <div class="info margin-top margin-bottom">
             <div class="text-bold margin-bottom-small">Next Steps</div>
 
-            <p>After adding your new website, install our JS SDK to integrate with your code and read our <a data-ls-attrs="href={{env.HOME}}/docs/getting-started-for-web" target="_blank" rel="noopener">getting started</a> tutorial.</p>
+            <p>After adding your new website, install our Web SDK to integrate with your code and read our <a data-ls-attrs="href={{env.HOME}}/docs/getting-started-for-web" target="_blank" rel="noopener">getting started</a> tutorial.</p>
 
             <div class="margin-bottom-no ide" data-lang="bash" data-lang-label="bash">
                 <pre class="line-numbers"><code class="prism language-bash" data-prism>npm install appwrite</code></pre>
@@ -222,6 +279,8 @@ $graph = $this->getParam('graph', false);
 
 <script type="text/html" id="template-web-update">
     <form
+        data-analytics
+        data-analytics-activity
         data-analytics-event="submit"
         data-analytics-category="console"
         data-analytics-label="Update Project Platform (Web)"
@@ -260,6 +319,8 @@ $graph = $this->getParam('graph', false);
             <h2 style="display: none">&nbsp;&nbsp;iOS&nbsp;&nbsp;</h2>
 
             <form
+                data-analytics
+                data-analytics-activity
                 data-analytics-event="submit"
                 data-analytics-category="console"
                 data-analytics-label="Create Project Platform (Flutter / iOS)"
@@ -292,6 +353,8 @@ $graph = $this->getParam('graph', false);
             <h2 style="display: none">&nbsp;&nbsp;Android&nbsp;&nbsp;</h2>
 
             <form
+                data-analytics
+                data-analytics-activity
                 data-analytics-event="submit"
                 data-analytics-category="console"
                 data-analytics-label="Create Project Platform (Flutter / Android)"
@@ -324,9 +387,11 @@ $graph = $this->getParam('graph', false);
 
 <script type="text/html" id="template-ios-update">
     <form
+        data-analytics
+        data-analytics-activity
         data-analytics-event="submit"
         data-analytics-category="console"
-        data-analytics-label="Update Project Platform (iOS)"
+        data-analytics-label="Update Project Platform (Flutter / iOS)"
         data-service="projects.updatePlatform"
         data-scope="console"
         data-event="submit"
@@ -354,9 +419,10 @@ $graph = $this->getParam('graph', false);
 
 <script type="text/html" id="template-android-update">
     <form
+        data-analytics
         data-analytics-event="submit"
         data-analytics-category="console"
-        data-analytics-label="Update Project Platform (Android)"
+        data-analytics-label="Update Project Platform (Flutter / Android)"
         data-service="projects.updatePlatform"
         data-scope="console"
         data-event="submit"

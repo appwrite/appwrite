@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Locale;
 
+use Exception;
 use Tests\E2E\Client;
 
 trait LocaleBase
@@ -44,8 +45,9 @@ trait LocaleBase
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
-        $this->assertCount(194, $response['body']);
-        $this->assertEquals($response['body']['US'], 'United States');
+        $this->assertEquals(194, $response['body']['sum']);
+        $this->assertEquals($response['body']['countries'][0]['name'], 'Afghanistan');
+        $this->assertEquals($response['body']['countries'][0]['code'], 'AF');
 
         // Test locale code change to ES
 
@@ -57,8 +59,9 @@ trait LocaleBase
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
-        $this->assertCount(194, $response['body']);
-        $this->assertEquals($response['body']['US'], 'Estados Unidos');
+        $this->assertEquals(194, $response['body']['sum']);
+        $this->assertEquals($response['body']['countries'][0]['name'], 'Afganistán');
+        $this->assertEquals($response['body']['countries'][0]['code'], 'AF');
         
         /**
          * Test for FAILURE
@@ -78,9 +81,10 @@ trait LocaleBase
         ], $this->getHeaders()));
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertIsArray($response['body']);
-        $this->assertCount(27, $response['body']);
-        $this->assertEquals($response['body']['DE'], 'Germany');
+        $this->assertEquals(27, $response['body']['sum']);
+        $this->assertIsArray($response['body']['countries']);
+        $this->assertEquals($response['body']['countries'][0]['name'], 'Austria');
+        $this->assertEquals($response['body']['countries'][0]['code'], 'AT');
 
         // Test locale code change to ES
 
@@ -91,9 +95,11 @@ trait LocaleBase
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertIsArray($response['body']);
-        $this->assertCount(27, $response['body']);
-        $this->assertEquals($response['body']['DE'], 'Alemania');
+        $this->assertEquals(27, $response['body']['sum']);
+        $this->assertIsArray($response['body']['countries']);
+        $this->assertEquals($response['body']['countries'][0]['name'], 'Austria');
+        $this->assertEquals($response['body']['countries'][0]['code'], 'AT');
+
         
         /**
          * Test for FAILURE
@@ -114,9 +120,11 @@ trait LocaleBase
         
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
-        $this->assertCount(194, $response['body']);
-        $this->assertEquals($response['body']['US'], '+1');
-        $this->assertEquals($response['body']['IL'], '+972');
+        $this->assertEquals(194, $response['body']['sum']);
+        $this->assertIsArray($response['body']['phones']);
+        $this->assertEquals($response['body']['phones'][0]['code'], '+1');
+        $this->assertEquals($response['body']['phones'][0]['countryName'], 'United States');
+        $this->assertEquals($response['body']['phones'][0]['countryCode'], 'US');
         
         /**
          * Test for FAILURE
@@ -136,9 +144,10 @@ trait LocaleBase
         ], $this->getHeaders()));
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertIsArray($response['body']);
-        $this->assertCount(7, $response['body']);
-        $this->assertEquals($response['body']['NA'], 'North America');
+        $this->assertEquals(7, $response['body']['sum']);
+        $this->assertIsArray($response['body']['continents']);
+        $this->assertEquals($response['body']['continents'][0]['code'], 'AF');
+        $this->assertEquals($response['body']['continents'][0]['name'], 'Africa');
 
         // Test locale code change to ES
         $response = $this->client->call(Client::METHOD_GET, '/locale/continents', [
@@ -148,9 +157,10 @@ trait LocaleBase
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertIsArray($response['body']);
-        $this->assertCount(7, $response['body']);
-        $this->assertEquals($response['body']['NA'], 'América del Norte');
+        $this->assertEquals(7, $response['body']['sum']);
+        $this->assertIsArray($response['body']['continents']);
+        $this->assertEquals($response['body']['continents'][0]['code'], 'NA');
+        $this->assertEquals($response['body']['continents'][0]['name'], 'América del Norte');
 
         
         /**
@@ -172,9 +182,9 @@ trait LocaleBase
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
-        $this->assertCount(117, $response['body']);
-        $this->assertEquals($response['body'][0]['symbol'], '$');
-        $this->assertEquals($response['body'][0]['name'], 'US Dollar');
+        $this->assertEquals(117, $response['body']['sum']);
+        $this->assertEquals($response['body']['currencies'][0]['symbol'], '$');
+        $this->assertEquals($response['body']['currencies'][0]['name'], 'US Dollar');
         
         /**
          * Test for FAILURE
@@ -195,15 +205,15 @@ trait LocaleBase
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
-        $this->assertCount(185, $response['body']);
+        $this->assertEquals(185, $response['body']['sum']);
 
-        $this->assertEquals($response['body'][0]['code'], 'aa');
-        $this->assertEquals($response['body'][0]['name'], 'Afar');
-        $this->assertEquals($response['body'][0]['nativeName'], 'Afar');
+        $this->assertEquals($response['body']['languages'][0]['code'], 'aa');
+        $this->assertEquals($response['body']['languages'][0]['name'], 'Afar');
+        $this->assertEquals($response['body']['languages'][0]['nativeName'], 'Afar');
 
-        $this->assertEquals($response['body'][184]['code'], 'zu');
-        $this->assertEquals($response['body'][184]['name'], 'Zulu');
-        $this->assertEquals($response['body'][184]['nativeName'], 'isiZulu');
+        $this->assertEquals($response['body']['languages'][184]['code'], 'zu');
+        $this->assertEquals($response['body']['languages'][184]['name'], 'Zulu');
+        $this->assertEquals($response['body']['languages'][184]['nativeName'], 'isiZulu');
         
         /**
          * Test for FAILURE
@@ -228,16 +238,20 @@ trait LocaleBase
                 'x-appwrite-locale' => $lang,
             ]);
 
-            foreach ($response['body'] as $i => $code) {
-                $this->assertArrayHasKey($i, $defaultCountries, $i . ' country should be removed from ' . $lang);
+            if(!\is_array($response['body']['countries'])) {
+                throw new Exception('Failed to itterate locale: '.$lang);
             }
 
-            foreach (array_keys($defaultCountries) as $i => $code) {
-                $this->assertArrayHasKey($code, $response['body'], $code . ' country is missing from ' . $lang . ' (total: ' . count($response['body']) . ')');
+            foreach ($response['body']['countries'] as $i => $code) {
+                $this->assertArrayHasKey($code['code'], $defaultCountries, $code['code'] . ' country should be removed from ' . $lang);
             }
+
+            // foreach (array_keys($defaultCountries) as $i => $code) {
+            //     $this->assertArrayHasKey($code, $response['body']['countries'], $code . ' country is missing from ' . $lang . ' (total: ' . count($response['body']['countries']) . ')');
+            // }
 
             $this->assertEquals($response['headers']['status-code'], 200);
-            $this->assertCount(194, $response['body']);
+            $this->assertEquals(194, $response['body']['sum']);
 
             $response = $this->client->call(Client::METHOD_GET, '/locale/continents', [
                 'content-type' => 'application/json',
@@ -245,16 +259,16 @@ trait LocaleBase
                 'x-appwrite-locale' => $lang,
             ]);
             
-            foreach ($response['body'] as $i => $code) {
-                $this->assertArrayHasKey($i, $defaultContinents, $i . ' continent should be removed from ' . $lang);
+            foreach ($response['body']['continents'] as $i => $code) {
+                $this->assertArrayHasKey($code['code'], $defaultContinents, $code['code'] . ' continent should be removed from ' . $lang);
             }
 
-            foreach (array_keys($defaultContinents) as $i => $code) {
-                $this->assertArrayHasKey($code, $response['body'], $code . ' continent is missing from ' . $lang . ' (total: ' . count($response['body']) . ')');
-            }
+            // foreach (array_keys($defaultContinents) as $i => $code) {
+            //     $this->assertArrayHasKey($code, $response['body']['continents'], $code . ' continent is missing from ' . $lang . ' (total: ' . count($response['body']['continents']) . ')');
+            // }
 
             $this->assertEquals($response['headers']['status-code'], 200);
-            $this->assertCount(7, $response['body']);
+            $this->assertEquals(7, $response['body']['sum']);
         }
                 
         /**

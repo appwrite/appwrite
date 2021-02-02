@@ -5,7 +5,7 @@ use Utopia\CLI\Console;
 
 require_once __DIR__.'/../init.php';
 
-\cli_set_process_title('Usage V1 Worker');
+Console::title('Usage V1 Worker');
 
 Console::success(APP_NAME.' usage worker v1 has started');
 
@@ -27,17 +27,19 @@ class UsageV1
         $statsd = $register->get('statsd', true);
 
         $projectId = $this->args['projectId'];
-        $httpMethod = $this->args['httpMethod'];
-        $httpRequest = $this->args['httpRequest'];
-        
+
+        $storage = $this->args['storage'];
+
         $networkRequestSize = $this->args['networkRequestSize'];
         $networkResponseSize = $this->args['networkResponseSize'];
         
-        $storage = $this->args['storage'];
+        $httpMethod = $this->args['httpMethod'];
+        $httpRequest = $this->args['httpRequest'];
 
+        $functionId = $this->args['functionId'];
         $functionExecution = $this->args['functionExecution'];
         $functionExecutionTime = $this->args['functionExecutionTime'];
-        $functionId = $this->args['functionId'];
+        $functionStatus = $this->args['functionStatus'];
 
         $tags = ",project={$projectId},version=".App::getEnv('_APP_VERSION', 'UNKNOWN').'';
 
@@ -49,14 +51,18 @@ class UsageV1
         }
         
         if($functionExecution >= 1) {
-            $statsd->increment('executions.all'.$tags.',functionId='.$functionId);
+            $statsd->increment('executions.all'.$tags.',functionId='.$functionId.',functionStatus='.$functionStatus);
+            var_dump($tags.',functionId='.$functionId.',functionStatus='.$functionStatus);
             $statsd->count('executions.time'.$tags.',functionId='.$functionId, $functionExecutionTime);
         }
 
-        $statsd->count('network.all'.$tags, $networkRequestSize + $networkResponseSize);
         $statsd->count('network.inbound'.$tags, $networkRequestSize);
         $statsd->count('network.outbound'.$tags, $networkResponseSize);
-        $statsd->count('storage.all'.$tags, $storage);
+        $statsd->count('network.all'.$tags, $networkRequestSize + $networkResponseSize);
+
+        if($storage >= 1) {
+            $statsd->count('storage.all'.$tags, $storage);
+        }
     }
 
     public function tearDown(): void

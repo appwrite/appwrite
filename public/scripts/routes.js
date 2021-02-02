@@ -23,6 +23,14 @@ window.ls.router
     template: "/auth/join?version=" + APP_ENV.CACHEBUSTER,
     scope: "home"
   })
+  .add("/auth/oauth2/success", {
+    template: "/auth/oauth2/success?version=" + APP_ENV.CACHEBUSTER,
+    scope: "home"
+  })
+  .add("/auth/oauth2/failure", {
+    template: "/auth/oauth2/failure?version=" + APP_ENV.CACHEBUSTER,
+    scope: "home"
+  })
   .add("/console", {
     template: "/console?version=" + APP_ENV.CACHEBUSTER,
     scope: "console"

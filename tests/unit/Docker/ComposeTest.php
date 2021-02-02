@@ -18,7 +18,7 @@ class ComposeTest extends TestCase
     {
         $data = @file_get_contents(__DIR__.'/../../resources/docker/docker-compose.yml');
 
-        if($data === false) {
+        if ($data === false) {
             throw new Exception('Failed to read compose file');
         }
 

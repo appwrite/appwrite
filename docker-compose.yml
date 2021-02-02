@@ -1,3 +1,9 @@
+# WARNING!
+# This is a development version of THE Appwrite docker-compose.yml file.
+# Avoid using this file in your production environment.
+# We're exposing here sensetive ports and mounting code volumes for rapid development and debugging of the server stack.
+# For a production ready compose file please use: https://appwrite.io/docker-compose.yml
+
 version: '3'
 
 services:
@@ -10,14 +16,15 @@ services:
       - --providers.file.directory=/storage/config
       - --providers.file.watch=true
       - --providers.docker=true
+      - --providers.docker.exposedByDefault=false
+      - --providers.docker.constraints=Label(`traefik.constraint-label-stack`,`appwrite`)
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
       - --accesslog=true
-    restart: unless-stopped
     ports:
       - 80:80
       - 443:443
-      - 8080:8080
+      - 9500:8080
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-config:/storage/config:ro
@@ -35,12 +42,13 @@ services:
       args:
         - TESTING=true
         - VERSION=dev
-    restart: unless-stopped
     ports: 
       - 9501:80
     networks:
       - appwrite
     labels:
+      - traefik.enable=true
+      - traefik.constraint-label-stack=appwrite
       - traefik.http.routers.appwrite.rule=PathPrefix(`/`)
       - traefik.http.routers.appwrite-secure.rule=PathPrefix(`/`)
       - traefik.http.routers.appwrite-secure.tls=true
@@ -52,6 +60,7 @@ services:
       - appwrite-certificates:/storage/certificates:rw
       - appwrite-functions:/storage/functions:rw
       - ./phpunit.xml:/usr/src/code/phpunit.xml
+      - ./psalm.xml:/usr/src/code/psalm.xml
       - ./tests:/usr/src/code/tests
       - ./app:/usr/src/code/app
       # - ./vendor:/usr/src/code/vendor
@@ -69,6 +78,7 @@ services:
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
+      - _APP_SYSTEM_RESPONSE_FORMAT
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_OPENSSL_KEY_V1
@@ -81,20 +91,35 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_STORAGE_ANTIVIRUS
+      - _APP_STORAGE_ANTIVIRUS_HOST
+      - _APP_STORAGE_ANTIVIRUS_PORT
+      - _APP_SMTP_HOST
+      - _APP_SMTP_PORT
+      - _APP_SMTP_SECURE
+      - _APP_SMTP_USERNAME
+      - _APP_SMTP_PASSWORD
+      - _APP_USAGE_STATS
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
       - _APP_STORAGE_LIMIT
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_FUNCTIONS_CONTAINERS
+      - _APP_FUNCTIONS_CPUS
+      - _APP_FUNCTIONS_MEMORY
+      - _APP_FUNCTIONS_MEMORY_SWAP
+      - _APP_FUNCTIONS_ENVS
 
   appwrite-worker-usage:
     entrypoint: worker-usage
     container_name: appwrite-worker-usage
     build:
       context: .
-    restart: unless-stopped
     networks:
       - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - telegraf
@@ -110,9 +135,11 @@ services:
     container_name: appwrite-worker-audits
     build:
       context: .
-    restart: unless-stopped
     networks:
       - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
@@ -131,12 +158,15 @@ services:
     container_name: appwrite-worker-webhooks
     build:
       context: .
-    restart: unless-stopped
     networks:
       - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
+      - request-catcher
     environment:
       - _APP_ENV
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
@@ -153,9 +183,11 @@ services:
     container_name: appwrite-worker-tasks
     build:
       context: .
-    restart: unless-stopped
     networks:
       - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
@@ -175,15 +207,17 @@ services:
     container_name: appwrite-worker-deletes
     build:
       context: .
-    restart: unless-stopped
     networks:
       - appwrite
-    depends_on:
-      - redis
-      - mariadb
     volumes: 
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
+      - appwrite-functions:/storage/functions:rw
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      - redis
+      - mariadb
     environment:
       - _APP_ENV
       - _APP_REDIS_HOST
@@ -199,15 +233,16 @@ services:
     container_name: appwrite-worker-certificates
     build:
       context: .
-    restart: unless-stopped
     networks:
       - appwrite
-    depends_on:
-      - redis
-      - mariadb
     volumes: 
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      - redis
+      - mariadb
     environment:
       - _APP_ENV
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
@@ -224,16 +259,18 @@ services:
     container_name: appwrite-worker-functions
     build:
       context: .
-    restart: unless-stopped
     networks:
       - appwrite
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - appwrite-functions:/storage/functions:rw
+      - /tmp:/tmp:rw
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./docker:/usr/src/code/docker
     depends_on:
       - redis
       - mariadb
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /tmp:/tmp:rw
-      - appwrite-functions:/storage/functions:rw
     environment:
       - _APP_ENV
       - _APP_REDIS_HOST
@@ -245,15 +282,21 @@ services:
       - _APP_DB_PASS
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_FUNCTIONS_CONTAINERS
+      - _APP_FUNCTIONS_CPUS
+      - _APP_FUNCTIONS_MEMORY
+      - _APP_FUNCTIONS_MEMORY_SWAP
+      - _APP_USAGE_STATS
 
   appwrite-worker-mails:
     entrypoint: worker-mails
     container_name: appwrite-worker-mails
     build:
       context: .
-    restart: unless-stopped
     networks:
       - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - maildev
@@ -270,14 +313,37 @@ services:
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
 
+  appwrite-maintenance:
+    entrypoint: maintenance
+    container_name: appwrite-maintenance
+    build:
+      context: .
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_MAINTENANCE_INTERVAL
+      - _APP_MAINTENANCE_RETENTION_EXECUTION
+      - _APP_MAINTENANCE_RETENTION_ABUSE
+      - _APP_MAINTENANCE_RETENTION_AUDIT
+
   appwrite-schedule:
     entrypoint: schedule
     container_name: appwrite-schedule
     build:
       context: .
-    restart: unless-stopped
     networks:
       - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
     depends_on:
       - redis
     environment:
@@ -286,9 +352,8 @@ services:
       - _APP_REDIS_PORT
 
   mariadb:
-    image: appwrite/mariadb:1.0.3 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: appwrite/mariadb:1.2.0 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
-    restart: unless-stopped
     networks:
       - appwrite
     volumes:
@@ -300,17 +365,8 @@ services:
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
-    command: 'mysqld --innodb-flush-method=fsync'
+    command: 'mysqld --innodb-flush-method=fsync' # add ' --query_cache_size=0' for DB tests
     # command: mv /var/lib/mysql/ib_logfile0 /var/lib/mysql/ib_logfile0.bu && mv /var/lib/mysql/ib_logfile1 /var/lib/mysql/ib_logfile1.bu
-
-  maildev:
-    image: djfarrelly/maildev
-    container_name: appwrite-maildev
-    restart: unless-stopped
-    ports:
-      - '1080:80'
-    networks:
-      - appwrite
 
   # smtp:
   #   image: appwrite/smtp:1.2.0
@@ -327,7 +383,6 @@ services:
   redis:
     image: redis:6.0-alpine
     container_name: appwrite-redis
-    restart: unless-stopped
     networks:
       - appwrite
     volumes:
@@ -336,7 +391,6 @@ services:
   clamav:
     image: appwrite/clamav:1.2.0
     container_name: appwrite-clamav
-    restart: unless-stopped
     networks:
       - appwrite
     volumes:
@@ -345,7 +399,6 @@ services:
   influxdb:
     image: influxdb:1.8-alpine
     container_name: appwrite-influxdb
-    restart: unless-stopped
     networks:
       - appwrite
     volumes:
@@ -354,7 +407,43 @@ services:
   telegraf:
     image: appwrite/telegraf:1.0.0
     container_name: appwrite-telegraf
-    restart: unless-stopped
+    networks:
+      - appwrite
+
+  # Dev Tools Start ------------------------------------------------------------------------------------------
+  # 
+  # The Appwrite Team uses the following tools to help debug, monitor and diagnose the Appwrite stack
+  #
+  # Here is a description of the different tools and why are we using them:
+  #
+  # MailCatcher - An SMTP server. Catches all system emails and displays them in a nice UI.
+  # RequestCatcher - An HTTP server. Catches all system https calls and displays them using a simple HTTP API. Used to debug & tests webhooks and HTTP tasks
+  # RedisCommander - A nice UI for exploring Redis data
+  # Resque - A nice UI for exploring Reddis pub/sub, view the different queues workloads, pending and failed tasks
+  # Chronograf - A nice UI for exploring InfluxDB data
+  # Webgrind - A nice UI for exploring and debugging code-level stuff
+
+  maildev: # used mainly for dev tests
+    image: djfarrelly/maildev
+    container_name: appwrite-maildev
+    ports:
+      - '9503:80'
+    networks:
+      - appwrite
+
+  request-catcher: # used mainly for dev tests
+    image: smarterdm/http-request-catcher
+    container_name: appwrite-request-catcher
+    ports:
+      - '9504:5000'
+    networks:
+      - appwrite
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 9505:8080
     networks:
       - appwrite
 
@@ -406,6 +495,8 @@ services:
   #     - './debug:/tmp'
   #   ports:
   #     - '3001:80'
+  
+  # Dev Tools End   ------------------------------------------------------------------------------------------
 
 networks:
   gateway:
@@ -419,5 +510,5 @@ volumes:
   appwrite-certificates:
   appwrite-functions:
   appwrite-influxdb:
-  appwrite-chronograf:
   appwrite-config:
+  # appwrite-chronograf:

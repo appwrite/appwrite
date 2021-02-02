@@ -54,7 +54,7 @@ abstract class Adapter
     /**
      * Get Document.
      *
-     * @param int $id
+     * @param string $id
      *
      * @return array
      */
@@ -82,11 +82,11 @@ abstract class Adapter
     /**
      * Delete Node.
      *
-     * @param int $id
+     * @param string $id
      *
      * @return array
      */
-    abstract public function deleteDocument($id);
+    abstract public function deleteDocument(string $id);
 
     /**
      * Delete Unique Key.

@@ -5,8 +5,8 @@ use Utopia\Config\Config;
 
 App::init(function ($utopia, $request, $response, $layout) {
     /** @var Utopia\App $utopia */
-    /** @var Utopia\Request $request */
-    /** @var Utopia\Response $response */
+    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\View $layout */
 
     /* AJAX check  */
@@ -37,6 +37,7 @@ App::init(function ($utopia, $request, $response, $layout) {
         ->addHeader('Cache-Control', 'public, max-age='.$time)
         ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time).' GMT') // 45 days cache
         ->addHeader('X-Frame-Options', 'SAMEORIGIN') // Avoid console and homepage from showing in iframes
+        ->addHeader('X-XSS-Protection', '1; mode=block; report=/v1/xss?url='.\urlencode($request->getURI()))
         ->addHeader('X-UA-Compatible', 'IE=Edge') // Deny IE browsers from going into quirks mode
     ;
 

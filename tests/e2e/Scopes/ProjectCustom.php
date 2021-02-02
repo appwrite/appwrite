@@ -16,7 +16,7 @@ trait ProjectCustom
      */
     public function getProject(): array
     {
-        if(!empty(self::$project)) {
+        if (!empty(self::$project)) {
             return self::$project;
         }
 
@@ -75,29 +75,72 @@ trait ProjectCustom
                 'files.write',
                 'functions.read',
                 'functions.write',
+                'execution.read',
+                'execution.write',
                 'locale.read',
                 'avatars.read',
                 'health.read',
             ],
         ]);
 
-        $this->assertEquals(201, $project['headers']['status-code']);
+        $this->assertEquals(201, $key['headers']['status-code']);
         $this->assertNotEmpty($key['body']);
         $this->assertNotEmpty($key['body']['secret']);
 
-        // return [
-        //     'email' => $this->demoEmail,
-        //     'password' => $this->demoPassword,
-        //     'session' => $session,
-        //     'projectUid' => $project['body']['$id'],
-        //     'projectAPIKeySecret' => $key['body']['secret'],
-        //     'projectSession' => $this->client->parseCookie($user['headers']['set-cookie'])['a_session_' . $project['body']['$id']],
-        // ];
+        $webhook = $this->client->call(Client::METHOD_POST, '/projects/'.$project['body']['$id'].'/webhooks', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'name' => 'Webhook Test',
+            'events' => [
+                'account.create',
+                'account.update.email',
+                'account.update.name',
+                'account.update.password',
+                'account.update.prefs',
+                'account.recovery.create',
+                'account.recovery.update',
+                'account.verification.create',
+                'account.verification.update',
+                'account.delete',
+                'account.sessions.create',
+                'account.sessions.delete',
+                'database.collections.create',
+                'database.collections.update',
+                'database.collections.delete',
+                'database.documents.create',
+                'database.documents.update',
+                'database.documents.delete',
+                'storage.files.create',
+                'storage.files.update',
+                'storage.files.delete',
+                'users.create',
+                'users.update.status',
+                'users.delete',
+                'users.sessions.delete',
+                'teams.create',
+                'teams.update',
+                'teams.delete',
+                'teams.memberships.create',
+                'teams.memberships.update.status',
+                'teams.memberships.delete',
+            ],
+            'url' => 'http://request-catcher:5000/webhook',
+            'security' => false,
+            'httpUser' => '',
+            'httpPass' => '',
+        ]);
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $this->assertNotEmpty($webhook['body']);
 
         self::$project = [
             '$id' => $project['body']['$id'],
             'name' => $project['body']['name'],
             'apiKey' => $key['body']['secret'],
+            'webhookId' => $webhook['body']['$id'],
         ];
 
         return self::$project;

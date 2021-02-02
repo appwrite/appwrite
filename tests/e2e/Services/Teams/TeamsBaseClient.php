@@ -32,7 +32,7 @@ trait TeamsBaseClient
          * Test for FAILURE
          */
 
-         return $data;
+        return $data;
     }
 
     /**

@@ -11,19 +11,22 @@ class Error extends Model
     {
         $this
             ->addRule('message', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Error message.',
+                'default' => '',
                 'example' => 'Not found',
             ])
             ->addRule('code', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Error code.',
+                'default' => '',
                 'example' => '404',
             ])
             ->addRule('version', [
-                'type' => 'string',
+                'type' => self::TYPE_STRING,
                 'description' => 'Server version number.',
-                'example' => APP_VERSION_STABLE,
+                'default' => '',
+                'example' => '1.0',
             ])
         ;
     }

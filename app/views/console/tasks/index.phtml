@@ -15,13 +15,13 @@
     data-success="trigger"
     data-success-param-trigger-events="projects.listTasks">
 
-    <div data-ls-if="0 === {{console-tasks.length}} || undefined === {{console-tasks.length}}" class="box margin-top margin-bottom">
+    <div data-ls-if="0 === {{console-tasks.sum}} || undefined === {{console-tasks.sum}}" class="box margin-top margin-bottom">
         <h3 class="margin-bottom-small text-bold">No Tasks Found</h3>
 
         <p class="margin-bottom-no">You haven't created any tasks for your project yet.</p>
     </div>
 
-    <div class="box y-scroll margin-bottom" data-ls-if="0 != {{console-tasks.length}}">
+    <div class="box y-scroll margin-bottom" data-ls-if="0 != {{console-tasks.sum}}">
         <table class="full vertical">
             <thead>
                 <tr>
@@ -31,13 +31,13 @@
                     <th width="140"></th>
                 </tr>
             </thead>
-            <tbody data-ls-loop="console-tasks" data-ls-as="task" class="list">
+            <tbody data-ls-loop="console-tasks.tasks" data-ls-as="task" class="list">
                 <tr>
                     <td>
                         <div class="margin-bottom-tiny text-one-liner">
                             <span data-ls-attrs="title={{task.name}} ({{task.failures}} errors)" data-ls-bind="{{task.name}}"></span>
 
-                            <span data-ls-if="false === {{task.security}}" data-debug="1">
+                            <span data-ls-if="false === {{task.security}}">
                                 &nbsp; <span class="text-danger">SSL/TLS Disabled</span>
                             </span>
                             <span data-ls-if="0 !== {{task.failures}}">
@@ -60,7 +60,7 @@
 
                         <br />
                     
-                        <span data-ls-if="undefined !== {{task.previous}}">
+                        <span data-ls-if="undefined !== {{task.previous}} && {{task.previous}}">
                             <span data-ls-bind="Prev: {{task.previous|dateTime}}"></span>
 
                             <!-- <span data-ls-if="undefined !== {{task.delay}} && 59 < {{task.delay}}" class="text-danger margin-top-tiny">
@@ -78,6 +78,8 @@
                             <h1>Update Task</h1>
 
                             <form
+                                data-analytics
+                                data-analytics-activity
                                 data-analytics-event="submit"
                                 data-analytics-category="console"
                                 data-analytics-label="Update Project Task"
@@ -189,7 +191,7 @@
                                         </div>
                                         <div class="col span-6 margin-bottom">
                                             <label data-ls-attrs="for=httpPass-{{task.$id}}">Password</label>
-                                            <input type="password" class="full-width margin-bottom-no" data-ls-attrs="id=httpPass-{{task.$id}}" name="httpPass" autocomplete="off" data-ls-bind="{{task.httpPass}}" />
+                                            <input data-forms-show-secret type="password" class="full-width margin-bottom-no" data-ls-attrs="id=httpPass-{{task.$id}}" name="httpPass" autocomplete="off" data-ls-bind="{{task.httpPass}}" />
                                         </div>
                                     </div>
                                 </div>
@@ -202,6 +204,8 @@
                         </div>
 
                         <form
+                            data-analytics
+                            data-analytics-activity
                             data-analytics-event="submit"
                             data-analytics-category="console"
                             data-analytics-label="Delete Project Task"
@@ -238,6 +242,8 @@
             <h1>Add Task</h1>
 
             <form
+                data-analytics
+                data-analytics-activity
                 data-analytics-event="submit"
                 data-analytics-category="console"
                 data-analytics-label="Create Project Task"
@@ -335,7 +341,7 @@
                         </div>
                         <div class="col span-6 margin-bottom">
                             <label for="httpPass">Password</label>
-                            <input type="password" class="full-width margin-bottom-no" id="httpPass" name="httpPass" autocomplete="off" />
+                            <input type="password" data-forms-show-secret class="full-width margin-bottom-no" id="httpPass" name="httpPass" autocomplete="off" />
                         </div>
                     </div>
                 </div>

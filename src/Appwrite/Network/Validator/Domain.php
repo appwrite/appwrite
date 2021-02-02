@@ -37,11 +37,11 @@ class Domain extends Validator
      */
     public function isValid($value)
     {
-        if(empty($value)) {
+        if (empty($value)) {
             return false;
         }
 
-        if(!is_string($value)) {
+        if (!is_string($value)) {
             return false;
         }
 

@@ -1,15 +1,8 @@
 <?php
 
-const ROLE_GUEST = 0;
-const ROLE_MEMBER = 1;
-const ROLE_ADMIN = 2;
-const ROLE_DEVELOPER = 3;
-const ROLE_OWNER = 4;
-const ROLE_APP = 5;
-const ROLE_SYSTEM = 6;
-const ROLE_ALL = '*';
+use Appwrite\Auth\Auth;
 
-$logged = [
+$member = [
     'public',
     'home',
     'console',
@@ -24,6 +17,8 @@ $logged = [
     'projects.write',
     'locale.read',
     'avatars.read',
+    'execution.read',
+    'execution.write',
 ];
 
 $admins = [
@@ -37,8 +32,6 @@ $admins = [
     'users.write',
     'collections.read',
     'collections.write',
-    'functions.read',
-    'functions.write',
     'platforms.read',
     'platforms.write',
     'keys.read',
@@ -50,10 +43,14 @@ $admins = [
     'locale.read',
     'avatars.read',
     'health.read',
+    'functions.read',
+    'functions.write',
+    'execution.read',
+    'execution.write',
 ];
 
 return [
-    ROLE_GUEST => [
+    Auth::USER_ROLE_GUEST => [
         'label' => 'Guest',
         'scopes' => [
             'public',
@@ -63,25 +60,27 @@ return [
             'files.read',
             'locale.read',
             'avatars.read',
+            'execution.read',
+            'execution.write',
         ],
     ],
-    ROLE_MEMBER => [
+    Auth::USER_ROLE_MEMBER => [
         'label' => 'Member',
-        'scopes' => \array_merge($logged, []),
+        'scopes' => \array_merge($member, []),
     ],
-    ROLE_ADMIN => [
+    Auth::USER_ROLE_ADMIN => [
         'label' => 'Admin',
         'scopes' => \array_merge($admins, []),
     ],
-    ROLE_DEVELOPER => [
+    Auth::USER_ROLE_DEVELOPER => [
         'label' => 'Developer',
         'scopes' => \array_merge($admins, []),
     ],
-    ROLE_OWNER => [
+    Auth::USER_ROLE_OWNER => [
         'label' => 'Owner',
-        'scopes' => \array_merge($logged, $admins, []),
+        'scopes' => \array_merge($member, $admins, []),
     ],
-    ROLE_APP => [
+    Auth::USER_ROLE_APP => [
         'label' => 'Application',
         'scopes' => ['health.read'],
     ],

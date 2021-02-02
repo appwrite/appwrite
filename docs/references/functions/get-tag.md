@@ -1,0 +1,1 @@
+Get a code tag by its unique ID.

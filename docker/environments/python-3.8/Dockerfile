@@ -8,4 +8,4 @@ RUN mkdir /usr/local/src
 
 WORKDIR /usr/local/src/
 
-ENV PIP_TARGET=/usr/local/src/.appwrite
+ENV PYTHONPATH "${PYTHONPATH}:/usr/local/src/.appwrite"
