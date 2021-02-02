@@ -642,6 +642,7 @@ App::post('/v1/account/jwt')
     ->desc('Create Account JWT')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
+    ->label('docs', false) // Hidden for now - private beta
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createJWT')
