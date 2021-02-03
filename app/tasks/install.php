@@ -4,6 +4,7 @@ global $cli;
 
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
+use Utopia\Analytics\GoogleAnalytics;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\View;
@@ -28,6 +29,7 @@ $cli
          * 5. Run docker-compose up -d - DONE
          * 6. Run data migration
          */
+        $ga = new GoogleAnalytics('UA-188864507-1', uniqid('installation'));
         $config = Config::getParam('variables');
         $path = '/usr/src/code/appwrite';
         $defaultHTTPPort = '80';
@@ -160,10 +162,12 @@ $cli
         $exit = Console::execute("${env} docker-compose -f {$path}/docker-compose.yml up -d --remove-orphans --renew-anon-volumes", '', $stdout, $stderr);
 
         if ($exit !== 0) {
-            Console::error("Failed to install Appwrite dockers");
+            Console::error('Failed to install Appwrite dockers');
             Console::error($stderr);
             Console::exit($exit);
+            $ga->createEvent('installations', 'failure');
         } else {
-            Console::success("Appwrite installed successfully");
+            Console::success('Appwrite installed successfully');
+            $ga->createEvent('installations', 'successful');
         }
     });

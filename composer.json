@@ -58,15 +58,20 @@
         "adhocore/jwt": "1.1.0"
     },
     "require-dev": {
-        "swoole/ide-helper": "4.5.5",
         "appwrite/sdk-generator": "0.4.5",
+        "utopia-php/analytics": "dev-main",
         "phpunit/phpunit": "9.4.2",
+        "swoole/ide-helper": "4.5.5",
         "vimeo/psalm": "4.1.1"
     },
     "repositories": [
         {
             "type": "git",
             "url": "https://github.com/appwrite/sdk-generator"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/utopia-php/analytics"
         }
     ],
     "provide": {
