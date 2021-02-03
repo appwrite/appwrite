@@ -584,7 +584,25 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
         <li>
             <h2 style="display: none">CLI</h2>
 
-            34
+            <p><b>Unix</b></p>
+
+            <div class="ide margin-bottom" data-lang="bash" data-lang-label="Bash">
+                <pre class="line-numbers"><code class="prism language-bash" data-prism>appwrite functions createTag \
+    --functionId=6012cc93d5a7b \
+    --command="node index.js" \
+    --code="/myrepo/myfunction"</code></pre>
+            </div>
+
+            <p><b>PowerShell</b></p>
+
+            <div class="ide margin-bottom" data-lang="bash" data-lang-label="PowerShell">
+                <pre class="line-numbers"><code class="prism language-bash" data-prism>appwrite functions createTag ,
+    --functionId=6012cc93d5a7b ,
+    --command="node index.js" ,
+    --code="/myrepo/myfunction"</code></pre>
+            </div>
+
+            <p>Learn more about <a href="" target="_blank">creating tags</a>, installing and using the <a href="" target="_blank">Appwrite CLI</a>.</p>
         </li>
         <li>
             <h2 style="display: none">Manual</h2>
