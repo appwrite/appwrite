@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4b4d5ae4c4601730a0bfb1be3faed144",
+    "content-hash": "e7b1732817d699748e3bbf4f6c7e4fb0",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1229,16 +1229,16 @@
         },
         {
             "name": "utopia-php/analytics",
-            "version": "0.1.1",
+            "version": "0.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/analytics.git",
-                "reference": "5e9ce43523b19ae71973567f219275f97bbec5d9"
+                "reference": "a1f2a1672a927bef8cd4d9b47e5cfbc856a3c72f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/analytics/zipball/5e9ce43523b19ae71973567f219275f97bbec5d9",
-                "reference": "5e9ce43523b19ae71973567f219275f97bbec5d9",
+                "url": "https://api.github.com/repos/utopia-php/analytics/zipball/a1f2a1672a927bef8cd4d9b47e5cfbc856a3c72f",
+                "reference": "a1f2a1672a927bef8cd4d9b47e5cfbc856a3c72f",
                 "shasum": ""
             },
             "require": {
@@ -1278,9 +1278,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/analytics/issues",
-                "source": "https://github.com/utopia-php/analytics/tree/0.1.1"
+                "source": "https://github.com/utopia-php/analytics/tree/0.1.0"
             },
-            "time": "2021-02-04T09:14:43+00:00"
+            "time": "2021-02-03T17:07:09+00:00"
         },
         {
             "name": "utopia-php/audit",

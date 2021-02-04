@@ -37,14 +37,10 @@ $cli
         $vars = [];
 
         /**
-         * Generates an anonymous hash value based on following informations:
-         * - Host's machine name
-         * - Host's local IP adress
-         * 
-         * This value allows us to collect information without invading the privacy of our users.
+         * We are using a random value every execution for identification.
+         * This allows us to collect information without invading the privacy of our users.
          */
-        $cid = GoogleAnalytics::getUniqueByHostname();
-        $analytics = new GoogleAnalytics('UA-26264668-9', $cid);
+        $analytics = new GoogleAnalytics('UA-26264668-9', uniqid('server.', true));
 
         foreach($config as $category) {
             foreach($category['variables'] ?? [] as $var) {
