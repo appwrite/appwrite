@@ -475,6 +475,10 @@ class Database
 
     public function encode(Document $document):Document
     {
+        if (!self::$statusFilters) {
+            return $document;
+        }
+
         $collection = $this->getDocument($document->getCollection(), true , false);
         $rules = $collection->getAttribute('rules', []);
 
@@ -511,6 +515,10 @@ class Database
 
     public function decode(Document $document):Document
     {
+        if (!self::$statusFilters) {
+            return $document;
+        }
+
         $collection = $this->getDocument($document->getCollection(), true , false);
         $rules = $collection->getAttribute('rules', []);
 
@@ -575,10 +583,6 @@ class Database
      */
     static protected function decodeAttribute(string $name, $value)
     {
-        if (!self::$statusFilters) {
-            return $value;
-        }
-        
         if (!isset(self::$filters[$name])) {
             return $value;
             throw new Exception('Filter not found');

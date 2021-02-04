@@ -103,6 +103,10 @@ class V06 extends Filter {
                 $parsedResponse = $this->parseCurrencyList($content);
                 break;
 
+            case Response::MODEL_LANGUAGE_LIST:
+                $parsedResponse = $content;
+                break;
+
             case Response::MODEL_ANY :
                 $parsedResponse = $content;
                 break;

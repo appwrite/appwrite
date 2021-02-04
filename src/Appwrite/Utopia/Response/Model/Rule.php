@@ -62,7 +62,7 @@ class Rule extends Model
                 'description' => 'List of allowed values',
                 'array' => true,
                 'default' => [],
-                'example' => ['5e5ea5c168099'],
+                'example' => '5e5ea5c168099',
             ])
         ;
     }

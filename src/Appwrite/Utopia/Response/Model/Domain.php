@@ -45,6 +45,12 @@ class Domain extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('certificateId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Certificate ID.',
+                'default' => '',
+                'example' => '6ejea5c13377e',
+            ])
         ;
     }
 

@@ -95,7 +95,7 @@ class OpenAPI3 extends Format
 
             $id = $route->getLabel('sdk.method', \uniqid());
             $desc = (!empty($route->getLabel('sdk.description', ''))) ? \realpath(__DIR__.'/../../../../'.$route->getLabel('sdk.description', '')) : null;
-            $produces = $route->getLabel('sdk.response.type', 'application/json');
+            $produces = $route->getLabel('sdk.response.type', null);
             $model = $route->getLabel('sdk.response.model', 'none'); 
             
             $temp = [
@@ -370,7 +370,8 @@ class OpenAPI3 extends Format
                         'description' => $rule['description'] ?? '',
                         'items' => [
                             'type' => $type,
-                        ]
+                        ],
+                        'x-example' => $rule['example'] ?? null,
                     ];
 
                     if($format) {

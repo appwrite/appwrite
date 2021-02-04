@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use stdClass;
 use Utopia\Config\Config;
 
 class Project extends Model
@@ -92,35 +93,35 @@ class Project extends Model
                 'type' => Response::MODEL_PLATFORM,
                 'description' => 'List of Platforms.',
                 'default' => [],
-                'example' => [],
+                'example' => new stdClass,
                 'array' => true,
             ])
             ->addRule('webhooks', [
                 'type' => Response::MODEL_WEBHOOK,
                 'description' => 'List of Webhooks.',
                 'default' => [],
-                'example' => [],
+                'example' => new stdClass,
                 'array' => true,
             ])
             ->addRule('keys', [
                 'type' => Response::MODEL_KEY,
                 'description' => 'List of API Keys.',
                 'default' => [],
-                'example' => [],
+                'example' => new stdClass,
                 'array' => true,
             ])
             ->addRule('domains', [
                 'type' => Response::MODEL_DOMAIN,
                 'description' => 'List of Domains.',
                 'default' => [],
-                'example' => [],
+                'example' => new stdClass,
                 'array' => true,
             ])
             ->addRule('tasks', [
                 'type' => Response::MODEL_TASK,
                 'description' => 'List of Tasks.',
                 'default' => [],
-                'example' => [],
+                'example' => new stdClass,
                 'array' => true,
             ])
         ;

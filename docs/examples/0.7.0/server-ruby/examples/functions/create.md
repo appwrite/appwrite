@@ -10,6 +10,6 @@ client
 
 functions = Appwrite::Functions.new(client);
 
-response = functions.create(name: '[NAME]', env: 'node-14');
+response = functions.create(name: '[NAME]', execute: [], env: 'node-14.5');
 
 puts response
