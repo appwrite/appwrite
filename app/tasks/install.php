@@ -144,14 +144,14 @@ $cli
 
         if(!file_put_contents($path.'/docker-compose.yml', $templateForCompose->render(false))) {
             $message = 'Failed to save Docker Compose file';
-            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE.' - '.$message, 0);
+            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE.' - '.$message);
             Console::error($message);
             Console::exit(1);
         }
 
         if(!file_put_contents($path.'/.env', $templateForEnv->render(false))) {
             $message = 'Failed to save environment variables file';
-            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE.' - '.$message, 0);
+            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE.' - '.$message);
             Console::error($message);
             Console::exit(1);
         }
@@ -172,13 +172,13 @@ $cli
 
         if ($exit !== 0) {
             $message = 'Failed to install Appwrite dockers';
-            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE.' - '.$message, 0);
+            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE.' - '.$message);
             Console::error($message);
             Console::error($stderr);
             Console::exit($exit);
         } else {
             $message = 'Appwrite installed successfully';
-            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE.' - '.$message, 1);
+            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE.' - '.$message);
             Console::success($message);
         }
     });
