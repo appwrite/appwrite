@@ -36,6 +36,7 @@
 
         "utopia-php/framework": "0.10.0",
         "utopia-php/abuse": "0.3.*",
+        "utopia-php/analytics": "0.1.*",
         "utopia-php/audit": "0.5.*",
         "utopia-php/cache": "0.2.*",
         "utopia-php/cli": "0.9.0",
@@ -59,7 +60,6 @@
     },
     "require-dev": {
         "appwrite/sdk-generator": "0.4.5",
-        "utopia-php/analytics": "dev-main",
         "phpunit/phpunit": "9.4.2",
         "swoole/ide-helper": "4.5.5",
         "vimeo/psalm": "4.1.1"
@@ -68,10 +68,6 @@
         {
             "type": "git",
             "url": "https://github.com/appwrite/sdk-generator"
-        },
-        {
-            "type": "git",
-            "url": "https://github.com/utopia-php/analytics"
         }
     ],
     "provide": {

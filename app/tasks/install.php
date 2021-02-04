@@ -29,7 +29,7 @@ $cli
          * 5. Run docker-compose up -d - DONE
          * 6. Run data migration
          */
-        $ga = new GoogleAnalytics('UA-188864507-1', uniqid('installation'));
+        $analytics = new GoogleAnalytics('UA-26264668-9', uniqid('installation'));
         $config = Config::getParam('variables');
         $path = '/usr/src/code/appwrite';
         $defaultHTTPPort = '80';
@@ -165,9 +165,9 @@ $cli
             Console::error('Failed to install Appwrite dockers');
             Console::error($stderr);
             Console::exit($exit);
-            $ga->createEvent('installations', 'failure');
+            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE.' Install Server failed');
         } else {
             Console::success('Appwrite installed successfully');
-            $ga->createEvent('installations', 'successful');
+            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE.' Install Server successfully');
         }
     });
