@@ -36,6 +36,7 @@
 
         "utopia-php/framework": "0.10.0",
         "utopia-php/abuse": "0.3.*",
+        "utopia-php/analytics": "0.1.*",
         "utopia-php/audit": "0.5.*",
         "utopia-php/cache": "0.2.*",
         "utopia-php/cli": "0.9.0",
@@ -58,9 +59,9 @@
         "adhocore/jwt": "1.1.0"
     },
     "require-dev": {
-        "swoole/ide-helper": "4.5.5",
         "appwrite/sdk-generator": "0.4.5",
         "phpunit/phpunit": "9.4.2",
+        "swoole/ide-helper": "4.5.5",
         "vimeo/psalm": "4.1.1"
     },
     "repositories": [
