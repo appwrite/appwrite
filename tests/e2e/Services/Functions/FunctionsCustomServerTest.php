@@ -308,8 +308,6 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('', $execution['body']['stderr']);
         $this->assertEquals(0, $execution['body']['time']);
 
-        // sleep(75);
-
         // $execution = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/executions/'.$executionId, array_merge([
         //     'content-type' => 'application/json',
         //     'x-appwrite-project' => $this->getProject()['$id'],
@@ -561,7 +559,7 @@ class FunctionsCustomServerTest extends Scope
             ],
         ];
 
-        sleep(count($envs) * 20);
+        sleep(count($envs) * 15);
         fwrite(STDERR, ".");
 
         /**
@@ -643,7 +641,7 @@ class FunctionsCustomServerTest extends Scope
             $executionId = $execution['body']['$id'] ?? '';
             $this->assertEquals(201, $execution['headers']['status-code']);
             
-            sleep(30);
+            sleep(10);
 
             $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
                 'content-type' => 'application/json',
@@ -742,7 +740,7 @@ class FunctionsCustomServerTest extends Scope
         
         $this->assertEquals(201, $execution['headers']['status-code']);
 
-        sleep(15);
+        sleep(10);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
             'content-type' => 'application/json',
