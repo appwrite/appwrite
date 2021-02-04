@@ -144,11 +144,17 @@
     border-bottom: solid 1px var(--config-modal-note-border);
   }
 
-  .ide.strech {
-    box-shadow: none;
-    border-radius: 0;
-    margin: 0 -30px;
-  }
+  .ide {
+    &.strech {
+      box-shadow: none;
+      border-radius: 0;
+      margin: 0 -30px;
+    }
+
+    pre {
+      overflow: auto;
+    }
+  } 
 
   button.close {
     width: 30px;
