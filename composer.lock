@@ -1229,16 +1229,16 @@
         },
         {
             "name": "utopia-php/analytics",
-            "version": "0.1.0",
+            "version": "0.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/analytics.git",
-                "reference": "a1f2a1672a927bef8cd4d9b47e5cfbc856a3c72f"
+                "reference": "5e9ce43523b19ae71973567f219275f97bbec5d9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/analytics/zipball/a1f2a1672a927bef8cd4d9b47e5cfbc856a3c72f",
-                "reference": "a1f2a1672a927bef8cd4d9b47e5cfbc856a3c72f",
+                "url": "https://api.github.com/repos/utopia-php/analytics/zipball/5e9ce43523b19ae71973567f219275f97bbec5d9",
+                "reference": "5e9ce43523b19ae71973567f219275f97bbec5d9",
                 "shasum": ""
             },
             "require": {
@@ -1278,9 +1278,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/analytics/issues",
-                "source": "https://github.com/utopia-php/analytics/tree/0.1.0"
+                "source": "https://github.com/utopia-php/analytics/tree/0.1.1"
             },
-            "time": "2021-02-03T17:07:09+00:00"
+            "time": "2021-02-04T09:14:43+00:00"
         },
         {
             "name": "utopia-php/audit",

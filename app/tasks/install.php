@@ -29,12 +29,22 @@ $cli
          * 5. Run docker-compose up -d - DONE
          * 6. Run data migration
          */
-        $analytics = new GoogleAnalytics('UA-26264668-9', uniqid('installation'));
+
         $config = Config::getParam('variables');
         $path = '/usr/src/code/appwrite';
         $defaultHTTPPort = '80';
         $defaultHTTPSPort = '443';
         $vars = [];
+
+        /**
+         * Generates an anonymous hash value based on following informations:
+         * - Host's machine name
+         * - Host's local IP adress
+         * 
+         * This value allows us to collect information without invading the privacy of our users.
+         */
+        $cid = GoogleAnalytics::getUniqueByHostname();
+        $analytics = new GoogleAnalytics('UA-26264668-9', $cid);
 
         foreach($config as $category) {
             foreach($category['variables'] ?? [] as $var) {
@@ -138,12 +148,16 @@ $cli
         ;
 
         if(!file_put_contents($path.'/docker-compose.yml', $templateForCompose->render(false))) {
-            Console::error('Failed to save Docker Compose file');
+            $message = 'Failed to save Docker Compose file';
+            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE.' - '.$message, 0);
+            Console::error($message);
             Console::exit(1);
         }
 
         if(!file_put_contents($path.'/.env', $templateForEnv->render(false))) {
-            Console::error('Failed to save environment variables file');
+            $message = 'Failed to save environment variables file';
+            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE.' - '.$message, 0);
+            Console::error($message);
             Console::exit(1);
         }
 
@@ -162,12 +176,14 @@ $cli
         $exit = Console::execute("${env} docker-compose -f {$path}/docker-compose.yml up -d --remove-orphans --renew-anon-volumes", '', $stdout, $stderr);
 
         if ($exit !== 0) {
-            Console::error('Failed to install Appwrite dockers');
+            $message = 'Failed to install Appwrite dockers';
+            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE.' - '.$message, 0);
+            Console::error($message);
             Console::error($stderr);
             Console::exit($exit);
-            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE.' Install Server failed');
         } else {
-            Console::success('Appwrite installed successfully');
-            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE.' Install Server successfully');
+            $message = 'Appwrite installed successfully';
+            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE.' - '.$message, 1);
+            Console::success($message);
         }
     });
