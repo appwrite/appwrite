@@ -29,7 +29,6 @@ $cli
          * 5. Run docker-compose up -d - DONE
          * 6. Run data migration
          */
-
         $config = Config::getParam('variables');
         $path = '/usr/src/code/appwrite';
         $defaultHTTPPort = '80';
