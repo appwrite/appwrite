@@ -282,8 +282,9 @@ services:
       - _APP_REDIS_PORT
 
   mariadb:
-    image: appwrite/mariadb:1.2.0 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
+    build:
+      context: ./mysql_container
     restart: unless-stopped
     networks:
       - appwrite
