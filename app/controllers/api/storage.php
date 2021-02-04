@@ -84,32 +84,34 @@ App::post('/v1/storage/files')
         if (!$upload->isValid($file['tmp_name'])) {
             throw new Exception('Invalid file', 403);
         }
-
+        $localDevice = Storage::getDevice('self');
         // Save to storage
-        $size = Storage::getDevice('self')->getFileSize($file['tmp_name']);
+        $size = $localDevice->getFileSize($file['tmp_name']);
         $path = $device->getPath(\uniqid().'.'.\pathinfo($file['name'], PATHINFO_EXTENSION));
         
-        if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
-            throw new Exception('Failed moving file', 500);
-        }
-
-        $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
+        
+        $mimeType = $localDevice->getFileMimeType($file['tmp_name']); // Get mime-type before compression and encryption, getting mime-type from local file to avoid making external request
         
         if(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
+            if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
+                throw new Exception('Failed moving file', 500);
+            }
             if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
                 $antiVirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
                     (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
     
                 if (!$antiVirus->fileScan($path)) {
                     $device->delete($path);
-                    throw new Exception('Invalid file', 403);
+                    throw new Exception('Invalid file' . $path , 403);
                 }
             }
+            $data = $device->read($path);
+        } else {
+            $data = $localDevice->read($file['tmp_name']);
         }
 
         // Compression
         $compressor = new GZIP();
-        $data = $device->read($path);
         $data = $compressor->compress($data);
         $key = App::getEnv('_APP_OPENSSL_KEY_V1');
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
@@ -119,8 +121,7 @@ App::post('/v1/storage/files')
             throw new Exception('Failed to save file', 500);
         }
 
-        $sizeActual = Storage::getDevice('self')->getFileSize($path);
-        
+        $sizeActual = strlen($data); //actual size
         $file = $projectDB->createDocument([
             '$collection' => Database::SYSTEM_COLLECTION_FILES,
             '$permissions' => [
@@ -131,7 +132,7 @@ App::post('/v1/storage/files')
             'folderId' => '',
             'name' => $file['name'],
             'path' => $path,
-            'signature' => $device->getFileHash($path),
+            'signature' => md5($data),
             'mimeType' => $mimeType,
             'sizeOriginal' => $size,
             'sizeActual' => $sizeActual,
