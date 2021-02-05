@@ -52,6 +52,9 @@ class DeletesV1
                     case Database::SYSTEM_COLLECTION_COLLECTIONS:
                         $this->deleteDocuments($document, $projectId);
                         break;
+                    case Database::SYSTEM_COLLECTION_DOMAINS:
+                        $this->deleteCertificates($document);
+                        break;
                     default:
                         Console::error('No lazy delete operation available for document of type: '.$document->getCollection());
                         break;
@@ -303,6 +306,18 @@ class DeletesV1
         $executionEnd = \microtime(true);
 
         Console::info("Deleted {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
+    }
+
+    protected function deleteCertificates(Document $document)
+    {
+        $domain = $document->getAttribute('domain', null);
+        $directory = APP_STORAGE_CERTIFICATES . '/' . $domain;
+
+        if($domain && is_dir($directory)) {
+            array_map('unlink', glob("$directory/*.*"));
+            rmdir($directory);
+            Console::info("Deleted certificate files for domain {$domain}");
+        }
     }
 
     /**
