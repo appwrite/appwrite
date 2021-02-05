@@ -93,14 +93,14 @@ class Swagger2 extends Format
 
             $id = $route->getLabel('sdk.method', \uniqid());
             $desc = (!empty($route->getLabel('sdk.description', ''))) ? \realpath(__DIR__.'/../../../../'.$route->getLabel('sdk.description', '')) : null;
-            $produces = $route->getLabel('sdk.response.type', 'application/json');
+            $produces = $route->getLabel('sdk.response.type', null);
             $model = $route->getLabel('sdk.response.model', 'none'); 
             
             $temp = [
                 'summary' => $route->getDesc(),
                 'operationId' => $route->getLabel('sdk.namespace', 'default').ucfirst($id),
                 'consumes' => [],
-                'produces' => [$produces],
+                'produces' => [],
                 'tags' => [$route->getLabel('sdk.namespace', 'default')],
                 'description' => ($desc) ? \file_get_contents($desc) : '',
                 'responses' => [],
@@ -119,6 +119,10 @@ class Swagger2 extends Format
                     'packaging' => $route->getLabel('sdk.packaging', false),
                 ],
             ];
+
+            if($produces) {
+                $temp['produces'][] = $produces;
+            }
 
             foreach ($this->models as $key => $value) {
                 if($value->getType() === $model) {

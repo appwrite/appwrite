@@ -510,7 +510,7 @@ $maxCells = 10;
 
     <div data-ls-loop="project-collections.collections" data-ls-as="project" data-ls-key="$index2" class="tiles cell-3 margin-bottom-negative">
         <div class="margin-bottom" data-ls-if="{{project.$id}} != {{router.params.id}}">
-            <input type="checkbox" name="list" data-ls-attrs="value={{project.$id}}" data-ls-bind="{{rule.list}}" /> <span data-ls-bind="{{project.name}}"></span>
+            <input type="checkbox" name="list" data-ls-attrs="value={{project.$id}},id={{project.$id}}" data-ls-bind="{{rule.list}}" /> <label data-ls-attrs="for={{project.$id}}" data-ls-bind="{{project.name}}"></label>
         </div>
     </div>
 </script>
@@ -520,7 +520,8 @@ $maxCells = 10;
 
     <div data-ls-loop="project-collections.collections" data-ls-as="project" data-ls-key="$index2" class="tiles cell-3 margin-bottom-negative">
         <div class="margin-bottom" data-ls-if="{{project.$id}} != {{router.params.id}}">
-            <input type="radio" name="list" data-ls-attrs="value={{project.$id}}" data-ls-bind="{{rule.list|firstElement}}" data-cast-to="array" required /> <span data-ls-bind="{{project.name}}"></span>
+            <input type="radio" name="list" data-ls-attrs="value={{project.$id}},id={{project.$id}}" data-ls-bind="{{rule.list|firstElement}}" data-cast-to="array" required />
+            <label data-ls-attrs="for={{project.$id}}"data-ls-bind="{{project.name}}"></label>
         </div>
     </div>
 </script>

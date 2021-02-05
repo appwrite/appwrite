@@ -392,7 +392,6 @@ App::delete('/v1/functions/:functionId')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', '/docs/references/functions/delete-function.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->inject('response')
@@ -436,7 +435,7 @@ App::post('/v1/functions/:functionId/tags')
     ->label('sdk.response.model', Response::MODEL_TAG)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('command', '', new Text('1028'), 'Code execution command.')
-    ->param('file', null, new File(), 'Gzip file with your code package.', false)
+    ->param('code', null, new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', false)
     ->inject('request')
     ->inject('response')
     ->inject('projectDB')
@@ -453,7 +452,7 @@ App::post('/v1/functions/:functionId/tags')
             throw new Exception('Function not found', 404);
         }
 
-        $file = $request->getFiles('file');
+        $file = $request->getFiles('code');
         $device = Storage::getDevice('functions');
         $fileExt = new FileExt([FileExt::TYPE_GZIP]);
         $fileSize = new FileSize(App::getEnv('_APP_STORAGE_LIMIT', 0));
@@ -607,7 +606,6 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
     ->label('sdk.method', 'deleteTag')
     ->label('sdk.description', '/docs/references/functions/delete-tag.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('tagId', '', new UID(), 'Tag unique ID.')

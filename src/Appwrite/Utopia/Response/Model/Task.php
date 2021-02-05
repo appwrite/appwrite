@@ -49,7 +49,7 @@ class Task extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Task HTTP headers.',
                 'default' => [],
-                'example' => ['key:value'],
+                'example' => 'key:value',
                 'array' => true,
             ])
             ->addRule('httpUser', [

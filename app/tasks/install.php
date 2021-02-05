@@ -4,6 +4,7 @@ global $cli;
 
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
+use Utopia\Analytics\GoogleAnalytics;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\View;
@@ -33,6 +34,12 @@ $cli
         $defaultHTTPPort = '80';
         $defaultHTTPSPort = '443';
         $vars = [];
+
+        /**
+         * We are using a random value every execution for identification.
+         * This allows us to collect information without invading the privacy of our users.
+         */
+        $analytics = new GoogleAnalytics('UA-26264668-9', uniqid('server.', true));
 
         foreach($config as $category) {
             foreach($category['variables'] ?? [] as $var) {
@@ -136,12 +143,16 @@ $cli
         ;
 
         if(!file_put_contents($path.'/docker-compose.yml', $templateForCompose->render(false))) {
-            Console::error('Failed to save Docker Compose file');
+            $message = 'Failed to save Docker Compose file';
+            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE.' - '.$message);
+            Console::error($message);
             Console::exit(1);
         }
 
         if(!file_put_contents($path.'/.env', $templateForEnv->render(false))) {
-            Console::error('Failed to save environment variables file');
+            $message = 'Failed to save environment variables file';
+            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE.' - '.$message);
+            Console::error($message);
             Console::exit(1);
         }
 
@@ -160,10 +171,14 @@ $cli
         $exit = Console::execute("${env} docker-compose -f {$path}/docker-compose.yml up -d --remove-orphans --renew-anon-volumes", '', $stdout, $stderr);
 
         if ($exit !== 0) {
-            Console::error("Failed to install Appwrite dockers");
+            $message = 'Failed to install Appwrite dockers';
+            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE.' - '.$message);
+            Console::error($message);
             Console::error($stderr);
             Console::exit($exit);
         } else {
-            Console::success("Appwrite installed successfully");
+            $message = 'Appwrite installed successfully';
+            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE.' - '.$message);
+            Console::success($message);
         }
     });

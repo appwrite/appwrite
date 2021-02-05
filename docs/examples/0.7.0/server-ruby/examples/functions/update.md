@@ -10,6 +10,6 @@ client
 
 functions = Appwrite::Functions.new(client);
 
-response = functions.update(function_id: '[FUNCTION_ID]', name: '[NAME]');
+response = functions.update(function_id: '[FUNCTION_ID]', name: '[NAME]', execute: []);
 
 puts response

@@ -32,9 +32,8 @@ class ErrorDev extends Error
                 'type' => self::TYPE_STRING,
                 'description' => 'Error trace.',
                 'default' => [],
-                'example' => [
-                    ''
-                ],
+                'example' => '',
+                'array' => true,
             ])
         ;
     }

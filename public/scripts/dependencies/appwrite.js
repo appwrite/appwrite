@@ -141,7 +141,7 @@
 
             addGlobalHeader('x-sdk-version', 'appwrite:web:1.0.0');
             addGlobalHeader('content-type', '');
-
+    
             /**
              * @param {string} method
              * @param {string} path string
@@ -412,6 +412,28 @@
 
                 return http
                     .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Create Account JWT
+             *
+             * Use this endpoint to create a JSON Web Token. You can use the resulting JWT
+             * to authenticate on behalf of the current user when working with the
+             * Appwrite server-side API and SDKs. The JWT secret is valid for 15 minutes
+             * from its creation and will be invalid if the user will logout.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            createJWT: function() {
+                let path = '/account/jwt';
+
+                let payload = {};
+
+                return http
+                    .post(path, {
                         'content-type': 'application/json',
                     }, payload);
             },
@@ -966,10 +988,9 @@
             /**
              * Get Credit Card Icon
              *
-             * Need to display your users with your billing method or their payment
-             * methods? The credit card endpoint will return you the icon of the credit
-             * card provider you need. Use width, height and quality arguments to change
-             * the output settings.
+             * The credit card endpoint will return you the icon of the credit card
+             * provider you need. Use width, height and quality arguments to change the
+             * output settings.
              *
              * @param {string} code
              * @param {number} width
@@ -1330,7 +1351,7 @@
              *
              * Get a list of all the user collections. You can use the query params to
              * filter your results. On admin mode, this endpoint will return a list of all
-             * of the project collections. [Learn more about different API
+             * of the project's collections. [Learn more about different API
              * modes](/docs/admin).
              *
              * @param {string} search
@@ -1425,7 +1446,7 @@
             /**
              * Get Collection
              *
-             * Get collection by its unique ID. This endpoint response returns a JSON
+             * Get a collection by its unique ID. This endpoint response returns a JSON
              * object with the collection metadata.
              *
              * @param {string} collectionId
@@ -1450,7 +1471,7 @@
             /**
              * Update Collection
              *
-             * Update collection by its unique ID.
+             * Update a collection by its unique ID.
              *
              * @param {string} collectionId
              * @param {string} name
@@ -1533,7 +1554,7 @@
              *
              * Get a list of all the user documents. You can use the query params to
              * filter your results. On admin mode, this endpoint will return a list of all
-             * of the project documents. [Learn more about different API
+             * of the project's documents. [Learn more about different API
              * modes](/docs/admin).
              *
              * @param {string} collectionId
@@ -1662,8 +1683,8 @@
             /**
              * Get Document
              *
-             * Get document by its unique ID. This endpoint response returns a JSON object
-             * with the document data.
+             * Get a document by its unique ID. This endpoint response returns a JSON
+             * object with the document data.
              *
              * @param {string} collectionId
              * @param {string} documentId
@@ -1692,6 +1713,8 @@
             /**
              * Update Document
              *
+             * Update a document by its unique ID. Using the patch method you can pass
+             * only specific fields that will get updated.
              *
              * @param {string} collectionId
              * @param {string} documentId
@@ -1747,7 +1770,7 @@
             /**
              * Delete Document
              *
-             * Delete document by its unique ID. This endpoint deletes only the parent
+             * Delete a document by its unique ID. This endpoint deletes only the parent
              * documents, its attributes and relations to other documents. Child documents
              * **will not** be deleted.
              *
@@ -1781,6 +1804,8 @@
             /**
              * List Functions
              *
+             * Get a list of all the project's functions. You can use the query params to
+             * filter your results.
              *
              * @param {string} search
              * @param {number} limit
@@ -1819,6 +1844,9 @@
             /**
              * Create Function
              *
+             * Create a new function. You can pass a list of
+             * [permissions](/docs/permissions) to allow different project users or team
+             * with access to execute the function using the client API.
              *
              * @param {string} name
              * @param {string[]} execute
@@ -1830,7 +1858,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            create: function(name, execute, env, vars = [], events = [], schedule = '', timeout = 15) {
+            create: function(name, execute, env, vars = {}, events = [], schedule = '', timeout = 15) {
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
                 }
@@ -1884,6 +1912,7 @@
             /**
              * Get Function
              *
+             * Get a function by its unique ID.
              *
              * @param {string} functionId
              * @throws {Error}
@@ -1907,6 +1936,7 @@
             /**
              * Update Function
              *
+             * Update function by its unique ID.
              *
              * @param {string} functionId
              * @param {string} name
@@ -1918,7 +1948,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            update: function(functionId, name, execute, vars = [], events = [], schedule = '', timeout = 15) {
+            update: function(functionId, name, execute, vars = {}, events = [], schedule = '', timeout = 15) {
                 if(functionId === undefined) {
                     throw new Error('Missing required parameter: "functionId"');
                 }
@@ -1968,6 +1998,7 @@
             /**
              * Delete Function
              *
+             * Delete a function by its unique ID.
              *
              * @param {string} functionId
              * @throws {Error}
@@ -1991,6 +2022,10 @@
             /**
              * List Executions
              *
+             * Get a list of all the current user function execution logs. You can use the
+             * query params to filter your results. On admin mode, this endpoint will
+             * return a list of all of the project's teams. [Learn more about different
+             * API modes](/docs/admin).
              *
              * @param {string} functionId
              * @param {string} search
@@ -2034,6 +2069,10 @@
             /**
              * Create Execution
              *
+             * Trigger a function execution. The returned object will return you the
+             * current execution status. You can ping the `Get Execution` endpoint to get
+             * updates on the current execution status. Once this endpoint is called, your
+             * function execution process will start asynchronously.
              *
              * @param {string} functionId
              * @throws {Error}
@@ -2057,6 +2096,7 @@
             /**
              * Get Execution
              *
+             * Get a function execution log by its unique ID.
              *
              * @param {string} functionId
              * @param {string} executionId
@@ -2085,6 +2125,9 @@
             /**
              * Update Function Tag
              *
+             * Update the function code tag ID using the unique function ID. Use this
+             * endpoint to switch the code tag that should be executed by the execution
+             * endpoint.
              *
              * @param {string} functionId
              * @param {string} tag
@@ -2117,6 +2160,8 @@
             /**
              * List Tags
              *
+             * Get a list of all the project's code tags. You can use the query params to
+             * filter your results.
              *
              * @param {string} functionId
              * @param {string} search
@@ -2160,6 +2205,16 @@
             /**
              * Create Tag
              *
+             * Create a new function code tag. Use this endpoint to upload a new version
+             * of your code function. To execute your newly uploaded code, you'll need to
+             * update the function's tag to use your new tag UID.
+             * 
+             * This endpoint accepts a tar.gz file compressed with your code. Make sure to
+             * include any dependencies your code has within the compressed file. You can
+             * learn more about code packaging in the [Appwrite Cloud Functions
+             * tutorial](/docs/functions).
+             * 
+             * Use the "command" param to set the entry point used to execute your code.
              *
              * @param {string} functionId
              * @param {string} command
@@ -2201,6 +2256,7 @@
             /**
              * Get Tag
              *
+             * Get a code tag by its unique ID.
              *
              * @param {string} functionId
              * @param {string} tagId
@@ -2229,6 +2285,7 @@
             /**
              * Delete Tag
              *
+             * Delete a code tag by its unique ID.
              *
              * @param {string} functionId
              * @param {string} tagId
@@ -3987,7 +4044,7 @@
              *
              * Get a list of all the user files. You can use the query params to filter
              * your results. On admin mode, this endpoint will return a list of all of the
-             * project files. [Learn more about different API modes](/docs/admin).
+             * project's files. [Learn more about different API modes](/docs/admin).
              *
              * @param {string} search
              * @param {number} limit
@@ -4074,7 +4131,7 @@
             /**
              * Get File
              *
-             * Get file by its unique ID. This endpoint response returns a JSON object
+             * Get a file by its unique ID. This endpoint response returns a JSON object
              * with the file metadata.
              *
              * @param {string} fileId
@@ -4099,8 +4156,8 @@
             /**
              * Update File
              *
-             * Update file by its unique ID. Only users with write permissions have access
-             * to update this resource.
+             * Update a file by its unique ID. Only users with write permissions have
+             * access to update this resource.
              *
              * @param {string} fileId
              * @param {string[]} read
@@ -4167,7 +4224,7 @@
             /**
              * Get File for Download
              *
-             * Get file content by its unique ID. The endpoint response return with a
+             * Get a file content by its unique ID. The endpoint response return with a
              * 'Content-Disposition: attachment' header that tells the browser to start
              * downloading the file to user downloads directory.
              *
@@ -4281,8 +4338,9 @@
             /**
              * Get File for View
              *
-             * Get file content by its unique ID. This endpoint is similar to the download
-             * method but returns with no  'Content-Disposition: attachment' header.
+             * Get a file content by its unique ID. This endpoint is similar to the
+             * download method but returns with no  'Content-Disposition: attachment'
+             * header.
              *
              * @param {string} fileId
              * @throws {Error}
@@ -4329,7 +4387,8 @@
              *
              * Get a list of all the current user teams. You can use the query params to
              * filter your results. On admin mode, this endpoint will return a list of all
-             * of the project teams. [Learn more about different API modes](/docs/admin).
+             * of the project's teams. [Learn more about different API
+             * modes](/docs/admin).
              *
              * @param {string} search
              * @param {number} limit
@@ -4404,7 +4463,7 @@
             /**
              * Get Team
              *
-             * Get team by its unique ID. All team members have read access for this
+             * Get a team by its unique ID. All team members have read access for this
              * resource.
              *
              * @param {string} teamId
@@ -4429,7 +4488,7 @@
             /**
              * Update Team
              *
-             * Update team by its unique ID. Only team owners have write access for this
+             * Update a team by its unique ID. Only team owners have write access for this
              * resource.
              *
              * @param {string} teamId
@@ -4463,7 +4522,7 @@
             /**
              * Delete Team
              *
-             * Delete team by its unique ID. Only team owners have write access for this
+             * Delete a team by its unique ID. Only team owners have write access for this
              * resource.
              *
              * @param {string} teamId
@@ -4488,7 +4547,7 @@
             /**
              * Get Team Memberships
              *
-             * Get team members by the team unique ID. All team members have read access
+             * Get a team members by the team unique ID. All team members have read access
              * for this list of resources.
              *
              * @param {string} teamId
@@ -4684,8 +4743,8 @@
             /**
              * List Users
              *
-             * Get a list of all the project users. You can use the query params to filter
-             * your results.
+             * Get a list of all the project's users. You can use the query params to
+             * filter your results.
              *
              * @param {string} search
              * @param {number} limit
@@ -4766,7 +4825,7 @@
             /**
              * Get User
              *
-             * Get user by its unique ID.
+             * Get a user by its unique ID.
              *
              * @param {string} userId
              * @throws {Error}
@@ -4814,7 +4873,7 @@
             /**
              * Get User Logs
              *
-             * Get user activity logs list by its unique ID.
+             * Get a user activity logs list by its unique ID.
              *
              * @param {string} userId
              * @throws {Error}
@@ -4838,7 +4897,7 @@
             /**
              * Get User Preferences
              *
-             * Get user preferences by its unique ID.
+             * Get the user preferences by its unique ID.
              *
              * @param {string} userId
              * @throws {Error}
@@ -4862,8 +4921,8 @@
             /**
              * Update User Preferences
              *
-             * Update user preferences by its unique ID. You can pass only the specific
-             * settings you wish to update.
+             * Update the user preferences by its unique ID. You can pass only the
+             * specific settings you wish to update.
              *
              * @param {string} userId
              * @param {object} prefs
@@ -4896,7 +4955,7 @@
             /**
              * Get User Sessions
              *
-             * Get user sessions list by its unique ID.
+             * Get the user sessions list by its unique ID.
              *
              * @param {string} userId
              * @throws {Error}
@@ -4920,7 +4979,7 @@
             /**
              * Delete User Sessions
              *
-             * Delete all user sessions by its unique ID.
+             * Delete all user's sessions by using the user's unique ID.
              *
              * @param {string} userId
              * @throws {Error}
@@ -4944,7 +5003,7 @@
             /**
              * Delete User Session
              *
-             * Delete user sessions by its unique ID.
+             * Delete a user sessions by its unique ID.
              *
              * @param {string} userId
              * @param {string} sessionId
@@ -4973,7 +5032,7 @@
             /**
              * Update User Status
              *
-             * Update user status by its unique ID.
+             * Update the user status by its unique ID.
              *
              * @param {string} userId
              * @param {string} status
