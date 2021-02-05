@@ -83,8 +83,8 @@ class Response extends SwooleResponse
     const MODEL_CONTINENT_LIST = 'continentList';
     const MODEL_CURRENCY = 'currency';
     const MODEL_CURRENCY_LIST = 'currencyList';
-    const MODEL_LANGUAGE = 'langauge';
-    const MODEL_LANGUAGE_LIST = 'langaugeList';
+    const MODEL_LANGUAGE = 'language';
+    const MODEL_LANGUAGE_LIST = 'languageList';
     const MODEL_PHONE = 'phone';
     const MODEL_PHONE_LIST = 'phoneList';
 
@@ -104,7 +104,7 @@ class Response extends SwooleResponse
     
     // Project
     const MODEL_PROJECT = 'project';
-    const MODEL_PROJECT_LIST = 'projectsList';
+    const MODEL_PROJECT_LIST = 'projectList';
     const MODEL_WEBHOOK = 'webhook';
     const MODEL_WEBHOOK_LIST = 'webhookList';
     const MODEL_KEY = 'key';

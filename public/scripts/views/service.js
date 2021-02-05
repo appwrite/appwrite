@@ -197,6 +197,8 @@
         let params = [];
         let match;
 
+        functionAsString = functionAsString.replaceAll('={}', "");
+        functionAsString = functionAsString.replaceAll('=[]', "");
         functionAsString = functionAsString.replace(REGEX_COMMENTS, "");
         functionAsString = functionAsString.match(REGEX_FUNCTION_PARAMS)[1];
 

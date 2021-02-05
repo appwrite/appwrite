@@ -31,7 +31,7 @@ class Key extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Allowed permission scopes.',
                 'default' => [],
-                'example' => ['users.read', 'documents.write'],
+                'example' => 'users.read',
                 'array' => true,
             ])
             ->addRule('secret', [

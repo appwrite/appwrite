@@ -73,7 +73,7 @@ class CertificatesV1
             $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
     
             if(!$target->isKnown() || $target->isTest()) {
-                throw new Exception('Unreachable CNAME target ('.$target->get().'), plesse use a domain with a public suffix.');
+                throw new Exception('Unreachable CNAME target ('.$target->get().'), please use a domain with a public suffix.');
             }
         }
 
@@ -111,10 +111,10 @@ class CertificatesV1
 
         $staging = (App::isProduction()) ? '' : ' --dry-run';
 
-        $response = \shell_exec("certbot certonly --webroot --noninteractive --agree-tos{$staging} \
-            --email ".App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', 'security@localhost.test')." \
-            -w ".APP_STORAGE_CERTIFICATES." \
-            -d {$domain->get()}");
+        $response = \shell_exec("certbot certonly --webroot --noninteractive --agree-tos{$staging}"
+            ." --email ".App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', 'security@localhost.test')
+            ." -w ".APP_STORAGE_CERTIFICATES
+            ." -d {$domain->get()}");
 
         if(!$response) {
             throw new Exception('Failed to issue a certificate');

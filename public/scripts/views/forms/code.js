@@ -15,8 +15,11 @@
       pre.appendChild(code);
 
       element.parentNode.appendChild(div);
+      element.style.display = 'none';
 
       div.className = "ide";
+      div.dataset['langLabel'] = element.dataset["langLabel"] || 'JSON';
+      div.dataset['lang'] = element.dataset["lang"] || 'json';
       pre.className = "line-numbers";
       code.className = "prism language-" + lang;
       copy.className = "icon-docs copy";

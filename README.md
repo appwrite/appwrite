@@ -102,7 +102,7 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 * [**Account**](https://appwrite.io/docs/client/account) - Manage current user authentication and account. Track and manage the user sessions, devices, sign-in methods, and security logs.
 * [**Users**](https://appwrite.io/docs/server/users) - Manage and list all project users when in admin mode.
 * [**Teams**](https://appwrite.io/docs/client/teams) - Manage and group users in teams. Manage memberships, invites, and user roles within a team.
-* [**Database**](https://appwrite.io/docs/client/database) - Manage database collections and documents. Read, create, update, and delete documents and filter lists of documents collections using an advanced filter with graph-like capabilities.
+* [**Database**](https://appwrite.io/docs/client/database) - Manage database collections and documents. Read, create, update, and delete documents and filter lists of document collections using advanced filters.
 * [**Storage**](https://appwrite.io/docs/client/storage) - Manage storage files. Read, create, delete, and preview files. Manipulate the preview of your files to fit your app perfectly. All files are scanned by ClamAV and stored in a secure and encrypted way.
 * [**Functions**](https://appwrite.io/docs/server/functions) - Customize your Appwrite server by executing your custom code in a secure, isolated environment. You can trigger your code on any Appwrite system event, manually or using a CRON schedule.
 * [**Locale**](https://appwrite.io/docs/client/locale) - Track your user's location, and manage your app locale-based data.
@@ -115,7 +115,7 @@ For the complete API documentation, visit [https://appwrite.io/docs](https://app
 Below is a list of currently supported platforms and languages. If you wish to help us add support to your platform of choice, you can go over to our [SDK Generator](https://github.com/appwrite/sdk-generator) project and view our [contribution guide](https://github.com/appwrite/sdk-generator/blob/master/CONTRIBUTING.md).
 
 #### Client
-* ✅  &nbsp; [Web](https://github.com/appwrite/sdk-for-js) (Maintained by the Appwrite Team)
+* ✅  &nbsp; [Web](https://github.com/appwrite/sdk-for-web) (Maintained by the Appwrite Team)
 * ✅  &nbsp; [Flutter](https://github.com/appwrite/sdk-for-flutter) (Maintained by the Appwrite Team)
 
 #### Server
