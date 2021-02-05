@@ -113,7 +113,7 @@ $environments = [
         'image' => 'appwrite/env-dotnet-3.1:1.0.0',
         'build' => '/usr/src/code/docker/environments/dotnet-3.1',
         'logo' => 'dotnet.png',
-        'supports' => [System::X86, System::ARM],
+        'supports' => [System::X86],
     ],
     'dotnet-5.0' => [
         'name' => '.NET',
