@@ -241,7 +241,7 @@ App::options(function ($request, $response) {
         ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
         ->addHeader('Access-Control-Allow-Origin', $origin)
         ->addHeader('Access-Control-Allow-Credentials', 'true')
-        ->send();
+        ->noContent();
 }, ['request', 'response']);
 
 App::error(function ($error, $utopia, $request, $response, $layout, $project) {
