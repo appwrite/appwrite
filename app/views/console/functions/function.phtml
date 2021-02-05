@@ -147,41 +147,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                         </div>
 
                         <div class="pull-start">
-                            <div data-ui-modal class="modal close box sticky-footer" data-button-text="Deploy Tag">
-                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
-
-                                <h1>Deploy a New Tag</h1>
-
-                                <form
-                                    data-analytics
-                                    data-analytics-activity
-                                    data-analytics-event="submit"
-                                    data-analytics-category="console"
-                                    data-analytics-label="Create Function Tag"
-                                    data-service="functions.createTag"
-                                    data-scope="sdk"
-                                    data-event="submit"
-                                    data-success="alert,trigger,reset"
-                                    data-success-param-alert-text="Created function tag successfully"
-                                    data-success-param-trigger-events="functions.createTag"
-                                    data-failure="alert"
-                                    data-failure-param-alert-text="Failed to create function tag"
-                                    data-failure-param-alert-classname="error">
-                                    
-                                    <input type="hidden" name="functionId" data-ls-bind="{{router.params.id}}" />
-
-                                    <label for="tag-command">Command</label>
-                                    <input type="text" id="tag-command" name="command" required autocomplete="off" class="margin-bottom" placeholder="node main.js" />
-                            
-                                    <label for="tag-code">Gzipped Code (tar.gz file)</label>
-                                    <input type="file" name="code" id="tag-code" size="1" required accept="application/x-gzip">
-                                    <div class="text-fade text-size-xs margin-top-negative-small margin-bottom-large">(Max file size allowed: <?php echo $fileLimitHuman; ?>)</div>
-
-                                    <footer>
-                                        <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                                    </footer>
-                                </form>
-                            </div>
+                            <button data-ls-ui-trigger="deploy-tag">Deploy Tag</button>
                         </div>
 
                         <div class="pull-end paging">
@@ -607,4 +573,71 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
             </li>
         </ul>
     </div>
+</div>
+
+<div data-ui-modal class="modal close box sticky-footer" data-button-hide="on" data-open-event="deploy-tag">
+    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+    <h1 class="margin-bottom-xl">Deploy a New Tag</h1>
+
+    <ul class="phases padding margin-top-negative-small" data-ui-phases>
+        <li>
+            <h2 style="display: none">CLI</h2>
+
+            <p><b>Unix</b></p>
+
+            <div class="margin-bottom">
+                <textarea type="hidden" data-ls-bind="appwrite functions createTag \
+    --functionId={{project-function.$id}} \
+    --command='mycommand' \
+    --code='/myrepo/myfunction'" data-forms-code="bash" data-lang="bash" data-lang-label="Bash"></textarea>
+            </div>
+
+            <p><b>PowerShell</b></p>
+
+            <div class="margin-bottom">
+                <textarea type="hidden" data-ls-bind="appwrite functions createTag \
+    --functionId={{project-function.$id}} ,
+    --command='mycommand' ,
+    --code='/myrepo/myfunction'" data-forms-code="powershell" data-lang="powershell" data-lang-label="PowerShell"></textarea>
+            </div>
+
+            <p>Learn more about <a href="" target="_blank">creating tags</a>, installing and using the <a href="" target="_blank">Appwrite CLI</a>.</p>
+        </li>
+        <li>
+            <h2 style="display: none">Manual</h2>
+            <form class="margin-top-negative"
+                data-analytics
+                data-analytics-activity
+                data-analytics-event="submit"
+                data-analytics-category="console"
+                data-analytics-label="Create Function Tag"
+                data-service="functions.createTag"
+                data-scope="sdk"
+                data-event="submit"
+                data-success="alert,trigger,reset"
+                data-success-param-alert-text="Created function tag successfully"
+                data-success-param-trigger-events="functions.createTag"
+                data-failure="alert"
+                data-failure-param-alert-text="Failed to create function tag"
+                data-failure-param-alert-classname="error">
+                
+                <input type="hidden" name="functionId" data-ls-bind="{{router.params.id}}" />
+
+                <label for="tag-command">Command</label>
+                <input type="text" id="tag-command" name="command" required autocomplete="off" class="margin-bottom" placeholder="node main.js" />
+
+                <label for="tag-code">Gzipped Code (tar.gz file)</label>
+                <input type="file" name="code" id="tag-code" size="1" required accept="application/x-gzip,.gz">
+                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom-large">(Max file size allowed: <?php echo $fileLimitHuman; ?>)</div>
+
+                <footer>
+                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                </footer>
+            </form>
+        </li>
+    </ul>
+
+
+    
 </div>
