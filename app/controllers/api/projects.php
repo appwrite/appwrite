@@ -1585,7 +1585,7 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
 
         if ($consoleDB->deleteDocument($domain->getId())) {
             $deletes
-                ->setParam('type', DELETE_TYPE_DOCUMENT)
+                ->setParam('type', DELETE_TYPE_CERTIFICATES)
                 ->setParam('document', $domain)
             ;
         } else {

@@ -60,6 +60,7 @@ const DELETE_TYPE_DOCUMENT = 'document';
 const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
+const DELETE_TYPE_CERTIFICATES = 'certificates';
 
 $register = new Registry();
 

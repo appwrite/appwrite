@@ -38,7 +38,7 @@ class DeletesV1
         switch (strval($type)) {
             case DELETE_TYPE_DOCUMENT:
                 $document = $this->args['document'];
-                $document = new Document($document);    
+                $document = new Document($document);
                 switch (strval($document->getCollection())) {
                     case Database::SYSTEM_COLLECTION_PROJECTS:
                         $this->deleteProject($document);
@@ -51,9 +51,6 @@ class DeletesV1
                         break;
                     case Database::SYSTEM_COLLECTION_COLLECTIONS:
                         $this->deleteDocuments($document, $projectId);
-                        break;
-                    case Database::SYSTEM_COLLECTION_DOMAINS:
-                        $this->deleteCertificates($document);
                         break;
                     default:
                         Console::error('No lazy delete operation available for document of type: '.$document->getCollection());
@@ -71,6 +68,11 @@ class DeletesV1
 
             case DELETE_TYPE_ABUSE:
                 $this->deleteAbuseLogs($this->args['timestamp']);
+                break;
+
+            case DELETE_TYPE_CERTIFICATES:
+                $document = new Document($this->args['document']);
+                $this->deleteCertificates($document);
                 break;
                         
             default:
@@ -310,13 +312,15 @@ class DeletesV1
 
     protected function deleteCertificates(Document $document)
     {
-        $domain = $document->getAttribute('domain', null);
+        $domain = $document->getAttribute('domain');
         $directory = APP_STORAGE_CERTIFICATES . '/' . $domain;
 
         if($domain && is_dir($directory)) {
             array_map('unlink', glob("$directory/*.*"));
             rmdir($directory);
-            Console::info("Deleted certificate files for domain {$domain}");
+            Console::info("Deleted certificate files for {$domain}");
+        } else {
+            Console::info("No certificate files found for {$domain}");
         }
     }
 
