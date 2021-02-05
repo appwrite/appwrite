@@ -299,11 +299,6 @@ App::get('/v1/storage/files/:fileId/preview')
 
         $compressor = new GZIP();
         $device = Storage::getDevice('files');
-        if(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
-            if (!$device->exists($path)) {
-                throw new Exception('File not found', 404);
-            }
-        }
 
         $cache = new Cache(new Filesystem(APP_STORAGE_CACHE.'/app-'.$project->getId())); // Limit file number or size
         $data = $cache->load($key, 60 * 60 * 24 * 30 * 3 /* 3 months */);
@@ -386,13 +381,7 @@ App::get('/v1/storage/files/:fileId/download')
         
         $device = Storage::getDevice('files');
         
-        $path = $file->getAttribute('path', '');
-        
-        if(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
-            if (!$device->exists($path)) {
-                throw new Exception('File not found in '.$path, 404);
-            }
-        }    
+        $path = $file->getAttribute('path', '');  
 
         $compressor = new GZIP();
 
@@ -449,11 +438,6 @@ App::get('/v1/storage/files/:fileId/view')
         $device = Storage::getDevice('files');
         
         $path = $file->getAttribute('path', '');
-        if(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) {
-            if (!$device->exists($path)) {
-                throw new Exception('File not found in '.$path, 404);
-            }
-        }
 
         $compressor = new GZIP();
 
