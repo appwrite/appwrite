@@ -1566,7 +1566,8 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
     ->param('domainId', null, new UID(), 'Domain unique ID.')
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $domainId, $response, $consoleDB) {
+    ->inject('deletes')
+    ->action(function ($projectId, $domainId, $response, $consoleDB, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
@@ -1582,7 +1583,12 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
             throw new Exception('Domain not found', 404);
         }
 
-        if (!$consoleDB->deleteDocument($domain->getId())) {
+        if ($consoleDB->deleteDocument($domain->getId())) {
+            $deletes
+                ->setParam('type', DELETE_TYPE_DOCUMENT)
+                ->setParam('document', $domain)
+            ;
+        } else {
             throw new Exception('Failed to remove domains from DB', 500);
         }
 
