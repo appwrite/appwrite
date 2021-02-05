@@ -314,9 +314,10 @@ class DeletesV1
     {
         $domain = $document->getAttribute('domain');
         $directory = APP_STORAGE_CERTIFICATES . '/' . $domain;
+        $checkTraversal = realpath($directory) === $directory;
 
-        if($domain && is_dir($directory)) {
-            array_map('unlink', glob("$directory/*.*"));
+        if($domain && $checkTraversal && is_dir($directory)) {
+            array_map('unlink', glob($directory.'/*.*'));
             rmdir($directory);
             Console::info("Deleted certificate files for {$domain}");
         } else {
