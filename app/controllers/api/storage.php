@@ -383,7 +383,6 @@ App::get('/v1/storage/files/:fileId/download')
         if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
             throw new Exception('File not found', 404);
         }
-
         
         $device = Storage::getDevice('files');
         
