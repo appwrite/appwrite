@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9392457b87e42defd544ca840fee0bab",
+    "content-hash": "4ae49ebe79d2b715f82709dbab33680f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1752,16 +1752,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.2.0",
+            "version": "0.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "27bfd663c9b2a17ac0911522a87f42bee834df95"
+                "reference": "09b966b472ddf83eb32048b3c90cf3f40c1ad95a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/27bfd663c9b2a17ac0911522a87f42bee834df95",
-                "reference": "27bfd663c9b2a17ac0911522a87f42bee834df95",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/09b966b472ddf83eb32048b3c90cf3f40c1ad95a",
+                "reference": "09b966b472ddf83eb32048b3c90cf3f40c1ad95a",
                 "shasum": ""
             },
             "require": {
@@ -1798,9 +1798,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.2.0"
+                "source": "https://github.com/utopia-php/storage/tree/0.4.0"
             },
-            "time": "2021-01-27T12:21:27+00:00"
+            "time": "2021-01-31T07:33:03+00:00"
         },
         {
             "name": "utopia-php/swoole",
