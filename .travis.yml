@@ -25,7 +25,7 @@ before_install:
     echo "${DOCKERHUB_PULL_PASSWORD}" | docker login --username "${DOCKERHUB_PULL_USERNAME}" --password-stdin
   fi
 - docker --version
-- docker buildx create --use
+- docker buildx create
 - chmod -R u+x ./.travis-ci
 
 install:
