@@ -63,14 +63,14 @@ return [
                 'required' => false,
                 'question' => '',
             ],
-            [
-                'name' => '_APP_CONSOLE_WHITELIST_DOMAINS',
-                'description' => 'This option allows you to limit creation of users to Appwrite console for users sharing the same email domains. This option is very useful for team working with company emails domain.\n\nTo enable this option, pass a list of allowed email domains separated by a comma.',
-                'introduction' => '',
-                'default' => '',
-                'required' => false,
-                'question' => '',
-            ],
+            // [
+            //     'name' => '_APP_CONSOLE_WHITELIST_DOMAINS',
+            //     'description' => 'This option allows you to limit creation of users to Appwrite console for users sharing the same email domains. This option is very useful for team working with company emails domain.\n\nTo enable this option, pass a list of allowed email domains separated by a comma.',
+            //     'introduction' => '',
+            //     'default' => '',
+            //     'required' => false,
+            //     'question' => '',
+            // ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_IPS',
                 'description' => 'This last option allows you to limit creation of users in Appwrite console for users sharing the same set of IP addresses. This option is very useful for team working with a VPN service or a company IP.\n\nTo enable/activate this option, pass a list of allowed IP addresses separated by a comma.',
