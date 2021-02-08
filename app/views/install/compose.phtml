@@ -179,6 +179,7 @@ services:
     volumes: 
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
+      - appwrite-certificates:/storage/certificates:rw
     environment:
       - _APP_ENV
       - _APP_REDIS_HOST
@@ -207,6 +208,7 @@ services:
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
+      - _APP_DOMAIN_TARGET
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
