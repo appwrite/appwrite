@@ -15,7 +15,7 @@ The environment variables in Appwrite are prefixed with `_APP_`. If it belongs t
 ### Describe new environment variable
 First of all, we add the new environment variable to `app/config/variables.php` in the designated category. If none of the categories fit, add it to the General category. Copy the existing variables description to create a new one, so that you will not miss any required fields.
 
-These information are also used to generate the website documentation at https://appwrite.io/docs/environment-variables, so please use proper information that clearly defines the purpose and other required info about the environment variable that you are adding.
+This information is also used to generate the website documentation at https://appwrite.io/docs/environment-variables, so please use good descriptions that clearly define the purpose and other required info about the environment variable that you are adding.
 
 ### Add to .env and Dockerfile
 If newly introduced environment variable has a default value, add it to the `.env` and `Dockerfile` along with other environment variables. `.env` file uses settings for Appwrite development environment.
