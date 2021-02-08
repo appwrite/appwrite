@@ -1,0 +1,3 @@
+```sh
+$ appwrite locale getCurrencies 
+```
