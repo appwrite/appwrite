@@ -477,15 +477,22 @@ App::delete('/v1/projects/:projectId')
         ;
 
         foreach (['keys', 'webhooks', 'tasks', 'platforms', 'domains'] as $key) { // Delete all children (keys, webhooks, tasks [stop tasks?], platforms)
-            $list = $project->getAttribute('webhooks', []);
-
-            foreach ($list as $document) { /* @var $document Document */
-                if (!$consoleDB->deleteDocument($projectId)) {
+            $list = $project->getAttribute($key, []);
+            foreach ($list as $document) {
+                /** @var Document $document */
+                if ($consoleDB->deleteDocument($document->getId())) {
+                    if ($document->getCollection() == Database::SYSTEM_COLLECTION_DOMAINS) {
+                        $deletes
+                            ->setParam('type', DELETE_TYPE_CERTIFICATES)
+                            ->setParam('document', $document)
+                        ;
+                    }
+                } else {
                     throw new Exception('Failed to remove project document ('.$key.')] from DB', 500);
                 }
             }
         }
-        
+                
         if (!$consoleDB->deleteDocument($project->getAttribute('teamId', null))) {
             throw new Exception('Failed to remove project team from DB', 500);
         }
