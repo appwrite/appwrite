@@ -119,6 +119,7 @@
 - Block iframe access to Appwrite console using the `X-Frame-Options` header.
 - Fixed `roles` param input validator
 - API Keys are now stored encrypted 
+- Disabled domains whitlist ACL for the Appwrite console
 
 # Version 0.6.2 (PRE-RELEASE)
 
