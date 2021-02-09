@@ -339,15 +339,15 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_CPUS',
-                'description' => 'The maximum number of CPU core a single cloud function is allowed to use. Please note that setting a value higher than available cores will result in a function error, which might result in an error. The default value is 1.',
+                'description' => 'The maximum number of CPU core a single cloud function is allowed to use. Please note that setting a value higher than available cores will result in a function error, which might result in an error. The default value is empty. When it\'s empty, CPU limit will be disabled.',
                 'introduction' => '0.7.0',
-                'default' => '1',
+                'default' => '',
                 'required' => false,
                 'question' => '',
             ],
             [
                 'name' => '_APP_FUNCTIONS_MEMORY',
-                'description' => 'The maximum amount of memory a single cloud function is allowed to use in megabytes. The default value is 128.',
+                'description' => 'The maximum amount of memory a single cloud function is allowed to use in megabytes. The default value is  empty. When it\'s empty, memory limit will be disabled.',
                 'introduction' => '0.7.0',
                 'default' => '256',
                 'required' => false,
@@ -355,7 +355,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_MEMORY_SWAP',
-                'description' => 'The maximum amount of swap memory a single cloud function is allowed to use in megabytes. The default value is 128.',
+                'description' => 'The maximum amount of swap memory a single cloud function is allowed to use in megabytes. The default value is  empty. When it\'s empty, swap memory limit will be disabled.',
                 'introduction' => '0.7.0',
                 'default' => '256',
                 'required' => false,
