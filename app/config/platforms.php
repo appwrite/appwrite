@@ -147,7 +147,7 @@ return [
                 'package' => 'https://github.com/appwrite/sdk-for-cli',
                 'enabled' => true,
                 'beta' => true,
-                'dev' => true,
+                'dev' => false,
                 'family' => APP_PLATFORM_SERVER,
                 'prism' => 'bash',
                 'source' => \realpath(__DIR__ . '/../sdks/server-cli'),
