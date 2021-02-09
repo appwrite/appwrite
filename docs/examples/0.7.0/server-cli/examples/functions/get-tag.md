@@ -1,3 +1,1 @@
-```sh
-$ appwrite functions getTag  --functionId="[FUNCTION_ID]"   --tagId="[TAG_ID]"  
-```
+appwrite functions getTag --functionId="[FUNCTION_ID]" --tagId="[TAG_ID]" 

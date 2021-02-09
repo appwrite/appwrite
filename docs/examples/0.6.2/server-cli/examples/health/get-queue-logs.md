@@ -1,3 +1,1 @@
-```sh
-$ appwrite health getQueueLogs 
-```
+appwrite health getQueueLogs 

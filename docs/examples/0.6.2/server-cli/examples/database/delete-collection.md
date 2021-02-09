@@ -1,3 +1,1 @@
-```sh
-$ appwrite database deleteCollection  --collectionId="[COLLECTION_ID]"  
-```
+appwrite database deleteCollection --collectionId="[COLLECTION_ID]" 

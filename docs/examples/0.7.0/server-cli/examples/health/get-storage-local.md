@@ -1,3 +1,1 @@
-```sh
-$ appwrite health getStorageLocal 
-```
+appwrite health getStorageLocal 

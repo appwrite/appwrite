@@ -1,3 +1,1 @@
-```sh
-$ appwrite locale get 
-```
+appwrite locale get 

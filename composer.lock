@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7ddabc24c3282752e11922db85442052",
+    "content-hash": "8bdf84ab8515219514506b1c9b5afecf",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2085,11 +2085,11 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.5.0",
+            "version": "0.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "9ca5a3f5fece6a88d83686a067f1fc1ea7d6af85"
+                "reference": "772c2ddd496e6864e588ca65cd179929fa70f230"
             },
             "require": {
                 "ext-curl": "*",
@@ -2119,7 +2119,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2021-02-07T16:43:53+00:00"
+            "time": "2021-02-09T13:15:31+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",
@@ -3244,12 +3244,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-code-coverage.git",
-                "reference": "0bf76e406e6b1d08d8be732db3ec8e6cbe2f8cc2"
+                "reference": "ad069801f3d0cdb7102e58afd5f9f32834ec7160"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/0bf76e406e6b1d08d8be732db3ec8e6cbe2f8cc2",
-                "reference": "0bf76e406e6b1d08d8be732db3ec8e6cbe2f8cc2",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/ad069801f3d0cdb7102e58afd5f9f32834ec7160",
+                "reference": "ad069801f3d0cdb7102e58afd5f9f32834ec7160",
                 "shasum": ""
             },
             "require": {
@@ -3313,7 +3313,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-01-21T05:59:53+00:00"
+            "time": "2021-02-08T09:55:27+00:00"
         },
         {
             "name": "phpunit/php-file-iterator",
@@ -5544,12 +5544,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "5a60e72afa8511b63217d27bef3f4b7f074e20e1"
+                "reference": "429f90a02d3bd4a06787ac9bc48c56c4320b58a0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/5a60e72afa8511b63217d27bef3f4b7f074e20e1",
-                "reference": "5a60e72afa8511b63217d27bef3f4b7f074e20e1",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/429f90a02d3bd4a06787ac9bc48c56c4320b58a0",
+                "reference": "429f90a02d3bd4a06787ac9bc48c56c4320b58a0",
                 "shasum": ""
             },
             "require": {
@@ -5615,7 +5615,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-02-02T15:25:09+00:00"
+            "time": "2021-02-08T09:50:07+00:00"
         },
         {
             "name": "vimeo/psalm",

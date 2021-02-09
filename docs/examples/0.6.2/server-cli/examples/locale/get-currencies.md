@@ -1,3 +1,1 @@
-```sh
-$ appwrite locale getCurrencies 
-```
+appwrite locale getCurrencies 

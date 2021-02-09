@@ -1,3 +1,1 @@
-```sh
-$ appwrite avatars getFavicon  --url="https://example.com"  
-```
+appwrite avatars getFavicon --url="https://example.com" 

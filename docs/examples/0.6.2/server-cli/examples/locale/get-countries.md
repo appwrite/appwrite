@@ -1,3 +1,1 @@
-```sh
-$ appwrite locale getCountries 
-```
+appwrite locale getCountries 

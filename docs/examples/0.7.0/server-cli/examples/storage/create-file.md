@@ -1,3 +1,1 @@
-```sh
-$ appwrite storage createFile  --file=""   "--read[]="   "--write[]="  
-```
+appwrite storage createFile --file="" "--read[]=" "--write[]=" 

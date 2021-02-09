@@ -1,3 +1,1 @@
-```sh
-$ appwrite health getAntiVirus 
-```
+appwrite health getAntiVirus 

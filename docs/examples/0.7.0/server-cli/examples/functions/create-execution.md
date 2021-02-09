@@ -1,3 +1,1 @@
-```sh
-$ appwrite functions createExecution  --functionId="[FUNCTION_ID]"  
-```
+appwrite functions createExecution --functionId="[FUNCTION_ID]" 

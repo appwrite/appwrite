@@ -1,3 +1,1 @@
-```sh
-$ appwrite health getQueueTasks 
-```
+appwrite health getQueueTasks 

@@ -1,3 +1,1 @@
-```sh
-$ appwrite storage getFileView  --fileId="[FILE_ID]"   --as="pdf"  
-```
+appwrite storage getFileView --fileId="[FILE_ID]" --as="pdf" 

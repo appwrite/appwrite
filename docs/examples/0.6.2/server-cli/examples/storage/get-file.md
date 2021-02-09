@@ -1,3 +1,1 @@
-```sh
-$ appwrite storage getFile  --fileId="[FILE_ID]"  
-```
+appwrite storage getFile --fileId="[FILE_ID]" 

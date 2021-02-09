@@ -1,3 +1,1 @@
-```sh
-$ appwrite health get 
-```
+appwrite health get 
