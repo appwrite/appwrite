@@ -15,7 +15,7 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
 FROM php:8.0-cli-alpine as step1
 
 ENV PHP_REDIS_VERSION=5.3.2 \
-    PHP_SWOOLE_VERSION=v4.6.2 \
+    PHP_SWOOLE_VERSION=v4.6.3 \
     PHP_IMAGICK_VERSION=master \
     PHP_YAML_VERSION=2.2.1 \
     PHP_MAXMINDDB_VERSION=v1.9.0
