@@ -406,11 +406,12 @@ App::post('/v1/teams/:teamId/memberships')
         $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
         $content = new Template(__DIR__.'/../../config/locale/translations/templates/'.$locale->getText('account.emails.invitation.body'));
         $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
-
+        $title = \sprintf($locale->getText('account.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]']));
+        
         $body
             ->setParam('{{content}}', $content->render())
             ->setParam('{{cta}}', $cta->render())
-            ->setParam('{{title}}', $locale->getText('account.emails.invitation.title'))
+            ->setParam('{{title}}', $title)
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
             ->setParam('{{team}}', $team->getAttribute('name', '[TEAM-NAME]'))
@@ -430,7 +431,7 @@ App::post('/v1/teams/:teamId/memberships')
                 ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name')))
                 ->setParam('recipient', $email)
                 ->setParam('name', $name)
-                ->setParam('subject', \sprintf($locale->getText('account.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]'])))
+                ->setParam('subject', $title)
                 ->setParam('body', $body->render())
                 ->trigger();
             ;
