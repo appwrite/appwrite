@@ -433,7 +433,7 @@ App::post('/v1/teams/:teamId/memberships')
                 ->setParam('name', $name)
                 ->setParam('subject', $title)
                 ->setParam('body', $body->render())
-                ->trigger();
+                ->trigger()
             ;
         }
 
