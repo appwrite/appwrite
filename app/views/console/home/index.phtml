@@ -27,52 +27,54 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
 <div class="zone xxl margin-top-negative-xxxl">
     <div class="clear margin-bottom-small margin-top-negative">
-        <div class="pull-end">
+        <?php if (!$graph && $usageStatsEnabled): ?>
+            <div class="pull-end">
 
-            <form class="margin-start-small inline" data-ls-if="{{usage.range}} !== '24h'"
-                data-analytics
-                data-analytics-event="click"
-                data-analytics-category="console"
-                data-analytics-label="Usage 24h"
-                data-service="projects.getUsage"
-                data-event="submit"
-                data-name="usage"
-                data-param-project-id="{{router.params.project}}"
-                data-param-range="24h">
-                <button class="tick">24h</button>
-            </form>
+                <form class="margin-start-small inline" data-ls-if="{{usage.range}} !== '24h'"
+                    data-analytics
+                    data-analytics-event="click"
+                    data-analytics-category="console"
+                    data-analytics-label="Usage 24h"
+                    data-service="projects.getUsage"
+                    data-event="submit"
+                    data-name="usage"
+                    data-param-project-id="{{router.params.project}}"
+                    data-param-range="24h">
+                    <button class="tick">24h</button>
+                </form>
 
-            <button class="tick margin-start-small" data-ls-if="{{usage.range}} === '24h'" disabled>24h</button>
+                <button class="tick margin-start-small" data-ls-if="{{usage.range}} === '24h'" disabled>24h</button>
 
-            <form class="margin-start-small inline" data-ls-if="{{usage.range}} !== '30d'"
-                data-analytics
-                data-analytics-event="click"
-                data-analytics-category="console"
-                data-analytics-label="Usage 30d"
-                data-service="projects.getUsage"
-                data-event="submit"
-                data-name="usage"
-                data-param-project-id="{{router.params.project}}">
-                <button class="tick">30d</button>
-            </form>
+                <form class="margin-start-small inline" data-ls-if="{{usage.range}} !== '30d'"
+                    data-analytics
+                    data-analytics-event="click"
+                    data-analytics-category="console"
+                    data-analytics-label="Usage 30d"
+                    data-service="projects.getUsage"
+                    data-event="submit"
+                    data-name="usage"
+                    data-param-project-id="{{router.params.project}}">
+                    <button class="tick">30d</button>
+                </form>
 
-            <button class="tick margin-start-small" data-ls-if="{{usage.range}} === '30d'" disabled>30d</button>
+                <button class="tick margin-start-small" data-ls-if="{{usage.range}} === '30d'" disabled>30d</button>
 
-            <form class="margin-start-small inline" data-ls-if="{{usage.range}} !== '90d'"
-                data-analytics
-                data-analytics-event="click"
-                data-analytics-category="console"
-                data-analytics-label="Usage 90d"
-                data-service="projects.getUsage"
-                data-event="submit"
-                data-name="usage"
-                data-param-project-id="{{router.params.project}}"
-                data-param-range="90d">
-                <button class="tick">90d</button>
-            </form>
+                <form class="margin-start-small inline" data-ls-if="{{usage.range}} !== '90d'"
+                    data-analytics
+                    data-analytics-event="click"
+                    data-analytics-category="console"
+                    data-analytics-label="Usage 90d"
+                    data-service="projects.getUsage"
+                    data-event="submit"
+                    data-name="usage"
+                    data-param-project-id="{{router.params.project}}"
+                    data-param-range="90d">
+                    <button class="tick">90d</button>
+                </form>
 
-            <button class="tick margin-start-small" data-ls-if="{{usage.range}} === '90d'" disabled>90d</button>
-        </div>
+                <button class="tick margin-start-small" data-ls-if="{{usage.range}} === '90d'" disabled>90d</button>
+            </div>
+        <?php endif; ?>
     </div>
     <div
         data-service="projects.getUsage"
