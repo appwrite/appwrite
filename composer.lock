@@ -1804,21 +1804,21 @@
         },
         {
             "name": "utopia-php/swoole",
-            "version": "0.2.0",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/swoole.git",
-                "reference": "bc9dd3e113e9b8cbbf54468524637f39b2deb861"
+                "reference": "63168a82037f371516a199d75da101c8caa3edc1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/bc9dd3e113e9b8cbbf54468524637f39b2deb861",
-                "reference": "bc9dd3e113e9b8cbbf54468524637f39b2deb861",
+                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/63168a82037f371516a199d75da101c8caa3edc1",
+                "reference": "63168a82037f371516a199d75da101c8caa3edc1",
                 "shasum": ""
             },
             "require": {
                 "ext-swoole": "*",
-                "php": ">=7.3",
+                "php": ">=7.4",
                 "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
@@ -1854,9 +1854,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/swoole/issues",
-                "source": "https://github.com/utopia-php/swoole/tree/0.2.0"
+                "source": "https://github.com/utopia-php/swoole/tree/0.2.1"
             },
-            "time": "2020-10-29T12:42:38+00:00"
+            "time": "2021-02-10T06:20:43+00:00"
         },
         {
             "name": "utopia-php/system",
