@@ -148,7 +148,7 @@ return [
             [
                 'key' => 'cli',
                 'name' => 'Command Line',
-                'version' => '0.1.0',
+                'version' => '0.3.0',
                 'url' => 'https://github.com/appwrite/sdk-for-cli',
                 'package' => 'https://github.com/appwrite/sdk-for-cli',
                 'enabled' => true,
