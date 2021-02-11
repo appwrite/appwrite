@@ -1,4 +1,4 @@
-# Version 0.7.0 (NOT-RELEASED)
+# Version 0.7.0
 
 ## Features
 
