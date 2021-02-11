@@ -79,16 +79,16 @@ services:
       - _APP_USAGE_STATS
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
+      - _APP_STORAGE_LIMIT
+      - _APP_STORAGE_ANTIVIRUS
+      - _APP_STORAGE_ANTIVIRUS_HOST
+      - _APP_STORAGE_ANTIVIRUS_PORT
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_FUNCTIONS_CONTAINERS
       - _APP_FUNCTIONS_CPUS
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
       - _APP_FUNCTIONS_ENVS
-      - _APP_STORAGE_LIMIT
-      - _APP_STORAGE_ANTIVIRUS
-      - _APP_STORAGE_ANTIVIRUS_HOST
-      - _APP_STORAGE_ANTIVIRUS_PORT
 
   appwrite-worker-usage:
     image: appwrite/appwrite:<?php echo $version."\n"; ?>
