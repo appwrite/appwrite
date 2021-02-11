@@ -39,7 +39,7 @@
 - New OAuth adapter for PayPal sandbox  (@armino-dev - [#420](https://github.com/appwrite/appwrite/issues/410))
 - New OAuth adapter for Tradeshift  (@armino-dev - [#855](https://github.com/appwrite/appwrite/pull/855))
 - New OAuth adapter for Tradeshift sandbox  (@armino-dev - [#855](https://github.com/appwrite/appwrite/pull/855))
-- Introducing new permssion types: role:guest, role:member, role:app
+- Introducing new permssion types: role:guest & role:member
 - Disabled rate-limits on server side integrations
 - Refactored migration script 
 
