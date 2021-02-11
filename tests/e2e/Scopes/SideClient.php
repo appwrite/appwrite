@@ -11,4 +11,12 @@ trait SideClient
             'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $this->getUser()['session'],
         ];
     }
+
+    /**
+     * @return string
+     */
+    public function getSide()
+    {
+        return 'client';
+    }
 }

@@ -10,6 +10,7 @@
                 text: text,
                 class: "cookie-alert",
                 link: env.HOME + "/policy/cookies",
+                label: 'Learn More',
                 callback: function() {
                   cookie.set("cookie-alert", "true", 365 * 10); // 10 years
                 }

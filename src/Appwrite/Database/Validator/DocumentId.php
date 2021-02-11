@@ -16,7 +16,7 @@ class DocumentId extends Validator
     /**
      * @var Database
      */
-    protected $database = null;
+    protected $database;
 
     /**
      * @var string

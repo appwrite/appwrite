@@ -1,6 +1,7 @@
 <?php
 $home = $this->getParam('home', '');
 ?>
+
 <div class="cover">
     <div class="zone xl">
 
@@ -9,8 +10,8 @@ $home = $this->getParam('home', '');
         <p class="margin-bottom margin-top-negative-small">Take advantage of the Appwrite APIs and tools.</p>
 
         <ul class="margin-bottom-xl clear">
-            <li class="pull-start margin-end margin-bottom-small"><a href="<?php echo $home; ?>/docs" target="_blank" rel="noopener"><i class="icon-book-open"></i> &nbsp;Docs</a></li>
-            <li class="pull-start margin-end margin-bottom-small"><a href="<?php echo $home; ?>/support" target="_blank" rel="noopener"><i class="icon-lifebuoy"></i> &nbsp;Support</a></li>
+            <li class="pull-start margin-end margin-bottom-small"><a href="<?php echo $home; ?>/docs" target="_blank" rel="noopener" class="link-animation-enabled"><i class="icon-book-open"></i> &nbsp;Docs</a></li>
+            <li class="pull-start margin-end margin-bottom-small"><a href="<?php echo $home; ?>/support" target="_blank" rel="noopener" class="link-animation-enabled"><i class="icon-lifebuoy"></i> &nbsp;Support</a></li>
         </ul>
     </div>
 </div>
@@ -18,46 +19,68 @@ $home = $this->getParam('home', '');
 <section class="zone xl margin-bottom margin-top-negative-xl">
     <div class="margin-bottom-xl"
         data-service="projects.list"
+        data-param-search="{{router.params.search}}"
+        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+        data-param-offset="{{router.params.offset}}"
+        data-param-order-type="DESC"
         data-scope="console"
         data-event="load,projects.create"
         data-name="console-projects"
         data-success="trigger"
         data-success-param-trigger-events="projects.list">
 
-        <div data-ls-if="0 == {{console-projects.length}}" class="box margin-bottom" style="display: none">
+        <div data-ls-if="0 == {{console-projects.projects.length}}" class="box margin-bottom" style="display: none">
             <h3 class="margin-bottom-small text-bold">Get Started</h3>
 
             <p class="margin-bottom-no">No Projects Found, Create your first project now.</p>
         </div>
 
-        <ul data-ls-loop="console-projects" data-ls-as="project" data-ls-append="" class="tiles cell-3" style="visibility: hidden">
+        <ul data-ls-loop="console-projects.projects" data-ls-as="project" data-ls-append="" class="tiles cell-3">
             <li class="margin-bottom">
                 <a data-ls-attrs="href=/console/home?project={{project.$id}}" class="box">
                     <div data-ls-bind="{{project.name}}" class="text-one-liner margin-bottom-tiny text-bold">&nbsp;</div>
                     
                     <p data-ls-if="({{project.platforms.length}})" class="text-fade text-size-small" data-ls-bind="{{project.platforms.length}} apps"></p>
                     <p data-ls-if="(!{{project.platforms.length}})" class="text-fade text-size-small">&nbsp;</p>
-                    <!-- <ul data-ls-loop="project.platforms" data-ls-as="platform" class="clear margin-bottom" style="min-height: 30px; overflow: hidden;">
-                        <li class="pull-start">
-                            <div data-ls-if="{{platform.type}} === 'web'" class="corner">
-                                <img src="" data-ls-attrs="src=/images/clients/web.png?v=<?php echo APP_CACHE_BUSTER; ?>" class="avatar xxs no-shadow" loading="lazy" width="30" height="30" />&nbsp;
-                            </div>
-                            
-                            <div data-ls-if="{{platform.type}} === 'flutter-ios'" class="corner">
-                                <img src="" data-ls-attrs="src=/images/clients/ios.png?v=<?php echo APP_CACHE_BUSTER; ?>" class="avatar xxs no-shadow" loading="lazy" width="30" height="30" />&nbsp;
-                            </div>
-                            
-                            <div data-ls-if="{{platform.type}} === 'flutter-android'" class="corner">
-                                <img src="" data-ls-attrs="src=/images/clients/android.png?v=<?php echo APP_CACHE_BUSTER; ?>" class="avatar xxs no-shadow" loading="lazy" width="30" height="30" />&nbsp;
-                            </div>
-                        </li>
-                    </ul> -->
+
                     <div>
                         <i class="icon-right-open"></i>
                     </div>
                 </a>
             </li>
         </ul>
+
+        <div class="pull-end paging">
+            <form
+                data-service="projects.list"
+                data-event="submit"
+                data-param-function-id="{{router.params.id}}"
+                data-param-search="{{router.params.search}}"
+                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-order-type="DESC"
+                data-scope="console"
+                data-name="console-projects"
+                data-success="state"
+                data-success-param-state-keys="search,offset">
+                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{console-projects.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+            </form>
+
+            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{console-projects.sum|pageTotal}}"></span>
+
+            <form
+                data-service="projects.list"
+                data-event="submit"
+                data-param-function-id="{{router.params.id}}"
+                data-param-search="{{router.params.search}}"
+                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-order-type="DESC"
+                data-scope="console"
+                data-name="console-projects"
+                data-success="state"
+                data-success-param-state-keys="search,offset">
+                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{console-projects.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+            </form>
+        </div>
         
         <button data-ls-ui-trigger="create-project">Create Project</button>
     </div>
@@ -70,23 +93,28 @@ $home = $this->getParam('home', '');
                 <p class="text-fade">Join Appwrite growing developers community channels.</p>
         
                 <a href="<?php echo APP_SOCIAL_TWITTER; ?>" target="_blank" rel="noopener" title="<?php echo APP_NAME;?> on Twitter"
+                    data-analytics
                     data-analytics-event="click"
                     data-analytics-category="console/home"
                     data-analytics-label="Twitter Link"><i class="icon-twitter"></i></a>
                 <a href="<?php echo APP_SOCIAL_FACEBOOK; ?>" target="_blank" rel="noopener" title="<?php echo APP_NAME;?> on Facebook"
+                    data-analytics
                     data-analytics-event="click"
                     data-analytics-category="console/home"
                     data-analytics-label="Facebook Link"><i class="icon-facebook"></i></a>
                 <a href="<?php echo APP_SOCIAL_LINKEDIN; ?>" target="_blank" rel="noopener" title="<?php echo APP_NAME;?> on Linkedin"
+                    data-analytics
                     data-analytics-event="click"
                     data-analytics-category="console/home"
                     data-analytics-label="Linkedin Link"><i class="icon-linkedin"></i></a>
                 <a href="<?php echo APP_SOCIAL_DISCORD; ?>" target="_blank" rel="noopener" title="<?php echo APP_NAME;?> Discord Server"
+                    data-analytics
                     data-analytics-event="click"
                     data-analytics-category="console/home"
                     data-analytics-label="Discord Link"><i class="icon-discord"></i></a>
                 <a href="<?php echo APP_SOCIAL_GITHUB; ?>" target="_blank" rel="noopener" title="<?php echo APP_NAME;?> on Github"
-                    data-analytics-event="click"
+                    data-analytics
+                    data-analytics-type="click"
                     data-analytics-category="console/home"
                     data-analytics-label="GitHub Link"><i class="icon-github-circled"></i></a>
             </div>

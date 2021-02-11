@@ -93,12 +93,16 @@ class Origin extends Validator
      * Check if Origin has been whiltlisted
      *  for access to the API
      *
-     * @param string $origin
+     * @param mixed $origin
      *
      * @return bool
      */
     public function isValid($origin)
     {
+        if (!is_string($origin)) {
+            return false;
+        }
+
         $scheme = \parse_url($origin, PHP_URL_SCHEME);
         $host = \parse_url($origin, PHP_URL_HOST);
 

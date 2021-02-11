@@ -49,7 +49,7 @@ $rules = $collection->getAttribute('rules', []);
                         <tr>
                             <th width="40">&nbsp;</th>
                             <?php foreach($rules as $rule):
-                                $label = (isset($rule['label'])) ? $rule['label'] : '';
+                                $label = $rule['label'] ?? '';
                                 ?>
                                 <th width="120"><?php echo $this->escape($label); ?></th>
                             <?php endforeach; ?>
@@ -62,10 +62,10 @@ $rules = $collection->getAttribute('rules', []);
                             <input type="radio" name="selected" data-ls-attrs="value={{node.$id}}" data-ls-bind="{{search.selected}}" />
                         </td>
                         <?php foreach($rules as $rule):
-                            $label = (isset($rule['label'])) ? $rule['label'] : '';
-                            $key = (isset($rule['key'])) ? $rule['key'] : '';
-                            $type = (isset($rule['type'])) ? $rule['type'] : '';
-                            $array = (isset($rule['array'])) ? $rule['array'] : '';
+                            $label = $rule['label'] ?? '';
+                            $key = $rule['key'] ?? '';
+                            $type = $rule['type'] ?? '';
+                            $array = $rule['array'] ?? '';
                             ?>
                             <td data-title="<?php echo $this->escape($label); ?>" class="text-size-small text-height-small">
                                 <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection=<?php echo $this->escape($id); ?>&project={{router.params.project}}" target="_blank">

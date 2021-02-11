@@ -20,7 +20,7 @@ abstract class OAuth2
     protected $callback;
 
     /**
-     * @var string
+     * @var array
      */
     protected $state;
 
@@ -38,7 +38,7 @@ abstract class OAuth2
      * @param array  $state
      * @param array $scopes
      */
-    public function __construct(string $appId, string $appSecret, string $callback, $state = [], $scopes = [])
+    public function __construct(string $appId, string $appSecret, string $callback, array $state = [], array $scopes = [])
     {
         $this->appID = $appId;
         $this->appSecret = $appSecret;
@@ -116,7 +116,7 @@ abstract class OAuth2
     /**
      * @param $state
      *
-     * @return string
+     * @return array
      */
     public function parseState(string $state)
     {
@@ -152,6 +152,6 @@ abstract class OAuth2
 
         \curl_close($ch);
 
-        return $response;
+        return (string)$response;
     }
 }

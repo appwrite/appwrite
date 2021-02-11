@@ -18,14 +18,14 @@ $scopes = $this->getParam('scopes', []);
     data-success="trigger"
     data-success-param-trigger-events="projects.listKeys">
 
-    <div data-ls-if="0 == {{console-keys.length}} || undefined == {{console-keys.length}}" class="box margin-top margin-bottom">
+    <div data-ls-if="0 == {{console-keys.sum}} || undefined == {{console-keys.sum}}" class="box margin-top margin-bottom">
         <h3 class="margin-bottom-small text-bold">No API Keys Found</h3>
 
         <p class="margin-bottom-no">You haven't created any API keys for your project yet.</p>
     </div>
 
-    <div class="box margin-bottom" data-ls-if="0 != {{console-keys.length}}">
-        <ul data-ls-loop="console-keys" data-ls-as="key" class="list">
+    <div class="box margin-bottom" data-ls-if="0 != {{console-keys.sum}}">
+        <ul data-ls-loop="console-keys.keys" data-ls-as="key" class="list">
             <li class="clear">
                 <div data-ui-modal class="modal box close" data-button-alias="none" data-open-event="key-update-{{key.$id}}">
                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
@@ -33,6 +33,8 @@ $scopes = $this->getParam('scopes', []);
                     <h1>Update API Key</h1>
 
                     <form
+                        data-analytics
+                        data-analytics-activity
                         data-analytics-event="submit"
                         data-analytics-category="console"
                         data-analytics-label="Update Project Key"
@@ -50,21 +52,25 @@ $scopes = $this->getParam('scopes', []);
                         <input type="hidden" name="keyId" data-ls-bind="{{key.$id}}" />
 
                         <label data-ls-attrs="for=name-{{key.$id}}">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different API keys."><i class="icon-question"></i></span></label>
-                        <input type="text" class="full-width" data-ls-attrs="id=name-{{key.$id}}" name="name" required autocomplete="off" data-ls-bind="{{key.name}}" />
+                        <input type="text" class="full-width" data-ls-attrs="id=name-{{key.$id}}" name="name" required autocomplete="off" data-ls-bind="{{key.name}}" maxlength="128" />
 
-                        <label data-ls-attrs="for=scopes-{{key.$id}}">Scopes (<a data-ls-attrs="href={{env.HOME}}/docs/keys" target="_blank" rel="noopener">Learn more</a>)</label>
-                        <div class="row responsive thin">
-                            <?php foreach ($scopes as $i => $scope) : ?>
-                                <div class="col span-6 text-one-liner margin-bottom text-height-large">
-                                    <input type="checkbox" name="scopes" data-ls-bind="{{key.scopes}}" value="<?php echo $scope; ?>" /> <?php echo $scope; ?>
-                                </div>
-                                <?php if (($i + 1) % 2 === 0) : ?>
-                                </div>
-                                <div class="row responsive thin">
-                                <?php endif; ?>
-
-                            <?php endforeach; ?>
-                        </div>
+                        <section data-forms-select-all>
+                            <label data-ls-attrs="for=scopes-{{key.$id}}">Scopes (<a data-ls-attrs="href={{env.HOME}}/docs/keys" target="_blank" rel="noopener">Learn more</a>)</label>
+                            <div class="row responsive thin">
+                                <?php foreach ($scopes as $i => $scope) : ?>
+                                    <div class="col span-6 text-one-liner margin-bottom text-height-large text-size-small" title="<?php echo $scope; ?>">
+                                        <input data-ls-attrs="id=scope-<?php echo $scope; ?>" type="checkbox" name="scopes" data-ls-bind="{{key.scopes}}" value="<?php echo $scope; ?>" />
+                                        &nbsp;
+                                        <label class="inline" for="scope-<?php echo $scope; ?>"><?php echo $scope; ?></label>
+                                    </div>
+                                    <?php if (($i + 1) % 2 === 0) : ?>
+                                    </div>
+                                    <div class="row responsive thin">
+                                    <?php endif; ?>
+    
+                                <?php endforeach; ?>
+                            </div>
+                        </section>
 
                         <hr class="margin-top-no" />
 
@@ -73,6 +79,8 @@ $scopes = $this->getParam('scopes', []);
                 </div>
 
                 <form class="pull-end margin-end"
+                    data-analytics
+                    data-analytics-activity
                     data-analytics-event="submit"
                     data-analytics-category="console"
                     data-analytics-label="Delete Project Key"
@@ -129,9 +137,11 @@ $scopes = $this->getParam('scopes', []);
             <h1>Add API Keys</h1>
 
             <form
+                data-analytics
+                data-analytics-activity
                 data-analytics-event="submit"
                 data-analytics-category="console"
-                data-analytics-label="Create Project Platform"
+                data-analytics-label="Create Project Key"
                 data-service="projects.createKey"
                 data-scope="console"
                 data-event="submit"
@@ -145,21 +155,25 @@ $scopes = $this->getParam('scopes', []);
                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
 
                 <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different API keys."><i class="icon-question"></i></span></label>
-                <input type="text" class="full-width" id="name" name="name" required autocomplete="off" />
+                <input type="text" class="full-width" id="name" name="name" required autocomplete="off" maxlength="128" />
 
-                <label for="scopes">Scopes (<a data-ls-attrs="href={{env.HOME}}/docs/keys" target="_blank" rel="noopener">Learn more</a>)</label>
-                <div class="row responsive thin">
-                    <?php foreach ($scopes as $i => $scope) : ?>
-                        <div class="col span-6 text-one-liner margin-bottom text-height-large">
-                            <input type="checkbox" name="scopes" value="<?php echo $scope; ?>" /> <?php echo $scope; ?>
-                        </div>
-                        <?php if (($i + 1) % 2 === 0) : ?>
-                        </div>
-                        <div class="row responsive thin">
-                        <?php endif; ?>
+                <section data-forms-select-all>
+                    <label for="scopes">Scopes (<a data-ls-attrs="href={{env.HOME}}/docs/keys" target="_blank" rel="noopener">Learn more</a>)</label>
+                    <div class="row responsive thin">
+                        <?php foreach ($scopes as $i => $scope) : ?>
+                            <div class="col span-6 text-one-liner margin-bottom text-height-large text-size-small" title="<?php echo $scope; ?>">
+                                <input type="checkbox" name="scopes" id="<?php echo $scope; ?>" value="<?php echo $scope; ?>" /> 
+                                &nbsp; 
+                                <label class="inline" for="<?php echo $scope; ?>"><?php echo $scope; ?></label>
+                            </div>
+                            <?php if (($i + 1) % 2 === 0) : ?>
+                            </div>
+                            <div class="row responsive thin">
+                            <?php endif; ?>
 
-                    <?php endforeach; ?>
-                </div>
+                        <?php endforeach; ?>
+                    </div>
+                </section>
 
                 <hr class="margin-top-no" />
 

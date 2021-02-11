@@ -61,7 +61,7 @@ class Vk extends OAuth2
      */
     public function getAccessToken(string $code): string
     {
-        $headers[] = 'Content-Type: application/x-www-form-urlencoded;charset=UTF-8';
+        $headers = ['Content-Type: application/x-www-form-urlencoded;charset=UTF-8'];
         $accessToken = $this->request(
             'POST',
             'https://oauth.vk.com/access_token?',

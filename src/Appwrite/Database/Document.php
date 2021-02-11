@@ -17,19 +17,19 @@ class Document extends ArrayObject
      *
      * @see ArrayObject::__construct
      *
-     * @param null   $input
+     * @param array $input
      * @param int    $flags
      * @param string $iterator_class
      */
-    public function __construct($input = null, $flags = 0, $iterator_class = 'ArrayIterator')
+    public function __construct($input = [], $flags = 0, $iterator_class = 'ArrayIterator')
     {
         foreach ($input as $key => &$value) {
             if (\is_array($value)) {
-                if (isset($value['$id']) || isset($value['$collection'])) {
+                if ((isset($value['$id']) || isset($value['$collection'])) && (!$value instanceof self)) {
                     $input[$key] = new self($value);
                 } else {
                     foreach ($value as $childKey => $child) {
-                        if (isset($child['$id']) || isset($child['$collection'])) {
+                        if ((isset($child['$id']) || isset($child['$collection'])) && (!$child instanceof self)) {
                             $value[$childKey] = new self($child);
                         }
                     }
@@ -49,7 +49,7 @@ class Document extends ArrayObject
     }
 
     /**
-     * @return int|null
+     * @return string
      */
     public function getCollection()
     {
@@ -194,6 +194,18 @@ class Document extends ArrayObject
     }
 
     /**
+     * Checks if a document key is set.
+     *
+     * @param string $key
+     *
+     * @return bool
+     */
+    public function isSet($key)
+    {
+        return isset($this[$key]);
+    }
+
+    /**
      * Get Array Copy.
      *
      * Outputs entity as a PHP array
@@ -207,7 +219,7 @@ class Document extends ArrayObject
     {
         $array = parent::getArrayCopy();
 
-        $output = array();
+        $output = [];
 
         foreach ($array as $key => &$value) {
             if (!empty($whitelist) && !\in_array($key, $whitelist)) { // Export only whitelisted fields

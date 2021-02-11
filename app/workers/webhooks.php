@@ -1,32 +1,42 @@
 <?php
 
-require_once __DIR__.'/../init.php';
-
-\cli_set_process_title('Webhooks V1 Worker');
-
-echo APP_NAME.' webhooks worker v1 has started';
-
+use Utopia\App;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Appwrite\Database\Database;
+use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
+use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
+
+require_once __DIR__.'/../init.php';
+
+Console::title('Webhooks V1 Worker');
+
+Console::success(APP_NAME.' webhooks worker v1 has started');
 
 class WebhooksV1
 {
     public $args = [];
 
-    public function setUp()
+    public function setUp(): void
     {
     }
 
     public function perform()
     {
-        global $consoleDB, $request;
+        global $register;
 
+        $consoleDB = new Database();
+        $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+        $consoleDB->setNamespace('app_console'); // Main DB
+        $consoleDB->setMocks(Config::getParam('collections', []));
+    
         $errors = [];
 
         // Event
-        $projectId = $this->args['projectId'];
-        $event = $this->args['event'];
+        $projectId = $this->args['projectId'] ?? '';
+        $userId = $this->args['userId'] ?? '';
+        $event = $this->args['event'] ?? '';
         $payload = \json_encode($this->args['payload']);
 
         // Webhook
@@ -35,7 +45,7 @@ class WebhooksV1
 
         $project = $consoleDB->getDocument($projectId);
 
-        Authorization::enable();
+        Authorization::reset();
 
         if (\is_null($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) {
             throw new Exception('Project Not Found');
@@ -46,12 +56,13 @@ class WebhooksV1
                 continue;
             }
 
-            $name = (isset($webhook['name'])) ? $webhook['name'] : '';
-            $signature = (isset($webhook['signature'])) ? $webhook['signature'] : 'not-yet-implemented';
-            $url = (isset($webhook['url'])) ? $webhook['url'] : '';
-            $security = (isset($webhook['security'])) ? (bool) $webhook['security'] : true;
-            $httpUser = (isset($webhook['httpUser'])) ? $webhook['httpUser'] : null;
-            $httpPass = (isset($webhook['httpPass'])) ? $webhook['httpPass'] : null;
+            $id = $webhook['$id'] ?? '';
+            $name = $webhook['name'] ?? '';
+            $signature = $webhook['signature'] ?? 'not-yet-implemented';
+            $url = $webhook['url'] ?? '';
+            $security = (bool) $webhook['security'] ?? true;
+            $httpUser = $webhook['httpUser'] ?? null;
+            $httpPass = $webhook['httpPass'] ?? null;
 
             $ch = \curl_init($url);
 
@@ -60,8 +71,8 @@ class WebhooksV1
             \curl_setopt($ch, CURLOPT_HEADER, 0);
             \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
             \curl_setopt($ch, CURLOPT_USERAGENT, \sprintf(APP_USERAGENT,
-                Config::getParam('version'),
-                $request->getServer('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
+                App::getEnv('_APP_VERSION', 'UNKNOWN'),
+                App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
             ));
             \curl_setopt(
                 $ch,
@@ -69,8 +80,11 @@ class WebhooksV1
                 [
                     'Content-Type: application/json',
                     'Content-Length: '.\strlen($payload),
+                    'X-'.APP_NAME.'-Webhook-Id: '.$id,
                     'X-'.APP_NAME.'-Webhook-Event: '.$event,
                     'X-'.APP_NAME.'-Webhook-Name: '.$name,
+                    'X-'.APP_NAME.'-Webhook-User-Id: '.$userId,
+                    'X-'.APP_NAME.'-Webhook-Project-Id: '.$projectId,
                     'X-'.APP_NAME.'-Webhook-Signature: '.$signature,
                 ]
             );
@@ -97,7 +111,7 @@ class WebhooksV1
         }
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         // ... Remove environment for this job
     }

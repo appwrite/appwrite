@@ -97,9 +97,9 @@ class URL
      *
      * Convert query string array to string
      *
-     * @param string $query
+     * @param array $query
      *
-     * @return array
+     * @return string
      */
     public static function unparseQuery(array $query):string
     {

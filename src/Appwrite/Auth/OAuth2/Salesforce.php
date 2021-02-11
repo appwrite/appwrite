@@ -34,7 +34,7 @@ class Salesforce extends OAuth2
     /**
      * @param $state
      *
-     * @return json
+     * @return array
      */
     public function parseState(string $state)
     {

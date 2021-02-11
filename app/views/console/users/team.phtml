@@ -31,7 +31,7 @@
     <div class="zone xl">
         <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
             <li data-state="/console/users/teams/team?id={{router.params.id}}&project={{router.params.project}}">
-                <h2>General</h2>
+                <h2>Overview</h2>
                 
                 <div class="row responsive margin-top-negative">
                     <div class="col span-8 margin-bottom-large">
@@ -39,6 +39,8 @@
 
                         <div class="box margin-bottom-large">
                             <form
+                                data-analytics
+                                data-analytics-activity
                                 data-analytics-event="submit"
                                 data-analytics-category="console"
                                 data-analytics-label="Update Team"
@@ -55,7 +57,7 @@
                                 <input data-ls-attrs="id=team-id-{{team.$id}}" name="teamId" type="hidden" disabled data-ls-bind="{{team.$id}}" />
 
                                 <label for="name">Name</label>
-                                <input data-ls-attrs="id=team-name-{{team.$id}}" name="name" type="text" autocomplete="off" data-ls-bind="{{team.name}}">
+                                <input data-ls-attrs="id=team-name-{{team.$id}}" name="name" type="text" autocomplete="off" data-ls-bind="{{team.name}}" maxlength="128" />
 
                                 <hr />
 
@@ -88,6 +90,8 @@
                                     <ul data-ls-loop="project-members.memberships" data-ls-as="member" class="list">
                                         <li class="clear">
                                             <form class="pull-end"
+                                                data-analytics
+                                                data-analytics-activity
                                                 data-analytics-event="submit"
                                                 data-analytics-category="console"
                                                 data-analytics-label="Delete Team Membership"
@@ -110,8 +114,8 @@
 
                                             <div class="margin-bottom-tiny">
                                                 <a data-ls-attrs="href=/console/users/user?id={{member.userId}}&project={{router.params.project}}"><span data-ls-bind="{{member.name}}"></span></a> &nbsp;&nbsp;
-                                                <span data-ls-if="1 == {{member.roles.length}}" class="text-fade tooltip" data-ls-bind="({{member.roles.length}} role)" data-ls-attrs="data-tooltip={{member.roles|arraySentence}}"></span>
-                                                <span  data-ls-if="2 <= {{member.roles.length}}" class="text-fade tooltip" data-ls-bind="({{member.roles.length}} roles)" data-ls-attrs="data-tooltip={{member.roles|arraySentence}}"></span>
+                                                <span data-ls-if="1 == {{member.roles.length}}" class="text-fade tooltip" data-ls-bind="{{member.roles.length}} role" data-ls-attrs="data-tooltip={{member.roles|arraySentence}}"></span>
+                                                <span  data-ls-if="2 <= {{member.roles.length}}" class="text-fade tooltip" data-ls-bind="{{member.roles.length}} roles" data-ls-attrs="data-tooltip={{member.roles|arraySentence}}"></span>
                                             </div>
                                             <small class="text-size-small text-fade" data-ls-bind="{{member.email}}"></small> &nbsp;&nbsp;<span data-ls-if="false === {{member.confirm}}" class="text-danger text-size-small">Pending Approval</span>
                                         </li>
@@ -125,6 +129,8 @@
                                 <h1>Add Member</h1>
 
                                 <form name="teams.createTeamMembership"
+                                    data-analytics
+                                    data-analytics-activity
                                     data-analytics-event="submit"
                                     data-analytics-category="console"
                                     data-analytics-label="Create Team Membership"
@@ -145,7 +151,7 @@
                                     <input name="email" id="email" type="email" autocomplete="email" required>
                                     
                                     <label for="team-name">Name <small>(optional)</small></label>
-                                    <input name="name" id="team-name" type="text" autocomplete="name">
+                                    <input name="name" id="team-name" type="text" autocomplete="name" maxlength="128" />
 
                                     <label for="roles">Roles</label>
                                     <input type="hidden" id="team-roles" name="roles" data-forms-tags data-cast-to="json" data-ls-bind="<?php echo $this->escape(json_encode(['owner'])); ?>" placeholder="Add any role you like" />
@@ -200,10 +206,12 @@
 
                         <ul class="margin-bottom-large text-fade text-size-small">
                             <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{team.dateCreated|date-text}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{team.dateCreated|dateText}}"></span></li>
                         </ul>
 
                         <form name="teams.delete" class="margin-bottom"
+                            data-analytics
+                            data-analytics-activity
                             data-analytics-event="submit"
                             data-analytics-category="console"
                             data-analytics-label="Delete Team"

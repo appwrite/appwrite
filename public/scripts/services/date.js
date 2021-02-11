@@ -320,7 +320,7 @@
             var _date = function (format, timestamp) {
                 jsdate = (timestamp === undefined ? new Date() // Not provided
                         : (timestamp instanceof Date) ? new Date(timestamp) // JS Date()
-                            : new Date(timestamp * 1000) // UNIX timestamp (auto-convert to int)
+                            : new Date(timestamp * 1000) // Unix timestamp (auto-convert to int)
                 )
                 return format.replace(formatChr, formatChrCb)
             }

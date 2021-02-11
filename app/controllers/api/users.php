@@ -1,9 +1,7 @@
 <?php
 
-global $utopia, $response, $projectDB;
-
+use Utopia\App;
 use Utopia\Exception;
-use Utopia\Response;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Email;
@@ -11,86 +9,75 @@ use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Audit\Audit;
 use Utopia\Audit\Adapters\MySQL as AuditAdapter;
-use Utopia\Config\Config;
-use Utopia\Locale\Locale;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Database\Database;
+use Appwrite\Database\Document;
 use Appwrite\Database\Exception\Duplicate;
 use Appwrite\Database\Validator\UID;
+use Appwrite\Utopia\Response;
 use DeviceDetector\DeviceDetector;
-use GeoIp2\Database\Reader;
 
-$utopia->post('/v1/users')
+App::post('/v1/users')
     ->desc('Create User')
     ->groups(['api', 'users'])
+    ->label('event', 'users.create')
     ->label('scope', 'users.write')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'create')
     ->label('sdk.description', '/docs/references/users/create-user.md')
-    ->param('email', '', function () { return new Email(); }, 'User email.')
-    ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
-    ->param('name', '', function () { return new Text(100); }, 'User name.', true)
-    ->action(
-        function ($email, $password, $name) use ($response, $projectDB) {
-            $profile = $projectDB->getCollectionFirst([ // Get user by email address
-                'limit' => 1,
-                'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                    'email='.$email,
-                ],
-            ]);
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('email', '', new Email(), 'User email.')
+    ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
+    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->inject('response')
+    ->inject('projectDB')
+    ->action(function ($email, $password, $name, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
 
-            if (!empty($profile)) {
-                throw new Exception('User already registered', 409);
-            }
+        $profile = $projectDB->getCollectionFirst([ // Get user by email address
+            'limit' => 1,
+            'filters' => [
+                '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                'email='.$email,
+            ],
+        ]);
 
-            try {
-                $user = $projectDB->createDocument([
-                    '$collection' => Database::SYSTEM_COLLECTION_USERS,
-                    '$permissions' => [
-                        'read' => ['*'],
-                        'write' => ['user:{self}'],
-                    ],
-                    'email' => $email,
-                    'emailVerification' => false,
-                    'status' => Auth::USER_STATUS_UNACTIVATED,
-                    'password' => Auth::passwordHash($password),
-                    'password-update' => \time(),
-                    'registration' => \time(),
-                    'reset' => false,
-                    'name' => $name,
-                ], ['email' => $email]);
-            } catch (Duplicate $th) {
-                throw new Exception('Account already exists', 409);
-            }
-
-            $oauth2Keys = [];
-
-            foreach (Config::getParam('providers') as $key => $provider) {
-                if (!$provider['enabled']) {
-                    continue;
-                }
-
-                $oauth2Keys[] = 'oauth2'.\ucfirst($key);
-                $oauth2Keys[] = 'oauth2'.\ucfirst($key).'AccessToken';
-            }
-
-            $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->json(\array_merge($user->getArrayCopy(\array_merge([
-                    '$id',
-                    'status',
-                    'email',
-                    'registration',
-                    'emailVerification',
-                    'name',
-                ], $oauth2Keys)), ['roles' => []]));
+        if (!empty($profile)) {
+            throw new Exception('User already registered', 409);
         }
-    );
-    
-$utopia->get('/v1/users')
+
+        try {
+            $user = $projectDB->createDocument([
+                '$collection' => Database::SYSTEM_COLLECTION_USERS,
+                '$permissions' => [
+                    'read' => ['*'],
+                    'write' => ['user:{self}'],
+                ],
+                'email' => $email,
+                'emailVerification' => false,
+                'status' => Auth::USER_STATUS_UNACTIVATED,
+                'password' => Auth::passwordHash($password),
+                'passwordUpdate' => \time(),
+                'registration' => \time(),
+                'reset' => false,
+                'name' => $name,
+            ], ['email' => $email]);
+        } catch (Duplicate $th) {
+            throw new Exception('Account already exists', 409);
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($user, Response::MODEL_USER)
+        ;
+    });
+
+App::get('/v1/users')
     ->desc('List Users')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
@@ -98,54 +85,36 @@ $utopia->get('/v1/users')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'list')
     ->label('sdk.description', '/docs/references/users/list-users.md')
-    ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results.', true)
-    ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
-    ->action(
-        function ($search, $limit, $offset, $orderType) use ($response, $projectDB) {
-            $results = $projectDB->getCollection([
-                'limit' => $limit,
-                'offset' => $offset,
-                'orderField' => 'registration',
-                'orderType' => $orderType,
-                'orderCast' => 'int',
-                'search' => $search,
-                'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                ],
-            ]);
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER_LIST)
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->inject('response')
+    ->inject('projectDB')
+    ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
 
-            $oauth2Keys = [];
+        $results = $projectDB->getCollection([
+            'limit' => $limit,
+            'offset' => $offset,
+            'orderType' => $orderType,
+            'search' => $search,
+            'filters' => [
+                '$collection='.Database::SYSTEM_COLLECTION_USERS,
+            ],
+        ]);
 
-            foreach (Config::getParam('providers') as $key => $provider) {
-                if (!$provider['enabled']) {
-                    continue;
-                }
+        $response->dynamic(new Document([
+            'sum' => $projectDB->getSum(),
+            'users' => $results
+        ]), Response::MODEL_USER_LIST);
+    });
 
-                $oauth2Keys[] = 'oauth2'.\ucfirst($key);
-                $oauth2Keys[] = 'oauth2'.\ucfirst($key).'AccessToken';
-            }
-
-            $results = \array_map(function ($value) use ($oauth2Keys) { /* @var $value \Database\Document */
-                return $value->getArrayCopy(\array_merge(
-                    [
-                        '$id',
-                        'status',
-                        'email',
-                        'registration',
-                        'emailVerification',
-                        'name',
-                    ],
-                    $oauth2Keys
-                ));
-            }, $results);
-
-            $response->json(['sum' => $projectDB->getSum(), 'users' => $results]);
-        }
-    );
-
-$utopia->get('/v1/users/:userId')
+App::get('/v1/users/:userId')
     ->desc('Get User')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
@@ -153,41 +122,26 @@ $utopia->get('/v1/users/:userId')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/users/get-user.md')
-    ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
-    ->action(
-        function ($userId) use ($response, $projectDB) {
-            $user = $projectDB->getDocument($userId);
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new UID(), 'User unique ID.')
+    ->inject('response')
+    ->inject('projectDB')
+    ->action(function ($userId, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
 
-            if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-                throw new Exception('User not found', 404);
-            }
+        $user = $projectDB->getDocument($userId);
 
-            $oauth2Keys = [];
-
-            foreach (Config::getParam('providers') as $key => $provider) {
-                if (!$provider['enabled']) {
-                    continue;
-                }
-
-                $oauth2Keys[] = 'oauth2'.\ucfirst($key);
-                $oauth2Keys[] = 'oauth2'.\ucfirst($key).'AccessToken';
-            }
-
-            $response->json(\array_merge($user->getArrayCopy(\array_merge(
-                [
-                    '$id',
-                    'status',
-                    'email',
-                    'registration',
-                    'emailVerification',
-                    'name',
-                ],
-                $oauth2Keys
-            )), ['roles' => []]));
+        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            throw new Exception('User not found', 404);
         }
-    );
 
-$utopia->get('/v1/users/:userId/prefs')
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::get('/v1/users/:userId/prefs')
     ->desc('Get User Preferences')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
@@ -195,29 +149,28 @@ $utopia->get('/v1/users/:userId/prefs')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getPrefs')
     ->label('sdk.description', '/docs/references/users/get-user-prefs.md')
-    ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
-    ->action(
-        function ($userId) use ($response, $projectDB) {
-            $user = $projectDB->getDocument($userId);
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->param('userId', '', new UID(), 'User unique ID.')
+    ->inject('response')
+    ->inject('projectDB')
+    ->action(function ($userId, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
 
-            if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-                throw new Exception('User not found', 404);
-            }
+        $user = $projectDB->getDocument($userId);
 
-            $prefs = $user->getAttribute('prefs', '');
-
-            try {
-                $prefs = \json_decode($prefs, true);
-                $prefs = ($prefs) ? $prefs : [];
-            } catch (\Exception $error) {
-                throw new Exception('Failed to parse prefs', 500);
-            }
-
-            $response->json($prefs);
+        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            throw new Exception('User not found', 404);
         }
-    );
 
-$utopia->get('/v1/users/:userId/sessions')
+        $prefs = $user->getAttribute('prefs', new \stdClass());
+
+        $response->dynamic(new Document($prefs), Response::MODEL_ANY);
+    });
+
+App::get('/v1/users/:userId/sessions')
     ->desc('Get User Sessions')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
@@ -225,63 +178,48 @@ $utopia->get('/v1/users/:userId/sessions')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getSessions')
     ->label('sdk.description', '/docs/references/users/get-user-sessions.md')
-    ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
-    ->action(
-        function ($userId) use ($response, $projectDB) {
-            $user = $projectDB->getDocument($userId);
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SESSION_LIST)
+    ->param('userId', '', new UID(), 'User unique ID.')
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('locale')
+    ->action(function ($userId, $response, $projectDB, $locale) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
 
-            if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-                throw new Exception('User not found', 404);
-            }
+        $user = $projectDB->getDocument($userId);
 
-            $tokens = $user->getAttribute('tokens', []);
-            $reader = new Reader(__DIR__.'/../../db/DBIP/dbip-country-lite-2020-01.mmdb');
-            $sessions = [];
-            $index = 0;
-            $countries = Locale::getText('countries');
-
-            foreach ($tokens as $token) { /* @var $token Document */
-                if (Auth::TOKEN_TYPE_LOGIN != $token->getAttribute('type')) {
-                    continue;
-                }
-
-                $userAgent = (!empty($token->getAttribute('userAgent'))) ? $token->getAttribute('userAgent') : 'UNKNOWN';
-
-                $dd = new DeviceDetector($userAgent);
-
-                // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-                // $dd->skipBotDetection();
-
-                $dd->parse();
-
-                $sessions[$index] = [
-                    '$id' => $token->getId(),
-                    'OS' => $dd->getOs(),
-                    'client' => $dd->getClient(),
-                    'device' => $dd->getDevice(),
-                    'brand' => $dd->getBrand(),
-                    'model' => $dd->getModel(),
-                    'ip' => $token->getAttribute('ip', ''),
-                    'geo' => [],
-                ];
-
-                try {
-                    $record = $reader->country($token->getAttribute('ip', ''));
-                    $sessions[$index]['geo']['isoCode'] = \strtolower($record->country->isoCode);
-                    $sessions[$index]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : Locale::getText('locale.country.unknown');
-                } catch (\Exception $e) {
-                    $sessions[$index]['geo']['isoCode'] = '--';
-                    $sessions[$index]['geo']['country'] = Locale::getText('locale.country.unknown');
-                }
-
-                ++$index;
-            }
-
-            $response->json($sessions);
+        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            throw new Exception('User not found', 404);
         }
-    );
 
-$utopia->get('/v1/users/:userId/logs')
+        $tokens = $user->getAttribute('tokens', []);
+        $sessions = [];
+        $countries = $locale->getText('countries');
+
+        foreach ($tokens as $token) { /* @var $token Document */
+            if (Auth::TOKEN_TYPE_LOGIN != $token->getAttribute('type')) {
+                continue;
+            }
+
+            $token->setAttribute('countryName', (isset($countries[$token->getAttribute('contryCode')]))
+                ? $countries[$token->getAttribute('contryCode')]
+                : $locale->getText('locale.country.unknown'));
+            $token->setAttribute('current', false);
+
+            $sessions[] = $token;
+        }
+
+        $response->dynamic(new Document([
+            'sum' => count($sessions),
+            'sessions' => $sessions
+        ]), Response::MODEL_SESSION_LIST);
+    }, ['response', 'projectDB', 'locale']);
+
+App::get('/v1/users/:userId/logs')
     ->desc('Get User Logs')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
@@ -289,129 +227,150 @@ $utopia->get('/v1/users/:userId/logs')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getLogs')
     ->label('sdk.description', '/docs/references/users/get-user-logs.md')
-    ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
-    ->action(
-        function ($userId) use ($response, $register, $projectDB, $project) {
-            $user = $projectDB->getDocument($userId);
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_LOG_LIST)
+    ->param('userId', '', new UID(), 'User unique ID.')
+    ->inject('response')
+    ->inject('register')
+    ->inject('project')
+    ->inject('projectDB')
+    ->inject('locale')
+    ->inject('geodb')
+    ->action(function ($userId, $response, $register, $project, $projectDB, $locale, $geodb) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Registry\Registry $register */
+        /** @var Appwrite\Database\Document $project */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
+        /** @var MaxMind\Db\Reader $geodb */
+        
+        $user = $projectDB->getDocument($userId);
 
-            if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-                throw new Exception('User not found', 404);
-            }
+        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            throw new Exception('User not found', 404);
+        }
 
-            $adapter = new AuditAdapter($register->get('db'));
-            $adapter->setNamespace('app_'.$project->getId());
+        $adapter = new AuditAdapter($register->get('db'));
+        $adapter->setNamespace('app_'.$project->getId());
 
-            $audit = new Audit($adapter);
-            
-            $countries = Locale::getText('countries');
+        $audit = new Audit($adapter);
+        
+        $countries = $locale->getText('countries');
 
-            $logs = $audit->getLogsByUserAndActions($user->getId(), [
-                'account.create',
-                'account.delete',
-                'account.update.name',
-                'account.update.email',
-                'account.update.password',
-                'account.update.prefs',
-                'account.sessions.create',
-                'account.sessions.delete',
-                'account.recovery.create',
-                'account.recovery.update',
-                'account.verification.create',
-                'account.verification.update',
-                'teams.membership.create',
-                'teams.membership.update',
-                'teams.membership.delete',
+        $logs = $audit->getLogsByUserAndActions($user->getId(), [
+            'account.create',
+            'account.delete',
+            'account.update.name',
+            'account.update.email',
+            'account.update.password',
+            'account.update.prefs',
+            'account.sessions.create',
+            'account.sessions.delete',
+            'account.recovery.create',
+            'account.recovery.update',
+            'account.verification.create',
+            'account.verification.update',
+            'teams.membership.create',
+            'teams.membership.update',
+            'teams.membership.delete',
+        ]);
+
+        $output = [];
+
+        foreach ($logs as $i => &$log) {
+            $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
+
+            $dd = new DeviceDetector($log['userAgent']);
+
+            $dd->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+
+            $dd->parse();
+
+            $os = $dd->getOs();
+            $osCode = (isset($os['short_name'])) ? $os['short_name'] : '';
+            $osName = (isset($os['name'])) ? $os['name'] : '';
+            $osVersion = (isset($os['version'])) ? $os['version'] : '';
+
+            $client = $dd->getClient();
+            $clientType = (isset($client['type'])) ? $client['type'] : '';
+            $clientCode = (isset($client['short_name'])) ? $client['short_name'] : '';
+            $clientName = (isset($client['name'])) ? $client['name'] : '';
+            $clientVersion = (isset($client['version'])) ? $client['version'] : '';
+            $clientEngine = (isset($client['engine'])) ? $client['engine'] : '';
+            $clientEngineVersion = (isset($client['engine_version'])) ? $client['engine_version'] : '';
+
+            $output[$i] = new Document([
+                'event' => $log['event'],
+                'ip' => $log['ip'],
+                'time' => \strtotime($log['time']),
+
+                'osCode' => $osCode,
+                'osName' => $osName,
+                'osVersion' => $osVersion,
+                'clientType' => $clientType,
+                'clientCode' => $clientCode,
+                'clientName' => $clientName,
+                'clientVersion' => $clientVersion,
+                'clientEngine' => $clientEngine,
+                'clientEngineVersion' => $clientEngineVersion,
+                'deviceName' => $dd->getDeviceName(),
+                'deviceBrand' => $dd->getBrandName(),
+                'deviceModel' => $dd->getModel(),
             ]);
 
-            $reader = new Reader(__DIR__.'/../../db/DBIP/dbip-country-lite-2020-01.mmdb');
-            $output = [];
+            $record = $geodb->get($log['ip']);
 
-            foreach ($logs as $i => &$log) {
-                $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
-
-                $dd = new DeviceDetector($log['userAgent']);
-
-                $dd->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-
-                $dd->parse();
-
-                $output[$i] = [
-                    'event' => $log['event'],
-                    'ip' => $log['ip'],
-                    'time' => \strtotime($log['time']),
-                    'OS' => $dd->getOs(),
-                    'client' => $dd->getClient(),
-                    'device' => $dd->getDevice(),
-                    'brand' => $dd->getBrand(),
-                    'model' => $dd->getModel(),
-                    'geo' => [],
-                ];
-
-                try {
-                    $record = $reader->country($log['ip']);
-                    $output[$i]['geo']['isoCode'] = \strtolower($record->country->isoCode);
-                    $output[$i]['geo']['country'] = $record->country->name;
-                    $output[$i]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : Locale::getText('locale.country.unknown');
-                } catch (\Exception $e) {
-                    $output[$i]['geo']['isoCode'] = '--';
-                    $output[$i]['geo']['country'] = Locale::getText('locale.country.unknown');
-                }
+            if ($record) {
+                $output[$i]['countryCode'] = (isset($countries[$record['country']['iso_code']])) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
+            } else {
+                $output[$i]['countryCode'] = '--';
+                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
             }
-
-            $response->json($output);
         }
-    );
 
-$utopia->patch('/v1/users/:userId/status')
+        $response->dynamic(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
+    });
+
+App::patch('/v1/users/:userId/status')
     ->desc('Update User Status')
     ->groups(['api', 'users'])
+    ->label('event', 'users.update.status')
     ->label('scope', 'users.write')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updateStatus')
     ->label('sdk.description', '/docs/references/users/update-user-status.md')
-    ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
-    ->param('status', '', function () { return new WhiteList([Auth::USER_STATUS_ACTIVATED, Auth::USER_STATUS_BLOCKED, Auth::USER_STATUS_UNACTIVATED]); }, 'User Status code. To activate the user pass '.Auth::USER_STATUS_ACTIVATED.', to block the user pass '.Auth::USER_STATUS_BLOCKED.' and for disabling the user pass '.Auth::USER_STATUS_UNACTIVATED)
-    ->action(
-        function ($userId, $status) use ($response, $projectDB) {
-            $user = $projectDB->getDocument($userId);
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('status', '', new WhiteList([Auth::USER_STATUS_ACTIVATED, Auth::USER_STATUS_BLOCKED, Auth::USER_STATUS_UNACTIVATED], true), 'User Status code. To activate the user pass '.Auth::USER_STATUS_ACTIVATED.', to block the user pass '.Auth::USER_STATUS_BLOCKED.' and for disabling the user pass '.Auth::USER_STATUS_UNACTIVATED)
+    ->inject('response')
+    ->inject('projectDB')
+    ->action(function ($userId, $status, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
 
-            if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-                throw new Exception('User not found', 404);
-            }
+        $user = $projectDB->getDocument($userId);
 
-            $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
-                'status' => (int)$status,
-            ]));
-
-            if (false === $user) {
-                throw new Exception('Failed saving user to DB', 500);
-            }
-            
-            $oauth2Keys = [];
-
-            foreach (Config::getParam('providers') as $key => $provider) {
-                if (!$provider['enabled']) {
-                    continue;
-                }
-
-                $oauth2Keys[] = 'oauth2'.\ucfirst($key);
-                $oauth2Keys[] = 'oauth2'.\ucfirst($key).'AccessToken';
-            }
-
-            $response
-                ->json(\array_merge($user->getArrayCopy(\array_merge([
-                    '$id',
-                    'status',
-                    'email',
-                    'registration',
-                    'emailVerification',
-                    'name',
-                ], $oauth2Keys)), ['roles' => []]));
+        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            throw new Exception('User not found', 404);
         }
-    );
 
-$utopia->patch('/v1/users/:userId/prefs')
+        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
+            'status' => (int)$status,
+        ]));
+
+        if (false === $user) {
+            throw new Exception('Failed saving user to DB', 500);
+        }
+
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::patch('/v1/users/:userId/prefs')
     ->desc('Update User Preferences')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
@@ -419,100 +378,177 @@ $utopia->patch('/v1/users/:userId/prefs')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updatePrefs')
     ->label('sdk.description', '/docs/references/users/update-user-prefs.md')
-    ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
-    ->param('prefs', '', function () { return new Assoc();}, 'Prefs key-value JSON object.')
-    ->action(
-        function ($userId, $prefs) use ($response, $projectDB) {
-            $user = $projectDB->getDocument($userId);
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
+    ->inject('response')
+    ->inject('projectDB')
+    ->action(function ($userId, $prefs, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
 
-            if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-                throw new Exception('User not found', 404);
-            }
+        $user = $projectDB->getDocument($userId);
 
-            $old = \json_decode($user->getAttribute('prefs', '{}'), true);
-            $old = ($old) ? $old : [];
-
-            $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
-                'prefs' => \json_encode(\array_merge($old, $prefs)),
-            ]));
-
-            if (false === $user) {
-                throw new Exception('Failed saving user to DB', 500);
-            }
-
-            $prefs = $user->getAttribute('prefs', '');
-
-            try {
-                $prefs = \json_decode($prefs, true);
-                $prefs = ($prefs) ? $prefs : [];
-            } catch (\Exception $error) {
-                throw new Exception('Failed to parse prefs', 500);
-            }
-
-            $response->json($prefs);
+        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            throw new Exception('User not found', 404);
         }
-    );
 
+        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
+            'prefs' => $prefs,
+        ]));
 
-$utopia->delete('/v1/users/:userId/sessions/:sessionId')
+        if (false === $user) {
+            throw new Exception('Failed saving user to DB', 500);
+        }
+
+        $response->dynamic(new Document($prefs), Response::MODEL_ANY);
+    });
+
+App::delete('/v1/users/:userId/sessions/:sessionId')
     ->desc('Delete User Session')
     ->groups(['api', 'users'])
+    ->label('event', 'users.sessions.delete')
     ->label('scope', 'users.write')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'deleteSession')
     ->label('sdk.description', '/docs/references/users/delete-user-session.md')
-    ->label('abuse-limit', 100)
-    ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
-    ->param('sessionId', null, function () { return new UID(); }, 'User unique session ID.')
-    ->action(
-        function ($userId, $sessionId) use ($response, $request, $projectDB) {
-            $user = $projectDB->getDocument($userId);
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('sessionId', null, new UID(), 'User unique session ID.')
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('events')
+    ->action(function ($userId, $sessionId, $response, $projectDB, $events) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $events */
 
-            if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-                throw new Exception('User not found', 404);
-            }
+        $user = $projectDB->getDocument($userId);
 
-            $tokens = $user->getAttribute('tokens', []);
-
-            foreach ($tokens as $token) { /* @var $token Document */
-                if ($sessionId == $token->getId()) {
-                    if (!$projectDB->deleteDocument($token->getId())) {
-                        throw new Exception('Failed to remove token from DB', 500);
-                    }
-                }
-            }
-
-            $response->json(array('result' => 'success'));
+        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            throw new Exception('User not found', 404);
         }
-    );
 
-$utopia->delete('/v1/users/:userId/sessions')
+        $tokens = $user->getAttribute('tokens', []);
+
+        foreach ($tokens as $token) { /* @var $token Document */
+            if ($sessionId == $token->getId()) {
+                if (!$projectDB->deleteDocument($token->getId())) {
+                    throw new Exception('Failed to remove token from DB', 500);
+                }
+
+                $events
+                    ->setParam('payload', $response->output($user, Response::MODEL_USER))
+                ;
+            }
+        }
+
+        // TODO : Response filter implementation
+        $response->noContent();
+    });
+
+App::delete('/v1/users/:userId/sessions')
     ->desc('Delete User Sessions')
     ->groups(['api', 'users'])
+    ->label('event', 'users.sessions.delete')
     ->label('scope', 'users.write')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'deleteSessions')
     ->label('sdk.description', '/docs/references/users/delete-user-sessions.md')
-    ->label('abuse-limit', 100)
-    ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
-    ->action(
-        function ($userId) use ($response, $request, $projectDB) {
-            $user = $projectDB->getDocument($userId);
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('userId', '', new UID(), 'User unique ID.')
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('events')
+    ->action(function ($userId, $response, $projectDB, $events) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $events */
 
-            if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-                throw new Exception('User not found', 404);
-            }
+        $user = $projectDB->getDocument($userId);
 
-            $tokens = $user->getAttribute('tokens', []);
-
-            foreach ($tokens as $token) { /* @var $token Document */
-                if (!$projectDB->deleteDocument($token->getId())) {
-                    throw new Exception('Failed to remove token from DB', 500);
-                }
-            }
-
-            $response->json(array('result' => 'success'));
+        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            throw new Exception('User not found', 404);
         }
-    );
+
+        $tokens = $user->getAttribute('tokens', []);
+
+        foreach ($tokens as $token) { /* @var $token Document */
+            if (!$projectDB->deleteDocument($token->getId())) {
+                throw new Exception('Failed to remove token from DB', 500);
+            }
+        }
+
+        $events
+            ->setParam('payload', $response->output($user, Response::MODEL_USER))
+        ;
+
+        // TODO : Response filter implementation
+        $response->noContent();
+    });
+
+App::delete('/v1/users/:userId')
+    ->desc('Delete User')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.delete')
+    ->label('scope', 'users.write')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'deleteUser')
+    ->label('sdk.description', '/docs/references/users/delete-user.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('userId', '', function () {return new UID();}, 'User unique ID.')
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('events')
+    ->inject('deletes')
+    ->action(function ($userId, $response, $projectDB, $events, $deletes) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $events */
+        /** @var Appwrite\Event\Event $deletes */
+        
+        $user = $projectDB->getDocument($userId);
+
+        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            throw new Exception('User not found', 404);
+        }
+        if (!$projectDB->deleteDocument($userId)) {
+            throw new Exception('Failed to remove user from DB', 500);
+        }
+
+        if (!$projectDB->deleteUniqueKey(md5('users:email='.$user->getAttribute('email', null)))) {
+            throw new Exception('Failed to remove unique key from DB', 500);
+        }
+        
+        $reservedId = $projectDB->createDocument([
+            '$collection' => Database::SYSTEM_COLLECTION_RESERVED,
+            '$id' => $userId,
+            '$permissions' => [
+                'read' => ['*'],
+            ],
+        ]);
+
+        if (false === $reservedId) {
+            throw new Exception('Failed saving reserved id to DB', 500);
+        }
+
+        $deletes
+            ->setParam('type', DELETE_TYPE_DOCUMENT)
+            ->setParam('document', $user)
+        ;
+
+        $events
+            ->setParam('payload', $response->output($user, Response::MODEL_USER))
+        ;
+
+        // TODO : Response filter implementation
+        $response->noContent();
+    });

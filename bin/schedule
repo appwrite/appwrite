@@ -1,0 +1,3 @@
+#!/bin/sh
+
+REDIS_BACKEND="${_APP_REDIS_HOST}:${_APP_REDIS_PORT}" RESQUE_PHP='/usr/src/code/vendor/autoload.php' php /usr/src/code/vendor/bin/resque-scheduler

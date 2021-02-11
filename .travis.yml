@@ -1,11 +1,11 @@
-language: php
+dist: xenial
 
-php:
-  - '7.4'
+arch:
+  - amd64
 
-addons:
-  hosts:
-    - appwrite.test
+os: linux
+
+language: shell
 
 notifications:
   email:
@@ -14,20 +14,36 @@ notifications:
 services:
 - docker
 
-# cache:
-#   directories:
-#   - docker_images
-
-# before_install:
-# - docker load -i docker_images/images.tar || true
-
-# before_cache:
-# - docker save -o docker_images/images.tar appwrite_appwrite
+before_install:
+- curl -fsSL https://get.docker.com | sh
+- echo '{"experimental":"enabled"}' | sudo tee /etc/docker/daemon.json
+- mkdir -p $HOME/.docker
+- echo '{"experimental":"enabled"}' | sudo tee $HOME/.docker/config.json
+- sudo service docker start
+- >
+  if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
+    echo "${DOCKERHUB_PULL_PASSWORD}" | docker login --username "${DOCKERHUB_PULL_USERNAME}" --password-stdin
+  fi
+- docker --version
+- docker buildx create --use
+- chmod -R u+x ./.travis-ci
 
 install:
 - docker-compose up -d
-- sleep 90
+- sleep 10
 
 script:
 - docker ps
-- docker exec appwrite test
+- docker-compose logs appwrite
+- docker-compose logs appwrite-worker-functions
+- docker-compose exec appwrite doctor
+- docker-compose exec appwrite vars
+- docker-compose exec appwrite test
+
+deploy:
+  - provider: script
+    edge: true
+    script: ./.travis-ci/deploy.sh
+    on:
+      repo: appwrite/appwrite
+      branch: deploy
