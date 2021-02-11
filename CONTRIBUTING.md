@@ -79,7 +79,7 @@ To get proper autocompletion for all the different functions and classes in the 
 ```bash
 docker run --rm --interactive --tty \
   --volume $PWD:/app \
-  composer install
+  composer update --ignore-platform-reqs --optimize-autoloader --no-plugins --no-scripts --prefer-dist
 ```
 
 ### User Interface
