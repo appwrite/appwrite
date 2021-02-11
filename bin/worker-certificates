@@ -1,0 +1,3 @@
+#!/bin/sh
+
+QUEUE='v1-certificates' APP_INCLUDE='/usr/src/code/app/workers/certificates.php' REDIS_BACKEND="${_APP_REDIS_HOST}:${_APP_REDIS_PORT}" php /usr/src/code/vendor/bin/resque -dopcache.preload=opcache.preload=/usr/src/code/app/preload.php

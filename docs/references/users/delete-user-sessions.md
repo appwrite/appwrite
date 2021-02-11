@@ -1,1 +1,1 @@
-Delete all user sessions by its unique ID.
+Delete all user's sessions by using the user's unique ID.

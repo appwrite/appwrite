@@ -11,7 +11,7 @@ trait TeamsBaseClient
      */
     public function testGetTeamMemberships($data):array
     {
-        $teamUid = (isset($data['teamUid'])) ? $data['teamUid'] : '';
+        $teamUid = $data['teamUid'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -32,7 +32,7 @@ trait TeamsBaseClient
          * Test for FAILURE
          */
 
-         return $data;
+        return $data;
     }
 
     /**
@@ -40,8 +40,8 @@ trait TeamsBaseClient
      */
     public function testCreateTeamMembership($data):array
     {
-        $teamUid = (isset($data['teamUid'])) ? $data['teamUid'] : '';
-        $teamName = (isset($data['teamName'])) ? $data['teamName'] : '';
+        $teamUid = $data['teamUid'] ?? '';
+        $teamName = $data['teamName'] ?? '';
         $email = uniqid().'friend@localhost.test';
 
         /**
@@ -127,10 +127,10 @@ trait TeamsBaseClient
      */
     public function testUpdateTeamMembership($data):array
     {
-        $teamUid = (isset($data['teamUid'])) ? $data['teamUid'] : '';
-        $secret = (isset($data['secret'])) ? $data['secret'] : '';
-        $inviteUid = (isset($data['inviteUid'])) ? $data['inviteUid'] : '';
-        $userUid = (isset($data['userUid'])) ? $data['userUid'] : '';
+        $teamUid = $data['teamUid'] ?? '';
+        $secret = $data['secret'] ?? '';
+        $inviteUid = $data['inviteUid'] ?? '';
+        $userUid = $data['userUid'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -207,8 +207,8 @@ trait TeamsBaseClient
      */
     public function testDeleteTeamMembership($data):array
     {
-        $teamUid = (isset($data['teamUid'])) ? $data['teamUid'] : '';
-        $inviteUid = (isset($data['inviteUid'])) ? $data['inviteUid'] : '';
+        $teamUid = $data['teamUid'] ?? '';
+        $inviteUid = $data['inviteUid'] ?? '';
         
         /**
          * Test for SUCCESS

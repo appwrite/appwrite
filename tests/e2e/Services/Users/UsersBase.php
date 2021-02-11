@@ -25,7 +25,6 @@ trait UsersBase
         $this->assertEquals($user['body']['email'], 'users.service@example.com');
         $this->assertEquals($user['body']['status'], 0);
         $this->assertGreaterThan(0, $user['body']['registration']);
-        $this->assertIsArray($user['body']['roles']);
 
         return ['userId' => $user['body']['$id']];
     }
@@ -48,7 +47,6 @@ trait UsersBase
         $this->assertEquals($user['body']['email'], 'users.service@example.com');
         $this->assertEquals($user['body']['status'], 0);
         $this->assertGreaterThan(0, $user['body']['registration']);
-        $this->assertIsArray($user['body']['roles']);
 
         $sessions = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/sessions', array_merge([
             'content-type' => 'application/json',
@@ -127,24 +125,35 @@ trait UsersBase
     /**
      * @depends testGetUser
      */
-    public function testUpdateUserPrefs(array $data):array
+    public function testUpdateAndGetUserPrefs(array $data):array
     {
         /**
          * Test for SUCCESS
          */
-        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/prefs', array_merge([
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/'.$data['userId'].'/prefs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'prefs' => [
-                'key1' => 'value1',
-                'key2' => 'value2',
+                'funcKey1' => 'funcValue1',
+                'funcKey2' => 'funcValue2',
             ],
         ]);
 
         $this->assertEquals($user['headers']['status-code'], 200);
-        $this->assertEquals($user['body']['key1'], 'value1');
-        $this->assertEquals($user['body']['key2'], 'value2');
+        $this->assertEquals($user['body']['funcKey1'], 'funcValue1');
+        $this->assertEquals($user['body']['funcKey2'], 'funcValue2');
+
+        $user = $this->client->call(Client::METHOD_GET, '/users/'.$data['userId'].'/prefs', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body'], [
+            'funcKey1' => 'funcValue1',
+            'funcKey2' => 'funcValue2',
+        ]);
 
         /**
          * Test for FAILURE
@@ -164,6 +173,34 @@ trait UsersBase
         ], $this->getHeaders()));
 
         $this->assertEquals($user['headers']['status-code'], 400);
+
+        return $data;
+    }
+
+    /**
+     * @depends testGetUser
+     */
+    public function testDeleteUser(array $data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $user = $this->client->call(Client::METHOD_DELETE, '/users/' . $data['userId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($user['headers']['status-code'], 204);
+
+        /**
+         * Test for FAILURE
+         */
+        $user = $this->client->call(Client::METHOD_DELETE, '/users/' . $data['userId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($user['headers']['status-code'], 404);
 
         return $data;
     }

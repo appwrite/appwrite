@@ -1,15 +1,19 @@
 <?php
 
-require_once __DIR__.'/../init.php';
-
+use Utopia\App;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Appwrite\Database\Database;
+use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
+use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
 use Cron\CronExpression;
 
-\cli_set_process_title('Tasks V1 Worker');
+require_once __DIR__.'/../init.php';
 
-echo APP_NAME.' tasks worker v1 has started';
+Console::title('Tasks V1 Worker');
+
+Console::success(APP_NAME.' tasks worker v1 has started');
 
 class TasksV1
 {
@@ -18,13 +22,18 @@ class TasksV1
      */
     public $args = [];
 
-    public function setUp()
+    public function setUp(): void
     {
     }
 
     public function perform()
     {
-        global $consoleDB, $request;
+        global $register;
+
+        $consoleDB = new Database();
+        $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+        $consoleDB->setNamespace('app_console'); // Main DB
+        $consoleDB->setMocks(Config::getParam('collections', []));
 
         /*
          * 1. Get Original Task
@@ -39,9 +48,9 @@ class TasksV1
          *      If error count bigger than allowed change status to pause
          */
 
-        $taskId = (isset($this->args['$id'])) ? $this->args['$id'] : null;
-        $updated = (isset($this->args['updated'])) ? $this->args['updated'] : null;
-        $next = (isset($this->args['next'])) ? $this->args['next'] : null;
+        $taskId = $this->args['$id'] ?? null;
+        $updated = $this->args['updated'] ?? null;
+        $next = $this->args['next'] ?? null;
         $delay = \time() - $next;
         $errors = [];
         $timeout = 60 * 5; // 5 minutes
@@ -57,7 +66,7 @@ class TasksV1
 
         $task = $consoleDB->getDocument($taskId);
 
-        Authorization::enable();
+        Authorization::reset();
 
         if (\is_null($task->getId()) || Database::SYSTEM_COLLECTION_TASKS !== $task->getCollection()) {
             throw new Exception('Task Not Found');
@@ -95,8 +104,8 @@ class TasksV1
         \curl_setopt($ch, CURLOPT_HEADER, 0);
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         \curl_setopt($ch, CURLOPT_USERAGENT, \sprintf(APP_USERAGENT,
-            Config::getParam('version'),
-            $request->getServer('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
+            App::getEnv('_APP_VERSION', 'UNKNOWN'),
+            App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
         ));
         \curl_setopt(
             $ch,
@@ -187,7 +196,7 @@ class TasksV1
             throw new Exception('Failed saving tasks to DB');
         }
 
-        Authorization::enable();
+        Authorization::reset();
 
         // ResqueScheduler::enqueueAt($next, 'v1-tasks', 'TasksV1', $task->getArrayCopy());  // Sync task rescheduale
 
@@ -196,7 +205,7 @@ class TasksV1
         return true;
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         // ... Remove environment for this job
     }

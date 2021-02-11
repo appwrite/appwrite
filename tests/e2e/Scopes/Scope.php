@@ -34,13 +34,24 @@ abstract class Scope extends TestCase
     protected function getLastEmail():array
     {
         sleep(10);
+        
         $emails = json_decode(file_get_contents('http://maildev/email'), true);
 
-        if($emails && is_array($emails)) {
+        if ($emails && is_array($emails)) {
             return end($emails);
         }
 
         return [];
+    }
+
+    protected function getLastRequest():array
+    {
+        sleep(5);
+        
+        $resquest = json_decode(file_get_contents('http://request-catcher:5000/__last_request__'), true);
+        $resquest['data'] = json_decode($resquest['data'], true);
+        
+        return $resquest;
     }
 
     /**
@@ -63,7 +74,7 @@ abstract class Scope extends TestCase
      */
     public function getRoot(): array
     {
-        if((self::$root)) {
+        if ((self::$root)) {
             return self::$root;
         }
 
@@ -92,7 +103,7 @@ abstract class Scope extends TestCase
             'password' => $password,
         ]);
 
-        $session = $this->client->parseCookie($session['headers']['set-cookie'])['a_session_console'];
+        $session = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_console'];
 
         self::$root = [
             '$id' => $root['body']['$id'],
@@ -114,7 +125,7 @@ abstract class Scope extends TestCase
      */
     public function getUser(): array
     {
-        if(isset(self::$user[$this->getProject()['$id']])) {
+        if (isset(self::$user[$this->getProject()['$id']])) {
             return self::$user[$this->getProject()['$id']];
         }
 
@@ -143,7 +154,7 @@ abstract class Scope extends TestCase
             'password' => $password,
         ]);
 
-        $session = $this->client->parseCookie($session['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+        $session = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         self::$user[$this->getProject()['$id']] = [
             '$id' => $user['body']['$id'],

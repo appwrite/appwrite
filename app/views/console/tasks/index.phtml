@@ -15,13 +15,13 @@
     data-success="trigger"
     data-success-param-trigger-events="projects.listTasks">
 
-    <div data-ls-if="0 === {{console-tasks.length}} || undefined === {{console-tasks.length}}" class="box margin-top margin-bottom">
+    <div data-ls-if="0 === {{console-tasks.sum}} || undefined === {{console-tasks.sum}}" class="box margin-top margin-bottom">
         <h3 class="margin-bottom-small text-bold">No Tasks Found</h3>
 
         <p class="margin-bottom-no">You haven't created any tasks for your project yet.</p>
     </div>
 
-    <div class="box y-scroll margin-bottom" data-ls-if="0 != {{console-tasks.length}}">
+    <div class="box y-scroll margin-bottom" data-ls-if="0 != {{console-tasks.sum}}">
         <table class="full vertical">
             <thead>
                 <tr>
@@ -31,13 +31,13 @@
                     <th width="140"></th>
                 </tr>
             </thead>
-            <tbody data-ls-loop="console-tasks" data-ls-as="task" class="list">
+            <tbody data-ls-loop="console-tasks.tasks" data-ls-as="task" class="list">
                 <tr>
                     <td>
                         <div class="margin-bottom-tiny text-one-liner">
                             <span data-ls-attrs="title={{task.name}} ({{task.failures}} errors)" data-ls-bind="{{task.name}}"></span>
 
-                            <span data-ls-if="0 === {{task.security}}">
+                            <span data-ls-if="false === {{task.security}}">
                                 &nbsp; <span class="text-danger">SSL/TLS Disabled</span>
                             </span>
                             <span data-ls-if="0 !== {{task.failures}}">
@@ -45,7 +45,7 @@
                             </span>
                         </div>
 
-                        <a data-ls-attrs="href={{task.httpUrl}}" data-ls-bind="{{task.httpUrl}}" target="_blank" class="text-one-liner"></a>
+                        <a data-ls-attrs="href={{task.httpUrl}}" data-ls-bind="{{task.httpUrl}}" target="_blank" class="text-one-liner text-size-small"></a>
                     </td>
                     <td data-title="" style="vertical-align: middle">
                         <span data-ls-if="'play' === {{task.status}}">
@@ -56,16 +56,16 @@
                         </span>
                     </td>
                     <td data-title="" style="vertical-align: middle" class="text-size-small text-fade">
-                        <span data-ls-bind="Next: {{task.next|date-time}}"></span>
+                        <span data-ls-bind="Next: {{task.next|dateTime}}"></span>
 
                         <br />
                     
-                        <span data-ls-if="undefined !== {{task.previous}}">
-                            <span data-ls-bind="Prev: {{task.previous|date-time}}"></span>
+                        <span data-ls-if="undefined !== {{task.previous}} && {{task.previous}}">
+                            <span data-ls-bind="Prev: {{task.previous|dateTime}}"></span>
 
-                            <span data-ls-if="undefined !== {{task.delay}} && 59 < {{task.delay}}" class="text-danger margin-top-tiny">
+                            <!-- <span data-ls-if="undefined !== {{task.delay}} && 59 < {{task.delay}}" class="text-danger margin-top-tiny">
                                 <small data-ls-bind="({{task.delay|ms2hum}} Delay)"></small>
-                            </span>
+                            </span> -->
                         </span>
                         <small data-ls-if="undefined === {{task.previous}}" class="text-size-small">
                             None.
@@ -78,6 +78,8 @@
                             <h1>Update Task</h1>
 
                             <form
+                                data-analytics
+                                data-analytics-activity
                                 data-analytics-event="submit"
                                 data-analytics-category="console"
                                 data-analytics-label="Update Project Task"
@@ -95,12 +97,12 @@
                                 <input type="hidden" name="taskId" data-ls-bind="{{task.$id}}" />
 
                                 <label data-ls-attrs="for=name-{{task.$id}}">Name</label>
-                                <input type="text" class="full-width" data-ls-attrs="id=name-{{task.$id}}" name="name" required autocomplete="off" data-ls-bind="{{task.name}}" />
+                                <input type="text" class="full-width" data-ls-attrs="id=name-{{task.$id}}" name="name" required autocomplete="off" data-ls-bind="{{task.name}}" maxlength="128" />
 
                                 <label data-ls-attrs="for=status-{{task.$id}}" class="margin-bottom">Status
                                     <div class="margin-top-small">
                                         <input name="status" type="radio" checked="checked" required data-ls-bind="{{task.status}}" value="play" /> &nbsp; <span>Play</span> &nbsp;
-                                        <input name="status" type="radio" required data-ls-bind="{{task.status}}" value="pause" /> &nbsp; <span>Pause</span>
+                                        <input name="status" type="radio" required data-ls-bind="{{task.status}}" value="pause" /> &nbsp; <span>Pause</span> &nbsp;
                                     </div>
                                 </label>
 
@@ -172,8 +174,8 @@
                                     <label data-ls-attrs="for=security-{{task.$id}}" class="margin-bottom">
                                         <div class="margin-bottom-small text-bold">SSL / TLS (Certificate verification)</div>
                                         
-                                        <input name="security" type="radio" required data-ls-bind="{{task.security}}" value="1" /> &nbsp; <span>Enabled</span>
-                                        <input name="security" type="radio" required data-ls-bind="{{task.security}}" value="0" /> &nbsp; <span>Disabled</span>
+                                        <input name="security" type="radio" required data-ls-bind="{{task.security}}" value="true" data-cast-to="boolean" /> &nbsp; <span>Enabled</span>
+                                        <input name="security" type="radio" required data-ls-bind="{{task.security}}" value="false" data-cast-to="boolean" /> &nbsp; <span>Disabled</span>
                                     </label>
 
                                     <p class="margin-bottom text-size-small text-fade"><span class="text-red">Warning</span>: Untrusted or self-signed certificates may not be secure.
@@ -189,7 +191,7 @@
                                         </div>
                                         <div class="col span-6 margin-bottom">
                                             <label data-ls-attrs="for=httpPass-{{task.$id}}">Password</label>
-                                            <input type="password" class="full-width margin-bottom-no" data-ls-attrs="id=httpPass-{{task.$id}}" name="httpPass" autocomplete="off" data-ls-bind="{{task.httpPass}}" />
+                                            <input data-forms-show-secret type="password" class="full-width margin-bottom-no" data-ls-attrs="id=httpPass-{{task.$id}}" name="httpPass" autocomplete="off" data-ls-bind="{{task.httpPass}}" />
                                         </div>
                                     </div>
                                 </div>
@@ -202,6 +204,8 @@
                         </div>
 
                         <form
+                            data-analytics
+                            data-analytics-activity
                             data-analytics-event="submit"
                             data-analytics-category="console"
                             data-analytics-label="Delete Project Task"
@@ -238,6 +242,8 @@
             <h1>Add Task</h1>
 
             <form
+                data-analytics
+                data-analytics-activity
                 data-analytics-event="submit"
                 data-analytics-category="console"
                 data-analytics-label="Create Project Task"
@@ -254,12 +260,12 @@
                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
 
                 <label for="name">Name</label>
-                <input type="text" class="full-width" id="name" name="name" required autocomplete="off" />
+                <input type="text" class="full-width" id="name" name="name" required autocomplete="off" maxlength="128" />
 
                 <label data-ls-attrs="for=status" class="margin-bottom">Status
                     <div class="margin-top-small">
-                        <input name="status" type="radio" value="play" checked="checked" required /> &nbsp; <span>Play</span>
-                        <input name="status" type="radio" value="pause" required /> &nbsp; <span>Pause</span>
+                        <input name="status" type="radio" value="play" checked="checked" required /> &nbsp; <span>Play</span> &nbsp;
+                        <input name="status" type="radio" value="pause" required /> &nbsp; <span>Pause</span> &nbsp;
                     </div>
                 </label>
 
@@ -335,7 +341,7 @@
                         </div>
                         <div class="col span-6 margin-bottom">
                             <label for="httpPass">Password</label>
-                            <input type="password" class="full-width margin-bottom-no" id="httpPass" name="httpPass" autocomplete="off" />
+                            <input type="password" data-forms-show-secret class="full-width margin-bottom-no" id="httpPass" name="httpPass" autocomplete="off" />
                         </div>
                     </div>
                 </div>

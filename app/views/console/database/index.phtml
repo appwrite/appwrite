@@ -18,6 +18,8 @@
                 <h1>New Collection</h1>
 
                 <form
+                    data-analytics
+                    data-analytics-activity
                     data-analytics-event="submit"
                     data-analytics-category="console"
                     data-analytics-label="Create Database Collection"
@@ -33,7 +35,7 @@
                     data-failure-param-alert-classname="error">
 
                     <label for="user-name">Name</label>
-                    <input type="text" class="full-width" id="collection-name" name="name" required autocomplete="off" />
+                    <input type="text" class="full-width" id="collection-name" name="name" required autocomplete="off" maxlength="128" />
 
                     <input type="hidden" id="collection-read" name="read" required data-cast-to="json" value="<?php echo htmlentities(json_encode([])); ?>" />
                     <input type="hidden" id="collection-write" name="write" required data-cast-to="json" value="<?php echo htmlentities(json_encode([])); ?>" />
@@ -63,7 +65,7 @@
                 </div>
                 
                 <div data-ls-if="0 != {{project-collections.sum}}">
-                    <ul data-ls-loop="project-collections.collections" data-ls-as="collection" data-ls-append="" class="tiles cell-3 margin-bottom-small" style="visibility: hidden">
+                    <ul data-ls-loop="project-collections.collections" data-ls-as="collection" data-ls-append="" class="tiles cell-3 margin-bottom-small">
                         <li class="margin-bottom">
                             <a data-ls-attrs="href=/console/database/collection?id={{collection.$id}}&project={{router.params.project}}" class="box">
                                 <div data-ls-bind="{{collection.name}}" class="text-one-liner margin-bottom text-bold">&nbsp;</div>

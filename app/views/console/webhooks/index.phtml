@@ -21,14 +21,14 @@ $events = array_keys($this->getParam('events', []));
     data-success="trigger"
     data-success-param-trigger-events="projects.listWebhooks">
 
-    <div data-ls-if="0 == {{console-webhooks.length}} || undefined == {{console-webhooks.length}}" class="box margin-top margin-bottom">
+    <div data-ls-if="0 == {{console-webhooks.sum}} || undefined == {{console-webhooks.sum}}" class="box margin-top margin-bottom">
         <h3 class="margin-bottom-small text-bold">No Webhooks Found</h3>
 
         <p class="margin-bottom-no">You haven't created any webhooks for your project yet.</p>
     </div>
 
-    <div class="box margin-bottom" data-ls-if="0 != {{console-webhooks.length}}">
-        <ul data-ls-loop="console-webhooks" data-ls-as="webhook" class="list">
+    <div class="box margin-bottom" data-ls-if="0 != {{console-webhooks.sum}}">
+        <ul data-ls-loop="console-webhooks.webhooks" data-ls-as="webhook" class="list">
             <li class="clear">
 
                 <div data-ui-modal class="modal close sticky-footer" data-button-text="Update" data-button-class="pull-end">
@@ -37,6 +37,8 @@ $events = array_keys($this->getParam('events', []));
                     <h1>Update Webhook</h1>
 
                     <form
+                        data-analytics
+                        data-analytics-activity
                         data-analytics-event="submit"
                         data-analytics-category="console"
                         data-analytics-label="Update Project Webhook"
@@ -54,21 +56,25 @@ $events = array_keys($this->getParam('events', []));
                         <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$id}}" />
 
                         <label data-ls-attrs="for=name-{{webhook.$id}}">Name</label>
-                        <input type="text" class="full-width" data-ls-attrs="id=name-{{webhook.$id}}" name="name" required autocomplete="off" data-ls-bind="{{webhook.name}}" />
+                        <input type="text" class="full-width" data-ls-attrs="id=name-{{webhook.$id}}" name="name" required autocomplete="off" data-ls-bind="{{webhook.name}}" maxlength="128" />
 
-                        <label data-ls-attrs="for=events-{{webhook.$id}}">Events</label>
-                        <div class="row responsive thin">
-                            <?php foreach ($events as $i => $event) : ?>
-                                <div class="col span-6 text-one-liner margin-bottom text-height-large">
-                                    <input type="checkbox" name="events" data-ls-bind="{{webhook.events}}" value="<?php echo $event; ?>" /> <?php echo $event; ?>
-                                </div>
-                                <?php if (($i + 1) % 2 === 0) : ?>
-                                </div>
-                                <div class="row responsive thin">
-                                <?php endif; ?>
-
-                            <?php endforeach; ?>
-                        </div>
+                        <section data-forms-select-all>
+                            <label data-ls-attrs="for=events-{{webhook.$id}}">Events</label>
+                            <div class="row responsive thin">
+                                <?php foreach ($events as $i => $event) : ?>
+                                    <div class="col span-6 text-one-liner margin-bottom text-height-large text-size-small" title="<?php echo $event; ?>">
+                                        <input type="checkbox" name="events" data-ls-bind="{{webhook.events}}" id="update-<?php echo $event; ?>" value="<?php echo $event; ?>" />
+                                        &nbsp;
+                                        <label class="inline" for="update-<?php echo $event; ?>"><?php echo $event; ?></label>
+                                    </div>
+                                    <?php if (($i + 1) % 2 === 0) : ?>
+                                    </div>
+                                    <div class="row responsive thin">
+                                    <?php endif; ?>
+    
+                                <?php endforeach; ?>
+                            </div>
+                        </section>
 
                         <label data-ls-attrs="for=url-{{webhook.$id}}">POST URL</label>
                         <input type="url" class="full-width" data-ls-attrs="id=url-{{webhook.$id}}" name="url" required autocomplete="off" placeholder="https://example.com/callback" data-ls-bind="{{webhook.url}}" />
@@ -85,8 +91,8 @@ $events = array_keys($this->getParam('events', []));
                             <label data-ls-attrs="for=security-{{task.$id}}" class="margin-bottom-small">
                                 <div class="margin-bottom-small text-bold">SSL / TLS (Certificate verification)</div>
                                         
-                                <input name="security" type="radio" required data-ls-attrs="id=secure-yes-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="1" /> &nbsp; <span>Enabled</span> &nbsp;
-                                <input name="security" type="radio" required data-ls-attrs="id=secure-no-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="0" /> &nbsp; <span>Disabled</span> &nbsp;
+                                <input name="security" type="radio" required data-ls-attrs="id=secure-yes-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="true" data-cast-to="boolean" /> &nbsp; <span>Enabled</span> &nbsp;
+                                <input name="security" type="radio" required data-ls-attrs="id=secure-no-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="false" data-cast-to="boolean" /> &nbsp; <span>Disabled</span> &nbsp;
                             </label>
 
                             <p class="margin-bottom text-size-small text-fade"><span class="text-red">Warning</span>: Untrusted or self-signed certificates may not be secure.
@@ -102,7 +108,7 @@ $events = array_keys($this->getParam('events', []));
                                 </div>
                                 <div class="col span-6 margin-bottom">
                                     <label data-ls-attrs="for=httpPass-{{webhook.$id}}">Password</label>
-                                    <input type="password" class="full-width margin-bottom-no" data-ls-attrs="id=httpPass-{{webhook.$id}}" name="httpPass" autocomplete="off" data-ls-bind="{{webhook.httpPass}}" />
+                                    <input type="password" data-forms-show-secret class="full-width margin-bottom-no" data-ls-attrs="id=httpPass-{{webhook.$id}}" name="httpPass" autocomplete="off" data-ls-bind="{{webhook.httpPass}}" />
                                 </div>
                             </div>
                         </div>
@@ -114,6 +120,8 @@ $events = array_keys($this->getParam('events', []));
                 </div>
 
                 <form class="pull-end margin-end"
+                    data-analytics
+                    data-analytics-activity
                     data-analytics-event="submit"
                     data-analytics-category="console"
                     data-analytics-label="Delete Project Webhook"
@@ -135,7 +143,7 @@ $events = array_keys($this->getParam('events', []));
                 </form>
 
                 <span data-ls-bind="{{webhook.name}}"></span> &nbsp; (<span data-ls-bind="{{webhook.events.length}}"></span> events)
-                <span data-ls-if="0 == {{webhook.security}}">
+                <span data-ls-if="false === {{webhook.security}}">
                     &nbsp; <small class="text-danger">(SSL/TLS Disabled)</small>
                 </span>
                 <div class="margin-top-tiny">
@@ -152,6 +160,8 @@ $events = array_keys($this->getParam('events', []));
             <h1>Add Webhook</h1>
 
             <form
+                data-analytics
+                data-analytics-activity
                 data-analytics-event="submit"
                 data-analytics-category="console"
                 data-analytics-label="Create Project Webhook"
@@ -168,21 +178,25 @@ $events = array_keys($this->getParam('events', []));
                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
 
                 <label for="name">Name</label>
-                <input type="text" class="full-width" id="name" name="name" required autocomplete="off" />
+                <input type="text" class="full-width" id="name" name="name" required autocomplete="off" maxlength="128" />
 
-                <label for="events">Events</label>
-                <div class="row responsive thin">
-                    <?php foreach ($events as $i => $event) : ?>
-                        <div class="col span-6 text-one-liner margin-bottom text-height-large">
-                            <input type="checkbox" name="events" value="<?php echo $event; ?>" /> <?php echo $event; ?>
-                        </div>
-                        <?php if (($i + 1) % 2 === 0) : ?>
-                        </div>
-                        <div class="row responsive thin">
-                        <?php endif; ?>
+                <section data-forms-select-all>
+                    <label for="events">Events</label>
+                    <div class="row responsive thin">
+                        <?php foreach ($events as $i => $event) : ?>
+                            <div class="col span-6 text-one-liner margin-bottom text-height-large text-size-small" title="<?php echo $event; ?>">
+                                <input type="checkbox" name="events" id="add-<?php echo $event; ?>" value="<?php echo $event; ?>" />
+                                &nbsp;
+                                <label class="inline" for="add-<?php echo $event; ?>"><?php echo $event; ?></label>
+                            </div>
+                            <?php if (($i + 1) % 2 === 0) : ?>
+                            </div>
+                            <div class="row responsive thin">
+                            <?php endif; ?>
 
-                    <?php endforeach; ?>
-                </div>
+                        <?php endforeach; ?>
+                    </div>
+                </section>
 
                 <label for="url">POST URL</label>
                 <input type="url" class="full-width" id="url" name="url" required autocomplete="off" placeholder="https://example.com/callback" />
@@ -216,7 +230,7 @@ $events = array_keys($this->getParam('events', []));
                         </div>
                         <div class="col span-6 margin-bottom">
                             <label for="httpPass">Password</label>
-                            <input type="password" class="full-width margin-bottom-no" id="httpPass" name="httpPass" autocomplete="off" />
+                            <input type="password" data-forms-show-secret class="full-width margin-bottom-no" id="httpPass" name="httpPass" autocomplete="off" />
                         </div>
                     </div>
                 </div>

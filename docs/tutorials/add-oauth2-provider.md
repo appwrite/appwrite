@@ -49,7 +49,7 @@ After you finished adding your new provider to Appwrite you should be able to se
 
 Add credentials and check both a successful and a failed login (where the user denies integration on provider page).
 
-You can test your OAuth2 provider by trying to login using the [OAuth2 method](https://appwrite.io/docs/client/account#createOAuth2Session) when integrating the Appwrite JS SDK in a demo app.
+You can test your OAuth2 provider by trying to login using the [OAuth2 method](https://appwrite.io/docs/client/account#accountCreateOAuth2Session) when integrating the Appwrite Web SDK in a demo app.
 
 Pass your new adapter name as the provider parameter. If login is successful, you will be redirected to your success URL parameter. Otherwise, you will be redirected to your failure URL.
 

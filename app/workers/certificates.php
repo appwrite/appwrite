@@ -1,29 +1,37 @@
 <?php
 
 use Utopia\App;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Database\Database;
+use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
+use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\CNAME;
 
 require_once __DIR__.'/../init.php';
 
-\cli_set_process_title('Certificates V1 Worker');
+Console::title('Certificates V1 Worker');
 
-echo APP_NAME.' certificates worker v1 has started';
+Console::success(APP_NAME.' certificates worker v1 has started');
 
 class CertificatesV1
 {
     public $args = [];
 
-    public function setUp()
+    public function setUp(): void
     {
     }
 
     public function perform()
     {
-        global $request, $consoleDB;
+        global $register;
+
+        $consoleDB = new Database();
+        $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+        $consoleDB->setNamespace('app_console'); // Main DB
+        $consoleDB->setMocks(Config::getParam('collections', []));
 
         /**
          * 1. Get new domain document - DONE
@@ -44,8 +52,8 @@ class CertificatesV1
         $domain = $this->args['domain'];
 
         // Validation Args
-        $validateTarget = (isset($this->args['validateTarget'])) ? $this->args['validateTarget'] : true;
-        $validateCNAME = (isset($this->args['validateCNAME'])) ? $this->args['validateCNAME'] : true;
+        $validateTarget = $this->args['validateTarget'] ?? true;
+        $validateCNAME = $this->args['validateCNAME'] ?? true;
         
         // Options
         $domain = new Domain((!empty($domain)) ? $domain : '');
@@ -58,14 +66,14 @@ class CertificatesV1
         }
 
         if(!$domain->isKnown() || $domain->isTest()) {
-            throw new Exception('Unkown public suffix for domain');
+            throw new Exception('Unknown public suffix for domain');
         }
 
         if($validateTarget) {
-            $target = new Domain($request->getServer('_APP_DOMAIN_TARGET', ''));
+            $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
     
             if(!$target->isKnown() || $target->isTest()) {
-                throw new Exception('Unreachable CNAME target ('.$target->get().'), plesse use a domain with a public suffix.');
+                throw new Exception('Unreachable CNAME target ('.$target->get().'), please use a domain with a public suffix.');
             }
         }
 
@@ -80,9 +88,6 @@ class CertificatesV1
         $certificate = $consoleDB->getCollectionFirst([
             'limit' => 1,
             'offset' => 0,
-            'orderField' => 'id',
-            'orderType' => 'ASC',
-            'orderCast' => 'string',
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_CERTIFICATES,
                 'domain='.$domain->get(),
@@ -104,12 +109,12 @@ class CertificatesV1
                 throw new Exception('Renew isn\'t required');
         }
 
-        $staging = (Config::getParam('env') === App::MODE_TYPE_PRODUCTION) ? '' : ' --dry-run';
+        $staging = (App::isProduction()) ? '' : ' --dry-run';
 
-        $response = \shell_exec("certbot certonly --webroot --noninteractive --agree-tos{$staging} \
-            --email ".$request->getServer('_APP_SYSTEM_EMAIL_ADDRESS', 'security@localhost.test')." \
-            -w ".APP_STORAGE_CERTIFICATES." \
-            -d {$domain->get()}");
+        $response = \shell_exec("certbot certonly --webroot --noninteractive --agree-tos{$staging}"
+            ." --email ".App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', 'security@localhost.test')
+            ." -w ".APP_STORAGE_CERTIFICATES
+            ." -d {$domain->get()}");
 
         if(!$response) {
             throw new Exception('Failed to issue a certificate');
@@ -191,7 +196,7 @@ class CertificatesV1
         Authorization::reset();
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         // ... Remove environment for this job
     }

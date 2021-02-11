@@ -1,1 +1,1 @@
-Get user preferences by its unique ID.
+Get the user preferences by its unique ID.

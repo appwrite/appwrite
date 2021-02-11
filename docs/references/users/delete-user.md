@@ -1,0 +1,1 @@
+Delete a user by its unique ID.

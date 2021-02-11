@@ -17,10 +17,10 @@ $collections = [];
 <?php echo $searchFiles->render(); ?>
 
 <?php foreach($rules as $rule): // Form to append child document
-    $key = (isset($rule['key'])) ? $rule['key'] : '';
-    $label = (isset($rule['label'])) ? $rule['label'] : '';
-    $type = (isset($rule['type'])) ? $rule['type'] : '';
-    $list = (isset($rule['list']) && !empty($list)) ? $rule['list'] : [];
+    $key = $rule['key'] ?? '';
+    $label = $rule['label'] ?? '';
+    $type = $rule['type'] ?? '';
+    $list = $rule['list'] ?? [];
 ?>
     <?php foreach($list as $item):
         if($item === $collection->getId()) {
@@ -48,11 +48,11 @@ $collections = [];
 <?php endforeach; ?>
 
 <?php foreach($rules as $rule): // Form to append child document
-    $key = (isset($rule['key'])) ? $rule['key'] : '';
-    $label = (isset($rule['label'])) ? $rule['label'] : '';
-    $type = (isset($rule['type'])) ? $rule['type'] : '';
-    $list = (isset($rule['list'])) ? $rule['list'] : [];
-    $array = (isset($rule['array'])) ? $rule['array'] : false;
+    $key = $rule['key'] ?? '';
+    $label = $rule['label'] ?? '';
+    $type = $rule['type'] ?? '';
+    $list = $rule['list'] ?? [];
+    $array = $rule['array'] ?? false;
 ?>
 
     <?php if($type !== 'document' && $array): ?>
@@ -126,11 +126,11 @@ $collections = [];
 <?php endforeach; ?>
 
 <?php foreach($rules as $rule): // Form to remove array $index key
-    $key = (isset($rule['key'])) ? $rule['key'] : '';
-    $label = (isset($rule['label'])) ? $rule['label'] : '';
-    $type = (isset($rule['type'])) ? $rule['type'] : '';
-    $list = (isset($rule['list'])) ? $rule['list'] : false;
-    $array = (isset($rule['array'])) ? $rule['array'] : false;
+    $key = $rule['key'] ?? '';
+    $label = $rule['label'] ?? '';
+    $type = $rule['type'] ?? '';
+    $list = $rule['list'] ?? false;
+    $array = $rule['array'] ?? false;
 
     if(!$array) {
         continue;
@@ -192,6 +192,8 @@ $collections = [];
                 <div class="row responsive margin-top-negative">
                     <div class="col span-8 margin-bottom">
                         <form
+                            data-analytics
+                            data-analytics-activity
                             data-analytics-event="submit"
                             data-analytics-category="console"
                             data-analytics-label="Update Database Document"
@@ -214,10 +216,10 @@ $collections = [];
                                 <!-- <div class="document-nav" data-forms-nav>
                                     <ul class="text-align-end margin-end-small">
                                         <?php foreach($rules as $rule): // Form to append child document
-                                            $key = (isset($rule['key'])) ? $rule['key'] : '';
-                                            $label = (isset($rule['label'])) ? $rule['label'] : '';
-                                            $type = (isset($rule['type'])) ? $rule['type'] : '';
-                                            $list = (isset($rule['list'])) ? $rule['list'] : [];
+                                            $key = $rule['key'] ?? '';
+                                            $label = $rule['label'] ?? '';
+                                            $type = $rule['type'] ?? '';
+                                            $list = $rule['list'] ?? [];
                                         ?>
                                             <li class="text-size-small">
                                                 <span class="link text-fade" data-forms-nav-link="<?php echo $this->escape($key); ?>"><?php echo $this->escape($label); ?></span>
@@ -288,6 +290,8 @@ $collections = [];
 
                         <div data-ls-if="({{project-document.$id}})">
                             <form name="database.deleteDocument" class="margin-bottom"
+                                data-analytics
+                                data-analytics-activity
                                 data-analytics-event="submit"
                                 data-analytics-category="console"
                                 data-analytics-label="Delete Collection Document"

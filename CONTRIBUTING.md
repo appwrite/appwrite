@@ -72,7 +72,23 @@ cd appwrite
 docker-compose up -d
 ```
 
-After finishing the installation process, you can start writing and editing code. To compile new CSS and JS distribution files, use 'less' and 'build' tasks using gulp as a task manager.
+### Code Autocompletion
+
+To get proper autocompletion for all the different functions and classes in the codebase, you'll need to install Appwrite dependencies on your local machine. You can easily do that with PHP's package manager, [Composer](https://getcomposer.org/). If you don't have Composer installed, you can use the Docker Hub image to get the same result:
+
+```bash
+docker run --rm --interactive --tty \
+  --volume $PWD:/app \
+  composer install
+```
+
+### User Interface
+
+Appwrite uses an internal micro-framework called Litespeed.js to build simple UI components in vanilla JS and [less](http://lesscss.org/) for compiling CSS code. To apply any of your changes to the UI, use the `gulp build` or `gulp less` commands, and restart the Appwrite main container to load the new static files to memory using `docker-compose restart appwrite`.
+
+### Get Started
+
+After finishing the installation process, you can start writing and editing code.
 
 ## Architecture
 
@@ -145,6 +161,10 @@ Each container in Appwrite is a microservice on its own. Each service is an inde
 
 Currently, all of the Appwrite microservices are intended to communicate using the TCP protocol over a private network. You should be aware to not expose any of the services to the public-facing network, besides the public port 80 and 443, who, by default, are used to expose the Appwrite HTTP API.
 
+## Ports
+
+Appwrite dev version uses ports 80 and 443 as an entry point to the Appwrite API and console. We also expose multiple ports in the range of 9500-9504 for debugging some of the Appwrite containers on dev mode. If you have any conflicts with the ports running on your system, you can easily replace them by editing Appwrite's docker-compose.yml file and executing `docker-compose up -d` command.
+
 ## Technology Stack
 
 To start helping us to improve the Appwrite server by submitting code, prior knowledge of Appwrite's technology stack can help you with getting started.
@@ -198,8 +218,6 @@ When contributing code, please take into account the following considerations:
 
 Security and privacy are extremely important to Appwrite, developers, and users alike. Make sure to follow the best industry standards and practices.
 
-<!-- To help you make sure you are doing as best as possible, we have set up our security checklist for pull requests and contributors. Please make sure to follow the list before sending a pull request. -->
-
 ## Dependencies
 
 Please avoid introducing new dependencies to Appwrite without consulting the team. New dependencies can be very helpful but also introduce new security and privacy issues, complexity, and impact total docker image size.
@@ -214,30 +232,75 @@ For us to find the right balance, please open an issue explaining your ideas bef
 
 This will allow the Appwrite community to have sufficient discussion about the new feature value and how it fits in the product roadmap and vision.
 
-This is also important for the Appwrite lead developers to be able to give technical input and different emphasis regarding the feature design and architecture.
+This is also important for the Appwrite lead developers to be able to give technical input and different emphasis regarding the feature design and architecture. Some bigger features might need to go through our [RFC process](https://github.com/appwrite/rfc).
 
 ## Build
 
 To build a new version of the Appwrite server, all you need to do is run the build.sh file like this:
 
 ```bash
-bash ./build.sh 1.0.0
+bash ./build.sh X.X.X
 ```
 
 Before running the command, make sure you have proper write permissions to the Appwrite docker hub team.
 
-**Build for multicore**
+**Build for Multicore**
 
 ```bash
-docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t appwrite/multicore:0.0.0 --push
+docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x -t appwrite/appwrite:dev --push .
+```
+**Build Functions Envs**
+
+Build envs for all supported cloud functions (multicore builds)
+
+```bash
+bash ./docker/environments/build.sh
 ```
 
 ## Tests
 
-To run tests manually, use the Appwrite Docker CLI from your terminal:
+To run all tests manually, use the Appwrite Docker CLI from your terminal:
 
 ```bash
 docker-compose exec appwrite test
+```
+
+To run unit tests use:
+
+```bash
+docker-compose exec appwrite test /usr/src/code/tests/unit
+```
+
+To run end-2-end tests use:
+
+```bash
+docker-compose exec appwrite test /usr/src/code/tests/e2e
+```
+
+To run end-2-end tests for a spcific service use:
+
+```bash
+docker-compose exec appwrite test /usr/src/code/tests/e2e/Services/[ServiceName]
+```
+## Benchmarking
+
+You can use WRK Docker image to benchmark the server performance. Benchmarking is extremely useful when you want to compare how the server behaves before and after a change has been applied. Replace [APPWRITE_HOSTNAME_OR_IP] with your Appwrite server hostname or IP. Note that localhost is not accessible from inside the WRK container.
+
+```
+  Options:                                            
+    -c, --connections <N>  Connections to keep open   
+    -d, --duration    <T>  Duration of test           
+    -t, --threads     <N>  Number of threads to use   
+                                                      
+    -s, --script      <S>  Load Lua script file       
+    -H, --header      <H>  Add header to request      
+        --latency          Print latency statistics   
+        --timeout     <T>  Socket/request timeout     
+    -v, --version          Print version details    
+``` 
+
+```bash
+docker run --rm skandyla/wrk -t3 -c100 -d30  https://[APPWRITE_HOSTNAME_OR_IP]
 ```
 
 ## Code Maintenance  
@@ -258,6 +321,12 @@ php-cs-fixer fix app/controllers --rules='{"braces": {"allow_single_line_closure
 
 ```bash
 php-cs-fixer fix src --rules='{"braces": {"allow_single_line_closure": true}}'
+```
+
+Static Code Analysis:
+
+```bash
+docker-compose exec appwrite /usr/src/code/vendor/bin/psalm
 ```
 
 ## Tutorials

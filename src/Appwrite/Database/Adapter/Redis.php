@@ -137,18 +137,34 @@ class Redis extends Adapter
     /**
      * Delete Document.
      *
-     * @param $id
+     * @param string $id
      *
      * @return array
      *
      * @throws Exception
      */
-    public function deleteDocument($id)
+    public function deleteDocument(string $id)
     {
         $data = $this->adapter->deleteDocument($id);
 
         $this->getRedis()->expire($this->getNamespace().':document-'.$id, 0);
         $this->getRedis()->expire($this->getNamespace().':document-'.$id, 0);
+
+        return $data;
+    }
+
+    /**
+     * Delete Unique Key.
+     *
+     * @param $key
+     *
+     * @return array
+     *
+     * @throws Exception
+     */
+    public function deleteUniqueKey($key)
+    {
+        $data = $this->adapter->deleteUniqueKey($key);
 
         return $data;
     }
@@ -221,13 +237,13 @@ class Redis extends Adapter
     /**
      * Last Modified.
      *
-     * Return unix timestamp of last time a node queried in current session has been changed
+     * Return Unix timestamp of last time a node queried in current session has been changed
      *
      * @return int
      */
     public function lastModified()
     {
-        return;
+        return 0;
     }
 
     /**
@@ -243,7 +259,7 @@ class Redis extends Adapter
      *
      * @return Client
      */
-    protected function getRedis():Client
+    protected function getRedis(): Client
     {
         return $this->register->get('cache');
     }

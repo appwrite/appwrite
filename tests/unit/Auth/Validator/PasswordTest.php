@@ -5,19 +5,19 @@ namespace Appwrite\Tests;
 use Appwrite\Auth\Validator\Password;
 use PHPUnit\Framework\TestCase;
 
-class PasswordTestTest extends TestCase
+class PasswordTest extends TestCase
 {
     /**
      * @var Password
      */
     protected $object = null;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->object = new Password();
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
     }
 

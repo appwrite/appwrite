@@ -11,6 +11,6 @@ sdk
 sdk.auth.login(
     'email@example.com',
     'password',
-    'http://example.com/success', // required for JS SDK
-    'http://example.com/failure' // required for JS SDK
+    'http://example.com/success', // required for Web SDK
+    'http://example.com/failure' // required for Web SDK
 );

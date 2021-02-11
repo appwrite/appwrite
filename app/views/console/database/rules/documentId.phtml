@@ -9,7 +9,7 @@ $list = (is_array($list)) ? $list : [];
 ?>
 
 <?php foreach($list  as $item):
-    $collection = (isset($collections[$item])) ? $collections[$item] : null;
+    $collection = $collections[$item] ?? null;
     
     if(empty($collection)) {
         continue;
@@ -31,8 +31,8 @@ $list = (is_array($list)) ? $list : [];
         <div class="box line margin-bottom-small padding-small fade-bottom">
             <ul>
                 <?php foreach($rules as $i => $rule):
-                    $collectionLabel = (isset($rule['label'])) ? $rule['label'] : '';
-                    $collectionKey = (isset($rule['key'])) ? $rule['key'] : '';
+                    $collectionLabel = $rule['label'] ?? '';
+                    $collectionKey = $rule['key'] ?? '';
 
                     if($i === 3) {break;}
                     ?>

@@ -11,8 +11,8 @@
     top: 0;
     bottom: 0;
     background: #0c0c0c;
-    opacity: 0.5;
-    z-index: 4;
+    opacity: 0.75;
+    z-index: 5;
   }
 }
 
@@ -144,11 +144,17 @@
     border-bottom: solid 1px var(--config-modal-note-border);
   }
 
-  .ide.strech {
-    box-shadow: none;
-    border-radius: 0;
-    margin: 0 -30px;
-  }
+  .ide {
+    &.strech {
+      box-shadow: none;
+      border-radius: 0;
+      margin: 0 -30px;
+    }
+
+    pre {
+      overflow: auto;
+    }
+  } 
 
   button.close {
     width: 30px;

@@ -49,8 +49,6 @@ trait AccountBase
 
         $this->assertEquals($response['headers']['status-code'], 409);
 
-        sleep(5);
-
         return [
             'id' => $id,
             'email' => $email,
@@ -64,9 +62,8 @@ trait AccountBase
      */
     public function testCreateAccountSession($data):array
     {
-        sleep(10);
-        $email = (isset($data['email'])) ? $data['email'] : '';
-        $password = (isset($data['password'])) ? $data['password'] : '';
+        $email = $data['email'] ?? '';
+        $password = $data['password'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -83,7 +80,7 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 201);
 
         $sessionId = $response['body']['$id'];
-        $session = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         /**
          * Test for FAILURE
@@ -132,9 +129,9 @@ trait AccountBase
      */
     public function testGetAccount($data):array
     {
-        $email = (isset($data['email'])) ? $data['email'] : '';
-        $name = (isset($data['name'])) ? $data['name'] : '';
-        $session = (isset($data['session'])) ? $data['session'] : '';
+        $email = $data['email'] ?? '';
+        $name = $data['name'] ?? '';
+        $session = $data['session'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -152,10 +149,6 @@ trait AccountBase
         $this->assertIsNumeric($response['body']['registration']);
         $this->assertEquals($response['body']['email'], $email);
         $this->assertEquals($response['body']['name'], $name);
-        $this->assertContains('*', $response['body']['roles']);
-        $this->assertContains('user:'.$response['body']['$id'], $response['body']['roles']);
-        $this->assertContains('role:1', $response['body']['roles']);
-        $this->assertCount(3, $response['body']['roles']);
 
         /**
          * Test for FAILURE
@@ -183,7 +176,7 @@ trait AccountBase
      */
     public function testGetAccountPrefs($data):array
     {
-        $session = (isset($data['session'])) ? $data['session'] : '';
+        $session = $data['session'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -219,8 +212,8 @@ trait AccountBase
      */
     public function testGetAccountSessions($data):array
     {
-        $session = (isset($data['session'])) ? $data['session'] : '';
-        $sessionId = (isset($data['sessionId'])) ? $data['sessionId'] : '';
+        $session = $data['session'] ?? '';
+        $sessionId = $data['sessionId'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -235,31 +228,28 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
-        $this->assertCount(1, $response['body']);
-        $this->assertEquals($sessionId, $response['body'][0]['$id']);
+        $this->assertCount(2, $response['body']);
+        $this->assertEquals(1, $response['body']['sum']);
+        $this->assertEquals($sessionId, $response['body']['sessions'][0]['$id']);
         
-        $this->assertIsArray($response['body'][0]['OS']);
-        $this->assertEquals('Windows', $response['body'][0]['OS']['name']);
-        $this->assertEquals('WIN', $response['body'][0]['OS']['short_name']);
-        $this->assertEquals('10', $response['body'][0]['OS']['version']);
-        $this->assertEquals('x64', $response['body'][0]['OS']['platform']);
+        $this->assertEquals('Windows', $response['body']['sessions'][0]['osName']);
+        $this->assertEquals('WIN', $response['body']['sessions'][0]['osCode']);
+        $this->assertEquals('10', $response['body']['sessions'][0]['osVersion']);
 
-        $this->assertIsArray($response['body'][0]['client']);
-        $this->assertEquals('browser', $response['body'][0]['client']['type']);
-        $this->assertEquals('Chrome', $response['body'][0]['client']['name']);
-        $this->assertEquals('CH', $response['body'][0]['client']['short_name']); // FIXME (v1) key name should be camelcase
-        $this->assertEquals('70.0', $response['body'][0]['client']['version']);
-        $this->assertEquals('Blink', $response['body'][0]['client']['engine']);
-        $this->assertEquals(0, $response['body'][0]['device']);
-        $this->assertEquals('', $response['body'][0]['brand']);
-        $this->assertEquals('', $response['body'][0]['model']);
-        $this->assertEquals($response['body'][0]['ip'], filter_var($response['body'][0]['ip'], FILTER_VALIDATE_IP));
+        $this->assertEquals('browser', $response['body']['sessions'][0]['clientType']);
+        $this->assertEquals('Chrome', $response['body']['sessions'][0]['clientName']);
+        $this->assertEquals('CH', $response['body']['sessions'][0]['clientCode']);
+        $this->assertEquals('70.0', $response['body']['sessions'][0]['clientVersion']);
+        $this->assertEquals('Blink', $response['body']['sessions'][0]['clientEngine']);
+        $this->assertEquals('desktop', $response['body']['sessions'][0]['deviceName']);
+        $this->assertEquals('', $response['body']['sessions'][0]['deviceBrand']);
+        $this->assertEquals('', $response['body']['sessions'][0]['deviceModel']);
+        $this->assertEquals($response['body']['sessions'][0]['ip'], filter_var($response['body']['sessions'][0]['ip'], FILTER_VALIDATE_IP));
         
-        $this->assertIsArray($response['body'][0]['geo']);
-        $this->assertEquals('--', $response['body'][0]['geo']['isoCode']);
-        $this->assertEquals('Unknown', $response['body'][0]['geo']['country']);
+        $this->assertEquals('--', $response['body']['sessions'][0]['countryCode']);
+        $this->assertEquals('Unknown', $response['body']['sessions'][0]['countryName']);
         
-        $this->assertEquals(true, $response['body'][0]['current']);
+        $this->assertEquals(true, $response['body']['sessions'][0]['current']);
 
         /**
          * Test for FAILURE
@@ -281,7 +271,7 @@ trait AccountBase
     public function testGetAccountLogs($data):array
     {
         sleep(10);
-        $session = (isset($data['session'])) ? $data['session'] : '';
+        $session = $data['session'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -294,59 +284,53 @@ trait AccountBase
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertIsArray($response['body']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertCount(2, $response['body']);
+        $this->assertIsArray($response['body']['logs']);
+        $this->assertNotEmpty($response['body']['logs']);
+        $this->assertCount(2, $response['body']['logs']);
         
-        $this->assertEquals('account.sessions.create', $response['body'][0]['event']);
-        $this->assertEquals($response['body'][0]['ip'], filter_var($response['body'][0]['ip'], FILTER_VALIDATE_IP));
-        $this->assertIsNumeric($response['body'][0]['time']);
+        $this->assertContains($response['body']['logs'][0]['event'], ['account.create', 'account.sessions.create']);
+        $this->assertEquals($response['body']['logs'][0]['ip'], filter_var($response['body']['logs'][0]['ip'], FILTER_VALIDATE_IP));
+        $this->assertIsNumeric($response['body']['logs'][0]['time']);
 
-        $this->assertIsArray($response['body'][0]['OS']);
-        $this->assertEquals('Windows', $response['body'][0]['OS']['name']);
-        $this->assertEquals('WIN', $response['body'][0]['OS']['short_name']);
-        $this->assertEquals('10', $response['body'][0]['OS']['version']);
-        $this->assertEquals('x64', $response['body'][0]['OS']['platform']);
+        $this->assertEquals('Windows', $response['body']['logs'][0]['osName']);
+        $this->assertEquals('WIN', $response['body']['logs'][0]['osCode']);
+        $this->assertEquals('10', $response['body']['logs'][0]['osVersion']);
 
-        $this->assertIsArray($response['body'][0]['client']);
-        $this->assertEquals('browser', $response['body'][0]['client']['type']);
-        $this->assertEquals('Chrome', $response['body'][0]['client']['name']);
-        $this->assertEquals('CH', $response['body'][0]['client']['short_name']); // FIXME (v1) key name should be camelcase
-        $this->assertEquals('70.0', $response['body'][0]['client']['version']);
-        $this->assertEquals('Blink', $response['body'][0]['client']['engine']);
-        $this->assertEquals(0, $response['body'][0]['device']);
-        $this->assertEquals('', $response['body'][0]['brand']);
-        $this->assertEquals('', $response['body'][0]['model']);
-        $this->assertEquals($response['body'][0]['ip'], filter_var($response['body'][0]['ip'], FILTER_VALIDATE_IP));
+        $this->assertEquals('browser', $response['body']['logs'][0]['clientType']);
+        $this->assertEquals('Chrome', $response['body']['logs'][0]['clientName']);
+        $this->assertEquals('CH', $response['body']['logs'][0]['clientCode']);
+        $this->assertEquals('70.0', $response['body']['logs'][0]['clientVersion']);
+        $this->assertEquals('Blink', $response['body']['logs'][0]['clientEngine']);
+
+        $this->assertEquals('desktop', $response['body']['logs'][0]['deviceName']);
+        $this->assertEquals('', $response['body']['logs'][0]['deviceBrand']);
+        $this->assertEquals('', $response['body']['logs'][0]['deviceModel']);
+        $this->assertEquals($response['body']['logs'][0]['ip'], filter_var($response['body']['logs'][0]['ip'], FILTER_VALIDATE_IP));
         
-        $this->assertIsArray($response['body'][0]['geo']);
-        $this->assertEquals('--', $response['body'][0]['geo']['isoCode']);
-        $this->assertEquals('Unknown', $response['body'][0]['geo']['country']);
+        $this->assertEquals('--', $response['body']['logs'][0]['countryCode']);
+        $this->assertEquals('Unknown', $response['body']['logs'][0]['countryName']);
 
-        $this->assertEquals('account.create', $response['body'][1]['event']);
-        $this->assertEquals($response['body'][1]['ip'], filter_var($response['body'][0]['ip'], FILTER_VALIDATE_IP));
-        $this->assertIsNumeric($response['body'][1]['time']);
+        $this->assertContains($response['body']['logs'][1]['event'], ['account.create', 'account.sessions.create']);
+        $this->assertEquals($response['body']['logs'][1]['ip'], filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP));
+        $this->assertIsNumeric($response['body']['logs'][1]['time']);
 
-        $this->assertIsArray($response['body'][1]['OS']);
-        $this->assertEquals('Windows', $response['body'][1]['OS']['name']);
-        $this->assertEquals('WIN', $response['body'][1]['OS']['short_name']);
-        $this->assertEquals('10', $response['body'][1]['OS']['version']);
-        $this->assertEquals('x64', $response['body'][1]['OS']['platform']);
+        $this->assertEquals('Windows', $response['body']['logs'][1]['osName']);
+        $this->assertEquals('WIN', $response['body']['logs'][1]['osCode']);
+        $this->assertEquals('10', $response['body']['logs'][1]['osVersion']);
 
-        $this->assertIsArray($response['body'][1]['client']);
-        $this->assertEquals('browser', $response['body'][1]['client']['type']);
-        $this->assertEquals('Chrome', $response['body'][1]['client']['name']);
-        $this->assertEquals('CH', $response['body'][1]['client']['short_name']); // FIXME (v1) key name should be camelcase
-        $this->assertEquals('70.0', $response['body'][1]['client']['version']);
-        $this->assertEquals('Blink', $response['body'][1]['client']['engine']);
-        $this->assertEquals(0, $response['body'][1]['device']);
-        $this->assertEquals('', $response['body'][1]['brand']);
-        $this->assertEquals('', $response['body'][1]['model']);
-        $this->assertEquals($response['body'][1]['ip'], filter_var($response['body'][0]['ip'], FILTER_VALIDATE_IP));
+        $this->assertEquals('browser', $response['body']['logs'][1]['clientType']);
+        $this->assertEquals('Chrome', $response['body']['logs'][1]['clientName']);
+        $this->assertEquals('CH', $response['body']['logs'][1]['clientCode']);
+        $this->assertEquals('70.0', $response['body']['logs'][1]['clientVersion']);
+        $this->assertEquals('Blink', $response['body']['logs'][1]['clientEngine']);
+
+        $this->assertEquals('desktop', $response['body']['logs'][1]['deviceName']);
+        $this->assertEquals('', $response['body']['logs'][1]['deviceBrand']);
+        $this->assertEquals('', $response['body']['logs'][1]['deviceModel']);
+        $this->assertEquals($response['body']['logs'][1]['ip'], filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP));
         
-        $this->assertIsArray($response['body'][1]['geo']);
-        $this->assertEquals('--', $response['body'][1]['geo']['isoCode']);
-        $this->assertEquals('Unknown', $response['body'][1]['geo']['country']);
+        $this->assertEquals('--', $response['body']['logs'][1]['countryCode']);
+        $this->assertEquals('Unknown', $response['body']['logs'][1]['countryName']);
         
         /**
          * Test for FAILURE
@@ -369,8 +353,8 @@ trait AccountBase
      */
     public function testUpdateAccountName($data):array
     {
-        $email = (isset($data['email'])) ? $data['email'] : '';
-        $session = (isset($data['session'])) ? $data['session'] : '';
+        $email = $data['email'] ?? '';
+        $session = $data['session'] ?? '';
         $newName = 'New Name';
 
         /**
@@ -421,7 +405,7 @@ trait AccountBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
-            'name' => 'ocSRq1d3QphHivJyUmYY7WMnrxyjdk5YvVwcDqx2zS0coxESN8RmsQwLWw5Whnf0WbVohuFWTRAaoKgCOO0Y0M7LwgFnZmi8881Y7'
+            'name' => 'ocSRq1d3QphHivJyUmYY7WMnrxyjdk5YvVwcDqx2zS0coxESN8RmsQwLWw5Whnf0WbVohuFWTRAaoKgCOO0Y0M7LwgFnZmi8881Y72222222222222222222222222222'
         ]);
         
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -436,9 +420,9 @@ trait AccountBase
      */
     public function testUpdateAccountPassword($data):array
     {
-        $email = (isset($data['email'])) ? $data['email'] : '';
-        $password = (isset($data['password'])) ? $data['password'] : '';
-        $session = (isset($data['session'])) ? $data['session'] : '';
+        $email = $data['email'] ?? '';
+        $password = $data['password'] ?? '';
+        $session = $data['session'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -505,7 +489,7 @@ trait AccountBase
     public function testUpdateAccountEmail($data):array
     {
         $newEmail = uniqid().'new@localhost.test';
-        $session = (isset($data['session'])) ? $data['session'] : '';
+        $session = $data['session'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -561,7 +545,7 @@ trait AccountBase
     public function testUpdateAccountPrefs($data):array
     {
         $newEmail = uniqid().'new@localhost.test';
-        $session = (isset($data['session'])) ? $data['session'] : '';
+        $session = $data['session'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -573,8 +557,8 @@ trait AccountBase
             'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
             'prefs' => [
-                'key1' => 'value1',
-                'key2' => 'value2',
+                'prefKey1' => 'prefValue1',
+                'prefKey2' => 'prefValue2',
             ]
         ]);
 
@@ -582,8 +566,8 @@ trait AccountBase
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']);
-        $this->assertEquals('value1', $response['body']['key1']);
-        $this->assertEquals('value2', $response['body']['key2']);
+        $this->assertEquals('prefValue1', $response['body']['prefs']['prefKey1']);
+        $this->assertEquals('prefValue2', $response['body']['prefs']['prefKey2']);
 
         /**
          * Test for FAILURE
@@ -638,9 +622,9 @@ trait AccountBase
      */
     public function testCreateAccountVerification($data):array
     {
-        $email = (isset($data['email'])) ? $data['email'] : '';
-        $name = (isset($data['name'])) ? $data['name'] : '';
-        $session = (isset($data['session'])) ? $data['session'] : '';
+        $email = $data['email'] ?? '';
+        $name = $data['name'] ?? '';
+        $session = $data['session'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -657,7 +641,7 @@ trait AccountBase
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals(2, $response['body']['type']);
+        $this->assertEmpty($response['body']['secret']);
         $this->assertIsNumeric($response['body']['expire']);
 
         $lastEmail = $this->getLastEmail();
@@ -671,24 +655,24 @@ trait AccountBase
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
-            'url' => 'localhost/recovery',
+            'url' => 'localhost/verification',
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
-            'url' => 'http://remotehost/recovery',
+            'url' => 'http://remotehost/verification',
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -703,9 +687,9 @@ trait AccountBase
      */
     public function testUpdateAccountVerification($data):array
     {
-        $id = (isset($data['id'])) ? $data['id'] : '';
-        $session = (isset($data['session'])) ? $data['session'] : '';
-        $verification = (isset($data['verification'])) ? $data['verification'] : '';
+        $id = $data['id'] ?? '';
+        $session = $data['session'] ?? '';
+        $verification = $data['verification'] ?? '';
         
         /**
          * Test for SUCCESS
@@ -757,9 +741,9 @@ trait AccountBase
      */
     public function testDeleteAccountSession($data):array
     {
-        $email = (isset($data['email'])) ? $data['email'] : '';
-        $password = (isset($data['password'])) ? $data['password'] : '';
-        $session = (isset($data['session'])) ? $data['session'] : '';
+        $email = $data['email'] ?? '';
+        $password = $data['password'] ?? '';
+        $session = $data['session'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -774,7 +758,7 @@ trait AccountBase
         ]);
 
         $sessionNewId = $response['body']['$id'];
-        $sessionNew = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+        $sessionNew = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         $this->assertEquals($response['headers']['status-code'], 201);
 
@@ -825,8 +809,8 @@ trait AccountBase
      */
     public function testDeleteAccountSessionCurrent($data):array
     {
-        $email = (isset($data['email'])) ? $data['email'] : '';
-        $password = (isset($data['password'])) ? $data['password'] : '';
+        $email = $data['email'] ?? '';
+        $password = $data['password'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -840,7 +824,7 @@ trait AccountBase
             'password' => $password,
         ]);
 
-        $sessionNew = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+        $sessionNew = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         $this->assertEquals($response['headers']['status-code'], 201);
 
@@ -882,7 +866,7 @@ trait AccountBase
      */
     public function testDeleteAccountSessions($data):array
     {
-        $session = (isset($data['session'])) ? $data['session'] : '';
+        $session = $data['session'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -910,8 +894,8 @@ trait AccountBase
         /**
          * Create new fallback session
          */
-        $email = (isset($data['email'])) ? $data['email'] : '';
-        $password = (isset($data['password'])) ? $data['password'] : '';
+        $email = $data['email'] ?? '';
+        $password = $data['password'] ?? '';
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
             'origin' => 'http://localhost',
@@ -922,7 +906,7 @@ trait AccountBase
             'password' => $password,
         ]);
 
-        $data['session'] = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+        $data['session'] = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         return $data;
     }
@@ -932,8 +916,8 @@ trait AccountBase
      */
     public function testCreateAccountRecovery($data):array
     {
-        $email = (isset($data['email'])) ? $data['email'] : '';
-        $name = (isset($data['name'])) ? $data['name'] : '';
+        $email = $data['email'] ?? '';
+        $name = $data['name'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -949,7 +933,7 @@ trait AccountBase
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals(3, $response['body']['type']);
+        $this->assertEmpty($response['body']['secret']);
         $this->assertIsNumeric($response['body']['expire']);
 
         $lastEmail = $this->getLastEmail();
@@ -1006,8 +990,8 @@ trait AccountBase
      */
     public function testUpdateAccountRecovery($data):array
     {
-        $id = (isset($data['id'])) ? $data['id'] : '';
-        $recovery = (isset($data['recovery'])) ? $data['recovery'] : '';
+        $id = $data['id'] ?? '';
+        $recovery = $data['recovery'] ?? '';
         $newPassowrd = 'test-recovery';
         
         /**

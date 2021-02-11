@@ -95,4 +95,34 @@ class Template extends View
 
         return \http_build_query($parsed);
     }
+
+    /**
+     * From Camel Case
+     * 
+     * @var string $input
+     * 
+     * @return string
+     */
+    public static function fromCamelCaseToSnake($input): string
+    {
+        \preg_match_all('!([A-Z][A-Z0-9]*(?=$|[A-Z][a-z0-9])|[A-Za-z][a-z0-9]+)!', $input, $matches);
+        $ret = $matches[0];
+        foreach ($ret as &$match) {
+            $match = $match == \strtoupper($match) ? \strtolower($match) : \lcfirst($match);
+        }
+
+        return \implode('_', $ret);
+    }
+
+    /**
+     * From Camel Case to Dash Case
+     * 
+     * @var string $input
+     * 
+     * @return string
+     */
+    public static function fromCamelCaseToDash($input): string
+    {
+        return \str_replace([' ', '_'], '-', \strtolower(\preg_replace('/([a-zA-Z])(?=[A-Z])/', '$1-', $input)));
+    }
 }
