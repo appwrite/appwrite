@@ -50,6 +50,39 @@ class AccountCustomClientTest extends Scope
         return [];
     }
 
+    public function testCreateOAuth2AccountSessionWithProvidedToken():array
+    {
+        $provider = 'mock';
+        $appId = '1';
+        $secret = '123456';
+
+       
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/'.$this->getProject()['$id'].'/oauth2', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'provider' => $provider,
+            'appId' => $appId,
+            'secret' => $secret,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/'.$provider.'/from', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'accessToken' => $secret,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        return [];
+    }
+
     public function testBlockedAccount():array
     {
         $email = uniqid().'user@localhost.test';
