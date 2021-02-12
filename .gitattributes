@@ -1,3 +1,4 @@
 *.html linguist-detectable=false
 *.phtml linguist-detectable=false
 app/config/* linguist-detectable=false
+tests/* linguist-detectable=false
