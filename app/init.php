@@ -367,10 +367,10 @@ App::setResource('user', function($mode, $project, $console, $request, $response
 
     Authorization::setDefaultStatus(true);
 
-    Auth::setCookieName('a_session_'.$project->getId());
+    Auth::setCookieName('aw'.$project->getId());
 
     if (APP_MODE_ADMIN === $mode) {
-        Auth::setCookieName('a_session_'.$console->getId());
+        Auth::setCookieName('aw'.$console->getId());
     }
 
     $session = Auth::decodeSession(

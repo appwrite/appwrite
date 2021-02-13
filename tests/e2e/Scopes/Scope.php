@@ -103,7 +103,7 @@ abstract class Scope extends TestCase
             'password' => $password,
         ]);
 
-        $session = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_console'];
+        $session = $this->client->parseCookie((string)$session['headers']['set-cookie'])['awconsole'];
 
         self::$root = [
             '$id' => $root['body']['$id'],
@@ -154,7 +154,7 @@ abstract class Scope extends TestCase
             'password' => $password,
         ]);
 
-        $session = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+        $session = $this->client->parseCookie((string)$session['headers']['set-cookie'])['aw'.$this->getProject()['$id']];
 
         self::$user[$this->getProject()['$id']] = [
             '$id' => $user['body']['$id'],
