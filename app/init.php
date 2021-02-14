@@ -39,7 +39,7 @@ const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
 const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
-const APP_CACHE_BUSTER = 142;
+const APP_CACHE_BUSTER = 143;
 const APP_VERSION_STABLE = '0.7.0';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
@@ -60,6 +60,7 @@ const DELETE_TYPE_DOCUMENT = 'document';
 const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
+const DELETE_TYPE_CERTIFICATES = 'certificates';
 
 $register = new Registry();
 
@@ -224,7 +225,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2020-01.mmdb');
+    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2021-02.mmdb');
 });
 
 /*

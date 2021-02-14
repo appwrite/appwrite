@@ -364,5 +364,5 @@ Submitting documentation updates, enhancements, designs, or bug fixes. Spelling 
 
 ### Helping Someone
 
-Searching for Appwrite on Discord, GitHub, or StackOverflow and helping someone else who needs help. You can also help by reaching others how to contribute to Appwrite's repo!
+Searching for Appwrite on Discord, GitHub, or StackOverflow and helping someone else who needs help. You can also help by teaching others how to contribute to Appwrite's repo!
 

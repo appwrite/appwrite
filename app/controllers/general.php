@@ -93,7 +93,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
                 Response::setFilter(new V06());
                 break;
             default:
-                throw new Exception('No filter available for response format : '.$responseFormat, 400);
+                Response::setFilter(null);
         }
     } else {
         Response::setFilter(null);
@@ -241,7 +241,7 @@ App::options(function ($request, $response) {
         ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
         ->addHeader('Access-Control-Allow-Origin', $origin)
         ->addHeader('Access-Control-Allow-Credentials', 'true')
-        ->send();
+        ->noContent();
 }, ['request', 'response']);
 
 App::error(function ($error, $utopia, $request, $response, $layout, $project) {
@@ -388,7 +388,7 @@ App::get('/.well-known/acme-challenge')
     ->inject('response')
     ->action(function ($request, $response) {
         $base = \realpath(APP_STORAGE_CERTIFICATES);
-        $path = \str_replace('/.well-known/acme-challenge/', '', $request->getParam('q'));
+        $path = \str_replace('/.well-known/acme-challenge/', '', $request->getURI());
         $absolute = \realpath($base.'/.well-known/acme-challenge/'.$path);
 
         if (!$base) {

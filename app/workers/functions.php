@@ -29,7 +29,18 @@ $warmupStart = \microtime(true);
 
 Co\run(function() use ($environments) {  // Warmup: make sure images are ready to run fast 🚀
     Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
-    
+
+    $dockerUser = App::getEnv('DOCKERHUB_PULL_USERNAME', null);
+    $dockerPass = App::getEnv('DOCKERHUB_PULL_PASSWORD', null);
+
+    if($dockerUser) {
+        $stdout = '';
+        $stderr = '';
+
+        Console::execute('docker login --username '.$dockerUser.' --password-stdin', $dockerPass, $stdout, $stderr);
+        Console::log('Docker Login'. $stdout.$stderr);
+    }
+
     foreach($environments as $environment) {
         go(function() use ($environment) {
             $stdout = '';
@@ -386,13 +397,15 @@ class FunctionsV1
     
             $executionStart = \microtime(true);
             $executionTime = \time();
-
+            $cpus = App::getEnv('_APP_FUNCTIONS_CPUS', '');
+            $memory = App::getEnv('_APP_FUNCTIONS_MEMORY', '');
+            $swap = App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '');
             $exitCode = Console::execute("docker run ".
                 " -d".
                 " --entrypoint=\"\"".
-                " --cpus=".App::getEnv('_APP_FUNCTIONS_CPUS', '1').
-                " --memory=".App::getEnv('_APP_FUNCTIONS_MEMORY', '256')."m".
-                " --memory-swap=".App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '256')."m".
+                (empty($cpus) ? "" : (" --cpus=".$cpus)).
+                (empty($memory) ? "" : (" --memory=".$memory."m")).
+                (empty($swap) ? "" : (" --memory-swap=".$swap."m")).
                 " --name={$container}".
                 " --label appwrite-type=function".
                 " --label appwrite-created={$executionTime}".
