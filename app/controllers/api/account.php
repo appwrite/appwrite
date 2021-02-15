@@ -19,11 +19,11 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Exception\Duplicate;
 use Appwrite\Database\Validator\UID;
 use Appwrite\Database\Validator\Authorization;
+use Appwrite\Detector\Detector;
 use Appwrite\Template\Template;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as URLParser;
 use Appwrite\Utopia\Response;
-use DeviceDetector\DeviceDetector;
 use Utopia\Validator\ArrayList;
 
 $oauthDefaultSuccess = App::getEnv('_APP_HOME').'/auth/oauth2/success';
@@ -184,59 +184,23 @@ App::post('/v1/account/sessions')
             throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
         }
 
-        $dd = new DeviceDetector($request->getUserAgent('UNKNOWN'));
-
-        $dd->parse();
-
-        $os = $dd->getOs();
-        $osCode = (isset($os['short_name'])) ? $os['short_name'] : '';
-        $osName = (isset($os['name'])) ? $os['name'] : '';
-        $osVersion = (isset($os['version'])) ? $os['version'] : '';
-
-        $client = $dd->getClient();
-        $clientType = (isset($client['type'])) ? $client['type'] : '';
-        $clientCode = (isset($client['short_name'])) ? $client['short_name'] : '';
-        $clientName = (isset($client['name'])) ? $client['name'] : '';
-        $clientVersion = (isset($client['version'])) ? $client['version'] : '';
-        $clientEngine = (isset($client['engine'])) ? $client['engine'] : '';
-        $clientEngineVersion = (isset($client['engine_version'])) ? $client['engine_version'] : '';
-
+        $detector = new Detector($request->getUserAgent('UNKNOWN'));
+        $record = $geodb->get($request->getIP());
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $secret = Auth::tokenGenerator();
-        $session = new Document([
-            '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
-            '$permissions' => ['read' => ['user:'.$profile->getId()], 'write' => ['user:'.$profile->getId()]],
-            'userId' => $profile->getId(),
-            'type' => Auth::TOKEN_TYPE_LOGIN,
-            'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-            'expire' => $expiry,
-            'userAgent' => $request->getUserAgent('UNKNOWN'),
-            'ip' => $request->getIP(),
-            'osCode' => $osCode,
-            'osName' => $osName,
-            'osVersion' => $osVersion,
-            'clientType' => $clientType,
-            'clientCode' => $clientCode,
-            'clientName' => $clientName,
-            'clientVersion' => $clientVersion,
-            'clientEngine' => $clientEngine,
-            'clientEngineVersion' => $clientEngineVersion,
-            'deviceName' => $dd->getDeviceName(),
-            'deviceBrand' => $dd->getBrandName(),
-            'deviceModel' => $dd->getModel(),
-        ]);
-
-        $record = $geodb->get($request->getIP());
-
-        if($record) {
-            $session
-                ->setAttribute('countryCode', \strtolower($record['country']['iso_code']))
-            ;
-        } else {
-            $session
-                ->setAttribute('countryCode', '--')
-            ;
-        }
+        $session = new Document(array_merge(
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
+                '$permissions' => ['read' => ['user:'.$profile->getId()], 'write' => ['user:'.$profile->getId()]],
+                'userId' => $profile->getId(),
+                'type' => Auth::TOKEN_TYPE_LOGIN,
+                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'expire' => $expiry,
+                'userAgent' => $request->getUserAgent('UNKNOWN'),
+                'ip' => $request->getIP(),
+                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+            ], $detector->getOS(), $detector->getClient(), $detector->getDevice()
+        ));
 
         Authorization::setRole('user:'.$profile->getId());
 
@@ -535,26 +499,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         // Create session token, verify user account and update OAuth2 ID and Access Token
 
-        $dd = new DeviceDetector($request->getUserAgent('UNKNOWN'));
-
-        $dd->parse();
-
-        $os = $dd->getOs();
-        $osCode = (isset($os['short_name'])) ? $os['short_name'] : '';
-        $osName = (isset($os['name'])) ? $os['name'] : '';
-        $osVersion = (isset($os['version'])) ? $os['version'] : '';
-
-        $client = $dd->getClient();
-        $clientType = (isset($client['type'])) ? $client['type'] : '';
-        $clientCode = (isset($client['short_name'])) ? $client['short_name'] : '';
-        $clientName = (isset($client['name'])) ? $client['name'] : '';
-        $clientVersion = (isset($client['version'])) ? $client['version'] : '';
-        $clientEngine = (isset($client['engine'])) ? $client['engine'] : '';
-        $clientEngineVersion = (isset($client['engine_version'])) ? $client['engine_version'] : '';
-
+        $detector = new Detector($request->getUserAgent('UNKNOWN'));
+        $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-        $session = new Document([
+        $session = new Document(array_merge([
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
             '$permissions' => ['read' => ['user:'.$user['$id']], 'write' => ['user:'.$user['$id']]],
             'userId' => $user->getId(),
@@ -563,31 +512,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
-            'osCode' => $osCode,
-            'osName' => $osName,
-            'osVersion' => $osVersion,
-            'clientType' => $clientType,
-            'clientCode' => $clientCode,
-            'clientName' => $clientName,
-            'clientVersion' => $clientVersion,
-            'clientEngine' => $clientEngine,
-            'clientEngineVersion' => $clientEngineVersion,
-            'deviceName' => $dd->getDeviceName(),
-            'deviceBrand' => $dd->getBrandName(),
-            'deviceModel' => $dd->getModel(),
-        ]);
-
-        $record = $geodb->get($request->getIP());
-
-        if($record) {
-            $session
-                ->setAttribute('countryCode', \strtolower($record['country']['iso_code']))
-            ;
-        } else {
-            $session
-                ->setAttribute('countryCode', '--')
-            ;
-        }
+            'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+        ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
         $user
             ->setAttribute('oauth2'.\ucfirst($provider), $oauth2ID)
@@ -820,43 +746,13 @@ App::get('/v1/account/logs')
         foreach ($logs as $i => &$log) {
             $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
 
-            $dd = new DeviceDetector($log['userAgent']);
+            $detector = new Detector($log['userAgent']);
 
-            $dd->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-
-            $dd->parse();
-
-            $os = $dd->getOs();
-            $osCode = (isset($os['short_name'])) ? $os['short_name'] : '';
-            $osName = (isset($os['name'])) ? $os['name'] : '';
-            $osVersion = (isset($os['version'])) ? $os['version'] : '';
-
-            $client = $dd->getClient();
-            $clientType = (isset($client['type'])) ? $client['type'] : '';
-            $clientCode = (isset($client['short_name'])) ? $client['short_name'] : '';
-            $clientName = (isset($client['name'])) ? $client['name'] : '';
-            $clientVersion = (isset($client['version'])) ? $client['version'] : '';
-            $clientEngine = (isset($client['engine'])) ? $client['engine'] : '';
-            $clientEngineVersion = (isset($client['engine_version'])) ? $client['engine_version'] : '';
-
-            $output[$i] = new Document([
+            $output[$i] = new Document(array_merge([
                 'event' => $log['event'],
                 'ip' => $log['ip'],
                 'time' => \strtotime($log['time']),
-
-                'osCode' => $osCode,
-                'osName' => $osName,
-                'osVersion' => $osVersion,
-                'clientType' => $clientType,
-                'clientCode' => $clientCode,
-                'clientName' => $clientName,
-                'clientVersion' => $clientVersion,
-                'clientEngine' => $clientEngine,
-                'clientEngineVersion' => $clientEngineVersion,
-                'deviceName' => $dd->getDeviceName(),
-                'deviceBrand' => $dd->getBrandName(),
-                'deviceModel' => $dd->getModel(),
-            ]);
+            ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
             $record = $geodb->get($log['ip']);
 
