@@ -199,7 +199,7 @@ App::post('/v1/account/sessions')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-            ], $detector->getOS(), $detector->getClient()
+            ], $detector->getOS(), $detector->getClient(), $detector->getDevice()
         ));
 
         Authorization::setRole('user:'.$profile->getId());
@@ -513,7 +513,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-        ], $detector->getOS(), $detector->getClient()));
+        ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
         $user
             ->setAttribute('oauth2'.\ucfirst($provider), $oauth2ID)
