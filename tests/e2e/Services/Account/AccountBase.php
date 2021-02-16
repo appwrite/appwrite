@@ -405,7 +405,6 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
-        $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertIsNumeric($response['body']['registration']);
         $this->assertEquals($response['body']['email'], $email);
@@ -473,7 +472,6 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
-        $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertIsNumeric($response['body']['registration']);
         $this->assertEquals($response['body']['email'], $email);
@@ -540,7 +538,6 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
-        $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertIsNumeric($response['body']['registration']);
         $this->assertEquals($response['body']['email'], $newEmail);
@@ -597,7 +594,6 @@ trait AccountBase
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
-        $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertEquals('prefValue1', $response['body']['prefs']['prefKey1']);
         $this->assertEquals('prefValue2', $response['body']['prefs']['prefKey2']);
