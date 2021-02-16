@@ -49,6 +49,39 @@ trait AccountBase
 
         $this->assertEquals($response['headers']['status-code'], 409);
 
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => '',
+            'password' => '',
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => '',
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => '',
+            'password' => $password,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
         return [
             'id' => $id,
             'email' => $email,
