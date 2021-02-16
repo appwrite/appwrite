@@ -627,7 +627,7 @@ App::post('/v1/account/sessions/anonymous')
             throw new Exception('Failed saving user to DB', 500);
         }
 
-        // Create session token, verify user account and update OAuth2 ID and Access Token
+        // Create session token
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
