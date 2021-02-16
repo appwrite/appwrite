@@ -333,6 +333,17 @@ class AccountCustomClientTest extends Scope
         $this->assertIsNumeric($response['body']['registration']);
         $this->assertEquals($response['body']['email'], $email);
 
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+
         return [];
     }
 }
