@@ -305,11 +305,9 @@ class AccountCustomClientTest extends Scope
         return [];
     }
 
-    /**
-     * @depends testCreateAnonymousAccount
-     */
-    public function testConvertAnonymousAccount($session):array
+    public function testConvertAnonymousAccount():array
     {
+        $session = $this->testCreateAnonymousAccount();
         $email = uniqid().'new@localhost.test';
         $password = 'new-password';
 
@@ -369,6 +367,56 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 201);
+
+        return [];
+    }
+
+    public function testConvertAnonymousAccountOAuth2():array
+    {
+        $session = $this->testCreateAnonymousAccount();
+        $provider = 'mock';
+        $appId = '1';
+        $secret = '123456';
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/'.$this->getProject()['$id'].'/oauth2', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'provider' => $provider,
+            'appId' => $appId,
+            'secret' => $secret,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/'.$provider, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]), [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('success', $response['body']['result']);
+        
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]));
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($response['body']['name'], 'User Name');
+        $this->assertEquals($response['body']['email'], 'user@localhost.test');
 
         return [];
     }

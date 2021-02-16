@@ -515,6 +515,15 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
         ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
+        $isAnonymousUser = is_null($user->getAttribute('email')) && is_null($user->getAttribute('password'));
+
+        if ($isAnonymousUser) {
+            $user
+                ->setAttribute('name', $oauth2->getUserName($accessToken))
+                ->setAttribute('email', $oauth2->getUserEmail($accessToken))
+            ;
+        }
+
         $user
             ->setAttribute('oauth2'.\ucfirst($provider), $oauth2ID)
             ->setAttribute('oauth2'.\ucfirst($provider).'AccessToken', $accessToken)
