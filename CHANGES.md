@@ -1,3 +1,9 @@
+# Version DEV (NOT RELEASED YET)
+
+## Features
+
+- Added Anonymous Login ([RFC-010](https://github.com/appwrite/rfc/blob/main/010-anonymous-login.md))
+
 # Version 0.7.0
 
 ## Features
