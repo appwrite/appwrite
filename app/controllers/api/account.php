@@ -109,7 +109,7 @@ App::post('/v1/account')
             throw new Exception('Account already exists', 409);
         }
 
-        Authorization::enable();
+        Authorization::reset();
 
         Authorization::unsetRole('role:'.Auth::USER_ROLE_GUEST);
         Authorization::setRole('user:'.$user->getId());
@@ -485,7 +485,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     throw new Exception('Account already exists', 409);
                 }
 
-                Authorization::enable();
+                Authorization::reset();
 
                 if (false === $user) {
                     throw new Exception('Failed saving user to DB', 500);
@@ -630,7 +630,7 @@ App::post('/v1/account/sessions/anonymous')
             throw new Exception('Failed saving user to DB', 500);
         }
 
-        Authorization::enable();
+        Authorization::reset();
 
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500);
