@@ -57,7 +57,7 @@ if(!empty($platforms)) {
     <?php if (!empty($canonical)): ?>
         <meta property="og:url" content="<?php echo $canonical; ?>" />
     <?php endif; ?>
-    <meta property="og:image"  content="<?php echo $protocol; ?>://<?php echo $domain; ?><?php echo $port != 80 ?':'.$port : '' ?>/images/logo.png?v=<?php echo APP_CACHE_BUSTER; ?>" />
+    <meta property="og:image"  content="<?php echo $endpoint; ?>/images/logo.png?v=<?php echo APP_CACHE_BUSTER; ?>" />
     <script>
 
         (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
