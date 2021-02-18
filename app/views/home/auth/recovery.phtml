@@ -23,7 +23,7 @@
         <label>Email</label>
         <input name="email" type="email" class="full-width" autocomplete="email" placeholder="me@example.com" required>
 
-        <input name="url" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/recovery/reset" />
+        <input name="url" type="hidden" data-ls-bind="{{env.ENDPOINT}}/auth/recovery/reset" />
 
         <button type="submit" class="btn btn-primary"><i class="fa fa-sign-in"></i> Recover</button>
     </form>
