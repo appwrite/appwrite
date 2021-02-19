@@ -595,11 +595,10 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge([
-            '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
+            '$collection' => Database::SYSTEM_COLLECTION_SESSIONS,
             '$permissions' => ['read' => ['user:'.$user->getId()], 'write' => ['user:'.$user->getId()]],
             'userId' => $user->getId(),
-            'type' => Auth::TOKEN_TYPE_LOGIN,
-            'provider' => Auth::TOKEN_PROVIDER_EMAIL,
+            'provider' => Auth::SESSION_PROVIDER_EMAIL,
             'providerUid' => $user->getAttribute('email'),
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expiry,
@@ -608,7 +607,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
         ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
-        $user->setAttribute('tokens', $session, Document::SET_TYPE_APPEND);
+        $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
 
         Authorization::setRole('user:'.$userId);
 

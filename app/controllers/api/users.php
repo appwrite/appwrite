@@ -196,21 +196,18 @@ App::get('/v1/users/:userId/sessions')
             throw new Exception('User not found', 404);
         }
 
-        $tokens = $user->getAttribute('tokens', []);
-        $sessions = [];
+        $sessions = $user->getAttribute('sessions', []);
         $countries = $locale->getText('countries');
 
-        foreach ($tokens as $token) { /* @var $token Document */
-            if (Auth::TOKEN_TYPE_LOGIN != $token->getAttribute('type')) {
-                continue;
-            }
+        foreach ($sessions as $key => $session) { 
+            /** @var Document $session */
 
-            $token->setAttribute('countryName', (isset($countries[$token->getAttribute('contryCode')]))
-                ? $countries[$token->getAttribute('contryCode')]
+            $session->setAttribute('countryName', (isset($countries[$session->getAttribute('contryCode')]))
+                ? $countries[$session->getAttribute('contryCode')]
                 : $locale->getText('locale.country.unknown'));
-            $token->setAttribute('current', false);
+            $session->setAttribute('current', false);
 
-            $sessions[] = $token;
+            $sessions[$key] = $session;
         }
 
         $response->dynamic(new Document([

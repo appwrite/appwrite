@@ -28,7 +28,7 @@ class Auth
     /**
      * Token Types.
      */
-    const TOKEN_TYPE_LOGIN = 1;
+    const TOKEN_TYPE_LOGIN = 1; // Deprecated
     const TOKEN_TYPE_VERIFICATION = 2;
     const TOKEN_TYPE_RECOVERY = 3;
     const TOKEN_TYPE_INVITE = 4;
@@ -36,8 +36,8 @@ class Auth
     /**
      * Session Providers.
      */
-    const TOKEN_PROVIDER_EMAIL = 'email';
-    const TOKEN_PROVIDER_ANONYMOUS = 'anonymous';
+    const SESSION_PROVIDER_EMAIL = 'email';
+    const SESSION_PROVIDER_ANONYMOUS = 'anonymous';
 
     /**
      * Token Expiration times.
@@ -207,6 +207,30 @@ class Auth
                 $token->getAttribute('secret') === self::hash($secret) &&
                 $token->getAttribute('expire') >= \time()) {
                 return (string)$token->getId();
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Verify session and check that its not expired.
+     *
+     * @param array  $sessions
+     * @param string $secret
+     *
+     * @return bool|string
+     */
+    public static function sessionVerify(array $sessions, string $secret)
+    {
+        foreach ($sessions as $session) { /** @var Document $session */
+            if ($session->isSet('secret') &&
+                $session->isSet('expire') &&
+                $session->isSet('provider') &&
+                $session->isSet('providerUid') &&
+                $session->getAttribute('secret') === self::hash($secret) &&
+                $session->getAttribute('expire') >= \time()) {
+                return (string)$session->getId();
             }
         }
 
