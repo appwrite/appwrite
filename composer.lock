@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5893b378d1dcda91aedf77059f4b0efb",
+    "content-hash": "90ff57f6e7de570c7bdffad74829f187",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1596,6 +1596,48 @@
             "time": "2020-12-26T12:02:39+00:00"
         },
         {
+            "name": "utopia-php/image",
+            "version": "0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/image",
+                "reference": "66e38db211b1d6fe93de09d82606641e0f996e42"
+            },
+            "require": {
+                "chillerlan/php-qrcode": "4.3.0",
+                "ext-imagick": "*",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.3",
+                "vimeo/psalm": "4.0.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Image\\": "src/Image"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "eldad@appwrite.io"
+                }
+            ],
+            "description": "A simple Image manipulation library",
+            "keywords": [
+                "framework",
+                "image",
+                "php",
+                "upf",
+                "utopia"
+            ],
+            "time": "2021-02-19T05:09:46+00:00"
+        },
+        {
             "name": "utopia-php/locale",
             "version": "0.3.3",
             "source": {
@@ -1753,16 +1795,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.2.0",
+            "version": "0.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "27bfd663c9b2a17ac0911522a87f42bee834df95"
+                "reference": "86f749f2d79268528732e560f77dde0155e162ca"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/27bfd663c9b2a17ac0911522a87f42bee834df95",
-                "reference": "27bfd663c9b2a17ac0911522a87f42bee834df95",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/86f749f2d79268528732e560f77dde0155e162ca",
+                "reference": "86f749f2d79268528732e560f77dde0155e162ca",
                 "shasum": ""
             },
             "require": {
@@ -1799,9 +1841,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.2.0"
+                "source": "https://github.com/utopia-php/storage/tree/0.4.1"
             },
-            "time": "2021-01-27T12:21:27+00:00"
+            "time": "2021-02-19T05:04:44+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -4738,12 +4780,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "2a6f75224a537ee506e9fa1e6fc4200ad411ffd9"
+                "reference": "539148499aaafa5058d534582f61ce2a66480987"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/2a6f75224a537ee506e9fa1e6fc4200ad411ffd9",
-                "reference": "2a6f75224a537ee506e9fa1e6fc4200ad411ffd9",
+                "url": "https://api.github.com/repos/symfony/console/zipball/539148499aaafa5058d534582f61ce2a66480987",
+                "reference": "539148499aaafa5058d534582f61ce2a66480987",
                 "shasum": ""
             },
             "require": {
@@ -4828,7 +4870,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-02-17T15:27:35+00:00"
+            "time": "2021-02-18T11:02:40+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
