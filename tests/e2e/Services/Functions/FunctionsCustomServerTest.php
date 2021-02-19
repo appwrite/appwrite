@@ -534,7 +534,7 @@ class FunctionsCustomServerTest extends Scope
             $envs[$key] = array_merge($env, $functions[$key]);
         }
 
-        sleep(count($envs) * 15);
+        sleep(count($envs) * 20);
         fwrite(STDERR, ".");
 
         /**

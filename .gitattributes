@@ -1,0 +1,10 @@
+app/config/* linguist-detectable=false
+app/config/* linguist-detectable=false
+app/config/*/* linguist-detectable=false
+app/config/*/*/* linguist-detectable=false
+app/config/*/*/*/* linguist-detectable=false
+tests/* linguist-detectable=false
+tests/*/* linguist-detectable=false
+tests/*/*/* linguist-detectable=false
+tests/*/*/*/* linguist-detectable=false
+tests/*/*/*/*/* linguist-detectable=false
