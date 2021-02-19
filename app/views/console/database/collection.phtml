@@ -114,7 +114,7 @@ $maxCells = 10;
                                                     <?php if(!$array): ?>
                                                         <?php switch($type):
                                                             case 'fileId': ?>
-                                                                <img data-ls-if="{{node.<?php echo $this->escape($key); ?>}} != ''" src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{node.<?php echo $this->escape($key); ?>}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="avatar" width="30" height="30" loading="lazy" />
+                                                                <img data-ls-if="{{node.<?php echo $this->escape($key); ?>}} != ''" src="" data-ls-attrs="src={{env.ENDPOINT}}/v1/storage/files/{{node.<?php echo $this->escape($key); ?>}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="avatar" width="30" height="30" loading="lazy" />
                                                             <?php break; ?>
                                                             <?php case 'document': ?>
                                                                 {...}

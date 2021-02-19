@@ -11,13 +11,18 @@ App::init(function ($utopia, $request, $response, $layout) {
 
     /* AJAX check  */
     if (!empty($request->getQuery('version', ''))) {
-        $layout->setPath(__DIR__.'/../../views/layouts/empty.phtml');
+        $layout->setPath(__DIR__ . '/../../views/layouts/empty.phtml');
     }
-    
+
+    $port = $request->getPort();
+    $protocol = $request->getProtocol();
+    $domain = $request->getHostname();
+
     $layout
         ->setParam('title', APP_NAME)
-        ->setParam('protocol', $request->getProtocol())
-        ->setParam('domain', $request->getHostname())
+        ->setParam('protocol', $protocol)
+        ->setParam('domain', $domain)
+        ->setParam('endpoint', $protocol . '://' . $domain . ($port != 80 && $port != 443 ? ':' . $port : ''))
         ->setParam('home', App::getEnv('_APP_HOME'))
         ->setParam('setup', App::getEnv('_APP_SETUP'))
         ->setParam('class', 'unknown')
@@ -34,10 +39,10 @@ App::init(function ($utopia, $request, $response, $layout) {
     $time = (60 * 60 * 24 * 45); // 45 days cache
 
     $response
-        ->addHeader('Cache-Control', 'public, max-age='.$time)
-        ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time).' GMT') // 45 days cache
+        ->addHeader('Cache-Control', 'public, max-age=' . $time)
+        ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time) . ' GMT') // 45 days cache
         ->addHeader('X-Frame-Options', 'SAMEORIGIN') // Avoid console and homepage from showing in iframes
-        ->addHeader('X-XSS-Protection', '1; mode=block; report=/v1/xss?url='.\urlencode($request->getURI()))
+        ->addHeader('X-XSS-Protection', '1; mode=block; report=/v1/xss?url=' . \urlencode($request->getURI()))
         ->addHeader('X-UA-Compatible', 'IE=Edge') // Deny IE browsers from going into quirks mode
     ;
 
