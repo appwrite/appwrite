@@ -375,15 +375,6 @@ $collections = [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Current',
-                'key' => 'current',
-                'type' => Database::SYSTEM_VAR_TYPE_BOOLEAN,
-                'default' => false,
-                'required' => true,
-                'array' => false,
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'User Agent',
                 'key' => 'userAgent',
                 'type' => Database::SYSTEM_VAR_TYPE_TEXT,
