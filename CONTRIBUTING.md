@@ -92,7 +92,7 @@ After finishing the installation process, you can start writing and editing code
 
 
 #### Advanced Topics
-We love to create issues that are good for begginers and label them as `good for begginers` or `hacktoberfest`, but some more advanced topics might require extra knowledge. Below is a list with links for which you can use to learn more about some of them more advance topics that will help you master the Appwrite codebase.
+We love to create issues that are good for begginers and label them as `good for begginers` or `hacktoberfest`, but some more advanced topics might require extra knowledge. Below is a list of links you can use to learn more about some of the more advance topics that will help you master the Appwrite codebase.
 
 ##### Tools and Libs
 - [Docker](https://www.docker.com/get-started)
@@ -111,6 +111,7 @@ Learn more at our [Technology Stack](## Technology Stack) section.
 
 ##### Architecture
 - [Microservices vs Monolithic](https://www.mulesoft.com/resources/api/microservices-vs-monolithic#:~:text=Microservices%20architecture%20vs%20monolithic%20architecture&text=A%20monolithic%20application%20is%20built%20as%20a%20single%20unit.&text=To%20make%20any%20alterations%20to,formally%20with%20business%2Doriented%20APIs.)
+- [MVVM](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93viewmodel) - Appwrite console architecture
 
 ##### Security
 - [Appwrite Auth and ACL](https://github.com/appwrite/appwrite/blob/0.7.x/docs/specs/authentication.drawio.svg)
