@@ -34,6 +34,12 @@ class Auth
     const TOKEN_TYPE_INVITE = 4;
 
     /**
+     * Session Providers.
+     */
+    const TOKEN_PROVIDER_EMAIL = 'email';
+    const TOKEN_PROVIDER_ANONYMOUS = 'anonymous';
+
+    /**
      * Token Expiration times.
      */
     const TOKEN_EXPIRATION_LOGIN_LONG = 31536000;      /* 1 year */

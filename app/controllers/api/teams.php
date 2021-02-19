@@ -599,6 +599,8 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
             '$permissions' => ['read' => ['user:'.$user->getId()], 'write' => ['user:'.$user->getId()]],
             'userId' => $user->getId(),
             'type' => Auth::TOKEN_TYPE_LOGIN,
+            'provider' => Auth::TOKEN_PROVIDER_EMAIL,
+            'providerUid' => $user->getAttribute('email'),
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),

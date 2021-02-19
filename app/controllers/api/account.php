@@ -194,6 +194,8 @@ App::post('/v1/account/sessions')
                 '$permissions' => ['read' => ['user:'.$profile->getId()], 'write' => ['user:'.$profile->getId()]],
                 'userId' => $profile->getId(),
                 'type' => Auth::TOKEN_TYPE_LOGIN,
+                'provider' => Auth::TOKEN_PROVIDER_EMAIL,
+                'providerUid' => $email,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'expire' => $expiry,
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -449,7 +451,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             'limit' => 1,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                'oauth2'.\ucfirst($provider).'='.$oauth2ID,
+                'tokens.provider='.$provider,
+                'tokens.providerUid='.$oauth2ID
             ],
         ]) : $user;
 
@@ -508,6 +511,9 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             '$permissions' => ['read' => ['user:'.$user['$id']], 'write' => ['user:'.$user['$id']]],
             'userId' => $user->getId(),
             'type' => Auth::TOKEN_TYPE_LOGIN,
+            'provider' => $provider,
+            'providerUid' => $oauth2ID,
+            'providerToken' => $accessToken,
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -516,8 +522,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
         $user
-            ->setAttribute('oauth2'.\ucfirst($provider), $oauth2ID)
-            ->setAttribute('oauth2'.\ucfirst($provider).'AccessToken', $accessToken)
             ->setAttribute('status', Auth::USER_STATUS_ACTIVATED)
             ->setAttribute('tokens', $session, Document::SET_TYPE_APPEND)
         ;

@@ -320,6 +320,33 @@ $collections = [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Provider',
+                'key' => 'provider',
+                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
+                'default' => '',
+                'required' => false,
+                'array' => false,
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Provider User Identifier',
+                'key' => 'providerUid',
+                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
+                'default' => '',
+                'required' => false,
+                'array' => false,
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Provider Token',
+                'key' => 'providerToken',
+                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
+                'default' => '',
+                'required' => false,
+                'array' => false,
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Secret',
                 'key' => 'secret',
                 'type' => Database::SYSTEM_VAR_TYPE_TEXT,
@@ -1616,26 +1643,6 @@ foreach ($providers as $index => $provider) {
         'required' => false,
         'array' => false,
         'filter' => ['encrypt'],
-    ];
-
-    $collections[Database::SYSTEM_COLLECTION_USERS]['rules'][] = [
-        '$collection' => Database::SYSTEM_COLLECTION_RULES,
-        'label' => 'OAuth2 '.\ucfirst($index).' ID',
-        'key' => 'oauth2'.\ucfirst($index),
-        'type' => Database::SYSTEM_VAR_TYPE_TEXT,
-        'default' => '',
-        'required' => false,
-        'array' => false,
-    ];
-
-    $collections[Database::SYSTEM_COLLECTION_USERS]['rules'][] = [
-        '$collection' => Database::SYSTEM_COLLECTION_RULES,
-        'label' => 'OAuth2 '.\ucfirst($index).' Access Token',
-        'key' => 'oauth2'.\ucfirst($index).'AccessToken',
-        'type' => Database::SYSTEM_VAR_TYPE_TEXT,
-        'default' => '',
-        'required' => false,
-        'array' => false,
     ];
 }
 
