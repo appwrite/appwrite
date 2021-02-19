@@ -1,3 +1,14 @@
+# Version 0.8.0 (Not Released Yet)
+
+- Anonymous login
+
+# Version 0.7.1 (Not Released Yet)
+
+- Updated missing storage env vars
+- Added option to for Redis authentication
+- Force adding a security email on setup
+- Better error logs on appwrite cretificates worker
+
 # Version 0.7.0
 
 ## Features
