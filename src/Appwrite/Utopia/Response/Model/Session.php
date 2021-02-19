@@ -28,6 +28,24 @@ class Session extends Model
                 'default' => 0,
                 'example' => 1592981250,
             ])
+            ->addRule('provider', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Session Provider.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
+            ->addRule('providerUid', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Session Provider User ID.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
+            ->addRule('providerToken', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Session Provider Token.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
             ->addRule('ip', [
                 'type' => self::TYPE_STRING,
                 'description' => 'IP in use when the session was created.',

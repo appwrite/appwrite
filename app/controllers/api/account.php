@@ -1054,7 +1054,9 @@ App::delete('/v1/account/sessions/:sessionId')
                 
         $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($sessions as $session) { /** @var Document $session */
+        foreach ($sessions as $session) { 
+            /** @var Document $session */
+
             if (($sessionId == $session->getId())) {
                 if (!$projectDB->deleteDocument($session->getId())) {
                     throw new Exception('Failed to remove token from DB', 500);
@@ -1121,10 +1123,12 @@ App::delete('/v1/account/sessions')
         /** @var Appwrite\Event\Event $events */
 
         $protocol = $request->getProtocol();
-        $tokens = $user->getAttribute('tokens', []);
+        $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($tokens as $token) { /* @var $token Document */
-            if (!$projectDB->deleteDocument($token->getId())) {
+        foreach ($sessions as $session) { 
+            /** @var Document $session */
+
+            if (!$projectDB->deleteDocument($session->getId())) {
                 throw new Exception('Failed to remove token from DB', 500);
             }
 
@@ -1140,10 +1144,10 @@ App::delete('/v1/account/sessions')
                 ;
             }
 
-            $token->setAttribute('current', false);
+            $session->setAttribute('current', false);
 
-            if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
-                $token->setAttribute('current', true);
+            if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                $session->setAttribute('current', true);
                 $response
                     ->addCookie(Auth::$cookieName.'_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
                     ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
@@ -1153,8 +1157,8 @@ App::delete('/v1/account/sessions')
                     
         $events
             ->setParam('payload', $response->output(new Document([
-                'sum' => count($tokens),
-                'sessions' => $tokens
+                'sum' => count($sessions),
+                'sessions' => $sessions
             ]), Response::MODEL_SESSION_LIST))
         ;
 

@@ -307,7 +307,7 @@ $collections = [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_SESSIONS,
         '$permissions' => ['read' => ['*']],
-        'name' => 'Sessions',
+        'name' => 'Session',
         'structure' => true,
         'rules' => [
             [

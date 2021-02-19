@@ -430,11 +430,13 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
             throw new Exception('User not found', 404);
         }
 
-        $tokens = $user->getAttribute('tokens', []);
+        $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($tokens as $token) { /* @var $token Document */
-            if ($sessionId == $token->getId()) {
-                if (!$projectDB->deleteDocument($token->getId())) {
+        foreach ($sessions as $session) { 
+            /** @var Document $session */
+
+            if ($sessionId == $session->getId()) {
+                if (!$projectDB->deleteDocument($session->getId())) {
                     throw new Exception('Failed to remove token from DB', 500);
                 }
 
@@ -474,10 +476,12 @@ App::delete('/v1/users/:userId/sessions')
             throw new Exception('User not found', 404);
         }
 
-        $tokens = $user->getAttribute('tokens', []);
+        $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($tokens as $token) { /* @var $token Document */
-            if (!$projectDB->deleteDocument($token->getId())) {
+        foreach ($sessions as $session) { 
+            /** @var Document $session */
+
+            if (!$projectDB->deleteDocument($session->getId())) {
                 throw new Exception('Failed to remove token from DB', 500);
             }
         }
