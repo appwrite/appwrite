@@ -3,7 +3,7 @@
 namespace Appwrite\Tests;
 
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Filter\V06;
+use Appwrite\Utopia\Response\Filters\V06;
 use PHPUnit\Framework\TestCase;
 use Swoole\Http\Response as SwooleResponse;
 

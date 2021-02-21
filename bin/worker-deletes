@@ -1,3 +1,10 @@
 #!/bin/sh
 
-QUEUE='v1-deletes' APP_INCLUDE='/usr/src/code/app/workers/deletes.php' REDIS_BACKEND="${_APP_REDIS_HOST}:${_APP_REDIS_PORT}" php /usr/src/code/vendor/bin/resque -dopcache.preload=opcache.preload=/usr/src/code/app/preload.php
+if [ -z "$_APP_REDIS_USER" ] || [ -z "$_APP_REDIS_PASS" ]
+then
+    REDIS_BACKEND="${_APP_REDIS_HOST}:${_APP_REDIS_PORT}"
+else
+    REDIS_BACKEND="redis://${_APP_REDIS_USER}:${_APP_REDIS_PASS}@${_APP_REDIS_HOST}:${_APP_REDIS_PORT}"
+fi
+
+QUEUE='v1-deletes' APP_INCLUDE='/usr/src/code/app/workers/deletes.php' php /usr/src/code/vendor/bin/resque -dopcache.preload=opcache.preload=/usr/src/code/app/preload.php

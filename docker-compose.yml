@@ -21,7 +21,6 @@ services:
       - --entrypoints.appwrite_web.address=:80
       - --entrypoints.appwrite_websecure.address=:443
       - --accesslog=true
-    restart: unless-stopped
     ports:
       - 80:80
       - 443:443
@@ -43,7 +42,6 @@ services:
       args:
         - TESTING=true
         - VERSION=dev
-    restart: unless-stopped
     ports: 
       - 9501:80
     networks:
@@ -88,6 +86,7 @@ services:
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
+      - _APP_SYSTEM_RESPONSE_FORMAT
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_OPENSSL_KEY_V1
@@ -95,6 +94,8 @@ services:
       - _APP_DOMAIN_TARGET
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -108,15 +109,16 @@ services:
       - _APP_SMTP_SECURE
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
+      - _APP_USAGE_STATS
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
       - _APP_STORAGE_LIMIT
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_FUNCTIONS_CONTAINERS
-      - _APP_SYSTEM_RESPONSE_FORMAT
       - _APP_FUNCTIONS_CPUS
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
+      - _APP_FUNCTIONS_ENVS
 
   appwrite-realtime:
     entrypoint: realtime
@@ -162,7 +164,6 @@ services:
     container_name: appwrite-worker-usage
     build:
       context: .
-    restart: unless-stopped
     networks:
       - appwrite
     volumes:
@@ -175,6 +176,8 @@ services:
       - _APP_ENV
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
       - _APP_STATSD_HOST
       - _APP_STATSD_PORT
 
@@ -183,7 +186,6 @@ services:
     container_name: appwrite-worker-audits
     build:
       context: .
-    restart: unless-stopped
     networks:
       - appwrite
     volumes:
@@ -196,6 +198,8 @@ services:
       - _APP_ENV
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -207,7 +211,6 @@ services:
     container_name: appwrite-worker-webhooks
     build:
       context: .
-    restart: unless-stopped
     networks:
       - appwrite
     volumes:
@@ -222,6 +225,8 @@ services:
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -233,7 +238,6 @@ services:
     container_name: appwrite-worker-tasks
     build:
       context: .
-    restart: unless-stopped
     networks:
       - appwrite
     volumes:
@@ -247,6 +251,8 @@ services:
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -258,13 +264,13 @@ services:
     container_name: appwrite-worker-deletes
     build:
       context: .
-    restart: unless-stopped
     networks:
       - appwrite
     volumes: 
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-functions:/storage/functions:rw
+      - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
@@ -274,6 +280,8 @@ services:
       - _APP_ENV
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -285,7 +293,6 @@ services:
     container_name: appwrite-worker-certificates
     build:
       context: .
-    restart: unless-stopped
     networks:
       - appwrite
     volumes: 
@@ -301,6 +308,8 @@ services:
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -312,7 +321,6 @@ services:
     container_name: appwrite-worker-functions
     build:
       context: .
-    restart: unless-stopped
     networks:
       - appwrite
     volumes:
@@ -320,8 +328,8 @@ services:
       - appwrite-functions:/storage/functions:rw
       - /tmp:/tmp:rw
       - ./app:/usr/src/code/app
-      - ./docker:/usr/src/code/docker
       - ./src:/usr/src/code/src
+      - ./docker:/usr/src/code/docker
     depends_on:
       - redis
       - mariadb
@@ -329,6 +337,8 @@ services:
       - _APP_ENV
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -339,13 +349,15 @@ services:
       - _APP_FUNCTIONS_CPUS
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
+      - _APP_USAGE_STATS
+      - DOCKERHUB_PULL_USERNAME
+      - DOCKERHUB_PULL_PASSWORD
 
   appwrite-worker-mails:
     entrypoint: worker-mails
     container_name: appwrite-worker-mails
     build:
       context: .
-    restart: unless-stopped
     networks:
       - appwrite
     volumes:
@@ -361,6 +373,8 @@ services:
       - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
       - _APP_SMTP_SECURE
@@ -372,28 +386,6 @@ services:
     container_name: appwrite-maintenance
     build:
       context: .
-    restart: unless-stopped
-    networks:
-      - appwrite
-    depends_on:
-      - redis
-    environment:
-      - _APP_ENV
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_MAINTENANCE_INTERVAL
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-
-  appwrite-schedule:
-    entrypoint: schedule
-    container_name: appwrite-schedule
-    build:
-      context: .
-    restart: unless-stopped
     networks:
       - appwrite
     volumes:
@@ -405,17 +397,41 @@ services:
       - _APP_ENV
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_MAINTENANCE_INTERVAL
+      - _APP_MAINTENANCE_RETENTION_EXECUTION
+      - _APP_MAINTENANCE_RETENTION_ABUSE
+      - _APP_MAINTENANCE_RETENTION_AUDIT
+
+  appwrite-schedule:
+    entrypoint: schedule
+    container_name: appwrite-schedule
+    build:
+      context: .
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
 
   mariadb:
     image: appwrite/mariadb:1.2.0 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
-    restart: unless-stopped
     networks:
       - appwrite
     volumes:
       - appwrite-mariadb:/var/lib/mysql:rw
     ports:
-      - "9502:3306"
+      - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=password
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
@@ -439,7 +455,6 @@ services:
   redis:
     image: redis:6.0-alpine
     container_name: appwrite-redis
-    restart: unless-stopped
     networks:
       - appwrite
     volumes:
@@ -448,7 +463,6 @@ services:
   clamav:
     image: appwrite/clamav:1.2.0
     container_name: appwrite-clamav
-    restart: unless-stopped
     networks:
       - appwrite
     volumes:
@@ -457,7 +471,6 @@ services:
   influxdb:
     image: influxdb:1.8-alpine
     container_name: appwrite-influxdb
-    restart: unless-stopped
     networks:
       - appwrite
     volumes:
@@ -466,14 +479,25 @@ services:
   telegraf:
     image: appwrite/telegraf:1.0.0
     container_name: appwrite-telegraf
-    restart: unless-stopped
     networks:
       - appwrite
+
+  # Dev Tools Start ------------------------------------------------------------------------------------------
+  # 
+  # The Appwrite Team uses the following tools to help debug, monitor and diagnose the Appwrite stack
+  #
+  # Here is a description of the different tools and why are we using them:
+  #
+  # MailCatcher - An SMTP server. Catches all system emails and displays them in a nice UI.
+  # RequestCatcher - An HTTP server. Catches all system https calls and displays them using a simple HTTP API. Used to debug & tests webhooks and HTTP tasks
+  # RedisCommander - A nice UI for exploring Redis data
+  # Resque - A nice UI for exploring Reddis pub/sub, view the different queues workloads, pending and failed tasks
+  # Chronograf - A nice UI for exploring InfluxDB data
+  # Webgrind - A nice UI for exploring and debugging code-level stuff
 
   maildev: # used mainly for dev tests
     image: djfarrelly/maildev
     container_name: appwrite-maildev
-    restart: unless-stopped
     ports:
       - '9503:80'
     networks:
@@ -482,9 +506,16 @@ services:
   request-catcher: # used mainly for dev tests
     image: smarterdm/http-request-catcher
     container_name: appwrite-request-catcher
-    restart: unless-stopped
     ports:
       - '9504:5000'
+    networks:
+      - appwrite
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 9505:8080
     networks:
       - appwrite
 
@@ -536,6 +567,8 @@ services:
   #     - './debug:/tmp'
   #   ports:
   #     - '3001:80'
+  
+  # Dev Tools End   ------------------------------------------------------------------------------------------
 
 networks:
   gateway:
@@ -549,5 +582,5 @@ volumes:
   appwrite-certificates:
   appwrite-functions:
   appwrite-influxdb:
-  appwrite-chronograf:
   appwrite-config:
+  # appwrite-chronograf:

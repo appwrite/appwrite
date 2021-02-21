@@ -7,7 +7,6 @@ use Utopia\Swoole\Response as SwooleResponse;
 use Swoole\Http\Response as SwooleHTTPResponse;
 use Appwrite\Database\Document;
 use Appwrite\Utopia\Response\Filter;
-use Appwrite\Utopia\Response\Filter\V06;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\None;
 use Appwrite\Utopia\Response\Model\Any;
@@ -22,6 +21,7 @@ use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
 use Appwrite\Utopia\Response\Model\File;
 use Appwrite\Utopia\Response\Model\Func;
+use Appwrite\Utopia\Response\Model\JWT;
 use Appwrite\Utopia\Response\Model\Key;
 use Appwrite\Utopia\Response\Model\Language;
 use Appwrite\Utopia\Response\Model\User;
@@ -39,6 +39,7 @@ use Appwrite\Utopia\Response\Model\Tag;
 use Appwrite\Utopia\Response\Model\Task;
 use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
+use stdClass;
 
 /**
  * @method public function setStatusCode(int $code = 200): Response
@@ -66,7 +67,8 @@ class Response extends SwooleResponse
     const MODEL_USER_LIST = 'userList';
     const MODEL_SESSION = 'session';
     const MODEL_SESSION_LIST = 'sessionList';
-    const MODEL_TOKEN = 'token'; // - Missing
+    const MODEL_TOKEN = 'token';
+    const MODEL_JWT = 'jwt';
     
     // Storage
     const MODEL_FILE = 'file';
@@ -81,8 +83,8 @@ class Response extends SwooleResponse
     const MODEL_CONTINENT_LIST = 'continentList';
     const MODEL_CURRENCY = 'currency';
     const MODEL_CURRENCY_LIST = 'currencyList';
-    const MODEL_LANGUAGE = 'langauge';
-    const MODEL_LANGUAGE_LIST = 'langaugeList';
+    const MODEL_LANGUAGE = 'language';
+    const MODEL_LANGUAGE_LIST = 'languageList';
     const MODEL_PHONE = 'phone';
     const MODEL_PHONE_LIST = 'phoneList';
 
@@ -102,7 +104,7 @@ class Response extends SwooleResponse
     
     // Project
     const MODEL_PROJECT = 'project';
-    const MODEL_PROJECT_LIST = 'projectsList';
+    const MODEL_PROJECT_LIST = 'projectList';
     const MODEL_WEBHOOK = 'webhook';
     const MODEL_WEBHOOK_LIST = 'webhookList';
     const MODEL_KEY = 'key';
@@ -168,6 +170,7 @@ class Response extends SwooleResponse
             ->setModel(new User())
             ->setModel(new Session())
             ->setModel(new Token())
+            ->setModel(new JWT())
             ->setModel(new Locale())
             ->setModel(new File())
             ->setModel(new Team())
@@ -252,13 +255,12 @@ class Response extends SwooleResponse
     {
         $output = $this->output($document, $model);
 
-        // If filter is set, parse the item
+        // If filter is set, parse the output
         if(self::isFilter()){
-            $item = self::getFilter()->parse($output, $model);
+            $output = self::getFilter()->parse($output, $model);
         }
 
-        $this->json($output);
-
+        $this->json(!empty($output) ? $output : new stdClass());
     }
 
     /**

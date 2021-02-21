@@ -23,6 +23,8 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                 <h1>Upload File</h1>
 
                 <form
+                    data-analytics
+                    data-analytics-activity
                     data-analytics-event="submit"
                     data-analytics-category="console"
                     data-analytics-label="Create Storage File"
@@ -111,7 +113,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                             <tbody data-ls-loop="project-files.files" data-ls-as="file">
                                 <tr>
                                     <td class="hide">
-                                        <img src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="pull-start avatar" width="30" height="30" loading="lazy" />
+                                        <img src="" data-ls-attrs="src={{env.ENDPOINT}}/v1/storage/files/{{file.$id}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="pull-start avatar" width="30" height="30" loading="lazy" />
                                     </td>
                                     <td data-title="Name: " class="text-one-liner" data-ls-attrs="title={{file.name}}" >
                                         <div data-ui-modal class="box modal sticky-footer width-large close" data-button-text="{{file.name}}" data-button-class="link" data-button-element="span">
@@ -124,6 +126,8 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                             <div class="row responsive modalize">
                                                 <div class="col span-8">
                                                     <form class="strip"
+                                                        data-analytics
+                                                        data-analytics-activity
                                                         data-analytics-event="submit"
                                                         data-analytics-category="console"
                                                         data-analytics-label="Update Storage File"
@@ -153,6 +157,8 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                                     </form>
 
                                                     <form class="strip"
+                                                        data-analytics
+                                                        data-analytics-activity
                                                         data-analytics-event="submit"
                                                         data-analytics-category="console"
                                                         data-analytics-label="Delete File"
@@ -174,15 +180,15 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                                     <div class="margin-bottom-small">File Preview</div>
                                                     
                                                     <div class="margin-bottom-small">
-                                                        <img src="" class="file-preview" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/preview?width=350&height=250&project={{router.params.project}}&mode=admin" loading="lazy" width="225" height="160" />
+                                                        <img src="" class="file-preview" data-ls-attrs="src={{env.ENDPOINT}}/v1/storage/files/{{file.$id}}/preview?width=350&height=250&project={{router.params.project}}&mode=admin" loading="lazy" width="225" height="160" />
                                                     </div>
 
                                                     <div class="margin-bottom-tiny">
-                                                        <a href="" data-ls-attrs="href=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/view?project={{router.params.project}}&mode=admin" target="_blank" rel="noopener"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> New Window <i class="icon-link-ext"></i></a>
+                                                        <a href="" data-ls-attrs="href={{env.ENDPOINT}}/v1/storage/files/{{file.$id}}/view?project={{router.params.project}}&mode=admin" target="_blank" rel="noopener"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> New Window <i class="icon-link-ext"></i></a>
                                                     </div>
 
                                                     <div class="margin-bottom">
-                                                        <a href="" data-ls-attrs="href=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/download?project={{router.params.project}}&mode=admin" target="_blank" rel="noopener"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Download <i class="icon-link-ext"></i></a>
+                                                        <a href="" data-ls-attrs="href={{env.ENDPOINT}}/v1/storage/files/{{file.$id}}/download?project={{router.params.project}}&mode=admin" target="_blank" rel="noopener"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Download <i class="icon-link-ext"></i></a>
                                                     </div>
                                                 </div>
                                             </div>

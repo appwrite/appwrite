@@ -1,4 +1,4 @@
-# Version 0.7.0 (NOT-RELEASED)
+# Version 0.7.0
 
 ## Features
 
@@ -37,8 +37,14 @@
 - Added new environment variables for ClamAV hostname and port ([#780](https://github.com/appwrite/appwrite/pull/780))
 - New OAuth adapter for Box.com (@armino-dev - [#420](https://github.com/appwrite/appwrite/issues/410))
 - New OAuth adapter for PayPal sandbox  (@armino-dev - [#420](https://github.com/appwrite/appwrite/issues/410))
+- New OAuth adapter for Tradeshift  (@armino-dev - [#855](https://github.com/appwrite/appwrite/pull/855))
+- New OAuth adapter for Tradeshift sandbox  (@armino-dev - [#855](https://github.com/appwrite/appwrite/pull/855))
+- Introducing new permssion types: role:guest & role:member
+- Disabled rate-limits on server side integrations
+- Refactored migration script 
 
 ### User Interface
+
 - Updated grid for OAuth2 providers list in the console ([#413](https://github.com/appwrite/appwrite/issues/413))
 - Added Google Fonts to Appwrite for offline availability 
 - Added option to delete user from the console (@PineappleIOnic - [#538](https://github.com/appwrite/appwrite/issues/538))
@@ -53,6 +59,7 @@
 - Added toggle to hide/show secret keys and passwords inside the dashboard (@kodumbeats, [#535](https://github.com/appwrite/appwrite/issues/535))
 
 ### Upgrades
+
 - Upgraded QR codes generator library (@PedroCisnerosSantana - [#475](https://github.com/appwrite/appwrite/issues/475))
 - Upgraded Traefik image to version 2.3
 - Upgraded MariaDB to version 10.5.5
@@ -61,8 +68,10 @@
 - Upgraded Redis Resque queue library to version 1.3.6 ([#319](https://github.com/appwrite/appwrite/issues/319))
 - Upgraded ClamAV container image to version 1.0.11 ([#412](https://github.com/appwrite/appwrite/issues/412))
 - Upgraded device detctor to version 3.12.6
+- Upgraded GEOIP DB file to Feb 2021 release
 
 ## Breaking Changes (Read before upgrading!)
+
 - **Deprecated** `first` and `last` query params for documents list route in the database API
 - **Deprecated** Deprectaed Pubjabi Translations ('pn')
 - **Deprecated** `PATCH /account/prefs` is now updating the prefs payload and not just merging it
@@ -100,6 +109,8 @@
 - Fixed OAuth redirect when using the self-hosted instance default success URL ([#454](https://github.com/appwrite/appwrite/issues/454))
 - Fixed bug denying authentication with Github OAuth provider
 - Fixed a bug making read permission overwrite write permission in some cases
+- Fixed consistent property names in databases by enforcing camel case
+
 ## Security
 
 - Access to Health API now requires authentication with an API Key with access to `health.read` scope allowed
@@ -107,6 +118,8 @@
 - Now using your `_APP_SYSTEM_EMAIL_ADDRESS` as the email address for issuing and renewing SSL certificates
 - Block iframe access to Appwrite console using the `X-Frame-Options` header.
 - Fixed `roles` param input validator
+- API Keys are now stored encrypted 
+- Disabled domains whitlist ACL for the Appwrite console
 
 # Version 0.6.2 (PRE-RELEASE)
 

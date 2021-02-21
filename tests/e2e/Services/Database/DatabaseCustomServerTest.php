@@ -27,7 +27,7 @@ class DatabaseCustomServerTest extends Scope
         ]), [
             'name' => 'Actors',
             'read' => ['*'],
-            'write' => ['role:1', 'role:2'],
+            'write' => ['role:member', 'role:admin'],
             'rules' => [
                 [
                     'label' => 'First Name',

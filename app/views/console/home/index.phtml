@@ -1,5 +1,6 @@
 <?php
 $graph = $this->getParam('graph', false);
+$usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 ?>
 
 <div class="cover margin-bottom-small">
@@ -26,40 +27,54 @@ $graph = $this->getParam('graph', false);
 
 <div class="zone xxl margin-top-negative-xxxl">
     <div class="clear margin-bottom-small margin-top-negative">
-        <div class="pull-end">
+        <?php if (!$graph && $usageStatsEnabled): ?>
+            <div class="pull-end">
 
-            <form class="margin-start-small inline" data-ls-if="{{usage.range}} !== '24h'"
-                data-service="projects.getUsage"
-                data-event="submit"
-                data-name="usage"
-                data-param-project-id="{{router.params.project}}"
-                data-param-range="24h">
-                <button class="tick">24h</button>
-            </form>
+                <form class="margin-start-small inline" data-ls-if="{{usage.range}} !== '24h'"
+                    data-analytics
+                    data-analytics-event="click"
+                    data-analytics-category="console"
+                    data-analytics-label="Usage 24h"
+                    data-service="projects.getUsage"
+                    data-event="submit"
+                    data-name="usage"
+                    data-param-project-id="{{router.params.project}}"
+                    data-param-range="24h">
+                    <button class="tick">24h</button>
+                </form>
 
-            <button class="tick margin-start-small" data-ls-if="{{usage.range}} === '24h'" disabled>24h</button>
+                <button class="tick margin-start-small" data-ls-if="{{usage.range}} === '24h'" disabled>24h</button>
 
-            <form class="margin-start-small inline" data-ls-if="{{usage.range}} !== '30d'"
-                data-service="projects.getUsage"
-                data-event="submit"
-                data-name="usage"
-                data-param-project-id="{{router.params.project}}">
-                <button class="tick">30d</button>
-            </form>
+                <form class="margin-start-small inline" data-ls-if="{{usage.range}} !== '30d'"
+                    data-analytics
+                    data-analytics-event="click"
+                    data-analytics-category="console"
+                    data-analytics-label="Usage 30d"
+                    data-service="projects.getUsage"
+                    data-event="submit"
+                    data-name="usage"
+                    data-param-project-id="{{router.params.project}}">
+                    <button class="tick">30d</button>
+                </form>
 
-            <button class="tick margin-start-small" data-ls-if="{{usage.range}} === '30d'" disabled>30d</button>
+                <button class="tick margin-start-small" data-ls-if="{{usage.range}} === '30d'" disabled>30d</button>
 
-            <form class="margin-start-small inline" data-ls-if="{{usage.range}} !== '90d'"
-                data-service="projects.getUsage"
-                data-event="submit"
-                data-name="usage"
-                data-param-project-id="{{router.params.project}}"
-                data-param-range="90d">
-                <button class="tick">90d</button>
-            </form>
+                <form class="margin-start-small inline" data-ls-if="{{usage.range}} !== '90d'"
+                    data-analytics
+                    data-analytics-event="click"
+                    data-analytics-category="console"
+                    data-analytics-label="Usage 90d"
+                    data-service="projects.getUsage"
+                    data-event="submit"
+                    data-name="usage"
+                    data-param-project-id="{{router.params.project}}"
+                    data-param-range="90d">
+                    <button class="tick">90d</button>
+                </form>
 
-            <button class="tick margin-start-small" data-ls-if="{{usage.range}} === '90d'" disabled>90d</button>
-        </div>
+                <button class="tick margin-start-small" data-ls-if="{{usage.range}} === '90d'" disabled>90d</button>
+            </div>
+        <?php endif; ?>
     </div>
     <div
         data-service="projects.getUsage"
@@ -68,7 +83,7 @@ $graph = $this->getParam('graph', false);
         data-param-project-id="{{router.params.project}}"
         data-param-range="30d">
 
-        <?php if (!$graph) : ?>
+        <?php if (!$graph && $usageStatsEnabled): ?>
             <div class="box dashboard">
                 <div class="row responsive">
                     <div class="col span-9">
@@ -139,6 +154,8 @@ $graph = $this->getParam('graph', false);
                 </div>
 
                 <form class="pull-end margin-end"
+                    data-analytics
+                    data-analytics-activity
                     data-analytics-event="submit"
                     data-analytics-category="console"
                     data-analytics-label="Delete Project Platform"
@@ -190,7 +207,11 @@ $graph = $this->getParam('graph', false);
     </div>
 
     <div class="pull-end desktops-only tablets-only">
-        <a data-ls-attrs="href=/console/keys?project={{router.params.project}}">Manage Your Server API Keys</a>
+        <a data-analytics
+            data-analytics-event="click"
+            data-analytics-category="console"
+            data-analytics-label="API Keys Link"
+            data-ls-attrs="href=/console/keys?project={{router.params.project}}">Manage Your Server API Keys</a>
     </div>
 
     <div class="drop-list pull-start" data-ls-ui-open="" data-button-aria="Choose Platform" data-button-text="Add Platform" data-button-class="button" data-blur="1">
@@ -220,6 +241,8 @@ $graph = $this->getParam('graph', false);
     <h1>New Web App</h1>
 
     <form
+        data-analytics
+        data-analytics-activity
         data-analytics-event="submit"
         data-analytics-category="console"
         data-analytics-label="Create Project Platform (Web)"
@@ -258,6 +281,8 @@ $graph = $this->getParam('graph', false);
 
 <script type="text/html" id="template-web-update">
     <form
+        data-analytics
+        data-analytics-activity
         data-analytics-event="submit"
         data-analytics-category="console"
         data-analytics-label="Update Project Platform (Web)"
@@ -296,6 +321,8 @@ $graph = $this->getParam('graph', false);
             <h2 style="display: none">&nbsp;&nbsp;iOS&nbsp;&nbsp;</h2>
 
             <form
+                data-analytics
+                data-analytics-activity
                 data-analytics-event="submit"
                 data-analytics-category="console"
                 data-analytics-label="Create Project Platform (Flutter / iOS)"
@@ -328,6 +355,8 @@ $graph = $this->getParam('graph', false);
             <h2 style="display: none">&nbsp;&nbsp;Android&nbsp;&nbsp;</h2>
 
             <form
+                data-analytics
+                data-analytics-activity
                 data-analytics-event="submit"
                 data-analytics-category="console"
                 data-analytics-label="Create Project Platform (Flutter / Android)"
@@ -360,9 +389,11 @@ $graph = $this->getParam('graph', false);
 
 <script type="text/html" id="template-ios-update">
     <form
+        data-analytics
+        data-analytics-activity
         data-analytics-event="submit"
         data-analytics-category="console"
-        data-analytics-label="Update Project Platform (iOS)"
+        data-analytics-label="Update Project Platform (Flutter / iOS)"
         data-service="projects.updatePlatform"
         data-scope="console"
         data-event="submit"
@@ -390,9 +421,10 @@ $graph = $this->getParam('graph', false);
 
 <script type="text/html" id="template-android-update">
     <form
+        data-analytics
         data-analytics-event="submit"
         data-analytics-category="console"
-        data-analytics-label="Update Project Platform (Android)"
+        data-analytics-label="Update Project Platform (Flutter / Android)"
         data-service="projects.updatePlatform"
         data-scope="console"
         data-event="submit"

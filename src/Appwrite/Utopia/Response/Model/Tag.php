@@ -13,26 +13,31 @@ class Tag extends Model
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Tag ID.',
+                'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('functionId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Function ID.',
+                'default' => '',
                 'example' => '5e5ea6g16897e',
             ])
             ->addRule('dateCreated', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'The tag creation date in Unix timestamp.',
+                'default' => 0,
                 'example' => 1592981250,
             ])
             ->addRule('command', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The entrypoint command in use to execute the tag code.',
+                'default' => '',
                 'example' => 'enabled',
             ])
             ->addRule('size', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The code size in bytes.',
+                'default' => '',
                 'example' => 'python-3.8',
             ])
         ;

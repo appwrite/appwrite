@@ -5,7 +5,7 @@ use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
-use Appwrite\Storage\Device\Local;
+use Utopia\Storage\Device\Local;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\CLI\Console;
@@ -15,7 +15,7 @@ use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 
 require_once __DIR__.'/../init.php';
 
-\cli_set_process_title('Deletes V1 Worker');
+Console::title('Deletes V1 Worker');
 
 Console::success(APP_NAME.' deletes worker v1 has started'."\n");
 
@@ -38,7 +38,7 @@ class DeletesV1
         switch (strval($type)) {
             case DELETE_TYPE_DOCUMENT:
                 $document = $this->args['document'];
-                $document = new Document($document);    
+                $document = new Document($document);
                 switch (strval($document->getCollection())) {
                     case Database::SYSTEM_COLLECTION_PROJECTS:
                         $this->deleteProject($document);
@@ -59,7 +59,7 @@ class DeletesV1
                 break;
 
             case DELETE_TYPE_EXECUTIONS:
-                $this->deleteExecutionLogs();
+                $this->deleteExecutionLogs($this->args['timestamp']);
                 break;
 
             case DELETE_TYPE_AUDIT:
@@ -68,6 +68,11 @@ class DeletesV1
 
             case DELETE_TYPE_ABUSE:
                 $this->deleteAbuseLogs($this->args['timestamp']);
+                break;
+
+            case DELETE_TYPE_CERTIFICATES:
+                $document = new Document($this->args['document']);
+                $this->deleteCertificates($document);
                 break;
                         
             default:
@@ -121,16 +126,17 @@ class DeletesV1
         ], $this->getProjectDB($projectId));
     }
 
-    protected function deleteExecutionLogs() 
+    protected function deleteExecutionLogs($timestamp) 
     {
-        $this->deleteForProjectIds(function($projectId) {
+        $this->deleteForProjectIds(function($projectId) use ($timestamp) {
             if (!($projectDB = $this->getProjectDB($projectId))) {
                 throw new Exception('Failed to get projectDB for project '.$projectId);
             }
 
             // Delete Executions
             $this->deleteByGroup([
-                '$collection='.Database::SYSTEM_COLLECTION_EXECUTIONS
+                '$collection='.Database::SYSTEM_COLLECTION_EXECUTIONS,
+                'dateCreated<'.$timestamp
             ], $projectDB);
         });
     }
@@ -302,6 +308,21 @@ class DeletesV1
         $executionEnd = \microtime(true);
 
         Console::info("Deleted {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
+    }
+
+    protected function deleteCertificates(Document $document)
+    {
+        $domain = $document->getAttribute('domain');
+        $directory = APP_STORAGE_CERTIFICATES . '/' . $domain;
+        $checkTraversal = realpath($directory) === $directory;
+
+        if($domain && $checkTraversal && is_dir($directory)) {
+            array_map('unlink', glob($directory.'/*.*'));
+            rmdir($directory);
+            Console::info("Deleted certificate files for {$domain}");
+        } else {
+            Console::info("No certificate files found for {$domain}");
+        }
     }
 
     /**

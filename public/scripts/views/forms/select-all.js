@@ -31,18 +31,20 @@
         element.parentNode.insertBefore(unselect, element);
   
         select.addEventListener('click', function () {
-          let checkboxes = document.querySelectorAll("input[type='checkbox']");
+          let checkboxes = element.querySelectorAll("input[type='checkbox']");
   
           for(var i = 0; i < checkboxes.length; i++) {
             checkboxes[i].checked = true;
+            checkboxes[i].dispatchEvent(new Event('change'));
           }
         })
   
         unselect.addEventListener('click', function () {
-          let checkboxes = document.querySelectorAll("input[type='checkbox']");
+          let checkboxes = element.querySelectorAll("input[type='checkbox']");
   
           for(var i = 0; i < checkboxes.length; i++) {
             checkboxes[i].checked = false;
+            checkboxes[i].dispatchEvent(new Event('change'));
           }
         })
   

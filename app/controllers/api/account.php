@@ -1,5 +1,6 @@
 <?php
 
+use Ahc\Jwt\JWT;
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Config\Config;
@@ -18,11 +19,11 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Exception\Duplicate;
 use Appwrite\Database\Validator\UID;
 use Appwrite\Database\Validator\Authorization;
+use Appwrite\Detector\Detector;
 use Appwrite\Template\Template;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as URLParser;
 use Appwrite\Utopia\Response;
-use DeviceDetector\DeviceDetector;
 use Utopia\Validator\ArrayList;
 
 $oauthDefaultSuccess = App::getEnv('_APP_HOME').'/auth/oauth2/success';
@@ -99,7 +100,7 @@ App::post('/v1/account')
                 'emailVerification' => false,
                 'status' => Auth::USER_STATUS_UNACTIVATED,
                 'password' => Auth::passwordHash($password),
-                'password-update' => \time(),
+                'passwordUpdate' => \time(),
                 'registration' => \time(),
                 'reset' => false,
                 'name' => $name,
@@ -183,59 +184,23 @@ App::post('/v1/account/sessions')
             throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
         }
 
-        $dd = new DeviceDetector($request->getUserAgent('UNKNOWN'));
-
-        $dd->parse();
-
-        $os = $dd->getOs();
-        $osCode = (isset($os['short_name'])) ? $os['short_name'] : '';
-        $osName = (isset($os['name'])) ? $os['name'] : '';
-        $osVersion = (isset($os['version'])) ? $os['version'] : '';
-
-        $client = $dd->getClient();
-        $clientType = (isset($client['type'])) ? $client['type'] : '';
-        $clientCode = (isset($client['short_name'])) ? $client['short_name'] : '';
-        $clientName = (isset($client['name'])) ? $client['name'] : '';
-        $clientVersion = (isset($client['version'])) ? $client['version'] : '';
-        $clientEngine = (isset($client['engine'])) ? $client['engine'] : '';
-        $clientEngineVersion = (isset($client['engine_version'])) ? $client['engine_version'] : '';
-
+        $detector = new Detector($request->getUserAgent('UNKNOWN'));
+        $record = $geodb->get($request->getIP());
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $secret = Auth::tokenGenerator();
-        $session = new Document([
-            '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
-            '$permissions' => ['read' => ['user:'.$profile->getId()], 'write' => ['user:'.$profile->getId()]],
-            'userId' => $profile->getId(),
-            'type' => Auth::TOKEN_TYPE_LOGIN,
-            'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-            'expire' => $expiry,
-            'userAgent' => $request->getUserAgent('UNKNOWN'),
-            'ip' => $request->getIP(),
-            'osCode' => $osCode,
-            'osName' => $osName,
-            'osVersion' => $osVersion,
-            'clientType' => $clientType,
-            'clientCode' => $clientCode,
-            'clientName' => $clientName,
-            'clientVersion' => $clientVersion,
-            'clientEngine' => $clientEngine,
-            'clientEngineVersion' => $clientEngineVersion,
-            'deviceName' => $dd->getDeviceName(),
-            'deviceBrand' => $dd->getBrandName(),
-            'deviceModel' => $dd->getModel(),
-        ]);
-
-        $record = $geodb->get($request->getIP());
-
-        if($record) {
-            $session
-                ->setAttribute('countryCode', \strtolower($record['country']['iso_code']))
-            ;
-        } else {
-            $session
-                ->setAttribute('countryCode', '--')
-            ;
-        }
+        $session = new Document(array_merge(
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
+                '$permissions' => ['read' => ['user:'.$profile->getId()], 'write' => ['user:'.$profile->getId()]],
+                'userId' => $profile->getId(),
+                'type' => Auth::TOKEN_TYPE_LOGIN,
+                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'expire' => $expiry,
+                'userAgent' => $request->getUserAgent('UNKNOWN'),
+                'ip' => $request->getIP(),
+                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+            ], $detector->getOS(), $detector->getClient(), $detector->getDevice()
+        ));
 
         Authorization::setRole('user:'.$profile->getId());
 
@@ -511,7 +476,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'emailVerification' => true,
                         'status' => Auth::USER_STATUS_ACTIVATED, // Email should already be authenticated by OAuth2 provider
                         'password' => Auth::passwordHash(Auth::passwordGenerator()),
-                        'password-update' => \time(),
+                        'passwordUpdate' => \time(),
                         'registration' => \time(),
                         'reset' => false,
                         'name' => $name,
@@ -534,26 +499,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         // Create session token, verify user account and update OAuth2 ID and Access Token
 
-        $dd = new DeviceDetector($request->getUserAgent('UNKNOWN'));
-
-        $dd->parse();
-
-        $os = $dd->getOs();
-        $osCode = (isset($os['short_name'])) ? $os['short_name'] : '';
-        $osName = (isset($os['name'])) ? $os['name'] : '';
-        $osVersion = (isset($os['version'])) ? $os['version'] : '';
-
-        $client = $dd->getClient();
-        $clientType = (isset($client['type'])) ? $client['type'] : '';
-        $clientCode = (isset($client['short_name'])) ? $client['short_name'] : '';
-        $clientName = (isset($client['name'])) ? $client['name'] : '';
-        $clientVersion = (isset($client['version'])) ? $client['version'] : '';
-        $clientEngine = (isset($client['engine'])) ? $client['engine'] : '';
-        $clientEngineVersion = (isset($client['engine_version'])) ? $client['engine_version'] : '';
-
+        $detector = new Detector($request->getUserAgent('UNKNOWN'));
+        $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-        $session = new Document([
+        $session = new Document(array_merge([
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
             '$permissions' => ['read' => ['user:'.$user['$id']], 'write' => ['user:'.$user['$id']]],
             'userId' => $user->getId(),
@@ -562,31 +512,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
-            'osCode' => $osCode,
-            'osName' => $osName,
-            'osVersion' => $osVersion,
-            'clientType' => $clientType,
-            'clientCode' => $clientCode,
-            'clientName' => $clientName,
-            'clientVersion' => $clientVersion,
-            'clientEngine' => $clientEngine,
-            'clientEngineVersion' => $clientEngineVersion,
-            'deviceName' => $dd->getDeviceName(),
-            'deviceBrand' => $dd->getBrandName(),
-            'deviceModel' => $dd->getModel(),
-        ]);
-
-        $record = $geodb->get($request->getIP());
-
-        if($record) {
-            $session
-                ->setAttribute('countryCode', \strtolower($record['country']['iso_code']))
-            ;
-        } else {
-            $session
-                ->setAttribute('countryCode', '--')
-            ;
-        }
+            'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+        ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
         $user
             ->setAttribute('oauth2'.\ucfirst($provider), $oauth2ID)
@@ -637,6 +564,50 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         ;
     });
 
+App::post('/v1/account/jwt')
+    ->desc('Create Account JWT')
+    ->groups(['api', 'account'])
+    ->label('scope', 'account')
+    ->label('docs', false) // Hidden for now - private beta
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'createJWT')
+    ->label('sdk.description', '/docs/references/account/create-jwt.md')
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'url:{url},userId:{param-userId}')
+    ->inject('response')
+    ->inject('user')
+    ->action(function ($response, $user) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Document $user */
+            
+        $tokens = $user->getAttribute('tokens', []);
+        $session = new Document();
+
+        foreach ($tokens as $token) { /** @var Appwrite\Database\Document $token */
+            if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                $session = $token;
+            }
+        }
+
+        if($session->isEmpty()) {
+            throw new Exception('No valid session found', 401);
+        }
+        
+        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic(new Document(['jwt' => $jwt->encode([
+                // 'uid'    => 1,
+                // 'aud'    => 'http://site.com',
+                // 'scopes' => ['user'],
+                // 'iss'    => 'http://api.mysite.com',
+                'userId' => $user->getId(),
+                'sessionId' => $session->getId(),
+            ])]), Response::MODEL_JWT);
+    });
+
 App::get('/v1/account')
     ->desc('Get Account')
     ->groups(['api', 'account'])
@@ -674,7 +645,7 @@ App::get('/v1/account/prefs')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
 
-        $prefs = $user->getAttribute('prefs', new \stdClass);
+        $prefs = $user->getAttribute('prefs', new \stdClass());
 
         $response->dynamic(new Document($prefs), Response::MODEL_ANY);
     });
@@ -775,43 +746,13 @@ App::get('/v1/account/logs')
         foreach ($logs as $i => &$log) {
             $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
 
-            $dd = new DeviceDetector($log['userAgent']);
+            $detector = new Detector($log['userAgent']);
 
-            $dd->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-
-            $dd->parse();
-
-            $os = $dd->getOs();
-            $osCode = (isset($os['short_name'])) ? $os['short_name'] : '';
-            $osName = (isset($os['name'])) ? $os['name'] : '';
-            $osVersion = (isset($os['version'])) ? $os['version'] : '';
-
-            $client = $dd->getClient();
-            $clientType = (isset($client['type'])) ? $client['type'] : '';
-            $clientCode = (isset($client['short_name'])) ? $client['short_name'] : '';
-            $clientName = (isset($client['name'])) ? $client['name'] : '';
-            $clientVersion = (isset($client['version'])) ? $client['version'] : '';
-            $clientEngine = (isset($client['engine'])) ? $client['engine'] : '';
-            $clientEngineVersion = (isset($client['engine_version'])) ? $client['engine_version'] : '';
-
-            $output[$i] = new Document([
+            $output[$i] = new Document(array_merge([
                 'event' => $log['event'],
                 'ip' => $log['ip'],
                 'time' => \strtotime($log['time']),
-
-                'osCode' => $osCode,
-                'osName' => $osName,
-                'osVersion' => $osVersion,
-                'clientType' => $clientType,
-                'clientCode' => $clientCode,
-                'clientName' => $clientName,
-                'clientVersion' => $clientVersion,
-                'clientEngine' => $clientEngine,
-                'clientEngineVersion' => $clientEngineVersion,
-                'deviceName' => $dd->getDeviceName(),
-                'deviceBrand' => $dd->getBrandName(),
-                'deviceModel' => $dd->getModel(),
-            ]);
+            ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
             $record = $geodb->get($log['ip']);
 
@@ -1022,7 +963,6 @@ App::delete('/v1/account')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', '/docs/references/account/delete.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->inject('request')
     ->inject('response')
@@ -1089,7 +1029,6 @@ App::delete('/v1/account/sessions/:sessionId')
     ->label('sdk.method', 'deleteSession')
     ->label('sdk.description', '/docs/references/account/delete-session.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->label('abuse-limit', 100)
     ->param('sessionId', null, new UID(), 'Session unique ID. Use the string \'current\' to delete the current device session.')
@@ -1164,7 +1103,6 @@ App::delete('/v1/account/sessions')
     ->label('sdk.method', 'deleteSessions')
     ->label('sdk.description', '/docs/references/account/delete-sessions.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->label('abuse-limit', 100)
     ->inject('request')
@@ -1412,7 +1350,7 @@ App::put('/v1/account/recovery')
 
         $profile = $projectDB->updateDocument(\array_merge($profile->getArrayCopy(), [
             'password' => Auth::passwordHash($password),
-            'password-update' => \time(),
+            'passwordUpdate' => \time(),
             'emailVerification' => true,
         ]));
 

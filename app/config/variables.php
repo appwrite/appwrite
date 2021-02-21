@@ -1,5 +1,7 @@
 <?php
 
+use Utopia\Config\Config;
+
 return [
     [
         'category' => 'General',
@@ -22,7 +24,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_OPTIONS_FORCE_HTTPS', 
+                'name' => '_APP_OPTIONS_FORCE_HTTPS',
                 'description' => 'Allows you to force HTTPS connection to your API. This feature redirects any HTTP call to HTTPS and adds the \'Strict-Transport-Security\' header to all HTTP responses. By default, set to \'disabled\'. To enable, set to \'enabled\'. This feature will work only when your ports are set to default 80 and 443.',
                 'introduction' => '',
                 'default' => 'enabled',
@@ -51,7 +53,7 @@ return [
                 'introduction' => '',
                 'default' => 'localhost',
                 'required' => true,
-                'question' => "Enter a DNS A record hostname to serve as a CNAME for your custom domains.\nYou can use the same value as used for the Appwrite hostname.",
+                'question' => 'Enter a DNS A record hostname to serve as a CNAME for your custom domains.\nYou can use the same value as used for the Appwrite hostname.',
             ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_EMAILS',
@@ -61,17 +63,17 @@ return [
                 'required' => false,
                 'question' => '',
             ],
-            [
-                'name' => '_APP_CONSOLE_WHITELIST_DOMAINS',
-                'description' => "This option allows you to limit creation of users to Appwrite console for users sharing the same email domains. This option is very useful for team working with company emails domain.\n\nTo enable this option, pass a list of allowed email domains separated by a comma.",
-                'introduction' => '',
-                'default' => '',
-                'required' => false,
-                'question' => '',
-            ],
+            // [
+            //     'name' => '_APP_CONSOLE_WHITELIST_DOMAINS',
+            //     'description' => 'This option allows you to limit creation of users to Appwrite console for users sharing the same email domains. This option is very useful for team working with company emails domain.\n\nTo enable this option, pass a list of allowed email domains separated by a comma.',
+            //     'introduction' => '',
+            //     'default' => '',
+            //     'required' => false,
+            //     'question' => '',
+            // ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_IPS',
-                'description' => "This last option allows you to limit creation of users in Appwrite console for users sharing the same set of IP addresses. This option is very useful for team working with a VPN service or a company IP.\n\nTo enable/activate this option, pass a list of allowed IP addresses separated by a comma.",
+                'description' => 'This last option allows you to limit creation of users in Appwrite console for users sharing the same set of IP addresses. This option is very useful for team working with a VPN service or a company IP.\n\nTo enable/activate this option, pass a list of allowed IP addresses separated by a comma.',
                 'introduction' => '',
                 'default' => '',
                 'required' => false,
@@ -90,6 +92,30 @@ return [
                 'description' => 'This is the sender email address that will appear on email messages sent to developers from the Appwrite console. The default value is \'team@appwrite.io\'. You should choose an email address that is allowed to be used from your SMTP server to avoid the server email ending in the users\' SPAM folders.',
                 'introduction' => '0.7.0',
                 'default' => 'team@appwrite.io',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_SYSTEM_RESPONSE_FORMAT',
+                'description' => 'Use this environment variable to set the default Appwrite HTTP response format to support an older version of Appwrite. This option is useful to overcome breaking changes between versions. You can also use the `X-Appwrite-Response-Format` HTTP request header to overwrite the response for a specific request. This variable accepts any valid Appwrite version. To use the current version format, leave the value of the variable empty.',
+                'introduction' => '0.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_SYSTEM_SECURITY_EMAIL_ADDRESS',
+                'description' => 'This is the email address used to issue SSL certificates for custom domains or the user agent in your webhooks payload.',
+                'introduction' => '0.7.0',
+                'default' => '',
+                'required' => true,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_USAGE_STATS',
+                'description' => 'This variable allows you to disable the collection and displaying of usage stats. This value is set to \'enabled\' by default, to disable the usage stats set the value to \'disabled\'. When disabled, it\'s recommended to turn off the Worker Usage, Influxdb and Telegraf containers for better resource usage.',
+                'introduction' => '0.7.0',
+                'default' => 'enabled',
                 'required' => false,
                 'question' => '',
             ],
@@ -112,6 +138,22 @@ return [
                 'description' => 'Redis server TCP port. Default value is: \'6379\'.',
                 'introduction' => '',
                 'default' => '6379',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_REDIS_USER',
+                'description' => 'Redis server user.',
+                'introduction' => '0.7',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_REDIS_PASS',
+                'description' => 'Redis server password.',
+                'introduction' => '0.7',
+                'default' => '',
                 'required' => false,
                 'question' => '',
             ],
@@ -147,7 +189,7 @@ return [
             ],
             [
                 'name' => '_APP_DB_USER',
-                'description' => 'MariaDB server user name. Default value is: \'root\'.',
+                'description' => 'MariaDB server user name. Default value is: \'user\'.',
                 'introduction' => '',
                 'default' => 'user',
                 'required' => false,
@@ -209,7 +251,7 @@ return [
     ],
     [
         'category' => 'SMTP',
-        'description' => "Appwrite is using an SMTP server for emailing your projects users and server admins. The SMTP env vars are used to allow Appwrite server to connect to the SMTP container.\n\nIf running in production, it might be easier to use a 3rd party SMTP server as it might be a little more difficult to set up a production SMTP server that will not send all your emails into your user's SPAM folder.",
+        'description' => 'Appwrite is using an SMTP server for emailing your projects users and server admins. The SMTP env vars are used to allow Appwrite server to connect to the SMTP container.\n\nIf running in production, it might be easier to use a 3rd party SMTP server as it might be a little more difficult to set up a production SMTP server that will not send all your emails into your user\'s SPAM folder.',
         'variables' => [
             [
                 'name' => '_APP_SMTP_HOST',
@@ -313,25 +355,33 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_CPUS',
-                'description' => 'The maximum number of CPU core a single cloud function is allowed to use. Please note that setting a value higher than available cores will result in a function error, which might result in an error. The default value is 1.',
+                'description' => 'The maximum number of CPU core a single cloud function is allowed to use. Please note that setting a value higher than available cores will result in a function error, which might result in an error. The default value is empty. When it\'s empty, CPU limit will be disabled.',
                 'introduction' => '0.7.0',
-                'default' => '1',
+                'default' => '',
                 'required' => false,
                 'question' => '',
             ],
             [
                 'name' => '_APP_FUNCTIONS_MEMORY',
-                'description' => 'The maximum amount of memory a single cloud function is allowed to use in megabytes. The default value is 128.',
+                'description' => 'The maximum amount of memory a single cloud function is allowed to use in megabytes. The default value is  empty. When it\'s empty, memory limit will be disabled.',
                 'introduction' => '0.7.0',
-                'default' => '128',
+                'default' => '256',
                 'required' => false,
                 'question' => '',
             ],
             [
                 'name' => '_APP_FUNCTIONS_MEMORY_SWAP',
-                'description' => 'The maximum amount of swap memory a single cloud function is allowed to use in megabytes. The default value is 128.',
+                'description' => 'The maximum amount of swap memory a single cloud function is allowed to use in megabytes. The default value is  empty. When it\'s empty, swap memory limit will be disabled.',
                 'introduction' => '0.7.0',
-                'default' => '128',
+                'default' => '256',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_FUNCTIONS_ENVS',
+                'description' => 'This option allows you to limit the available environments for cloud functions. This option is very useful for low-cost servers to safe disk space.\n\nTo enable/activate this option, pass a list of allowed environments separated by a comma.\n\nCurrently, supported environments are: ' . \implode(', ', \array_keys(Config::getParam('providers'))),
+                'introduction' => '0.7.0',
+                'default' => 'node-14.5,deno-1.6,php-7.4,python-3.8,ruby-3.0,dotnet-5.0',
                 'required' => false,
                 'question' => '',
             ],
@@ -348,13 +398,31 @@ return [
                     'required' => false,
                     'question' => '',
                 ],
+                [
+                    'name' => '_APP_MAINTENANCE_RETENTION_EXECUTION',
+                    'description' => 'The maximum duration (in seconds) upto which to retain execution logs. The default value is 1209600 seconds (14 days).',
+                    'introduction' => '0.7.0',
+                    'default' => '1209600',
+                    'required' => false,
+                    'question' => '',
+                ],
+                [
+                    'name' => '_APP_MAINTENANCE_RETENTION_AUDIT',
+                    'description' => 'IThe maximum duration (in seconds) upto which to retain audit logs. The default value is 1209600 seconds (14 days).',
+                    'introduction' => '0.7.0',
+                    'default' => '1209600',
+                    'required' => false,
+                    'question' => '',
+                ],
+                [
+                    'name' => '_APP_MAINTENANCE_RETENTION_ABUSE',
+                    'description' => 'The maximum duration (in seconds) upto which to retain abuse logs. The default value is 86400 seconds (1 day).',
+                    'introduction' => '0.7.0',
+                    'default' => '86400',
+                    'required' => false,
+                    'question' => '',
+                ]
             ],
         ],
-    ],
-    [
-        'name' => '_APP_SYSTEM_RESPONSE_FORMAT',
-        'default' => '',
-        'required' => false,
-        'question' => '',
     ],
 ];

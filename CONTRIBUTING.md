@@ -72,7 +72,23 @@ cd appwrite
 docker-compose up -d
 ```
 
-After finishing the installation process, you can start writing and editing code. To compile new CSS and JS distribution files, use 'less' and 'build' tasks using gulp as a task manager.
+### Code Autocompletion
+
+To get proper autocompletion for all the different functions and classes in the codebase, you'll need to install Appwrite dependencies on your local machine. You can easily do that with PHP's package manager, [Composer](https://getcomposer.org/). If you don't have Composer installed, you can use the Docker Hub image to get the same result:
+
+```bash
+docker run --rm --interactive --tty \
+  --volume $PWD:/app \
+  composer update --ignore-platform-reqs --optimize-autoloader --no-plugins --no-scripts --prefer-dist
+```
+
+### User Interface
+
+Appwrite uses an internal micro-framework called Litespeed.js to build simple UI components in vanilla JS and [less](http://lesscss.org/) for compiling CSS code. To apply any of your changes to the UI, use the `gulp build` or `gulp less` commands, and restart the Appwrite main container to load the new static files to memory using `docker-compose restart appwrite`.
+
+### Get Started
+
+After finishing the installation process, you can start writing and editing code.
 
 ## Architecture
 
@@ -216,7 +232,7 @@ For us to find the right balance, please open an issue explaining your ideas bef
 
 This will allow the Appwrite community to have sufficient discussion about the new feature value and how it fits in the product roadmap and vision.
 
-This is also important for the Appwrite lead developers to be able to give technical input and different emphasis regarding the feature design and architecture.
+This is also important for the Appwrite lead developers to be able to give technical input and different emphasis regarding the feature design and architecture. Some bigger features might need to go through our [RFC process](https://github.com/appwrite/rfc).
 
 ## Build
 
@@ -348,5 +364,5 @@ Submitting documentation updates, enhancements, designs, or bug fixes. Spelling 
 
 ### Helping Someone
 
-Searching for Appwrite on Discord, GitHub, or StackOverflow and helping someone else who needs help. You can also help by reaching others how to contribute to Appwrite's repo!
+Searching for Appwrite on Discord, GitHub, or StackOverflow and helping someone else who needs help. You can also help by teaching others how to contribute to Appwrite's repo!
 

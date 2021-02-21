@@ -57,6 +57,7 @@ class Swagger2 extends Format
             'produces' => ['application/json'],
             'securityDefinitions' => $this->keys,
             'paths' => [],
+            'tags' => $this->services,
             'definitions' => [],
             'externalDocs' => [
                 'description' => $this->getParam('docs.description'),
@@ -92,14 +93,14 @@ class Swagger2 extends Format
 
             $id = $route->getLabel('sdk.method', \uniqid());
             $desc = (!empty($route->getLabel('sdk.description', ''))) ? \realpath(__DIR__.'/../../../../'.$route->getLabel('sdk.description', '')) : null;
-            $produces = $route->getLabel('sdk.response.type', 'application/json');
+            $produces = $route->getLabel('sdk.response.type', null);
             $model = $route->getLabel('sdk.response.model', 'none'); 
             
             $temp = [
                 'summary' => $route->getDesc(),
                 'operationId' => $route->getLabel('sdk.namespace', 'default').ucfirst($id),
                 'consumes' => [],
-                'produces' => [$produces],
+                'produces' => [],
                 'tags' => [$route->getLabel('sdk.namespace', 'default')],
                 'description' => ($desc) ? \file_get_contents($desc) : '',
                 'responses' => [],
@@ -115,8 +116,13 @@ class Swagger2 extends Format
                     'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
                     'scope' => $route->getLabel('scope', ''),
                     'platforms' => $route->getLabel('sdk.platform', []),
+                    'packaging' => $route->getLabel('sdk.packaging', false),
                 ],
             ];
+
+            if($produces) {
+                $temp['produces'][] = $produces;
+            }
 
             foreach ($this->models as $key => $value) {
                 if($value->getType() === $model) {
@@ -210,7 +216,7 @@ class Swagger2 extends Format
                         $node['x-example'] = '{}';
                         //$node['format'] = 'json';
                         break;
-                    case 'Appwrite\Storage\Validator\File':
+                    case 'Utopia\Storage\Validator\File':
                         $consumes = ['multipart/form-data'];
                         $node['type'] = 'file';
                         break;
@@ -366,7 +372,8 @@ class Swagger2 extends Format
                         'description' => $rule['description'] ?? '',
                         'items' => [
                             'type' => $type,
-                        ]
+                        ],
+                        'x-example' => $rule['example'] ?? null,
                     ];
 
                     if($format) {

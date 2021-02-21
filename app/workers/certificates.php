@@ -12,7 +12,7 @@ use Appwrite\Network\Validator\CNAME;
 
 require_once __DIR__.'/../init.php';
 
-\cli_set_process_title('Certificates V1 Worker');
+Console::title('Certificates V1 Worker');
 
 Console::success(APP_NAME.' certificates worker v1 has started');
 
@@ -73,7 +73,7 @@ class CertificatesV1
             $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
     
             if(!$target->isKnown() || $target->isTest()) {
-                throw new Exception('Unreachable CNAME target ('.$target->get().'), plesse use a domain with a public suffix.');
+                throw new Exception('Unreachable CNAME target ('.$target->get().'), please use a domain with a public suffix.');
             }
         }
 
@@ -110,14 +110,22 @@ class CertificatesV1
         }
 
         $staging = (App::isProduction()) ? '' : ' --dry-run';
+        $email = App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS');
 
-        $response = \shell_exec("certbot certonly --webroot --noninteractive --agree-tos{$staging} \
-            --email ".App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', 'security@localhost.test')." \
-            -w ".APP_STORAGE_CERTIFICATES." \
-            -d {$domain->get()}");
+        if(empty($email)) {
+            throw new Exception('You must set a valid security email address (_APP_SYSTEM_SECURITY_EMAIL_ADDRESS) to issue an SSL certificate');
+        }
 
-        if(!$response) {
-            throw new Exception('Failed to issue a certificate');
+        $stdout = '';
+        $stderr = '';
+
+        $exit = Console::execute("certbot certonly --webroot --noninteractive --agree-tos{$staging}"
+            ." --email ".$email
+            ." -w ".APP_STORAGE_CERTIFICATES
+            ." -d {$domain->get()}", '', $stdout, $stderr);
+
+        if($stderr || $exit !== 0) {
+            throw new Exception('Failed to issue a certificate with message: '.$stderr);
         }
 
         $path = APP_STORAGE_CERTIFICATES.'/'.$domain->get();
@@ -129,19 +137,19 @@ class CertificatesV1
         }
         
         if(!@\rename('/etc/letsencrypt/live/'.$domain->get().'/cert.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/cert.pem')) {
-            throw new Exception('Failed to rename certificate cert.pem: '.\json_encode($response));
+            throw new Exception('Failed to rename certificate cert.pem: '.\json_encode($stdout));
         }
 
         if(!@\rename('/etc/letsencrypt/live/'.$domain->get().'/chain.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/chain.pem')) {
-            throw new Exception('Failed to rename certificate chain.pem: '.\json_encode($response));
+            throw new Exception('Failed to rename certificate chain.pem: '.\json_encode($stdout));
         }
 
         if(!@\rename('/etc/letsencrypt/live/'.$domain->get().'/fullchain.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/fullchain.pem')) {
-            throw new Exception('Failed to rename certificate fullchain.pem: '.\json_encode($response));
+            throw new Exception('Failed to rename certificate fullchain.pem: '.\json_encode($stdout));
         }
 
         if(!@\rename('/etc/letsencrypt/live/'.$domain->get().'/privkey.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/privkey.pem')) {
-            throw new Exception('Failed to rename certificate privkey.pem: '.\json_encode($response));
+            throw new Exception('Failed to rename certificate privkey.pem: '.\json_encode($stdout));
         }
 
         $certificate = \array_merge($certificate, [
@@ -154,7 +162,7 @@ class CertificatesV1
             'issueDate' => \time(),
             'renewDate' => $renew,
             'attempts' => 0,
-            'log' => \json_encode($response),
+            'log' => \json_encode($stdout),
         ]);
 
         $certificate = $consoleDB->createDocument($certificate);

@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Utopia\Response\Filter;
+namespace Appwrite\Utopia\Response\Filters;
 
 use Appwrite\Auth\Auth;
 use Appwrite\Database\Database;
@@ -101,6 +101,10 @@ class V06 extends Filter {
 
             case Response::MODEL_CURRENCY_LIST:
                 $parsedResponse = $this->parseCurrencyList($content);
+                break;
+
+            case Response::MODEL_LANGUAGE_LIST:
+                $parsedResponse = $content;
                 break;
 
             case Response::MODEL_ANY :

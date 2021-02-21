@@ -114,7 +114,7 @@ $maxCells = 10;
                                                     <?php if(!$array): ?>
                                                         <?php switch($type):
                                                             case 'fileId': ?>
-                                                                <img data-ls-if="{{node.<?php echo $this->escape($key); ?>}} != ''" src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{node.<?php echo $this->escape($key); ?>}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="avatar" width="30" height="30" loading="lazy" />
+                                                                <img data-ls-if="{{node.<?php echo $this->escape($key); ?>}} != ''" src="" data-ls-attrs="src={{env.ENDPOINT}}/v1/storage/files/{{node.<?php echo $this->escape($key); ?>}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="avatar" width="30" height="30" loading="lazy" />
                                                             <?php break; ?>
                                                             <?php case 'document': ?>
                                                                 {...}
@@ -174,6 +174,8 @@ $maxCells = 10;
                 <div class="row responsive margin-top-negative">
                     <div class="col span-8 margin-bottom">
                         <form
+                            data-analytics
+                            data-analytics-activity
                             data-analytics-event="submit"
                             data-analytics-category="console"
                             data-analytics-label="Update Database Collection"
@@ -340,6 +342,8 @@ $maxCells = 10;
                         </ul>
 
                         <form name="database.deleteCollection" class="margin-bottom"
+                            data-analytics
+                            data-analytics-activity
                             data-analytics-event="submit"
                             data-analytics-category="console"
                             data-analytics-label="Delete Database Collection"
@@ -363,6 +367,7 @@ $maxCells = 10;
                 <ul data-ls-loop="project-collection.rules" data-ls-as="rule" class="sortable">
                     <li data-forms-remove data-forms-move-up  data-forms-move-down>
                         <form
+                            data-analytics
                             data-analytics-event="splice-rule-{{$index}}"
                             data-analytics-category="console"
                             data-analytics-label="Spliced Collection Rule"
@@ -384,6 +389,8 @@ $maxCells = 10;
                     <h1>Add Rule</h1>
 
                     <form
+                        data-analytics
+                        data-analytics-activity
                         data-analytics-event="submit"
                         data-analytics-category="console"
                         data-analytics-label="Added Collection Rule"
@@ -503,7 +510,7 @@ $maxCells = 10;
 
     <div data-ls-loop="project-collections.collections" data-ls-as="project" data-ls-key="$index2" class="tiles cell-3 margin-bottom-negative">
         <div class="margin-bottom" data-ls-if="{{project.$id}} != {{router.params.id}}">
-            <input type="checkbox" name="list" data-ls-attrs="value={{project.$id}}" data-ls-bind="{{rule.list}}" /> <span data-ls-bind="{{project.name}}"></span>
+            <input type="checkbox" name="list" data-ls-attrs="value={{project.$id}},id={{project.$id}}" data-ls-bind="{{rule.list}}" /> <label data-ls-attrs="for={{project.$id}}" data-ls-bind="{{project.name}}"></label>
         </div>
     </div>
 </script>
@@ -513,7 +520,8 @@ $maxCells = 10;
 
     <div data-ls-loop="project-collections.collections" data-ls-as="project" data-ls-key="$index2" class="tiles cell-3 margin-bottom-negative">
         <div class="margin-bottom" data-ls-if="{{project.$id}} != {{router.params.id}}">
-            <input type="radio" name="list" data-ls-attrs="value={{project.$id}}" data-ls-bind="{{rule.list|firstElement}}" data-cast-to="array" required /> <span data-ls-bind="{{project.name}}"></span>
+            <input type="radio" name="list" data-ls-attrs="value={{project.$id}},id={{project.$id}}" data-ls-bind="{{rule.list|firstElement}}" data-cast-to="array" required />
+            <label data-ls-attrs="for={{project.$id}}"data-ls-bind="{{project.name}}"></label>
         </div>
     </div>
 </script>

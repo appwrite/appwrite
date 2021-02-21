@@ -11,7 +11,7 @@ use Cron\CronExpression;
 
 require_once __DIR__.'/../init.php';
 
-\cli_set_process_title('Tasks V1 Worker');
+Console::title('Tasks V1 Worker');
 
 Console::success(APP_NAME.' tasks worker v1 has started');
 

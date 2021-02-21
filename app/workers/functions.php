@@ -1,7 +1,4 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
@@ -9,6 +6,7 @@ use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
+use Cron\CronExpression;
 use Swoole\Runtime;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -16,7 +14,7 @@ use Utopia\Config\Config;
 
 require_once __DIR__.'/../init.php';
 
-\cli_set_process_title('Functions V1 Worker');
+Console::title('Functions V1 Worker');
 
 Runtime::setHookFlags(SWOOLE_HOOK_ALL);
 
@@ -30,21 +28,27 @@ $environments = Config::getParam('environments');
 $warmupStart = \microtime(true);
 
 Co\run(function() use ($environments) {  // Warmup: make sure images are ready to run fast 🚀
-    Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
-    
+    Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+
+    $dockerUser = App::getEnv('DOCKERHUB_PULL_USERNAME', null);
+    $dockerPass = App::getEnv('DOCKERHUB_PULL_PASSWORD', null);
+
+    if($dockerUser) {
+        $stdout = '';
+        $stderr = '';
+
+        Console::execute('docker login --username '.$dockerUser.' --password-stdin', $dockerPass, $stdout, $stderr);
+        Console::log('Docker Login'. $stdout.$stderr);
+    }
+
     foreach($environments as $environment) {
         go(function() use ($environment) {
             $stdout = '';
             $stderr = '';
         
-            Console::info('Warming up '.$environment['name'].' environment...');
+            Console::info('Warming up '.$environment['name'].' '.$environment['version'].' environment...');
         
-            if(App::isDevelopment()) {
-                Console::execute('docker build '.$environment['build'].' -t '.$environment['image'], '', $stdout, $stderr);
-            }
-            else {
-                Console::execute('docker pull '.$environment['image'], '', $stdout, $stderr);
-            }
+            Console::execute('docker pull '.$environment['image'], '', $stdout, $stderr);
         
             if(!empty($stdout)) {
                 Console::log($stdout);
@@ -87,14 +91,6 @@ $stdout = \explode("\n", $stdout);
     \parse_str($value, $container);
 
     if(isset($container['name'])) {
-        // $labels = [];
-        // $temp = explode(',', $container['labels'] ?? []);
-
-        // foreach($temp as &$label) {
-        //     $label = explode('=', $label);
-        //     $labels[$label[0] || 0] = $label[1] || '';
-        // }
-
         $container = [
             'name' => $container['name'],
             'online' => (\substr($container['status'], 0, 2) === 'Up'),
@@ -116,19 +112,6 @@ $stdout = \explode("\n", $stdout);
 
 Console::info(count($list)." functions listed in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
 
-/*
- * 1. Get Original Task
- * 2. Check for updates
- *  If has updates skip task and don't reschedule
- *  If status not equal to play skip task
- * 3. Check next run date, update task and add new job at the given date
- * 4. Execute task (set optional timeout)
- * 5. Update task response to log
- *      On success reset error count
- *      On failure add error count
- *      If error count bigger than allowed change status to pause
- */
-
 /**
  * 1. Get event args - DONE
  * 2. Unpackage code in the isolated container - DONE
@@ -143,23 +126,6 @@ Console::info(count($list)." functions listed in " . ($executionEnd - $execution
  */
 
 //TODO aviod scheduled execution if delay is bigger than X offest
-
-/**
- * Limit CPU Usage - DONE
- * Limit Memory Usage - DONE
- * Limit Network Usage
- * Limit Storage Usage (//--storage-opt size=120m \)
- * Make sure no access to redis, mariadb, influxdb or other system services
- * Make sure no access to NFS server / storage volumes
- * Access Appwrite REST from internal network for improved performance
- */
-
-/**
- * Get Usage Stats
- *  -> Network (docker stats --no-stream --format="{{.NetIO}}" appwrite)
- *  -> CPU Time - DONE
- *  -> Invoctions (+1) - DONE
- */
 
 class FunctionsV1
 {
@@ -180,6 +146,7 @@ class FunctionsV1
         $executionId = $this->args['executionId'] ?? '';
         $trigger = $this->args['trigger'] ?? '';
         $event = $this->args['event'] ?? '';
+        $scheduleOriginal = $this->args['scheduleOriginal'] ?? '';
         $payload = (!empty($this->args['payload'])) ? json_encode($this->args['payload']) : '';
 
         $database = new Database();
@@ -228,9 +195,7 @@ class FunctionsV1
 
                         Console::success('Triggered function: '.$event);
 
-                        Swoole\Coroutine\run(function () use ($projectId, $database, $function, $event, $payload) {
-                            $this->execute('event', $projectId, '', $database, $function, $event, $payload);
-                        });
+                        $this->execute('event', $projectId, '', $database, $function, $event, $payload);
                     }
                 }
                 break;
@@ -248,6 +213,45 @@ class FunctionsV1
                  *      On failure add error count
                  *      If error count bigger than allowed change status to pause
                  */
+
+                // Reschedule
+                Authorization::disable();
+                $function = $database->getDocument($functionId);
+                Authorization::reset();
+
+                if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+                    throw new Exception('Function not found ('.$functionId.')');
+                }
+
+                if($scheduleOriginal && $scheduleOriginal !== $function->getAttribute('schedule')) { // Schedule has changed from previous run, ignore this run.
+                    return;
+                }
+
+                $cron = CronExpression::factory($function->getAttribute('schedule'));
+                $next = (int) $cron->getNextRunDate()->format('U');
+
+                $function
+                    ->setAttribute('scheduleNext', $next)
+                    ->setAttribute('schedulePrevious', \time())
+                ;
+
+                Authorization::disable();
+
+                $function = $database->updateDocument(array_merge($function->getArrayCopy(), [
+                    'scheduleNext' => $next,
+                ]));
+
+                Authorization::reset();
+
+                ResqueScheduler::enqueueAt($next, 'v1-functions', 'FunctionsV1', [
+                    'projectId' => $projectId,
+                    'functionId' => $function->getId(),
+                    'executionId' => null,
+                    'trigger' => 'schedule',
+                    'scheduleOriginal' => $function->getAttribute('schedule', ''),
+                ]);  // Async task rescheduale
+
+                $this->execute($trigger, $projectId, $executionId, $database, $function);
                 
                 break;
 
@@ -260,9 +264,7 @@ class FunctionsV1
                     throw new Exception('Function not found ('.$functionId.')');
                 }
 
-                Swoole\Coroutine\run(function () use ($trigger, $projectId, $executionId, $database, $function) {
-                    $this->execute($trigger, $projectId, $executionId, $database, $function);
-                });
+                $this->execute($trigger, $projectId, $executionId, $database, $function);
                 break;
             
             default:
@@ -316,8 +318,8 @@ class FunctionsV1
             'time' => 0,
         ]);
 
-        if(false === $execution) {
-            throw new Exception('Failed to create execution');
+        if(false === $execution || ($execution instanceof Document && $execution->isEmpty())) {
+            throw new Exception('Failed to create or read execution');
         }
         
         Authorization::reset();
@@ -344,7 +346,7 @@ class FunctionsV1
         \array_walk($vars, function (&$value, $key) {
             $key = $this->filterEnvKey($key);
             $value = \escapeshellarg((empty($value)) ? 'null' : $value);
-            $value = "\t\t\t--env {$key}={$value} \\";
+            $value = "--env {$key}={$value}";
         });
 
         $tagPath = $tag->getAttribute('path', '');
@@ -380,27 +382,38 @@ class FunctionsV1
             unset($list[$container]);
         }
 
+        /**
+         * Limit CPU Usage - DONE
+         * Limit Memory Usage - DONE
+         * Limit Network Usage
+         * Limit Storage Usage (//--storage-opt size=120m \)
+         * Make sure no access to redis, mariadb, influxdb or other system services
+         * Make sure no access to NFS server / storage volumes
+         * Access Appwrite REST from internal network for improved performance
+         */
         if(!isset($list[$container])) { // Create contianer if not ready
             $stdout = '';
             $stderr = '';
     
             $executionStart = \microtime(true);
             $executionTime = \time();
-
-            $exitCode = Console::execute("docker run \
-                -d \
-                --entrypoint=\"\" \
-                --cpus=".App::getEnv('_APP_FUNCTIONS_CPUS', '1')." \
-                --memory=".App::getEnv('_APP_FUNCTIONS_MEMORY', '128')."m \
-                --memory-swap=".App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '128')."m \
-                --name={$container} \
-                --label appwrite-type=function \
-                --label appwrite-created=".$executionTime." \
-                --volume {$tagPathTargetDir}:/tmp:rw \
-                --workdir /usr/local/src \
-                ".\implode("\n", $vars)."
-                {$environment['image']} \
-                sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'"
+            $cpus = App::getEnv('_APP_FUNCTIONS_CPUS', '');
+            $memory = App::getEnv('_APP_FUNCTIONS_MEMORY', '');
+            $swap = App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '');
+            $exitCode = Console::execute("docker run ".
+                " -d".
+                " --entrypoint=\"\"".
+                (empty($cpus) ? "" : (" --cpus=".$cpus)).
+                (empty($memory) ? "" : (" --memory=".$memory."m")).
+                (empty($swap) ? "" : (" --memory-swap=".$swap."m")).
+                " --name={$container}".
+                " --label appwrite-type=function".
+                " --label appwrite-created={$executionTime}".
+                " --volume {$tagPathTargetDir}:/tmp:rw".
+                " --workdir /usr/local/src".
+                " ".\implode(" ", $vars).
+                " {$environment['image']}".
+                " sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'"
             , '', $stdout, $stderr, 30);
 
             $executionEnd = \microtime(true);
@@ -430,11 +443,8 @@ class FunctionsV1
 
         $executionStart = \microtime(true);
         
-        $exitCode = Console::execute("docker exec \
-        ".\implode("\n", $vars)."
-        {$container} \
-        {$command}"
-        , '', $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
+        $exitCode = Console::execute("docker exec ".\implode(" ", $vars)." {$container} {$command}"
+            , '', $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
 
         $executionEnd = \microtime(true);
         $executionTime = ($executionEnd - $executionStart);
@@ -470,8 +480,10 @@ class FunctionsV1
             ->setParam('networkRequestSize', 0)
             ->setParam('networkResponseSize', 0)
         ;
-
-        $usage->trigger();
+        
+        if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+            $usage->trigger();
+        }
 
         $this->cleanup();
     }

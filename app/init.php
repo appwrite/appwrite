@@ -11,6 +11,8 @@ if (\file_exists(__DIR__.'/../vendor/autoload.php')) {
     require_once __DIR__.'/../vendor/autoload.php';
 }
 
+use Ahc\Jwt\JWT;
+use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
 use Appwrite\Database\Database;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
@@ -32,12 +34,12 @@ use PDO as PDONative;
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
 const APP_EMAIL_TEAM = 'team@localhost.test'; // Default email address
-const APP_EMAIL_SECURITY = 'security@localhost.test'; // Default security email address
+const APP_EMAIL_SECURITY = ''; // Default security email address
 const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
 const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
-const APP_CACHE_BUSTER = 142;
+const APP_CACHE_BUSTER = 144;
 const APP_VERSION_STABLE = '0.7.0';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
@@ -58,6 +60,7 @@ const DELETE_TYPE_DOCUMENT = 'document';
 const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
+const DELETE_TYPE_CERTIFICATES = 'certificates';
 
 $register = new Registry();
 
@@ -88,9 +91,13 @@ Config::load('storage-mimes', __DIR__.'/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__.'/config/storage/inputs.php'); 
 Config::load('storage-outputs', __DIR__.'/config/storage/outputs.php'); 
 
-Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '')
-    .':'.App::getEnv('_APP_REDIS_PORT', ''));
-
+$user = App::getEnv('_APP_REDIS_USER','');
+$pass = App::getEnv('_APP_REDIS_PASS','');
+if(!empty($user) || !empty($pass)) {
+    Resque::setBackend('redis://'.$user.':'.$pass.'@'.App::getEnv('_APP_REDIS_HOST', '').':'.App::getEnv('_APP_REDIS_PORT', ''));
+} else {
+    Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '').':'.App::getEnv('_APP_REDIS_PORT', ''));
+}
 /**
  * DB Filters
  */
@@ -173,6 +180,18 @@ $register->set('statsd', function () { // Register DB connection
 $register->set('cache', function () { // Register cache connection
     $redis = new Redis();
     $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
+    $user = App::getEnv('_APP_REDIS_USER','');
+    $pass = App::getEnv('_APP_REDIS_PASS','');
+    $auth = [];
+    if(!empty($user)) {
+        $auth["user"] = $user;
+    }
+    if(!empty($pass)) {
+        $auth["pass"] = $pass;
+    }
+    if(!empty($auth)) {
+        $redis->auth($auth);
+    }
     $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
     return $redis;
@@ -206,7 +225,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2020-01.mmdb');
+    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2021-02.mmdb');
 });
 
 /*
@@ -319,7 +338,14 @@ App::setResource('deletes', function($register) {
 }, ['register']);
 
 // Test Mock
-App::setResource('clients', function($console, $project) {
+App::setResource('clients', function($request, $console, $project) {
+    $console->setAttribute('platforms', [ // Allways allow current host
+        '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+        'name' => 'Current Host',
+        'type' => 'web',
+        'hostname' => $request->getHostname(),
+    ], Document::SET_TYPE_APPEND);
+    
     /**
      * Get All verified client URLs for both console and current projects
      * + Filter for duplicated entries
@@ -345,7 +371,7 @@ App::setResource('clients', function($console, $project) {
     }))));
 
     return $clients;
-}, ['console', 'project']);
+}, ['request', 'console', 'project']);
 
 App::setResource('user', function($mode, $project, $console, $request, $response, $projectDB, $consoleDB) {
     /** @var Utopia\Swoole\Request $request */
@@ -402,6 +428,29 @@ App::setResource('user', function($mode, $project, $console, $request, $response
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         }
         else {
+            $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+        }
+    }
+
+    $authJWT = $request->getHeader('x-appwrite-jwt', '');
+
+    if (!empty($authJWT)) { // JWT authentication
+        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+
+        try {
+            $payload = $jwt->decode($authJWT);
+        } catch (JWTException $error) {
+            throw new Exception('Failed to verify JWT. '.$error->getMessage(), 401);
+        }
+        
+        $jwtUserId = $payload['userId'] ?? '';
+        $jwtSessionId = $payload['sessionId'] ?? '';
+
+        if($jwtUserId && $jwtSessionId) {
+            $user = $projectDB->getDocument($jwtUserId);
+        }
+
+        if (empty($user->search('$id', $jwtSessionId, $user->getAttribute('tokens')))) { // Match JWT to active token
             $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
         }
     }

@@ -33,6 +33,8 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
 
                         <div class="box margin-bottom-large">
                             <form
+                                data-analytics
+                                data-analytics-activity
                                 data-analytics-event="submit"
                                 data-analytics-category="console"
                                 data-analytics-label="Update Project"
@@ -87,6 +89,8 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                             <p>PLEASE NOTE: Project deletion is irreversible.</p>
 
                             <form class="inline"
+                                data-analytics
+                                data-analytics-activity
                                 data-analytics-event="submit"
                                 data-analytics-category="console"
                                 data-analytics-label="Delete Project"
@@ -131,7 +135,7 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
 
                         <label for="name">API Endpoint</label>
                         <div class="input-copy">
-                            <input data-forms-copy type="text" disabled data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/v1" />
+                            <input data-forms-copy type="text" disabled data-ls-bind="{{env.ENDPOINT}}/v1" />
                         </div>
 
                         <ul class="margin-bottom-large text-fade text-size-small">
@@ -281,6 +285,8 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                                                     <li>
                                                         Confirm and verify your CNAME record values:
                                                         <form class="strip"
+                                                            data-analytics
+                                                            data-analytics-activity
                                                             data-analytics-event="submit"
                                                             data-analytics-category="console"
                                                             data-analytics-label="Update Domain Verification"
@@ -313,6 +319,8 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                                         </td>
                                         <td data-title="">
                                             <form class="pull-end"
+                                                data-analytics
+                                                data-analytics-activity
                                                 data-analytics-event="submit"
                                                 data-analytics-category="console"
                                                 data-analytics-label="Delete Project Domain"
@@ -345,6 +353,8 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                                 <h1>Add Domain</h1>
 
                                 <form
+                                    data-analytics
+                                    data-analytics-activity
                                     data-analytics-event="submit"
                                     data-analytics-category="console"
                                     data-analytics-label="Create Project Domain"
@@ -388,9 +398,11 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                         <ul data-ls-loop="members.memberships" data-ls-as="member" class="list">
                             <li class="clear">
                                 <form class="pull-end"
+                                    data-analytics
+                                    data-analytics-activity
                                     data-analytics-event="submit"
                                     data-analytics-category="console"
-                                    data-analytics-label="Delete Team Membership"
+                                    data-analytics-label="Delete Project Membership"
                                     data-service="teams.deleteMembership"
                                     data-scope="console"
                                     data-event="submit"
@@ -409,9 +421,11 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                                 
                                 <div data-ls-if="false === {{member.confirm}}" class="pull-end margin-end">
                                     <form class="pull-end"
+                                        data-analytics
+                                        data-analytics-activity
                                         data-analytics-event="submit"
                                         data-analytics-category="console"
-                                        data-analytics-label="Create Team Membership (resend)"
+                                        data-analytics-label="Create Project Membership (resend)"
                                         data-service="teams.deleteMembership"
                                         data-scope="console"
                                         data-event="submit"
@@ -439,7 +453,7 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                                         data-failure-param-alert-classname="error">
 
                                         <input name="teamId" type="hidden" data-ls-bind="{{member.teamId}}">
-                                        <input name="url" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
+                                        <input name="url" type="hidden" data-ls-bind="{{env.ENDPOINT}}/auth/join?project={{router.params.project}}" />
                                         <input name="email" type="hidden" data-ls-bind="{{member.email}}">
                                         <input name="name" type="hidden" data-ls-bind="{{member.name}}">
                                         <input name="roles" type="hidden" data-ls-bind="{{member.roles}}" data-cast-to="json">
@@ -462,9 +476,11 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                         <h1>Invite Member</h1>
 
                         <form name="teams.createTeamMembership"
+                            data-analytics
+                            data-analytics-activity
                             data-analytics-event="submit"
                             data-analytics-category="console"
-                            data-analytics-label="Create Team Membership"
+                            data-analytics-label="Create Project Membership"
                             data-service="teams.createMembership"
                             data-scope="console"
                             data-event="submit"
@@ -477,7 +493,7 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                             data-failure-param-alert-classname="error">
 
                             <input name="teamId" id="team-teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
-                            <input name="url" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
+                            <input name="url" type="hidden" data-ls-bind="{{env.ENDPOINT}}/auth/join?project={{router.params.project}}" />
                             
                             <label for="email">Email</label>
                             <input name="email" id="email" type="email" autocomplete="email" required>
