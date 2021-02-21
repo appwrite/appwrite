@@ -16,9 +16,9 @@ use Appwrite\Database\Validator\UID;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Exception\Duplicate;
 use Appwrite\Database\Validator\Key;
+use Appwrite\Detector\Detector;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response;
-use DeviceDetector\DeviceDetector;
 
 App::post('/v1/teams')
     ->desc('Create Team')
@@ -406,11 +406,12 @@ App::post('/v1/teams/:teamId/memberships')
         $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
         $content = new Template(__DIR__.'/../../config/locale/translations/templates/'.$locale->getText('account.emails.invitation.body'));
         $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
-
+        $title = \sprintf($locale->getText('account.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]']));
+        
         $body
             ->setParam('{{content}}', $content->render())
             ->setParam('{{cta}}', $cta->render())
-            ->setParam('{{title}}', $locale->getText('account.emails.invitation.title'))
+            ->setParam('{{title}}', $title)
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
             ->setParam('{{team}}', $team->getAttribute('name', '[TEAM-NAME]'))
@@ -430,9 +431,9 @@ App::post('/v1/teams/:teamId/memberships')
                 ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name')))
                 ->setParam('recipient', $email)
                 ->setParam('name', $name)
-                ->setParam('subject', \sprintf($locale->getText('account.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]'])))
+                ->setParam('subject', $title)
                 ->setParam('body', $body->render())
-                ->trigger();
+                ->trigger()
             ;
         }
 
@@ -589,27 +590,11 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
 
         // Log user in
 
-        $dd = new DeviceDetector($request->getUserAgent('UNKNOWN'));
-
-        $dd->parse();
-
-        $os = $dd->getOs();
-        $osCode = (isset($os['short_name'])) ? $os['short_name'] : '';
-        $osName = (isset($os['name'])) ? $os['name'] : '';
-        $osVersion = (isset($os['version'])) ? $os['version'] : '';
-
-        $client = $dd->getClient();
-        $clientType = (isset($client['type'])) ? $client['type'] : '';
-        $clientCode = (isset($client['short_name'])) ? $client['short_name'] : '';
-        $clientName = (isset($client['name'])) ? $client['name'] : '';
-        $clientVersion = (isset($client['version'])) ? $client['version'] : '';
-        $clientEngine = (isset($client['engine'])) ? $client['engine'] : '';
-        $clientEngineVersion = (isset($client['engine_version'])) ? $client['engine_version'] : '';
-
+        $detector = new Detector($request->getUserAgent('UNKNOWN'));
+        $record = $geodb->get($request->getIP());
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $secret = Auth::tokenGenerator();
-
-        $session = new Document([
+        $session = new Document(array_merge([
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
             '$permissions' => ['read' => ['user:'.$user->getId()], 'write' => ['user:'.$user->getId()]],
             'userId' => $user->getId(),
@@ -618,32 +603,8 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
             'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
-
-            'osCode' => $osCode,
-            'osName' => $osName,
-            'osVersion' => $osVersion,
-            'clientType' => $clientType,
-            'clientCode' => $clientCode,
-            'clientName' => $clientName,
-            'clientVersion' => $clientVersion,
-            'clientEngine' => $clientEngine,
-            'clientEngineVersion' => $clientEngineVersion,
-            'deviceName' => $dd->getDeviceName(),
-            'deviceBrand' => $dd->getBrandName(),
-            'deviceModel' => $dd->getModel(),
-        ]);
-
-        $record = $geodb->get($request->getIP());
-
-        if($record) {
-            $session
-                ->setAttribute('countryCode', \strtolower($record['country']['iso_code']))
-            ;
-        } else {
-            $session
-                ->setAttribute('countryCode', '--')
-            ;
-        }
+            'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+        ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
         $user->setAttribute('tokens', $session, Document::SET_TYPE_APPEND);
 

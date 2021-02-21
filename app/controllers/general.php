@@ -93,7 +93,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
                 Response::setFilter(new V06());
                 break;
             default:
-                throw new Exception('No filter available for response format : '.$responseFormat, 400);
+                Response::setFilter(null);
         }
     } else {
         Response::setFilter(null);
