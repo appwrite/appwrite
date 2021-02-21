@@ -12,6 +12,8 @@
 
 ## Upgrades
 
+- Upgraded redis extenstion lib to version 5.3.3
+- Upgraded maxmind extenstion lib to version 1.10.0
 - Upgraded utopia-php/cli lib to version 0.10.0
 - Upgraded matomo/device-detector lib to version 4.1.0
 - Upgraded dragonmantank/cron-expression lib to version 3.1.0
