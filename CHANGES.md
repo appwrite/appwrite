@@ -1,3 +1,28 @@
+# Version 0.8.0 (Not Released Yet)
+
+- Anonymous login
+
+# Version 0.7.1 (Not Released Yet)
+
+## Features
+
+- Added option for Redis authentication
+- Force adding a security email on setup
+- Better error logs on appwrite cretificates worker## Upgrades
+
+## Upgrades
+
+- Upgraded utopia-php/cli lib to version 0.10.0
+- Upgraded matomo/device-detector lib to version 4.1.0
+- Upgraded dragonmantank/cron-expression lib to version 3.1.0
+- Upgraded influxdb/influxdb-php lib to version 1.15.2
+- Upgraded phpmailer/phpmailer lib to version 6.3.0
+- Upgraded adhocore/jwt lib to version 1.1.2
+ 
+## Bug Fixes
+
+- Updated missing storage env vars
+
 # Version 0.7.0
 
 ## Features
