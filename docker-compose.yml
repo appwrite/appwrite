@@ -515,7 +515,7 @@ services:
     image: adminer
     restart: always
     ports:
-      - 9505:8080
+      - 9506:8080
     networks:
       - appwrite
 
