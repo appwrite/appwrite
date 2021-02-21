@@ -37,6 +37,7 @@ App::get('/v1/health/realtime')
     ->desc('Get Realtime')
     ->groups(['api', 'health'])
     ->label('scope', 'public')
+    ->inject('response')
     ->action(function ($response) {
         /** @var Utopia\Response $response */
         $redis = new Redis();
@@ -44,7 +45,7 @@ App::get('/v1/health/realtime')
     
         $redis->publish('realtime', 'I\'m a live message');
         $response->json(['status' => 'OK']);
-    }, ['response']);
+    });
 
 App::get('/v1/health/db')
     ->desc('Get DB')

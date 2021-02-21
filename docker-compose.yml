@@ -145,6 +145,9 @@ services:
       - traefik.http.routers.appwrite_realtime_wss.tls.certresolver=dns
     networks:
       - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
     depends_on:
       - redis
     environment:
