@@ -14,9 +14,9 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
 
 FROM php:7.4-cli-alpine as step1
 
-ENV PHP_REDIS_VERSION=5.3.0 \
+ENV PHP_REDIS_VERSION=5.3.3 \
     PHP_SWOOLE_VERSION=v4.5.8 \
-    PHP_MAXMINDDB_VERSION=v1.8.0 \
+    PHP_MAXMINDDB_VERSION=v1.10.0 \
     PHP_XDEBUG_VERSION=sdebug_2_9-beta
 
 RUN \
