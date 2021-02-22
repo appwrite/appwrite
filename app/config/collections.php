@@ -321,15 +321,6 @@ $collections = [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Secret',
-                'key' => 'secret',
-                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
-                'default' => '',
-                'required' => true,
-                'array' => false,
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Provider',
                 'key' => 'provider',
                 'type' => Database::SYSTEM_VAR_TYPE_TEXT,
