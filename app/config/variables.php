@@ -255,7 +255,7 @@ return [
         'variables' => [
             [
                 'name' => '_APP_SMTP_HOST',
-                'description' => 'SMTP server host name address. Use anempty string to disable all mail sending from the server. The default value for this variable is an empty string',
+                'description' => 'SMTP server host name address. Use an empty string to disable all mail sending from the server. The default value for this variable is an empty string',
                 'introduction' => '',
                 'default' => '',
                 'required' => false,
