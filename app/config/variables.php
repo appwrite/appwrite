@@ -255,17 +255,17 @@ return [
         'variables' => [
             [
                 'name' => '_APP_SMTP_HOST',
-                'description' => 'SMTP server host name address. Default value is: \'smtp\'. Pass an empty string to disable all mail sending from the server.',
+                'description' => 'SMTP server host name address. Default value is an empty string. Use an empty string to disable all mail sending from the server.',
                 'introduction' => '',
-                'default' => 'smtp',
+                'default' => '',
                 'required' => false,
                 'question' => '',
             ],
             [
                 'name' => '_APP_SMTP_PORT',
-                'description' => 'SMTP server TCP port. Default value is: \'25\'.',
+                'description' => 'SMTP server TCP port. Empty by default.',
                 'introduction' => '',
-                'default' => '25',
+                'default' => '',
                 'required' => false,
                 'question' => '',
             ],
