@@ -2,6 +2,7 @@
 
 $customDomainsEnabled = $this->getParam('customDomainsEnabled', false);
 $customDomainsTarget = $this->getParam('customDomainsTarget', false);
+$smtpEnabled = $this->getParam('smtpEnabled', false);
 
 ?>
 <div class="cover">
@@ -506,10 +507,16 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                                 <option data-ls-attrs="value={{role.type}}" data-ls-bind="{{role.label}}"></option>
                             </select>
 
+                            <?php if(!$smtpEnabled): ?>
+                            <div class="box note padding-tiny warning margin-bottom text-align-center">
+                                <i class="icon-warning"></i> SMTP connection is disabled. <a href="https://appwrite.io/docs/email-delivery" target="_blank" rel="noopener">Learn more <i class="icon-link-ext"></i></a>
+                            </div>
+                            <?php endif; ?>
+
                             <hr />
 
                             <div class="clear">
-                                <button>Send Invite</button>
+                                <button<?php if(!$smtpEnabled): ?> disabled<?php endif; ?>>Send Invite</button>
                                 &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                             </div>
                         </form>
