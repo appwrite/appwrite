@@ -134,14 +134,6 @@ $server->on('open', function(Server $server, Request $request) use (&$connection
         return null;
     });
 
-    App::setResource('project', function () { // TODO get project from query string
-        return new Document();
-    });
-
-    App::setResource('user', function () { // TODO get user with JWT token
-        return new Document();
-    });
-
     $channels = array_flip($request->getQuery('channels', []));
     $jwt = $request->getQuery('jwt', '');
     $user = $app->getResource('user');
