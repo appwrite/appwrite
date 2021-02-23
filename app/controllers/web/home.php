@@ -60,13 +60,14 @@ App::get('/')
             $whitlistGod = $project->getAttribute('authWhitelistGod');
 
             if($whitlistGod !== 'disabled') {
-                $sum = $projectDB->getCount([ // Count users
-                    'limit' => 1,
+                $projectDB->getCollection([ // Count users
                     'filters' => [
                         '$collection='.Database::SYSTEM_COLLECTION_USERS,
                     ],
                 ]);
-
+                    
+                $sum = $projectDB->getSum();
+                
                 if($sum !== 0) {
                     return $response->redirect('/auth/signin');
                 }
