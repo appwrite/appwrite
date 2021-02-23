@@ -64,12 +64,13 @@ App::post('/v1/account')
             $whitlistDomains = $project->getAttribute('authWhitelistDomains');
 
             if($whitlistGod !== 'disabled') {
-                $sum = $projectDB->getCount([ // Count users
-                    'limit' => 1,
+                $projectDB->getCollection([ // Count users
                     'filters' => [
                         '$collection='.Database::SYSTEM_COLLECTION_USERS,
                     ],
                 ]);
+                    
+                $sum = $projectDB->getSum();
 
                 if($sum !== 0) {
                     throw new Exception('Console registration is restricted. Contact your administrator for more information.', 401);
