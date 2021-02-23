@@ -2,6 +2,7 @@
 
 $customDomainsEnabled = $this->getParam('customDomainsEnabled', false);
 $customDomainsTarget = $this->getParam('customDomainsTarget', false);
+$smtpEnabled = $this->getParam('smtpEnabled', false);
 
 ?>
 <div class="cover">
@@ -135,7 +136,7 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
 
                         <label for="name">API Endpoint</label>
                         <div class="input-copy">
-                            <input data-forms-copy type="text" disabled data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/v1" />
+                            <input data-forms-copy type="text" disabled data-ls-bind="{{env.ENDPOINT}}/v1" />
                         </div>
 
                         <ul class="margin-bottom-large text-fade text-size-small">
@@ -453,7 +454,7 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                                         data-failure-param-alert-classname="error">
 
                                         <input name="teamId" type="hidden" data-ls-bind="{{member.teamId}}">
-                                        <input name="url" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
+                                        <input name="url" type="hidden" data-ls-bind="{{env.ENDPOINT}}/auth/join?project={{router.params.project}}" />
                                         <input name="email" type="hidden" data-ls-bind="{{member.email}}">
                                         <input name="name" type="hidden" data-ls-bind="{{member.name}}">
                                         <input name="roles" type="hidden" data-ls-bind="{{member.roles}}" data-cast-to="json">
@@ -493,7 +494,7 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                             data-failure-param-alert-classname="error">
 
                             <input name="teamId" id="team-teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
-                            <input name="url" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
+                            <input name="url" type="hidden" data-ls-bind="{{env.ENDPOINT}}/auth/join?project={{router.params.project}}" />
                             
                             <label for="email">Email</label>
                             <input name="email" id="email" type="email" autocomplete="email" required>
@@ -506,10 +507,16 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                                 <option data-ls-attrs="value={{role.type}}" data-ls-bind="{{role.label}}"></option>
                             </select>
 
+                            <?php if(!$smtpEnabled): ?>
+                            <div class="box note padding-tiny warning margin-bottom text-align-center">
+                                <i class="icon-warning"></i> SMTP connection is disabled. <a href="https://appwrite.io/docs/email-delivery" target="_blank" rel="noopener">Learn more <i class="icon-link-ext"></i></a>
+                            </div>
+                            <?php endif; ?>
+
                             <hr />
 
                             <div class="clear">
-                                <button>Send Invite</button>
+                                <button<?php if(!$smtpEnabled): ?> disabled<?php endif; ?>>Send Invite</button>
                                 &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                             </div>
                         </form>

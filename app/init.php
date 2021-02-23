@@ -34,12 +34,12 @@ use PDO as PDONative;
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
 const APP_EMAIL_TEAM = 'team@localhost.test'; // Default email address
-const APP_EMAIL_SECURITY = 'security@localhost.test'; // Default security email address
+const APP_EMAIL_SECURITY = ''; // Default security email address
 const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
 const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
-const APP_CACHE_BUSTER = 143;
+const APP_CACHE_BUSTER = 144;
 const APP_VERSION_STABLE = '0.7.0';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
@@ -91,9 +91,13 @@ Config::load('storage-mimes', __DIR__.'/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__.'/config/storage/inputs.php'); 
 Config::load('storage-outputs', __DIR__.'/config/storage/outputs.php'); 
 
-Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '')
-    .':'.App::getEnv('_APP_REDIS_PORT', ''));
-
+$user = App::getEnv('_APP_REDIS_USER','');
+$pass = App::getEnv('_APP_REDIS_PASS','');
+if(!empty($user) || !empty($pass)) {
+    Resque::setBackend('redis://'.$user.':'.$pass.'@'.App::getEnv('_APP_REDIS_HOST', '').':'.App::getEnv('_APP_REDIS_PORT', ''));
+} else {
+    Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '').':'.App::getEnv('_APP_REDIS_PORT', ''));
+}
 /**
  * DB Filters
  */
@@ -176,6 +180,18 @@ $register->set('statsd', function () { // Register DB connection
 $register->set('cache', function () { // Register cache connection
     $redis = new Redis();
     $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
+    $user = App::getEnv('_APP_REDIS_USER','');
+    $pass = App::getEnv('_APP_REDIS_PASS','');
+    $auth = [];
+    if(!empty($user)) {
+        $auth["user"] = $user;
+    }
+    if(!empty($pass)) {
+        $auth["pass"] = $pass;
+    }
+    if(!empty($auth)) {
+        $redis->auth($auth);
+    }
     $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
     return $redis;
