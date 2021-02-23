@@ -123,6 +123,10 @@ App::get('/auth/recovery')
 
         $page = new View(__DIR__.'/../../views/home/auth/recovery.phtml');
 
+        $page
+            ->setParam('smtpEnabled', (!empty(App::getEnv('_APP_SMTP_HOST'))))
+        ;
+
         $layout
             ->setParam('title', 'Password Recovery - '.APP_NAME)
             ->setParam('body', $page);

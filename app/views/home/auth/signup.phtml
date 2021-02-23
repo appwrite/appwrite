@@ -26,6 +26,10 @@ $god = ($this->getParam('god') !== 'disabled');
         data-failure-param-alert-text="Registration Failed. Please try again later"
         data-failure-param-alert-classname="error">
 
+        <?php if($god): ?>
+            <p>Please create your first god account</p>
+        <?php endif; ?>
+
         <label>Name</label>
         <input name="name" type="text" autocomplete="name" placeholder="" required maxlength="128">
 
