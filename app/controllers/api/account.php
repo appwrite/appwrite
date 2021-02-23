@@ -591,21 +591,27 @@ App::post('/v1/account/sessions/anonymous')
     ->inject('response')
     ->inject('locale')
     ->inject('user')
+    ->inject('project')
     ->inject('projectDB')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($request, $response, $locale, $user, $projectDB, $geodb, $audits) {
+    ->action(function ($request, $response, $locale, $user, $project, $projectDB, $geodb, $audits) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
         /** @var Appwrite\Database\Document $user */
+        /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
 
         $protocol = $request->getProtocol();
 
-        if ($user->getId()) {
+        if(App::getEnv('_APP_LOGIN_ANONYMOUS', 'enabled') !== 'enabled') {
+            throw new Exception('Anonymous login is disabled.', 412);
+        }
+
+        if ($user->getId() || 'console' === $project->getId()) {
             throw new Exception('Failed to create anonymous user.', 401);
         }
 

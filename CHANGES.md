@@ -3,6 +3,7 @@
 ## Features
 
 - Added Anonymous Login ([RFC-010](https://github.com/appwrite/rfc/blob/main/010-anonymous-login.md))
+- Added new Environment Variable to enable or disable Anonymous Login 
 
 # Version 0.7.0
 

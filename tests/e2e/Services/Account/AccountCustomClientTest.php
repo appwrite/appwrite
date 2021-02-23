@@ -6,6 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\App;
 
 class AccountCustomClientTest extends Scope
 {
@@ -238,7 +239,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
@@ -252,7 +253,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         return $session;
     }

@@ -119,6 +119,14 @@ return [
                 'required' => false,
                 'question' => '',
             ],
+            [
+                'name' => '_APP_LOGIN_ANONYMOUS',
+                'description' => 'This variable allows you to enable anonymous login.',
+                'introduction' => '0.8.0',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+            ],
         ],
     ],
     [

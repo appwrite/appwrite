@@ -89,6 +89,7 @@ services:
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
       - _APP_FUNCTIONS_ENVS
+      - _APP_LOGIN_ANONYMOUS
 
   appwrite-worker-usage:
     image: appwrite/appwrite:<?php echo $version."\n"; ?>
