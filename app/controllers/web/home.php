@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Database\Database;
 use Appwrite\Specification\Format\OpenAPI3;
 use Appwrite\Specification\Format\Swagger2;
 use Appwrite\Specification\Specification;
@@ -42,10 +43,37 @@ App::get('/')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('response')
-    ->action(function ($response) {
+    ->inject('project')
+    ->inject('projectDB')
+    ->action(function ($response, $projectDB, $project) {
         /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Database\Document $project */
 
-        $response->redirect('/auth/signin');
+        $response
+            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->addHeader('Expires', 0)
+            ->addHeader('Pragma', 'no-cache')
+        ;
+
+        if ('console' === $project->getId()) {
+            $whitlistGod = $project->getAttribute('authWhitelistGod');
+
+            if($whitlistGod !== 'disabled') {
+                $sum = $projectDB->getCount([ // Count users
+                    'limit' => 1,
+                    'filters' => [
+                        '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                    ],
+                ]);
+
+                if($sum !== 0) {
+                    return $response->redirect('/auth/signin');
+                }
+            }
+        }
+
+        $response->redirect('/auth/signup');
     });
 
 App::get('/auth/signin')
@@ -57,6 +85,10 @@ App::get('/auth/signin')
         /** @var Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/home/auth/signin.phtml');
+
+        $page
+            ->setParam('god', App::getEnv('_APP_CONSOLE_WHITELIST_GOD', 'enabled'))
+        ;
 
         $layout
             ->setParam('title', 'Sign In - '.APP_NAME)
@@ -71,6 +103,10 @@ App::get('/auth/signup')
     ->action(function ($layout) {
         /** @var Utopia\View $layout */
         $page = new View(__DIR__.'/../../views/home/auth/signup.phtml');
+
+        $page
+            ->setParam('god', App::getEnv('_APP_CONSOLE_WHITELIST_GOD', 'enabled'))
+        ;
 
         $layout
             ->setParam('title', 'Sign Up - '.APP_NAME)

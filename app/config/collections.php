@@ -43,6 +43,7 @@ $collections = [
         'legalCity' => '',
         'legalAddress' => '',
         'legalTaxId' => '',
+        'authWhitelistGod' => App::getEnv('_APP_CONSOLE_WHITELIST_GOD', 'enabled'),
         'authWhitelistEmails' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
         'authWhitelistIPs' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
         'authWhitelistDomains' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_DOMAINS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_DOMAINS', null)) : [],

@@ -56,8 +56,16 @@ return [
                 'question' => 'Enter a DNS A record hostname to serve as a CNAME for your custom domains.\nYou can use the same value as used for the Appwrite hostname.',
             ],
             [
+                'name' => '_APP_CONSOLE_WHITELIST_GOD',
+                'description' => 'This option allows you to disable the creation of new users on the Appwrite console. When enabled only 1 user will be able to use the registartion form. New users can be added by invting them to your project. By default this option is enabled.',
+                'introduction' => '',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+            ],
+            [
                 'name' => '_APP_CONSOLE_WHITELIST_EMAILS',
-                'description' => 'This option allows you to limit creation of users to Appwrite console. This option is very useful for small teams or sole developers. To enable it, pass a list of allowed email addresses separated by a comma.',
+                'description' => 'This option allows you to limit creation of new users on the Appwrite console. This option is very useful for small teams or sole developers. To enable it, pass a list of allowed email addresses separated by a comma.',
                 'introduction' => '',
                 'default' => '',
                 'required' => false,

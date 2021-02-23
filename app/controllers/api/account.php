@@ -58,9 +58,23 @@ App::post('/v1/account')
         /** @var Appwrite\Event\Event $audits */
 
         if ('console' === $project->getId()) {
+            $whitlistGod = $project->getAttribute('authWhitelistGod');
             $whitlistEmails = $project->getAttribute('authWhitelistEmails');
             $whitlistIPs = $project->getAttribute('authWhitelistIPs');
             $whitlistDomains = $project->getAttribute('authWhitelistDomains');
+
+            if($whitlistGod !== 'disabled') {
+                $sum = $projectDB->getCount([ // Count users
+                    'limit' => 1,
+                    'filters' => [
+                        '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                    ],
+                ]);
+
+                if($sum !== 0) {
+                    throw new Exception('Console registration is restricted. Contact your administrator for more information.', 401);
+                }
+            }
 
             if (!empty($whitlistEmails) && !\in_array($email, $whitlistEmails)) {
                 throw new Exception('Console registration is restricted to specific emails. Contact your administrator for more information.', 401);
