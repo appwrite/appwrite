@@ -10,6 +10,11 @@ class Realtime
     /**
      * @var string
      */
+    protected $project = '';
+
+    /**
+     * @var string
+     */
     protected $event = '';
 
     /**
@@ -26,13 +31,33 @@ class Realtime
     /**
      * Event constructor.
      *
+     * @param string $project
      * @param string $event
      * @param array $payload
      */
-    public function __construct(string $event, array $payload)
+    public function __construct(string $project, string $event, array $payload)
     {
+        $this->project = $project;
         $this->event = $event;
         $this->payload = new Document($payload);
+    }
+
+    /**
+     * @param string $project
+     * return $this
+     */
+    public function setProject(string $project): self
+    {
+        $this->project = $project;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getProject(): string
+    {
+        return $this->project;
     }
 
     /**
@@ -115,11 +140,13 @@ class Realtime
         $redis = new \Redis();
         $redis->connect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
         $redis->publish('realtime', json_encode([
+            'project' => $this->project,
             'channels' => $this->channels,
+            'permissions' => $this->payload->getAttribute('$permissions.read'),
             'data' => [
                 'event' => $this->event,
                 'timestamp' => time(),
-                'payload' => $this->payload
+                'payload' => $this->payload->getArrayCopy()
             ]
         ]));
 

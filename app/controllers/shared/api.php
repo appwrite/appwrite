@@ -143,6 +143,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
         
         $realtime
             ->setEvent($events->getParam('event'))
+            ->setProject($project->getId())
             ->setPayload($response->getPayload())
             ->trigger();
         

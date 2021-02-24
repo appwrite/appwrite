@@ -323,7 +323,7 @@ App::setResource('events', function($register) {
 }, ['register']);
 
 App::setResource('realtime', function($register) {
-    return new Realtime('', []);
+    return new Realtime('', '', []);
 }, ['register']);
 
 App::setResource('audits', function($register) {
