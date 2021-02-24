@@ -208,21 +208,5 @@ class HTTPTest extends Scope
         $this->assertIsString($body['server-python']);
         $this->assertIsString($body['server-ruby']);
         $this->assertIsString($body['server-cli']);
-
-         /**
-         * Test with header
-         */
-        $response = $this->client->call(Client::METHOD_GET, '/locale/continents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-            'x-appwrite-response-format' => '0.6.2'
-        ], $this->getHeaders()));
-
-        $body = $response['body'];
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals($body['sum'], 7);
-        $this->assertEquals($body['continents']['AF'], 'Africa');
-        $this->assertEquals($body['continents']['AN'], 'Antarctica');
-        $this->assertEquals($body['continents']['AS'], 'Asia');
     }
 }
