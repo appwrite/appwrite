@@ -2071,7 +2071,7 @@ container.path(paths[i],value);}});}
 return;}
 if(element.value!==value){element.value=value;element.dispatchEvent(new Event('change'));}
 if(bind){element.addEventListener('input',sync);element.addEventListener('change',sync);}}
-else{if(element.innerHTML!=value){element.innerHTML=value;}}};let sync=(()=>{return()=>{if(debug){console.info('debug-ls-bind','sync-path',paths);console.info('debug-ls-bind','sync-syntax',syntax);console.info('debug-ls-bind','sync-syntax-parsed',parsedSyntax);console.info('debug-ls-bind','sync-value',element.value);}
+else{if(element.textContent!=value){element.textContent=value;}}};let sync=(()=>{return()=>{if(debug){console.info('debug-ls-bind','sync-path',paths);console.info('debug-ls-bind','sync-syntax',syntax);console.info('debug-ls-bind','sync-syntax-parsed',parsedSyntax);console.info('debug-ls-bind','sync-value',element.value);}
 for(let i=0;i<paths.length;i++){if('{{'+paths[i]+'}}'!==parsedSyntax){if(debug){console.info('debug-ls-bind','sync-skipped-path',paths[i]);console.info('debug-ls-bind','sync-skipped-syntax',syntax);console.info('debug-ls-bind','sync-skipped-syntax-parsed',parsedSyntax);}
 continue;}
 if(debug){console.info('debug-ls-bind','sync-loop-path',paths[i]);console.info('debug-ls-bind','sync-loop-syntax',parsedSyntax);}
@@ -2250,9 +2250,10 @@ return value+" "+unit+" "+direction;}).add("ms2hum",function($value){let temp=$v
 (minutes?minutes+"m ":"")+
 Number.parseFloat(seconds).toFixed(0)+"s");}
 return"< 1s";}).add("seconds2hum",function($value){var seconds=($value).toFixed(3);var minutes=($value/(60)).toFixed(1);var hours=($value/(60*60)).toFixed(1);var days=($value/(60*60*24)).toFixed(1);if(seconds<60){return seconds+"s";}else if(minutes<60){return minutes+"m";}else if(hours<24){return hours+"h";}else{return days+"d"}}).add("markdown",function($value,markdown){return markdown.render($value);}).add("pageCurrent",function($value,env){return Math.ceil(parseInt($value||0)/env.PAGING_LIMIT)+1;}).add("pageTotal",function($value,env){let total=Math.ceil(parseInt($value||0)/env.PAGING_LIMIT);return total?total:1;}).add("humanFileSize",function($value){if(!$value){return 0;}
-let thresh=1000;if(Math.abs($value)<thresh){return $value+" B";}
-let units=["kB","MB","GB","TB","PB","EB","ZB","YB"];let u=-1;do{$value/=thresh;++u;}while(Math.abs($value)>=thresh&&u<units.length-1);return($value.toFixed(1)+'<span class="text-size-small unit">'+
-units[u]+"</span>");}).add("statsTotal",function($value){if(!$value){return 0;}
+let thresh=1000;if(Math.abs($value)<thresh){return $value;}
+let units=["kB","MB","GB","TB","PB","EB","ZB","YB"];let u=-1;do{$value/=thresh;++u;}while(Math.abs($value)>=thresh&&u<units.length-1);return $value.toFixed(1);}).add("humanFileUnit",function($value){if(!$value){return'';}
+let thresh=1000;if(Math.abs($value)<thresh){return'B';}
+let units=["kB","MB","GB","TB","PB","EB","ZB","YB"];let u=-1;do{$value/=thresh;++u;}while(Math.abs($value)>=thresh&&u<units.length-1);return units[u];}).add("statsTotal",function($value){if(!$value){return 0;}
 $value=abbreviate($value,0,false,false);return $value==="0"?"N/A":$value;}).add("isEmpty",function($value){return(!!$value);}).add("isEmptyObject",function($value){return((Object.keys($value).length===0&&$value.constructor===Object)||$value.length===0)}).add("activeDomainsCount",function($value){let result=[];if(Array.isArray($value)){result=$value.filter(function(node){return(node.verification&&node.certificateId);});}
 return result.length;}).add("documentAction",function(container){let collection=container.get('project-collection');let document=container.get('project-document');if(collection&&document&&!document.$id){return'database.createDocument';}
 return'database.updateDocument';}).add("documentSuccess",function(container){let document=container.get('project-document');if(document&&!document.$id){return',redirect';}

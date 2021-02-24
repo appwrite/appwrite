@@ -26,6 +26,10 @@
 
 - Updated missing storage env vars
 
+## Security
+
+- Fixed an XSS vulnerability in the Appwrite console
+
 # Version 0.7.0
 
 ## Features
