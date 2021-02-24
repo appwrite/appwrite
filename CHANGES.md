@@ -10,6 +10,7 @@
 - Force adding a security email on setup
 - Better error logs on appwrite cretificates worker## Upgrades
 - SMTP is now disabled by default, no dummy SMTP is included in setup
+- Added a new endpoint that returns the server and SDKs latest versions numbers #941
 
 ## Upgrades
 
