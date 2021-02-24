@@ -20,6 +20,7 @@ use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
+use Appwrite\Event\Realtime;
 use Appwrite\Extend\PDO;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\App;
@@ -319,6 +320,10 @@ App::setResource('locale', function() {
 // Queues
 App::setResource('events', function($register) {
     return new Event('', '');
+}, ['register']);
+
+App::setResource('realtime', function($register) {
+    return new Realtime('', []);
 }, ['register']);
 
 App::setResource('audits', function($register) {
