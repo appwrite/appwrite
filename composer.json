@@ -47,7 +47,8 @@
         "utopia-php/domains": "0.2.*",
         "utopia-php/swoole": "0.2.*",
         "utopia-php/system": "0.4.*",
-        "utopia-php/storage": "0.2.*",
+        "utopia-php/storage": "0.4.*",
+        "utopia-php/image": "0.1.*",
 
         "resque/php-resque": "1.3.6",
         "matomo/device-detector": "3.13.0",
