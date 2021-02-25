@@ -19,10 +19,7 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Registry\Registry;
 use Utopia\Swoole\Request as SwooleRequest;
-
 use PDO as PDONative;
-use Swoole\Database\RedisConfig;
-use Swoole\Database\RedisPool;
 
 /**
  * TODO List
@@ -46,7 +43,7 @@ Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 $server = new Server("0.0.0.0", 80);
 $server->set([
     'worker_num' => 1
-    ]);
+]);
 $subscriptions = [];
 $connections = [];
 
@@ -74,16 +71,16 @@ $register->set('db', function () { // Register DB connection
 $register->set('cache', function () { // Register cache connection
     $redis = new Redis();
     $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
-    $user = App::getEnv('_APP_REDIS_USER','');
-    $pass = App::getEnv('_APP_REDIS_PASS','');
+    $user = App::getEnv('_APP_REDIS_USER', '');
+    $pass = App::getEnv('_APP_REDIS_PASS', '');
     $auth = [];
-    if(!empty($user)) {
+    if (!empty($user)) {
         $auth["user"] = $user;
     }
-    if(!empty($pass)) {
+    if (!empty($pass)) {
         $auth["pass"] = $pass;
     }
-    if(!empty($auth)) {
+    if (!empty($auth)) {
         $redis->auth($auth);
     }
     $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
@@ -114,9 +111,7 @@ $server->on("workerStart", function ($server, $workerId) use (&$subscriptions, &
                 Console::error('Pub/sub failed (worker: ' . $workerId . ')');
             }
 
-            $redis->subscribe(['realtime'], function ($redis, $channel, $payload) use ($server, $workerId, &$connections, &$subscriptions) {
-                // TODO get project and resource ID and itterate over the resource read(?) permissions and send a message to all listeners
-
+            $redis->subscribe(['realtime'], function ($redis, $channel, $payload) use ($server, &$connections, &$subscriptions) {
                 /**
                  * Supported Resources:
                  *  - Collection
@@ -130,20 +125,22 @@ $server->on("workerStart", function ($server, $workerId) use (&$subscriptions, &
                  *  - Function
                  *  - Execution
                  */
-                $event = json_decode($payload);
+                $event = json_decode($payload, true);
 
                 $receivers = [];
 
                 foreach ($connections as $fd => $connection) {
-                    if ($connection['projectId'] !== $event->project) {
+                    if ($connection['projectId'] !== $event['project']) {
                         continue;
                     }
 
                     foreach ($connection['roles'] as $role) {
-                        if (\array_key_exists($role, $subscriptions[$event->project])) {
-                            foreach ($event->channels as $channel) {
-                                if (\array_key_exists($channel, $subscriptions[$event->project][$role]) && \in_array($role, $event->permissions)) {
-                                    $receivers = array_merge($receivers, array_keys($subscriptions[$event->project][$role][$channel]));
+                        if (\array_key_exists($role, $subscriptions[$event['project']])) {
+                            foreach ($event['data']['channels'] as $channel) {
+                                if (\array_key_exists($channel, $subscriptions[$event['project']][$role]) && \in_array($role, $event['permissions'])) {
+                                    foreach (array_keys($subscriptions[$event['project']][$role][$channel]) as $ids) {
+                                        $receivers[] = $ids;
+                                    }
                                     break;
                                 }
                             }
@@ -154,13 +151,14 @@ $server->on("workerStart", function ($server, $workerId) use (&$subscriptions, &
                 $receivers = array_keys(array_flip($receivers));
 
                 foreach ($receivers as $receiver) {
-                    if ($server->exist($receiver)
-                        && $server->isEstablished($receiver)
-                        ) {
-                            $server->push($receiver, json_encode($event->data), SWOOLE_WEBSOCKET_OPCODE_TEXT,
-                                SWOOLE_WEBSOCKET_FLAG_FIN | SWOOLE_WEBSOCKET_FLAG_COMPRESS);
-                    }
-                    else { 
+                    if ($server->exist($receiver) && $server->isEstablished($receiver)) {
+                        $server->push(
+                            $receiver,
+                            json_encode($event['data']),
+                            SWOOLE_WEBSOCKET_OPCODE_TEXT,
+                            SWOOLE_WEBSOCKET_FLAG_FIN | SWOOLE_WEBSOCKET_FLAG_COMPRESS
+                        );
+                    } else {
                         $server->close($receiver);
                     }
                 }
@@ -254,13 +252,26 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
         return $user;
     }, ['project', 'request', 'projectDB']);
 
-    $channels = array_flip($request->getQuery('channels', []));
-    $user = $app->getResource('user');
-    $project = $app->getResource('project');
-    $roles = ['*', 'user:' . $user->getId(), 'role:' . (($user->isEmpty()) ? Auth::USER_ROLE_GUEST : Auth::USER_ROLE_MEMBER)];
-
     /** @var Appwrite\Database\Document $user */
+    $user = $app->getResource('user');
+
     /** @var Appwrite\Database\Document $project */
+    $project = $app->getResource('project');
+
+    $channels = $request->getQuery('channels', []);
+
+    if (empty($project->getId())) {
+        $server->push($connection, 'Missing or unknown project ID');
+        $server->close($connection);
+    }
+
+    if (empty($request->getQuery('channels', []))) {
+        $server->push($connection, 'Missing or unknown channels');
+        $server->close($connection);
+    }
+
+    $roles = ['*', 'user:' . $user->getId(), 'role:' . (($user->isEmpty()) ? Auth::USER_ROLE_GUEST : Auth::USER_ROLE_MEMBER)];
+    $channels = array_flip($channels);
 
     \array_map(function ($node) use (&$roles) {
         if (isset($node['teamId']) && isset($node['roles'])) {
@@ -304,11 +315,9 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
         'projectId' => $project->getId(),
         'roles' => $roles,
     ];
-
-    $server->push($connection, json_encode($subscriptions));
 });
 
-$server->on('message', function (Server $server, Frame $frame) use (&$connections, &$subscriptions) {
+$server->on('message', function (Server $server, Frame $frame) {
     if ($frame->data === 'reload') {
         $server->reload();
     }
@@ -341,7 +350,6 @@ $server->on('close', function (Server $server, int $fd) use (&$connections, &$su
     unset($connections[$fd]);
 
     Console::info('Connection close: ' . $fd);
-
 });
 
 $server->start();

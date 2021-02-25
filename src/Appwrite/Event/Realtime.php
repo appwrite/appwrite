@@ -141,10 +141,10 @@ class Realtime
         $redis->connect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
         $redis->publish('realtime', json_encode([
             'project' => $this->project,
-            'channels' => $this->channels,
             'permissions' => $this->payload->getAttribute('$permissions.read'),
             'data' => [
                 'event' => $this->event,
+                'channels' => $this->channels,
                 'timestamp' => time(),
                 'payload' => $this->payload->getArrayCopy()
             ]
