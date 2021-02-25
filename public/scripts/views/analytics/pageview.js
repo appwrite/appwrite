@@ -7,8 +7,14 @@
       if (!ga) {
         console.error("Google Analytics ga object is not available");
       }
+      
+      let doNotTrack = window.navigator.doNotTrack;
 
-      var project = router.params["project"] || 'None';
+      if(doNotTrack == '1') {
+        return;
+      }
+
+      let project = router.params["project"] || 'None';
 
       ga("set", "page", window.location.pathname);
 

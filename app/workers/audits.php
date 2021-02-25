@@ -6,7 +6,7 @@ use Utopia\CLI\Console;
 
 require_once __DIR__.'/../init.php';
 
-\cli_set_process_title('Audits V1 Worker');
+Console::title('Audits V1 Worker');
 
 Console::success(APP_NAME.' audits worker v1 has started');
 

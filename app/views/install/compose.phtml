@@ -76,14 +76,19 @@ services:
       - _APP_SMTP_SECURE
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
+      - _APP_USAGE_STATS
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
       - _APP_STORAGE_LIMIT
+      - _APP_STORAGE_ANTIVIRUS
+      - _APP_STORAGE_ANTIVIRUS_HOST
+      - _APP_STORAGE_ANTIVIRUS_PORT
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_FUNCTIONS_CONTAINERS
       - _APP_FUNCTIONS_CPUS
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
+      - _APP_FUNCTIONS_ENVS
 
   appwrite-worker-usage:
     image: appwrite/appwrite:<?php echo $version."\n"; ?>
@@ -177,6 +182,7 @@ services:
     volumes: 
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
+      - appwrite-certificates:/storage/certificates:rw
     environment:
       - _APP_ENV
       - _APP_REDIS_HOST
@@ -205,6 +211,7 @@ services:
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
+      - _APP_DOMAIN_TARGET
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -239,6 +246,7 @@ services:
       - _APP_FUNCTIONS_CPUS
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
+      - _APP_USAGE_STATS
 
   appwrite-worker-mails:
     image: appwrite/appwrite:<?php echo $version."\n"; ?>
@@ -263,10 +271,9 @@ services:
       - _APP_SMTP_PASSWORD
       
   appwrite-maintenance:
+    image: appwrite/appwrite:<?php echo $version."\n"; ?>
     entrypoint: maintenance
     container_name: appwrite-maintenance
-    build:
-      context: .
     restart: unless-stopped
     networks:
       - appwrite
@@ -277,11 +284,10 @@ services:
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_MAINTENANCE_INTERVAL
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
+      - _APP_MAINTENANCE_RETENTION_EXECUTION
+      - _APP_MAINTENANCE_RETENTION_ABUSE
+      - _APP_MAINTENANCE_RETENTION_AUDIT
+
 
   appwrite-schedule:
     image: appwrite/appwrite:<?php echo $version."\n"; ?>
@@ -305,8 +311,6 @@ services:
       - appwrite
     volumes:
       - appwrite-mariadb:/var/lib/mysql:rw
-    ports:
-      - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=rootsecretpassword
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
@@ -370,5 +374,4 @@ volumes:
   appwrite-certificates:
   appwrite-functions:
   appwrite-influxdb:
-  appwrite-chronograf:
   appwrite-config:

@@ -2,8 +2,8 @@
 
 use Utopia\App;
 use Utopia\Exception;
-use Appwrite\Storage\Device\Local;
-use Appwrite\Storage\Storage;
+use Utopia\Storage\Device\Local;
+use Utopia\Storage\Storage;
 use Appwrite\ClamAV\Network;
 use Appwrite\Event\Event;
 
@@ -287,10 +287,6 @@ App::get('/v1/health/stats') // Currently only used internally
 
         $response
             ->json([
-                'server' => [
-                    'name' => 'nginx',
-                    'version' => \shell_exec('nginx -v 2>&1'),
-                ],
                 'storage' => [
                     'used' => Storage::human($device->getDirectorySize($device->getRoot().'/')),
                     'partitionTotal' => Storage::human($device->getPartitionTotalSpace()),

@@ -176,73 +176,81 @@ App::get('/v1/projects/:projectId/usage')
             throw new Exception('Project not found', 404);
         }
 
-        $period = [
-            '24h' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('-24 hours')),
-                'end' => DateTime::createFromFormat('U', \strtotime('+1 hour')),
-                'group' => '30m',
-            ],
-            '7d' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('-7 days')),
-                'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                'group' => '1d',
-            ],
-            '30d' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('-30 days')),
-                'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                'group' => '1d',
-            ],
-            '90d' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('-90 days')),
-                'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                'group' => '1d',
-            ],
-        ];
+        if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
 
-        $client = $register->get('influxdb');
-
-        $requests = [];
-        $network = [];
-        $functions = [];
-
-        if ($client) {
-            $start = $period[$range]['start']->format(DateTime::RFC3339);
-            $end = $period[$range]['end']->format(DateTime::RFC3339);
-            $database = $client->selectDB('telegraf');
-
-            // Requests
-            $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_requests_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-            $points = $result->getPoints();
-
-            foreach ($points as $point) {
-                $requests[] = [
-                    'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                    'date' => \strtotime($point['time']),
-                ];
+            $period = [
+                '24h' => [
+                    'start' => DateTime::createFromFormat('U', \strtotime('-24 hours')),
+                    'end' => DateTime::createFromFormat('U', \strtotime('+1 hour')),
+                    'group' => '30m',
+                ],
+                '7d' => [
+                    'start' => DateTime::createFromFormat('U', \strtotime('-7 days')),
+                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
+                    'group' => '1d',
+                ],
+                '30d' => [
+                    'start' => DateTime::createFromFormat('U', \strtotime('-30 days')),
+                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
+                    'group' => '1d',
+                ],
+                '90d' => [
+                    'start' => DateTime::createFromFormat('U', \strtotime('-90 days')),
+                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
+                    'group' => '1d',
+                ],
+            ];
+    
+            $client = $register->get('influxdb');
+    
+            $requests = [];
+            $network = [];
+            $functions = [];
+    
+            if ($client) {
+                $start = $period[$range]['start']->format(DateTime::RFC3339);
+                $end = $period[$range]['end']->format(DateTime::RFC3339);
+                $database = $client->selectDB('telegraf');
+    
+                // Requests
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_requests_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+                $points = $result->getPoints();
+    
+                foreach ($points as $point) {
+                    $requests[] = [
+                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
+                        'date' => \strtotime($point['time']),
+                    ];
+                }
+    
+                // Network
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_network_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+                $points = $result->getPoints();
+    
+                foreach ($points as $point) {
+                    $network[] = [
+                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
+                        'date' => \strtotime($point['time']),
+                    ];
+                }
+    
+                // Functions
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+                $points = $result->getPoints();
+    
+                foreach ($points as $point) {
+                    $functions[] = [
+                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
+                        'date' => \strtotime($point['time']),
+                    ];
+                }
             }
-
-            // Network
-            $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_network_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-            $points = $result->getPoints();
-
-            foreach ($points as $point) {
-                $network[] = [
-                    'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                    'date' => \strtotime($point['time']),
-                ];
-            }
-
-            // Functions
-            $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-            $points = $result->getPoints();
-
-            foreach ($points as $point) {
-                $functions[] = [
-                    'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                    'date' => \strtotime($point['time']),
-                ];
-            }
+        } else {
+            $requests = [];
+            $network = [];
+            $functions = [];
         }
+
 
         // Users
 
@@ -440,7 +448,6 @@ App::delete('/v1/projects/:projectId')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'delete')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('password', '', new UID(), 'Your user password for confirmation. Must be between 6 to 32 chars.')
@@ -470,15 +477,22 @@ App::delete('/v1/projects/:projectId')
         ;
 
         foreach (['keys', 'webhooks', 'tasks', 'platforms', 'domains'] as $key) { // Delete all children (keys, webhooks, tasks [stop tasks?], platforms)
-            $list = $project->getAttribute('webhooks', []);
-
-            foreach ($list as $document) { /* @var $document Document */
-                if (!$consoleDB->deleteDocument($projectId)) {
+            $list = $project->getAttribute($key, []);
+            foreach ($list as $document) {
+                /** @var Document $document */
+                if ($consoleDB->deleteDocument($document->getId())) {
+                    if ($document->getCollection() == Database::SYSTEM_COLLECTION_DOMAINS) {
+                        $deletes
+                            ->setParam('type', DELETE_TYPE_CERTIFICATES)
+                            ->setParam('document', $document)
+                        ;
+                    }
+                } else {
                     throw new Exception('Failed to remove project document ('.$key.')] from DB', 500);
                 }
             }
         }
-        
+                
         if (!$consoleDB->deleteDocument($project->getAttribute('teamId', null))) {
             throw new Exception('Failed to remove project team from DB', 500);
         }
@@ -676,7 +690,6 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteWebhook')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('webhookId', null, new UID(), 'Webhook unique ID.')
@@ -869,7 +882,6 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteKey')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('keyId', null, new UID(), 'Key unique ID.')
@@ -1118,7 +1130,6 @@ App::delete('/v1/projects/:projectId/tasks/:taskId')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteTask')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('taskId', null, new UID(), 'Task unique ID.')
@@ -1326,7 +1337,6 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deletePlatform')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('platformId', null, new UID(), 'Platform unique ID.')
@@ -1389,7 +1399,7 @@ App::post('/v1/projects/:projectId/domains')
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception('Unreachable CNAME target ('.$target->get().'), plesse use a domain with a public suffix.', 500);
+            throw new Exception('Unreachable CNAME target ('.$target->get().'), please use a domain with a public suffix.', 500);
         }
 
         $domain = new Domain($domain);
@@ -1520,7 +1530,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception('Unreachable CNAME target ('.$target->get().'), plesse use a domain with a public suffix.', 500);
+            throw new Exception('Unreachable CNAME target ('.$target->get().'), please use a domain with a public suffix.', 500);
         }
 
         if ($domain->getAttribute('verification') === true) {
@@ -1558,13 +1568,13 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteDomain')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('domainId', null, new UID(), 'Domain unique ID.')
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $domainId, $response, $consoleDB) {
+    ->inject('deletes')
+    ->action(function ($projectId, $domainId, $response, $consoleDB, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
@@ -1580,7 +1590,12 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
             throw new Exception('Domain not found', 404);
         }
 
-        if (!$consoleDB->deleteDocument($domain->getId())) {
+        if ($consoleDB->deleteDocument($domain->getId())) {
+            $deletes
+                ->setParam('type', DELETE_TYPE_CERTIFICATES)
+                ->setParam('document', $domain)
+            ;
+        } else {
             throw new Exception('Failed to remove domains from DB', 500);
         }
 

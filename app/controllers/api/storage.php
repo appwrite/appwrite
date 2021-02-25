@@ -13,11 +13,11 @@ use Appwrite\ClamAV\Network;
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\UID;
-use Appwrite\Storage\Storage;
-use Appwrite\Storage\Validator\File;
-use Appwrite\Storage\Validator\FileSize;
-use Appwrite\Storage\Validator\Upload;
-use Appwrite\Storage\Compression\Algorithms\GZIP;
+use Utopia\Storage\Storage;
+use Utopia\Storage\Validator\File;
+use Utopia\Storage\Validator\FileSize;
+use Utopia\Storage\Validator\Upload;
+use Utopia\Storage\Compression\Algorithms\GZIP;
 use Appwrite\Resize\Resize;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Response;
@@ -541,7 +541,6 @@ App::delete('/v1/storage/files/:fileId')
     ->label('sdk.method', 'deleteFile')
     ->label('sdk.description', '/docs/references/storage/delete-file.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->inject('response')

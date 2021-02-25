@@ -3,6 +3,7 @@ $fileLimit = $this->getParam('fileLimit', 0);
 $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 $events = array_keys($this->getParam('events', []));
 $timeout = $this->getParam('timeout', 900);
+$usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 ?>
 <div
     data-service="functions.get"
@@ -51,6 +52,8 @@ $timeout = $this->getParam('timeout', 900);
                                 </p>
 
                                 <form data-ls-if="{{project-function.tag}} !== ''" name="functions.createExecution" class="margin-top"
+                                    data-analytics
+                                    data-analytics-activity
                                     data-analytics-event="submit"
                                     data-analytics-category="console"
                                     data-analytics-label="Create Function Execution"
@@ -93,6 +96,8 @@ $timeout = $this->getParam('timeout', 900);
                                     <ul data-ls-loop="project-function-tags.tags" data-ls-as="tag" class="list">
                                         <li class="clear">
                                             <form data-ls-if="{{tag.$id}} !== {{project-function.tag}}" name="functions.updateTag" class="pull-end"
+                                                data-analytics
+                                                data-analytics-activity
                                                 data-analytics-event="submit"
                                                 data-analytics-category="console"
                                                 data-analytics-label="Create Function Execution"
@@ -115,6 +120,8 @@ $timeout = $this->getParam('timeout', 900);
                                                 <span class="pull-start" data-ls-bind="Created {{tag.dateCreated|timeSince}} &nbsp; | &nbsp; {{tag.size|humanFileSize}}"></span>
 
                                                 <form data-ls-if="{{tag.$id}} !== {{project-function.tag}}" name="functions.deleteTag" class="pull-start"
+                                                    data-analytics
+                                                    data-analytics-activity
                                                     data-analytics-event="submit"
                                                     data-analytics-category="console"
                                                     data-analytics-label="Delete Function Tag"
@@ -140,39 +147,7 @@ $timeout = $this->getParam('timeout', 900);
                         </div>
 
                         <div class="pull-start">
-                            <div data-ui-modal class="modal close box sticky-footer" data-button-text="Deploy Tag">
-                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
-
-                                <h1>Deploy a New Tag</h1>
-
-                                <form
-                                    data-analytics-event="submit"
-                                    data-analytics-category="console"
-                                    data-analytics-label="Create Function Tag"
-                                    data-service="functions.createTag"
-                                    data-scope="sdk"
-                                    data-event="submit"
-                                    data-success="alert,trigger,reset"
-                                    data-success-param-alert-text="Created function tag successfully"
-                                    data-success-param-trigger-events="functions.createTag"
-                                    data-failure="alert"
-                                    data-failure-param-alert-text="Failed to create function tag"
-                                    data-failure-param-alert-classname="error">
-                                    
-                                    <input type="hidden" name="functionId" data-ls-bind="{{router.params.id}}" />
-
-                                    <label for="tag-command">Command</label>
-                                    <input type="text" id="tag-command" name="command" required autocomplete="off" class="margin-bottom" placeholder="node main.js" />
-                            
-                                    <label for="tag-code">Gzipped Code (tar.gz file)</label>
-                                    <input type="file" name="code" id="tag-code" size="1" required accept="application/x-gzip">
-                                    <div class="text-fade text-size-xs margin-top-negative-small margin-bottom-large">(Max file size allowed: <?php echo $fileLimitHuman; ?>)</div>
-
-                                    <footer>
-                                        <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                                    </footer>
-                                </form>
-                            </div>
+                            <button data-ls-ui-trigger="deploy-tag">Deploy Tag</button>
                         </div>
 
                         <div class="pull-end paging">
@@ -220,6 +195,8 @@ $timeout = $this->getParam('timeout', 900);
                         </ul>
 
                         <form name="functions.delete" class="margin-bottom"
+                            data-analytics
+                            data-analytics-activity
                             data-analytics-event="submit"
                             data-analytics-category="console"
                             data-analytics-label="Delete Function"
@@ -240,6 +217,7 @@ $timeout = $this->getParam('timeout', 900);
                     </div>
                 </div>
             </li>
+            <?php if($usageStatsEnabled): ?>
             <li data-state="/console/functions/function/monitors?id={{router.params.id}}&project={{router.params.project}}">
                 
                 <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '90d'"
@@ -318,6 +296,7 @@ $timeout = $this->getParam('timeout', 900);
                     </ul>
                 </div>
             </li>
+            <?php endif; ?>
             <li data-state="/console/functions/function/logs?id={{router.params.id}}&project={{router.params.project}}">
 
                 <div class="text-fade text-size-small pull-end margin-top" data-ls-bind="{{project-function-executions.sum}} executions found"></div>
@@ -466,6 +445,8 @@ $timeout = $this->getParam('timeout', 900);
                         <label>&nbsp;</label>
 
                         <form
+                            data-analytics
+                            data-analytics-activity
                             data-analytics-event="submit"
                             data-analytics-category="console"
                             data-analytics-label="Update Function"
@@ -484,9 +465,13 @@ $timeout = $this->getParam('timeout', 900);
                                 <section class="margin-bottom-large">
                                     <label for="name">Name</label>
                                     <input name="name" id="function-name" type="text" autocomplete="off" data-ls-bind="{{project-function.name}}" data-forms-text-direction required placeholder="Function Name" maxlength="128" />
-                                    
+
+                                    <label for="execute">Execute Access <span class="tooltip small" data-tooltip="Choose who can execute this function using the client API."><i class="icon-info-circled"></i></span> <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
+                                    <input type="hidden" id="execute" name="execute" data-forms-tags data-cast-to="json" data-ls-bind="{{project-function.$permissions.execute}}" placeholder="User ID, Team ID or Role" />
+                                    <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
+
                                     <label for="timeout">Timeout (seconds) <span class="tooltip small" data-tooltip="Limit the execution time of your function."><i class="icon-info-circled"></i></span></label>
-                                    <input name="timeout" id="function-timeout" type="number" autocomplete="off" data-ls-bind="{{project-function.timeout}}" min="1" max="<?php echo $this->escape($timeout); ?>" />
+                                    <input name="timeout" id="function-timeout" type="number" autocomplete="off" data-ls-bind="{{project-function.timeout}}" min="1" max="<?php echo $this->escape($timeout); ?>" data-cast-to="integer" />
                                     <div class="text-size-small text-fade margin-bottom margin-top-negative-small">Max value is <?php echo $this->escape(number_format($timeout)); ?> seconds (<?php echo $this->escape((int) ($timeout / 60)); ?> minutes)</div>
                                 </section>
 
@@ -495,7 +480,9 @@ $timeout = $this->getParam('timeout', 900);
                                     <div class="row responsive thin margin-top-small">
                                         <?php foreach ($events as $i => $event) : ?>
                                             <div class="col span-6 text-one-liner margin-bottom text-height-large text-size-small" title="<?php echo $event; ?>">
-                                                <input type="checkbox" name="events" data-ls-bind="{{project-function.events}}" value="<?php echo $event; ?>" /> &nbsp; <?php echo $event; ?>
+                                                <input type="checkbox" name="events" data-ls-bind="{{project-function.events}}" id="<?php echo $event; ?>" value="<?php echo $event; ?>" />
+                                                &nbsp;
+                                                <label class="inline" for="<?php echo $event; ?>"><?php echo $event; ?></label>
                                             </div>
                                             <?php if (($i + 1) % 2 === 0) : ?>
                                             </div>
@@ -506,15 +493,9 @@ $timeout = $this->getParam('timeout', 900);
                                     </div>
                                 </section>
 
-                                <label for="execute">Execute Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
-                                <input type="hidden" id="execute" name="execute" data-forms-tags data-cast-to="json" data-ls-bind="{{project-function.$permissions.execute}}" placeholder="User ID, Team ID or Role" />
-                                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
-
-                                <section class="margin-bottom-large">
-                                    <label for="schedule">Schedule (CRON Syntax) <span class="tooltip small" data-tooltip="Set a CRON schedule to trigger this function."><i class="icon-info-circled"></i></span></label>
-                                    <input type="text" class="full-width" name="schedule" autocomplete="off" data-ls-bind="{{project-function.schedule}}" placeholder="* * * * *" />
-                                    <div class="text-size-small text-fade margin-bottom margin-top-negative-small">Leave blank for no schedule</div>
-                                </section>
+                                <label for="schedule">Schedule (CRON Syntax) <span class="tooltip small" data-tooltip="Set a CRON schedule to trigger this function."><i class="icon-info-circled"></i></span></label>
+                                <input type="text" id="function-schedule" class="full-width" name="schedule" autocomplete="off" data-ls-bind="{{project-function.schedule}}" placeholder="* * * * *" />
+                                <div class="text-size-small text-fade margin-bottom margin-top-negative-small">Leave blank for no schedule</div>
 
                                 <h3 class="margin-bottom-small">Variables <span class="tooltip small" data-tooltip="Set variables or secret keys that will be passed as env vars to your function at runtime."><i class="icon-info-circled"></i></span></h3>
 
@@ -522,7 +503,7 @@ $timeout = $this->getParam('timeout', 900);
                                     <hr class="margin-bottom margin-top-no" />
 
                                     <fieldset name="vars" data-cast-to="object">
-                                        <div data-ls-loop="project-function.vars" data-ls-as="var" id="project-vars">
+                                        <div data-ls-loop="project-function.vars" data-ls-as="var" id="project-vars" style="visibility: visible;">
                                             <div class="margin-bottom-small">
                                                 <div data-forms-remove class="row thin">
                                                     <div class="col span-10">
@@ -568,6 +549,8 @@ $timeout = $this->getParam('timeout', 900);
                         </ul>
 
                         <form name="functions.delete" class="margin-bottom"
+                            data-analytics
+                            data-analytics-activity
                             data-analytics-event="submit"
                             data-analytics-category="console"
                             data-analytics-label="Delete Function"
@@ -590,4 +573,71 @@ $timeout = $this->getParam('timeout', 900);
             </li>
         </ul>
     </div>
+</div>
+
+<div data-ui-modal class="modal close box sticky-footer" data-button-hide="on" data-open-event="deploy-tag">
+    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+    <h1 class="margin-bottom-xl">Deploy a New Tag</h1>
+
+    <ul class="phases padding margin-top-negative-small" data-ui-phases>
+        <li>
+            <h2 style="display: none">CLI</h2>
+
+            <p><b>Unix</b></p>
+
+            <div class="margin-bottom">
+                <textarea type="hidden" data-ls-bind="appwrite functions createTag \
+    --functionId={{project-function.$id}} \
+    --command='mycommand' \
+    --code='/myrepo/myfunction'" data-forms-code="bash" data-lang="bash" data-lang-label="Bash"></textarea>
+            </div>
+
+            <p><b>PowerShell</b></p>
+
+            <div class="margin-bottom">
+                <textarea type="hidden" data-ls-bind="appwrite functions createTag ,
+    --functionId={{project-function.$id}} ,
+    --command='mycommand' ,
+    --code='/myrepo/myfunction'" data-forms-code="powershell" data-lang="powershell" data-lang-label="PowerShell"></textarea>
+            </div>
+
+            <p>Learn more about <a href="" target="_blank">creating tags</a>, installing and using the <a href="" target="_blank">Appwrite CLI</a>.</p>
+        </li>
+        <li>
+            <h2 style="display: none">Manual</h2>
+            <form class="margin-top-negative"
+                data-analytics
+                data-analytics-activity
+                data-analytics-event="submit"
+                data-analytics-category="console"
+                data-analytics-label="Create Function Tag"
+                data-service="functions.createTag"
+                data-scope="sdk"
+                data-event="submit"
+                data-success="alert,trigger,reset"
+                data-success-param-alert-text="Created function tag successfully"
+                data-success-param-trigger-events="functions.createTag"
+                data-failure="alert"
+                data-failure-param-alert-text="Failed to create function tag"
+                data-failure-param-alert-classname="error">
+                
+                <input type="hidden" name="functionId" data-ls-bind="{{router.params.id}}" />
+
+                <label for="tag-command">Command</label>
+                <input type="text" id="tag-command" name="command" required autocomplete="off" class="margin-bottom" placeholder="node main.js" />
+
+                <label for="tag-code">Gzipped Code (tar.gz file)</label>
+                <input type="file" name="code" id="tag-code" size="1" required accept="application/x-gzip,.gz">
+                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom-large">(Max file size allowed: <?php echo $fileLimitHuman; ?>)</div>
+
+                <footer>
+                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                </footer>
+            </form>
+        </li>
+    </ul>
+
+
+    
 </div>

@@ -13,13 +13,15 @@ class Permissions extends Model
             ->addRule('read', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Read permissions.',
-                'example' => ['*', 'user:5e5ea5c16897e'],
+                'default' => [],
+                'example' => 'user:5e5ea5c16897e',
                 'array' => true,
             ])
             ->addRule('write', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Write permissions.',
-                'example' => ['*', 'user:5e5ea5c16897e'],
+                'default' => [],
+                'example' => 'user:5e5ea5c16897e',
                 'array' => true,
             ])
         ;

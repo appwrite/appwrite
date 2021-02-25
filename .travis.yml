@@ -1,9 +1,11 @@
+dist: xenial
+
 arch:
   - amd64
 
 os: linux
 
-language: minimal
+language: shell
 
 notifications:
   email:
@@ -13,20 +15,35 @@ services:
 - docker
 
 before_install:
-  - curl -fsSL https://get.docker.com | sh
-  - echo '{"experimental":"enabled"}' | sudo tee /etc/docker/daemon.json
-  - mkdir -p $HOME/.docker
-  - echo '{"experimental":"enabled"}' | sudo tee $HOME/.docker/config.json
-  - sudo service docker start
+- curl -fsSL https://get.docker.com | sh
+- echo '{"experimental":"enabled"}' | sudo tee /etc/docker/daemon.json
+- mkdir -p $HOME/.docker
+- echo '{"experimental":"enabled"}' | sudo tee $HOME/.docker/config.json
+- sudo service docker start
+- >
+  if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
+    echo "${DOCKERHUB_PULL_PASSWORD}" | docker login --username "${DOCKERHUB_PULL_USERNAME}" --password-stdin
+  fi
+- docker --version
+- docker buildx create --use
+- chmod -R u+x ./.travis-ci
 
 install:
-- docker --version
 - docker-compose up -d
 - sleep 10
 
 script:
 - docker ps
 - docker-compose logs appwrite
+- docker-compose logs appwrite-worker-functions
 - docker-compose exec appwrite doctor
 - docker-compose exec appwrite vars
 - docker-compose exec appwrite test
+
+deploy:
+  - provider: script
+    edge: true
+    script: ./.travis-ci/deploy.sh
+    on:
+      repo: appwrite/appwrite
+      branch: deploy

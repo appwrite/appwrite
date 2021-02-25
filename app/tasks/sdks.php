@@ -4,6 +4,7 @@ use Utopia\Config\Config;
 use Utopia\CLI\Console;
 use Appwrite\Spec\Swagger2;
 use Appwrite\SDK\SDK;
+use Appwrite\SDK\Language\CLI;
 use Appwrite\SDK\Language\PHP;
 use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\Language\Node;
@@ -91,6 +92,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config->setNPMPackage('appwrite');
                         $config->setBowerPackage('appwrite');
                         break;
+                    case 'cli':
+                        $config = new CLI();
+                        $config->setComposerVendor('appwrite');
+                        $config->setComposerPackage('cli');
+                        break;
                     case 'php':
                         $config = new PHP();
                         $config->setComposerVendor('appwrite');
@@ -100,6 +106,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config = new Node();
                         $config->setNPMPackage('node-appwrite');
                         $config->setBowerPackage('appwrite');
+                        $warning = $warning."\n\n > This is the Node.js SDK for integrating with Appwrite from your Node.js server-side code.
+                            If you're looking to integrate from the browser, you should check [appwrite/sdk-for-web](https://github.com/appwrite/sdk-for-web)";
                         break;
                     case 'deno':
                         $config = new Deno();
@@ -124,6 +132,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'dart':
                         $config = new Dart();
                         $config->setPackageName('dart_appwrite');
+                        $warning = $warning."\n\n > This is the Dart SDK for integrating with Appwrite from your Dart server-side code.
+                            If you're looking for the Flutter SDK you should check [appwrite/sdk-for-flutter](https://github.com/appwrite/sdk-for-flutter)";
                         break;
                     case 'go':
                         $config = new Go();
@@ -215,5 +225,5 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             }
         }
 
-        exit();
+        Console::exit();
     });

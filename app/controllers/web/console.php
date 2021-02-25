@@ -7,7 +7,7 @@ use Utopia\Domains\Domain;
 use Appwrite\Database\Database;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Validator\UID;
-use Appwrite\Storage\Storage;
+use Utopia\Storage\Storage;
 
 App::init(function ($layout) {
     /** @var Utopia\View $layout */
@@ -122,7 +122,8 @@ App::get('/console/home')
         /** @var Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/console/home/index.phtml');
-
+        $page
+            ->setParam('usageStatsEnabled',App::getEnv('_APP_USAGE_STATS','enabled') == 'enabled');
         $layout
             ->setParam('title', APP_NAME.' - Console')
             ->setParam('body', $page);
@@ -390,6 +391,7 @@ App::get('/console/functions/function')
             ->setParam('fileLimit', App::getEnv('_APP_STORAGE_LIMIT', 0))
             ->setParam('fileLimitHuman', Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0)))
             ->setParam('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900))
+            ->setParam('usageStatsEnabled',App::getEnv('_APP_USAGE_STATS','enabled') == 'enabled');
         ;
 
         $layout

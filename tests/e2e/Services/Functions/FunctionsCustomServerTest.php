@@ -308,8 +308,6 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('', $execution['body']['stderr']);
         $this->assertEquals(0, $execution['body']['time']);
 
-        // sleep(75);
-
         // $execution = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/executions/'.$executionId, array_merge([
         //     'content-type' => 'application/json',
         //     'x-appwrite-project' => $this->getProject()['$id'],
@@ -455,23 +453,6 @@ class FunctionsCustomServerTest extends Scope
 
     public function testENVS():array
     {
-        /**
-         * Test for SUCCESS
-         */
-        $file = $this->client->call(Client::METHOD_POST, '/storage/files', array_merge([
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
-            'read' => ['*'],
-            'write' => ['*'],
-            'folderId' => 'xyz',
-        ]);
-
-        $this->assertEquals($file['headers']['status-code'], 201);
-        $this->assertNotEmpty($file['body']['$id']);
-
-        $fileId = $file['body']['$id'] ?? '';
 
         $functions = realpath(__DIR__ . '/../../../resources/functions');
 
@@ -507,7 +488,15 @@ class FunctionsCustomServerTest extends Scope
             [
                 'language' => 'Node.js',
                 'version' => '14.5',
-                'name' => 'node-14',
+                'name' => 'node-14.5',
+                'code' => $functions.'/node.tar.gz',
+                'command' => 'node index.js',
+                'timeout' => 15,
+            ],
+            [
+                'language' => 'Node.js',
+                'version' => '15.5',
+                'name' => 'node-15.5',
                 'code' => $functions.'/node.tar.gz',
                 'command' => 'node index.js',
                 'timeout' => 15,
@@ -521,6 +510,14 @@ class FunctionsCustomServerTest extends Scope
                 'timeout' => 15,
             ],
             [
+                'language' => 'Ruby',
+                'version' => '3.0',
+                'name' => 'ruby-3.0',
+                'code' => $functions.'/ruby.tar.gz',
+                'command' => 'ruby app.rb',
+                'timeout' => 15,
+            ],
+            [
                 'language' => 'Deno',
                 'version' => '1.5',
                 'name' => 'deno-1.5',
@@ -528,7 +525,60 @@ class FunctionsCustomServerTest extends Scope
                 'command' => 'deno run --allow-env index.ts',
                 'timeout' => 15,
             ],
+            [
+                'language' => 'Deno',
+                'version' => '1.6',
+                'name' => 'deno-1.6',
+                'code' => $functions.'/deno.tar.gz',
+                'command' => 'deno run --allow-env index.ts',
+                'timeout' => 15,
+            ],
+            [
+                'language' => 'Dart',
+                'version' => '2.10',
+                'name' => 'dart-2.10',
+                'code' => $functions.'/dart.tar.gz',
+                'command' => 'dart main.dart',
+                'timeout' => 15,
+            ],
+            [
+                'language' => '.NET',
+                'version' => '3.1',
+                'name' => 'dotnet-3.1',
+                'code' => $functions.'/dotnet-3.1.tar.gz',
+                'command' => 'dotnet dotnet.dll',
+                'timeout' => 15,
+            ],
+            [
+                'language' => '.NET',
+                'version' => '5.0',
+                'name' => 'dotnet-5.0',
+                'code' => $functions.'/dotnet-5.0.tar.gz',
+                'command' => 'dotnet dotnet.dll',
+                'timeout' => 15,
+            ],
         ];
+
+        sleep(count($envs) * 20);
+        fwrite(STDERR, ".");
+
+        /**
+         * Test for SUCCESS
+         */
+        $file = $this->client->call(Client::METHOD_POST, '/storage/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'read' => ['*'],
+            'write' => ['*'],
+            'folderId' => 'xyz',
+        ]);
+
+        $this->assertEquals($file['headers']['status-code'], 201);
+        $this->assertNotEmpty($file['body']['$id']);
+
+        $fileId = $file['body']['$id'] ?? '';
 
         foreach ($envs as $key => $env) {
             $language = $env['language'] ?? '';
@@ -590,8 +640,8 @@ class FunctionsCustomServerTest extends Scope
 
             $executionId = $execution['body']['$id'] ?? '';
             $this->assertEquals(201, $execution['headers']['status-code']);
-
-            sleep(20);
+            
+            sleep(10);
 
             $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
                 'content-type' => 'application/json',
@@ -601,6 +651,11 @@ class FunctionsCustomServerTest extends Scope
             if($executions['body']['executions'][0]['status'] !== 'completed') {
                 var_dump($env);
                 var_dump($executions['body']['executions'][0]);
+                $stdout = '';
+                $stderr = '';
+                Console::execute('docker logs appwrite-worker-functions', '', $stdout, $stderr);
+                var_dump($stdout);
+                var_dump($stderr);
             }
     
             $this->assertEquals($executions['headers']['status-code'], 200);
@@ -621,6 +676,7 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals($stdout[4], $language);
             $this->assertEquals($stdout[5], $version);
             // $this->assertEquals($stdout[6], $fileId);
+            fwrite(STDERR, ".");
         }
 
         return [
@@ -684,7 +740,7 @@ class FunctionsCustomServerTest extends Scope
         
         $this->assertEquals(201, $execution['headers']['status-code']);
 
-        sleep(15);
+        sleep(10);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
             'content-type' => 'application/json',

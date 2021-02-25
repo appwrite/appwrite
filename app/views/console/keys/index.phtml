@@ -33,6 +33,8 @@ $scopes = $this->getParam('scopes', []);
                     <h1>Update API Key</h1>
 
                     <form
+                        data-analytics
+                        data-analytics-activity
                         data-analytics-event="submit"
                         data-analytics-category="console"
                         data-analytics-label="Update Project Key"
@@ -57,7 +59,9 @@ $scopes = $this->getParam('scopes', []);
                             <div class="row responsive thin">
                                 <?php foreach ($scopes as $i => $scope) : ?>
                                     <div class="col span-6 text-one-liner margin-bottom text-height-large text-size-small" title="<?php echo $scope; ?>">
-                                        <input type="checkbox" name="scopes" data-ls-bind="{{key.scopes}}" value="<?php echo $scope; ?>" /> &nbsp; <?php echo $scope; ?>
+                                        <input data-ls-attrs="id=scope-<?php echo $scope; ?>" type="checkbox" name="scopes" data-ls-bind="{{key.scopes}}" value="<?php echo $scope; ?>" />
+                                        &nbsp;
+                                        <label class="inline" for="scope-<?php echo $scope; ?>"><?php echo $scope; ?></label>
                                     </div>
                                     <?php if (($i + 1) % 2 === 0) : ?>
                                     </div>
@@ -75,6 +79,8 @@ $scopes = $this->getParam('scopes', []);
                 </div>
 
                 <form class="pull-end margin-end"
+                    data-analytics
+                    data-analytics-activity
                     data-analytics-event="submit"
                     data-analytics-category="console"
                     data-analytics-label="Delete Project Key"
@@ -131,9 +137,11 @@ $scopes = $this->getParam('scopes', []);
             <h1>Add API Keys</h1>
 
             <form
+                data-analytics
+                data-analytics-activity
                 data-analytics-event="submit"
                 data-analytics-category="console"
-                data-analytics-label="Create Project Platform"
+                data-analytics-label="Create Project Key"
                 data-service="projects.createKey"
                 data-scope="console"
                 data-event="submit"
@@ -154,7 +162,9 @@ $scopes = $this->getParam('scopes', []);
                     <div class="row responsive thin">
                         <?php foreach ($scopes as $i => $scope) : ?>
                             <div class="col span-6 text-one-liner margin-bottom text-height-large text-size-small" title="<?php echo $scope; ?>">
-                                <input type="checkbox" name="scopes" value="<?php echo $scope; ?>" /> &nbsp; <?php echo $scope; ?>
+                                <input type="checkbox" name="scopes" id="<?php echo $scope; ?>" value="<?php echo $scope; ?>" /> 
+                                &nbsp; 
+                                <label class="inline" for="<?php echo $scope; ?>"><?php echo $scope; ?></label>
                             </div>
                             <?php if (($i + 1) % 2 === 0) : ?>
                             </div>

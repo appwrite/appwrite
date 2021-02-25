@@ -51,6 +51,7 @@
                     <span class="link"><i class="icon-sun-inv force-dark pull-start"></i><i class="icon-moon-inv force-light pull-start"></i> &nbsp; Change Theme
                         <div class="pull-end switch-theme">
                             <button data-general-theme
+                                data-analytics
                                 data-analytics-event="click"
                                 data-analytics-category="console/header"
                                 data-analytics-label="Switch Theme">
@@ -67,6 +68,7 @@
 
     <nav class="project-only" data-ls-ui-open="" data-button-class="round icon-btn phones-only tablets-only" data-button-aria="Navigation" data-button-icon="icon-dot-3">
         <a class="logo" href="/console"
+            data-analytics
             data-analytics-event="click"
             data-analytics-category="console/navigation"
             data-analytics-label="Logo Link">
@@ -81,6 +83,7 @@
             <ul class="links">
                 <li>
                     <a data-ls-attrs="href=/console/home?project={{router.params.project}}"
+                        data-analytics
                         data-analytics-event="click"
                         data-analytics-category="console/navigation"
                         data-analytics-label="Home Link">
@@ -95,6 +98,7 @@
             <ul class="links">
                 <li>
                     <a data-ls-attrs="href=/console/database?project={{router.params.project}}"
+                        data-analytics
                         data-analytics-event="click"
                         data-analytics-category="console/navigation"
                         data-analytics-label="Database Link">
@@ -104,6 +108,7 @@
                 </li>
                 <li>
                     <a data-ls-attrs="href=/console/storage?project={{router.params.project}}"
+                        data-analytics
                         data-analytics-event="click"
                         data-analytics-category="console/navigation"
                         data-analytics-label="Storage Link">
@@ -113,6 +118,7 @@
                 </li>
                 <li>
                     <a data-ls-attrs="href=/console/users?project={{router.params.project}}"
+                        data-analytics
                         data-analytics-event="click"
                         data-analytics-category="console/navigation"
                         data-analytics-label="Users Link">
@@ -122,6 +128,7 @@
                 </li>
                 <li>
                     <a data-ls-attrs="href=/console/functions?project={{router.params.project}}"
+                        data-analytics
                         data-analytics-event="click"
                         data-analytics-category="console/navigation"
                         data-analytics-label="Functions Link"
@@ -137,6 +144,7 @@
             <ul class="links">
                 <li>
                     <a data-ls-attrs="href=/console/tasks?project={{router.params.project}}"
+                        data-analytics
                         data-analytics-event="click"
                         data-analytics-category="console/navigation"
                         data-analytics-label="Tasks Link">
@@ -146,6 +154,7 @@
                 </li>
                 <li>
                     <a data-ls-attrs="href=/console/webhooks?project={{router.params.project}}"
+                        data-analytics
                         data-analytics-event="click"
                         data-analytics-category="console/navigation"
                         data-analytics-label="Webhooks Links">
@@ -155,6 +164,7 @@
                 </li>
                 <li>
                     <a data-ls-attrs="href=/console/keys?project={{router.params.project}}"
+                        data-analytics
                         data-analytics-event="click"
                         data-analytics-category="console/navigation"
                         data-analytics-label="API Keys Link">
@@ -168,6 +178,7 @@
         <ul class="links bottom">
             <li>
                 <a data-ls-attrs="href=/console/settings?project={{router.params.project}}"
+                    data-analytics
                     data-analytics-event="click"
                     data-analytics-category="console/navigation"
                     data-analytics-label="Settings Link">
@@ -194,6 +205,8 @@
 
     <form
         data-setup
+        data-analytics
+        data-analytics-activity
         data-analytics-event="submit"
         data-analytics-category="console"
         data-analytics-label="Create Project">

@@ -18,28 +18,32 @@ class Webhook extends Model
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Webhook ID.',
+                'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Webhook name.',
+                'default' => '',
                 'example' => 'My Webhook',
             ])
             ->addRule('url', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Webhook URL endpoint.',
+                'default' => '',
                 'example' => 'https://example.com/webhook',
             ])
             ->addRule('events', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Webhook trigger events.',
                 'default' => [],
-                'example' => ['database.collections.update', 'database.collections.delete'],
+                'example' => 'database.collections.update',
                 'array' => true,
             ])
             ->addRule('security', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Indicated if SSL / TLS Certificate verification is enabled.',
+                'default' => true,
                 'example' => true,
             ])
             ->addRule('httpUser', [
