@@ -10,6 +10,7 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Extend\PDO;
+use Appwrite\Realtime\Realtime;
 use Swoole\WebSocket\Server;
 use Swoole\Http\Request;
 use Swoole\Process;
@@ -20,6 +21,8 @@ use Utopia\Config\Config;
 use Utopia\Registry\Registry;
 use Utopia\Swoole\Request as SwooleRequest;
 use PDO as PDONative;
+use Utopia\Abuse\Abuse;
+use Utopia\Abuse\Adapters\TimeLimit;
 
 /**
  * TODO List
@@ -127,28 +130,7 @@ $server->on("workerStart", function ($server, $workerId) use (&$subscriptions, &
                  */
                 $event = json_decode($payload, true);
 
-                $receivers = [];
-
-                foreach ($connections as $fd => $connection) {
-                    if ($connection['projectId'] !== $event['project']) {
-                        continue;
-                    }
-
-                    foreach ($connection['roles'] as $role) {
-                        if (\array_key_exists($role, $subscriptions[$event['project']])) {
-                            foreach ($event['data']['channels'] as $channel) {
-                                if (\array_key_exists($channel, $subscriptions[$event['project']][$role]) && \in_array($role, $event['permissions'])) {
-                                    foreach (array_keys($subscriptions[$event['project']][$role][$channel]) as $ids) {
-                                        $receivers[] = $ids;
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                $receivers = array_keys(array_flip($receivers));
+                $receivers = Realtime::identifyReceivers($event, $connections, $subscriptions);
 
                 foreach ($receivers as $receiver) {
                     if ($server->exist($receiver) && $server->isEstablished($receiver)) {
@@ -260,28 +242,47 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
 
     $channels = $request->getQuery('channels', []);
 
+    /*
+     * Abuse Check
+     */
+    $timeLimit = new TimeLimit('url:{url},ip:{ip}', 60, 60, function () use ($register) {
+        return $register->get('db');
+    });
+    $timeLimit->setNamespace('app_' . $project->getId());
+    $timeLimit
+        ->setParam('{ip}', $request->getIP())
+        ->setParam('{url}', $request->getURI());
+
+    $abuse = new Abuse($timeLimit);
+
+    if ($abuse->check() && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+        $server->push($connection, 'Too many requests');
+        $server->close($connection);
+    }
+
+    /*
+     *  Project Check
+     */
     if (empty($project->getId())) {
         $server->push($connection, 'Missing or unknown project ID');
         $server->close($connection);
     }
 
-    if (empty($request->getQuery('channels', []))) {
-        $server->push($connection, 'Missing or unknown channels');
-        $server->close($connection);
-    }
+    Realtime::setUser($user);
 
     $roles = ['*', 'user:' . $user->getId(), 'role:' . (($user->isEmpty()) ? Auth::USER_ROLE_GUEST : Auth::USER_ROLE_MEMBER)];
     $channels = array_flip($channels);
 
-    \array_map(function ($node) use (&$roles) {
-        if (isset($node['teamId']) && isset($node['roles'])) {
-            $roles[] = 'team:' . $node['teamId'];
+    Realtime::parseChannels($channels);
+    Realtime::parseRoles($roles);
 
-            foreach ($node['roles'] as $nodeRole) { // Set all team roles
-                $roles[] = 'team:' . $node['teamId'] . '/' . $nodeRole;
-            }
-        }
-    }, $user->getAttribute('memberships', []));
+    /**
+     * Channels Check
+     */
+    if (empty($request->getQuery('channels', []))) {
+        $server->push($connection, 'Missing channels');
+        $server->close($connection);
+    }
 
     /**
      * Build Subscriptions Tree
@@ -315,6 +316,8 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
         'projectId' => $project->getId(),
         'roles' => $roles,
     ];
+
+    $server->push($connection, json_encode($channels));
 });
 
 $server->on('message', function (Server $server, Frame $frame) {

@@ -23,6 +23,11 @@ class Realtime
     protected $channels = [];
 
     /**
+     * @var array
+     */
+    protected $permissions = [];
+
+    /**
      * @var Document
      */
     protected $payload;
@@ -106,22 +111,26 @@ class Realtime
         switch (true) {
             case strpos($this->event, 'account.') === 0:
                 $this->channels[] = 'account.' . $this->payload->getId();
+                $this->permissions = ['user:' . $this->payload->getId()];
 
                 break;
             case strpos($this->event, 'database.collections.') === 0:
                 $this->channels[] = 'collections';
                 $this->channels[] = 'collections.' . $this->payload->getId();
+                $this->permissions = $this->payload->getAttribute('$permissions.read');
 
                 break;
             case strpos($this->event, 'database.documents.') === 0:
                 $this->channels[] = 'documents';
                 $this->channels[] = 'collections.' . $this->payload->getAttribute('$collection') . '.documents';
                 $this->channels[] = 'documents.' . $this->payload->getId();
+                $this->permissions = $this->payload->getAttribute('$permissions.read');
 
                 break;
             case strpos($this->event, 'storage.') === 0:
                 $this->channels[] = 'files';
                 $this->channels[] = 'files.' . $this->payload->getId();
+                $this->permissions = $this->payload->getAttribute('$permissions.read');
 
                 break;
         }
@@ -141,7 +150,7 @@ class Realtime
         $redis->connect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
         $redis->publish('realtime', json_encode([
             'project' => $this->project,
-            'permissions' => $this->payload->getAttribute('$permissions.read'),
+            'permissions' => $this->permissions,
             'data' => [
                 'event' => $this->event,
                 'channels' => $this->channels,
