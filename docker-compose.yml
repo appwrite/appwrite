@@ -504,7 +504,7 @@ services:
   graphiql:
     container_name: graphiql
     ports:
-        - '9505:4000'
+        - '9506:4000'
     environment:
         - API_URL=http://localhost/v1/graphql
     image: npalm/graphiql

@@ -260,7 +260,7 @@ class Response extends SwooleResponse
             $output = self::getFilter()->parse($output, $model);
         }
 
-        $this->json(!empty($output) ? $output : new stdClass());
+        // $this->json(!empty($output) ? $output : new stdClass());
     }
 
     /**

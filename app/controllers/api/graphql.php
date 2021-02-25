@@ -159,8 +159,6 @@ function getArgType(Validator $validator, bool $required) {
 function getArgs(array $params) {
     $args = [];
     foreach ($params as $key => $value) {
-        var_dump("Key : ${key}");
-        var_dump($value);
         $args[$key] = [
             'type' => getArgType($value['validator'],!$value['optional']),
             'description' => $value['description'],
@@ -183,22 +181,33 @@ function buildSchema($utopia, $response) {
                     $methodName = $namespace.'_'.$route->getLabel('sdk.method', '');
                     $responseModelName = $route->getLabel('sdk.response.model', Response::MODEL_NONE);
                     
-                    var_dump("******************************************");
-                    var_dump("Model Name : ${responseModelName}");
+                    // var_dump("******************************************");
+                    // var_dump("Model Name : ${responseModelName}");
 
                     if ( $responseModelName !== Response::MODEL_NONE && $responseModelName !== Response::MODEL_ANY ) {
                         $responseModel = $response->getModel($responseModelName);
                         createTypeMapping($responseModel, $response);
+
+                        $args = getArgs($route->getParams());
                         $fields[$methodName] = [
                             'type' => $typeMapping[$responseModel->getType()],
                             'description' => $route->getDesc(), 
-                            'args' => getArgs($route->getParams()),
+                            'args' => $args,
+                            'resolve' => function ($args) use (&$utopia, $route, $response) {
+                                var_dump("************* REACHED RESOLVE *****************");
+                                var_dump($route);
+                                $utopia->execute($route, $args);
+                                var_dump("********************** ARGS *******************");
+                                var_dump($args);
+                                var_dump("**************** OUTPUT ************");
+                                var_dump($response->getPayload());
+                                return $response->getPayload();
+                            }
                         ];
 
-                        // print_r($fields[$methodName]);
-                        var_dump("Processed route : {$route->getURL()}");
+                        // var_dump("Processed route : {$route->getURL()}");
                     } else {
-                        var_dump("Skipping route : {$route->getURL()}");
+                        // var_dump("Skipping route : {$route->getURL()}");
                     }
                 }
             }
@@ -232,8 +241,7 @@ App::post('/v1/graphql')
     ->inject('request')
     ->inject('response')
     ->inject('utopia')
-    ->inject('schema')
-    ->action(function ($request, $response, $utopia, $schema) {
+    ->action(function ($request, $response, $utopia) {
             // Generate the Schema of the server on startup. 
             // Use the routes from utopia and get the params then construct the queries and mutations.
 
@@ -246,6 +254,8 @@ App::post('/v1/graphql')
                 $rootValue = [];
                 $result = GraphQL::executeQuery($schema, $query, $rootValue, null, $variables);
                 $output = $result->toArray();
+                var_dump("********** OUTPUT *********");
+                var_dump($output);
             } catch (\Exception $error) {
                 $output = [
                     'errors' => [
