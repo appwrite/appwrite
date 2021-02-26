@@ -20,15 +20,21 @@ class Redis extends Adapter
     protected $adapter;
 
     /**
+     * @var bool
+     */
+    protected $isPool;
+
+    /**
      * Redis constructor.
      *
      * @param Adapter  $adapter
      * @param Registry $register
      */
-    public function __construct(Adapter $adapter, Registry $register)
+    public function __construct(Adapter $adapter, Registry $register, $isPool = false)
     {
         $this->register = $register;
         $this->adapter = $adapter;
+        $this->isPool = $isPool;
     }
 
     /**
@@ -261,7 +267,9 @@ class Redis extends Adapter
      */
     protected function getRedis(): Client
     {
-        return $this->register->get('cache');
+        return $this->isPool ? 
+                $this->register->get('cache')->get() : 
+                $this->register->get('cache');
     }
 
     /**

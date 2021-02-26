@@ -60,6 +60,8 @@ class Realtime
     }
 
     /**
+     * Identifies the receivers of all subscriptions, based on the permissions and event.
+     * 
      * @param array $event
      * @param array $connections
      * @param array $subscriptions
