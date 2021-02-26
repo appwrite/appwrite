@@ -44,7 +44,7 @@ class RealtimeChannelsTest extends TestCase
         $this->connectionsTotal = $this->connectionsAuthenticated + $this->connectionsGuest;
 
         /**
-         * Add 100 Authenticated Clients
+         * Add Authenticated Clients
          */
         for ($i = 0; $i < $this->connectionsPerChannel; $i++) {
             foreach ($this->allChannels as $index => $channel) {
@@ -74,7 +74,7 @@ class RealtimeChannelsTest extends TestCase
         }
 
         /**
-         * Add 100 Guest Clients
+         * Add Guest Clients
          */
         for ($i = 0; $i < $this->connectionsPerChannel; $i++) {
             foreach ($this->allChannels as $index => $channel) {
@@ -111,7 +111,7 @@ class RealtimeChannelsTest extends TestCase
         $this->assertCount(1, $this->subscriptions);
 
         /**
-         * Check for 133 subscriptions:
+         * Check for correct amount of subscriptions:
          *  - XXX users
          *  - 1 *
          *  - 1 role:guest
@@ -122,9 +122,9 @@ class RealtimeChannelsTest extends TestCase
         $this->assertCount(($this->connectionsAuthenticated + (3 * $this->connectionsPerChannel) + 3), $this->subscriptions['1']);
 
         /**
-         * Check for 200 connections
-         *  - 100 Authenticated
-         *  - 100 Guests
+         * Check for connections
+         *  - Authenticated
+         *  - Guests
          */
         $this->assertCount($this->connectionsTotal, $this->connections);
     }
