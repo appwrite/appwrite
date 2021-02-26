@@ -70,7 +70,7 @@ class RealtimeTest extends TestCase
         $this->assertArrayNotHasKey('account', $channels);
         $this->assertArrayNotHasKey('account.456', $channels);
 
-        Realtime::addSubscription('1', 1, $this->subscriptions, $this->connections, $roles, $channels);
+        Realtime::addSubscription('1', 1, $roles, $this->subscriptions, $this->connections, $channels);
 
         $event = [
             'project' => '1',
@@ -219,5 +219,16 @@ class RealtimeTest extends TestCase
         );
 
         $this->assertEmpty($receivers);
+
+        Realtime::removeSubscription(2, $this->subscriptions, $this->connections);
+
+        $this->assertCount(1, $this->connections);
+        $this->assertCount(8, $this->subscriptions['1']);
+
+
+        Realtime::removeSubscription(1, $this->subscriptions, $this->connections);
+
+        $this->assertEmpty($this->connections);
+        $this->assertEmpty($this->subscriptions);
     }
 }

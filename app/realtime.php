@@ -294,32 +294,7 @@ $server->on('message', function (Server $server, Frame $frame) {
 });
 
 $server->on('close', function (Server $server, int $fd) use (&$connections, &$subscriptions) {
-    /**
-     * TODO: Move into Realtime Class for tests
-     */
-    $projectId = $connections[$fd]['projectId'] ?? '';
-    $roles = $connections[$fd]['roles'] ?? [];
-
-    foreach ($roles as $key => $role) {
-        foreach ($subscriptions[$projectId][$role] as $channel => $list) {
-            unset($subscriptions[$projectId][$role][$channel][$fd]); // Remove connection
-
-            if (empty($subscriptions[$projectId][$role][$channel])) {
-                unset($subscriptions[$projectId][$role][$channel]);  // Remove channel when no connections
-            }
-        }
-
-        if (empty($subscriptions[$projectId][$role])) {
-            unset($subscriptions[$projectId][$role]); // Remove role when no channels
-        }
-    }
-
-    if (empty($subscriptions[$projectId])) { // Remove project when no roles
-        unset($subscriptions[$projectId]);
-    }
-
-    unset($connections[$fd]);
-
+    Realtime::removeSubscription($fd, $subscriptions, $connections);
     Console::info('Connection close: ' . $fd);
 });
 

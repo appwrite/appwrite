@@ -110,7 +110,7 @@ class Realtime
      * @param array $roles
      * @param array $channels
      */
-    static function addSubscription($projectId, $connection, &$subscriptions, &$connections, &$roles, &$channels)
+    static function addSubscription($projectId, $connection, $roles, &$subscriptions, &$connections, &$channels)
     {
         /**
          * Build Subscriptions Tree
@@ -144,5 +144,38 @@ class Realtime
             'projectId' => $projectId,
             'roles' => $roles,
         ];
+    }
+
+    /**
+     * Remove Subscription. 
+     * 
+     * @param mixed $connection
+     * @param array $subscriptions
+     * @param array $connections
+     */
+    static function removeSubscription($connection, &$subscriptions, &$connections)
+    {
+        $projectId = $connections[$connection]['projectId'] ?? '';
+        $roles = $connections[$connection]['roles'] ?? [];
+
+        foreach ($roles as $key => $role) {
+            foreach ($subscriptions[$projectId][$role] as $channel => $list) {
+                unset($subscriptions[$projectId][$role][$channel][$connection]); // Remove connection
+
+                if (empty($subscriptions[$projectId][$role][$channel])) {
+                    unset($subscriptions[$projectId][$role][$channel]);  // Remove channel when no connections
+                }
+            }
+
+            if (empty($subscriptions[$projectId][$role])) {
+                unset($subscriptions[$projectId][$role]); // Remove role when no channels
+            }
+        }
+
+        if (empty($subscriptions[$projectId])) { // Remove project when no roles
+            unset($subscriptions[$projectId]);
+        }
+
+        unset($connections[$connection]);
     }
 }
