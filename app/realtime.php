@@ -21,8 +21,6 @@ use Utopia\Config\Config;
 use Utopia\Registry\Registry;
 use Utopia\Swoole\Request as SwooleRequest;
 use PDO as PDONative;
-use Swoole\Database\RedisConfig;
-use Swoole\Database\RedisPool;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 
@@ -74,30 +72,24 @@ $register->set('db', function () { // Register DB connection
     return $pdo;
 });
 
-$register->set('cache', function () use (&$pool) { // Register cache connection
-    $config = new RedisConfig();
-
+$register->set('cache', function () { // Register cache connection
+    $redis = new Redis();
+    $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
     $user = App::getEnv('_APP_REDIS_USER', '');
     $pass = App::getEnv('_APP_REDIS_PASS', '');
-    $auth = '';
-    
+    $auth = [];
     if (!empty($user)) {
-        $auth = $user;
+        $auth["user"] = $user;
     }
     if (!empty($pass)) {
-        $auth += ':' . $pass;
+        $auth["pass"] = $pass;
     }
     if (!empty($auth)) {
-        $config->withAuth($auth);
+        $redis->auth($auth);
     }
-    
-    $config
-        ->withHost(App::getEnv('_APP_REDIS_HOST', ''))
-        ->withPort(App::getEnv('_APP_REDIS_PORT', ''));
-    
-    $pool = new RedisPool($config);
+    $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
-    return $pool;
+    return $redis;
 });
 
 $server->on('workerStart', function ($server, $workerId) use (&$subscriptions, &$connections, &$register) {
@@ -114,7 +106,7 @@ $server->on('workerStart', function ($server, $workerId) use (&$subscriptions, &
                 sleep(5); // 5 sec delay between connection attempts
             }
 
-            $redis = $register->get('cache')->get();
+            $redis = $register->get('cache');
 
             if ($redis->ping(true)) {
                 $attempts = 0;
@@ -191,7 +183,7 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
 
     App::setResource('consoleDB', function () use (&$register) {
         $consoleDB = new Database();
-        $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register, true)); // TODO: Add Redis
+        $consoleDB->setAdapter(new MySQLAdapter($register)); // TODO: Add Redis
         $consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
         $consoleDB->setMocks(Config::getParam('collections', []));
 
