@@ -116,6 +116,9 @@ class Response extends SwooleResponse
     const MODEL_DOMAIN = 'domain';
     const MODEL_DOMAIN_LIST = 'domainList';
 
+    // Content type
+    const CONTENT_TYPE_NULL = null;
+
     /**
      * @var Filter
      */
@@ -260,7 +263,22 @@ class Response extends SwooleResponse
             $output = self::getFilter()->parse($output, $model);
         }
 
-        // $this->json(!empty($output) ? $output : new stdClass());
+        switch($this->getContentType()) {
+            case self::CONTENT_TYPE_JSON:
+                $this->json(!empty($output) ? $output : new stdClass());
+                break;
+
+            case self::CONTENT_TYPE_NULL:
+                break;
+            
+            case self::CONTENT_TYPE_YAML:
+                $this->yaml(!empty($output) ? $output : new stdClass());
+                break;
+                
+            default :
+                throw new Exception("No Response format set.");
+                break;
+        }
     }
 
     /**

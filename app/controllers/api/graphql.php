@@ -97,8 +97,8 @@ function createTypeMapping(Model $model, Response $response) {
 }
 
 
-function getArgType(Validator $validator, bool $required) {
-
+function getArgType($validator, bool $required, $utopia, $injections) {
+    $validator = (\is_callable($validator)) ? call_user_func_array($validator, $utopia->getResources($injections)) : $validator;
     $type = [];
     switch ((!empty($validator)) ? \get_class($validator) : '') {
         case 'Utopia\Validator\Text':
@@ -145,7 +145,7 @@ function getArgType(Validator $validator, bool $required) {
             $type = Type::string();
             break;
         default:
-            $type = 'string';
+            $type = Type::string();
             break;
     }
 
@@ -156,11 +156,11 @@ function getArgType(Validator $validator, bool $required) {
     return $type;
 }
 
-function getArgs(array $params) {
+function getArgs(array $params, $utopia) {
     $args = [];
     foreach ($params as $key => $value) {
         $args[$key] = [
-            'type' => getArgType($value['validator'],!$value['optional']),
+            'type' => getArgType($value['validator'],!$value['optional'], $utopia, $value['injections']),
             'description' => $value['description'],
             'defaultValue' => $value['default']
         ];
@@ -172,58 +172,74 @@ function buildSchema($utopia, $response) {
     $start = microtime(true);
 
     global $typeMapping;
-    $fields = [];
+    $queryFields = [];
+    $mutationFields = [];
     foreach($utopia->getRoutes() as $method => $routes ){
-        if ($method == "GET") {
-            foreach($routes as $route) {
-                $namespace = $route->getLabel('sdk.namespace', '');
-                if( true ) {
-                    $methodName = $namespace.'_'.$route->getLabel('sdk.method', '');
-                    $responseModelName = $route->getLabel('sdk.response.model', Response::MODEL_NONE);
+        foreach($routes as $route) {
+            $namespace = $route->getLabel('sdk.namespace', '');
+
+            if ($namespace == 'users') {
+                $methodName = $namespace.'_'.$route->getLabel('sdk.method', '');
+                $responseModelName = $route->getLabel('sdk.response.model', "");
+                var_dump("******************************************");
+                var_dump("Processing route : ${method} : {$route->getURL()}");
+                var_dump("Model Name : ${responseModelName}");
+                if ( $responseModelName !== Response::MODEL_NONE && $responseModelName !== Response::MODEL_ANY ) {
+                    $responseModel = $response->getModel($responseModelName);
+                    createTypeMapping($responseModel, $response);
+                    $type = $typeMapping[$responseModel->getType()];
+                    var_dump("Type Created : ${type}");
+                    $args = getArgs($route->getParams(), $utopia);
+                    var_dump("Args Generated : ${args}");
                     
-                    // var_dump("******************************************");
-                    // var_dump("Model Name : ${responseModelName}");
-
-                    if ( $responseModelName !== Response::MODEL_NONE && $responseModelName !== Response::MODEL_ANY ) {
-                        $responseModel = $response->getModel($responseModelName);
-                        createTypeMapping($responseModel, $response);
-
-                        $args = getArgs($route->getParams());
-                        $fields[$methodName] = [
-                            'type' => $typeMapping[$responseModel->getType()],
-                            'description' => $route->getDesc(), 
-                            'args' => $args,
-                            'resolve' => function ($args) use (&$utopia, $route, $response) {
-                                var_dump("************* REACHED RESOLVE *****************");
-                                var_dump($route);
-                                $utopia->execute($route, $args);
-                                var_dump("********************** ARGS *******************");
-                                var_dump($args);
-                                var_dump("**************** OUTPUT ************");
-                                var_dump($response->getPayload());
-                                return $response->getPayload();
-                            }
-                        ];
-
-                        // var_dump("Processed route : {$route->getURL()}");
-                    } else {
-                        // var_dump("Skipping route : {$route->getURL()}");
+                    $field = [
+                        'type' => $type,
+                        'description' => $route->getDesc(), 
+                        'args' => $args,
+                        'resolve' => function ($args) use (&$utopia, $route, $response) {
+                            var_dump("************* REACHED RESOLVE *****************");
+                            var_dump($route);
+                            $utopia->execute($route, $args);
+                            var_dump("********************** ARGS *******************");
+                            var_dump($args);
+                            var_dump("**************** OUTPUT ************");
+                            var_dump($response->getPayload());
+                            return $response->getPayload();
+                        }
+                    ];
+                    
+                    if ($method == 'GET') {
+                        $queryFields[$methodName] = $field;
+                    } else if ($method == 'POST' || $method == 'PUT' || $method == 'PATCH' || $method == 'DELETE') {
+                        $mutationFields[$methodName] = $field;
                     }
+                    
+                    var_dump("Processed route : ${method} : {$route->getURL()}");
+                } else {
+                    var_dump("Skipping route : {$route->getURL()}");
                 }
             }
         }
     }
 
-    ksort($fields);
+    ksort($queryFields);
+    ksort($mutationFields);
 
     $queryType = new ObjectType([
         'name' => 'Query',
         'description' => 'The root of all your queries',
-        'fields' => $fields
+        'fields' => $queryFields
+    ]);
+
+    $mutationType = new ObjectType([
+        'name' => 'Mutation',
+        'description' => 'The root of all your mutations',
+        'fields' => $mutationFields
     ]);
 
     $schema = new Schema([
-        'query' => $queryType
+        'query' => $queryType,
+        'mutation' => $mutationType
     ]);
 
     $time_elapsed_secs = microtime(true) - $start;
@@ -248,7 +264,7 @@ App::post('/v1/graphql')
             $schema = buildSchema($utopia, $response);
             $query = $request->getPayload('query', '');
             $variables = $request->getPayload('variables', null);
-
+            $response->setContentType(Response::CONTENT_TYPE_NULL);
 
             try {
                 $rootValue = [];

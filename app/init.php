@@ -212,6 +212,10 @@ $register->set('geodb', function () {
     return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2021-02.mmdb');
 });
 
+$register->set('schema', function () {
+    
+});
+
 /*
  * Localization
  */
@@ -287,6 +291,10 @@ Locale::setLanguage('zh-tw', include __DIR__.'/config/locale/translations/zh-tw.
 
 App::setResource('register', function() use ($register) {
     return $register;
+});
+
+App::setResource('schema', function() use ($register) {
+    return $register->get('schema');
 });
 
 App::setResource('layout', function($locale) {

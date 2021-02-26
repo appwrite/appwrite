@@ -189,8 +189,6 @@ App::get('/v1/locale/continents')
     ->action(function ($response, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
-
-        var_dump("*************** IN LOCALE ************* ");
         
         $list = $locale->getText('continents'); /* @var $list array */
 
