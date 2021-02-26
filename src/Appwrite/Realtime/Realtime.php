@@ -2,6 +2,7 @@
 
 namespace Appwrite\Realtime;
 
+use Appwrite\Auth\Auth;
 use Appwrite\Database\Document;
 
 class Realtime
@@ -20,10 +21,33 @@ class Realtime
     }
 
     /**
+     * @return array
+     */
+    static function getRoles()
+    {
+        $roles = ['*', 'role:' . ((self::$user->isEmpty()) ? Auth::USER_ROLE_GUEST : Auth::USER_ROLE_MEMBER)];
+        if (!(self::$user->isEmpty())) {
+            $roles[] = 'user:' . self::$user->getId();
+        }
+        foreach (self::$user->getAttribute('memberships', []) as $node) {
+            if (isset($node['teamId']) && isset($node['roles'])) {
+                $roles[] = 'team:' . $node['teamId'];
+
+                foreach ($node['roles'] as $nodeRole) { // Set all team roles
+                    $roles[] = 'team:' . $node['teamId'] . '/' . $nodeRole;
+                }
+            }
+        }
+        return $roles;
+    }
+
+    /**
      * @param array $channels
      */
-    static function parseChannels(array &$channels)
+    static function parseChannels(array $channels)
     {
+        $channels = array_flip($channels);
+
         foreach ($channels as $key => $value) {
             if (strpos($key, 'account.') === 0) {
                 unset($channels[$key]);
@@ -41,22 +65,8 @@ class Realtime
             }
             unset($channels['account']);
         }
-    }
 
-    /**
-     * @param array $roles
-     */
-    static function parseRoles(array &$roles)
-    {
-        \array_map(function ($node) use (&$roles) {
-            if (isset($node['teamId']) && isset($node['roles'])) {
-                $roles[] = 'team:' . $node['teamId'];
-
-                foreach ($node['roles'] as $nodeRole) { // Set all team roles
-                    $roles[] = 'team:' . $node['teamId'] . '/' . $nodeRole;
-                }
-            }
-        }, self::$user->getAttribute('memberships', []));
+        return $channels;
     }
 
     /**
@@ -89,5 +99,50 @@ class Realtime
         }
 
         return array_keys(array_flip($receivers));
+    }
+
+    /**
+     * Adds Subscription. 
+     * 
+     * @param string $projectId
+     * @param mixed $connection
+     * @param array $subscriptions
+     * @param array $roles
+     * @param array $channels
+     */
+    static function addSubscription($projectId, $connection, &$subscriptions, &$connections, &$roles, &$channels)
+    {
+        /**
+         * Build Subscriptions Tree
+         * 
+         * [PROJECT_ID] -> 
+         *      [ROLE_X] -> 
+         *          [CHANNEL_NAME_X] -> [CONNECTION_ID]
+         *          [CHANNEL_NAME_Y] -> [CONNECTION_ID]
+         *          [CHANNEL_NAME_Z] -> [CONNECTION_ID]
+         *      [ROLE_Y] -> 
+         *          [CHANNEL_NAME_X] -> [CONNECTION_ID]
+         *          [CHANNEL_NAME_Y] -> [CONNECTION_ID]
+         *          [CHANNEL_NAME_Z] -> [CONNECTION_ID]
+         */
+
+        if (!isset($subscriptions[$projectId])) { // Init Project
+            $subscriptions[$projectId] = [];
+        }
+
+        foreach ($roles as $key => $role) {
+            if (!isset($subscriptions[$projectId][$role])) { // Add user first connection
+                $subscriptions[$projectId][$role] = [];
+            }
+
+            foreach ($channels as $channel => $list) {
+                $subscriptions[$projectId][$role][$channel][$connection] = true;
+            }
+        }
+
+        $connections[$connection] = [
+            'projectId' => $projectId,
+            'roles' => $roles,
+        ];
     }
 }

@@ -241,8 +241,6 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
     /** @var Appwrite\Database\Document $project */
     $project = $app->getResource('project');
 
-    $channels = $request->getQuery('channels', []);
-
     /*
      * Abuse Check
      */
@@ -271,52 +269,18 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
 
     Realtime::setUser($user);
 
-    $roles = ['*', 'user:' . $user->getId(), 'role:' . (($user->isEmpty()) ? Auth::USER_ROLE_GUEST : Auth::USER_ROLE_MEMBER)];
-    $channels = array_flip($channels);
-
-    Realtime::parseChannels($channels);
-    Realtime::parseRoles($roles);
+    $roles = Realtime::getRoles();
+    $channels = Realtime::parseChannels($request->getQuery('channels', []));
 
     /**
      * Channels Check
      */
-    if (empty($request->getQuery('channels', []))) {
+    if (empty($channels)) {
         $server->push($connection, 'Missing channels');
         $server->close($connection);
     }
-
-    /**
-     * Build Subscriptions Tree
-     * 
-     * [PROJECT_ID] -> 
-     *      [ROLE_X] -> 
-     *          [CHANNEL_NAME_X] -> [CONNECTION_ID]
-     *          [CHANNEL_NAME_Y] -> [CONNECTION_ID]
-     *          [CHANNEL_NAME_Z] -> [CONNECTION_ID]
-     *      [ROLE_Y] -> 
-     *          [CHANNEL_NAME_X] -> [CONNECTION_ID]
-     *          [CHANNEL_NAME_Y] -> [CONNECTION_ID]
-     *          [CHANNEL_NAME_Z] -> [CONNECTION_ID]
-     */
-
-    if (!isset($subscriptions[$project->getId()])) { // Init Project
-        $subscriptions[$project->getId()] = [];
-    }
-
-    foreach ($roles as $key => $role) {
-        if (!isset($subscriptions[$project->getId()][$role])) { // Add user first connection
-            $subscriptions[$project->getId()][$role] = [];
-        }
-
-        foreach ($channels as $channel => $list) {
-            $subscriptions[$project->getId()][$role][$channel][$connection] = true;
-        }
-    }
-
-    $connections[$connection] = [
-        'projectId' => $project->getId(),
-        'roles' => $roles,
-    ];
+    
+    Realtime::addSubscription($project->getId(), $connection, $subscriptions, $connections, $roles, $channels);
 
     $server->push($connection, json_encode($channels));
 });
@@ -330,6 +294,9 @@ $server->on('message', function (Server $server, Frame $frame) {
 });
 
 $server->on('close', function (Server $server, int $fd) use (&$connections, &$subscriptions) {
+    /**
+     * TODO: Move into Realtime Class for tests
+     */
     $projectId = $connections[$fd]['projectId'] ?? '';
     $roles = $connections[$fd]['roles'] ?? [];
 
