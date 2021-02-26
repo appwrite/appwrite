@@ -113,11 +113,11 @@ class RealtimeChannelsTest extends TestCase
         /**
          * Check for correct amount of subscriptions:
          *  - XXX users
+         *  - XXX teams
+         *  - XXX team roles (2 roles per team)
          *  - 1 *
          *  - 1 role:guest
          *  - 1 role:member
-         *  - 10 teams
-         *  - 20 team roles (2 roles per team)
          */
         $this->assertCount(($this->connectionsAuthenticated + (3 * $this->connectionsPerChannel) + 3), $this->subscriptions['1']);
 
