@@ -162,8 +162,6 @@ Appwrite's current structure is a combination of both [Monolithic](https://en.wi
 │       ├── Extend
 │       ├── Network
 │       ├── OpenSSL
-│       ├── Resize
-│       ├── Storage
 │       ├── Task
 │       ├── Template
 │       ├── URL
