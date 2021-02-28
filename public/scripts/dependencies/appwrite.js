@@ -311,10 +311,10 @@
              *
              * Use this endpoint to allow a new user to register a new account in your
              * project. After the user registration completes successfully, you can use
-             * the [/account/verfication](/docs/client/account#createVerification) route
-             * to start verifying the user email address. To allow the new user to login
-             * to their new account, you need to create a new [account
-             * session](/docs/client/account#createSession).
+             * the [/account/verfication](/docs/client/account#accountCreateVerification)
+             * route to start verifying the user email address. To allow the new user to
+             * login to their new account, you need to create a new [account
+             * session](/docs/client/account#accountCreateSession).
              *
              * @param {string} email
              * @param {string} password
@@ -412,28 +412,6 @@
 
                 return http
                     .patch(path, {
-                        'content-type': 'application/json',
-                    }, payload);
-            },
-
-            /**
-             * Create Account JWT
-             *
-             * Use this endpoint to create a JSON Web Token. You can use the resulting JWT
-             * to authenticate on behalf of the current user when working with the
-             * Appwrite server-side API and SDKs. The JWT secret is valid for 15 minutes
-             * from its creation and will be invalid if the user will logout.
-             *
-             * @throws {Error}
-             * @return {Promise}             
-             */
-            createJWT: function() {
-                let path = '/account/jwt';
-
-                let payload = {};
-
-                return http
-                    .post(path, {
                         'content-type': 'application/json',
                     }, payload);
             },
@@ -579,8 +557,9 @@
              * When the user clicks the confirmation link he is redirected back to your
              * app password reset URL with the secret key and email address values
              * attached to the URL query string. Use the query string params to submit a
-             * request to the [PUT /account/recovery](/docs/client/account#updateRecovery)
-             * endpoint to complete the process.
+             * request to the [PUT
+             * /account/recovery](/docs/client/account#accountUpdateRecovery) endpoint to
+             * complete the process.
              *
              * @param {string} email
              * @param {string} url
@@ -620,7 +599,7 @@
              * Use this endpoint to complete the user account password reset. Both the
              * **userId** and **secret** arguments will be passed as query parameters to
              * the redirect URL you have provided when sending your request to the [POST
-             * /account/recovery](/docs/client/account#createRecovery) endpoint.
+             * /account/recovery](/docs/client/account#accountCreateRecovery) endpoint.
              * 
              * Please note that in order to avoid a [Redirect
              * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
@@ -851,7 +830,7 @@
              * should redirect the user back to your app and allow you to complete the
              * verification process by verifying both the **userId** and **secret**
              * parameters. Learn more about how to [complete the verification
-             * process](/docs/client/account#updateVerification). 
+             * process](/docs/client/account#accountUpdateVerification). 
              * 
              * Please note that in order to avoid a [Redirect
              * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md),
@@ -1616,7 +1595,7 @@
              *
              * Create a new Document. Before using this route, you should create a new
              * collection resource using either a [server
-             * integration](/docs/server/database?sdk=nodejs#createCollection) API or
+             * integration](/docs/server/database#databaseCreateCollection) API or
              * directly from your database console.
              *
              * @param {string} collectionId
@@ -2024,8 +2003,8 @@
              *
              * Get a list of all the current user function execution logs. You can use the
              * query params to filter your results. On admin mode, this endpoint will
-             * return a list of all of the project's teams. [Learn more about different
-             * API modes](/docs/admin).
+             * return a list of all of the project's executions. [Learn more about
+             * different API modes](/docs/admin).
              *
              * @param {string} functionId
              * @param {string} search
@@ -2980,6 +2959,75 @@
 
                 return http
                     .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Update Project users limit
+             *
+             *
+             * @param {string} projectId
+             * @param {string} limit
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            updateAuthLimit: function(projectId, limit) {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                if(limit === undefined) {
+                    throw new Error('Missing required parameter: "limit"');
+                }
+                
+                let path = '/projects/{projectId}/auth/limit'.replace(new RegExp('{projectId}', 'g'), projectId);
+
+                let payload = {};
+
+                if(limit) {
+                    payload['limit'] = limit;
+                }
+
+                return http
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Update Project auth method status. Use this endpoint to enable or disable a given auth method for this project.
+             *
+             *
+             * @param {string} projectId
+             * @param {string} method
+             * @param {boolean} status
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            updateAuthStatus: function(projectId, method, status) {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                if(method === undefined) {
+                    throw new Error('Missing required parameter: "method"');
+                }
+                
+                if(status === undefined) {
+                    throw new Error('Missing required parameter: "status"');
+                }
+                
+                let path = '/projects/{projectId}/auth/{method}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{method}', 'g'), method);
+
+                let payload = {};
+
+                if(status) {
+                    payload['status'] = status;
+                }
+
+                return http
+                    .patch(path, {
                         'content-type': 'application/json',
                     }, payload);
             },
@@ -4598,8 +4646,8 @@
              * 
              * Use the 'URL' parameter to redirect the user from the invitation email back
              * to your app. When the user is redirected, use the [Update Team Membership
-             * Status](/docs/client/teams#updateMembershipStatus) endpoint to allow the
-             * user to accept the invitation to the team.
+             * Status](/docs/client/teams#teamsUpdateMembershipStatus) endpoint to allow
+             * the user to accept the invitation to the team.
              * 
              * Please note that in order to avoid a [Redirect
              * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
