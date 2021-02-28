@@ -301,9 +301,46 @@ $auth = $this->getParam('auth', []);
         </li>
         
         <li data-state="/console/users/providers?project={{router.params.project}}">
-            <p class="text-fade text-size-small margin-bottom pull-end">Unlimited Users <a href="">Set Limit</a></p>
+            <p data-ls-if="{{console-project.usersAuthLimit}} == 0" class="text-fade text-size-small margin-bottom pull-end">Unlimited Users <span class="link" data-ls-ui-trigger="project-update-auth-users-limit">Set Limit</a></p>
+            <p data-ls-if="{{console-project.usersAuthLimit}} != 0" class="text-fade text-size-small margin-bottom pull-end"><span data-ls-bind="{{console-project.usersAuthLimit|statsTotal}}"></span> Users allowed <span class="link" data-ls-ui-trigger="project-update-auth-users-limit">Change Limit</a></p>
             
             <h2>Settings</h2>
+
+            <div data-ui-modal class="modal close" data-button-alias="none" data-open-event="project-update-auth-users-limit">
+                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                <h1>Max Allowed Users</h1>
+
+                <form data-debug="1"
+                    data-analytics
+                    data-analytics-activity
+                    data-analytics-event="submit"
+                    data-analytics-category="console"
+                    data-analytics-label="Update Project Users Limit"
+                    data-service="projects.updateAuthLimit"
+                    data-scope="console"
+                    data-event="submit"
+                    data-param-project-id="{{router.params.project}}"
+                    data-success="alert,trigger"
+                    data-success-param-alert-text="Updated project users limit successfully"
+                    data-success-param-trigger-events="projects.update"
+                    data-failure="alert"
+                    data-failure-param-alert-text="Failed to update project users limit"
+                    data-failure-param-alert-classname="error">
+
+                    <input name="limit" id="users-limit" type="number" data-ls-bind="{{console-project.usersAuthLimit}}" data-cast-to="numeric" />
+
+                    <div class="info row thin margin-bottom margin-top">
+                        <div class="col span-1">
+                            <i class="icon-info-circled text-sign"></i>
+                        </div>
+                        <div class="col span-11">This limit will prevent new users from signing up for your project, no matter what auth method has been used. For an unlimited amount of users, set the limit to 0.</div>
+                    </div>
+
+                    <button>Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                </form>
+            </div>
+
 
             <p class="text-fade margin-bottom">Choose auth methods you wish to use.</p>
 
@@ -326,7 +363,7 @@ $auth = $this->getParam('auth', []);
                                 data-analytics-label="Update Project Auth Status (<?php echo $this->escape($name); ?>)"
                                 data-service="projects.updateAuthStatus"
                                 data-scope="console"
-                                data-event="submit"
+                                data-event="change"
                                 data-param-project-id="{{router.params.project}}"
                                 data-success="alert,trigger"
                                 data-success-param-alert-text="Updated project auth status successfully"
@@ -336,12 +373,7 @@ $auth = $this->getParam('auth', []);
                                 data-failure-param-alert-classname="error">
                                 <input name="method" id="<?php echo $this->escape($key); ?>" type="hidden" autocomplete="off" value="<?php echo $this->escape($index); ?>">
 
-                                <span data-ls-if="{{console-project.<?php echo $this->escape($key); ?>}}">
-                                    <button name="status" class="switch on pull-end" value="false" data-cast-to="boolean"></button>
-                                </span>
-                                <span data-ls-if="!{{console-project.<?php echo $this->escape($key); ?>}}">
-                                    <button name="status" class="switch pull-end" value="true" data-cast-to="boolean"></button>
-                                </span>
+                                <input name="status" type="hidden" data-forms-switch data-ls-bind="{{console-project.<?php echo $this->escape($key); ?>}}" data-cast-to="boolean" class="pull-end" />
                             </form>
                         <?php endif; ?>
 

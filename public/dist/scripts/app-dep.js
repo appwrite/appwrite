@@ -245,7 +245,7 @@ if(password===undefined){throw new Error('Missing required parameter: "password"
 let path='/projects/{projectId}'.replace(new RegExp('{projectId}','g'),projectId);let payload={};if(password){payload['password']=password;}
 return http.delete(path,{'content-type':'application/json',},payload);},updateAuthLimit:function(projectId,limit){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
 if(limit===undefined){throw new Error('Missing required parameter: "limit"');}
-let path='/projects/{projectId}/auth/limit'.replace(new RegExp('{projectId}','g'),projectId);let payload={};if(limit){payload['limit']=limit;}
+let path='/projects/{projectId}/auth/limit'.replace(new RegExp('{projectId}','g'),projectId);let payload={};if(typeof limit!=='undefined'){payload['limit']=limit;}
 return http.patch(path,{'content-type':'application/json',},payload);},updateAuthStatus:function(projectId,method,status){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
 if(method===undefined){throw new Error('Missing required parameter: "method"');}
 if(status===undefined){throw new Error('Missing required parameter: "status"');}
