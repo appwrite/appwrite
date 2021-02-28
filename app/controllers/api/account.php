@@ -31,9 +31,10 @@ $oauthDefaultFailure = App::getEnv('_APP_HOME').'/auth/oauth2/failure';
 
 App::post('/v1/account')
     ->desc('Create Account')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'auth'])
     ->label('event', 'account.create')
     ->label('scope', 'public')
+    ->label('auth.type', 'emailPassword')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'create')
@@ -72,6 +73,22 @@ App::post('/v1/account')
 
             if (!empty($whitlistDomains) && !\in_array(\substr(\strrchr($email, '@'), 1), $whitlistDomains)) {
                 throw new Exception('Console registration is restricted to specific domains. Contact your administrator for more information.', 401);
+            }
+        }
+
+        $limit = $project->getAttribute('usersAuthLimit', 0);
+
+        if ($limit !== 0) {
+            $projectDB->getCollection([ // Count users
+                'filters' => [
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                ],
+            ]);
+
+            $sum = $projectDB->getSum();
+
+            if($sum >= $limit) {
+                throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
             }
         }
 
@@ -465,7 +482,23 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 ],
             ]);
 
-            if (!$user || empty($user->getId())) { // Last option -> create user alone, generate random password
+            if (!$user || empty($user->getId())) { // Last option -> create the user, generate random password
+                $limit = $project->getAttribute('usersAuthLimit', 0);
+        
+                if ($limit !== 0) {
+                    $projectDB->getCollection([ // Count users
+                        'filters' => [
+                            '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                        ],
+                    ]);
+        
+                    $sum = $projectDB->getSum();
+        
+                    if($sum >= $limit) {
+                        throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
+                    }
+                }
+                
                 Authorization::disable();
 
                 try {
@@ -566,8 +599,9 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
 App::post('/v1/account/jwt')
     ->desc('Create Account JWT')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'auth'])
     ->label('scope', 'account')
+    ->label('auth.type', 'jwt')
     ->label('docs', false) // Hidden for now - private beta
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')

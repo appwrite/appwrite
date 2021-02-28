@@ -110,6 +110,61 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
 
 }, ['utopia', 'request', 'response', 'project', 'user', 'register', 'events', 'audits', 'usage', 'deletes'], 'api');
 
+
+App::init(function ($utopia, $request, $response, $project, $user) {
+    /** @var Utopia\App $utopia */
+    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Response $response */
+    /** @var Appwrite\Database\Document $project */
+    /** @var Appwrite\Database\Document $user */
+    /** @var Utopia\Registry\Registry $register */
+    /** @var Appwrite\Event\Event $events */
+    /** @var Appwrite\Event\Event $audits */
+    /** @var Appwrite\Event\Event $usage */
+    /** @var Appwrite\Event\Event $deletes */
+    /** @var Appwrite\Event\Event $functions */
+
+    $route = $utopia->match($request);
+
+    $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
+    $isAppUser = Auth::isAppUser(Authorization::$roles);
+
+    if($isAppUser || $isPreviliggedUser) { // Skip limits for app and console devs
+        return;
+    }
+
+    switch ($route->getLabel('auth.type', '')) {
+        case 'emailPassword':
+            if($project->getAttribute('usersAuthEmailPassword', false) === false) {
+                throw new Exception('Email / Password authentication is disabled for this project', 501);
+            }
+            break;
+
+        case 'anonymous':
+            if($project->getAttribute('usersAuthAnonymous', false) === false) {
+                throw new Exception('Anonymous authentication is disabled for this project', 501);
+            }
+            break;
+
+        case 'invites':
+            if($project->getAttribute('usersAuthInvites', false) === false) {
+                throw new Exception('Invites authentication is disabled for this project', 501);
+            }
+            break;
+
+        case 'jwt':
+            if($project->getAttribute('usersAuthJWT', false) === false) {
+                throw new Exception('JWT authentication is disabled for this project', 501);
+            }
+            break;
+        
+        default:
+            throw new Exception('Unsupported authentication route');
+            break;
+    }
+
+}, ['utopia', 'request', 'response', 'project', 'user'], 'auth');
+
 App::shutdown(function ($utopia, $request, $response, $project, $events, $audits, $usage, $deletes, $mode) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */

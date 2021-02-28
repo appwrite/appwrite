@@ -251,9 +251,10 @@ App::delete('/v1/teams/:teamId')
 
 App::post('/v1/teams/:teamId/memberships')
     ->desc('Create Team Membership')
-    ->groups(['api', 'teams'])
+    ->groups(['api', 'teams', 'auth'])
     ->label('event', 'teams.memberships.create')
     ->label('scope', 'teams.write')
+    ->label('auth.type', 'invites')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'createMembership')
@@ -309,6 +310,22 @@ App::post('/v1/teams/:teamId/memberships')
         ]);
 
         if (empty($invitee)) { // Create new user if no user with same email found
+
+            $limit = $project->getAttribute('usersAuthLimit', 0);
+        
+            if ($limit !== 0 && $project->getId() !== 'console') { // check users limit, console invites are allways allowed.
+                $projectDB->getCollection([ // Count users
+                    'filters' => [
+                        '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                    ],
+                ]);
+    
+                $sum = $projectDB->getSum();
+    
+                if($sum >= $limit) {
+                    throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
+                }
+            }
 
             Authorization::disable();
 
