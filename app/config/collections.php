@@ -5,7 +5,7 @@ use Utopia\Config\Config;
 use Appwrite\Database\Database;
 
 $providers = Config::getParam('providers', []);
-$aith = Config::getParam('auth', []);
+$auth = Config::getParam('auth', []);
 
 $collections = [
     'console' => [
