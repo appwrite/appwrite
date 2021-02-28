@@ -5,6 +5,7 @@ use Utopia\Config\Config;
 use Appwrite\Database\Database;
 
 $providers = Config::getParam('providers', []);
+$aith = Config::getParam('auth', []);
 
 $collections = [
     'console' => [
@@ -677,6 +678,14 @@ $collections = [
                 'key' => 'legalTaxId',
                 'type' => Database::SYSTEM_VAR_TYPE_TEXT,
                 'default' => '',
+                'required' => false,
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Max users allowed',
+                'key' => 'usersAuthLimit',
+                'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,
+                'default' => 0,
                 'required' => false,
             ],
             [
@@ -1636,6 +1645,17 @@ foreach ($providers as $index => $provider) {
         'default' => '',
         'required' => false,
         'array' => false,
+    ];
+}
+
+foreach ($auth as $key => $method) {
+    $collections[Database::SYSTEM_COLLECTION_PROJECTS]['rules'][] = [
+        '$collection' => Database::SYSTEM_COLLECTION_RULES,
+        'label' => $method['name'] || '',
+        'key' => $key,
+        'type' => Database::SYSTEM_VAR_TYPE_BOOLEAN,
+        'default' => true,
+        'required' => false,
     ];
 }
 
