@@ -1,6 +1,15 @@
 # Version 0.8.0 (Not Released Yet)
 
+## Features
+
 - Anonymous login
+- Added option to disable email/password
+- Added option to disable anonymous login (need to merge and apply changed)
+- Added option to disable JWT auth
+- Added option to disable team invites
+- Option to limit number of users (good for app launches + god account PR)
+- Added 2 new endpoints to the projects API to allow new settings
+- Enabled 501 errors (Not Implemented) from the error handler
 
 # Version 0.7.1 (Not Released Yet)
 
