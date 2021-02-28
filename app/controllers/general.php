@@ -269,7 +269,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
 
     $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
-    switch ($error->getCode()) {
+    switch ($error->getCode()) { // Don't show 500 errors!
         case 400: // Error allowed publicly
         case 401: // Error allowed publicly
         case 402: // Error allowed publicly
@@ -278,6 +278,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
         case 409: // Error allowed publicly
         case 412: // Error allowed publicly
         case 429: // Error allowed publicly
+        case 501: // Error allowed publicly
             $code = $error->getCode();
             $message = $error->getMessage();
             break;
