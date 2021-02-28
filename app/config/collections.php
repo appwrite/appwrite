@@ -1648,11 +1648,11 @@ foreach ($providers as $index => $provider) {
     ];
 }
 
-foreach ($auth as $key => $method) {
+foreach ($auth as $index => $method) {
     $collections[Database::SYSTEM_COLLECTION_PROJECTS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
         'label' => $method['name'] || '',
-        'key' => $key,
+        'key' => $method['key'] || '',
         'type' => Database::SYSTEM_VAR_TYPE_BOOLEAN,
         'default' => true,
         'required' => false,

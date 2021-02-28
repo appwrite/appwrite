@@ -17,14 +17,6 @@ return [
         'docs' => 'https://appwrite.io/docs/client/account?sdk=web#accountCreateAnonymousSession',
         'enabled' => true,
     ],
-    'phone' => [
-        'name' => 'Phone',
-        'key' => 'usersAuthPhone',
-        'icon' => '/images/users/phone.png',
-        'docs' => 'https://appwrite.io/docs/client/account?sdk=web#accountCreatePhoneSession',
-        'docs' => '',
-        'enabled' => false,
-    ],
     'invites' => [
         'name' => 'Invites',
         'key' => 'usersAuthInvites',
@@ -38,5 +30,13 @@ return [
         'icon' => '/images/users/jwt.png',
         'docs' => 'https://appwrite.io/docs/client/account?sdk=web#accountCreateJWT',
         'enabled' => true,
+    ],
+    'phone' => [
+        'name' => 'Phone',
+        'key' => 'usersAuthPhone',
+        'icon' => '/images/users/phone.png',
+        'docs' => 'https://appwrite.io/docs/client/account?sdk=web#accountCreatePhoneSession',
+        'docs' => '',
+        'enabled' => false,
     ],
 ];
