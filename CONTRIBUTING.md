@@ -143,7 +143,6 @@ Appwrite's current structure is a combination of both [Monolithic](https://en.wi
 ├── docs # Docs and tutorials
 │   ├── examples
 │   ├── references
-│   ├── sdks
 │   ├── services
 │   ├── specs
 │   └── tutorials
@@ -157,13 +156,14 @@ Appwrite's current structure is a combination of both [Monolithic](https://en.wi
 │   └── Appwrite
 │       ├── Auth
 │       ├── Database
+│       ├── Detector
 │       ├── Docker
 │       ├── Event
 │       ├── Extend
+│       ├── Migration
 │       ├── Network
 │       ├── OpenSSL
-│       ├── Resize
-│       ├── Storage
+│       ├── Specification
 │       ├── Task
 │       ├── Template
 │       ├── URL
