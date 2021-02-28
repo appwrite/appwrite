@@ -335,15 +335,15 @@
 
                 let payload = {};
 
-                if(email) {
+                if(typeof email !== 'undefined') {
                     payload['email'] = email;
                 }
 
-                if(password) {
+                if(typeof password !== 'undefined') {
                     payload['password'] = password;
                 }
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
@@ -402,11 +402,11 @@
 
                 let payload = {};
 
-                if(email) {
+                if(typeof email !== 'undefined') {
                     payload['email'] = email;
                 }
 
-                if(password) {
+                if(typeof password !== 'undefined') {
                     payload['password'] = password;
                 }
 
@@ -454,7 +454,7 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
@@ -488,11 +488,11 @@
 
                 let payload = {};
 
-                if(password) {
+                if(typeof password !== 'undefined') {
                     payload['password'] = password;
                 }
 
-                if(oldPassword) {
+                if(typeof oldPassword !== 'undefined') {
                     payload['oldPassword'] = oldPassword;
                 }
 
@@ -540,7 +540,7 @@
 
                 let payload = {};
 
-                if(prefs) {
+                if(typeof prefs !== 'undefined') {
                     payload['prefs'] = prefs;
                 }
 
@@ -579,11 +579,11 @@
 
                 let payload = {};
 
-                if(email) {
+                if(typeof email !== 'undefined') {
                     payload['email'] = email;
                 }
 
-                if(url) {
+                if(typeof url !== 'undefined') {
                     payload['url'] = url;
                 }
 
@@ -634,19 +634,19 @@
 
                 let payload = {};
 
-                if(userId) {
+                if(typeof userId !== 'undefined') {
                     payload['userId'] = userId;
                 }
 
-                if(secret) {
+                if(typeof secret !== 'undefined') {
                     payload['secret'] = secret;
                 }
 
-                if(password) {
+                if(typeof password !== 'undefined') {
                     payload['password'] = password;
                 }
 
-                if(passwordAgain) {
+                if(typeof passwordAgain !== 'undefined') {
                     payload['passwordAgain'] = passwordAgain;
                 }
 
@@ -700,11 +700,11 @@
 
                 let payload = {};
 
-                if(email) {
+                if(typeof email !== 'undefined') {
                     payload['email'] = email;
                 }
 
-                if(password) {
+                if(typeof password !== 'undefined') {
                     payload['password'] = password;
                 }
 
@@ -851,7 +851,7 @@
 
                 let payload = {};
 
-                if(url) {
+                if(typeof url !== 'undefined') {
                     payload['url'] = url;
                 }
 
@@ -887,11 +887,11 @@
 
                 let payload = {};
 
-                if(userId) {
+                if(typeof userId !== 'undefined') {
                     payload['userId'] = userId;
                 }
 
-                if(secret) {
+                if(typeof secret !== 'undefined') {
                     payload['secret'] = secret;
                 }
 
@@ -1400,19 +1400,19 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(read) {
+                if(typeof read !== 'undefined') {
                     payload['read'] = read;
                 }
 
-                if(write) {
+                if(typeof write !== 'undefined') {
                     payload['write'] = write;
                 }
 
-                if(rules) {
+                if(typeof rules !== 'undefined') {
                     payload['rules'] = rules;
                 }
 
@@ -1481,19 +1481,19 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(read) {
+                if(typeof read !== 'undefined') {
                     payload['read'] = read;
                 }
 
-                if(write) {
+                if(typeof write !== 'undefined') {
                     payload['write'] = write;
                 }
 
-                if(rules) {
+                if(typeof rules !== 'undefined') {
                     payload['rules'] = rules;
                 }
 
@@ -1629,27 +1629,27 @@
 
                 let payload = {};
 
-                if(data) {
+                if(typeof data !== 'undefined') {
                     payload['data'] = data;
                 }
 
-                if(read) {
+                if(typeof read !== 'undefined') {
                     payload['read'] = read;
                 }
 
-                if(write) {
+                if(typeof write !== 'undefined') {
                     payload['write'] = write;
                 }
 
-                if(parentDocument) {
+                if(typeof parentDocument !== 'undefined') {
                     payload['parentDocument'] = parentDocument;
                 }
 
-                if(parentProperty) {
+                if(typeof parentProperty !== 'undefined') {
                     payload['parentProperty'] = parentProperty;
                 }
 
-                if(parentPropertyType) {
+                if(typeof parentPropertyType !== 'undefined') {
                     payload['parentPropertyType'] = parentPropertyType;
                 }
 
@@ -1728,15 +1728,15 @@
 
                 let payload = {};
 
-                if(data) {
+                if(typeof data !== 'undefined') {
                     payload['data'] = data;
                 }
 
-                if(read) {
+                if(typeof read !== 'undefined') {
                     payload['read'] = read;
                 }
 
-                if(write) {
+                if(typeof write !== 'undefined') {
                     payload['write'] = write;
                 }
 
@@ -1854,31 +1854,31 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(execute) {
+                if(typeof execute !== 'undefined') {
                     payload['execute'] = execute;
                 }
 
-                if(env) {
+                if(typeof env !== 'undefined') {
                     payload['env'] = env;
                 }
 
-                if(vars) {
+                if(typeof vars !== 'undefined') {
                     payload['vars'] = vars;
                 }
 
-                if(events) {
+                if(typeof events !== 'undefined') {
                     payload['events'] = events;
                 }
 
-                if(schedule) {
+                if(typeof schedule !== 'undefined') {
                     payload['schedule'] = schedule;
                 }
 
-                if(timeout) {
+                if(typeof timeout !== 'undefined') {
                     payload['timeout'] = timeout;
                 }
 
@@ -1944,27 +1944,27 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(execute) {
+                if(typeof execute !== 'undefined') {
                     payload['execute'] = execute;
                 }
 
-                if(vars) {
+                if(typeof vars !== 'undefined') {
                     payload['vars'] = vars;
                 }
 
-                if(events) {
+                if(typeof events !== 'undefined') {
                     payload['events'] = events;
                 }
 
-                if(schedule) {
+                if(typeof schedule !== 'undefined') {
                     payload['schedule'] = schedule;
                 }
 
-                if(timeout) {
+                if(typeof timeout !== 'undefined') {
                     payload['timeout'] = timeout;
                 }
 
@@ -2126,7 +2126,7 @@
 
                 let payload = {};
 
-                if(tag) {
+                if(typeof tag !== 'undefined') {
                     payload['tag'] = tag;
                 }
 
@@ -2218,11 +2218,11 @@
 
                 let payload = {};
 
-                if(command) {
+                if(typeof command !== 'undefined') {
                     payload['command'] = command;
                 }
 
-                if(code) {
+                if(typeof code !== 'undefined') {
                     payload['code'] = code;
                 }
 
@@ -2781,47 +2781,47 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(teamId) {
+                if(typeof teamId !== 'undefined') {
                     payload['teamId'] = teamId;
                 }
 
-                if(description) {
+                if(typeof description !== 'undefined') {
                     payload['description'] = description;
                 }
 
-                if(logo) {
+                if(typeof logo !== 'undefined') {
                     payload['logo'] = logo;
                 }
 
-                if(url) {
+                if(typeof url !== 'undefined') {
                     payload['url'] = url;
                 }
 
-                if(legalName) {
+                if(typeof legalName !== 'undefined') {
                     payload['legalName'] = legalName;
                 }
 
-                if(legalCountry) {
+                if(typeof legalCountry !== 'undefined') {
                     payload['legalCountry'] = legalCountry;
                 }
 
-                if(legalState) {
+                if(typeof legalState !== 'undefined') {
                     payload['legalState'] = legalState;
                 }
 
-                if(legalCity) {
+                if(typeof legalCity !== 'undefined') {
                     payload['legalCity'] = legalCity;
                 }
 
-                if(legalAddress) {
+                if(typeof legalAddress !== 'undefined') {
                     payload['legalAddress'] = legalAddress;
                 }
 
-                if(legalTaxId) {
+                if(typeof legalTaxId !== 'undefined') {
                     payload['legalTaxId'] = legalTaxId;
                 }
 
@@ -2885,43 +2885,43 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(description) {
+                if(typeof description !== 'undefined') {
                     payload['description'] = description;
                 }
 
-                if(logo) {
+                if(typeof logo !== 'undefined') {
                     payload['logo'] = logo;
                 }
 
-                if(url) {
+                if(typeof url !== 'undefined') {
                     payload['url'] = url;
                 }
 
-                if(legalName) {
+                if(typeof legalName !== 'undefined') {
                     payload['legalName'] = legalName;
                 }
 
-                if(legalCountry) {
+                if(typeof legalCountry !== 'undefined') {
                     payload['legalCountry'] = legalCountry;
                 }
 
-                if(legalState) {
+                if(typeof legalState !== 'undefined') {
                     payload['legalState'] = legalState;
                 }
 
-                if(legalCity) {
+                if(typeof legalCity !== 'undefined') {
                     payload['legalCity'] = legalCity;
                 }
 
-                if(legalAddress) {
+                if(typeof legalAddress !== 'undefined') {
                     payload['legalAddress'] = legalAddress;
                 }
 
-                if(legalTaxId) {
+                if(typeof legalTaxId !== 'undefined') {
                     payload['legalTaxId'] = legalTaxId;
                 }
 
@@ -2953,7 +2953,7 @@
 
                 let payload = {};
 
-                if(password) {
+                if(typeof password !== 'undefined') {
                     payload['password'] = password;
                 }
 
@@ -2985,7 +2985,7 @@
 
                 let payload = {};
 
-                if(limit) {
+                if(typeof limit !== 'undefined') {
                     payload['limit'] = limit;
                 }
 
@@ -3022,7 +3022,7 @@
 
                 let payload = {};
 
-                if(status) {
+                if(typeof status !== 'undefined') {
                     payload['status'] = status;
                 }
 
@@ -3077,7 +3077,7 @@
 
                 let payload = {};
 
-                if(domain) {
+                if(typeof domain !== 'undefined') {
                     payload['domain'] = domain;
                 }
 
@@ -3221,11 +3221,11 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(scopes) {
+                if(typeof scopes !== 'undefined') {
                     payload['scopes'] = scopes;
                 }
 
@@ -3295,11 +3295,11 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(scopes) {
+                if(typeof scopes !== 'undefined') {
                     payload['scopes'] = scopes;
                 }
 
@@ -3361,15 +3361,15 @@
 
                 let payload = {};
 
-                if(provider) {
+                if(typeof provider !== 'undefined') {
                     payload['provider'] = provider;
                 }
 
-                if(appId) {
+                if(typeof appId !== 'undefined') {
                     payload['appId'] = appId;
                 }
 
-                if(secret) {
+                if(typeof secret !== 'undefined') {
                     payload['secret'] = secret;
                 }
 
@@ -3432,23 +3432,23 @@
 
                 let payload = {};
 
-                if(type) {
+                if(typeof type !== 'undefined') {
                     payload['type'] = type;
                 }
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(key) {
+                if(typeof key !== 'undefined') {
                     payload['key'] = key;
                 }
 
-                if(store) {
+                if(typeof store !== 'undefined') {
                     payload['store'] = store;
                 }
 
-                if(hostname) {
+                if(typeof hostname !== 'undefined') {
                     payload['hostname'] = hostname;
                 }
 
@@ -3516,19 +3516,19 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(key) {
+                if(typeof key !== 'undefined') {
                     payload['key'] = key;
                 }
 
-                if(store) {
+                if(typeof store !== 'undefined') {
                     payload['store'] = store;
                 }
 
-                if(hostname) {
+                if(typeof hostname !== 'undefined') {
                     payload['hostname'] = hostname;
                 }
 
@@ -3639,39 +3639,39 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(status) {
+                if(typeof status !== 'undefined') {
                     payload['status'] = status;
                 }
 
-                if(schedule) {
+                if(typeof schedule !== 'undefined') {
                     payload['schedule'] = schedule;
                 }
 
-                if(security) {
+                if(typeof security !== 'undefined') {
                     payload['security'] = security;
                 }
 
-                if(httpMethod) {
+                if(typeof httpMethod !== 'undefined') {
                     payload['httpMethod'] = httpMethod;
                 }
 
-                if(httpUrl) {
+                if(typeof httpUrl !== 'undefined') {
                     payload['httpUrl'] = httpUrl;
                 }
 
-                if(httpHeaders) {
+                if(typeof httpHeaders !== 'undefined') {
                     payload['httpHeaders'] = httpHeaders;
                 }
 
-                if(httpUser) {
+                if(typeof httpUser !== 'undefined') {
                     payload['httpUser'] = httpUser;
                 }
 
-                if(httpPass) {
+                if(typeof httpPass !== 'undefined') {
                     payload['httpPass'] = httpPass;
                 }
 
@@ -3764,39 +3764,39 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(status) {
+                if(typeof status !== 'undefined') {
                     payload['status'] = status;
                 }
 
-                if(schedule) {
+                if(typeof schedule !== 'undefined') {
                     payload['schedule'] = schedule;
                 }
 
-                if(security) {
+                if(typeof security !== 'undefined') {
                     payload['security'] = security;
                 }
 
-                if(httpMethod) {
+                if(typeof httpMethod !== 'undefined') {
                     payload['httpMethod'] = httpMethod;
                 }
 
-                if(httpUrl) {
+                if(typeof httpUrl !== 'undefined') {
                     payload['httpUrl'] = httpUrl;
                 }
 
-                if(httpHeaders) {
+                if(typeof httpHeaders !== 'undefined') {
                     payload['httpHeaders'] = httpHeaders;
                 }
 
-                if(httpUser) {
+                if(typeof httpUser !== 'undefined') {
                     payload['httpUser'] = httpUser;
                 }
 
-                if(httpPass) {
+                if(typeof httpPass !== 'undefined') {
                     payload['httpPass'] = httpPass;
                 }
 
@@ -3924,27 +3924,27 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(events) {
+                if(typeof events !== 'undefined') {
                     payload['events'] = events;
                 }
 
-                if(url) {
+                if(typeof url !== 'undefined') {
                     payload['url'] = url;
                 }
 
-                if(security) {
+                if(typeof security !== 'undefined') {
                     payload['security'] = security;
                 }
 
-                if(httpUser) {
+                if(typeof httpUser !== 'undefined') {
                     payload['httpUser'] = httpUser;
                 }
 
-                if(httpPass) {
+                if(typeof httpPass !== 'undefined') {
                     payload['httpPass'] = httpPass;
                 }
 
@@ -4026,27 +4026,27 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(events) {
+                if(typeof events !== 'undefined') {
                     payload['events'] = events;
                 }
 
-                if(url) {
+                if(typeof url !== 'undefined') {
                     payload['url'] = url;
                 }
 
-                if(security) {
+                if(typeof security !== 'undefined') {
                     payload['security'] = security;
                 }
 
-                if(httpUser) {
+                if(typeof httpUser !== 'undefined') {
                     payload['httpUser'] = httpUser;
                 }
 
-                if(httpPass) {
+                if(typeof httpPass !== 'undefined') {
                     payload['httpPass'] = httpPass;
                 }
 
@@ -4158,15 +4158,15 @@
 
                 let payload = {};
 
-                if(file) {
+                if(typeof file !== 'undefined') {
                     payload['file'] = file;
                 }
 
-                if(read) {
+                if(typeof read !== 'undefined') {
                     payload['read'] = read;
                 }
 
-                if(write) {
+                if(typeof write !== 'undefined') {
                     payload['write'] = write;
                 }
 
@@ -4230,11 +4230,11 @@
 
                 let payload = {};
 
-                if(read) {
+                if(typeof read !== 'undefined') {
                     payload['read'] = read;
                 }
 
-                if(write) {
+                if(typeof write !== 'undefined') {
                     payload['write'] = write;
                 }
 
@@ -4494,11 +4494,11 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(roles) {
+                if(typeof roles !== 'undefined') {
                     payload['roles'] = roles;
                 }
 
@@ -4557,7 +4557,7 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
@@ -4683,19 +4683,19 @@
 
                 let payload = {};
 
-                if(email) {
+                if(typeof email !== 'undefined') {
                     payload['email'] = email;
                 }
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(roles) {
+                if(typeof roles !== 'undefined') {
                     payload['roles'] = roles;
                 }
 
-                if(url) {
+                if(typeof url !== 'undefined') {
                     payload['url'] = url;
                 }
 
@@ -4771,11 +4771,11 @@
 
                 let payload = {};
 
-                if(userId) {
+                if(typeof userId !== 'undefined') {
                     payload['userId'] = userId;
                 }
 
-                if(secret) {
+                if(typeof secret !== 'undefined') {
                     payload['secret'] = secret;
                 }
 
@@ -4852,15 +4852,15 @@
 
                 let payload = {};
 
-                if(email) {
+                if(typeof email !== 'undefined') {
                     payload['email'] = email;
                 }
 
-                if(password) {
+                if(typeof password !== 'undefined') {
                     payload['password'] = password;
                 }
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
@@ -4990,7 +4990,7 @@
 
                 let payload = {};
 
-                if(prefs) {
+                if(typeof prefs !== 'undefined') {
                     payload['prefs'] = prefs;
                 }
 
@@ -5100,7 +5100,7 @@
 
                 let payload = {};
 
-                if(status) {
+                if(typeof status !== 'undefined') {
                     payload['status'] = status;
                 }
 

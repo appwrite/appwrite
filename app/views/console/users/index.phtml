@@ -328,7 +328,7 @@ $auth = $this->getParam('auth', []);
                     data-failure-param-alert-text="Failed to update project users limit"
                     data-failure-param-alert-classname="error">
 
-                    <input name="limit" id="users-limit" type="number" data-ls-bind="{{console-project.usersAuthLimit}}" data-cast-to="numeric" />
+                    <input name="limit" id="users-limit" type="number" data-ls-bind="{{console-project.usersAuthLimit}}" data-cast-to="numeric" min="0" />
 
                     <div class="info row thin margin-bottom margin-top">
                         <div class="col span-1">
