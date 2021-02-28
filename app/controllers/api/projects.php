@@ -8,6 +8,7 @@ use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\URL;
 use Utopia\Validator\Range;
+use Utopia\Validator\Integer;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Auth\Auth;
@@ -437,6 +438,78 @@ App::patch('/v1/projects/:projectId/oauth2')
         if (false === $project) {
             throw new Exception('Failed saving project to DB', 500);
         }
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+App::patch('/v1/projects/:projectId/auth/:method')
+    ->desc('Update Project auth method status. Use this endpoint to enable or disable a given auth method for this project.')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateAuthStatus')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('method', '', new WhiteList(\array_keys(Config::getParam('auth')), true), 'Auth Method. Possible values: '.implode(',', \array_keys(Config::getParam('auth'))), false)
+    ->param('status', false, new Boolean(true), 'Set the status of this auth method.')
+    ->inject('response')
+    ->inject('consoleDB')
+    ->action(function ($projectId, $method, $status, $response, $consoleDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $consoleDB */
+
+        $project = $consoleDB->getDocument($projectId);
+        $auth = Config::getParam('auth')[$method] ?? [];
+        $authKey = $auth['key'] ?? '';
+        $status = ($status === '1' || $status === 'true' || $status === 1 || $status === true);
+
+        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            throw new Exception('Project not found', 404);
+        }
+
+        if (false === $consoleDB->updateDocument(
+            \array_merge($project->getArrayCopy(), [
+                $authKey => $status,
+            ]))
+        ) {
+            throw new Exception('Failed saving project to DB', 500);
+        };
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+App::patch('/v1/projects/:projectId/auth/limit')
+    ->desc('Update Project users limit')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateAuthLimit')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('limit', false, new Integer(true), 'Set the max number of users allowed in this project. Use 0 for unlimited.')
+    ->inject('response')
+    ->inject('consoleDB')
+    ->action(function ($projectId, $limit, $response, $consoleDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $consoleDB */
+
+        $project = $consoleDB->getDocument($projectId);
+
+        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            throw new Exception('Project not found', 404);
+        }
+
+        if (false === $consoleDB->updateDocument(
+            \array_merge($project->getArrayCopy(), [
+                'usersAuthLimit' => $limit,
+            ]))
+        ) {
+            throw new Exception('Failed saving project to DB', 500);
+        };
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
