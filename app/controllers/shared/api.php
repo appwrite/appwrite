@@ -61,12 +61,12 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
         ;
     }
 
-    $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
+    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
     $isAppUser = Auth::isAppUser(Authorization::$roles);
 
     if (($abuse->check() // Route is rate-limited
         && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') // Abuse is not diabled
-        && (!$isAppUser && !$isPreviliggedUser)) // User is not an admin or API key
+        && (!$isAppUser && !$isPrivilegedUser)) // User is not an admin or API key
         {
         throw new Exception('Too many requests', 429);
     }
@@ -126,10 +126,10 @@ App::init(function ($utopia, $request, $response, $project, $user) {
 
     $route = $utopia->match($request);
 
-    $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
+    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
     $isAppUser = Auth::isAppUser(Authorization::$roles);
 
-    if($isAppUser || $isPreviliggedUser) { // Skip limits for app and console devs
+    if($isAppUser || $isPrivilegedUser) { // Skip limits for app and console devs
         return;
     }
 

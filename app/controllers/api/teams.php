@@ -44,7 +44,7 @@ App::post('/v1/teams')
 
         Authorization::disable();
 
-        $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $team = $projectDB->createDocument([
@@ -54,7 +54,7 @@ App::post('/v1/teams')
                 'write' => ['team:{self}/owner'],
             ],
             'name' => $name,
-            'sum' => ($isPreviliggedUser || $isAppUser) ? 0 : 1,
+            'sum' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
             'dateCreated' => \time(),
         ]);
 
@@ -64,7 +64,7 @@ App::post('/v1/teams')
             throw new Exception('Failed saving team to DB', 500);
         }
 
-        if (!$isPreviliggedUser && !$isAppUser) { // Don't add user on server mode
+        if (!$isPrivilegedUser && !$isAppUser) { // Don't add user on server mode
             $membership = new Document([
                 '$collection' => Database::SYSTEM_COLLECTION_MEMBERSHIPS,
                 '$permissions' => [
@@ -282,7 +282,7 @@ App::post('/v1/teams/:teamId/memberships')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $mails */
 
-        $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $name = (empty($name)) ? $email : $name;
@@ -369,7 +369,7 @@ App::post('/v1/teams/:teamId/memberships')
             }
         }
 
-        if (!$isOwner && !$isPreviliggedUser && !$isAppUser) { // Not owner, not admin, not app (server)
+        if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
             throw new Exception('User is not allowed to send invitations for this team', 401);
         }
 
@@ -385,12 +385,12 @@ App::post('/v1/teams/:teamId/memberships')
             'teamId' => $team->getId(),
             'roles' => $roles,
             'invited' => \time(),
-            'joined' => ($isPreviliggedUser || $isAppUser) ? \time() : 0,
-            'confirm' => ($isPreviliggedUser || $isAppUser),
+            'joined' => ($isPrivilegedUser || $isAppUser) ? \time() : 0,
+            'confirm' => ($isPrivilegedUser || $isAppUser),
             'secret' => Auth::hash($secret),
         ]);
 
-        if ($isPreviliggedUser || $isAppUser) { // Allow admin to create membership
+        if ($isPrivilegedUser || $isAppUser) { // Allow admin to create membership
             Authorization::disable();
             $membership = $projectDB->createDocument($membership->getArrayCopy());
 
@@ -442,7 +442,7 @@ App::post('/v1/teams/:teamId/memberships')
             ->setParam('{{text-cta}}', '#ffffff')
         ;
 
-        if (!$isPreviliggedUser && !$isAppUser) { // No need in comfirmation when in admin or app mode
+        if (!$isPrivilegedUser && !$isAppUser) { // No need in comfirmation when in admin or app mode
             $mails
                 ->setParam('event', 'teams.membership.create')
                 ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name')))

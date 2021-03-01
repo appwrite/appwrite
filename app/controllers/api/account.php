@@ -1229,7 +1229,7 @@ App::post('/v1/account/recovery')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
 
-        $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
@@ -1319,7 +1319,7 @@ App::post('/v1/account/recovery')
 
         $recovery  // Hide secret for clients, sp
             ->setAttribute('secret',
-                ($isPreviliggedUser || $isAppUser) ? $secret : '');
+                ($isPrivilegedUser || $isAppUser) ? $secret : '');
 
         $audits
             ->setParam('userId', $profile->getId())
@@ -1447,7 +1447,7 @@ App::post('/v1/account/verification')
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $mails */
 
-        $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $verificationSecret = Auth::tokenGenerator();
@@ -1522,7 +1522,7 @@ App::post('/v1/account/verification')
 
         $verification  // Hide secret for clients, sp
             ->setAttribute('secret',
-                ($isPreviliggedUser || $isAppUser) ? $verificationSecret : '');
+                ($isPrivilegedUser || $isAppUser) ? $verificationSecret : '');
 
         $audits
             ->setParam('userId', $user->getId())
