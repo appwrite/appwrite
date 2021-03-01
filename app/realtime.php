@@ -44,7 +44,7 @@ $server = new Server('0.0.0.0', 80);
 
 $server->set([
     'websocket_compression' => true,
-    'package_max_length' => 81920
+    'package_max_length' => 64000 // Default maximum Package Size (64kb)
 ]);
 
 $subscriptions = [];
