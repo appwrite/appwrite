@@ -9,6 +9,7 @@ use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
+use Appwrite\Network\Validator\Origin;
 use Appwrite\Realtime\Realtime;
 use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
@@ -51,13 +52,13 @@ $subscriptions = [];
 $connections = [];
 
 $register->set('redis', function () {
-    $user = App::getEnv('_APP_REDIS_USER','');
-    $pass = App::getEnv('_APP_REDIS_PASS','');
+    $user = App::getEnv('_APP_REDIS_USER', '');
+    $pass = App::getEnv('_APP_REDIS_PASS', '');
     $auth = '';
-    if(!empty($user)) {
+    if (!empty($user)) {
         $auth += $user;
     }
-    if(!empty($pass)) {
+    if (!empty($pass)) {
         $auth += ':' . $pass;
     }
 
@@ -188,6 +189,10 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
         return $project;
     }, ['consoleDB', 'request']);
 
+    App::setResource('console', function ($consoleDB) {
+        return $consoleDB->getDocument('console');
+    }, ['consoleDB']);
+
     App::setResource('user', function ($project, $request, $projectDB) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Database\Document $project */
@@ -226,6 +231,9 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
     /** @var Appwrite\Database\Document $project */
     $project = $app->getResource('project');
 
+    /** @var Appwrite\Database\Document $console */
+    $console = $app->getResource('console');
+
     /*
      * Abuse Check
      */
@@ -241,6 +249,19 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
 
     if ($abuse->check() && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
         $server->push($connection, 'Too many requests');
+        $server->close($connection);
+    }
+
+    /*
+     * Validate Client Domain - Check to avoid CSRF attack
+     *  Adding Appwrite API domains to allow XDOMAIN communication
+     *  Skip this check for non-web platforms which are not required to send an origin header
+     */
+    $origin = $request->getOrigin();
+    $originValidator = new Origin(\array_merge($project->getAttribute('platforms', []), $console->getAttribute('platforms', [])));
+
+    if (!$originValidator->isValid($origin)) {
+        $server->push($connection, $originValidator->getDescription());
         $server->close($connection);
     }
 
@@ -264,7 +285,7 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
         $server->push($connection, 'Missing channels');
         $server->close($connection);
     }
-    
+
     Realtime::subscribe($project->getId(), $connection, $roles, $subscriptions, $connections, $channels);
 
     $server->push($connection, json_encode($channels));
