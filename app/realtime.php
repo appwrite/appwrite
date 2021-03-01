@@ -116,7 +116,7 @@ $server->on('workerStart', function ($server, $workerId) use (&$subscriptions, &
                  */
                 $event = json_decode($payload, true);
 
-                $receivers = Realtime::identifyReceivers($event, $connections, $subscriptions);
+                $receivers = Realtime::identifyReceivers($event, $subscriptions);
 
                 foreach ($receivers as $receiver) {
                     if ($server->exist($receiver) && $server->isEstablished($receiver)) {

@@ -160,7 +160,6 @@ class RealtimeChannelsTest extends TestCase
 
             $receivers = Realtime::identifyReceivers(
                 $event,
-                $this->connections,
                 $this->subscriptions
             );
 
@@ -197,7 +196,6 @@ class RealtimeChannelsTest extends TestCase
 
                 $receivers = Realtime::identifyReceivers(
                     $event,
-                    $this->connections,
                     $this->subscriptions
                 );
 
@@ -235,7 +233,6 @@ class RealtimeChannelsTest extends TestCase
 
             $receivers = Realtime::identifyReceivers(
                 $event,
-                $this->connections,
                 $this->subscriptions
             );
 
@@ -273,7 +270,6 @@ class RealtimeChannelsTest extends TestCase
 
             $receivers = Realtime::identifyReceivers(
                 $event,
-                $this->connections,
                 $this->subscriptions
             );
 
@@ -303,7 +299,6 @@ class RealtimeChannelsTest extends TestCase
 
             $receivers = Realtime::identifyReceivers(
                 $event,
-                $this->connections,
                 $this->subscriptions
             );
 

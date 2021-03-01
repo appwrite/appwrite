@@ -61,7 +61,6 @@ class RealtimeGuestTest extends TestCase
 
         $receivers = Realtime::identifyReceivers(
             $event, 
-            $this->connections, 
             $this->subscriptions
         );
 
@@ -72,7 +71,6 @@ class RealtimeGuestTest extends TestCase
 
         $receivers = Realtime::identifyReceivers(
             $event, 
-            $this->connections, 
             $this->subscriptions
         );
 
@@ -83,7 +81,6 @@ class RealtimeGuestTest extends TestCase
 
         $receivers = Realtime::identifyReceivers(
             $event, 
-            $this->connections, 
             $this->subscriptions
         );
 
@@ -93,7 +90,6 @@ class RealtimeGuestTest extends TestCase
 
         $receivers = Realtime::identifyReceivers(
             $event, 
-            $this->connections, 
             $this->subscriptions
         );
 
@@ -103,7 +99,6 @@ class RealtimeGuestTest extends TestCase
 
         $receivers = Realtime::identifyReceivers(
             $event, 
-            $this->connections, 
             $this->subscriptions
         );
 
@@ -113,7 +108,6 @@ class RealtimeGuestTest extends TestCase
 
         $receivers = Realtime::identifyReceivers(
             $event, 
-            $this->connections, 
             $this->subscriptions
         );
 
@@ -123,7 +117,6 @@ class RealtimeGuestTest extends TestCase
 
         $receivers = Realtime::identifyReceivers(
             $event, 
-            $this->connections, 
             $this->subscriptions
         );
 
@@ -133,7 +126,6 @@ class RealtimeGuestTest extends TestCase
 
         $receivers = Realtime::identifyReceivers(
             $event, 
-            $this->connections, 
             $this->subscriptions
         );
 
@@ -143,7 +135,6 @@ class RealtimeGuestTest extends TestCase
 
         $receivers = Realtime::identifyReceivers(
             $event, 
-            $this->connections, 
             $this->subscriptions
         );
 
@@ -153,7 +144,6 @@ class RealtimeGuestTest extends TestCase
 
         $receivers = Realtime::identifyReceivers(
             $event, 
-            $this->connections, 
             $this->subscriptions
         );
 
@@ -163,7 +153,6 @@ class RealtimeGuestTest extends TestCase
 
         $receivers = Realtime::identifyReceivers(
             $event, 
-            $this->connections, 
             $this->subscriptions
         );
 
@@ -174,7 +163,6 @@ class RealtimeGuestTest extends TestCase
 
         $receivers = Realtime::identifyReceivers(
             $event, 
-            $this->connections, 
             $this->subscriptions
         );
 
@@ -184,7 +172,6 @@ class RealtimeGuestTest extends TestCase
 
         $receivers = Realtime::identifyReceivers(
             $event, 
-            $this->connections, 
             $this->subscriptions
         );
 
@@ -195,7 +182,6 @@ class RealtimeGuestTest extends TestCase
 
         $receivers = Realtime::identifyReceivers(
             $event, 
-            $this->connections, 
             $this->subscriptions
         );
 

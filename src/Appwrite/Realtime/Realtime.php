@@ -80,26 +80,20 @@ class Realtime
      * @param array $connections
      * @param array $subscriptions
      */
-    static function identifyReceivers(array &$event, array &$connections, array &$subscriptions)
+    static function identifyReceivers(array &$event, array &$subscriptions)
     {
         $receivers = [];
-        foreach ($connections as $connection) {
-            if ($connection['projectId'] !== $event['project']) {
-                continue;
-            }
-
-            foreach ($connection['roles'] as $role) {
-                if (\array_key_exists($role, $subscriptions[$event['project']])) {
-                    foreach ($event['data']['channels'] as $channel) {
-                        if (
-                            \array_key_exists($channel, $subscriptions[$event['project']][$role])
-                            && (\in_array($role, $event['permissions']) || \in_array('*', $event['permissions']))
-                        ) {
-                            foreach (array_keys($subscriptions[$event['project']][$role][$channel]) as $ids) {
-                                $receivers[] = $ids;
-                            }
-                            break;
+        if ($subscriptions[$event['project']]) {
+            foreach ($subscriptions[$event['project']] as $role => $subscription) {
+                foreach ($event['data']['channels'] as $channel) {
+                    if (
+                        \array_key_exists($channel, $subscriptions[$event['project']][$role])
+                        && (\in_array($role, $event['permissions']) || \in_array('*', $event['permissions']))
+                    ) {
+                        foreach (array_keys($subscriptions[$event['project']][$role][$channel]) as $ids) {
+                            $receivers[] = $ids;
                         }
+                        break;
                     }
                 }
             }
