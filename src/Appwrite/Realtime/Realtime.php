@@ -49,13 +49,17 @@ class Realtime
         $channels = array_flip($channels);
 
         foreach ($channels as $key => $value) {
-            if (strpos($key, 'account.') === 0) {
-                unset($channels[$key]);
-            } elseif ($key === 'account') {
-                if (!empty(self::$user->getId())) {
-                    $channels['account.' . self::$user->getId()] = $value;
-                }
-                unset($channels['account']);
+            switch (true) {
+                case strpos($key, 'account.') === 0:
+                    unset($channels[$key]);
+                    break;
+                
+                case $key === 'account':
+                    if (!empty(self::$user->getId())) {
+                        $channels['account.' . self::$user->getId()] = $value;
+                    }
+                    unset($channels['account']);
+                    break;
             }
         }
 
