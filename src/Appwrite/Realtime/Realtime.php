@@ -79,7 +79,7 @@ class Realtime
     static function identifyReceivers(array &$event, array &$connections, array &$subscriptions)
     {
         $receivers = [];
-        foreach ($connections as $fd => $connection) {
+        foreach ($connections as $connection) {
             if ($connection['projectId'] !== $event['project']) {
                 continue;
             }
@@ -133,7 +133,7 @@ class Realtime
             $subscriptions[$projectId] = [];
         }
 
-        foreach ($roles as $key => $role) {
+        foreach ($roles as $role) {
             if (!isset($subscriptions[$projectId][$role])) { // Add user first connection
                 $subscriptions[$projectId][$role] = [];
             }
@@ -161,7 +161,7 @@ class Realtime
         $projectId = $connections[$connection]['projectId'] ?? '';
         $roles = $connections[$connection]['roles'] ?? [];
 
-        foreach ($roles as $key => $role) {
+        foreach ($roles as $role) {
             foreach ($subscriptions[$projectId][$role] as $channel => $list) {
                 unset($subscriptions[$projectId][$role][$channel][$connection]); // Remove connection
 
