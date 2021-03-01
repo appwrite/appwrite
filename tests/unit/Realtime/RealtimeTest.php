@@ -42,8 +42,7 @@ class RealtimeTest extends TestCase
 
         $roles = Realtime::getRoles();
 
-        $this->assertCount(8, $roles);
-        $this->assertContains('*', $roles);
+        $this->assertCount(7, $roles);
         $this->assertContains('user:123', $roles);
         $this->assertContains('role:member', $roles);
         $this->assertContains('team:abc', $roles);
@@ -223,7 +222,7 @@ class RealtimeTest extends TestCase
         Realtime::removeSubscription(2, $this->subscriptions, $this->connections);
 
         $this->assertCount(1, $this->connections);
-        $this->assertCount(8, $this->subscriptions['1']);
+        $this->assertCount(7, $this->subscriptions['1']);
 
 
         Realtime::removeSubscription(1, $this->subscriptions, $this->connections);

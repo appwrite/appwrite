@@ -25,7 +25,7 @@ class Realtime
      */
     static function getRoles()
     {
-        $roles = ['*', 'role:' . ((self::$user->isEmpty()) ? Auth::USER_ROLE_GUEST : Auth::USER_ROLE_MEMBER)];
+        $roles = ['role:' . ((self::$user->isEmpty()) ? Auth::USER_ROLE_GUEST : Auth::USER_ROLE_MEMBER)];
         if (!(self::$user->isEmpty())) {
             $roles[] = 'user:' . self::$user->getId();
         }
@@ -87,7 +87,10 @@ class Realtime
             foreach ($connection['roles'] as $role) {
                 if (\array_key_exists($role, $subscriptions[$event['project']])) {
                     foreach ($event['data']['channels'] as $channel) {
-                        if (\array_key_exists($channel, $subscriptions[$event['project']][$role]) && \in_array($role, $event['permissions'])) {
+                        if (
+                            \array_key_exists($channel, $subscriptions[$event['project']][$role])
+                            && (\in_array($role, $event['permissions']) || \in_array('*', $event['permissions']))
+                        ) {
                             foreach (array_keys($subscriptions[$event['project']][$role][$channel]) as $ids) {
                                 $receivers[] = $ids;
                             }

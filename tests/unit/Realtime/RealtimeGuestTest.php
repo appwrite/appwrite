@@ -26,8 +26,7 @@ class RealtimeGuestTest extends TestCase
         ]));
 
         $roles = Realtime::getRoles();
-        $this->assertCount(2, $roles);
-        $this->assertContains('*', $roles);
+        $this->assertCount(1, $roles);
         $this->assertContains('role:guest', $roles);
 
         $channels = [
@@ -205,7 +204,7 @@ class RealtimeGuestTest extends TestCase
         Realtime::removeSubscription(2, $this->subscriptions, $this->connections);
 
         $this->assertCount(1, $this->connections);
-        $this->assertCount(2, $this->subscriptions['1']);
+        $this->assertCount(1, $this->subscriptions['1']);
 
 
         Realtime::removeSubscription(1, $this->subscriptions, $this->connections);

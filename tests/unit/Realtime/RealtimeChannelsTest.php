@@ -115,11 +115,10 @@ class RealtimeChannelsTest extends TestCase
          *  - XXX users
          *  - XXX teams
          *  - XXX team roles (2 roles per team)
-         *  - 1 *
          *  - 1 role:guest
          *  - 1 role:member
          */
-        $this->assertCount(($this->connectionsAuthenticated + (3 * $this->connectionsPerChannel) + 3), $this->subscriptions['1']);
+        $this->assertCount(($this->connectionsAuthenticated + (3 * $this->connectionsPerChannel) + 2), $this->subscriptions['1']);
 
         /**
          * Check for connections
@@ -131,9 +130,9 @@ class RealtimeChannelsTest extends TestCase
         Realtime::removeSubscription(-1, $this->subscriptions, $this->connections);
 
         $this->assertCount($this->connectionsTotal, $this->connections);
-        $this->assertCount(($this->connectionsAuthenticated + (3 * $this->connectionsPerChannel) + 3), $this->subscriptions['1']);
+        $this->assertCount(($this->connectionsAuthenticated + (3 * $this->connectionsPerChannel) + 2), $this->subscriptions['1']);
 
-        for ($i=0; $i < $this->connectionsCount; $i++) { 
+        for ($i = 0; $i < $this->connectionsCount; $i++) {
             Realtime::removeSubscription($i, $this->subscriptions, $this->connections);
 
             $this->assertCount(($this->connectionsCount - $i - 1), $this->connections);
