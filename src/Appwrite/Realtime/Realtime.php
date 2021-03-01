@@ -113,7 +113,7 @@ class Realtime
      * @param array $roles
      * @param array $channels
      */
-    static function addSubscription($projectId, $connection, $roles, &$subscriptions, &$connections, &$channels)
+    static function subscribe($projectId, $connection, $roles, &$subscriptions, &$connections, &$channels)
     {
         /**
          * Build Subscriptions Tree
@@ -156,7 +156,7 @@ class Realtime
      * @param array $subscriptions
      * @param array $connections
      */
-    static function removeSubscription($connection, &$subscriptions, &$connections)
+    static function unsubscribe($connection, &$subscriptions, &$connections)
     {
         $projectId = $connections[$connection]['projectId'] ?? '';
         $roles = $connections[$connection]['roles'] ?? [];

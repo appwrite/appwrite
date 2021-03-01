@@ -280,7 +280,7 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
         $server->close($connection);
     }
     
-    Realtime::addSubscription($project->getId(), $connection, $subscriptions, $connections, $roles, $channels);
+    Realtime::subscribe($project->getId(), $connection, $subscriptions, $connections, $roles, $channels);
 
     $server->push($connection, json_encode($channels));
 });
@@ -294,7 +294,7 @@ $server->on('message', function (Server $server, Frame $frame) {
 });
 
 $server->on('close', function (Server $server, int $fd) use (&$connections, &$subscriptions) {
-    Realtime::removeSubscription($fd, $subscriptions, $connections);
+    Realtime::unsubscribe($fd, $subscriptions, $connections);
     Console::info('Connection close: ' . $fd);
 });
 

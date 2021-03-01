@@ -60,7 +60,7 @@ class RealtimeChannelsTest extends TestCase
                     ]
                 ]));
 
-                Realtime::addSubscription(
+                Realtime::subscribe(
                     '1',
                     $this->connectionsCount,
                     Realtime::getRoles(),
@@ -82,7 +82,7 @@ class RealtimeChannelsTest extends TestCase
                     '$id' => ''
                 ]));
 
-                Realtime::addSubscription(
+                Realtime::subscribe(
                     '1',
                     $this->connectionsCount,
                     Realtime::getRoles(),
@@ -127,13 +127,13 @@ class RealtimeChannelsTest extends TestCase
          */
         $this->assertCount($this->connectionsTotal, $this->connections);
 
-        Realtime::removeSubscription(-1, $this->subscriptions, $this->connections);
+        Realtime::unsubscribe(-1, $this->subscriptions, $this->connections);
 
         $this->assertCount($this->connectionsTotal, $this->connections);
         $this->assertCount(($this->connectionsAuthenticated + (3 * $this->connectionsPerChannel) + 2), $this->subscriptions['1']);
 
         for ($i = 0; $i < $this->connectionsCount; $i++) {
-            Realtime::removeSubscription($i, $this->subscriptions, $this->connections);
+            Realtime::unsubscribe($i, $this->subscriptions, $this->connections);
 
             $this->assertCount(($this->connectionsCount - $i - 1), $this->connections);
         }
