@@ -240,6 +240,7 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
     if (empty($project->getId())) {
         $server->push($connection, 'Missing or unknown project ID');
         $server->close($connection);
+        return;
     }
 
     /*
@@ -258,6 +259,7 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
     if ($abuse->check() && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
         $server->push($connection, 'Too many requests');
         $server->close($connection);
+        return;
     }
 
     /*
@@ -271,6 +273,7 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
     if (!$originValidator->isValid($origin)) {
         $server->push($connection, $originValidator->getDescription());
         $server->close($connection);
+        return;
     }
 
     Realtime::setUser($user);
@@ -284,6 +287,7 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
     if (empty($channels)) {
         $server->push($connection, 'Missing channels');
         $server->close($connection);
+        return;
     }
 
     Realtime::subscribe($project->getId(), $connection, $roles, $subscriptions, $connections, $channels);
