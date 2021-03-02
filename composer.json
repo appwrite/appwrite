@@ -63,6 +63,7 @@
         "phpunit/phpunit": "9.4.2",
         "ratchet/pawl": "0.3.5",
         "swoole/ide-helper": "4.5.5",
+        "textalk/websocket": "1.5.2",
         "vimeo/psalm": "4.1.1"
     },
     "repositories": [
