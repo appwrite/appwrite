@@ -235,6 +235,14 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
     $console = $app->getResource('console');
 
     /*
+     *  Project Check
+     */
+    if (empty($project->getId())) {
+        $server->push($connection, 'Missing or unknown project ID');
+        $server->close($connection);
+    }
+
+    /*
      * Abuse Check
      */
     $timeLimit = new TimeLimit('url:{url},ip:{ip}', 60, 60, function () use ($register) {
@@ -262,14 +270,6 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
 
     if (!$originValidator->isValid($origin)) {
         $server->push($connection, $originValidator->getDescription());
-        $server->close($connection);
-    }
-
-    /*
-     *  Project Check
-     */
-    if (empty($project->getId())) {
-        $server->push($connection, 'Missing or unknown project ID');
         $server->close($connection);
     }
 
