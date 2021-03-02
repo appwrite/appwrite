@@ -109,6 +109,13 @@ class Realtime
     private function prepareChannels(): void
     {
         switch (true) {
+            case strpos($this->event, 'account.recovery.') === 0:
+            case strpos($this->event, 'account.sessions.') === 0:
+            case strpos($this->event, 'account.verification.') === 0:
+                $this->channels[] = 'account.' . $this->payload->getAttribute('userId');
+                $this->permissions = ['user:' . $this->payload->getAttribute('userId')];
+
+                break;
             case strpos($this->event, 'account.') === 0:
                 $this->channels[] = 'account.' . $this->payload->getId();
                 $this->permissions = ['user:' . $this->payload->getId()];
