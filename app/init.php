@@ -20,6 +20,7 @@ use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
+use Appwrite\Event\Realtime;
 use Appwrite\Extend\PDO;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\App;
@@ -34,7 +35,7 @@ use PDO as PDONative;
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
 const APP_EMAIL_TEAM = 'team@localhost.test'; // Default email address
-const APP_EMAIL_SECURITY = 'security@localhost.test'; // Default security email address
+const APP_EMAIL_SECURITY = ''; // Default security email address
 const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
 const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
@@ -91,9 +92,13 @@ Config::load('storage-mimes', __DIR__.'/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__.'/config/storage/inputs.php'); 
 Config::load('storage-outputs', __DIR__.'/config/storage/outputs.php'); 
 
-Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '')
-    .':'.App::getEnv('_APP_REDIS_PORT', ''));
-
+$user = App::getEnv('_APP_REDIS_USER','');
+$pass = App::getEnv('_APP_REDIS_PASS','');
+if(!empty($user) || !empty($pass)) {
+    Resque::setBackend('redis://'.$user.':'.$pass.'@'.App::getEnv('_APP_REDIS_HOST', '').':'.App::getEnv('_APP_REDIS_PORT', ''));
+} else {
+    Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '').':'.App::getEnv('_APP_REDIS_PORT', ''));
+}
 /**
  * DB Filters
  */
@@ -176,6 +181,18 @@ $register->set('statsd', function () { // Register DB connection
 $register->set('cache', function () { // Register cache connection
     $redis = new Redis();
     $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
+    $user = App::getEnv('_APP_REDIS_USER','');
+    $pass = App::getEnv('_APP_REDIS_PASS','');
+    $auth = [];
+    if(!empty($user)) {
+        $auth["user"] = $user;
+    }
+    if(!empty($pass)) {
+        $auth["pass"] = $pass;
+    }
+    if(!empty($auth)) {
+        $redis->auth($auth);
+    }
     $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
     return $redis;
@@ -305,6 +322,10 @@ App::setResource('events', function($register) {
     return new Event('', '');
 }, ['register']);
 
+App::setResource('realtime', function($register) {
+    return new Realtime('', '', []);
+}, ['register']);
+
 App::setResource('audits', function($register) {
     return new Event(Event::AUDITS_QUEUE_NAME, Event::AUDITS_CLASS_NAME);
 }, ['register']);
@@ -378,10 +399,10 @@ App::setResource('user', function($mode, $project, $console, $request, $response
             $request->getCookie(Auth::$cookieName.'_legacy', '')));// Get fallback session from old clients (no SameSite support)
 
     // Get fallback session from clients who block 3rd-party cookies
-    $response->addHeader('X-Debug-Fallback', 'false');
+    if($response) $response->addHeader('X-Debug-Fallback', 'false');
 
     if(empty($session['id']) && empty($session['secret'])) {
-        $response->addHeader('X-Debug-Fallback', 'true');
+        if($response) $response->addHeader('X-Debug-Fallback', 'true');
         $fallback = $request->getHeader('x-fallback-cookies', '');
         $fallback = \json_decode($fallback, true);
         $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
@@ -395,7 +416,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     }
     else {
         $user = $consoleDB->getDocument(Auth::$unique);
-
+        
         $user
             ->setAttribute('$id', 'admin-'.$user->getAttribute('$id'))
         ;
@@ -410,7 +431,8 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     if (APP_MODE_ADMIN === $mode) {
         if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
-        } else {
+        }
+        else {
             $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
         }
     }
