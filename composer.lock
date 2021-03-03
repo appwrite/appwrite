@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4f58de92fb64af44d915387895472881",
+    "content-hash": "c89bd786aae720e161185007212f6594",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -296,61 +296,6 @@
                 "source": "https://github.com/colinmollenhour/credis/tree/v1.12.1"
             },
             "time": "2020-11-06T16:09:14+00:00"
-        },
-        {
-            "name": "domnikl/statsd",
-            "version": "3.0.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/domnikl/statsd-php.git",
-                "reference": "393c6565efbfb23c8296ae3099a62fb6366c6ce3"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/domnikl/statsd-php/zipball/393c6565efbfb23c8296ae3099a62fb6366c6ce3",
-                "reference": "393c6565efbfb23c8296ae3099a62fb6366c6ce3",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">= 7.2"
-            },
-            "require-dev": {
-                "flyeralarm/php-code-validator": "^2.2",
-                "phpunit/phpunit": "~8.0",
-                "vimeo/psalm": "^3.4"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Domnikl\\Statsd\\": "src/",
-                    "Domnikl\\Test\\Statsd\\": "tests/unit"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Dominik Liebler",
-                    "email": "liebler.dominik@gmail.com"
-                }
-            ],
-            "description": "a PHP client for statsd",
-            "homepage": "https://domnikl.github.com/statsd-php",
-            "keywords": [
-                "Metrics",
-                "monitoring",
-                "statistics",
-                "statsd",
-                "udp"
-            ],
-            "support": {
-                "issues": "https://github.com/domnikl/statsd-php/issues",
-                "source": "https://github.com/domnikl/statsd-php/tree/master"
-            },
-            "abandoned": true,
-            "time": "2020-01-03T14:24:58+00:00"
         },
         {
             "name": "dragonmantank/cron-expression",
@@ -1191,6 +1136,59 @@
                 "source": "https://github.com/resque/php-resque/tree/v1.3.6"
             },
             "time": "2020-04-16T16:39:50+00:00"
+        },
+        {
+            "name": "slickdeals/statsd",
+            "version": "3.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Slickdeals/statsd-php.git",
+                "reference": "393c6565efbfb23c8296ae3099a62fb6366c6ce3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Slickdeals/statsd-php/zipball/393c6565efbfb23c8296ae3099a62fb6366c6ce3",
+                "reference": "393c6565efbfb23c8296ae3099a62fb6366c6ce3",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">= 7.2"
+            },
+            "require-dev": {
+                "flyeralarm/php-code-validator": "^2.2",
+                "phpunit/phpunit": "~8.0",
+                "vimeo/psalm": "^3.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Domnikl\\Statsd\\": "src/",
+                    "Domnikl\\Test\\Statsd\\": "tests/unit"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Dominik Liebler",
+                    "email": "liebler.dominik@gmail.com"
+                }
+            ],
+            "description": "a PHP client for statsd",
+            "homepage": "https://domnikl.github.com/statsd-php",
+            "keywords": [
+                "Metrics",
+                "monitoring",
+                "statistics",
+                "statsd",
+                "udp"
+            ],
+            "support": {
+                "source": "https://github.com/Slickdeals/statsd-php/tree/3.0.2"
+            },
+            "time": "2020-01-03T14:24:58+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
