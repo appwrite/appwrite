@@ -141,6 +141,22 @@ return [
                 'required' => false,
                 'question' => '',
             ],
+            [
+                'name' => '_APP_REDIS_USER',
+                'description' => 'Redis server user.',
+                'introduction' => '0.7',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_REDIS_PASS',
+                'description' => 'Redis server password.',
+                'introduction' => '0.7',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
         ],
     ],
     [
