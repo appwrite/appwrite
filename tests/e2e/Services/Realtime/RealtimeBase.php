@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Realtime;
 
+use CURLFile;
 use Tests\E2E\Client;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\ConnectionException;
@@ -78,9 +79,6 @@ trait RealtimeBase
             'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session
         ];
 
-        /**
-         * Test for SUCCESS
-         */
         $client = $this->getWebsocket(['documents']);
         $response = json_decode($client->receive(), true);
         $this->assertCount(1, $response);
@@ -370,7 +368,6 @@ trait RealtimeBase
     public function testChannelDatabase()
     {
         $user = $this->getUser();
-        $userId = $user['$id'] ?? '';
         $session = $user['session'] ?? '';
         $projectId = $this->getProject()['$id'];
 
@@ -384,7 +381,7 @@ trait RealtimeBase
         $this->assertArrayHasKey('collections', $response);
 
         /**
-         * Test for SUCCESS
+         * Test Collection Create
          */
         $actors = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
             'content-type' => 'application/json',
@@ -425,6 +422,9 @@ trait RealtimeBase
 
         $data = ['actorsId' => $actors['body']['$id']];
 
+        /**
+         * Test Document Create
+         */
         $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['actorsId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -449,6 +449,9 @@ trait RealtimeBase
 
         $data['documentId'] = $document['body']['$id'];
 
+        /**
+         * Test Document Update
+         */
         $document = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $data['actorsId'] . '/documents/' . $data['documentId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -474,6 +477,9 @@ trait RealtimeBase
         $this->assertEquals($response['payload']['firstName'], 'Chris1');
         $this->assertEquals($response['payload']['lastName'], 'Evans2');
 
+        /**
+         * Test Document Delete
+         */
         $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['actorsId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -502,6 +508,84 @@ trait RealtimeBase
         $this->assertContains('documents.' . $document['body']['$id'], $response['channels']);
         $this->assertContains('collections.' . $data['actorsId'] . '.documents', $response['channels']);
         $this->assertEquals('database.documents.delete', $response['event']);
+        $this->assertNotEmpty($response['payload']);
+
+        $client->close();
+    }
+
+    public function testChannelFiles()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        $client = $this->getWebsocket(['files'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_'.$projectId.'=' . $session
+        ]);
+        $response = json_decode($client->receive(), true);
+        $this->assertCount(1, $response);
+        $this->assertArrayHasKey('files', $response);
+
+        /**
+         * Test File Create
+         */
+        $file = $this->client->call(Client::METHOD_POST, '/storage/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'read' => ['*'],
+            'write' => ['*'],
+            'folderId' => 'xyz',
+        ]);
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('timestamp', $response);
+        $this->assertCount(2, $response['channels']);
+        $this->assertContains('files', $response['channels']);
+        $this->assertContains('files.' . $file['body']['$id'], $response['channels']);
+        $this->assertEquals('storage.files.create', $response['event']);
+        $this->assertNotEmpty($response['payload']);
+
+        $data = ['fileId' => $file['body']['$id']];
+
+        /**
+         * Test File Update
+         */
+        $this->client->call(Client::METHOD_PUT, '/storage/files/' . $data['fileId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'read' => ['*'],
+            'write' => ['*'],
+        ]);
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('timestamp', $response);
+        $this->assertCount(2, $response['channels']);
+        $this->assertContains('files', $response['channels']);
+        $this->assertContains('files.' . $file['body']['$id'], $response['channels']);
+        $this->assertEquals('storage.files.update', $response['event']);
+        $this->assertNotEmpty($response['payload']);
+
+        /**
+         * Test File Delete
+         */
+        $this->client->call(Client::METHOD_DELETE, '/storage/files/' . $data['fileId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('timestamp', $response);
+        $this->assertCount(2, $response['channels']);
+        $this->assertContains('files', $response['channels']);
+        $this->assertContains('files.' . $file['body']['$id'], $response['channels']);
+        $this->assertEquals('storage.files.delete', $response['event']);
         $this->assertNotEmpty($response['payload']);
 
         $client->close();
