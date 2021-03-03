@@ -22,6 +22,7 @@
 - Upgraded influxdb/influxdb-php lib to version 1.15.2
 - Upgraded phpmailer/phpmailer lib to version 6.3.0
 - Upgraded adhocore/jwt lib to version 1.1.2
+- Upgraded domnikl/statsd to slickdeals/statsd version 3.0
  
 ## Bug Fixes
 
