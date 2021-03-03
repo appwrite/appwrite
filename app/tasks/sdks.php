@@ -4,6 +4,7 @@ use Utopia\Config\Config;
 use Utopia\CLI\Console;
 use Appwrite\Spec\Swagger2;
 use Appwrite\SDK\SDK;
+use Appwrite\SDK\Language\CLI;
 use Appwrite\SDK\Language\PHP;
 use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\Language\Node;
@@ -90,6 +91,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config = new Web();
                         $config->setNPMPackage('appwrite');
                         $config->setBowerPackage('appwrite');
+                        break;
+                    case 'cli':
+                        $config = new CLI();
+                        $config->setComposerVendor('appwrite');
+                        $config->setComposerPackage('cli');
                         break;
                     case 'php':
                         $config = new PHP();

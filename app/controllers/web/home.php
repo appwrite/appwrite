@@ -328,7 +328,7 @@ App::get('/specs/:format')
 
             $services[] = [
                 'name' => $service['key'] ?? '',
-                'description' => (!empty($service['description'])) ? file_get_contents(realpath(__DIR__.'/../../..'.$service['description'])) : '',
+                'description' => $service['subtitle'] ?? '',
             ];
         }
 

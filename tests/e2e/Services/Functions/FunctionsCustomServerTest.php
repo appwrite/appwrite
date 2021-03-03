@@ -559,7 +559,7 @@ class FunctionsCustomServerTest extends Scope
             ],
         ];
 
-        sleep(count($envs) * 15);
+        sleep(count($envs) * 20);
         fwrite(STDERR, ".");
 
         /**

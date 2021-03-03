@@ -1,4 +1,15 @@
-# Version 0.7.0 (NOT-RELEASED)
+# Version 0.8.0 (Not Released Yet)
+
+- Anonymous login
+
+# Version 0.7.1 (Not Released Yet)
+
+- Updated missing storage env vars
+- Added option to for Redis authentication
+- Force adding a security email on setup
+- Better error logs on appwrite cretificates worker
+
+# Version 0.7.0
 
 ## Features
 
@@ -39,7 +50,7 @@
 - New OAuth adapter for PayPal sandbox  (@armino-dev - [#420](https://github.com/appwrite/appwrite/issues/410))
 - New OAuth adapter for Tradeshift  (@armino-dev - [#855](https://github.com/appwrite/appwrite/pull/855))
 - New OAuth adapter for Tradeshift sandbox  (@armino-dev - [#855](https://github.com/appwrite/appwrite/pull/855))
-- Introducing new permssion types: role:guest, role:member, role:app
+- Introducing new permssion types: role:guest & role:member
 - Disabled rate-limits on server side integrations
 - Refactored migration script 
 
@@ -68,6 +79,7 @@
 - Upgraded Redis Resque queue library to version 1.3.6 ([#319](https://github.com/appwrite/appwrite/issues/319))
 - Upgraded ClamAV container image to version 1.0.11 ([#412](https://github.com/appwrite/appwrite/issues/412))
 - Upgraded device detctor to version 3.12.6
+- Upgraded GEOIP DB file to Feb 2021 release
 
 ## Breaking Changes (Read before upgrading!)
 
@@ -118,6 +130,7 @@
 - Block iframe access to Appwrite console using the `X-Frame-Options` header.
 - Fixed `roles` param input validator
 - API Keys are now stored encrypted 
+- Disabled domains whitlist ACL for the Appwrite console
 
 # Version 0.6.2 (PRE-RELEASE)
 
