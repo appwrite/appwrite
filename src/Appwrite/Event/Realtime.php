@@ -85,7 +85,7 @@ class Realtime
 
     /**
      * @param array $payload
-     * return $this
+     * @return $this
      */
     public function setPayload(array $payload): self
     {
@@ -169,6 +169,11 @@ class Realtime
         $this->reset();
     }
 
+    /**
+     * Resets this event and unpopulates all data.
+     * 
+     * @return $this
+     */
     public function reset(): self
     {
         $this->event = '';

@@ -11,14 +11,6 @@ class RealtimeGuestTest extends TestCase
     public $connections = [];
     public $subscriptions = [];
 
-    public function setUp(): void
-    {
-    }
-
-    public function tearDown(): void
-    {
-    }
-
     public function testGuest()
     {
         Realtime::setUser(new Document([
@@ -47,7 +39,6 @@ class RealtimeGuestTest extends TestCase
 
         Realtime::subscribe('1', 1, $roles, $this->subscriptions, $this->connections, $channels);
 
- 
         $event = [
             'project' => '1',
             'permissions' => ['*'],
@@ -191,7 +182,6 @@ class RealtimeGuestTest extends TestCase
 
         $this->assertCount(1, $this->connections);
         $this->assertCount(1, $this->subscriptions['1']);
-
 
         Realtime::unsubscribe(1, $this->subscriptions, $this->connections);
 

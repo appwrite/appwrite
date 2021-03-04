@@ -13,6 +13,8 @@ class Realtime
     static $user;
 
     /**
+     * Sets the current user for the role and channel parsing.
+     * 
      * @param Document $user
      */
     static function setUser(Document $user)
@@ -21,10 +23,16 @@ class Realtime
     }
 
     /**
+     * Returns array of roles that the set User has permissions to.
+     * 
      * @return array
      */
     static function getRoles()
     {
+        if (!isset(self::$user)) {
+            return [];
+        }
+
         $roles = ['role:' . ((self::$user->isEmpty()) ? Auth::USER_ROLE_GUEST : Auth::USER_ROLE_MEMBER)];
         if (!(self::$user->isEmpty())) {
             $roles[] = 'user:' . self::$user->getId();
@@ -42,6 +50,9 @@ class Realtime
     }
 
     /**
+     * Converts the channels from the Query Params into an array. 
+     * Also renames the account channel to account.USER_ID and removes all illegal account channel variations.
+     * 
      * @param array $channels
      */
     static function parseChannels(array $channels)

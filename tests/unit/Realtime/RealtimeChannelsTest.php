@@ -32,8 +32,6 @@ class RealtimeChannelsTest extends TestCase
         'documents.2',
     ];
 
-
-
     public function setUp(): void
     {
         /**

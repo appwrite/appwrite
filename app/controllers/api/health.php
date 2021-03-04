@@ -40,10 +40,7 @@ App::get('/v1/health/realtime')
     ->inject('response')
     ->action(function ($response) {
         /** @var Utopia\Response $response */
-        $redis = new Redis();
-        $redis->connect('redis', 6379);
-    
-        $redis->publish('realtime', 'I\'m a live message');
+        // TODO: realtime health
         $response->json(['status' => 'OK']);
     });
 

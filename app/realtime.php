@@ -27,15 +27,10 @@ use Utopia\Abuse\Adapters\TimeLimit;
 /**
  * TODO List
  * 
- * - CORS Validation
- * - Limit payload size
  * - JWT Authentication (in path / or in message)
  * 
  * Protocols Support:
  * - Websocket support: https://www.swoole.co.uk/docs/modules/swoole-websocket-server
- * - MQTT support: https://www.swoole.co.uk/docs/modules/swoole-mqtt-server
- * - SSE support: https://github.com/hhxsv5/php-sse
- * - Socket.io support: https://github.com/shuixn/socket.io-swoole-server
  */
 
 ini_set('default_socket_timeout', -1);
@@ -44,13 +39,15 @@ Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 $server = new Server('0.0.0.0', 80);
 
 $server->set([
-    'websocket_compression' => true,
     'package_max_length' => 64000 // Default maximum Package Size (64kb)
 ]);
 
 $subscriptions = [];
 $connections = [];
 
+/**
+ * Create Redis Connection Pool in favor of the default 'cache' register.
+ */
 $register->set('redis', function () {
     $user = App::getEnv('_APP_REDIS_USER', '');
     $pass = App::getEnv('_APP_REDIS_PASS', '');
@@ -106,14 +103,13 @@ $server->on('workerStart', function ($server, $workerId) use (&$subscriptions, &
                  * Supported Resources:
                  *  - Collection
                  *  - Document
-                 *  - Bucket
                  *  - File
-                 *  - User? / Account? (no permissions)
-                 *  - Session? (no permissions)
-                 *  - Team? (no permissions)
-                 *  - Membership? (no permissions)
-                 *  - Function
-                 *  - Execution
+                 *  - Account
+                 *  - Session
+                 *  - Team? (not implemented yet)
+                 *  - Membership? (not implemented yet)
+                 *  - Function? (not available yet)
+                 *  - Execution? (not available yet)
                  */
                 $event = json_decode($payload, true);
 
@@ -157,7 +153,7 @@ $server->on('start', function (Server $server) {
 });
 
 $server->on('open', function (Server $server, Request $request) use (&$connections, &$subscriptions, &$register) {
-    Console::info("Connection open (user: {$request->fd}, worker: {$server->getWorkerId()})");
+    Console::info("Connection open (user: {$request->fd}, connections: {}, worker: {$server->getWorkerId()})");
 
     $app = new App('');
     $connection = $request->fd;
@@ -263,9 +259,9 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
     }
 
     /*
-     * Validate Client Domain - Check to avoid CSRF attack
-     *  Adding Appwrite API domains to allow XDOMAIN communication
-     *  Skip this check for non-web platforms which are not required to send an origin header
+     * Validate Client Domain - Check to avoid CSRF attack.
+     * Adding Appwrite API domains to allow XDOMAIN communication.
+     * Skip this check for non-web platforms which are not required to send an origin header.
      */
     $origin = $request->getOrigin();
     $originValidator = new Origin(\array_merge($project->getAttribute('platforms', []), $console->getAttribute('platforms', [])));
@@ -296,11 +292,8 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
 });
 
 $server->on('message', function (Server $server, Frame $frame) {
-    if ($frame->data === 'reload') {
-        $server->reload();
-    }
-
-    Console::info('Recieved message: ' . $frame->data . ' (user: ' . $frame->fd . ', worker: ' . $server->getWorkerId() . ')');
+    $server->push($frame->fd, 'Sending messages is not allowed.');
+    $server->close($frame->fd);
 });
 
 $server->on('close', function (Server $server, int $fd) use (&$connections, &$subscriptions) {
