@@ -1,13 +1,19 @@
 <?php
 
+use Appwrite\Auth\Auth;
+use Appwrite\Database\Database;
 use GraphQL\GraphQL;
 use GraphQL\Type\Schema;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use GraphQL\Error\ClientAware;
+use GraphQL\Error\DebugFlag;
+use GraphQL\Language\Parser;
 use GraphQL\Type\Definition\NonNull;
 use Utopia\App;
+use Utopia\Config\Config;
 use Utopia\Validator;
 
 /**
@@ -59,13 +65,13 @@ function createTypeMapping(Model $model, Response $response) {
     // If map already contains this complex type, then simply return 
     if (isset($typeMapping[$model->getType()])) return;
 
-
     $rules = $model->getRules();
     $name = $model->getType();
     $fields = [];
+    $type = null;
     foreach ($rules as $key => $props) {
         // Replace this with php regex
-        $key = str_replace('$', '', $key);
+        $keyWithoutSpecialChars = str_replace('$', '', $key);
         if (isset( $typeMapping[$props['type']])) {
             $type = $typeMapping[$props['type']];
         } else {
@@ -82,10 +88,30 @@ function createTypeMapping(Model $model, Response $response) {
             $type = Type::listOf($type);
         }
 
-        $fields[$key] = [
+        $fields[$keyWithoutSpecialChars] = [
             'type' => $type,
             'description' => $props['description'],
+            'resolve' => function ($type, $args, $context, $info) use ($key) {
+                var_dump("************* RESOLVING FIELD {$info->fieldName} *************");
+                // var_dump("isCompositeType : ", Type::isCompositeType($type));
+                // var_dump("isLeafType : ", Type::isLeafType($type));
+                if ( $type[$key] instanceof stdClass ) {
+                    // var_dump("STD Class");
+                    return json_encode($type[$key]);
+                }  else {
+                    // var_dump("not stdclass");
+                    return $type[$key];
+                }
+            }
         ];
+
+        // if ($keyWithoutSpecialChars !== $key) {
+        //     $fields[$keyWithoutSpecialChars]['resolve'] = function ($value, $args, $context, $info) use ($key) {
+        //         var_dump("************* RESOLVING FIELD {$info->fieldName} *************");
+        //         var_dump($value);
+        //         return $value[$key];
+        //     };
+        // } 
     }
 
     $objectType = [
@@ -168,6 +194,29 @@ function getArgs(array $params, $utopia) {
     return $args;
 }
 
+function isModel($response, Model $model) {
+
+    foreach ($model->getRules() as $key => $rule) {
+        if (!isset($response[$key])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+class MySafeException extends \Exception implements ClientAware
+{
+    public function isClientSafe()
+    {
+        return true;
+    }
+
+    public function getCategory()
+    {
+        return 'businessLogic';
+    }
+}
+
 function buildSchema($utopia, $response) {
     $start = microtime(true);
 
@@ -178,33 +227,48 @@ function buildSchema($utopia, $response) {
         foreach($routes as $route) {
             $namespace = $route->getLabel('sdk.namespace', '');
 
-            if ($namespace == 'users') {
+            if ($namespace == 'database' || true) {
                 $methodName = $namespace.'_'.$route->getLabel('sdk.method', '');
                 $responseModelName = $route->getLabel('sdk.response.model', "");
-                var_dump("******************************************");
-                var_dump("Processing route : ${method} : {$route->getURL()}");
-                var_dump("Model Name : ${responseModelName}");
-                if ( $responseModelName !== Response::MODEL_NONE && $responseModelName !== Response::MODEL_ANY ) {
+                // var_dump("******************************************");
+                // var_dump("Processing route : ${method} : {$route->getURL()}");
+                // var_dump("Model Name : ${responseModelName}");
+                if ( $responseModelName !== "" && $responseModelName !== Response::MODEL_NONE && $responseModelName !== Response::MODEL_ANY ) {
                     $responseModel = $response->getModel($responseModelName);
                     createTypeMapping($responseModel, $response);
                     $type = $typeMapping[$responseModel->getType()];
-                    var_dump("Type Created : ${type}");
+                    // var_dump("Type Created : ${type}");
                     $args = getArgs($route->getParams(), $utopia);
-                    var_dump("Args Generated : ${args}");
+                    // var_dump("Args Generated :");
+                    // var_dump($args);
                     
                     $field = [
                         'type' => $type,
                         'description' => $route->getDesc(), 
                         'args' => $args,
-                        'resolve' => function ($args) use (&$utopia, $route, $response) {
-                            var_dump("************* REACHED RESOLVE *****************");
-                            var_dump($route);
-                            $utopia->execute($route, $args);
+                        'resolve' => function ($type, $args, $context, $info) use (&$utopia, $route, $response) {
+                            var_dump("************* REACHED RESOLVE FOR  {$info->fieldName} *****************");
+                            // var_dump($route);
+
+                            // var_dump("************* CONTEXT *****************");
+                            // var_dump($context);
+
+
                             var_dump("********************** ARGS *******************");
                             var_dump($args);
+
+                            $utopia->setRoute($route);
+                            $utopia->execute($route, $args);
+                            
                             var_dump("**************** OUTPUT ************");
-                            var_dump($response->getPayload());
-                            return $response->getPayload();
+                            // var_dump($response->getPayload());
+                            $result = $response->getPayload();
+
+                            if (isModel($result, $response->getModel(Response::MODEL_ERROR)) || isModel($result, $response->getModel(Response::MODEL_ERROR_DEV))) {
+                                throw new MySafeException($result['message'], $result['code']);
+                            }
+                            
+                            return $result;
                         }
                     ];
                     
@@ -214,9 +278,9 @@ function buildSchema($utopia, $response) {
                         $mutationFields[$methodName] = $field;
                     }
                     
-                    var_dump("Processed route : ${method} : {$route->getURL()}");
+                    // var_dump("Processed route : ${method} : {$route->getURL()}");
                 } else {
-                    var_dump("Skipping route : {$route->getURL()}");
+                    // var_dump("Skipping route : {$route->getURL()}");
                 }
             }
         }
@@ -252,16 +316,19 @@ function buildSchema($utopia, $response) {
 
 App::post('/v1/graphql')
     ->desc('GraphQL Endpoint')
-    ->groups(['api', 'graphql'])
-    ->label('scope', 'public')
+    ->label('scope', 'graphql')
     ->inject('request')
     ->inject('response')
     ->inject('utopia')
-    ->action(function ($request, $response, $utopia) {
+    ->inject('user')
+    ->inject('project')
+    ->middleware(true)
+    ->action(function ($request, $response, $utopia, $user, $project) {
+
+
             // Generate the Schema of the server on startup. 
             // Use the routes from utopia and get the params then construct the queries and mutations.
-
-            $schema = buildSchema($utopia, $response);
+            $schema = buildSchema($utopia, $response, $request);
             $query = $request->getPayload('query', '');
             $variables = $request->getPayload('variables', null);
             $response->setContentType(Response::CONTENT_TYPE_NULL);
@@ -270,8 +337,8 @@ App::post('/v1/graphql')
                 $rootValue = [];
                 $result = GraphQL::executeQuery($schema, $query, $rootValue, null, $variables);
                 $output = $result->toArray();
-                var_dump("********** OUTPUT *********");
-                var_dump($output);
+                // var_dump("********** OUTPUT *********");
+                // var_dump($output);
             } catch (\Exception $error) {
                 $output = [
                     'errors' => [
@@ -286,6 +353,5 @@ App::post('/v1/graphql')
                 ];
             }
             $response->json($output);
-            echo "\n"; //TODO REMOVE THIS
         }
     );

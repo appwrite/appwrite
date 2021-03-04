@@ -98,6 +98,8 @@ App::get('/v1/users')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
+        var_dump("Running execute method for list users");
+        
         $results = $projectDB->getCollection([
             'limit' => $limit,
             'offset' => $offset,
@@ -217,7 +219,7 @@ App::get('/v1/users/:userId/sessions')
             'sum' => count($sessions),
             'sessions' => $sessions
         ]), Response::MODEL_SESSION_LIST);
-    }, ['response', 'projectDB', 'locale']);
+    });
 
 App::get('/v1/users/:userId/logs')
     ->desc('Get User Logs')

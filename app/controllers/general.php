@@ -33,6 +33,8 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     /** @var bool $mode */
     /** @var array $clients */
 
+    var_dump("*********** In general.php init *************");
+
     $localeParam = (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
 
     if (\in_array($localeParam, Config::getParam('locale-codes'))) {
@@ -210,6 +212,10 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
 
     // TDOO Check if user is god
 
+    var_dump("*********** Allowed Scopes *********");
+    var_dump($scopes);
+    var_dump($scope);
+
     if (!\in_array($scope, $scopes)) {
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) { // Check if permission is denied because project is missing
             throw new Exception('Project not found', 404);
@@ -251,6 +257,8 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\View $layout */
     /** @var Appwrite\Database\Document $project */
+
+    var_dump("*********** In general.php error *************");
 
     $route = $utopia->match($request);
     $template = ($route) ? $route->getLabel('error', null) : null;

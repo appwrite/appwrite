@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "aed281e2643524e5f1320533abb612eb",
+    "content-hash": "d1b9fa5657767534eefd141136bb3cfd",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -349,7 +349,7 @@
                 "issues": "https://github.com/domnikl/statsd-php/issues",
                 "source": "https://github.com/domnikl/statsd-php/tree/master"
             },
-            "abandoned": true,
+            "abandoned": "slickdeals/statsd",
             "time": "2020-01-03T14:24:58+00:00"
         },
         {
@@ -574,12 +574,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/psr7.git",
-                "reference": "f47ece9e6e8ce74e3be04bef47f46061dc18c095"
+                "reference": "2f3e4f6cf8fd4aad7624c90a94f0ab38fde25976"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/psr7/zipball/f47ece9e6e8ce74e3be04bef47f46061dc18c095",
-                "reference": "f47ece9e6e8ce74e3be04bef47f46061dc18c095",
+                "url": "https://api.github.com/repos/guzzle/psr7/zipball/2f3e4f6cf8fd4aad7624c90a94f0ab38fde25976",
+                "reference": "2f3e4f6cf8fd4aad7624c90a94f0ab38fde25976",
                 "shasum": ""
             },
             "require": {
@@ -641,7 +641,7 @@
                 "issues": "https://github.com/guzzle/psr7/issues",
                 "source": "https://github.com/guzzle/psr7/tree/1.x"
             },
-            "time": "2020-12-08T11:45:39+00:00"
+            "time": "2021-03-02T18:57:24+00:00"
         },
         {
             "name": "influxdb/influxdb-php",
@@ -1004,12 +1004,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-fig/log.git",
-                "reference": "dd738d0b4491f32725492cf345f6b501f5922fec"
+                "reference": "a18c1e692e02b84abbafe4856c3cd7cc6903908c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/log/zipball/dd738d0b4491f32725492cf345f6b501f5922fec",
-                "reference": "dd738d0b4491f32725492cf345f6b501f5922fec",
+                "url": "https://api.github.com/repos/php-fig/log/zipball/a18c1e692e02b84abbafe4856c3cd7cc6903908c",
+                "reference": "a18c1e692e02b84abbafe4856c3cd7cc6903908c",
                 "shasum": ""
             },
             "require": {
@@ -1047,7 +1047,7 @@
             "support": {
                 "source": "https://github.com/php-fig/log/tree/master"
             },
-            "time": "2020-09-18T06:44:51+00:00"
+            "time": "2021-03-02T15:02:34+00:00"
         },
         {
             "name": "ralouphie/getallheaders",
@@ -1548,16 +1548,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.10.0",
+            "version": "0.12.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "65909bdb24ef6b6c6751abfdea90caf96bbc6c50"
+                "reference": "bfdb236f91f4393f6db7faccd2d67550a1e73101"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/65909bdb24ef6b6c6751abfdea90caf96bbc6c50",
-                "reference": "65909bdb24ef6b6c6751abfdea90caf96bbc6c50",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/bfdb236f91f4393f6db7faccd2d67550a1e73101",
+                "reference": "bfdb236f91f4393f6db7faccd2d67550a1e73101",
                 "shasum": ""
             },
             "require": {
@@ -1591,9 +1591,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.10.0"
+                "source": "https://github.com/utopia-php/framework/tree/0.12.0"
             },
-            "time": "2020-12-26T12:02:39+00:00"
+            "time": "2021-03-04T17:14:23+00:00"
         },
         {
             "name": "utopia-php/locale",
@@ -1753,21 +1753,21 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.2.0",
+            "version": "0.4.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "27bfd663c9b2a17ac0911522a87f42bee834df95"
+                "reference": "9db3ab713a6d392c3c2c799aeea751f6c8dc2ff7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/27bfd663c9b2a17ac0911522a87f42bee834df95",
-                "reference": "27bfd663c9b2a17ac0911522a87f42bee834df95",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/9db3ab713a6d392c3c2c799aeea751f6c8dc2ff7",
+                "reference": "9db3ab713a6d392c3c2c799aeea751f6c8dc2ff7",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.4",
-                "utopia-php/framework": "0.10.0"
+                "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -1799,9 +1799,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.2.0"
+                "source": "https://github.com/utopia-php/storage/tree/0.4.3"
             },
-            "time": "2021-01-27T12:21:27+00:00"
+            "time": "2021-03-02T20:25:02+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -5792,12 +5792,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/webmozarts/assert.git",
-                "reference": "9c89b265ccc4092d58e66d72af5d343ee77a41ae"
+                "reference": "4631e2c7d2d7132adac9fd84d4c1a98c10a6e049"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/webmozarts/assert/zipball/9c89b265ccc4092d58e66d72af5d343ee77a41ae",
-                "reference": "9c89b265ccc4092d58e66d72af5d343ee77a41ae",
+                "url": "https://api.github.com/repos/webmozarts/assert/zipball/4631e2c7d2d7132adac9fd84d4c1a98c10a6e049",
+                "reference": "4631e2c7d2d7132adac9fd84d4c1a98c10a6e049",
                 "shasum": ""
             },
             "require": {
@@ -5843,7 +5843,7 @@
                 "issues": "https://github.com/webmozarts/assert/issues",
                 "source": "https://github.com/webmozarts/assert/tree/master"
             },
-            "time": "2021-01-18T12:52:36+00:00"
+            "time": "2021-02-28T20:01:57+00:00"
         },
         {
             "name": "webmozart/path-util",

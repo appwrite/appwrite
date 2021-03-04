@@ -34,7 +34,7 @@
 
         "appwrite/php-clamav": "1.0.*",
 
-        "utopia-php/framework": "0.10.0",
+        "utopia-php/framework": "0.12.0",
         "utopia-php/abuse": "0.3.*",
         "utopia-php/analytics": "0.1.*",
         "utopia-php/audit": "0.5.*",
@@ -47,7 +47,7 @@
         "utopia-php/domains": "0.2.*",
         "utopia-php/swoole": "0.2.*",
         "utopia-php/system": "0.4.*",
-        "utopia-php/storage": "0.2.*",
+        "utopia-php/storage": "0.4.*",
 
         "webonyx/graphql-php": "14.4.0",
         "resque/php-resque": "1.3.6",

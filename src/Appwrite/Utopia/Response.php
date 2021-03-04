@@ -117,7 +117,7 @@ class Response extends SwooleResponse
     const MODEL_DOMAIN_LIST = 'domainList';
 
     // Content type
-    const CONTENT_TYPE_NULL = null;
+    const CONTENT_TYPE_NULL = 'null';
 
     /**
      * @var Filter
@@ -276,7 +276,7 @@ class Response extends SwooleResponse
                 break;
                 
             default :
-                throw new Exception("No Response format set.");
+                $this->json(!empty($output) ? $output : new stdClass());
                 break;
         }
     }
@@ -329,6 +329,14 @@ class Response extends SwooleResponse
         }
 
         $this->payload = $output;
+
+        var_dump("********************** PAYLOAD SET *********************");
+        var_dump("Message : {$output['message']}");
+        var_dump("Code : {$output['code']}");
+        var_dump("Version : {$output['version']}");
+        var_dump("File : {$output['file']}");
+        var_dump("Line : {$output['line']}");
+        var_dump("Trace : ");
 
         return $this->payload;
     }
