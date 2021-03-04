@@ -280,6 +280,32 @@ App::get('/v1/mock/tests/general/empty')
         $response->noContent();
     });
 
+App::get('/v1/mock/tests/general/400-error')
+    ->desc('Mock a an 400 failed request')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'general')
+    ->label('sdk.method', 'error400')
+    ->label('sdk.description', 'Mock an 400 error')
+    ->label('sdk.mock', true)
+    ->action(function () {
+        throw new Exception('Mock 400 error', 400);
+    });
+
+App::get('/v1/mock/tests/general/500-error')
+    ->desc('Mock a an 500 failed request')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'general')
+    ->label('sdk.method', 'error500')
+    ->label('sdk.description', 'Mock an 500 error')
+    ->label('sdk.mock', true)
+    ->action(function () {
+        throw new Exception('Mock 500 error', 500);
+    });
+
 App::get('/v1/mock/tests/general/oauth2')
     ->desc('Mock an OAuth2 login route')
     ->groups(['mock'])
