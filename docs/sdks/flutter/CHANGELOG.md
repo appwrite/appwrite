@@ -1,3 +1,7 @@
+## 0.4.0-dev.2
+
+- Minor fixes for custom exceptions
+
 ## 0.4.0-dev.1
 
 - Improved code quality

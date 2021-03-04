@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4b03aefd02908c32c2d1be6127c8c23a",
+    "content-hash": "eebe34132bbd166e74c848453fe2068e",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -574,12 +574,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/psr7.git",
-                "reference": "f47ece9e6e8ce74e3be04bef47f46061dc18c095"
+                "reference": "2f3e4f6cf8fd4aad7624c90a94f0ab38fde25976"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/psr7/zipball/f47ece9e6e8ce74e3be04bef47f46061dc18c095",
-                "reference": "f47ece9e6e8ce74e3be04bef47f46061dc18c095",
+                "url": "https://api.github.com/repos/guzzle/psr7/zipball/2f3e4f6cf8fd4aad7624c90a94f0ab38fde25976",
+                "reference": "2f3e4f6cf8fd4aad7624c90a94f0ab38fde25976",
                 "shasum": ""
             },
             "require": {
@@ -641,7 +641,7 @@
                 "issues": "https://github.com/guzzle/psr7/issues",
                 "source": "https://github.com/guzzle/psr7/tree/1.x"
             },
-            "time": "2020-12-08T11:45:39+00:00"
+            "time": "2021-03-02T18:57:24+00:00"
         },
         {
             "name": "influxdb/influxdb-php",
@@ -2086,11 +2086,11 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.6.1",
+            "version": "0.6.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "8a55e7082428583a89ece31df463663c2b2320d8"
+                "reference": "d96376295c9265a054634d21dcdbfc02b832c677"
             },
             "require": {
                 "ext-curl": "*",
@@ -2120,7 +2120,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2021-03-02T17:02:58+00:00"
+            "time": "2021-03-03T12:53:32+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",
