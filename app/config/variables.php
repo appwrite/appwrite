@@ -105,10 +105,10 @@ return [
             ],
             [
                 'name' => '_APP_SYSTEM_SECURITY_EMAIL_ADDRESS',
-                'description' => 'This is the email address used to issue SSL certificates for custom domains or the user agent in webhooks. The default value is \'security@localhost.test\'.',
+                'description' => 'This is the email address used to issue SSL certificates for custom domains or the user agent in your webhooks payload.',
                 'introduction' => '0.7.0',
-                'default' => 'security@localhost.test',
-                'required' => false,
+                'default' => '',
+                'required' => true,
                 'question' => '',
             ],
             [
@@ -255,17 +255,17 @@ return [
         'variables' => [
             [
                 'name' => '_APP_SMTP_HOST',
-                'description' => 'SMTP server host name address. Default value is: \'smtp\'. Pass an empty string to disable all mail sending from the server.',
+                'description' => 'SMTP server host name address. Use an empty string to disable all mail sending from the server. The default value for this variable is an empty string',
                 'introduction' => '',
-                'default' => 'smtp',
+                'default' => '',
                 'required' => false,
                 'question' => '',
             ],
             [
                 'name' => '_APP_SMTP_PORT',
-                'description' => 'SMTP server TCP port. Default value is: \'25\'.',
+                'description' => 'SMTP server TCP port. Empty by default.',
                 'introduction' => '',
-                'default' => '25',
+                'default' => '',
                 'required' => false,
                 'question' => '',
             ],

@@ -943,7 +943,7 @@ App::post('/v1/projects/:projectId/tasks')
             throw new Exception('Project not found', 404);
         }
 
-        $cron = CronExpression::factory($schedule);
+        $cron = new CronExpression($schedule);
         $next = ($status == 'play') ? $cron->getNextRunDate()->format('U') : null;
 
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
@@ -1093,7 +1093,7 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
             throw new Exception('Task not found', 404);
         }
 
-        $cron = CronExpression::factory($schedule);
+        $cron = new CronExpression($schedule);
         $next = ($status == 'play') ? $cron->getNextRunDate()->format('U') : null;
 
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);

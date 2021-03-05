@@ -10,9 +10,14 @@ void main() { // Init SDK
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
   ;
 
-  String result = avatars.getCreditCard(
+  Future result = avatars.getCreditCard(
     code: 'amex',
   );
 
-  print(result); // Resource URL string
+  result
+    .then((response) {
+      print(response);
+    }).catchError((error) {
+      print(error.response);
+  });
 }

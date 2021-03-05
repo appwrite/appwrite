@@ -186,4 +186,27 @@ class HTTPTest extends Scope
         $this->assertEquals($body['continents']['AN'], 'Antarctica');
         $this->assertEquals($body['continents']['AS'], 'Asia');
     }
+
+    public function testVersions() {
+
+        /**
+         * Test without header
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/versions', array_merge([
+            'content-type' => 'application/json',
+        ], $this->getHeaders()));
+
+        $body = $response['body'];
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsString($body['server']);
+        $this->assertIsString($body['client-web']);
+        $this->assertIsString($body['client-flutter']);
+        $this->assertIsString($body['console-web']);
+        $this->assertIsString($body['server-nodejs']);
+        $this->assertIsString($body['server-deno']);
+        $this->assertIsString($body['server-php']);
+        $this->assertIsString($body['server-python']);
+        $this->assertIsString($body['server-ruby']);
+        $this->assertIsString($body['server-cli']);
+    }
 }
