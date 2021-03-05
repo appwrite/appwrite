@@ -1,3 +1,9 @@
+# Version 0.7.1
+
+## Bug Fixs
+
+- Fixed a bug, that Response format header was not added in the access-control-allow-header list.
+
 # Version 0.7.0
 
 ## Features
