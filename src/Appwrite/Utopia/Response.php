@@ -39,6 +39,7 @@ use Appwrite\Utopia\Response\Model\Tag;
 use Appwrite\Utopia\Response\Model\Task;
 use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
+use Appwrite\Utopia\Response\Model\Mock; // Keep last
 use stdClass;
 
 /**
@@ -115,6 +116,9 @@ class Response extends SwooleResponse
     const MODEL_PLATFORM_LIST = 'platformList';
     const MODEL_DOMAIN = 'domain';
     const MODEL_DOMAIN_LIST = 'domainList';
+    
+    // Tests (keep last)
+    const MODEL_MOCK = 'mock';
 
     /**
      * @var Filter
@@ -191,6 +195,8 @@ class Response extends SwooleResponse
             ->setModel(new Phone())
             // Verification
             // Recovery
+            // Tests (keep last)
+            ->setModel(new Mock())
         ;
 
         parent::__construct($response);
