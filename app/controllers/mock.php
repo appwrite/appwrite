@@ -2,8 +2,8 @@
 
 global $utopia, $request, $response;
 
+use Appwrite\Utopia\Response;
 use Utopia\App;
-use Utopia\Response;
 use Utopia\Validator\Numeric;
 use Utopia\Validator\Text;
 use Utopia\Validator\ArrayList;
@@ -161,7 +161,7 @@ App::delete('/v1/mock/tests/bar')
     });
 
 App::post('/v1/mock/tests/general/upload')
-    ->desc('Mock a post request for SDK tests')
+    ->desc('Upload File')
     ->groups(['mock'])
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
@@ -203,7 +203,7 @@ App::post('/v1/mock/tests/general/upload')
     });
 
 App::get('/v1/mock/tests/general/redirect')
-    ->desc('Mock a post request for SDK tests')
+    ->desc('Redirect')
     ->groups(['mock'])
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
@@ -219,7 +219,7 @@ App::get('/v1/mock/tests/general/redirect')
     });
 
 App::get('/v1/mock/tests/general/redirect/done')
-    ->desc('Mock a post request for SDK tests')
+    ->desc('Redirect Target')
     ->groups(['mock'])
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
@@ -231,13 +231,13 @@ App::get('/v1/mock/tests/general/redirect/done')
     });
 
 App::get('/v1/mock/tests/general/set-cookie')
-    ->desc('Mock a cookie request for SDK tests')
+    ->desc('Set Cookie')
     ->groups(['mock'])
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'general')
     ->label('sdk.method', 'setCookie')
-    ->label('sdk.description', 'Mock a set cookie request for SDK tests')
+    ->label('sdk.description', 'Mock a set cookie request.')
     ->label('sdk.mock', true)
     ->inject('response')
     ->action(function ($response) {
@@ -247,13 +247,13 @@ App::get('/v1/mock/tests/general/set-cookie')
     });
 
 App::get('/v1/mock/tests/general/get-cookie')
-    ->desc('Mock a cookie request for SDK tests')
+    ->desc('Get Cookie')
     ->groups(['mock'])
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'general')
     ->label('sdk.method', 'getCookie')
-    ->label('sdk.description', 'Mock a get cookie request for SDK tests')
+    ->label('sdk.description', 'Mock a cookie response.')
     ->label('sdk.mock', true)
     ->inject('request')
     ->action(function ($request) {
@@ -265,13 +265,15 @@ App::get('/v1/mock/tests/general/get-cookie')
     });
 
 App::get('/v1/mock/tests/general/empty')
-    ->desc('Mock a post request for SDK tests')
+    ->desc('Empty Response')
     ->groups(['mock'])
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'general')
     ->label('sdk.method', 'empty')
-    ->label('sdk.description', 'Mock a redirected request for SDK tests')
+    ->label('sdk.description', 'Mock a an empty response body.')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
     ->label('sdk.mock', true)
     ->inject('response')
     ->action(function ($response) {
@@ -281,26 +283,32 @@ App::get('/v1/mock/tests/general/empty')
     });
 
 App::get('/v1/mock/tests/general/400-error')
-    ->desc('Mock a an 400 failed request')
+    ->desc('400 Error')
     ->groups(['mock'])
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'general')
     ->label('sdk.method', 'error400')
-    ->label('sdk.description', 'Mock an 400 error')
+    ->label('sdk.description', 'Mock a an 400 failed request.')
+    ->label('sdk.response.code', Response::STATUS_CODE_BAD_REQUEST)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ERROR)
     ->label('sdk.mock', true)
     ->action(function () {
         throw new Exception('Mock 400 error', 400);
     });
 
 App::get('/v1/mock/tests/general/500-error')
-    ->desc('Mock a an 500 failed request')
+    ->desc('500 Error')
     ->groups(['mock'])
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'general')
     ->label('sdk.method', 'error500')
-    ->label('sdk.description', 'Mock an 500 error')
+    ->label('sdk.description', 'Mock a an 500 failed request.')
+    ->label('sdk.response.code', Response::STATUS_CODE_INTERNAL_SERVER_ERROR)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ERROR)
     ->label('sdk.mock', true)
     ->action(function () {
         throw new Exception('Mock 500 error', 500);
