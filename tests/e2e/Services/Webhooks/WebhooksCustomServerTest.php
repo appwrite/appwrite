@@ -199,11 +199,10 @@ class WebhooksCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'prefs' => ['test' => true],
+            'prefs' => ['a' => 'b']
         ]);
 
         $this->assertEquals($user['headers']['status-code'], 200);
-        $this->assertNotEmpty($user['body']['prefs']);
 
         $webhook = $this->getLastRequest();
 
@@ -215,13 +214,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
-        $this->assertNotEmpty($webhook['data']['$id']);
-        $this->assertEquals($webhook['data']['name'], $data['name']);
-        $this->assertIsInt($webhook['data']['registration']);
-        $this->assertEquals($webhook['data']['status'], 0);
-        $this->assertEquals($webhook['data']['email'], $data['email']);
-        $this->assertEquals($webhook['data']['emailVerification'], false);
-        $this->assertEquals($webhook['data']['prefs'], ["test" => true]);
+        $this->assertEquals($webhook['data']['a'], 'b');
 
         return $data;
     }
@@ -260,7 +253,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['data']['status'], 2);
         $this->assertEquals($webhook['data']['email'], $data['email']);
         $this->assertEquals($webhook['data']['emailVerification'], false);
-        $this->assertEquals($webhook['data']['prefs'], []);
+        $this->assertEquals($webhook['data']['prefs']['a'], 'b');
 
         return $data;
     }
@@ -296,7 +289,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['data']['status'], 2);
         $this->assertEquals($webhook['data']['email'], $data['email']);
         $this->assertEquals($webhook['data']['emailVerification'], false);
-        $this->assertEquals($webhook['data']['prefs'], []);
+        $this->assertEquals($webhook['data']['prefs']['a'], 'b');
 
         return $data;
     }
