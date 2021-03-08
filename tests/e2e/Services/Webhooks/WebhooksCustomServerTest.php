@@ -203,6 +203,8 @@ class WebhooksCustomServerTest extends Scope
         ]);
 
         $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body']['a'], 'b');
+
         $webhook = $this->getLastRequest();
 
         $this->assertEquals($webhook['method'], 'POST');
