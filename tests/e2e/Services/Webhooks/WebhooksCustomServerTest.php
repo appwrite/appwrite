@@ -203,7 +203,6 @@ class WebhooksCustomServerTest extends Scope
         ]);
 
         $this->assertEquals($user['headers']['status-code'], 200);
-
         $webhook = $this->getLastRequest();
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -220,7 +219,7 @@ class WebhooksCustomServerTest extends Scope
     }
 
     /**
-     * @depends testCreateUser
+     * @depends testUpdateUserPrefs
      */
     public function testUpdateUserStatus(array $data):array
     {
