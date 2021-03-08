@@ -11,6 +11,7 @@ use Appwrite\Utopia\Response\Model;
 use GraphQL\Error\ClientAware;
 use GraphQL\Error\DebugFlag;
 use GraphQL\Language\Parser;
+use GraphQL\Type\Definition\ListOfType;
 use GraphQL\Type\Definition\NonNull;
 use Utopia\App;
 use Utopia\Config\Config;
@@ -55,6 +56,7 @@ $typeMapping = [
     // Outliers 
     Model::TYPE_JSON => Type::string(),
     Response::MODEL_ANY => Type::string(),
+    Response::MODEL_NONE => Type::string(),
 ];
 
 
@@ -91,17 +93,42 @@ function createTypeMapping(Model $model, Response $response) {
         $fields[$keyWithoutSpecialChars] = [
             'type' => $type,
             'description' => $props['description'],
-            'resolve' => function ($type, $args, $context, $info) use ($key) {
+            'resolve' => function ($object, $args, $context, $info) use ($key, $type) {
                 var_dump("************* RESOLVING FIELD {$info->fieldName} *************");
-                // var_dump("isCompositeType : ", Type::isCompositeType($type));
-                // var_dump("isLeafType : ", Type::isLeafType($type));
-                if ( $type[$key] instanceof stdClass ) {
-                    // var_dump("STD Class");
-                    return json_encode($type[$key]);
-                }  else {
-                    // var_dump("not stdclass");
-                    return $type[$key];
+                // var_dump($info->returnType->getWrappedType());
+
+                var_dump("isListType : ", $info->returnType instanceof ListOfType);
+                var_dump("isBuiltinType : ", Type::isBuiltInType($info->returnType));
+                var_dump("isCompositeType : ", Type::isCompositeType($info->returnType));
+                var_dump("isLeafType : ", Type::isLeafType($info->returnType));
+                var_dump("isOutputType : ", Type::isOutputType($info->returnType));
+
+                var_dump("PHP Type of object: " . gettype($object[$key]));
+                switch(gettype($object[$key])) {
+                    case 'array': 
+                        $isAssoc = count(array_filter(array_keys($object[$key]), 'is_string')) > 0 ;
+                        if ($isAssoc) {
+                            return json_encode($object[$key]);
+                        } else {
+                            return array_map('json_encode', $object[$key]);
+                        }
+                    case 'object': 
+                        return json_encode($object[$key]);
+                    default: 
+                        return $object[$key];
                 }
+
+
+                
+                $isListType = $info->returnType instanceof ListOfType;
+
+                if ($isListType) {
+                    $isStringType = $info->returnType->getWrappedType() === Type::string(); 
+                } else {
+
+                }
+
+                // $isString = $info->returnType->getWrappedType();
             }
         ];
 

@@ -330,13 +330,13 @@ class Response extends SwooleResponse
 
         $this->payload = $output;
 
-        var_dump("********************** PAYLOAD SET *********************");
-        var_dump("Message : {$output['message']}");
-        var_dump("Code : {$output['code']}");
-        var_dump("Version : {$output['version']}");
-        var_dump("File : {$output['file']}");
-        var_dump("Line : {$output['line']}");
-        var_dump("Trace : ");
+        // var_dump("********************** PAYLOAD SET *********************");
+        // var_dump("Message : {$output['message']}");
+        // var_dump("Code : {$output['code']}");
+        // var_dump("Version : {$output['version']}");
+        // var_dump("File : {$output['file']}");
+        // var_dump("Line : {$output['line']}");
+        // var_dump("Trace : ");
 
         return $this->payload;
     }
