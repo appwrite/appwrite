@@ -39,12 +39,12 @@ $subscriptions = [];
 $connections = [];
 
 $server->on('workerStart', function ($server, $workerId) use (&$subscriptions, &$connections, &$register) {
-    Console::success('Worker ' . ++$workerId . ' started succefully');
+    Console::success('Worker ' . $workerId . ' started succefully');
     
     $attempts = 0;
     $start = time();
 
-    // $register->context('realtime-' . $workerId);
+    $register->context('realtime-pubsub-' . $workerId);
 
     while ($attempts < 300) {
         try {
@@ -120,6 +120,8 @@ $server->on('start', function (Server $server) {
 
 $server->on('open', function (Server $server, Request $request) use (&$connections, &$subscriptions, &$register) {
     Console::info("Connection open (user: {$request->fd}, connections: {}, worker: {$server->getWorkerId()})");
+
+    $register->context('realtime-' . $server->getWorkerId());
 
     $app = new App('');
     $connection = $request->fd;
