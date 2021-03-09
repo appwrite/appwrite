@@ -156,17 +156,11 @@ $register->set('dbPool', function () { // Register DB connection
     
     $pool = new PDOPool($config);
 
-    // Connection settings
-    // $pdo->setAttribute(PDONative::ATTR_DEFAULT_FETCH_MODE, PDONative::FETCH_ASSOC);   // Return arrays
-    // $pdo->setAttribute(PDONative::ATTR_ERRMODE, PDONative::ERRMODE_EXCEPTION);        // Handle all errors with exceptions
-
     return $pool;
 });
 $register->set('db', function () use ($register) {
     $pool = $register->get('dbPool');
     $pdo = $pool->get()->__getObject();
-
-    var_dump(gettype($pdo));
     
     $pdo->setAttribute(PDONative::ATTR_DEFAULT_FETCH_MODE, PDONative::FETCH_ASSOC);   // Return arrays
     $pdo->setAttribute(PDONative::ATTR_ERRMODE, PDONative::ERRMODE_EXCEPTION);        // Handle all errors with exceptions
