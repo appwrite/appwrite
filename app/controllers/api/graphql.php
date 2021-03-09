@@ -11,6 +11,14 @@ use Appwrite\Utopia\Response\Model;
 use GraphQL\Error\ClientAware;
 use GraphQL\Error\DebugFlag;
 use GraphQL\Language\Parser;
+use GraphQL\Language\AST\BooleanValueNode;
+use GraphQL\Language\AST\FloatValueNode;
+use GraphQL\Language\AST\IntValueNode;
+use GraphQL\Language\AST\ListValueNode;
+use GraphQL\Language\AST\Node;
+use GraphQL\Language\AST\ObjectValueNode;
+use GraphQL\Language\AST\StringValueNode;
+use GraphQL\Type\Definition\ScalarType;
 use GraphQL\Type\Definition\ListOfType;
 use GraphQL\Type\Definition\NonNull;
 use Utopia\App;
@@ -45,7 +53,68 @@ use Utopia\Validator;
  *  - Objects
  */
 
+
+class JsonType extends ScalarType
+{
+    public $name = 'Json';
+    public $description =
+        'The `JSON` scalar type represents JSON values as specified by
+        [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).';
+
+    public function __construct(?string $name = null)
+    {
+        if ($name) {
+            $this->name = $name;
+        }
+        parent::__construct();
+    }
+
+    public function parseValue($value)
+    {
+        return $this->identity($value);
+    }
+
+    public function serialize($value)
+    {
+        return $this->identity($value);
+    }
+
+    public function parseLiteral(Node $valueNode, ?array $variables = null)
+    {
+        switch ($valueNode) {
+            case ($valueNode instanceof StringValueNode):
+            case ($valueNode instanceof BooleanValueNode):
+                return $valueNode->value;
+            case ($valueNode instanceof IntValueNode):
+            case ($valueNode instanceof FloatValueNode):
+                return floatval($valueNode->value);
+            case ($valueNode instanceof ObjectValueNode): {
+                $value = [];
+                foreach ($valueNode->fields as $field) {
+                    $value[$field->name->value] = $this->parseLiteral($field->value);
+                }
+                return $value;
+            }
+            case ($valueNode instanceof ListValueNode):
+                return array_map([$this, 'parseLiteral'], $valueNode->values);
+            default:
+                return null;
+        }
+
+    }
+
+    private function identity($value)
+    {
+        return $value;
+    }
+
+}
+
+
 global $typeMapping;
+
+global $jsonParser;
+$jsonParser = new JsonType();
 
 $typeMapping = [
     Model::TYPE_BOOLEAN => Type::boolean(),
@@ -54,8 +123,8 @@ $typeMapping = [
     Model::TYPE_FLOAT => Type::float(),
 
     // Outliers 
-    Model::TYPE_JSON => Type::string(),
-    Response::MODEL_ANY => Type::string(),
+    Model::TYPE_JSON => $jsonParser,
+    Response::MODEL_ANY => $jsonParser,
     Response::MODEL_NONE => Type::string(),
 ];
 
@@ -64,17 +133,42 @@ function createTypeMapping(Model $model, Response $response) {
 
     global $typeMapping; 
 
-    // If map already contains this complex type, then simply return 
+    /* 
+        If the map already contains the type, end the recursion 
+        and return.
+    */
     if (isset($typeMapping[$model->getType()])) return;
 
     $rules = $model->getRules();
     $name = $model->getType();
     $fields = [];
     $type = null;
+    /*
+        Iterate through all the rules in the response model. Each rule is of the form 
+        [
+            [KEY 1] => [
+                'type' => A string from Appwrite/Utopia/Response
+                'description' => A description of the type 
+                'default' => A default value for this type 
+                'example' => An example of this type
+                'require' => a boolean representing whether this field is required 
+                'array' => a boolean representing whether this field is an array 
+            ],
+            [KEY 2] => [
+            ],
+            [KEY 3] => [
+            ] .....
+        ]
+    */
     foreach ($rules as $key => $props) {
-        // Replace this with php regex
+        /* 
+            If there are any field names containing characters other than a-z, A-Z, 0-9, _ , 
+            we need to remove all those characters. Currently Appwrite's Response model has only the 
+            $ sign which is prohibited. So we're only replacing that. We need to replace this with a regex
+            based approach.
+        */
         $keyWithoutSpecialChars = str_replace('$', '', $key);
-        if (isset( $typeMapping[$props['type']])) {
+        if (isset($typeMapping[$props['type']])) {
             $type = $typeMapping[$props['type']];
         } else {
             try {
@@ -86,6 +180,9 @@ function createTypeMapping(Model $model, Response $response) {
             }
         }
 
+        /* If any of the rules is a list, 
+            Wrap the base type with a listOf Type
+        */ 
         if ($props['array']) {
             $type = Type::listOf($type);
         }
@@ -104,41 +201,23 @@ function createTypeMapping(Model $model, Response $response) {
                 var_dump("isOutputType : ", Type::isOutputType($info->returnType));
 
                 var_dump("PHP Type of object: " . gettype($object[$key]));
-                switch(gettype($object[$key])) {
-                    case 'array': 
-                        $isAssoc = count(array_filter(array_keys($object[$key]), 'is_string')) > 0 ;
-                        if ($isAssoc) {
-                            return json_encode($object[$key]);
-                        } else {
-                            return array_map('json_encode', $object[$key]);
-                        }
-                    case 'object': 
-                        return json_encode($object[$key]);
-                    default: 
-                        return $object[$key];
-                }
+                // switch(gettype($object[$key])) {
+                //     case 'array': 
+                //         $isAssoc = count(array_filter(array_keys($object[$key]), 'is_string')) > 0 ;
+                //         if ($isAssoc) {
+                //             return json_encode($object[$key]);
+                //         } else {
+                //             return array_map('json_encode', $object[$key]);
+                //         }
+                //     case 'object': 
+                //         return json_encode($object[$key]);
+                //     default: 
+                //         return $object[$key];
+                // }
 
-
-                
-                $isListType = $info->returnType instanceof ListOfType;
-
-                if ($isListType) {
-                    $isStringType = $info->returnType->getWrappedType() === Type::string(); 
-                } else {
-
-                }
-
-                // $isString = $info->returnType->getWrappedType();
+                return $object[$key];
             }
         ];
-
-        // if ($keyWithoutSpecialChars !== $key) {
-        //     $fields[$keyWithoutSpecialChars]['resolve'] = function ($value, $args, $context, $info) use ($key) {
-        //         var_dump("************* RESOLVING FIELD {$info->fieldName} *************");
-        //         var_dump($value);
-        //         return $value[$key];
-        //     };
-        // } 
     }
 
     $objectType = [
@@ -260,7 +339,7 @@ function buildSchema($utopia, $response) {
                 // var_dump("******************************************");
                 // var_dump("Processing route : ${method} : {$route->getURL()}");
                 // var_dump("Model Name : ${responseModelName}");
-                if ( $responseModelName !== "" && $responseModelName !== Response::MODEL_NONE && $responseModelName !== Response::MODEL_ANY ) {
+                if ( $responseModelName !== "" && $responseModelName !== Response::MODEL_NONE ) {
                     $responseModel = $response->getModel($responseModelName);
                     createTypeMapping($responseModel, $response);
                     $type = $typeMapping[$responseModel->getType()];
@@ -349,7 +428,7 @@ App::post('/v1/graphql')
     ->inject('utopia')
     ->inject('user')
     ->inject('project')
-    ->middleware(true)
+    ->middleware(true) 
     ->action(function ($request, $response, $utopia, $user, $project) {
 
 
@@ -360,9 +439,31 @@ App::post('/v1/graphql')
             $variables = $request->getPayload('variables', null);
             $response->setContentType(Response::CONTENT_TYPE_NULL);
 
+            $callable = function ($objectValue, $args, $context, $info) {
+
+                var_dump("Entering Custom Field Resolver. \n");
+                var_dump("************* RESOLVING FIELD {$info->fieldName} *************");
+                $fieldName = $info->fieldName;
+                $property  = null;
+            
+                if (is_array($objectValue) || $objectValue instanceof \ArrayAccess) {
+                    if (isset($objectValue[$fieldName])) {
+                        $property = $objectValue[$fieldName];
+                    }
+                } elseif (is_object($objectValue)) {
+                    if (isset($objectValue->{$fieldName})) {
+                        $property = $objectValue->{$fieldName};
+                    }
+                }
+
+                return $property instanceof Closure
+                    ? $property($objectValue, $args, $context, $info)
+                    : $property;
+            };
+
             try {
                 $rootValue = [];
-                $result = GraphQL::executeQuery($schema, $query, $rootValue, null, $variables);
+                $result = GraphQL::executeQuery($schema, $query, $rootValue, null, $variables, null, $callable);
                 $output = $result->toArray();
                 // var_dump("********** OUTPUT *********");
                 // var_dump($output);
