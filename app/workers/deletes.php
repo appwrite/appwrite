@@ -5,6 +5,7 @@ use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
+use Swoole\Runtime;
 use Utopia\Storage\Device\Local;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
@@ -21,65 +22,73 @@ Console::success(APP_NAME.' deletes worker v1 has started'."\n");
 
 class DeletesV1
 {
-
+    
     public $args = [];
-
+    
     protected $consoleDB = null;
-
+    
     public function setUp(): void
     {
     }
-
+    
     public function perform()
     {
-        $projectId = $this->args['projectId'];   
-        $type = $this->args['type'];
-        
-        switch (strval($type)) {
-            case DELETE_TYPE_DOCUMENT:
-                $document = $this->args['document'];
-                $document = new Document($document);
-                switch (strval($document->getCollection())) {
-                    case Database::SYSTEM_COLLECTION_PROJECTS:
-                        $this->deleteProject($document);
+        Runtime::enableCoroutine();
+        Runtime::setHookFlags(SWOOLE_HOOK_ALL);
+
+        Co\run(function () {
+            $projectId = $this->args['projectId'];   
+            $type = $this->args['type'];
+            
+            try {
+                switch (strval($type)) {
+                    case DELETE_TYPE_DOCUMENT:
+                        $document = $this->args['document'];
+                        $document = new Document($document);
+                        switch (strval($document->getCollection())) {
+                            case Database::SYSTEM_COLLECTION_PROJECTS:
+                                $this->deleteProject($document);
+                                break;
+                            case Database::SYSTEM_COLLECTION_FUNCTIONS:
+                                $this->deleteFunction($document, $projectId);
+                                break;
+                            case Database::SYSTEM_COLLECTION_USERS:
+                                $this->deleteUser($document, $projectId);
+                                break;
+                            case Database::SYSTEM_COLLECTION_COLLECTIONS:
+                                $this->deleteDocuments($document, $projectId);
+                                break;
+                            default:
+                                Console::error('No lazy delete operation available for document of type: ' . $document->getCollection());
+                                break;
+                        }
                         break;
-                    case Database::SYSTEM_COLLECTION_FUNCTIONS:
-                        $this->deleteFunction($document, $projectId);
+
+                    case DELETE_TYPE_EXECUTIONS:
+                        $this->deleteExecutionLogs($this->args['timestamp']);
                         break;
-                    case Database::SYSTEM_COLLECTION_USERS:
-                        $this->deleteUser($document, $projectId);
+
+                    case DELETE_TYPE_AUDIT:
+                        $this->deleteAuditLogs($this->args['timestamp']);
                         break;
-                    case Database::SYSTEM_COLLECTION_COLLECTIONS:
-                        $this->deleteDocuments($document, $projectId);
+
+                    case DELETE_TYPE_ABUSE:
+                        $this->deleteAbuseLogs($this->args['timestamp']);
                         break;
+
+                    case DELETE_TYPE_CERTIFICATES:
+                        $document = new Document($this->args['document']);
+                        $this->deleteCertificates($document);
+                        break;
+
                     default:
-                        Console::error('No lazy delete operation available for document of type: '.$document->getCollection());
+                        Console::error('No delete operation for type: ' . $type);
                         break;
                 }
-                break;
-
-            case DELETE_TYPE_EXECUTIONS:
-                $this->deleteExecutionLogs($this->args['timestamp']);
-                break;
-
-            case DELETE_TYPE_AUDIT:
-                $this->deleteAuditLogs($this->args['timestamp']);
-                break;
-
-            case DELETE_TYPE_ABUSE:
-                $this->deleteAbuseLogs($this->args['timestamp']);
-                break;
-
-            case DELETE_TYPE_CERTIFICATES:
-                $document = new Document($this->args['document']);
-                $this->deleteCertificates($document);
-                break;
-                        
-            default:
-                Console::error('No delete operation for type: '.$type);
-                break;
-            
+            } catch (\Throwable $th) {
+                //throw $th;
             }
+        });
     }
 
     public function tearDown(): void

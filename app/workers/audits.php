@@ -1,5 +1,6 @@
 <?php
 
+use Swoole\Runtime;
 use Utopia\Audit\Audit;
 use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 use Utopia\CLI\Console;
@@ -22,21 +23,26 @@ class AuditsV1
     {
         global $register;
 
-        $projectId = $this->args['projectId'];
-        $userId = $this->args['userId'];
-        $event = $this->args['event'];
-        $resource = $this->args['resource'];
-        $userAgent = $this->args['userAgent'];
-        $ip = $this->args['ip'];
-        $data = $this->args['data'];
-        $db = $register->get('db', true);
-        
-        $adapter = new AuditAdapter($db);
-        $adapter->setNamespace('app_'.$projectId);
+        Runtime::enableCoroutine();
+        Runtime::setHookFlags(SWOOLE_HOOK_ALL);
 
-        $audit = new Audit($adapter);
+        Co\run(function () use ($register) {
+            $projectId = $this->args['projectId'];
+            $userId = $this->args['userId'];
+            $event = $this->args['event'];
+            $resource = $this->args['resource'];
+            $userAgent = $this->args['userAgent'];
+            $ip = $this->args['ip'];
+            $data = $this->args['data'];
+            $db = $register->get('db', true);
+            
+            $adapter = new AuditAdapter($db);
+            $adapter->setNamespace('app_'.$projectId);
 
-        $audit->log($userId, $event, $resource, $userAgent, $ip, '', $data);
+            $audit = new Audit($adapter);
+
+            $audit->log($userId, $event, $resource, $userAgent, $ip, '', $data);
+        });
     }
 
     public function tearDown(): void

@@ -20,7 +20,6 @@ use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
-use Appwrite\Extend\PDO;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\App;
 use Utopia\View;
@@ -30,6 +29,8 @@ use Utopia\Registry\Registry;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use PDO as PDONative;
+use Swoole\Database\PDOConfig;
+use Swoole\Database\PDOPool;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -138,19 +139,35 @@ Database::addFilter('encrypt',
 /*
  * Registry
  */
-$register->set('db', function () { // Register DB connection
-    $dbHost = App::getEnv('_APP_DB_HOST', '');
-    $dbUser = App::getEnv('_APP_DB_USER', '');
-    $dbPass = App::getEnv('_APP_DB_PASS', '');
-    $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
-
-    $pdo = new PDO("mysql:host={$dbHost};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
-        PDONative::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
-        PDONative::ATTR_TIMEOUT => 3, // Seconds
-        PDONative::ATTR_PERSISTENT => true
-    ));
+$register->set('dbPool', function () { // Register DB connection
+    $config = new PDOConfig();
+    $config
+        ->withHost(App::getEnv('_APP_DB_HOST', ''))
+        ->withPort(App::getEnv('_APP_DB_PORT', ''))
+        ->withDbName(App::getEnv('_APP_DB_SCHEMA', ''))
+        ->withUsername(App::getEnv('_APP_DB_USER', ''))
+        ->withPassword(App::getEnv('_APP_DB_PASS', ''))
+        ->withCharset('utf8mb4')
+        ->withOptions([
+            PDONative::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
+            PDONative::ATTR_TIMEOUT => 3, // Seconds
+            PDONative::ATTR_PERSISTENT => true
+        ]);
+    
+    $pool = new PDOPool($config);
 
     // Connection settings
+    // $pdo->setAttribute(PDONative::ATTR_DEFAULT_FETCH_MODE, PDONative::FETCH_ASSOC);   // Return arrays
+    // $pdo->setAttribute(PDONative::ATTR_ERRMODE, PDONative::ERRMODE_EXCEPTION);        // Handle all errors with exceptions
+
+    return $pool;
+});
+$register->set('db', function () use ($register) {
+    $pool = $register->get('dbPool');
+    $pdo = $pool->get()->__getObject();
+
+    var_dump(gettype($pdo));
+    
     $pdo->setAttribute(PDONative::ATTR_DEFAULT_FETCH_MODE, PDONative::FETCH_ASSOC);   // Return arrays
     $pdo->setAttribute(PDONative::ATTR_ERRMODE, PDONative::ERRMODE_EXCEPTION);        // Handle all errors with exceptions
 
