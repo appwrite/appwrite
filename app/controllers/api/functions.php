@@ -672,11 +672,12 @@ App::post('/v1/functions/:functionId/executions')
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
     ->param('functionId', '', new UID(), 'Function unique ID.')
+    ->param('data', '', new Text(8192), 'String of custom data to send to function.', true)
     // ->param('async', 1, new Range(0, 1), 'Execute code asynchronously. Pass 1 for true, 0 for false. Default value is 1.', true)
     ->inject('response')
     ->inject('project')
     ->inject('projectDB')
-    ->action(function ($functionId, /*$async,*/ $response, $project, $projectDB) {
+    ->action(function ($functionId, $data, /*$async,*/ $response, $project, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
@@ -736,6 +737,7 @@ App::post('/v1/functions/:functionId/executions')
             'functionId' => $function->getId(),
             'executionId' => $execution->getId(),
             'trigger' => 'http',
+            'data' => $data,
         ]);
 
         $response

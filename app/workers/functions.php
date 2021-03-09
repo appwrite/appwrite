@@ -148,6 +148,7 @@ class FunctionsV1
         $event = $this->args['event'] ?? '';
         $scheduleOriginal = $this->args['scheduleOriginal'] ?? '';
         $payload = (!empty($this->args['payload'])) ? json_encode($this->args['payload']) : '';
+        $data = $this->args['data'] ?? '';
 
         $database = new Database();
         $database->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
@@ -195,7 +196,7 @@ class FunctionsV1
 
                         Console::success('Triggered function: '.$event);
 
-                        $this->execute('event', $projectId, '', $database, $function, $event, $payload);
+                        $this->execute('event', $projectId, '', $database, $function, $event, $payload, $data);
                     }
                 }
                 break;
@@ -251,7 +252,7 @@ class FunctionsV1
                     'scheduleOriginal' => $function->getAttribute('schedule', ''),
                 ]);  // Async task rescheduale
 
-                $this->execute($trigger, $projectId, $executionId, $database, $function);
+                $this->execute($trigger, $projectId, $executionId, $database, $function, /*$event*/'', /*$payload*/'', $data);
                 
                 break;
 
@@ -264,7 +265,7 @@ class FunctionsV1
                     throw new Exception('Function not found ('.$functionId.')');
                 }
 
-                $this->execute($trigger, $projectId, $executionId, $database, $function);
+                $this->execute($trigger, $projectId, $executionId, $database, $function, /*$event*/'', /*$payload*/'', $data);
                 break;
             
             default:
@@ -283,10 +284,11 @@ class FunctionsV1
      * @param Database $function
      * @param string $event
      * @param string $payload
+     * @param string $data
      * 
      * @return void
      */
-    public function execute(string $trigger, string $projectId, string $executionId, Database $database, Document $function, string $event = '', string $payload = ''): void
+    public function execute(string $trigger, string $projectId, string $executionId, Database $database, Document $function, string $event = '', string $payload = '', string $data = ''): void
     {
         global $list;
 
@@ -341,6 +343,7 @@ class FunctionsV1
             'APPWRITE_FUNCTION_ENV_VERSION' => $environment['version'],
             'APPWRITE_FUNCTION_EVENT' => $event,
             'APPWRITE_FUNCTION_EVENT_PAYLOAD' => $payload,
+            'APPWRITE_FUNCTION_DATA' => $data,
         ]);
 
         \array_walk($vars, function (&$value, $key) {
