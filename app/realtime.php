@@ -3,23 +3,16 @@
 require_once __DIR__ . '/init.php';
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use Appwrite\Auth\Auth;
-use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
-use Appwrite\Database\Adapter\Redis as RedisAdapter;
-use Appwrite\Database\Database;
-use Appwrite\Database\Document;
-use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Realtime\Realtime;
-use Swoole\Database\RedisConfig;
-use Swoole\Database\RedisPool;
+use Appwrite\Utopia\Response;
 use Swoole\WebSocket\Server;
 use Swoole\Http\Request;
+use Swoole\Http\Response as SwooleResponse;
 use Swoole\Process;
 use Swoole\WebSocket\Frame;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Config\Config;
 use Utopia\Swoole\Request as SwooleRequest;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
@@ -45,40 +38,13 @@ $server->set([
 $subscriptions = [];
 $connections = [];
 
-/**
- * Create Redis Connection Pool in favor of the default 'cache' register.
- */
-$register->set('redis', function () {
-    $user = App::getEnv('_APP_REDIS_USER', '');
-    $pass = App::getEnv('_APP_REDIS_PASS', '');
-    $auth = '';
-    if (!empty($user)) {
-        $auth += $user;
-    }
-    if (!empty($pass)) {
-        $auth += ':' . $pass;
-    }
-
-    $config = new RedisConfig();
-    $config
-        ->withHost(App::getEnv('_APP_REDIS_HOST', ''))
-        ->withPort(App::getEnv('_APP_REDIS_PORT', ''))
-        ->withAuth($auth)
-        ->withTimeout(0)
-        ->withReadTimeout(0)
-        ->withRetryInterval(0);
-
-
-    $pool = new RedisPool($config);
-
-    return $pool;
-});
-
 $server->on('workerStart', function ($server, $workerId) use (&$subscriptions, &$connections, &$register) {
     Console::success('Worker ' . ++$workerId . ' started succefully');
-
+    
     $attempts = 0;
     $start = time();
+
+    // $register->context('realtime-' . $workerId);
 
     while ($attempts < 300) {
         try {
@@ -88,7 +54,7 @@ $server->on('workerStart', function ($server, $workerId) use (&$subscriptions, &
                 sleep(5); // 5 sec delay between connection attempts
             }
 
-            $redis = $register->get('redis')->get();
+            $redis = $register->get('cache', true);
             $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
             if ($redis->ping(true)) {
@@ -163,63 +129,9 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
         return $request;
     });
 
-    App::setResource('consoleDB', function () use (&$register) {
-        $consoleDB = new Database();
-        $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register, true));
-        $consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
-        $consoleDB->setMocks(Config::getParam('collections', []));
-
-        return $consoleDB;
-    }, ['register']);
-
-    App::setResource('project', function ($consoleDB, $request) {
-        /** @var Utopia\Swoole\Request $request */
-        /** @var Appwrite\Database\Database $consoleDB */
-
-        Authorization::disable();
-
-        $project = $consoleDB->getDocument($request->getQuery('project'));
-
-        Authorization::reset();
-
-        return $project;
-    }, ['consoleDB', 'request']);
-
-    App::setResource('console', function ($consoleDB) {
-        return $consoleDB->getDocument('console');
-    }, ['consoleDB']);
-
-    App::setResource('user', function ($project, $request, $projectDB) {
-        /** @var Utopia\Swoole\Request $request */
-        /** @var Appwrite\Database\Document $project */
-        /** @var Appwrite\Database\Database $projectDB */
-
-        Authorization::setDefaultStatus(true);
-
-        Auth::setCookieName('a_session_' . $project->getId());
-
-        $session = Auth::decodeSession(
-            $request->getCookie(
-                Auth::$cookieName, // Get sessions
-                $request->getCookie(Auth::$cookieName . '_legacy', '')
-            )
-        ); // Get fallback session from old clients (no SameSite support)
-
-        Auth::$unique = $session['id'];
-        Auth::$secret = $session['secret'];
-
-        $user = $projectDB->getDocument(Auth::$unique);
-
-        if (
-            empty($user->getId()) // Check a document has been found in the DB
-            || Database::SYSTEM_COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
-            || !Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)
-        ) { // Validate user has valid login token
-            $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
-        }
-
-        return $user;
-    }, ['project', 'request', 'projectDB']);
+    App::setResource('response', function () {
+        return new Response(new SwooleResponse());
+    });
 
     /** @var Appwrite\Database\Document $user */
     $user = $app->getResource('user');
