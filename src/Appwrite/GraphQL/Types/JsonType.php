@@ -11,6 +11,7 @@ use GraphQL\Language\AST\ObjectValueNode;
 use GraphQL\Language\AST\StringValueNode;
 use GraphQL\Type\Definition\ScalarType;
 
+// https://github.com/webonyx/graphql-php/issues/129#issuecomment-309366803
 class JsonType extends ScalarType
 {
     public $name = 'Json';

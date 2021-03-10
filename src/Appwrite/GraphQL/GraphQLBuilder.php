@@ -18,7 +18,6 @@ class GraphQLBuilder {
 
     public static $typeMapping;
 
-
     private static function init() {
         self::$jsonParser = new JsonType();
         self::$typeMapping = [
