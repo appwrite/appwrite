@@ -87,9 +87,7 @@ class Realtime
     /**
      * Identifies the receivers of all subscriptions, based on the permissions and event.
      * 
-     * The processing works in linear time complexity, meaning it will increase in time - the same amount it increases in space.
-     * 
-     * Example with a event with user:XXX permissions and with X users spread across 10 different channels:
+     * Example of performance with an event with user:XXX permissions and with X users spread across 10 different channels:
      *  - 0.014 ms (±6.88%) | 10 Connections / 100 Subscriptions 
      *  - 0.070 ms (±3.71%) | 100 Connections / 1,000 Subscriptions 
      *  - 0.846 ms (±2.74%) | 1,000 Connections / 10,000 Subscriptions
