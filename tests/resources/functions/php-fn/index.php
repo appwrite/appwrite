@@ -5,15 +5,15 @@ include './vendor/autoload.php';
 use Appwrite\Client;
 use Appwrite\Services\Storage;
 
-$client = new Client();
+// $client = new Client();
 
-$client
-    ->setEndpoint($_ENV['APPWRITE_ENDPOINT']) // Your API Endpoint
-    ->setProject($_ENV['APPWRITE_PROJECT']) // Your project ID
-    ->setKey($_ENV['APPWRITE_SECRET']) // Your secret API key
-;
+// $client
+    // ->setEndpoint($_ENV['APPWRITE_ENDPOINT']) // Your API Endpoint
+    // ->setProject($_ENV['APPWRITE_PROJECT']) // Your project ID
+    // ->setKey($_ENV['APPWRITE_SECRET']) // Your secret API key
+// ;
 
-$storage = new Storage($client);
+// $storage = new Storage($client);
 
 // $result = $storage->getFile($_ENV['APPWRITE_FILEID']);
 
