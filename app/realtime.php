@@ -1,16 +1,15 @@
 <?php
 
 require_once __DIR__ . '/init.php';
-require_once __DIR__ . '/../vendor/autoload.php';
 
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Realtime\Realtime;
 use Appwrite\Utopia\Response;
-use Swoole\WebSocket\Server;
+use Swoole\Process;
 use Swoole\Http\Request;
 use Swoole\Http\Response as SwooleResponse;
-use Swoole\Process;
 use Swoole\WebSocket\Frame;
+use Swoole\WebSocket\Server;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Swoole\Request as SwooleRequest;
@@ -26,7 +25,6 @@ use Utopia\Abuse\Adapters\TimeLimit;
  * - Websocket support: https://www.swoole.co.uk/docs/modules/swoole-websocket-server
  */
 
-ini_set('default_socket_timeout', -1);
 Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 $server = new Server('0.0.0.0', 80);
