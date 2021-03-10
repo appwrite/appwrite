@@ -120,6 +120,9 @@ class Response extends SwooleResponse
     // Tests (keep last)
     const MODEL_MOCK = 'mock';
 
+    // Content type
+    const CONTENT_TYPE_NULL = 'null';
+
     /**
      * @var Filter
      */
@@ -266,7 +269,22 @@ class Response extends SwooleResponse
             $output = self::getFilter()->parse($output, $model);
         }
 
-        $this->json(!empty($output) ? $output : new stdClass());
+        switch($this->getContentType()) {
+            case self::CONTENT_TYPE_JSON:
+                $this->json(!empty($output) ? $output : new stdClass());
+                break;
+
+            case self::CONTENT_TYPE_NULL:
+                break;
+            
+            case self::CONTENT_TYPE_YAML:
+                $this->yaml(!empty($output) ? $output : new stdClass());
+                break;
+                
+            default :
+                $this->json(!empty($output) ? $output : new stdClass());
+                break;
+        }
     }
 
     /**
@@ -317,6 +335,14 @@ class Response extends SwooleResponse
         }
 
         $this->payload = $output;
+
+        // var_dump("********************** PAYLOAD SET *********************");
+        // var_dump("Message : {$output['message']}");
+        // var_dump("Code : {$output['code']}");
+        // var_dump("Version : {$output['version']}");
+        // var_dump("File : {$output['file']}");
+        // var_dump("Line : {$output['line']}");
+        // var_dump("Trace : ");
 
         return $this->payload;
     }

@@ -21,6 +21,7 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
 use Appwrite\Extend\PDO;
+use Appwrite\GraphQL\GraphQLBuilder;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\App;
 use Utopia\View;
@@ -502,3 +503,24 @@ App::setResource('geodb', function($register) {
     /** @var Utopia\Registry\Registry $register */
     return $register->get('geodb');
 }, ['register']);
+
+App::setResource('schema', function($utopia, $response, $request, $register) {
+    
+    $schema = null;
+    try {
+        /* 
+            Try to get the schema from the register. 
+            If there is no schema, an exception will be thrown
+        */
+        var_dump('[INFO] Getting Schema from register..');
+        $schema = $register->get('_schema');
+    } catch (Exception $e) {
+        var_dump('[INFO] Exception, Schema not present. Generating Schema');
+        $schema = GraphQLBuilder::buildSchema($utopia, $response, $request);
+        $register->set('_schema', function () use ($schema){ // Register cache connection
+            return $schema;
+        });
+    }
+
+    return $schema;
+}, ['utopia', 'response', 'request', 'register']);

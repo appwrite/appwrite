@@ -33,6 +33,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     /** @var bool $mode */
     /** @var array $clients */
 
+
     $localeParam = (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
 
     if (\in_array($localeParam, Config::getParam('locale-codes'))) {
@@ -40,6 +41,8 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     };
 
     $route = $utopia->match($request);
+
+    var_dump("*********** In general.php init with route {$route->getURL()} *************");
 
     if (!empty($route->getLabel('sdk.platform', [])) && empty($project->getId()) && ($route->getLabel('scope', '') !== 'public')) {
         throw new Exception('Missing or unknown project ID', 400);
@@ -167,7 +170,9 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     $scopes = $roles[$role]['scopes']; // Allowed scopes for user role
 
     $authKey = $request->getHeader('x-appwrite-key', '');
-
+    var_dump("***** AUTH KEY ******");
+    
+    var_dump($authKey);
     if (!empty($authKey)) { // API Key authentication
         // Check if given key match project API keys
         $key = $project->search('secret', $authKey, $project->getAttribute('keys', []));
@@ -210,6 +215,10 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
 
     // TDOO Check if user is god
 
+    // var_dump("*********** Allowed Scopes *********");
+    // var_dump($scopes);
+    // var_dump($scope);
+
     if (!\in_array($scope, $scopes)) {
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) { // Check if permission is denied because project is missing
             throw new Exception('Project not found', 404);
@@ -251,6 +260,8 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\View $layout */
     /** @var Appwrite\Database\Document $project */
+
+    var_dump("*********** In general.php error *************");
 
     $route = $utopia->match($request);
     $template = ($route) ? $route->getLabel('error', null) : null;

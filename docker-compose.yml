@@ -63,7 +63,7 @@ services:
       - ./psalm.xml:/usr/src/code/psalm.xml
       - ./tests:/usr/src/code/tests
       - ./app:/usr/src/code/app
-      # - ./vendor:/usr/src/code/vendor
+      - ./vendor:/usr/src/code/vendor
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
@@ -522,6 +522,14 @@ services:
   #     - '3001:80'
   
   # Dev Tools End   ------------------------------------------------------------------------------------------
+
+  graphiql:
+    container_name: graphiql
+    ports:
+        - '9506:4000'
+    environment:
+        - API_URL=http://localhost/v1/graphql
+    image: npalm/graphiql
 
 networks:
   gateway:

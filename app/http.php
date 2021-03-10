@@ -81,6 +81,8 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
 
+    var_dump($swooleRequest->header);
+
     if(Files::isFileLoaded($request->getURI())) {
         $time = (60 * 60 * 24 * 365 * 2); // 45 days cache
 
@@ -99,9 +101,11 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     try {
         Authorization::cleanRoles();
         Authorization::setRole('*');
-
+        var_dump("******* Running App ******* ");
+        
         $app->run($request, $response);
     } catch (\Throwable $th) {
+        var_dump("*********** In http.php catching error  *************");
         Console::error('[Error] Type: '.get_class($th));
         Console::error('[Error] Message: '.$th->getMessage());
         Console::error('[Error] File: '.$th->getFile());
