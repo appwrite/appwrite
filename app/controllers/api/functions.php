@@ -735,12 +735,12 @@ App::post('/v1/functions/:functionId/executions')
         if (false === $execution) {
             throw new Exception('Failed saving execution to DB', 500);
         }
-
+        
+        $jwt = ''; // initialize
         if (!empty($user->getId())) { // If userId exists, generate a JWT for function
             
             $tokens = $user->getAttribute('tokens', []);
             $session = new Document();
-            $jwt = '';
 
             foreach ($tokens as $token) { /** @var Appwrite\Database\Document $token */
                 if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
@@ -749,8 +749,8 @@ App::post('/v1/functions/:functionId/executions')
             }
 
             if(!$session->isEmpty()) {
-                $newjwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
-                $jwt = $newjwt->encode([
+                $jwtObj = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+                $jwt = $jwtObj->encode([
                     'userId' => $user->getId(),
                     'sessionId' => $session->getId(),
                 ]);
