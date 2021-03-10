@@ -61,8 +61,10 @@ App::post('/v1/graphql')
     ->inject('request')
     ->inject('response')
     ->inject('schema')
+    ->inject('utopia')
+    ->inject('register')
     ->middleware(false) 
-    ->action(function ($request, $response, $schema) {
+    ->action(function ($request, $response, $schema, $utopia, $register) {
 
         // $myErrorFormatter = function(Error $error) {
         //     $formattedError = FormattedError::createFromException($error); 
@@ -73,6 +75,12 @@ App::post('/v1/graphql')
         $query = $request->getPayload('query', '');
         $variables = $request->getPayload('variables', null);
         $response->setContentType(Response::CONTENT_TYPE_NULL);
+        $register->set('__app', function() use ($utopia) {
+            return $utopia;
+        });
+        $register->set('__response', function() use ($response) {
+            return $response;
+        });
 
         try {
             $rootValue = [];

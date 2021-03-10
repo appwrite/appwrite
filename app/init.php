@@ -516,7 +516,7 @@ App::setResource('schema', function($utopia, $response, $request, $register) {
         $schema = $register->get('_schema');
     } catch (Exception $e) {
         var_dump('[INFO] Exception, Schema not present. Generating Schema');
-        $schema = GraphQLBuilder::buildSchema($utopia, $response, $request);
+        $schema = GraphQLBuilder::buildSchema($utopia, $response, $register);
         $register->set('_schema', function () use ($schema){ // Register cache connection
             return $schema;
         });

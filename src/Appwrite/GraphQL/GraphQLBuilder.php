@@ -196,7 +196,7 @@ class GraphQLBuilder {
         return true;
     }
 
-    public static function buildSchema($utopia, $response) {
+    public static function buildSchema($utopia, $response, $register) {
         
         self::init();
 
@@ -228,14 +228,16 @@ class GraphQLBuilder {
                             'type' => $type,
                             'description' => $route->getDesc(), 
                             'args' => $args,
-                            'resolve' => function ($type, $args, $context, $info) use (&$utopia, $route, $response) {
+                            'resolve' => function ($type, $args, $context, $info) use (&$register, $route) {
                                 // var_dump("************* REACHED RESOLVE FOR  {$info->fieldName} *****************");
                                 // var_dump($route);
                                 // var_dump("************* CONTEXT *****************");
                                 // var_dump($context);
                                 // var_dump("********************** ARGS *******************");
                                 // var_dump($args);
-    
+                                
+                                $utopia = $register->get('__app');
+                                $response = $register->get('__response');
                                 $utopia->setRoute($route);
                                 $utopia->execute($route, $args);
                                 
