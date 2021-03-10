@@ -1,5 +1,7 @@
 <?php
 
+use Ahc\Jwt\JWT;
+use Appwrite\Auth\Auth;
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
@@ -747,7 +749,11 @@ App::post('/v1/functions/:functionId/executions')
             }
 
             if(!$session->isEmpty()) {
-                $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+                $newjwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+                $jwt = $newjwt->encode([
+                    'userId' => $user->getId(),
+                    'sessionId' => $session->getId(),
+                ]);
             }
         }
 
