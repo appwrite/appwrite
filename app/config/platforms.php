@@ -32,7 +32,7 @@ return [
             [
                 'key' => 'flutter',
                 'name' => 'Flutter',
-                'version' => '0.3.0',
+                'version' => '0.4.0-dev.2',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter',
                 'package' => 'https://pub.dev/packages/appwrite',
                 'enabled' => true,
@@ -165,7 +165,7 @@ return [
             [
                 'key' => 'deno',
                 'name' => 'Deno',
-                'version' => '0.1.0',
+                'version' => '0.1.1',
                 'url' => 'https://github.com/appwrite/sdk-for-deno',
                 'package' => 'https://deno.land/x/appwrite',
                 'enabled' => true,
@@ -199,7 +199,7 @@ return [
             [
                 'key' => 'python',
                 'name' => 'Python',
-                'version' => '0.1.0',
+                'version' => '0.1.1',
                 'url' => 'https://github.com/appwrite/sdk-for-python',
                 'package' => 'https://pypi.org/project/appwrite/',
                 'enabled' => true,
@@ -216,7 +216,7 @@ return [
             [
                 'key' => 'ruby',
                 'name' => 'Ruby',
-                'version' => '2.0.0',
+                'version' => '2.0.2',
                 'url' => 'https://github.com/appwrite/sdk-for-ruby',
                 'package' => 'https://rubygems.org/gems/appwrite',
                 'enabled' => true,
@@ -284,12 +284,12 @@ return [
             [
                 'key' => 'dart',
                 'name' => 'Dart',
-                'version' => '0.2.0',
+                'version' => '0.4.0',
                 'url' => 'https://github.com/appwrite/sdk-for-dart',
                 'package' => 'https://pub.dev/packages/dart_appwrite',
                 'enabled' => true,
                 'beta' => true,
-                'dev' => true,
+                'dev' => false,
                 'hidden' => false,
                 'family' => APP_PLATFORM_SERVER,
                 'prism' => 'dart',
@@ -301,7 +301,7 @@ return [
             [
                 'key' => 'cli',
                 'name' => 'Command Line',
-                'version' => '0.5.0',
+                'version' => '0.6.0',
                 'url' => 'https://github.com/appwrite/sdk-for-cli',
                 'package' => 'https://github.com/appwrite/sdk-for-cli',
                 'enabled' => true,

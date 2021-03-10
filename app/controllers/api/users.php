@@ -207,8 +207,8 @@ App::get('/v1/users/:userId/sessions')
                 continue;
             }
 
-            $token->setAttribute('countryName', (isset($countries[$token->getAttribute('contryCode')]))
-                ? $countries[$token->getAttribute('contryCode')]
+            $token->setAttribute('countryName', (isset($countries[strtoupper($token->getAttribute('contryCode'))]))
+                ? $countries[strtoupper($token->getAttribute('contryCode'))]
                 : $locale->getText('locale.country.unknown'));
             $token->setAttribute('current', false);
 
