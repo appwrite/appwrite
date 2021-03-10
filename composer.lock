@@ -4,24 +4,24 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2b47762c56fd4622b111787819f22a9f",
+    "content-hash": "442d6d8b6c76ef7ae5ea26e500af6479",
     "packages": [
         {
             "name": "adhocore/jwt",
-            "version": "1.1.0",
+            "version": "1.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/adhocore/php-jwt.git",
-                "reference": "424a1d66b729a316dd074e6382167765b810cd3d"
+                "reference": "6c434af7170090bb7a8880d2bc220a2254ba7899"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/adhocore/php-jwt/zipball/424a1d66b729a316dd074e6382167765b810cd3d",
-                "reference": "424a1d66b729a316dd074e6382167765b810cd3d",
+                "url": "https://api.github.com/repos/adhocore/php-jwt/zipball/6c434af7170090bb7a8880d2bc220a2254ba7899",
+                "reference": "6c434af7170090bb7a8880d2bc220a2254ba7899",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.0"
+                "php": "^7.0 || ^8.0"
             },
             "require-dev": {
                 "phpunit/phpunit": "^6.5 || ^7.5"
@@ -53,7 +53,7 @@
             ],
             "support": {
                 "issues": "https://github.com/adhocore/php-jwt/issues",
-                "source": "https://github.com/adhocore/php-jwt/tree/1.1.0"
+                "source": "https://github.com/adhocore/php-jwt/tree/1.1.2"
             },
             "funding": [
                 {
@@ -61,7 +61,7 @@
                     "type": "custom"
                 }
             ],
-            "time": "2020-10-09T00:34:35+00:00"
+            "time": "2021-02-20T09:56:44+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -298,83 +298,31 @@
             "time": "2020-11-06T16:09:14+00:00"
         },
         {
-            "name": "domnikl/statsd",
-            "version": "3.0.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/domnikl/statsd-php.git",
-                "reference": "393c6565efbfb23c8296ae3099a62fb6366c6ce3"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/domnikl/statsd-php/zipball/393c6565efbfb23c8296ae3099a62fb6366c6ce3",
-                "reference": "393c6565efbfb23c8296ae3099a62fb6366c6ce3",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">= 7.2"
-            },
-            "require-dev": {
-                "flyeralarm/php-code-validator": "^2.2",
-                "phpunit/phpunit": "~8.0",
-                "vimeo/psalm": "^3.4"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Domnikl\\Statsd\\": "src/",
-                    "Domnikl\\Test\\Statsd\\": "tests/unit"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Dominik Liebler",
-                    "email": "liebler.dominik@gmail.com"
-                }
-            ],
-            "description": "a PHP client for statsd",
-            "homepage": "https://domnikl.github.com/statsd-php",
-            "keywords": [
-                "Metrics",
-                "monitoring",
-                "statistics",
-                "statsd",
-                "udp"
-            ],
-            "support": {
-                "issues": "https://github.com/domnikl/statsd-php/issues",
-                "source": "https://github.com/domnikl/statsd-php/tree/master"
-            },
-            "abandoned": "slickdeals/statsd",
-            "time": "2020-01-03T14:24:58+00:00"
-        },
-        {
             "name": "dragonmantank/cron-expression",
-            "version": "3.0.1",
+            "version": "v3.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/dragonmantank/cron-expression.git",
-                "reference": "fa4e95ff5a7f1d62c3fbc05c32729b7f3ca14b52"
+                "reference": "7a8c6e56ab3ffcc538d05e8155bb42269abf1a0c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dragonmantank/cron-expression/zipball/fa4e95ff5a7f1d62c3fbc05c32729b7f3ca14b52",
-                "reference": "fa4e95ff5a7f1d62c3fbc05c32729b7f3ca14b52",
+                "url": "https://api.github.com/repos/dragonmantank/cron-expression/zipball/7a8c6e56ab3ffcc538d05e8155bb42269abf1a0c",
+                "reference": "7a8c6e56ab3ffcc538d05e8155bb42269abf1a0c",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.1"
+                "php": "^7.2|^8.0",
+                "webmozart/assert": "^1.7.0"
             },
             "replace": {
                 "mtdowling/cron-expression": "^1.0"
             },
             "require-dev": {
-                "phpstan/phpstan": "^0.11",
-                "phpunit/phpunit": "^6.4|^7.0"
+                "phpstan/extension-installer": "^1.0",
+                "phpstan/phpstan": "^0.12",
+                "phpstan/phpstan-webmozart-assert": "^0.12.7",
+                "phpunit/phpunit": "^7.0|^8.0|^9.0"
             },
             "type": "library",
             "autoload": {
@@ -400,7 +348,7 @@
             ],
             "support": {
                 "issues": "https://github.com/dragonmantank/cron-expression/issues",
-                "source": "https://github.com/dragonmantank/cron-expression/tree/3.0.1"
+                "source": "https://github.com/dragonmantank/cron-expression/tree/v3.1.0"
             },
             "funding": [
                 {
@@ -408,7 +356,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2020-08-21T02:30:13+00:00"
+            "time": "2020-11-24T19:55:57+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
@@ -645,24 +593,25 @@
         },
         {
             "name": "influxdb/influxdb-php",
-            "version": "1.15.1",
+            "version": "1.15.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/influxdata/influxdb-php.git",
-                "reference": "447acb600969f9510c9f1900a76d442fc3537b0e"
+                "reference": "d6e59f4f04ab9107574fda69c2cbe36671253d03"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/influxdata/influxdb-php/zipball/447acb600969f9510c9f1900a76d442fc3537b0e",
-                "reference": "447acb600969f9510c9f1900a76d442fc3537b0e",
+                "url": "https://api.github.com/repos/influxdata/influxdb-php/zipball/d6e59f4f04ab9107574fda69c2cbe36671253d03",
+                "reference": "d6e59f4f04ab9107574fda69c2cbe36671253d03",
                 "shasum": ""
             },
             "require": {
                 "guzzlehttp/guzzle": "^6.0|^7.0",
-                "php": "^5.5 || ^7.0"
+                "php": "^5.5 || ^7.0 || ^8.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^5.7"
+                "dms/phpunit-arraysubset-asserts": "^0.2.1",
+                "phpunit/phpunit": "^9.5"
             },
             "suggest": {
                 "ext-curl": "Curl extension, needed for Curl driver",
@@ -704,34 +653,39 @@
             ],
             "support": {
                 "issues": "https://github.com/influxdata/influxdb-php/issues",
-                "source": "https://github.com/influxdata/influxdb-php/tree/1.15.1"
+                "source": "https://github.com/influxdata/influxdb-php/tree/1.15.2"
             },
-            "time": "2020-09-18T13:24:03+00:00"
+            "time": "2020-12-26T17:45:17+00:00"
         },
         {
             "name": "matomo/device-detector",
-            "version": "3.13.0",
+            "version": "4.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/matomo-org/device-detector.git",
-                "reference": "75ca5b690e38c40d199ade93e677bc5d7c3bc498"
+                "reference": "6b3facc35e7a465bc4223fddfa5fa88c5b327554"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/75ca5b690e38c40d199ade93e677bc5d7c3bc498",
-                "reference": "75ca5b690e38c40d199ade93e677bc5d7c3bc498",
+                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/6b3facc35e7a465bc4223fddfa5fa88c5b327554",
+                "reference": "6b3facc35e7a465bc4223fddfa5fa88c5b327554",
                 "shasum": ""
             },
             "require": {
                 "mustangostang/spyc": "*",
-                "php": ">=5.5"
+                "php": ">=7.2"
+            },
+            "replace": {
+                "piwik/device-detector": "self.version"
             },
             "require-dev": {
-                "fabpot/php-cs-fixer": "~1.7",
-                "matthiasmullie/scrapbook": "@stable",
-                "phpunit/phpunit": "^4.8.36",
-                "psr/cache": "^1.0",
-                "psr/simple-cache": "^1.0"
+                "matthiasmullie/scrapbook": "^1.4.7",
+                "mayflower/mo4-coding-standard": "dev-master#275cb9d",
+                "phpstan/phpstan": "^0.12.52",
+                "phpunit/phpunit": "^8.5.8",
+                "psr/cache": "^1.0.1",
+                "psr/simple-cache": "^1.0.1",
+                "symfony/yaml": "^5.1.7"
             },
             "suggest": {
                 "doctrine/cache": "Can directly be used for caching purpose",
@@ -741,7 +695,10 @@
             "autoload": {
                 "psr-4": {
                     "DeviceDetector\\": ""
-                }
+                },
+                "exclude-from-classmap": [
+                    "Tests/"
+                ]
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
@@ -767,7 +724,7 @@
                 "source": "https://github.com/matomo-org/piwik",
                 "wiki": "https://dev.matomo.org/"
             },
-            "time": "2020-08-17T07:37:33+00:00"
+            "time": "2021-01-08T14:14:55+00:00"
         },
         {
             "name": "mustangostang/spyc",
@@ -821,27 +778,31 @@
         },
         {
             "name": "phpmailer/phpmailer",
-            "version": "v6.1.7",
+            "version": "v6.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPMailer/PHPMailer.git",
-                "reference": "2c2370ba3df7034f9eb7b8f387c97b52b2ba5ad0"
+                "reference": "4a08cf4cdd2c38d12ee2b9fa69e5d235f37a6dcb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/2c2370ba3df7034f9eb7b8f387c97b52b2ba5ad0",
-                "reference": "2c2370ba3df7034f9eb7b8f387c97b52b2ba5ad0",
+                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/4a08cf4cdd2c38d12ee2b9fa69e5d235f37a6dcb",
+                "reference": "4a08cf4cdd2c38d12ee2b9fa69e5d235f37a6dcb",
                 "shasum": ""
             },
             "require": {
                 "ext-ctype": "*",
                 "ext-filter": "*",
+                "ext-hash": "*",
                 "php": ">=5.5.0"
             },
             "require-dev": {
+                "dealerdirect/phpcodesniffer-composer-installer": "^0.7.0",
                 "doctrine/annotations": "^1.2",
-                "friendsofphp/php-cs-fixer": "^2.2",
-                "phpunit/phpunit": "^4.8 || ^5.7"
+                "phpcompatibility/php-compatibility": "^9.3.5",
+                "roave/security-advisories": "dev-latest",
+                "squizlabs/php_codesniffer": "^3.5.6",
+                "yoast/phpunit-polyfills": "^0.2.0"
             },
             "suggest": {
                 "ext-mbstring": "Needed to send email in multibyte encoding charset",
@@ -881,15 +842,15 @@
             "description": "PHPMailer is a full-featured email creation and transfer class for PHP",
             "support": {
                 "issues": "https://github.com/PHPMailer/PHPMailer/issues",
-                "source": "https://github.com/PHPMailer/PHPMailer/tree/v6.1.7"
+                "source": "https://github.com/PHPMailer/PHPMailer/tree/v6.3.0"
             },
             "funding": [
                 {
-                    "url": "https://github.com/synchro",
+                    "url": "https://github.com/Synchro",
                     "type": "github"
                 }
             ],
-            "time": "2020-07-14T18:50:27+00:00"
+            "time": "2021-02-19T15:28:08+00:00"
         },
         {
             "name": "psr/http-client",
@@ -1177,6 +1138,139 @@
             "time": "2020-04-16T16:39:50+00:00"
         },
         {
+            "name": "slickdeals/statsd",
+            "version": "3.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Slickdeals/statsd-php.git",
+                "reference": "393c6565efbfb23c8296ae3099a62fb6366c6ce3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Slickdeals/statsd-php/zipball/393c6565efbfb23c8296ae3099a62fb6366c6ce3",
+                "reference": "393c6565efbfb23c8296ae3099a62fb6366c6ce3",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">= 7.2"
+            },
+            "require-dev": {
+                "flyeralarm/php-code-validator": "^2.2",
+                "phpunit/phpunit": "~8.0",
+                "vimeo/psalm": "^3.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Domnikl\\Statsd\\": "src/",
+                    "Domnikl\\Test\\Statsd\\": "tests/unit"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Dominik Liebler",
+                    "email": "liebler.dominik@gmail.com"
+                }
+            ],
+            "description": "a PHP client for statsd",
+            "homepage": "https://domnikl.github.com/statsd-php",
+            "keywords": [
+                "Metrics",
+                "monitoring",
+                "statistics",
+                "statsd",
+                "udp"
+            ],
+            "support": {
+                "source": "https://github.com/Slickdeals/statsd-php/tree/3.0.2"
+            },
+            "time": "2020-01-03T14:24:58+00:00"
+        },
+        {
+            "name": "symfony/polyfill-ctype",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/polyfill-ctype.git",
+                "reference": "c6c942b1ac76c82448322025e084cadc56048b4e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/polyfill-ctype/zipball/c6c942b1ac76c82448322025e084cadc56048b4e",
+                "reference": "c6c942b1ac76c82448322025e084cadc56048b4e",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "suggest": {
+                "ext-ctype": "For best performance"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "1.22-dev"
+                },
+                "thanks": {
+                    "name": "symfony/polyfill",
+                    "url": "https://github.com/symfony/polyfill"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Polyfill\\Ctype\\": ""
+                },
+                "files": [
+                    "bootstrap.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Gert de Pagter",
+                    "email": "BackEndTea@gmail.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony polyfill for ctype functions",
+            "homepage": "https://symfony.com",
+            "keywords": [
+                "compatibility",
+                "ctype",
+                "polyfill",
+                "portable"
+            ],
+            "support": {
+                "source": "https://github.com/symfony/polyfill-ctype/tree/v1.22.1"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2021-01-07T16:49:33+00:00"
+        },
+        {
             "name": "utopia-php/abuse",
             "version": "0.3.1",
             "source": {
@@ -1389,16 +1483,16 @@
         },
         {
             "name": "utopia-php/cli",
-            "version": "0.9.0",
+            "version": "0.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "a83f8b5f57022e0d1c50913f1b1ab4f8f087dceb"
+                "reference": "69ae40187fb4b68ef14f0224a68d9cc016b83634"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/a83f8b5f57022e0d1c50913f1b1ab4f8f087dceb",
-                "reference": "a83f8b5f57022e0d1c50913f1b1ab4f8f087dceb",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/69ae40187fb4b68ef14f0224a68d9cc016b83634",
+                "reference": "69ae40187fb4b68ef14f0224a68d9cc016b83634",
                 "shasum": ""
             },
             "require": {
@@ -1436,9 +1530,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cli/issues",
-                "source": "https://github.com/utopia-php/cli/tree/0.9.0"
+                "source": "https://github.com/utopia-php/cli/tree/0.10.0"
             },
-            "time": "2021-01-19T20:00:02+00:00"
+            "time": "2021-01-26T16:35:15+00:00"
         },
         {
             "name": "utopia-php/config",
@@ -1594,6 +1688,59 @@
                 "source": "https://github.com/utopia-php/framework/tree/0.10.0"
             },
             "time": "2020-12-26T12:02:39+00:00"
+        },
+        {
+            "name": "utopia-php/image",
+            "version": "0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/image.git",
+                "reference": "66e38db211b1d6fe93de09d82606641e0f996e42"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/image/zipball/66e38db211b1d6fe93de09d82606641e0f996e42",
+                "reference": "66e38db211b1d6fe93de09d82606641e0f996e42",
+                "shasum": ""
+            },
+            "require": {
+                "chillerlan/php-qrcode": "4.3.0",
+                "ext-imagick": "*",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.3",
+                "vimeo/psalm": "4.0.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Image\\": "src/Image"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "eldad@appwrite.io"
+                }
+            ],
+            "description": "A simple Image manipulation library",
+            "keywords": [
+                "framework",
+                "image",
+                "php",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/image/issues",
+                "source": "https://github.com/utopia-php/image/tree/0.1.0"
+            },
+            "time": "2021-02-19T05:09:46+00:00"
         },
         {
             "name": "utopia-php/locale",
@@ -1753,21 +1900,21 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.2.0",
+            "version": "0.4.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "27bfd663c9b2a17ac0911522a87f42bee834df95"
+                "reference": "9db3ab713a6d392c3c2c799aeea751f6c8dc2ff7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/27bfd663c9b2a17ac0911522a87f42bee834df95",
-                "reference": "27bfd663c9b2a17ac0911522a87f42bee834df95",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/9db3ab713a6d392c3c2c799aeea751f6c8dc2ff7",
+                "reference": "9db3ab713a6d392c3c2c799aeea751f6c8dc2ff7",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.4",
-                "utopia-php/framework": "0.10.0"
+                "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -1799,9 +1946,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.2.0"
+                "source": "https://github.com/utopia-php/storage/tree/0.4.3"
             },
-            "time": "2021-01-27T12:21:27+00:00"
+            "time": "2021-03-02T20:25:02+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -1913,6 +2060,65 @@
                 "source": "https://github.com/utopia-php/system/tree/0.4.0"
             },
             "time": "2021-02-04T14:14:49+00:00"
+        },
+        {
+            "name": "webmozart/assert",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/webmozarts/assert.git",
+                "reference": "4631e2c7d2d7132adac9fd84d4c1a98c10a6e049"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/webmozarts/assert/zipball/4631e2c7d2d7132adac9fd84d4c1a98c10a6e049",
+                "reference": "4631e2c7d2d7132adac9fd84d4c1a98c10a6e049",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.2 || ^8.0",
+                "symfony/polyfill-ctype": "^1.8"
+            },
+            "conflict": {
+                "phpstan/phpstan": "<0.12.20",
+                "vimeo/psalm": "<3.9.1"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^8.5.13"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.10-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Webmozart\\Assert\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Bernhard Schussek",
+                    "email": "bschussek@gmail.com"
+                }
+            ],
+            "description": "Assertions to validate method input/output with nice error messages.",
+            "keywords": [
+                "assert",
+                "check",
+                "validate"
+            ],
+            "support": {
+                "issues": "https://github.com/webmozarts/assert/issues",
+                "source": "https://github.com/webmozarts/assert/tree/master"
+            },
+            "time": "2021-02-28T20:01:57+00:00"
         }
     ],
     "packages-dev": [
@@ -4825,86 +5031,6 @@
             "time": "2021-03-08T21:52:55+00:00"
         },
         {
-            "name": "symfony/polyfill-ctype",
-            "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/symfony/polyfill-ctype.git",
-                "reference": "c6c942b1ac76c82448322025e084cadc56048b4e"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-ctype/zipball/c6c942b1ac76c82448322025e084cadc56048b4e",
-                "reference": "c6c942b1ac76c82448322025e084cadc56048b4e",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.1"
-            },
-            "suggest": {
-                "ext-ctype": "For best performance"
-            },
-            "default-branch": true,
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-main": "1.22-dev"
-                },
-                "thanks": {
-                    "name": "symfony/polyfill",
-                    "url": "https://github.com/symfony/polyfill"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Symfony\\Polyfill\\Ctype\\": ""
-                },
-                "files": [
-                    "bootstrap.php"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Gert de Pagter",
-                    "email": "BackEndTea@gmail.com"
-                },
-                {
-                    "name": "Symfony Community",
-                    "homepage": "https://symfony.com/contributors"
-                }
-            ],
-            "description": "Symfony polyfill for ctype functions",
-            "homepage": "https://symfony.com",
-            "keywords": [
-                "compatibility",
-                "ctype",
-                "polyfill",
-                "portable"
-            ],
-            "support": {
-                "source": "https://github.com/symfony/polyfill-ctype/tree/v1.22.1"
-            },
-            "funding": [
-                {
-                    "url": "https://symfony.com/sponsor",
-                    "type": "custom"
-                },
-                {
-                    "url": "https://github.com/fabpot",
-                    "type": "github"
-                },
-                {
-                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
-                    "type": "tidelift"
-                }
-            ],
-            "time": "2021-01-07T16:49:33+00:00"
-        },
-        {
             "name": "symfony/polyfill-intl-grapheme",
             "version": "dev-main",
             "source": {
@@ -5713,59 +5839,6 @@
                 "source": "https://github.com/vimeo/psalm/tree/4.1.1"
             },
             "time": "2020-11-02T05:54:12+00:00"
-        },
-        {
-            "name": "webmozart/assert",
-            "version": "1.9.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/webmozarts/assert.git",
-                "reference": "bafc69caeb4d49c39fd0779086c03a3738cbb389"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/webmozarts/assert/zipball/bafc69caeb4d49c39fd0779086c03a3738cbb389",
-                "reference": "bafc69caeb4d49c39fd0779086c03a3738cbb389",
-                "shasum": ""
-            },
-            "require": {
-                "php": "^5.3.3 || ^7.0 || ^8.0",
-                "symfony/polyfill-ctype": "^1.8"
-            },
-            "conflict": {
-                "phpstan/phpstan": "<0.12.20",
-                "vimeo/psalm": "<3.9.1"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^4.8.36 || ^7.5.13"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Webmozart\\Assert\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Bernhard Schussek",
-                    "email": "bschussek@gmail.com"
-                }
-            ],
-            "description": "Assertions to validate method input/output with nice error messages.",
-            "keywords": [
-                "assert",
-                "check",
-                "validate"
-            ],
-            "support": {
-                "issues": "https://github.com/webmozarts/assert/issues",
-                "source": "https://github.com/webmozarts/assert/tree/1.9.1"
-            },
-            "time": "2020-07-08T17:02:28+00:00"
         },
         {
             "name": "webmozart/path-util",

@@ -54,7 +54,7 @@
                                 <input type="radio" name="selected" data-ls-attrs="value={{file.$id}}" data-ls-bind="{{search.selected}}" />
                             </td>
                             <td data-title="x" class="">
-                                <img src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="pull-start avatar" width="30" height="30" loading="lazy" />
+                                <img src="" data-ls-attrs="src={{env.ENDPOINT}}/v1/storage/files/{{file.$id}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="pull-start avatar" width="30" height="30" loading="lazy" />
                             </td>
                             <td data-title="Name: " class="text-one-liner">
                                 <span data-ls-bind="{{file.name}}" data-ls-attrs="title={{file.name}}" class="text-fade text-size-small"></span>
@@ -64,6 +64,7 @@
                             </td>
                             <td data-title="Size: ">
                                 <span class="text-fade text-size-small" data-ls-bind="{{file.sizeOriginal|humanFileSize}}"></span>
+                                <span class="text-fade text-size-small" data-ls-bind="{{file.sizeOriginal|humanFileUnit}}"></span>
                             </td>
                             <td data-title="Created: ">
                                 <span class="text-fade text-size-small" data-ls-bind="{{file.dateCreated|dateText}}"></span>

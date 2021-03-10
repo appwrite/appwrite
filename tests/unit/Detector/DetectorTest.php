@@ -38,7 +38,7 @@ class DetectorTest extends TestCase
             'clientName' => 'Firefox',
             'clientVersion' => '47.0',
             'clientEngine' => 'Gecko',
-            'clientEngineVersion' => '',
+            'clientEngineVersion' => '47.0',
         ]);
     }
 

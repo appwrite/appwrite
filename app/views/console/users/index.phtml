@@ -361,7 +361,7 @@ $providers = $this->getParam('providers', []);
                                             <p>To complete set up, add this OAuth2 redirect URI to your <?php echo $this->escape(ucfirst($provider)); ?> app configuration.</p>
 
                                             <div class="input-copy">
-                                                <input data-forms-copy type="text" disabled data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/v1/account/sessions/oauth2/callback/<?php echo $this->escape($provider); ?>/{{router.params.project}}" class="margin-bottom-no" />
+                                                <input data-forms-copy type="text" disabled data-ls-bind="{{env.ENDPOINT}}/v1/account/sessions/oauth2/callback/<?php echo $this->escape($provider); ?>/{{router.params.project}}" class="margin-bottom-no" />
                                             </div>
                                         </div>
                                     </div>
