@@ -343,6 +343,37 @@ class FunctionsCustomServerTest extends Scope
     /**
      * @depends testCreateExecution
      */
+    public function testCreateCustomExecution($data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$data['functionId'].'/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => 'foobar',
+        ]);
+
+        print_r($execution);
+        $executionId = $execution['body']['$id'] ?? '';
+
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertNotEmpty($execution['body']['$id']);
+        $this->assertNotEmpty($execution['body']['functionId']);
+        $this->assertIsInt($execution['body']['dateCreated']);
+        $this->assertEquals($data['functionId'], $execution['body']['functionId']);
+        $this->assertEquals('waiting', $execution['body']['status']);
+        $this->assertEquals(0, $execution['body']['exitCode']);
+        $this->assertEquals('', $execution['body']['stdout']);
+        $this->assertEquals('', $execution['body']['stderr']);
+        $this->assertEquals(0, $execution['body']['time']);
+        $this->assertStringContainsString('foobar', $execution['body']['stdout']);
+
+    }
+    /**
+     * @depends testCreateCustomExecution
+     */
     public function testListExecutions(array $data):array
     {
         /**
