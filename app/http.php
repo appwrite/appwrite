@@ -15,6 +15,24 @@ use Utopia\CLI\Console;
 
 // xdebug_start_trace('/tmp/trace');
 
+Files::load(__DIR__ . '/../public');
+
+include __DIR__ . '/controllers/general.php';
+
+$domain = App::getEnv('_APP_DOMAIN', '');
+
+Console::info('Issuing a TLS certificate for the master domain ('.$domain.') in 30 seconds.
+    Make sure your domain points to your server IP or restart your Appwrite server to try again.'); // TODO move this to installation script
+
+ResqueScheduler::enqueueAt(\time() + 30, 'v1-certificates', 'CertificatesV1', [
+    'document' => [],
+    'domain' => $domain,
+    'validateTarget' => false,
+    'validateCNAME' => false,
+]);
+
+Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
 $payloadSize = max(4000000 /* 4mb */, App::getEnv('_APP_STORAGE_LIMIT', 10000000 /* 10mb */));
@@ -54,22 +72,6 @@ $http->on('start', function (Server $http) use ($payloadSize) {
         $http->shutdown();
     });
 });
-
-Files::load(__DIR__ . '/../public');
-
-include __DIR__ . '/controllers/general.php';
-
-$domain = App::getEnv('_APP_DOMAIN', '');
-
-Console::info('Issuing a TLS certificate for the master domain ('.$domain.') in 30 seconds.
-    Make sure your domain points to your server IP or restart your Appwrite server to try again.'); // TODO move this to installation script
-
-ResqueScheduler::enqueueAt(\time() + 30, 'v1-certificates', 'CertificatesV1', [
-    'document' => [],
-    'domain' => $domain,
-    'validateTarget' => false,
-    'validateCNAME' => false,
-]);
 
 $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) {
     $request = new Request($swooleRequest);

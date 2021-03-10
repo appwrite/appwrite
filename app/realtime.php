@@ -27,6 +27,20 @@ use Utopia\Abuse\Adapters\TimeLimit;
 
 Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
+$register->set('db', function () use ($register) {
+    $pool = $register->get('dbPool');
+    $pdo = $pool->get()->__getObject();
+
+    return $pdo;
+}, true);
+
+$register->set('cache', function () use ($register) { // Register cache connection
+    $redis = $register->get('redisPool')->get();
+    $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
+
+    return $redis;
+}, true);
+
 $server = new Server('0.0.0.0', 80);
 
 $server->set([

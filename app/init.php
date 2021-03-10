@@ -36,7 +36,6 @@ use Utopia\Registry\Registry;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use PDO as PDONative;
-use Swoole\Runtime;
 use Swoole\Database\PDOConfig;
 use Swoole\Database\PDOPool;
 use Swoole\Database\RedisConfig;
@@ -161,7 +160,9 @@ $register->set('dbPool', function () { // Register DB connection
         ->withOptions([
             PDONative::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
             PDONative::ATTR_TIMEOUT => 3, // Seconds
-            PDONative::ATTR_PERSISTENT => true
+            PDONative::ATTR_PERSISTENT => true,
+            PDONative::ATTR_DEFAULT_FETCH_MODE => PDONative::FETCH_ASSOC,
+            PDONative::ATTR_ERRMODE => PDONative::ERRMODE_EXCEPTION,
         ]);
 
     $pool = new PDOPool($config);
@@ -169,15 +170,21 @@ $register->set('dbPool', function () { // Register DB connection
     return $pool;
 });
 $register->set('db', function () use ($register) {
-    $pool = $register->get('dbPool');
-    $pdo = $pool->get()->__getObject();
+    $dbHost = App::getEnv('_APP_DB_HOST', '');
+    $dbUser = App::getEnv('_APP_DB_USER', '');
+    $dbPass = App::getEnv('_APP_DB_PASS', '');
+    $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
 
-    // Connection settings
-    $pdo->setAttribute(PDONative::ATTR_DEFAULT_FETCH_MODE, PDONative::FETCH_ASSOC);   // Return arrays
-    $pdo->setAttribute(PDONative::ATTR_ERRMODE, PDONative::ERRMODE_EXCEPTION);        // Handle all errors with exceptions
+    $pdo = new PDO("mysql:host={$dbHost};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
+        PDONative::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
+        PDONative::ATTR_TIMEOUT => 3, // Seconds
+        PDONative::ATTR_PERSISTENT => true,
+        PDONative::ATTR_DEFAULT_FETCH_MODE => PDONative::FETCH_ASSOC,
+        PDONative::ATTR_ERRMODE => PDONative::ERRMODE_EXCEPTION,
+    ));
 
     return $pdo;
-}, true);
+});
 $register->set('influxdb', function () { // Register DB connection
     $host = App::getEnv('_APP_INFLUXDB_HOST', '');
     $port = App::getEnv('_APP_INFLUXDB_PORT', '');
@@ -223,12 +230,13 @@ $register->set('redisPool', function () {
 
     return $pool;
 });
-$register->set('cache', function () use ($register) { // Register cache connection
-    $redis = $register->get('redisPool')->get();
+$register->set('cache', function () { // Register cache connection
+    $redis = new Redis();
+    $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
     $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
     return $redis;
-}, true);
+});
 $register->set('smtp', function () {
     $mail = new PHPMailer(true);
 

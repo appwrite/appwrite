@@ -18,28 +18,16 @@ abstract class Worker
 
     public function setUp(): void
     {
-        run(function() {
-            Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
-
-            $this->init();
-        });
+        $this->init();
     }
 
     public function perform()
     {
-        run(function() {
-            Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
-
-            $this->execute();
-        });
+        $this->execute();
     }
 
     public function tearDown(): void
     {
-        run(function() {
-            Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
-
-            $this->shutdown();
-        });
+        $this->shutdown();
     }
 }
