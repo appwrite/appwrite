@@ -119,11 +119,11 @@ $server->on('start', function (Server $server) {
 });
 
 $server->on('open', function (Server $server, Request $request) use (&$connections, &$subscriptions, &$register) {
-    Console::info("Connection open (user: {$request->fd}, connections: {}, worker: {$server->getWorkerId()})");
-
     $app = new App('');
     $connection = $request->fd;
     $request = new SwooleRequest($request);
+
+    Console::info("Connection open (user: {$connection}, worker: {$server->getWorkerId()})");
 
     App::setResource('request', function () use ($request) {
         return $request;
@@ -152,8 +152,10 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
 
         /*
         * Abuse Check
+        *
+        * Abuse limits are connecting 128 times per minute and ip address.
         */
-        $timeLimit = new TimeLimit('url:{url},ip:{ip}', 60, 60, function () use ($register) {
+        $timeLimit = new TimeLimit('url:{url},ip:{ip}', 128, 60, function () use ($register) {
             return $register->get('db');
         });
         $timeLimit
@@ -209,9 +211,9 @@ $server->on('message', function (Server $server, Frame $frame) {
     $server->close($frame->fd);
 });
 
-$server->on('close', function (Server $server, int $fd) use (&$connections, &$subscriptions) {
-    Realtime::unsubscribe($fd, $subscriptions, $connections);
-    Console::info('Connection close: ' . $fd);
+$server->on('close', function (Server $server, int $connection) use (&$connections, &$subscriptions) {
+    Realtime::unsubscribe($connection, $subscriptions, $connections);
+    Console::info('Connection close: ' . $connection);
 });
 
 $server->start();

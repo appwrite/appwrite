@@ -33,17 +33,6 @@ App::get('/v1/health/version')
         $response->json(['version' => APP_VERSION_STABLE]);
     });
 
-App::get('/v1/health/realtime')
-    ->desc('Get Realtime')
-    ->groups(['api', 'health'])
-    ->label('scope', 'public')
-    ->inject('response')
-    ->action(function ($response) {
-        /** @var Utopia\Response $response */
-        // TODO: realtime health
-        $response->json(['status' => 'OK']);
-    });
-
 App::get('/v1/health/db')
     ->desc('Get DB')
     ->groups(['api', 'health'])
