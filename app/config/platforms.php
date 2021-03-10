@@ -289,7 +289,7 @@ return [
                 'package' => 'https://pub.dev/packages/dart_appwrite',
                 'enabled' => true,
                 'beta' => true,
-                'dev' => true,
+                'dev' => false,
                 'hidden' => false,
                 'family' => APP_PLATFORM_SERVER,
                 'prism' => 'dart',
