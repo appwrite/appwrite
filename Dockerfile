@@ -29,7 +29,8 @@ RUN \
   git \
   zlib-dev \
   brotli-dev \
-  libmaxminddb-dev
+  libmaxminddb-dev \
+  openssl-dev
 
 RUN docker-php-ext-install sockets
 
@@ -47,7 +48,7 @@ RUN \
   cd swoole-src && \
   git checkout $PHP_SWOOLE_VERSION && \
   phpize && \
-  ./configure --enable-sockets --enable-http2 && \
+  ./configure --enable-sockets --enable-http2 --enable-openssl && \
   make && make install && \
   cd .. && \
   ## Maxminddb extension
