@@ -9,6 +9,7 @@ use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\CNAME;
+use Appwrite\Resque\Worker;
 
 require_once __DIR__.'/../init.php';
 
@@ -16,15 +17,15 @@ Console::title('Certificates V1 Worker');
 
 Console::success(APP_NAME.' certificates worker v1 has started');
 
-class CertificatesV1
+class CertificatesV1 extends Worker
 {
     public $args = [];
 
-    public function setUp(): void
+    public function init(): void
     {
     }
 
-    public function perform()
+    public function execute(): void
     {
         global $register;
 
@@ -204,8 +205,7 @@ class CertificatesV1
         Authorization::reset();
     }
 
-    public function tearDown(): void
+    public function shutdown(): void
     {
-        // ... Remove environment for this job
     }
 }

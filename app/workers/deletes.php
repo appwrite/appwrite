@@ -5,6 +5,7 @@ use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
+use Appwrite\Resque\Worker;
 use Utopia\Storage\Device\Local;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
@@ -19,18 +20,17 @@ Console::title('Deletes V1 Worker');
 
 Console::success(APP_NAME.' deletes worker v1 has started'."\n");
 
-class DeletesV1
+class DeletesV1 extends Worker
 {
-
     public $args = [];
 
     protected $consoleDB = null;
 
-    public function setUp(): void
+    public function init(): void
     {
     }
 
-    public function perform()
+    public function execute(): void
     {
         $projectId = $this->args['projectId'];   
         $type = $this->args['type'];
@@ -82,9 +82,8 @@ class DeletesV1
             }
     }
 
-    public function tearDown(): void
+    public function shutdown(): void
     {
-        // ... Remove environment for this job
     }
     
     protected function deleteDocuments(Document $document, $projectId) 
