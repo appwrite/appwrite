@@ -41,12 +41,16 @@ trait RealtimeBase
          * Test for FAILURE
          */
         $client = $this->getWebsocket(['documents'], ['origin' => 'http://appwrite.unknown']);
-        $this->assertEquals('Invalid Origin. Register your new client (appwrite.unknown) as a new Web platform on your project console dashboard', $client->receive());
+        $payload = json_decode($client->receive(), true);
+        $this->assertEquals(1008, $payload['code']);
+        $this->assertEquals('Invalid Origin. Register your new client (appwrite.unknown) as a new Web platform on your project console dashboard', $payload['message']);
         $this->expectException(ConnectionException::class); // Check if server disconnnected client
         $client->close();
 
         $client = $this->getWebsocket();
-        $this->assertEquals('Missing channels', $client->receive());
+        $payload = json_decode($client->receive(), true);
+        $this->assertEquals(1008, $payload['code']);
+        $this->assertEquals('Missing channels', $payload['message']);
         $this->expectException(ConnectionException::class); // Check if server disconnnected client
         $client->close();
 
@@ -55,7 +59,9 @@ trait RealtimeBase
                 'Origin' => 'appwrite.test'
             ]
         ]);
-        $this->assertEquals('Missing or unknown project ID', $client->receive());
+        $payload = json_decode($client->receive(), true);
+        $this->assertEquals(1008, $payload['code']);
+        $this->assertEquals('Missing or unknown project ID', $payload['message']);
         $this->expectException(ConnectionException::class); // Check if server disconnnected client
         $client->close();
 
@@ -64,7 +70,9 @@ trait RealtimeBase
                 'Origin' => 'appwrite.test'
             ]
         ]);
-        $this->assertEquals('Missing or unknown project ID', $client->receive());
+        $payload = json_decode($client->receive(), true);
+        $this->assertEquals(1008, $payload['code']);
+        $this->assertEquals('Missing or unknown project ID', $payload['message']);
         $this->expectException(ConnectionException::class); // Check if server disconnnected client
         $client->close();
     }
