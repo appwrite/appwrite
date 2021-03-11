@@ -180,7 +180,7 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(201, $execution['headers']['status-code']);
 
-        sleep();
+        sleep(5);
         $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId, 
