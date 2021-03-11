@@ -51,3 +51,9 @@ promise.then(function (response) {
     console.log(error);
 });
 ```
+
+### Learn more
+You can use followng resources to learn more and get help
+- [Appwrite Docs](https://appwrite.io/docs)
+- [Discord Community](https://appwrite.io/discord)
+- [Appwrite Deno Playground](https://github.com/appwrite/playground-for-deno)
