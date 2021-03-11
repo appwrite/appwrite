@@ -28,18 +28,18 @@ The Appwrite SDK uses ASWebAuthenticationSession on iOS 12+ and SFAuthentication
 ### Android
 In order to capture the Appwrite OAuth callback url, the following activity needs to be added to your <a href="https://github.com/appwrite/playground-for-flutter/blob/master/android/app/src/main/AndroidManifest.xml" target="_blank" rel="noopener">AndroidManifest.xml</a>. Be sure to relpace the **[PROJECT_ID]** string with your actual Appwrite project ID. You can find your Appwrite project ID in you project settings screen in your Appwrite console.
 
-```
+```xml
 <manifest>
-<application>
-<activity android:name="com.linusu.flutter_web_auth.CallbackActivity" >
-<intent-filter android:label="flutter_web_auth">
-<action android:name="android.intent.action.VIEW" />
-<category android:name="android.intent.category.DEFAULT" />
-<category android:name="android.intent.category.BROWSABLE" />
-<data android:scheme="appwrite-callback-[PROJECT_ID]" />
-</intent-filter>
-</activity>
-</application>
+    <application>
+        <activity android:name="com.linusu.flutter_web_auth.CallbackActivity" >
+            <intent-filter android:label="flutter_web_auth">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="appwrite-callback-[PROJECT_ID]" />
+            </intent-filter>
+        </activity>
+    </application>
 </manifest>
 ```
 
@@ -108,5 +108,8 @@ name: 'My Name'
 );
 ```
 
-### Next Steps
-Appwrite has many services and tools to help improve your app and speed up your development. The best way to learn how you can take advantage of them is to explore the different API references docs.
+### Learn more
+You can use followng resources to learn more and get help
+- [Appwrite Docs](https://appwrite.io/docs)
+- [Discord Community](https://appwrite.io/discord)
+- [Appwrite Flutter Playground](https://github.com/appwrite/playground-for-flutter)
