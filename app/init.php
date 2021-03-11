@@ -165,7 +165,7 @@ $register->set('dbPool', function () { // Register DB connection
             PDONative::ATTR_ERRMODE => PDONative::ERRMODE_EXCEPTION,
         ]);
 
-    $pool = new PDOPool($config);
+    $pool = new PDOPool($config, 4096); // TODO: Investigate pool size
 
     return $pool;
 });
@@ -226,7 +226,7 @@ $register->set('redisPool', function () {
         ->withReadTimeout(0)
         ->withRetryInterval(0);
 
-    $pool = new RedisPool($config);
+    $pool = new RedisPool($config, 4096); // TODO: Investigate pool size
 
     return $pool;
 });

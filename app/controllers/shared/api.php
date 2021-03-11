@@ -140,13 +140,14 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
             ->setQueue('v1-functions')
             ->setClass('FunctionsV1')
             ->trigger();
-        
-        $realtime
-            ->setEvent($events->getParam('event'))
-            ->setProject($project->getId())
-            ->setPayload($response->getPayload())
-            ->trigger();
-        
+
+        if ($project->getId() !== 'console') {
+            $realtime
+                ->setEvent($events->getParam('event'))
+                ->setProject($project->getId())
+                ->setPayload($response->getPayload())
+                ->trigger();
+        }
     }
     
     if (!empty($audits->getParam('event'))) {
