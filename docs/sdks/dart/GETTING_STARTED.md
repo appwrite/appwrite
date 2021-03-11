@@ -22,3 +22,9 @@ void main() async {
   }
 }
 ```
+
+### Learn more
+You can use followng resources to learn more and get help
+- [Appwrite Docs](https://appwrite.io/docs)
+- [Discord Community](https://appwrite.io/discord)
+- [Appwrite Dart Playground](https://github.com/appwrite/playground-for-dart)
