@@ -50,24 +50,9 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
                                 <p class="text-fade margin-bottom-small" data-ls-bind="{{project-function.env|envName}} {{project-function.env|envVersion}}">
                                 </p>
-
-                                <form data-ls-if="{{project-function.tag}} !== ''" name="functions.createExecution" class="margin-top"
-                                    data-analytics
-                                    data-analytics-activity
-                                    data-analytics-event="submit"
-                                    data-analytics-category="console"
-                                    data-analytics-label="Create Function Execution"
-                                    data-service="functions.createExecution"
-                                    data-event="submit"
-                                    data-param-function-id="{{router.params.id}}"
-                                    data-success="alert,trigger"
-                                    data-success-param-alert-text="Function executed successfully"
-                                    data-success-param-trigger-events="functions.createExecution"
-                                    data-failure="alert"
-                                    data-failure-param-alert-text="Failed to execute function"
-                                    data-failure-param-alert-classname="error">
-                                    <button style="vertical-align: top;">Execute Now</button> &nbsp; <a data-ls-attrs="href=/console/functions/function/logs?id={{router.params.id}}&project={{router.params.project}}" class="button reverse" style="vertical-align: top;">View Logs</a>
-                                </form>
+                                <div data-ls-if="{{project-function.tag}} !== ''" class="margin-top">
+                                    <button data-ls-ui-trigger="execute-now">Execute Now</button> &nbsp; <a data-ls-attrs="href=/console/functions/function/logs?id={{router.params.id}}&project={{router.params.project}}" class="button reverse" style="vertical-align: top;">View Logs</a>
+                                </div>
                             </div>
                         </div>
 
@@ -575,6 +560,31 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
     </div>
 </div>
 
+<div data-ui-modal class="modal close box sticky-footer" data-button-hide="on" data-open-event="execute-now">
+    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+    <h1 class="margin-bottom">Execute Function</h1>
+    <form data-ls-if="{{project-function.tag}} !== ''" name="functions.createExecution" class="margin-top"
+        data-analytics
+        data-analytics-activity
+        data-analytics-event="submit"
+        data-analytics-category="console"
+        data-analytics-label="Create Function Execution"
+        data-service="functions.createExecution"
+        data-event="submit"
+        data-param-function-id="{{router.params.id}}"
+        data-success="alert,trigger"
+        data-success-param-alert-text="Function executed successfully"
+        data-success-param-trigger-events="functions.createExecution"
+        data-failure="alert"
+        data-failure-param-alert-text="Failed to execute function"
+        data-failure-param-alert-classname="error">
+
+        <label for="tag-command">APPWRITE_FUNCTION_DATA</label>
+        <input type="text" id="execution-data" name="execution-data" required autocomplete="off" class="margin-bottom" placeholder="data string (optional)" />
+
+        <button style="vertical-align: top;">Execute Now</button>
+     </form>
+</div>
 <div data-ui-modal class="modal close box sticky-footer" data-button-hide="on" data-open-event="deploy-tag">
     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
