@@ -128,11 +128,11 @@ $server->on('start', function (Server $server) {
 });
 
 $server->on('open', function (Server $server, Request $request) use (&$connections, &$subscriptions, &$register) {
-    Console::info("Connection open (user: {$request->fd}, connections: {}, worker: {$server->getWorkerId()})");
-
     $app = new App('');
     $connection = $request->fd;
     $request = new SwooleRequest($request);
+
+    Console::info("Connection open (user: {$connection}, worker: {$server->getWorkerId()})");
 
     App::setResource('request', function () use ($request) {
         return $request;
@@ -151,65 +151,68 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
     /** @var Appwrite\Database\Document $console */
     $console = $app->getResource('console');
 
-    /*
-     *  Project Check
-     */
-    if (empty($project->getId())) {
-        $server->push($connection, 'Missing or unknown project ID');
+    try {
+        /*
+        *  Project Check
+        */
+        if (empty($project->getId())) {
+            throw new Exception('Missing or unknown project ID', 1008);
+        }
+
+        /*
+        * Abuse Check
+        *
+        * Abuse limits are connecting 128 times per minute and ip address.
+        */
+        $timeLimit = new TimeLimit('url:{url},ip:{ip}', 128, 60, function () use ($register) {
+            return $register->get('db');
+        });
+        $timeLimit
+            ->setNamespace('app_' . $project->getId())
+            ->setParam('{ip}', $request->getIP())
+            ->setParam('{url}', $request->getURI());
+
+        $abuse = new Abuse($timeLimit);
+
+        if ($abuse->check() && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+            throw new Exception('Too many requests', 1013);
+        }
+
+        /*
+        * Validate Client Domain - Check to avoid CSRF attack.
+        * Adding Appwrite API domains to allow XDOMAIN communication.
+        * Skip this check for non-web platforms which are not required to send an origin header.
+        */
+        $origin = $request->getOrigin();
+        $originValidator = new Origin(\array_merge($project->getAttribute('platforms', []), $console->getAttribute('platforms', [])));
+
+        if (!$originValidator->isValid($origin)) {
+            throw new Exception($originValidator->getDescription(), 1008);
+        }
+
+        Realtime::setUser($user);
+
+        $roles = Realtime::getRoles();
+        $channels = Realtime::parseChannels($request->getQuery('channels', []));
+
+        /**
+         * Channels Check
+         */
+        if (empty($channels)) {
+            throw new Exception('Missing channels', 1008);
+        }
+
+        Realtime::subscribe($project->getId(), $connection, $roles, $subscriptions, $connections, $channels);
+
+        $server->push($connection, json_encode($channels));
+    } catch (\Throwable $th) {
+        $response = [
+            'code' => $th->getCode(),
+            'message' => $th->getMessage()
+        ];
+        $server->push($connection, json_encode($response));
         $server->close($connection);
-        return;
     }
-
-    /*
-     * Abuse Check
-     */
-    $timeLimit = new TimeLimit('url:{url},ip:{ip}', 60, 60, function () use ($register) {
-        return $register->get('db');
-    });
-    $timeLimit
-        ->setNamespace('app_' . $project->getId())
-        ->setParam('{ip}', $request->getIP())
-        ->setParam('{url}', $request->getURI());
-
-    $abuse = new Abuse($timeLimit);
-
-    if ($abuse->check() && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
-        $server->push($connection, 'Too many requests');
-        $server->close($connection);
-        return;
-    }
-
-    /*
-     * Validate Client Domain - Check to avoid CSRF attack.
-     * Adding Appwrite API domains to allow XDOMAIN communication.
-     * Skip this check for non-web platforms which are not required to send an origin header.
-     */
-    $origin = $request->getOrigin();
-    $originValidator = new Origin(\array_merge($project->getAttribute('platforms', []), $console->getAttribute('platforms', [])));
-
-    if (!$originValidator->isValid($origin)) {
-        $server->push($connection, $originValidator->getDescription());
-        $server->close($connection);
-        return;
-    }
-
-    Realtime::setUser($user);
-
-    $roles = Realtime::getRoles();
-    $channels = Realtime::parseChannels($request->getQuery('channels', []));
-
-    /**
-     * Channels Check
-     */
-    if (empty($channels)) {
-        $server->push($connection, 'Missing channels');
-        $server->close($connection);
-        return;
-    }
-
-    Realtime::subscribe($project->getId(), $connection, $roles, $subscriptions, $connections, $channels);
-
-    $server->push($connection, json_encode($channels));
 });
 
 $server->on('message', function (Server $server, Frame $frame) {
@@ -217,9 +220,9 @@ $server->on('message', function (Server $server, Frame $frame) {
     $server->close($frame->fd);
 });
 
-$server->on('close', function (Server $server, int $fd) use (&$connections, &$subscriptions) {
-    Realtime::unsubscribe($fd, $subscriptions, $connections);
-    Console::info('Connection close: ' . $fd);
+$server->on('close', function (Server $server, int $connection) use (&$connections, &$subscriptions) {
+    Realtime::unsubscribe($connection, $subscriptions, $connections);
+    Console::info('Connection close: ' . $connection);
 });
 
 $server->start();

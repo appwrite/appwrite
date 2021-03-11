@@ -87,6 +87,14 @@ class Realtime
     /**
      * Identifies the receivers of all subscriptions, based on the permissions and event.
      * 
+     * Example of performance with an event with user:XXX permissions and with X users spread across 10 different channels:
+     *  - 0.014 ms (±6.88%) | 10 Connections / 100 Subscriptions 
+     *  - 0.070 ms (±3.71%) | 100 Connections / 1,000 Subscriptions 
+     *  - 0.846 ms (±2.74%) | 1,000 Connections / 10,000 Subscriptions
+     *  - 10.866 ms (±1.01%) | 10,000 Connections / 100,000 Subscriptions
+     *  - 110.201 ms (±2.32%) | 100,000 Connections / 1,000,000 Subscriptions
+     *  - 1,121.328 ms (±0.84%) | 1,000,000 Connections / 10,000,000 Subscriptions 
+     * 
      * @param array $event
      * @param array $connections
      * @param array $subscriptions
