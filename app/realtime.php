@@ -1,16 +1,15 @@
 <?php
 
 require_once __DIR__ . '/init.php';
-require_once __DIR__ . '/../vendor/autoload.php';
 
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Realtime\Realtime;
 use Appwrite\Utopia\Response;
-use Swoole\WebSocket\Server;
+use Swoole\Process;
 use Swoole\Http\Request;
 use Swoole\Http\Response as SwooleResponse;
-use Swoole\Process;
 use Swoole\WebSocket\Frame;
+use Swoole\WebSocket\Server;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Swoole\Request as SwooleRequest;
@@ -26,8 +25,21 @@ use Utopia\Abuse\Adapters\TimeLimit;
  * - Websocket support: https://www.swoole.co.uk/docs/modules/swoole-websocket-server
  */
 
-ini_set('default_socket_timeout', -1);
 Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+
+$register->set('db', function () use ($register) {
+    $pool = $register->get('dbPool');
+    $pdo = $pool->get()->__getObject();
+
+    return $pdo;
+}, true);
+
+$register->set('cache', function () use ($register) { // Register cache connection
+    $redis = $register->get('redisPool')->get();
+    $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
+
+    return $redis;
+}, true);
 
 $server = new Server('0.0.0.0', 80);
 
@@ -39,12 +51,10 @@ $subscriptions = [];
 $connections = [];
 
 $server->on('workerStart', function ($server, $workerId) use (&$subscriptions, &$connections, &$register) {
-    Console::success('Worker ' . ++$workerId . ' started succefully');
-
+    Console::success('Worker ' . $workerId . ' started succefully');
+    
     $attempts = 0;
     $start = time();
-
-    // $register->context('realtime-' . $workerId);
 
     while ($attempts < 300) {
         try {
@@ -54,8 +64,7 @@ $server->on('workerStart', function ($server, $workerId) use (&$subscriptions, &
                 sleep(5); // 5 sec delay between connection attempts
             }
 
-            $redis = $register->get('cache', true);
-            $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
+            $redis = $register->get('cache');
 
             if ($redis->ping(true)) {
                 $attempts = 0;

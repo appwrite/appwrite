@@ -6,6 +6,7 @@ use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
+use Appwrite\Resque\Worker;
 use Cron\CronExpression;
 use Swoole\Runtime;
 use Utopia\App;
@@ -127,17 +128,17 @@ Console::info(count($list)." functions listed in " . ($executionEnd - $execution
 
 //TODO aviod scheduled execution if delay is bigger than X offest
 
-class FunctionsV1
+class FunctionsV1 extends Worker
 {
     public $args = [];
 
     public $allowed = [];
 
-    public function setUp(): void
+    public function init(): void
     {
     }
 
-    public function perform()
+    public function execute(): void
     {
         global $register;
 
@@ -195,7 +196,7 @@ class FunctionsV1
 
                         Console::success('Triggered function: '.$event);
 
-                        $this->execute('event', $projectId, '', $database, $function, $event, $payload);
+                        $this->run('event', $projectId, '', $database, $function, $event, $payload);
                     }
                 }
                 break;
@@ -251,7 +252,7 @@ class FunctionsV1
                     'scheduleOriginal' => $function->getAttribute('schedule', ''),
                 ]);  // Async task rescheduale
 
-                $this->execute($trigger, $projectId, $executionId, $database, $function);
+                $this->run($trigger, $projectId, $executionId, $database, $function);
                 
                 break;
 
@@ -264,7 +265,7 @@ class FunctionsV1
                     throw new Exception('Function not found ('.$functionId.')');
                 }
 
-                $this->execute($trigger, $projectId, $executionId, $database, $function);
+                $this->run($trigger, $projectId, $executionId, $database, $function);
                 break;
             
             default:
@@ -286,7 +287,7 @@ class FunctionsV1
      * 
      * @return void
      */
-    public function execute(string $trigger, string $projectId, string $executionId, Database $database, Document $function, string $event = '', string $payload = ''): void
+    public function run(string $trigger, string $projectId, string $executionId, Database $database, Document $function, string $event = '', string $payload = ''): void
     {
         global $list;
 
@@ -548,7 +549,7 @@ class FunctionsV1
         return $output;
     }
 
-    public function tearDown(): void
+    public function shutdown(): void
     {
     }
 }

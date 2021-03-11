@@ -7,6 +7,7 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
+use Appwrite\Resque\Worker;
 
 require_once __DIR__.'/../init.php';
 
@@ -14,15 +15,15 @@ Console::title('Webhooks V1 Worker');
 
 Console::success(APP_NAME.' webhooks worker v1 has started');
 
-class WebhooksV1
+class WebhooksV1 extends Worker
 {
     public $args = [];
 
-    public function setUp(): void
+    public function init(): void
     {
     }
 
-    public function perform()
+    public function execute(): void
     {
         global $register;
 
@@ -111,8 +112,7 @@ class WebhooksV1
         }
     }
 
-    public function tearDown(): void
+    public function shutdown(): void
     {
-        // ... Remove environment for this job
     }
 }

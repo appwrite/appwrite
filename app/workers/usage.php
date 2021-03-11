@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Resque\Worker;
 use Utopia\App;
 use Utopia\CLI\Console;
 
@@ -9,18 +10,18 @@ Console::title('Usage V1 Worker');
 
 Console::success(APP_NAME.' usage worker v1 has started');
 
-class UsageV1
+class UsageV1 extends Worker
 {
     /**
      * @var array
      */
     public $args = [];
 
-    public function setUp(): void
+    public function init(): void
     {
     }
 
-    public function perform()
+    public function execute(): void
     {
         global $register;
 
@@ -65,8 +66,7 @@ class UsageV1
         }
     }
 
-    public function tearDown(): void
+    public function shutdown(): void
     {
-        // ... Remove environment for this job
     }
 }

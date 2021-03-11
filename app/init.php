@@ -11,6 +11,12 @@ if (\file_exists(__DIR__.'/../vendor/autoload.php')) {
     require_once __DIR__.'/../vendor/autoload.php';
 }
 
+ini_set('memory_limit','512M');
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+ini_set('default_socket_timeout', -1);
+error_reporting(E_ALL);
+
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
@@ -21,7 +27,6 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
 use Appwrite\Event\Realtime;
-use Appwrite\Extend\PDO;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\App;
 use Utopia\View;
@@ -31,6 +36,10 @@ use Utopia\Registry\Registry;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use PDO as PDONative;
+use Swoole\Database\PDOConfig;
+use Swoole\Database\PDOPool;
+use Swoole\Database\RedisConfig;
+use Swoole\Database\RedisPool;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -139,7 +148,28 @@ Database::addFilter('encrypt',
 /*
  * Registry
  */
-$register->set('db', function () { // Register DB connection
+$register->set('dbPool', function () { // Register DB connection
+    $config = new PDOConfig();
+    $config
+        ->withHost(App::getEnv('_APP_DB_HOST', ''))
+        ->withPort(App::getEnv('_APP_DB_PORT', ''))
+        ->withDbName(App::getEnv('_APP_DB_SCHEMA', ''))
+        ->withUsername(App::getEnv('_APP_DB_USER', ''))
+        ->withPassword(App::getEnv('_APP_DB_PASS', ''))
+        ->withCharset('utf8mb4')
+        ->withOptions([
+            PDONative::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
+            PDONative::ATTR_TIMEOUT => 3, // Seconds
+            PDONative::ATTR_PERSISTENT => true,
+            PDONative::ATTR_DEFAULT_FETCH_MODE => PDONative::FETCH_ASSOC,
+            PDONative::ATTR_ERRMODE => PDONative::ERRMODE_EXCEPTION,
+        ]);
+
+    $pool = new PDOPool($config);
+
+    return $pool;
+});
+$register->set('db', function () use ($register) {
     $dbHost = App::getEnv('_APP_DB_HOST', '');
     $dbUser = App::getEnv('_APP_DB_USER', '');
     $dbPass = App::getEnv('_APP_DB_PASS', '');
@@ -148,12 +178,10 @@ $register->set('db', function () { // Register DB connection
     $pdo = new PDO("mysql:host={$dbHost};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
         PDONative::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
         PDONative::ATTR_TIMEOUT => 3, // Seconds
-        PDONative::ATTR_PERSISTENT => true
+        PDONative::ATTR_PERSISTENT => true,
+        PDONative::ATTR_DEFAULT_FETCH_MODE => PDONative::FETCH_ASSOC,
+        PDONative::ATTR_ERRMODE => PDONative::ERRMODE_EXCEPTION,
     ));
-
-    // Connection settings
-    $pdo->setAttribute(PDONative::ATTR_DEFAULT_FETCH_MODE, PDONative::FETCH_ASSOC);   // Return arrays
-    $pdo->setAttribute(PDONative::ATTR_ERRMODE, PDONative::ERRMODE_EXCEPTION);        // Handle all errors with exceptions
 
     return $pdo;
 });
@@ -178,21 +206,33 @@ $register->set('statsd', function () { // Register DB connection
 
     return $statsd;
 });
+$register->set('redisPool', function () {
+    $user = App::getEnv('_APP_REDIS_USER', '');
+    $pass = App::getEnv('_APP_REDIS_PASS', '');
+    $auth = '';
+    if (!empty($user)) {
+        $auth += $user;
+    }
+    if (!empty($pass)) {
+        $auth += ':' . $pass;
+    }
+
+    $config = new RedisConfig();
+    $config
+        ->withHost(App::getEnv('_APP_REDIS_HOST', ''))
+        ->withPort(App::getEnv('_APP_REDIS_PORT', ''))
+        ->withAuth($auth)
+        ->withTimeout(0)
+        ->withReadTimeout(0)
+        ->withRetryInterval(0);
+
+    $pool = new RedisPool($config);
+
+    return $pool;
+});
 $register->set('cache', function () { // Register cache connection
     $redis = new Redis();
     $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
-    $user = App::getEnv('_APP_REDIS_USER','');
-    $pass = App::getEnv('_APP_REDIS_PASS','');
-    $auth = [];
-    if(!empty($user)) {
-        $auth["user"] = $user;
-    }
-    if(!empty($pass)) {
-        $auth["pass"] = $pass;
-    }
-    if(!empty($auth)) {
-        $redis->auth($auth);
-    }
     $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
     return $redis;
