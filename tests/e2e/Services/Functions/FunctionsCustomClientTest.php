@@ -151,7 +151,7 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'command' => 'php function.php',
+            'command' => 'php index.php',
             'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php-fn.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'), //different tarball names intentional
         ]);
 
@@ -180,11 +180,12 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(201, $execution['headers']['status-code']);
 
-        sleep(10);
+        sleep(2);
        
         $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $executions['headers']['status-code']);
