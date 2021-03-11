@@ -128,7 +128,7 @@ $server->on('start', function (Server $server) {
 });
 
 $server->on('open', function (Server $server, Request $request) use (&$connections, &$subscriptions, &$register) {
-    $app = new App('');
+    $app = new App('America/New_York');
     $connection = $request->fd;
     $request = new SwooleRequest($request);
 
