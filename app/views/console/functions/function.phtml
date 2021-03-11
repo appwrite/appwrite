@@ -579,10 +579,10 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
         data-failure-param-alert-text="Failed to execute function"
         data-failure-param-alert-classname="error">
 
-        <label for="tag-command">APPWRITE_FUNCTION_DATA</label>
-        <input type="text" id="execution-data" name="execution-data" required autocomplete="off" class="margin-bottom" placeholder="data string (optional)" />
+        <label for="execution-data">APPWRITE_FUNCTION_DATA</label>
+        <input type="text" id="execution-data" name="data" required autocomplete="off" class="margin-bottom" placeholder="data string (optional)" />
 
-        <button style="vertical-align: top;">Execute Now</button>
+        <button type="submit" style="vertical-align: top;">Execute Now</button>
      </form>
 </div>
 <div data-ui-modal class="modal close box sticky-footer" data-button-hide="on" data-open-event="deploy-tag">
