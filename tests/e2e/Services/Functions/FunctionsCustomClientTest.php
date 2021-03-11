@@ -121,10 +121,13 @@ class FunctionsCustomClientTest extends Scope
         /**
          * Test for SUCCESS
          */
+        $projectId = $this->getProject()['$id'];
+        $apikey = $this->getProject()['apiKey'];
+
         $function = $this->client->call(Client::METHOD_POST, '/functions', [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apikey, 
         ], [
             'name' => 'Test',
             'execute' => ['*'],
@@ -138,7 +141,6 @@ class FunctionsCustomClientTest extends Scope
                 'account.create',
                 'account.delete',
             ],
-            'schedule' => '* * * * *',
             'timeout' => 10,
         ]);
 
@@ -148,8 +150,8 @@ class FunctionsCustomClientTest extends Scope
 
         $tag = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/tags', [
             'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
+            'x-appwrite-project' => $projectId, 
+            'x-appwrite-key' => $apikey, 
         ], [
             'command' => 'php index.php',
             'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php-fn.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'), //different tarball names intentional
@@ -161,8 +163,8 @@ class FunctionsCustomClientTest extends Scope
         
         $function = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/tag', [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
+            'x-appwrite-project' => $projectId, 
+            'x-appwrite-key' => $apikey, 
         ], [
             'tag' => $tagId,
         ]);
@@ -171,26 +173,23 @@ class FunctionsCustomClientTest extends Scope
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $projectId, 
         ], $this->getHeaders()), [
             'data' => 'foobar',
         ]);
 
-        $executionId = $execution['body']['$id'] ?? '';
-
         $this->assertEquals(201, $execution['headers']['status-code']);
 
-        sleep(2);
-       
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
+        sleep();
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], $this->getHeaders()));
+            'x-appwrite-project' => $projectId, 
+            'x-appwrite-key' => $apikey, 
+        ]);
 
         $this->assertEquals(200, $executions['headers']['status-code']);
-        $this->assertStringContainsString('foobar', $executions['body']['stdout']);
-        $this->assertStringContainsString($this->getUser()['$id'], $executions['body']['stdout']);
+        $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['stdout']);
+        $this->assertStringContainsString($this->getUser()['$id'], $executions['body']['executions'][0]['stdout']);
 
         return [];
     }
