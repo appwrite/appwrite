@@ -21,7 +21,7 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
 use Appwrite\Extend\PDO;
-use Appwrite\GraphQL\GraphQLBuilder;
+use Appwrite\GraphQL\Builder;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\App;
 use Utopia\View;
@@ -516,7 +516,7 @@ App::setResource('schema', function($utopia, $response, $request, $register) {
         $schema = $register->get('_schema');
     } catch (Exception $e) {
         var_dump('[INFO] Exception, Schema not present. Generating Schema');
-        $schema = GraphQLBuilder::buildSchema($utopia, $response, $register);
+        $schema = Builder::buildSchema($utopia, $response, $register);
         $register->set('_schema', function () use ($schema){ // Register cache connection
             return $schema;
         });

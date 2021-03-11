@@ -1,17 +1,10 @@
 <?php
 
-use Appwrite\GraphQL\GraphQLBuilder;
 use GraphQL\GraphQL;
-use GraphQL\Type\Schema;
-use GraphQL\Type\Definition\ObjectType;
-use GraphQL\Type\Definition\Type;
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model;
-use Appwrite\GraphQL\Types\JsonType;
 use GraphQL\Error\Error;
 use GraphQL\Error\ClientAware;
 use GraphQL\Error\FormattedError;
-use GraphQL\Type\Definition\ListOfType;
 use Utopia\App;
 
 /**
@@ -66,11 +59,16 @@ App::post('/v1/graphql')
     ->middleware(false) 
     ->action(function ($request, $response, $schema, $utopia, $register) {
 
-        // $myErrorFormatter = function(Error $error) {
-        //     $formattedError = FormattedError::createFromException($error); 
-        //     var_dump("***** IN ERROR FORMATTER ******");
-        //     return $formattedError;
-        // };
+        $myErrorFormatter = function(Error $error) {
+            $formattedError = FormattedError::createFromException($error); 
+            var_dump("***** IN ERROR FORMATTER ******");
+            var_dump("{$error->getMessage()}");
+            var_dump("{$error->getCode()}");
+            var_dump("{$error->getFile()}");
+            var_dump("{$error->getLine()}");
+            var_dump("{$error->getTrace()}");
+            return $formattedError;
+        };
 
         $query = $request->getPayload('query', '');
         $variables = $request->getPayload('variables', null);
@@ -84,7 +82,7 @@ App::post('/v1/graphql')
 
         try {
             $rootValue = [];
-            $result = GraphQL::executeQuery($schema, $query, $rootValue, null, $variables);
+            $result = GraphQL::executeQuery($schema, $query, $rootValue, null, $variables)->setErrorFormatter($myErrorFormatter);
             $output = $result->toArray();
         } catch (\Exception $error) {
             $output = [

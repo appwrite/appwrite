@@ -5,14 +5,14 @@ namespace Appwrite\GraphQL;
 use Appwrite\GraphQL\Types\JsonType;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
-use Exception;
 use GraphQL\Type\Definition\ListOfType;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
 use MySafeException;
+use Exception;
 
-class GraphQLBuilder {
+class Builder {
 
     public static $jsonParser;
 
@@ -31,6 +31,7 @@ class GraphQLBuilder {
         ];
     }
 
+    
     static function createTypeMapping(Model $model, Response $response) {
 
         /* 
@@ -91,17 +92,7 @@ class GraphQLBuilder {
             $fields[$keyWithoutSpecialChars] = [
                 'type' => $type,
                 'description' => $props['description'],
-                'resolve' => function ($object, $args, $context, $info) use ($key, $type) {
-                    
-                    // var_dump("************* RESOLVING FIELD {$info->fieldName} *************");
-                    // var_dump($info->returnType->getWrappedType());
-                    // var_dump("isListType : ", $info->returnType instanceof ListOfType);
-                    // var_dump("isCompositeType : ", Type::isCompositeType($info->returnType));
-                    // var_dump("isBuiltinType : ", Type::isBuiltInType($info->returnType));
-                    // var_dump("isLeafType : ", Type::isLeafType($info->returnType));
-                    // var_dump("isOutputType : ", Type::isOutputType($info->returnType));
-                    // var_dump("PHP Type of object: " . gettype($object[$key]));
-
+                'resolve' => function ($object, $args, $context, $info) use ($key) {
                     return $object[$key];
                 }
             ];
@@ -212,40 +203,22 @@ class GraphQLBuilder {
                 if ($namespace == 'database' || true) {
                     $methodName = $namespace.'_'.$route->getLabel('sdk.method', '');
                     $responseModelName = $route->getLabel('sdk.response.model', "");
-                    // var_dump("******************************************");
-                    // var_dump("Processing route : ${method} : {$route->getURL()}");
-                    // var_dump("Model Name : ${responseModelName}");
                     if ( $responseModelName !== "" && $responseModelName !== Response::MODEL_NONE ) {
                         $responseModel = $response->getModel($responseModelName);
                         self::createTypeMapping($responseModel, $response);
                         $type = self::$typeMapping[$responseModel->getType()];
-                        // var_dump("Type Created : ${type}");
                         $args = self::getArgs($route->getParams(), $utopia);
-                        // var_dump("Args Generated :");
-                        // var_dump($args);
-                        
+
                         $field = [
                             'type' => $type,
                             'description' => $route->getDesc(), 
                             'args' => $args,
                             'resolve' => function ($type, $args, $context, $info) use (&$register, $route) {
-                                // var_dump("************* REACHED RESOLVE FOR  {$info->fieldName} *****************");
-                                // var_dump($route);
-                                // var_dump("************* CONTEXT *****************");
-                                // var_dump($context);
-                                // var_dump("********************** ARGS *******************");
-                                // var_dump($args);
-                                
                                 $utopia = $register->get('__app');
                                 $response = $register->get('__response');
                                 $utopia->setRoute($route);
                                 $utopia->execute($route, $args);
-                                
-                                // var_dump("**************** OUTPUT ************");
-                                // var_dump($response->getPayload());
-                                
                                 $result = $response->getPayload();
-    
                                 if (self::isModel($result, $response->getModel(Response::MODEL_ERROR)) || self::isModel($result, $response->getModel(Response::MODEL_ERROR_DEV))) {
                                     throw new MySafeException($result['message'], $result['code']);
                                 }
@@ -259,10 +232,6 @@ class GraphQLBuilder {
                         } else if ($method == 'POST' || $method == 'PUT' || $method == 'PATCH' || $method == 'DELETE') {
                             $mutationFields[$methodName] = $field;
                         }
-                        
-                        // var_dump("Processed route : ${method} : {$route->getURL()}");
-                    } else {
-                        // var_dump("Skipping route : {$route->getURL()}");
                     }
                 }
             }
