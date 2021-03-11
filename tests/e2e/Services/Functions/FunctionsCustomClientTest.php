@@ -142,9 +142,11 @@ class FunctionsCustomClientTest extends Scope
             'timeout' => 10,
         ]);
 
+        $functionId = $function['body']['$id'] ?? '';
+
         $this->assertEquals(201, $function['headers']['status-code']);
 
-        $tag = $this->client->call(Client::METHOD_POST, '/functions/'.$function['body']['$id'].'/tags', [
+        $tag = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/tags', [
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -157,7 +159,7 @@ class FunctionsCustomClientTest extends Scope
         
         $this->assertEquals(201, $tag['headers']['status-code']);
         
-        $function = $this->client->call(Client::METHOD_PATCH, '/functions/'.$function['body']['$id'].'/tag', [
+        $function = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/tag', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -167,7 +169,7 @@ class FunctionsCustomClientTest extends Scope
             
         $this->assertEquals(200, $function['headers']['status-code']);
 
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$function['body']['$id'].'/executions', array_merge([
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -177,15 +179,17 @@ class FunctionsCustomClientTest extends Scope
         $executionId = $execution['body']['$id'] ?? '';
 
         $this->assertEquals(201, $execution['headers']['status-code']);
+
+        sleep(10);
        
-        $execution = $this->client->call(Client::METHOD_GET, '/functions/'.$function['body']['$id'].'/executions/'.$executionId, array_merge([
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
+        ], $this->getHeaders()));
 
-        $this->assertEquals(200, $execution['headers']['status-code']);
-        $this->assertStringContainsString('foobar', $execution['body']['stdout']);
-        $this->assertStringContainsString($this->getUser()['$id'], $execution['body']['stdout']);
+        $this->assertEquals(200, $executions['headers']['status-code']);
+        $this->assertStringContainsString('foobar', $executions['body']['stdout']);
+        $this->assertStringContainsString($this->getUser()['$id'], $executions['body']['stdout']);
 
         return [];
     }
