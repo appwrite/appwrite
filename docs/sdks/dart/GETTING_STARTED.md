@@ -8,14 +8,17 @@ import 'package:dart_appwrite/dart_appwrite.dart';
 
 void main() async {
   Client client = Client();
-    .setEndpoint(
-          'http://[HOSTNAME_OR_IP]/v1') // Make sure your endpoint is accessible
+    .setEndpoint('http://[HOSTNAME_OR_IP]/v1') // Make sure your endpoint is accessible
     .setProject('5ff3379a01d25') // Your project ID
     .setKey('cd868c7af8bdc893b4...93b7535db89')
 
   Users users = Users(client);
 
-  final response = await users.create(email: ‘email@example.com’,password: ‘password’, name: ‘name’);
-  print(response.data);
+  try {
+    final response = await users.create(email: ‘email@example.com’,password: ‘password’, name: ‘name’);
+    print(response.data);
+  } on AppwriteException catch(e) {
+    print(e.message);
+  }
 }
 ```
