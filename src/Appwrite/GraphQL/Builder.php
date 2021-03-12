@@ -207,12 +207,12 @@ class Builder {
     }
     
     /**
-    * Function to initialise the typeMapping array with the base cases of the recursion
+    * Function to check if a model 
     *
     * @param string $a
     * @return void
     */
-    protected static function isModel($response, Model $model) {
+    protected static function isModel($response, Model $model): bool {
     
         foreach ($model->getRules() as $key => $rule) {
             if (!isset($response[$key])) {
@@ -229,82 +229,73 @@ class Builder {
     * @return void
     */
     public static function buildSchema($utopia, $response, $register) {
-        
-        self::init();
-
         var_dump("[INFO] Building GraphQL Schema...");
         $start = microtime(true);
 
+        self::init();
         $queryFields = [];
         $mutationFields = [];
+
         foreach($utopia->getRoutes() as $method => $routes ){
             foreach($routes as $route) {
                 $namespace = $route->getLabel('sdk.namespace', '');
-    
-                if ($namespace == 'database' || true) {
-                    $methodName = $namespace.'_'.$route->getLabel('sdk.method', '');
-                    $responseModelName = $route->getLabel('sdk.response.model', "");
-                    if ( $responseModelName !== "" && $responseModelName !== Response::MODEL_NONE ) {
-                        $responseModel = $response->getModel($responseModelName);
-                        self::createTypeMapping($responseModel, $response);
-                        $type = self::$typeMapping[$responseModel->getType()];
-                        $args = self::getArgs($route->getParams(), $utopia);
+                $methodName = $namespace.'_'.$route->getLabel('sdk.method', '');
+                $responseModelName = $route->getLabel('sdk.response.model', "");
+                if ( $responseModelName !== "" && $responseModelName !== Response::MODEL_NONE ) {
+                    $responseModel = $response->getModel($responseModelName);
+                    self::createTypeMapping($responseModel, $response);
+                    $type = self::$typeMapping[$responseModel->getType()];
+                    $args = self::getArgs($route->getParams(), $utopia);
 
-                        $field = [
-                            'type' => $type,
-                            'description' => $route->getDesc(), 
-                            'args' => $args,
-                            'resolve' => function ($type, $args, $context, $info) use (&$register, $route) {
-                                $utopia = $register->get('__app');
-                                $response = $register->get('__response');
-                                $utopia->setRoute($route);
-                                $utopia->execute($route, $args);
-                                $result = $response->getPayload();
-                                if (self::isModel($result, $response->getModel(Response::MODEL_ERROR)) || self::isModel($result, $response->getModel(Response::MODEL_ERROR_DEV))) {
-                                    var_dump("***** There has been an exception.. *****");
-                                    unset($result['trace']);
-                                    // var_dump($result);
-                                    throw new MySafeException($result['message'], $result['code']);
-                                }
-                                
-                                return $result;
+                    $field = [
+                        'type' => $type,
+                        'description' => $route->getDesc(), 
+                        'args' => $args,
+                        'resolve' => function ($type, $args, $context, $info) use (&$register, $route) {
+                            $utopia = $register->get('__app');
+                            $response = $register->get('__response');
+                            $utopia->setRoute($route);
+                            $utopia->execute($route, $args);
+                            $result = $response->getPayload();
+                            if (self::isModel($result, $response->getModel(Response::MODEL_ERROR)) || self::isModel($result, $response->getModel(Response::MODEL_ERROR_DEV))) {
+                                var_dump("***** There has been an exception.. *****");
+                                unset($result['trace']);
+                                // var_dump($result);
+                                throw new MySafeException($result['message'], $result['code']);
                             }
-                        ];
-                        
-                        if ($method == 'GET') {
-                            $queryFields[$methodName] = $field;
-                        } else if ($method == 'POST' || $method == 'PUT' || $method == 'PATCH' || $method == 'DELETE') {
-                            $mutationFields[$methodName] = $field;
+                            
+                            return $result;
                         }
+                    ];
+                    
+                    if ($method == 'GET') {
+                        $queryFields[$methodName] = $field;
+                    } else if ($method == 'POST' || $method == 'PUT' || $method == 'PATCH' || $method == 'DELETE') {
+                        $mutationFields[$methodName] = $field;
                     }
                 }
             }
         }
-    
+
         ksort($queryFields);
         ksort($mutationFields);
-    
         $queryType = new ObjectType([
             'name' => 'Query',
             'description' => 'The root of all your queries',
             'fields' => $queryFields
         ]);
-    
         $mutationType = new ObjectType([
             'name' => 'Mutation',
             'description' => 'The root of all your mutations',
             'fields' => $mutationFields
         ]);
-    
         $schema = new Schema([
             'query' => $queryType,
             'mutation' => $mutationType
         ]);
-    
-        
+
         $time_elapsed_secs = microtime(true) - $start;
         var_dump("[INFO] Time Taken To Build Schema : ${time_elapsed_secs}s");
-
         return $schema; 
     }
 }
