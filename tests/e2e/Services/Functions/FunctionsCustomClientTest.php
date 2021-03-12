@@ -80,9 +80,9 @@ class FunctionsCustomClientTest extends Scope
         ]);
 
         $tagId = $tag['body']['$id'] ?? '';
-        
+
         $this->assertEquals(201, $tag['headers']['status-code']);
-        
+
         $function = $this->client->call(Client::METHOD_PATCH, '/functions/'.$function['body']['$id'].'/tag', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -90,7 +90,7 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'tag' => $tagId,
         ]);
-            
+
         $this->assertEquals(200, $function['headers']['status-code']);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$function['body']['$id'].'/executions', [
@@ -112,7 +112,7 @@ class FunctionsCustomClientTest extends Scope
         $executionId = $execution['body']['$id'] ?? '';
 
         $this->assertEquals(201, $execution['headers']['status-code']);
-       
+
         return [];
     }
 
@@ -127,7 +127,7 @@ class FunctionsCustomClientTest extends Scope
         $function = $this->client->call(Client::METHOD_POST, '/functions', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $apikey, 
+            'x-appwrite-key' => $apikey,
         ], [
             'name' => 'Test',
             'execute' => ['*'],
@@ -146,46 +146,41 @@ class FunctionsCustomClientTest extends Scope
 
         $tag = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/tags', [
             'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $projectId, 
-            'x-appwrite-key' => $apikey, 
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apikey,
         ], [
             'command' => 'php index.php',
             'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php-fn.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'), //different tarball names intentional
         ]);
 
         $tagId = $tag['body']['$id'] ?? '';
-        
+
         $this->assertEquals(201, $tag['headers']['status-code']);
-        
+
         $function = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/tag', [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId, 
-            'x-appwrite-key' => $apikey, 
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apikey,
         ], [
             'tag' => $tagId,
         ]);
-            
+
         $this->assertEquals(200, $function['headers']['status-code']);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId, 
+            'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
             'data' => 'foobar',
         ]);
 
         $this->assertEquals(201, $execution['headers']['status-code']);
 
-        fwrite(STDERR, ".");
-        sleep(60);
-        fwrite(STDERR, ".");
-
         $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId, 
-            'x-appwrite-key' => $apikey, 
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apikey,
         ]);
-        var_dump($executions['body']['executions']);
 
         $this->assertEquals(200, $executions['headers']['status-code']);
         $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['stdout']);
