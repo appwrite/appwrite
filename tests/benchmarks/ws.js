@@ -6,32 +6,45 @@ import { check } from 'k6';
 
 export let options = {
     stages: [
-        { duration: '20s', target: 10 },
-        { duration: '20s', target: 100 },
-        { duration: '20s', target: 0 },
+        { 
+            duration: '1m', 
+            target: 250
+        },
+        { 
+            duration: '1m', 
+            target: 250
+        },
     ],
 }
 
 export default function () {
+    // const url = new URL('wss://appwrite-realtime.monitor-api.com/v1/realtime');
+    // url.searchParams.append('project', '604249e6b1a9f');
     const url = new URL('ws://localhost/v1/realtime');
-    url.searchParams.append('project', '60479391b1c3f');
+    url.searchParams.append('project', '60476312f335c');
     url.searchParams.append('channels[]', 'files');
-    
+
     const res = ws.connect(url.toString(), function (socket) {
+        let connection = false;
+        let checked = false;
+        let payload = null;
         socket.on('open', () => {
-            console.log('connected')
-            });
-        
-        socket.on('message', (data) => {
-            console.log('Message received: ', data)
+            connection = true;
         });
 
-        socket.on('close', () => console.log('disconnected'));
-        
+        socket.on('message', (data) => {
+            payload = data;
+            checked = true;
+        });
+
         socket.setTimeout(function () {
-            console.log('2 seconds passed, closing the socket');
+            check(payload, {
+                'connection opened': (r) => connection,
+                'message received': (r) => checked,
+                'channels are right': (r) => r === `{"files":0}`
+            })
             socket.close();
-        }, 2000);
+          }, 5000);
     });
 
     check(res, { 'status is 101': (r) => r && r.status === 101 });
