@@ -27,6 +27,7 @@
 ## Bug Fixes
 
 - Updated missing storage env vars
+- Added missing event for users.update.prefs #952
 
 ## Security
 
