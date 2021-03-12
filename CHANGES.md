@@ -1,3 +1,41 @@
+# Version 0.8.0 (Not Released Yet)
+
+- Anonymous login
+
+# Version 0.7.1
+
+## Features
+
+- Better error logs on appwrite certificates worker
+- Added option for Redis authentication
+- Force adding a security email on setup
+- SMTP is now disabled by default, no dummy SMTP is included in setup
+- Added a new endpoint that returns the server and SDKs latest versions numbers #941
+
+## Upgrades
+
+- Upgraded redis extenstion lib to version 5.3.3
+- Upgraded maxmind extenstion lib to version 1.10.0
+- Upgraded utopia-php/cli lib to version 0.10.0
+- Upgraded matomo/device-detector lib to version 4.1.0
+- Upgraded dragonmantank/cron-expression lib to version 3.1.0
+- Upgraded influxdb/influxdb-php lib to version 1.15.2
+- Upgraded phpmailer/phpmailer lib to version 6.3.0
+- Upgraded adhocore/jwt lib to version 1.1.2
+- Upgraded domnikl/statsd to slickdeals/statsd version 3.0
+ 
+## Bug Fixes
+
+- Updated missing storage env vars
+- Fixed a bug, that added a wrong timzone offset to user log timestamps
+- Fixed a bug, that Response format header was not added in the access-control-allow-header list.
+- Fixed a bug where countryName is unknown on sessions (#933)
+- Added missing event users.update.prefs (#952)
+
+## Security
+
+- Fixed an XSS vulnerability in the Appwrite console
+
 # Version 0.7.0
 
 ## Features

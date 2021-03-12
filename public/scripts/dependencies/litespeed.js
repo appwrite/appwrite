@@ -116,7 +116,7 @@ container.path(paths[i],value);}});}
 return;}
 if(element.value!==value){element.value=value;element.dispatchEvent(new Event('change'));}
 if(bind){element.addEventListener('input',sync);element.addEventListener('change',sync);}}
-else{if(element.innerHTML!=value){element.innerHTML=value;}}};let sync=(()=>{return()=>{if(debug){console.info('debug-ls-bind','sync-path',paths);console.info('debug-ls-bind','sync-syntax',syntax);console.info('debug-ls-bind','sync-syntax-parsed',parsedSyntax);console.info('debug-ls-bind','sync-value',element.value);}
+else{if(element.textContent!=value){element.textContent=value;}}};let sync=(()=>{return()=>{if(debug){console.info('debug-ls-bind','sync-path',paths);console.info('debug-ls-bind','sync-syntax',syntax);console.info('debug-ls-bind','sync-syntax-parsed',parsedSyntax);console.info('debug-ls-bind','sync-value',element.value);}
 for(let i=0;i<paths.length;i++){if('{{'+paths[i]+'}}'!==parsedSyntax){if(debug){console.info('debug-ls-bind','sync-skipped-path',paths[i]);console.info('debug-ls-bind','sync-skipped-syntax',syntax);console.info('debug-ls-bind','sync-skipped-syntax-parsed',parsedSyntax);}
 continue;}
 if(debug){console.info('debug-ls-bind','sync-loop-path',paths[i]);console.info('debug-ls-bind','sync-loop-syntax',parsedSyntax);}

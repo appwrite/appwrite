@@ -34,13 +34,13 @@ use PDO as PDONative;
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
 const APP_EMAIL_TEAM = 'team@localhost.test'; // Default email address
-const APP_EMAIL_SECURITY = 'security@localhost.test'; // Default security email address
+const APP_EMAIL_SECURITY = ''; // Default security email address
 const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
 const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
 const APP_CACHE_BUSTER = 144;
-const APP_VERSION_STABLE = '0.7.0';
+const APP_VERSION_STABLE = '0.7.1';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_CACHE = '/storage/cache';

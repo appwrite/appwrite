@@ -82,7 +82,7 @@ class TasksV1
 
         // Reschedule
 
-        $cron = CronExpression::factory($task->getAttribute('schedule'));
+        $cron = new CronExpression($task->getAttribute('schedule'));
         $next = (int) $cron->getNextRunDate()->format('U');
         $headers = (\is_array($task->getAttribute('httpHeaders', []))) ? $task->getAttribute('httpHeaders', []) : [];
 
