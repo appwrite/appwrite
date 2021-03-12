@@ -1,6 +1,8 @@
 # Version 0.8.0 (Not Released Yet)
 
+## Features
 - Anonymous login
+- Added events for functions and executions (#971)
 
 # Version 0.7.1
 
