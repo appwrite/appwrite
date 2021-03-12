@@ -230,13 +230,12 @@ $register->set('redisPool', function () {
 
     return $pool;
 });
-$register->set('cache', function () { // Register cache connection
-    $redis = new Redis();
-    $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
+$register->set('cache', function () use ($register) { // Register cache connection
+    $redis = $register->get('redisPool')->get();
     $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
     return $redis;
-});
+}, true);
 $register->set('smtp', function () {
     $mail = new PHPMailer(true);
 
