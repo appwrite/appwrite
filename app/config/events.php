@@ -132,6 +132,11 @@ return [
         'model' => Response::MODEL_EXECUTION,
         'note' => 'version >= 0.7',
     ],
+    'functions.executions.update' => [
+        'description' => 'This event triggers when a function execution is updated.',
+        'model' => Response::MODEL_EXECUTION,
+        'note' => 'version >= 0.7',
+    ],
     'storage.files.create' => [
         'description' => 'This event triggers when a storage file is created.',
         'model' => Response::MODEL_FILE,

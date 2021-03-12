@@ -469,6 +469,28 @@ class FunctionsV1
             throw new Exception('Failed saving execution to DB', 500);
         }
 
+        var_dump($execution);
+        $executionUpdate = new Event('v1-webhooks', 'WebhooksV1');
+
+        $executionUpdate
+            ->setParam('projectId', $projectId)
+            ->setParam('userId', '')
+            ->setParam('event', 'functions.executions.update')
+            ->setParam('payload', [
+                '$id' => $execution['$id'],
+                'functionId' => $execution['functionId'],
+                'dateCreated' => $execution['dateCreated'],
+                'trigger' => $execution['trigger'],
+                'status' => $execution['status'],
+                'exitCode' => $execution['exitCode'],
+                'stdout' => $execution['stdout'],
+                'stderr' => $execution['stderr'],
+                'time' => $execution['time']
+            ]);
+
+        $executionUpdate->trigger();
+
+
         $usage = new Event('v1-usage', 'UsageV1');
 
         $usage
