@@ -176,6 +176,7 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(201, $execution['headers']['status-code']);
 
+        sleep(10);
         $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -183,6 +184,7 @@ class FunctionsCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $executions['headers']['status-code']);
+        $this->assertCount(1, $executions['body']['executions']);
         $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['stdout']);
         $this->assertStringContainsString($this->getUser()['$id'], $executions['body']['executions'][0]['stdout']);
 
