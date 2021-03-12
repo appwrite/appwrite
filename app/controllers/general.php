@@ -170,9 +170,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     $scopes = $roles[$role]['scopes']; // Allowed scopes for user role
 
     $authKey = $request->getHeader('x-appwrite-key', '');
-    var_dump("***** AUTH KEY ******");
-    
-    var_dump($authKey);
+
     if (!empty($authKey)) { // API Key authentication
         // Check if given key match project API keys
         $key = $project->search('secret', $authKey, $project->getAttribute('keys', []));
@@ -298,6 +296,9 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     }
 
     //$_SERVER = []; // Reset before reporting to error log to avoid keys being compromised
+
+    var_dump("*********** In general.php error->getCode() {$error->getCode()} *************");
+    var_dump("*********** In general.php code ${code} *************");
 
     $output = ((App::isDevelopment())) ? [
         'message' => $error->getMessage(),

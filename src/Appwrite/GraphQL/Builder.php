@@ -11,63 +11,85 @@ use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
 use MySafeException;
 use Exception;
+use Utopia\Validator;
 
 class Builder {
 
-    public static $jsonParser;
+    /** @var JsonType $jsonParser */
+    protected static $jsonParser = null;
 
-    public static $typeMapping;
+    /** @var array $typeMapping */
+    protected static $typeMapping = null;
 
-    private static function init() {
-        self::$jsonParser = new JsonType();
+    /**
+    * Function to initialise the typeMapping array with the base cases of the recursion
+    *
+    * @return   void
+    */
+    protected static function init() 
+    {
         self::$typeMapping = [
             Model::TYPE_BOOLEAN => Type::boolean(),
             Model::TYPE_STRING => Type::string(),
             Model::TYPE_INTEGER => Type::int(),
             Model::TYPE_FLOAT => Type::float(),
+            Model::TYPE_JSON => self::json(),
             Response::MODEL_NONE => Type::string(),
-            Model::TYPE_JSON => self::$jsonParser,
-            Response::MODEL_ANY => self::$jsonParser,
+            Response::MODEL_ANY => self::json(),
         ];
     }
 
-    
-    static function createTypeMapping(Model $model, Response $response) {
+    /**
+    * Function to create a singleton for $jsonParser
+    *
+    * @return JsonType
+    */
+    protected static function json() 
+    {
+        if (is_null(self::$jsonParser)) 
+        {
+            self::$jsonParser = new JsonType();
+        }
+        return self::$jsonParser;
+    }
 
-        /* 
-            If the map already contains the type, end the recursion 
-            and return.
-        */
+    /**
+    * Function to initialise the typeMapping array with the base cases of the recursion
+    * If the map already contains the type, end the recursion and return.
+    * Iterate through all the rules in the response model. Each rule is of the form 
+    *        [
+    *            [KEY 1] => [
+    *                'type' => A string from Appwrite/Utopia/Response
+    *                'description' => A description of the type 
+    *                'default' => A default value for this type 
+    *                'example' => An example of this type
+    *                'require' => a boolean representing whether this field is required 
+    *                'array' => a boolean representing whether this field is an array 
+    *            ],
+    *            [KEY 2] => [
+    *            ],
+    *            [KEY 3] => [
+    *            ] .....
+    *        ]
+    *   If there are any field names containing characters other than a-z, A-Z, 0-9, _ , 
+    *   we need to remove all those characters. Currently Appwrite's Response model has only the 
+    *   $ sign which is prohibited. So we're only replacing that. We need to replace this with a regex
+    *   based approach.
+    *
+    * @param Model $model
+    * @param Response $response
+    * @return void
+    */
+    static function createTypeMapping(Model $model, Response $response) 
+    {
+
         if (isset(self::$typeMapping[$model->getType()])) return;
     
         $rules = $model->getRules();
         $name = $model->getType();
         $fields = [];
         $type = null;
-        /*
-            Iterate through all the rules in the response model. Each rule is of the form 
-            [
-                [KEY 1] => [
-                    'type' => A string from Appwrite/Utopia/Response
-                    'description' => A description of the type 
-                    'default' => A default value for this type 
-                    'example' => An example of this type
-                    'require' => a boolean representing whether this field is required 
-                    'array' => a boolean representing whether this field is an array 
-                ],
-                [KEY 2] => [
-                ],
-                [KEY 3] => [
-                ] .....
-            ]
-        */
         foreach ($rules as $key => $props) {
-            /* 
-                If there are any field names containing characters other than a-z, A-Z, 0-9, _ , 
-                we need to remove all those characters. Currently Appwrite's Response model has only the 
-                $ sign which is prohibited. So we're only replacing that. We need to replace this with a regex
-                based approach.
-            */
             $keyWithoutSpecialChars = str_replace('$', '', $key);
             if (isset(self::$typeMapping[$props['type']])) {
                 $type = self::$typeMapping[$props['type']];
@@ -80,15 +102,9 @@ class Builder {
                     var_dump("Could Not find model for : {$props['type']}");
                 }
             }
-    
-            /* 
-                If any of the rules is a list, 
-                Wrap the base type with a listOf Type
-            */ 
             if ($props['array']) {
                 $type = Type::listOf($type);
             }
-    
             $fields[$keyWithoutSpecialChars] = [
                 'type' => $type,
                 'description' => $props['description'],
@@ -97,16 +113,23 @@ class Builder {
                 }
             ];
         }
-    
         $objectType = [
             'name' => $name, 
             'fields' => $fields
         ];
-       
         self::$typeMapping[$name] = new ObjectType($objectType);
     }
 
-    private static function getArgType($validator, bool $required, $utopia, $injections) {
+    /**
+    * Function to initialise the typeMapping array with the base cases of the recursion
+    *
+    * @param $validator
+    * @param bool $required
+    * @param $utopia
+    * @param bool $injections
+    * @return void
+    */
+    protected static function getArgType($validator, bool $required, $utopia, $injections) {
         $validator = (\is_callable($validator)) ? call_user_func_array($validator, $utopia->getResources($injections)) : $validator;
         $type = [];
         switch ((!empty($validator)) ? \get_class($validator) : '') {
@@ -128,12 +151,12 @@ class Builder {
             case 'Utopia\Validator\JSON':
             case 'Utopia\Validator\Mock':
             case 'Utopia\Validator\Assoc':
-                $type = Type::string();
+                $type = self::json();
                 break;
             case 'Appwrite\Storage\Validator\File':
                 $type = Type::string();
             case 'Utopia\Validator\ArrayList':
-                $type = Type::listOf(Type::string());
+                $type = Type::listOf(self::json());
                 break;
             case 'Appwrite\Auth\Validator\Password':
                 $type = Type::string();
@@ -165,7 +188,13 @@ class Builder {
         return $type;
     }
     
-    private static function getArgs(array $params, $utopia) {
+    /**
+    * Function to initialise the typeMapping array with the base cases of the recursion
+    *
+    * @param string $a
+    * @return void
+    */
+    protected static function getArgs(array $params, $utopia) {
         $args = [];
         foreach ($params as $key => $value) {
             $args[$key] = [
@@ -177,7 +206,13 @@ class Builder {
         return $args;
     }
     
-    private static function isModel($response, Model $model) {
+    /**
+    * Function to initialise the typeMapping array with the base cases of the recursion
+    *
+    * @param string $a
+    * @return void
+    */
+    protected static function isModel($response, Model $model) {
     
         foreach ($model->getRules() as $key => $rule) {
             if (!isset($response[$key])) {
@@ -187,6 +222,12 @@ class Builder {
         return true;
     }
 
+    /**
+    * Function to initialise the typeMapping array with the base cases of the recursion
+    *
+    * @param string $a
+    * @return void
+    */
     public static function buildSchema($utopia, $response, $register) {
         
         self::init();
@@ -220,6 +261,9 @@ class Builder {
                                 $utopia->execute($route, $args);
                                 $result = $response->getPayload();
                                 if (self::isModel($result, $response->getModel(Response::MODEL_ERROR)) || self::isModel($result, $response->getModel(Response::MODEL_ERROR_DEV))) {
+                                    var_dump("***** There has been an exception.. *****");
+                                    unset($result['trace']);
+                                    // var_dump($result);
                                     throw new MySafeException($result['message'], $result['code']);
                                 }
                                 

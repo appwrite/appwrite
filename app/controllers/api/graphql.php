@@ -6,6 +6,7 @@ use GraphQL\Error\Error;
 use GraphQL\Error\ClientAware;
 use GraphQL\Error\FormattedError;
 use Utopia\App;
+use Utopia\Exception;
 
 /**
  * TODO:
@@ -35,7 +36,7 @@ use Utopia\App;
  *  - Objects
  */
 
-class MySafeException extends \Exception implements ClientAware
+class MySafeException extends Exception implements ClientAware
 {
     public function isClientSafe()
     {
@@ -44,7 +45,7 @@ class MySafeException extends \Exception implements ClientAware
 
     public function getCategory()
     {
-        return 'businessLogic';
+        return 'Appwrite Server Error';
     }
 }
 
@@ -56,19 +57,35 @@ App::post('/v1/graphql')
     ->inject('schema')
     ->inject('utopia')
     ->inject('register')
-    ->middleware(false) 
+    ->middleware(true) 
     ->action(function ($request, $response, $schema, $utopia, $register) {
 
         $myErrorFormatter = function(Error $error) {
             $formattedError = FormattedError::createFromException($error); 
-            var_dump("***** IN ERROR FORMATTER ******");
-            var_dump("{$error->getMessage()}");
-            var_dump("{$error->getCode()}");
-            var_dump("{$error->getFile()}");
-            var_dump("{$error->getLine()}");
-            var_dump("{$error->getTrace()}");
+            // var_dump("***** IN ERROR FORMATTER ******");
+            // var_dump("{$error->getMessage()}");
+            // var_dump("{$error->getCode()}");
+            // var_dump("{$error->getFile()}");
+            // var_dump("{$error->getLine()}");
+            // var_dump("{$error->getTrace()}");
+
+            $formattedError['code'] = $error->getCode();
+            $formattedError['file'] = $error->getFile();
+            $formattedError['line'] = $error->getLine();
+            // $formattedError['trace'] = $error->getTrace();
             return $formattedError;
         };
+
+        $myErrorHandler = function(array $errors, callable $formatter) {
+            // $errors = array_map( function ($error) {
+            //     unset($error['trace']);
+            // },$errors);
+            // var_dump("**** In My Error Handler *****");
+            // var_dump($errors);
+
+            return array_map($formatter, $errors);
+        };
+
 
         $query = $request->getPayload('query', '');
         $variables = $request->getPayload('variables', null);
@@ -82,7 +99,7 @@ App::post('/v1/graphql')
 
         try {
             $rootValue = [];
-            $result = GraphQL::executeQuery($schema, $query, $rootValue, null, $variables)->setErrorFormatter($myErrorFormatter);
+            $result = GraphQL::executeQuery($schema, $query, $rootValue, null, $variables)->setErrorFormatter($myErrorFormatter)->setErrorsHandler($myErrorHandler);
             $output = $result->toArray();
         } catch (\Exception $error) {
             $output = [
