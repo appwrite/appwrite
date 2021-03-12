@@ -388,8 +388,6 @@ class WebhooksCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
 
-        $executionId = $execution['body']['$id'] ?? '';
-
         $this->assertEquals($execution['headers']['status-code'], 201);
         $this->assertNotEmpty($execution['body']['$id']);
 
@@ -420,6 +418,39 @@ class WebhooksCustomServerTest extends Scope
          * Test for FAILURE 
          */
 
-        return array_merge($data, ['executionId' => $executionId]);
+        return $data;
+    }
+
+    /**
+     * @depends testUpdateTag
+     */
+    public function testDeleteTag($data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $tag = $this->client->call(Client::METHOD_DELETE, '/functions/'.$data['functionId'].'/tags/'.$data['tagId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($tag['headers']['status-code'], 204);
+        $this->assertEmpty($tag['body']);
+
+        $webhook = $this->getLastRequest();
+
+        $this->assertEquals($webhook['method'], 'POST');
+        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
+        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'functions.tags.delete');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+
+        /**
+         * Test for FAILURE
+         */
+
+        return $data;
     }
 }
