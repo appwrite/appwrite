@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Webhooks;
 
+use CURLFile;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -258,6 +259,134 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['data']['email'], $data['email']);
         $this->assertEquals($webhook['data']['emailVerification'], false);
         $this->assertEquals($webhook['data']['prefs'], []);
+
+        return $data;
+    }
+
+    public function testCreateFunction():array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Test',
+            'env' => 'php-7.4',
+            'execute' => ['*'],
+            'timeout' => 10,
+        ]);
+
+        $functionId = $function['body']['$id'] ?? '';
+
+        $this->assertEquals($function['headers']['status-code'], 201);
+        $this->assertNotEmpty($function['body']['$id']);
+
+        $webhook = $this->getLastRequest();
+
+        $this->assertEquals($webhook['method'], 'POST');
+        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
+        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'functions.create');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+
+        /**
+         * Test for FAILURE 
+         */
+
+        return [
+            'functionId' => $functionId,
+        ];
+    }
+
+    /**
+     * @depends testCreateFunction
+     */
+    public function testCreateTag($data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $tag = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/tags', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'command' => 'php function.php',
+            'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
+        ]);
+
+        $tagId = $tag['body']['$id'] ?? '';
+
+        $this->assertEquals($tag['headers']['status-code'], 201);
+        $this->assertNotEmpty($tag['body']['$id']);
+
+        $webhook = $this->getLastRequest();
+
+        $this->assertEquals($webhook['method'], 'POST');
+        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
+        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'functions.tags.create');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+
+        /**
+         * Test for FAILURE 
+         */
+
+        return array_merge($data, ['tagId' => $tagId]);
+    }
+
+    /**
+     * @depends testCreateTag
+     */
+    public function testUpdateTag($data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/functions/'.$data['functionId'].'/tag', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'tag' => $data['tagId'],
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $webhook = $this->getLastRequest();
+
+        $this->assertEquals($webhook['method'], 'POST');
+        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
+        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'functions.tags.update');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+
+        /**
+         * Test for FAILURE 
+         */
+
+        return $data;
+    }
+
+    /**
+     * @depends testUpdateTag
+     */
+    public function testCreateExecution($data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        
+        /**
+         * Test for FAILURE 
+         */
 
         return $data;
     }
