@@ -31,6 +31,13 @@ ResqueScheduler::enqueueAt(\time() + 30, 'v1-certificates', 'CertificatesV1', [
     'validateCNAME' => false,
 ]);
 
+$register->set('cache', function () use ($register) { // Register cache connection
+    $redis = $register->get('redisPool')->get();
+    $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
+
+    return $redis;
+}, true);
+
 Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80));

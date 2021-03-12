@@ -5,8 +5,7 @@ require_once __DIR__ . '/init.php';
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Realtime\Realtime;
 use Appwrite\Utopia\Response;
-use Swoole\Database\RedisConfig;
-use Swoole\Database\RedisPool;
+use Swoole\Database\PDOProxy;
 use Swoole\Process;
 use Swoole\Http\Request;
 use Swoole\Http\Response as SwooleResponse;
@@ -34,6 +33,13 @@ $register->set('db', function () use ($register) {
     $pdo = $pool->get()->__getObject();
 
     return $pdo;
+}, true);
+
+$register->set('cache', function () use ($register) { // Register cache connection
+    $redis = $register->get('redisPool')->get();
+    $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
+
+    return $redis;
 }, true);
 
 $server = new Server('0.0.0.0', 80);

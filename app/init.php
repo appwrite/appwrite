@@ -165,7 +165,7 @@ $register->set('dbPool', function () { // Register DB connection
             PDONative::ATTR_ERRMODE => PDONative::ERRMODE_EXCEPTION,
         ]);
 
-    $pool = new PDOPool($config, 4096); // TODO: Investigate pool size
+    $pool = new PDOPool($config, 16384); // TODO: Investigate pool size
 
     return $pool;
 });
@@ -226,16 +226,17 @@ $register->set('redisPool', function () {
         ->withReadTimeout(0)
         ->withRetryInterval(0);
 
-    $pool = new RedisPool($config, 4096); // TODO: Investigate pool size
+    $pool = new RedisPool($config, 16384); // TODO: Investigate pool size
 
     return $pool;
 });
-$register->set('cache', function () use ($register) { // Register cache connection
-    $redis = $register->get('redisPool')->get();
+$register->set('cache', function () { // Register cache connection
+    $redis = new Redis();
+    $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
     $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
     return $redis;
-}, true);
+});
 $register->set('smtp', function () {
     $mail = new PHPMailer(true);
 
