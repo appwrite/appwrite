@@ -137,10 +137,6 @@ class FunctionsCustomClientTest extends Scope
                 'funcKey2' => 'funcValue2',
                 'funcKey3' => 'funcValue3',
             ],
-            'events' => [
-                'account.create',
-                'account.delete',
-            ],
             'timeout' => 10,
         ]);
 
