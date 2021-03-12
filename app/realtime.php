@@ -6,6 +6,8 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\Realtime\Realtime;
 use Appwrite\Utopia\Response;
 use Swoole\Database\PDOProxy;
+use Swoole\Database\RedisConfig;
+use Swoole\Database\RedisPool;
 use Swoole\Process;
 use Swoole\Http\Request;
 use Swoole\Http\Response as SwooleResponse;
@@ -206,6 +208,21 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
         Realtime::subscribe($project->getId(), $connection, $roles, $subscriptions, $connections, $channels);
 
         $server->push($connection, json_encode($channels));
+
+        /**
+         * Put used PDO and Redis Connections back into their pools.
+         */
+
+        /** @var Swoole\Database\PDOPool $dbPool */
+        $dbPool = $register->get('dbPool');
+        $dbPool->put(new PDOProxy(function () use ($register) {
+             return $register->get('db');
+            }
+        ));
+
+        /** @var Swoole\Database\RedisPool $redisPool */
+        $redisPool = $register->get('redisPool');
+        $redisPool->put($register->get('cache'));
     } catch (\Throwable $th) {
         $response = [
             'code' => $th->getCode(),
