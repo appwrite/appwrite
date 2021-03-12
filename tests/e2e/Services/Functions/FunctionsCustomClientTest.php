@@ -185,6 +185,7 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(200, $executions['headers']['status-code']);
         $this->assertCount(1, $executions['body']['executions']);
+        $this->assertEquals('completed', $executions['body']['executions'][0]['status']);
         $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['stdout']);
         $this->assertStringContainsString($this->getUser()['$id'], $executions['body']['executions'][0]['stdout']);
 
