@@ -12,7 +12,7 @@ class GraphQLServerTest extends Scope
     use SideServer;
     use ProjectCustom;
 
-    public function testCreateCollection() {
+    public function testCreateCollection(): array {
         $projectId = $this->getProject()['$id'];
         $key = $this->getProject()['apiKey'];
         $query = "
@@ -125,57 +125,55 @@ class GraphQLServerTest extends Scope
         $this->assertEquals(true, $secondRule['required']);
         $this->assertEquals([], $secondRule['list']);
 
-        $moviesVariables = [
-            'name' => 'Movies',
-            'read' => ['*'],
-            'write' => ['role:member', 'role:admin'],
-            'rules' => [
-                [
-                    'label' => 'Name',
-                    'key' => 'name',
-                    'type' => 'text',
-                    'default' => '',
-                    'required' => true,
-                    'array' => false
-                ],
-                [
-                    'label' => 'Release Year',
-                    'key' => 'releaseYear',
-                    'type' => 'numeric',
-                    'default' => 0,
-                    'required' => false,
-                    'array' => false
-                ],
-                [
-                    'label' => 'Actors',
-                    'key' => 'actors',
-                    'type' => 'document',
-                    'default' => [],
-                    'required' => false,
-                    'array' => true,
-                    'list' => [$data['id']],
-                ],
-            ],
-        ];
+        // $moviesVariables = [
+        //     'name' => 'Movies',
+        //     'read' => ['*'],
+        //     'write' => ['role:member', 'role:admin'],
+        //     'rules' => [
+        //         [
+        //             'label' => 'Name',
+        //             'key' => 'name',
+        //             'type' => 'text',
+        //             'default' => '',
+        //             'required' => true,
+        //             'array' => false
+        //         ],
+        //         [
+        //             'label' => 'Release Year',
+        //             'key' => 'releaseYear',
+        //             'type' => 'numeric',
+        //             'default' => 0,
+        //             'required' => false,
+        //             'array' => false
+        //         ],
+        //         [
+        //             'label' => 'Actors',
+        //             'key' => 'actors',
+        //             'type' => 'document',
+        //             'default' => [],
+        //             'required' => false,
+        //             'array' => true,
+        //             'list' => [$data['id']],
+        //         ],
+        //     ],
+        // ];
         
-        $graphQLPayload = [
-            "query" => $query,
-            "variables" => $moviesVariables
-        ];
+        // $graphQLPayload = [
+        //     "query" => $query,
+        //     "variables" => $moviesVariables
+        // ];
         
-        $movies = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $key
-        ]), $graphQLPayload);
+        // $movies = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+        //     'origin' => 'http://localhost',
+        //     'content-type' => 'application/json',
+        //     'x-appwrite-project' => $projectId,
+        //     'x-appwrite-key' => $key
+        // ]), $graphQLPayload);
 
-        var_dump($movies);
-
-        $this->assertEquals($movies['headers']['status-code'], 201);
-        $this->assertNull($movies['body']['errors']);
-        $this->assertIsArray($movies['body']['data']);
-        $this->assertIsArray($movies['body']['data']['database_createCollection']);
+        // $this->assertEquals($movies['headers']['status-code'], 201);
+        // $this->assertNull($movies['body']['errors']);
+        // $this->assertIsArray($movies['body']['data']);
+        // $this->assertIsArray($movies['body']['data']['database_createCollection']);
 
         // $data = $movies['body']['data']['database_createCollection'];
         // $this->assertArrayHasKey('id', $data);
@@ -230,19 +228,111 @@ class GraphQLServerTest extends Scope
         // $this->assertEquals([$actors['body']['data']['$id']], $thirdRule['list']);
 
         // return $data;
+
+        return ['actorsId' => $data['id']];
     }
 
+    /**
+    * @depends testCreateCollection
+    */
+    public function testDocumentCreate(array $data) {
+        $projectId = $this->getProject()['$id'];
+        $key = $this->getProject()['apiKey'];
+        $query = "
+            mutation createUser(\$collectionId: String!, \$data: Json!, \$read: [Json]!, \$write: [Json]!){
+                database_createDocument (collectionId: \$collectionId, data: \$data, read: \$read, write: \$write)
+            }
+        ";
 
-    //  /**
-    //  * @depends testCreateCollection
-    //  */
-    // public function testAddDocuments(array $data) {
+        $variables = [
+            'collectionId' => $data['actorsId'],
+            'data' => [
+                'firstName' => 'Robert',
+                'lastName' => "Downey"
+            ],
+            'read' => ['*'],
+            'write' => ['*'],
+        ];
+
+        $graphQLPayload = [
+            "query" => $query,
+            "variables" => $variables
+        ];
+
+        $document = $this->client->call(Client::METHOD_POST, '/graphql', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $key
+        ], $graphQLPayload);
+
+
+        $this->assertEquals($document['headers']['status-code'], 201);
+        $this->assertNull($document['body']['errors']);
+        $this->assertIsArray($document['body']['data']);
+        $this->assertIsArray($document['body']['data']['database_createDocument']);
+        $doc = $document['body']['data']['database_createDocument'];
+        $this->assertArrayHasKey('$id', $doc);
+        $this->assertEquals($data['actorsId'], $doc['$collection']);
+        $this->assertEquals('Robert', $doc['firstName']);
+        $this->assertEquals('Downey', $doc['lastName']);
+        $permissions = $doc['$permissions'];
+        $this->assertIsArray($permissions);
+        $this->assertArrayHasKey('read', $permissions);
+        $this->assertArrayHasKey('write', $permissions);
+        $read = $permissions['read'];
+        $this->assertContains('*', $read);
+        $write = $permissions['write'];
+        $this->assertContains('*', $write);
+    }
+
+    public function testUserCreate() {
+        $projectId = $this->getProject()['$id'];
+        $key = $this->getProject()['apiKey'];
+        $query = "
+            mutation createUser(\$email: String!, \$password: String!, \$name: String){
+                users_create (email: \$email, password: \$password, name: \$name) {
+                    id
+                    name
+                    registration
+                    status
+                    email
+                    emailVerification
+                    prefs
+                }
+            }
+        ";
         
-    //     $response = $this->client->call(Client::METHOD_DELETE, '/database/collections/'.$data['id'], [
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //         'x-appwrite-key' => $this->getProject()['apiKey']
-    //     ]);
+        $variables = [
+            'email' => 'users.service@example.com',
+            'password' => 'password',
+            'name' => 'Project User',
+        ];
 
-    // }
+        $graphQLPayload = [
+            "query" => $query,
+            "variables" => $variables
+        ];
+
+        $user = $this->client->call(Client::METHOD_POST, '/graphql', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $key
+        ], $graphQLPayload);
+
+        $this->assertEquals($user['headers']['status-code'], 201);
+        $this->assertNull($user['body']['errors']);
+        $this->assertIsArray($user['body']['data']);
+        $this->assertIsArray($user['body']['data']['users_create']);
+
+        $data = $user['body']['data']['users_create'];
+        $this->assertArrayHasKey('id', $data);
+        $this->assertArrayHasKey('registration', $data);
+        $this->assertEquals('Project User', $data['name']);
+        $this->assertEquals('users.service@example.com', $data['email']);
+        $this->assertEquals(0, $data['status']);
+        $this->assertEquals(false, $data['emailVerification']);
+        $this->assertEquals([], $data['prefs']);
+
+    }
+
 }
