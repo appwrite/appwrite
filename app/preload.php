@@ -28,10 +28,9 @@ foreach ([
     realpath(__DIR__ . '/../vendor/felixfbecker'),
     realpath(__DIR__ . '/../vendor/twig/twig'),
     realpath(__DIR__ . '/../vendor/guzzlehttp/guzzle'),
-    realpath(__DIR__ . '/../vendor/domnikl'),
-    realpath(__DIR__ . '/../vendor/domnikl'),
+    realpath(__DIR__ . '/../vendor/slickdeals'),
     realpath(__DIR__ . '/../vendor/psr/log'),
-    realpath(__DIR__ . '/../vendor/piwik'),
+    realpath(__DIR__ . '/../vendor/matomo'),
     realpath(__DIR__ . '/../vendor/symfony'),
 ] as $key => $value) {
     if($value !== false) {
