@@ -205,8 +205,8 @@ App::get('/v1/users/:userId/sessions')
                 continue;
             }
 
-            $token->setAttribute('countryName', (isset($countries[strtoupper($token->getAttribute('contryCode'))]))
-                ? $countries[strtoupper($token->getAttribute('contryCode'))]
+            $token->setAttribute('countryName', (isset($countries[strtoupper($token->getAttribute('countryCode'))]))
+                ? $countries[strtoupper($token->getAttribute('countryCode'))]
                 : $locale->getText('locale.country.unknown'));
             $token->setAttribute('current', false);
 
@@ -373,6 +373,7 @@ App::patch('/v1/users/:userId/status')
 App::patch('/v1/users/:userId/prefs')
     ->desc('Update User Preferences')
     ->groups(['api', 'users'])
+    ->label('event', 'users.update.prefs')
     ->label('scope', 'users.write')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'users')

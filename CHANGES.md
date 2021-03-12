@@ -29,8 +29,10 @@
 ## Bug Fixes
 
 - Updated missing storage env vars
+- Fixed a bug, that added a wrong timzone offset to user log timestamps
 - Fixed a bug, that Response format header was not added in the access-control-allow-header list.
 - Fixed a bug where countryName is unknown on sessions (#933)
+- Added missing event users.update.prefs (#952)
 
 ## Security
 

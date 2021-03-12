@@ -157,6 +157,11 @@ return [
         'model' => Response::MODEL_USER,
         'note' => 'version >= 0.7',
     ],
+    'users.update.prefs' => [
+        'description' => 'This event triggers when a user preference is updated from the users API.',
+        'model' => Response::MODEL_ANY,
+        'note' => 'version >= 0.7',
+    ],
     'users.update.status' => [
         'description' => 'This event triggers when a user status is updated from the users API.',
         'model' => Response::MODEL_USER,
