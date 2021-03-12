@@ -1,53 +1,12 @@
 <?php
 
 use GraphQL\GraphQL;
+use GraphQL\Type;
 use Appwrite\Utopia\Response;
 use GraphQL\Error\Error;
-use GraphQL\Error\ClientAware;
 use GraphQL\Error\FormattedError;
 use Utopia\App;
-use Utopia\Exception;
 
-/**
- * TODO:
- *  1. Map all objects, object-params, object-fields
- *  2. Parse GraphQL request payload (use: https://github.com/webonyx/graphql-php)
- *  3. Route request to relevant controllers (of REST API?) / resolvers and aggergate data
- *  4. Handle scope authentication
- *  5. Handle errors
- *  6. Return response
- *  7. Write tests!
- * 
- * Demo
- *  curl -H "Content-Type: application/json" http://localhost/v1/graphql -d '{"query": "query { echo(message: \"Hello World\") }" }'
- *  
- * Explorers:
- *  - https://shopify.dev/tools/graphiql-admin-api
- *  - https://developer.github.com/v4/explorer/
- *  - http://localhost:4000
- * 
- * Docs
- *  - Overview
- *  - Clients
- * 
- *  - Queries
- *  - Mutations
- * 
- *  - Objects
- */
-
-class MySafeException extends Exception implements ClientAware
-{
-    public function isClientSafe()
-    {
-        return true;
-    }
-
-    public function getCategory()
-    {
-        return 'Appwrite Server Error';
-    }
-}
 
 App::post('/v1/graphql')
     ->desc('GraphQL Endpoint')
@@ -59,6 +18,11 @@ App::post('/v1/graphql')
     ->inject('register')
     ->middleware(true) 
     ->action(function ($request, $response, $schema, $utopia, $register) {
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Type\Schema $schema */
+        /** @var Utopia\App $utopia */
+        /** @var Utopia\Registry\Registry $register */
 
         $myErrorFormatter = function(Error $error) {
             $formattedError = FormattedError::createFromException($error); 
@@ -85,7 +49,6 @@ App::post('/v1/graphql')
 
             return array_map($formatter, $errors);
         };
-
 
         $query = $request->getPayload('query', '');
         $variables = $request->getPayload('variables', null);

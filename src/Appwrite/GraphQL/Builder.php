@@ -5,13 +5,10 @@ namespace Appwrite\GraphQL;
 use Appwrite\GraphQL\Types\JsonType;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
-use GraphQL\Type\Definition\ListOfType;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
-use MySafeException;
-use Exception;
-use Utopia\Validator;
+use Appwrite\GraphQL\Exception;
 
 class Builder {
 
@@ -223,10 +220,13 @@ class Builder {
     }
 
     /**
-    * Function to initialise the typeMapping array with the base cases of the recursion
+    * This function goes through all the REST endpoints in the API and builds a 
+    * GraphQL schema for all those routes whose response model is neither empty nor NONE
     *
-    * @param string $a
-    * @return void
+    * @param $utopia
+    * @param $response
+    * @param $register
+    * @return Schema
     */
     public static function buildSchema($utopia, $response, $register) {
         var_dump("[INFO] Building GraphQL Schema...");
@@ -253,17 +253,16 @@ class Builder {
                         'args' => $args,
                         'resolve' => function ($type, $args, $context, $info) use (&$register, $route) {
                             $utopia = $register->get('__app');
+                            $utopia->setRoute($route)
+                                    ->execute($route, $args);
                             $response = $register->get('__response');
-                            $utopia->setRoute($route);
-                            $utopia->execute($route, $args);
                             $result = $response->getPayload();
                             if (self::isModel($result, $response->getModel(Response::MODEL_ERROR)) || self::isModel($result, $response->getModel(Response::MODEL_ERROR_DEV))) {
                                 var_dump("***** There has been an exception.. *****");
                                 unset($result['trace']);
                                 // var_dump($result);
-                                throw new MySafeException($result['message'], $result['code']);
+                                throw new Exception($result['message'], $result['code']);
                             }
-                            
                             return $result;
                         }
                     ];
@@ -296,6 +295,7 @@ class Builder {
 
         $time_elapsed_secs = microtime(true) - $start;
         var_dump("[INFO] Time Taken To Build Schema : ${time_elapsed_secs}s");
+
         return $schema; 
     }
 }

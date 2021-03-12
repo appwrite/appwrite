@@ -98,8 +98,6 @@ App::get('/v1/users')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
-        var_dump("Running execute method for list users");
-        
         $results = $projectDB->getCollection([
             'limit' => $limit,
             'offset' => $offset,
