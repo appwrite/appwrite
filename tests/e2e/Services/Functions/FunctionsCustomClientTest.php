@@ -176,7 +176,7 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(201, $execution['headers']['status-code']);
 
-        sleep(10);
+        sleep(30);
         $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
