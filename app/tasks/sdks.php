@@ -97,7 +97,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config->setComposerVendor('appwrite');
                         $config->setComposerPackage('cli');
                         $config->setExecutableName('appwrite');
-                        $config->setExecutableName('appwrite');
                         $config->setLogo("
     _                            _ _           ___   __   _____ 
    /_\  _ __  _ ____      ___ __(_) |_ ___    / __\ / /   \_   \
