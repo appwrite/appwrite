@@ -148,6 +148,7 @@ class FunctionsV1
         $event = $this->args['event'] ?? '';
         $scheduleOriginal = $this->args['scheduleOriginal'] ?? '';
         $payload = (!empty($this->args['payload'])) ? json_encode($this->args['payload']) : '';
+        $userId = $this->args['userId'] ?? '';
 
         $database = new Database();
         $database->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
@@ -195,7 +196,7 @@ class FunctionsV1
 
                         Console::success('Triggered function: '.$event);
 
-                        $this->execute('event', $projectId, '', $database, $function, $event, $payload);
+                        $this->execute('event', $projectId, '', $database, $function, $event, $payload, $userId);
                     }
                 }
                 break;
@@ -251,8 +252,8 @@ class FunctionsV1
                     'scheduleOriginal' => $function->getAttribute('schedule', ''),
                 ]);  // Async task rescheduale
 
-                $this->execute($trigger, $projectId, $executionId, $database, $function);
                 
+                $this->execute($trigger, $projectId, $executionId, $database, $function, $userId);
                 break;
 
             case 'http':
@@ -264,7 +265,7 @@ class FunctionsV1
                     throw new Exception('Function not found ('.$functionId.')');
                 }
 
-                $this->execute($trigger, $projectId, $executionId, $database, $function);
+                $this->execute($trigger, $projectId, $executionId, $database, $function, $userId);
                 break;
             
             default:
@@ -286,7 +287,7 @@ class FunctionsV1
      * 
      * @return void
      */
-    public function execute(string $trigger, string $projectId, string $executionId, Database $database, Document $function, string $event = '', string $payload = ''): void
+    public function execute(string $trigger, string $projectId, string $executionId, Database $database, Document $function, string $event = '', string $payload = '', string $userId = ''): void
     {
         global $list;
 
@@ -469,12 +470,11 @@ class FunctionsV1
             throw new Exception('Failed saving execution to DB', 500);
         }
 
-        var_dump($execution);
         $executionUpdate = new Event('v1-webhooks', 'WebhooksV1');
 
         $executionUpdate
             ->setParam('projectId', $projectId)
-            ->setParam('userId', '')
+            ->setParam('userId', $userId)
             ->setParam('event', 'functions.executions.update')
             ->setParam('payload', [
                 '$id' => $execution['$id'],
@@ -489,7 +489,6 @@ class FunctionsV1
             ]);
 
         $executionUpdate->trigger();
-
 
         $usage = new Event('v1-usage', 'UsageV1');
 
