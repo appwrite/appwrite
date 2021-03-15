@@ -1,7 +1,4 @@
-## Getting Started for Flutter
-
-### Create Your First Appwrite Project
-Go to your new Appwrite console, and once inside, click the (plus) icon in the top navigation header or on the **'Create Project'** button on your console homepage. Choose a name for your project and click create to get started.
+## Getting Started
 
 ### Add your Flutter Platform
 To init your SDK and start interacting with Appwrite services, you need to add a new Flutter platform to your project. To add a new platform, go to your Appwrite console, choose the project you created in the step before, and click the 'Add Platform' button.
@@ -10,11 +7,11 @@ From the options, choose to add a new **Flutter** platform and add your app cred
 
 If you are building your Flutter application for multiple devices, you have to follow this process for each different device.
 
-### iOS
+#### iOS
 For **iOS** add your app name and Bundle ID, You can find your Bundle Identifier in the General tab for your app's primary target in Xcode.
 
 ### Android
-For **Android** add your app <u>name</u> and <u>package name</u>, Your package name is generally the applicationId in your app-level build.gradle file. By registering your new app platform, you are allowing your app to communicate with the Appwrite API.</>
+For **Android** add your app <u>name</u> and <u>package name</u>, Your package name is generally the applicationId in your app-level build.gradle file. By registering your new app platform, you are allowing your app to communicate with the Appwrite API.
 
 #### iOS
 
@@ -44,16 +41,16 @@ In order to capture the Appwrite OAuth callback url, the following activity need
 ```
 
 #### Web
-Appwrite 0.7, and the Appwrite Flutter SDK 0.3.0 have added support for Flutter Web. To build web apps that integrate with Appwrite successfully, all you have to do is add a web platform on your Appwrite project's dashboard and list the domain your website will use to allow communication to the Appwrite API.</p><div class="notice"> 
+Appwrite 0.7, and the Appwrite Flutter SDK 0.3.0 have added support for Flutter Web. To build web apps that integrate with Appwrite successfully, all you have to do is add a web platform on your Appwrite project's dashboard and list the domain your website will use to allow communication to the Appwrite API.
 
 ### Flutter Web Cross-Domain Communication & Cookies
-<p>While running Flutter Web, make sure your Appwrite server and your Flutter client are using the same top-level domain and the same protocol (HTTP or HTTPS) to communicate. When trying to communicate between different domains or protocols, you may receive HTTP status error 401 because some modern browsers block cross-site or insecure cookies for enhanced privacy. In production, Appwrite allows you set multiple <a href="/docs/custom-domains">custom-domains</a> for each project.</p></div>
+While running Flutter Web, make sure your Appwrite server and your Flutter client are using the same top-level domain and the same protocol (HTTP or HTTPS) to communicate. When trying to communicate between different domains or protocols, you may receive HTTP status error 401 because some modern browsers block cross-site or insecure cookies for enhanced privacy. In production, Appwrite allows you set multiple [custom-domains](https://appwrite.io/docs/custom-domains) for each project.
 
 ### Init your SDK
 
 <p>Initialize your SDK code with your project ID, which can be found in your project settings page.
 
-```
+```dart
 import 'package:appwrite/appwrite.dart';
 Client client = Client();
 
@@ -65,13 +62,15 @@ client
 ;
 ```
 
-<p>Before starting to send any API calls to your new Appwrite instance, make sure your Android or iOS emulators has network access to the Appwrite server hostname or IP address.</p><p>When trying to connect to Appwrite from an emulator or a mobile device, localhost is the hostname for the device or emulator and not your local Appwrite instance. You should replace localhost with your private IP as the Appwrite endpoint's hostname. You can also use a service like <a href="https://ngrok.com/" target="_blank" rel="noopener">ngrok</a> to proxy the Appwrite API.</p>
+Before starting to send any API calls to your new Appwrite instance, make sure your Android or iOS emulators has network access to the Appwrite server hostname or IP address.
+
+When trying to connect to Appwrite from an emulator or a mobile device, localhost is the hostname for the device or emulator and not your local Appwrite instance. You should replace localhost with your private IP as the Appwrite endpoint's hostname. You can also use a service like <a href="https://ngrok.com/" target="_blank" rel="noopener">ngrok</a> to proxy the Appwrite API.
 
 ### Make Your First Request
 
 <p>Once your SDK object is set, access any of the Appwrite services and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the API References section.
 
-```
+```dart
 // Register User
 Account account = Account(client);
 Response user = await account
@@ -84,7 +83,7 @@ name: 'My Name'
 
 ### Full Example
 
-```
+```dart
 import 'package:appwrite/appwrite.dart';
 Client client = Client();
 
@@ -110,6 +109,7 @@ name: 'My Name'
 
 ### Learn more
 You can use followng resources to learn more and get help
-- [Appwrite Docs](https://appwrite.io/docs)
-- [Discord Community](https://appwrite.io/discord)
-- [Appwrite Flutter Playground](https://github.com/appwrite/playground-for-flutter)
+- 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-flutter)
+- 📜 [Appwrite Docs](https://appwrite.io/docs)
+- 💬 [Discord Community](https://appwrite.io/discord)
+- 🚂 [Appwrite Flutter Playground](https://github.com/appwrite/playground-for-flutter)
