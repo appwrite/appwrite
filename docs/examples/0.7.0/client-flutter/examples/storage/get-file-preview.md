@@ -8,10 +8,18 @@ void main() { // Init SDK
     .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
     .setProject('5df5acd0d48c2') // Your project ID
   ;
-
-  String result = storage.getFilePreview(
-    fileId: '[FILE_ID]',
-  );
-
-  print(result); // Resource URL string
 }
+
+//displaying image
+FutureBuilder(
+  future: storage.getFilePreview(
+    fileId: '[FILE_ID]',
+  ), //works for both public file and private file, for private files you need to be logged in
+  builder: (context, snapshot) {
+    return snapshot.hasData && snapshot.data != null
+      ? Image.memory(
+          snapshot.data.data,
+        )
+      : CircularProgressIndicator();
+  },
+);

@@ -294,7 +294,7 @@ App::put('/v1/functions/:functionId')
         }
 
         $original = $function->getAttribute('schedule', '');
-        $cron = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? CronExpression::factory($schedule) : null;
+        $cron = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? new CronExpression($schedule) : null;
         $next = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : null;
 
         $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
@@ -359,7 +359,7 @@ App::patch('/v1/functions/:functionId/tag')
         }
 
         $schedule = $function->getAttribute('schedule', '');
-        $cron = (empty($function->getAttribute('tag')) && !empty($schedule)) ? CronExpression::factory($schedule) : null;
+        $cron = (empty($function->getAttribute('tag')) && !empty($schedule)) ? new CronExpression($schedule) : null;
         $next = (empty($function->getAttribute('tag')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : null;
 
         $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [

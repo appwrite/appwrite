@@ -97,7 +97,10 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                         </div>
                     </div>
                     <div class="col span-3">
-                        <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.network.total|humanFileSize}}" data-default="0">0</span></div>
+                        <div class="value margin-bottom-small">
+                            <span class="sum" data-ls-bind="{{usage.network.total|humanFileSize}}" data-default="0">0</span>
+                            <span data-ls-bind="{{usage.network.total|humanFileUnit}}" class="text-size-small unit"></span>
+                        </div>
                         <div class="metric margin-bottom-small">Bandwidth</div>
 
                         <div class="margin-top-large value small">
@@ -117,7 +120,10 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                     <div class="margin-top-small"><b class="text-size-small unit">Documents</b></div>
                 </div>
                 <div class="col span-3">
-                    <div class="value"><span class="sum" data-ls-bind="{{usage.storage.total|humanFileSize}}" data-default="0">0</span></div>
+                    <div class="value">
+                        <span class="sum" data-ls-bind="{{usage.storage.total|humanFileSize}}" data-default="0">0</span>
+                        <span data-ls-bind="{{usage.storage.total|humanFileUnit}}" class="text-size-small unit"></span>
+                    </div>
                     <div class="margin-top-small"><b class="text-size-small unit">Storage</b></div>
                 </div>
                 <div class="col span-3">
