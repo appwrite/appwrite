@@ -23,7 +23,7 @@ The Appwrite SDK uses ASWebAuthenticationSession on iOS 12+ and SFAuthentication
 4. In Deployment Info, 'Target' select iOS 11.0
 
 ### Android
-In order to capture the Appwrite OAuth callback url, the following activity needs to be added to your <a href="https://github.com/appwrite/playground-for-flutter/blob/master/android/app/src/main/AndroidManifest.xml" target="_blank" rel="noopener">AndroidManifest.xml</a>. Be sure to relpace the **[PROJECT_ID]** string with your actual Appwrite project ID. You can find your Appwrite project ID in you project settings screen in your Appwrite console.
+In order to capture the Appwrite OAuth callback url, the following activity needs to be added to your [AndroidManifest.xml](https://github.com/appwrite/playground-for-flutter/blob/master/android/app/src/main/AndroidManifest.xml). Be sure to relpace the **[PROJECT_ID]** string with your actual Appwrite project ID. You can find your Appwrite project ID in you project settings screen in your Appwrite console.
 
 ```xml
 <manifest>
@@ -64,7 +64,7 @@ client
 
 Before starting to send any API calls to your new Appwrite instance, make sure your Android or iOS emulators has network access to the Appwrite server hostname or IP address.
 
-When trying to connect to Appwrite from an emulator or a mobile device, localhost is the hostname for the device or emulator and not your local Appwrite instance. You should replace localhost with your private IP as the Appwrite endpoint's hostname. You can also use a service like <a href="https://ngrok.com/" target="_blank" rel="noopener">ngrok</a> to proxy the Appwrite API.
+When trying to connect to Appwrite from an emulator or a mobile device, localhost is the hostname for the device or emulator and not your local Appwrite instance. You should replace localhost with your private IP as the Appwrite endpoint's hostname. You can also use a service like [ngrok](https://ngrok.com/) to proxy the Appwrite API.
 
 ### Make Your First Request
 
