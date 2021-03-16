@@ -23,7 +23,7 @@ class Builder {
     *
     * @return   void
     */
-    protected static function init() 
+    public static function init() 
     {
         self::$typeMapping = [
             Model::TYPE_BOOLEAN => Type::boolean(),
@@ -41,10 +41,9 @@ class Builder {
     *
     * @return JsonType
     */
-    protected static function json() 
+    public static function json() 
     {
-        if (is_null(self::$jsonParser)) 
-        {
+        if (is_null(self::$jsonParser)) {
             self::$jsonParser = new JsonType();
         }
         return self::$jsonParser;
@@ -75,13 +74,14 @@ class Builder {
     *
     * @param Model $model
     * @param Response $response
-    * @return void
+    * @return Type
     */
-    static function createTypeMapping(Model $model, Response $response) 
+    static function getTypeMapping(Model $model, Response $response): Type
     {
+        if (isset(self::$typeMapping[$model->getType()])) {
+            return self::$typeMapping[$model->getType()];
+        }
 
-        if (isset(self::$typeMapping[$model->getType()])) return;
-    
         $rules = $model->getRules();
         $name = $model->getType();
         $fields = [];
@@ -93,8 +93,7 @@ class Builder {
             } else {
                 try {
                     $complexModel = $response->getModel($props['type']);
-                    self::createTypeMapping($complexModel, $response);
-                    $type = self::$typeMapping[$props['type']];
+                    $type = self::getTypeMapping($complexModel, $response);
                 } catch (Exception $e) {
                     var_dump("Could Not find model for : {$props['type']}");
                 }
@@ -114,7 +113,8 @@ class Builder {
             'name' => $name, 
             'fields' => $fields
         ];
-        self::$typeMapping[$name] = new ObjectType($objectType);
+        self::$typeMapping[$name] = new ObjectType($objectType); 
+        return self::$typeMapping[$name];
     }
 
     /**
@@ -243,8 +243,7 @@ class Builder {
                 $responseModelName = $route->getLabel('sdk.response.model', "");
                 if ( $responseModelName !== "" && $responseModelName !== Response::MODEL_NONE ) {
                     $responseModel = $response->getModel($responseModelName);
-                    self::createTypeMapping($responseModel, $response);
-                    $type = self::$typeMapping[$responseModel->getType()];
+                    $type = self::getTypeMapping($responseModel, $response);
                     $description = $route->getDesc();
                     $args = self::getArgs($route->getParams(), $utopia);
                     
