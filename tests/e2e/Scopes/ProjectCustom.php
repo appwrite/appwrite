@@ -117,6 +117,7 @@ trait ProjectCustom
                 'storage.files.update',
                 'storage.files.delete',
                 'users.create',
+                'users.update.prefs',
                 'users.update.status',
                 'users.delete',
                 'users.sessions.delete',

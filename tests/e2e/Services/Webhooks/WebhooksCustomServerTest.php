@@ -186,9 +186,42 @@ class WebhooksCustomServerTest extends Scope
          */
         return ['userId' => $user['body']['$id'], 'name' => $user['body']['name'], 'email' => $user['body']['email']];
     }
- 
-    /**
+
+     /**
      * @depends testCreateUser
+     */
+    public function testUpdateUserPrefs(array $data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/prefs', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'prefs' => ['a' => 'b']
+        ]);
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body']['a'], 'b');
+
+        $webhook = $this->getLastRequest();
+
+        $this->assertEquals($webhook['method'], 'POST');
+        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
+        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'users.update.prefs');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
+        $this->assertEquals($webhook['data']['a'], 'b');
+
+        return $data;
+    }
+
+    /**
+     * @depends testUpdateUserPrefs
      */
     public function testUpdateUserStatus(array $data):array
     {
@@ -221,7 +254,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['data']['status'], 2);
         $this->assertEquals($webhook['data']['email'], $data['email']);
         $this->assertEquals($webhook['data']['emailVerification'], false);
-        $this->assertEquals($webhook['data']['prefs'], []);
+        $this->assertEquals($webhook['data']['prefs']['a'], 'b');
 
         return $data;
     }
@@ -257,7 +290,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['data']['status'], 2);
         $this->assertEquals($webhook['data']['email'], $data['email']);
         $this->assertEquals($webhook['data']['emailVerification'], false);
-        $this->assertEquals($webhook['data']['prefs'], []);
+        $this->assertEquals($webhook['data']['prefs']['a'], 'b');
 
         return $data;
     }

@@ -107,8 +107,8 @@ return [
                 'name' => '_APP_SYSTEM_SECURITY_EMAIL_ADDRESS',
                 'description' => 'This is the email address used to issue SSL certificates for custom domains or the user agent in your webhooks payload.',
                 'introduction' => '0.7.0',
-                'default' => '',
-                'required' => true,
+                'default' => 'certs@appwrite.io',
+                'required' => false,
                 'question' => '',
             ],
             [

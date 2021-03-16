@@ -8,7 +8,6 @@ void main() { // Init SDK
     .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
     .setProject('5df5acd0d48c2') // Your project ID
   ;
-
   Future result = functions.getExecution(
     functionId: '[FUNCTION_ID]',
     executionId: '[EXECUTION_ID]',
