@@ -174,7 +174,7 @@ class Builder {
                 $type = Type::string();
                 break;
             default:
-                $type = Type::string();
+                $type = self::json();
                 break;
         }
     

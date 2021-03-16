@@ -3,6 +3,7 @@
 use GraphQL\GraphQL;
 use GraphQL\Type;
 use Appwrite\Utopia\Response;
+use GraphQL\Error\DebugFlag;
 use GraphQL\Error\Error;
 use GraphQL\Error\FormattedError;
 use Utopia\App;
@@ -61,9 +62,10 @@ App::post('/v1/graphql')
         });
 
         try {
+            $debug = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
             $rootValue = [];
             $result = GraphQL::executeQuery($schema, $query, $rootValue, null, $variables)->setErrorFormatter($myErrorFormatter)->setErrorsHandler($myErrorHandler);
-            $output = $result->toArray();
+            $output = $result->toArray($debug);
         } catch (\Exception $error) {
             $output = [
                 'errors' => [

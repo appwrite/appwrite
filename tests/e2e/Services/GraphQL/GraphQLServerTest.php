@@ -7,6 +7,8 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 
+use function PHPSTORM_META\type;
+
 class GraphQLServerTest extends Scope 
 {
     use SideServer;
@@ -332,7 +334,99 @@ class GraphQLServerTest extends Scope
         $this->assertEquals(0, $data['status']);
         $this->assertEquals(false, $data['emailVerification']);
         $this->assertEquals([], $data['prefs']);
+    }
+
+
+    public function testScopeBasedAuth() {
+        $key = $this->createKey("test", ['locale.read']);
+        $projectId = $this->getProject()['$id'];
+        // Check that locale can be fetched
+        $query = "
+            query listCountries {
+                locale_getCountries{
+                sum
+                countries {
+                    name
+                    code
+                }
+                }
+            }
+        ";
+        
+        $variables = [];
+
+        $graphQLPayload = [
+            "query" => $query,
+            "variables" => $variables
+        ];
+
+        $countries = $this->client->call(Client::METHOD_POST, '/graphql', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $key
+        ], $graphQLPayload);
+
+        $this->assertEquals($countries['headers']['status-code'], 200);
+        $this->assertNull($countries['body']['errors']);
+        $this->assertIsArray($countries['body']['data']);
+        $this->assertIsArray($countries['body']['data']['locale_getCountries']);
+        $data = $countries['body']['data']['locale_getCountries'];
+        $this->assertEquals(194, count($data['countries']));
+        $this->assertEquals(194, $data['sum']);
+
+        // Create a new key with no scopes granted
+        $key = $this->createKey("test", []);
+        $countries = $this->client->call(Client::METHOD_POST, '/graphql', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $key
+        ], $graphQLPayload);
+
+        $errorMessage = "app.${projectId}@service.localhost (role: application) missing scope (locale.read)";
+        $this->assertEquals($countries['headers']['status-code'], 401);
+        $this->assertEquals($countries['body']['errors'][0]['message'], $errorMessage);
+        $this->assertIsArray($countries['body']['data']);
+        $this->assertNull($countries['body']['data']['locale_getCountries']);
+
 
     }
 
+    public function createKey(string $name, array $scopes): string {
+        $projectId = $this->getProject()['$id'];
+        $query = "
+            mutation createKey(\$projectId: String!, \$name: String!, \$scopes: [Json]!){
+                projects_createKey (projectId: \$projectId, name: \$name, scopes: \$scopes) {
+                    id
+                    name
+                    scopes
+                    secret
+                }
+            }
+        ";
+        
+        $variables = [
+            "projectId" => $projectId,
+            "name" => $name,
+            "scopes" => $scopes
+        ];
+
+        $graphQLPayload = [
+            "query" => $query,
+            "variables" => $variables
+        ];
+
+        $key = $this->client->call(Client::METHOD_POST, '/graphql', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console'
+        ], $graphQLPayload);
+
+        $this->assertEquals($key['headers']['status-code'], 201);
+        $this->assertNull($key['body']['errors']);
+        $this->assertIsArray($key['body']['data']);
+        $this->assertIsArray($key['body']['data']['projects_createKey']);
+
+        return $key['body']['data']['projects_createKey']['secret'];
+    }
 }
