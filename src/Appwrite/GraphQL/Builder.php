@@ -245,26 +245,29 @@ class Builder {
                     $responseModel = $response->getModel($responseModelName);
                     self::createTypeMapping($responseModel, $response);
                     $type = self::$typeMapping[$responseModel->getType()];
+                    $description = $route->getDesc();
                     $args = self::getArgs($route->getParams(), $utopia);
+                    
+                    $resolve = function ($type, $args, $context, $info) use (&$register, $route) {
+                        $utopia = $register->get('__app');
+                        $utopia->setRoute($route)
+                                ->execute($route, $args);
+                        $response = $register->get('__response');
+                        $result = $response->getPayload();
+                        if (self::isModel($result, $response->getModel(Response::MODEL_ERROR)) || self::isModel($result, $response->getModel(Response::MODEL_ERROR_DEV))) {
+                            var_dump("***** There has been an exception.. *****");
+                            unset($result['trace']);
+                            // var_dump($result);
+                            throw new Exception($result['message'], $result['code']);
+                        }
+                        return $result;
+                    };
 
                     $field = [
                         'type' => $type,
-                        'description' => $route->getDesc(), 
+                        'description' => $description, 
                         'args' => $args,
-                        'resolve' => function ($type, $args, $context, $info) use (&$register, $route) {
-                            $utopia = $register->get('__app');
-                            $utopia->setRoute($route)
-                                    ->execute($route, $args);
-                            $response = $register->get('__response');
-                            $result = $response->getPayload();
-                            if (self::isModel($result, $response->getModel(Response::MODEL_ERROR)) || self::isModel($result, $response->getModel(Response::MODEL_ERROR_DEV))) {
-                                var_dump("***** There has been an exception.. *****");
-                                unset($result['trace']);
-                                // var_dump($result);
-                                throw new Exception($result['message'], $result['code']);
-                            }
-                            return $result;
-                        }
+                        'resolve' => $resolve
                     ];
                     
                     if ($method == 'GET') {

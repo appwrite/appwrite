@@ -6,52 +6,50 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Tests\E2E\Scopes\SideServer;
 
 class GraphQLBase extends Scope 
 {
     use ProjectCustom;
-    use SideClient;
+    use SideServer;
 
-    public function testListUsers()
-    {
-
-        /**
-         * Test for SUCCESS
-         */
-
-        // $projectId = $this->getProject()['$id'];
-        
-        $projectId = '60394d47b252a';
-        $collectionId = "6048c40b28392";
-        
+    public function createKey(string $name, array $scopes): string {
+        $projectId = $this->getProject()['$id'];
         $query = "
-            query listDocuments(\$collectionId: String!){
-                database_listDocuments (collectionId: \$collectionId) {
-                    sum
-                    documents 
+            mutation createKey(\$projectId: String!, \$name: String!, \$scopes: [Json]!){
+                projects_createKey (projectId: \$projectId, name: \$name, scopes: \$scopes) {
+                    id
+                    name
+                    scopes
+                    secret
                 }
             }
         ";
-
+        
         $variables = [
-            'collectionId' => $collectionId
+            "projectId" => $projectId,
+            "name" => $name,
+            "scopes" => $scopes
         ];
 
         $graphQLPayload = [
             "query" => $query,
             "variables" => $variables
         ];
-        
-        $response = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+
+        $key = $this->client->call(Client::METHOD_POST, '/graphql', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ]), $graphQLPayload);
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console'
+        ], $graphQLPayload);
 
-        var_dump($response['headers']);
-        var_dump($response['body']);
-        $this->assertEquals($response['headers']['status-code'], 200);
-        
+        $this->assertEquals($key['headers']['status-code'], 201);
+        $this->assertNull($key['body']['errors']);
+        $this->assertIsArray($key['body']['data']);
+        $this->assertIsArray($key['body']['data']['projects_createKey']);
+
+        return $key['body']['data']['projects_createKey']['secret'];
     }
     
 }
