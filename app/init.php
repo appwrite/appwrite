@@ -148,27 +148,6 @@ Database::addFilter('encrypt',
 /*
  * Registry
  */
-$register->set('dbPool', function () { // Register DB connection
-    $config = new PDOConfig();
-    $config
-        ->withHost(App::getEnv('_APP_DB_HOST', ''))
-        ->withPort(App::getEnv('_APP_DB_PORT', ''))
-        ->withDbName(App::getEnv('_APP_DB_SCHEMA', ''))
-        ->withUsername(App::getEnv('_APP_DB_USER', ''))
-        ->withPassword(App::getEnv('_APP_DB_PASS', ''))
-        ->withCharset('utf8mb4')
-        ->withOptions([
-            PDONative::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
-            PDONative::ATTR_TIMEOUT => 3, // Seconds
-            PDONative::ATTR_PERSISTENT => true,
-            PDONative::ATTR_DEFAULT_FETCH_MODE => PDONative::FETCH_ASSOC,
-            PDONative::ATTR_ERRMODE => PDONative::ERRMODE_EXCEPTION,
-        ]);
-
-    $pool = new PDOPool($config, 16384); // TODO: Investigate pool size
-
-    return $pool;
-});
 $register->set('db', function () use ($register) {
     $dbHost = App::getEnv('_APP_DB_HOST', '');
     $dbUser = App::getEnv('_APP_DB_USER', '');
@@ -205,30 +184,6 @@ $register->set('statsd', function () { // Register DB connection
     $statsd = new \Domnikl\Statsd\Client($connection);
 
     return $statsd;
-});
-$register->set('redisPool', function () {
-    $user = App::getEnv('_APP_REDIS_USER', '');
-    $pass = App::getEnv('_APP_REDIS_PASS', '');
-    $auth = '';
-    if (!empty($user)) {
-        $auth += $user;
-    }
-    if (!empty($pass)) {
-        $auth += ':' . $pass;
-    }
-
-    $config = new RedisConfig();
-    $config
-        ->withHost(App::getEnv('_APP_REDIS_HOST', ''))
-        ->withPort(App::getEnv('_APP_REDIS_PORT', ''))
-        ->withAuth($auth)
-        ->withTimeout(0)
-        ->withReadTimeout(0)
-        ->withRetryInterval(0);
-
-    $pool = new RedisPool($config, 16384); // TODO: Investigate pool size
-
-    return $pool;
 });
 $register->set('cache', function () { // Register cache connection
     $redis = new Redis();
