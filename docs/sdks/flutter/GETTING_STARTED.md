@@ -10,10 +10,10 @@ If you are building your Flutter application for multiple devices, you have to f
 #### iOS
 For **iOS** add your app name and Bundle ID, You can find your Bundle Identifier in the General tab for your app's primary target in Xcode.
 
-### Android
+#### Android
 For **Android** add your app <u>name</u> and <u>package name</u>, Your package name is generally the applicationId in your app-level build.gradle file. By registering your new app platform, you are allowing your app to communicate with the Appwrite API.
 
-#### iOS
+### iOS
 
 The Appwrite SDK uses ASWebAuthenticationSession on iOS 12+ and SFAuthenticationSession on iOS 11 to allow OAuth authentication. You have to change your iOS Deployment Target in Xcode to be iOS >= 11 to be able to build your app on an emulator or a real device.
 
@@ -40,10 +40,10 @@ In order to capture the Appwrite OAuth callback url, the following activity need
 </manifest>
 ```
 
-#### Web
+### Web
 Appwrite 0.7, and the Appwrite Flutter SDK 0.3.0 have added support for Flutter Web. To build web apps that integrate with Appwrite successfully, all you have to do is add a web platform on your Appwrite project's dashboard and list the domain your website will use to allow communication to the Appwrite API.
 
-### Flutter Web Cross-Domain Communication & Cookies
+#### Flutter Web Cross-Domain Communication & Cookies
 While running Flutter Web, make sure your Appwrite server and your Flutter client are using the same top-level domain and the same protocol (HTTP or HTTPS) to communicate. When trying to communicate between different domains or protocols, you may receive HTTP status error 401 because some modern browsers block cross-site or insecure cookies for enhanced privacy. In production, Appwrite allows you set multiple [custom-domains](https://appwrite.io/docs/custom-domains) for each project.
 
 ### Init your SDK
@@ -56,9 +56,9 @@ Client client = Client();
 
 
 client
-.setEndpoint('https://localhost/v1') // Your Appwrite Endpoint
-.setProject('5e8cf4f46b5e8') // Your project ID
-.setSelfSigned() // Remove in production
+  .setEndpoint('https://localhost/v1') // Your Appwrite Endpoint
+  .setProject('5e8cf4f46b5e8') // Your project ID
+  .setSelfSigned() // Remove in production
 ;
 ```
 
@@ -74,11 +74,11 @@ When trying to connect to Appwrite from an emulator or a mobile device, localhos
 // Register User
 Account account = Account(client);
 Response user = await account
-.create(
-email: 'me@appwrite.io',
-password: 'password',
-name: 'My Name'
-);
+  .create(
+    email: 'me@appwrite.io',
+    password: 'password',
+    name: 'My Name'
+  );
 ```
 
 ### Full Example
@@ -89,22 +89,21 @@ Client client = Client();
 
 
 client
-.setEndpoint('https://localhost/v1') // Your Appwrite Endpoint
-.setProject('5e8cf4f46b5e8') // Your project ID
-.setSelfSigned() // Remove in production
-;
+  .setEndpoint('https://localhost/v1') // Your Appwrite Endpoint
+  .setProject('5e8cf4f46b5e8') // Your project ID
+  .setSelfSigned() // Remove in production
+  ;
 
 
 // Register User
 Account account = Account(client);
 
-
 Response user = await account
-.create(
-email: 'me@appwrite.io',
-password: 'password',
-name: 'My Name'
-);
+  .create(
+    email: 'me@appwrite.io',
+    password: 'password',
+    name: 'My Name'
+  );
 ```
 
 ### Learn more
