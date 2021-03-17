@@ -542,6 +542,14 @@ class FunctionsCustomServerTest extends Scope
                 'timeout' => 15,
             ],
             [
+                'language' => 'Dart',
+                'version' => '2.12',
+                'name' => 'dart-2.12',
+                'code' => $functions.'/dart.tar.gz',
+                'command' => 'dart main.dart',
+                'timeout' => 15,
+            ],
+            [
                 'language' => '.NET',
                 'version' => '3.1',
                 'name' => 'dotnet-3.1',
