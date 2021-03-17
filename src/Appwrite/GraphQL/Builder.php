@@ -203,21 +203,6 @@ class Builder {
         return $args;
     }
     
-    /**
-    * Function to check if a model 
-    *
-    * @param string $a
-    * @return void
-    */
-    protected static function isModel($response, Model $model): bool {
-    
-        foreach ($model->getRules() as $key => $rule) {
-            if (!isset($response[$key])) {
-                return false;
-            }
-        }
-        return true;
-    }
 
     /**
     * This function goes through all the REST endpoints in the API and builds a 
@@ -246,29 +231,26 @@ class Builder {
                     $type = self::getTypeMapping($responseModel, $response);
                     $description = $route->getDesc();
                     $args = self::getArgs($route->getParams(), $utopia);
-                    
                     $resolve = function ($type, $args, $context, $info) use (&$register, $route) {
                         $utopia = $register->get('__app');
-                        $utopia->setRoute($route)
-                                ->execute($route, $args);
+                        $utopia->setRoute($route)->execute($route, $args);
                         $response = $register->get('__response');
                         $result = $response->getPayload();
-                        if (self::isModel($result, $response->getModel(Response::MODEL_ERROR)) || self::isModel($result, $response->getModel(Response::MODEL_ERROR_DEV))) {
+                        if ( $response->getCurrentModel() == Response::MODEL_ERROR_DEV ) {
+                            var_dump("***** There has been an dev exception.. *****");
+                            throw new ExceptionDev($result['message'], $result['code'], $result['version'], $result['file'], $result['line'], $result['trace']);
+                        } else if ( $response->getCurrentModel() == Response::MODEL_ERROR ) {
                             var_dump("***** There has been an exception.. *****");
-                            unset($result['trace']);
-                            // var_dump($result);
                             throw new Exception($result['message'], $result['code']);
                         }
                         return $result;
                     };
-
                     $field = [
                         'type' => $type,
                         'description' => $description, 
                         'args' => $args,
                         'resolve' => $resolve
                     ];
-                    
                     if ($method == 'GET') {
                         $queryFields[$methodName] = $field;
                     } else if ($method == 'POST' || $method == 'PUT' || $method == 'PATCH' || $method == 'DELETE') {

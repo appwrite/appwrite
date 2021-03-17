@@ -134,6 +134,11 @@ class Response extends SwooleResponse
     protected $payload = [];
 
     /**
+     * @var string
+     */
+    protected $model = '';
+
+    /**
      * Response constructor.
      * 
      * @param float $time
@@ -252,6 +257,17 @@ class Response extends SwooleResponse
     }
 
     /**
+     * Returns the model that was used to 
+     * parse the currrent payload
+     * 
+     * @return string
+     */
+    public function getCurrentModel(): string
+    {
+        return $this->model;
+    }
+
+    /**
      * Validate response objects and outputs
      *  the response according to given format type
      * 
@@ -300,6 +316,8 @@ class Response extends SwooleResponse
         $data       = $document;
         $model      = $this->getModel($model);
         $output     = [];
+
+        $this->model = $model->getType();
 
         if ($model->isAny()) {
             $this->payload = $document->getArrayCopy();

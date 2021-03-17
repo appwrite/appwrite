@@ -27,28 +27,13 @@ App::post('/v1/graphql')
 
         $myErrorFormatter = function(Error $error) {
             $formattedError = FormattedError::createFromException($error); 
-            // var_dump("***** IN ERROR FORMATTER ******");
-            // var_dump("{$error->getMessage()}");
-            // var_dump("{$error->getCode()}");
-            // var_dump("{$error->getFile()}");
-            // var_dump("{$error->getLine()}");
-            // var_dump("{$error->getTrace()}");
-
-            $formattedError['code'] = $error->getCode();
-            $formattedError['file'] = $error->getFile();
-            $formattedError['line'] = $error->getLine();
-            // $formattedError['trace'] = $error->getTrace();
+            var_dump("***** IN ERROR FORMATTER ******");
+            $parentError = $error->getPrevious();
+            $formattedError['code'] = $parentError->getCode();
+            $formattedError['file'] = $parentError->getFile();
+            $formattedError['version'] = App::getEnv('_APP_VERSION', 'UNKNOWN');
+            $formattedError['line'] = $parentError->getLine();
             return $formattedError;
-        };
-
-        $myErrorHandler = function(array $errors, callable $formatter) {
-            // $errors = array_map( function ($error) {
-            //     unset($error['trace']);
-            // },$errors);
-            // var_dump("**** In My Error Handler *****");
-            // var_dump($errors);
-
-            return array_map($formatter, $errors);
         };
 
         $query = $request->getPayload('query', '');
@@ -63,8 +48,10 @@ App::post('/v1/graphql')
 
         try {
             $debug = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
+            // $debug = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::RETHROW_INTERNAL_EXCEPTIONS;
             $rootValue = [];
-            $result = GraphQL::executeQuery($schema, $query, $rootValue, null, $variables)->setErrorFormatter($myErrorFormatter)->setErrorsHandler($myErrorHandler);
+            $result = GraphQL::executeQuery($schema, $query, $rootValue, null, $variables)
+                                ->setErrorFormatter($myErrorFormatter);
             $output = $result->toArray($debug);
         } catch (\Exception $error) {
             $output = [
@@ -80,5 +67,5 @@ App::post('/v1/graphql')
             ];
         }
         $response->json($output);
-        }
-    );
+    }
+);
