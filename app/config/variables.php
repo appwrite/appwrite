@@ -151,7 +151,7 @@ return [
             ],
             [
                 'name' => '_APP_REDIS_PASS',
-                'description' => 'Redis server password. This is an optionl variable. Default value is an empty string.',
+                'description' => 'Redis server password. This is an optional variable. Default value is an empty string.',
                 'introduction' => '0.7',
                 'default' => '',
                 'required' => false,
