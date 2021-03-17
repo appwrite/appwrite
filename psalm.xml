@@ -12,4 +12,14 @@
             <directory name="vendor" />
         </ignoreFiles>
     </projectFiles>
+    <stubs>
+        <file name="vendor/jetbrains/phpstorm-stubs/redis/Redis.php" />
+        <file name="vendor/jetbrains/phpstorm-stubs/yaml/YAML.php" />
+        <file name="vendor/swoole/ide-helper/output/swoole/namespace/Runtime.php" />
+        <file name="vendor/swoole/ide-helper/output/swoole/functions.php" />
+        <file name="vendor/swoole/ide-helper/output/swoole/constants.php" />
+        <file name="vendor/swoole/ide-helper/output/swoole/namespace/Http/Response.php" />
+        <file name="vendor/swoole/ide-helper/output/swoole_library/src/alias.php" />
+        <file name="vendor/swoole/ide-helper/output/swoole_library/src/alias_ns.php" />
+    </stubs>
 </psalm>

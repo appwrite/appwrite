@@ -63,7 +63,8 @@
         "appwrite/sdk-generator": "0.6.3",
         "phpunit/phpunit": "9.4.2",
         "swoole/ide-helper": "4.5.5",
-        "vimeo/psalm": "4.1.1"
+        "vimeo/psalm": "4.1.1",
+        "jetbrains/phpstorm-stubs": "dev-master"
     },
     "repositories": [
         {
