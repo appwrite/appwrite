@@ -31,6 +31,7 @@
 - Fixed a bug, that Response format header was not added in the access-control-allow-header list.
 - Fixed a bug where countryName is unknown on sessions (#933)
 - Added missing event users.update.prefs (#952)
+- Fixed bug not allowing to reset document permissions (#977)
 
 ## Security
 
