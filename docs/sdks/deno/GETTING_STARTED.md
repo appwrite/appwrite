@@ -16,7 +16,7 @@ client
 
 ### Make your first request
 
-Once your SDK object is set, create any of the Appwrite service project objects and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the API References section.
+Once your SDK object is set, create any of the Appwrite service objects and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the API References section.
 
 ```typescript
 let users = new sdk.Users(client);
