@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3463ecea7830f29a67317097ad2aeb66",
+    "content-hash": "a328295b2b11cf89bbae0f3a8d9143ee",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -522,12 +522,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/psr7.git",
-                "reference": "d7fe0a0eabc266c3dcf2f20aa12121044ff196a4"
+                "reference": "64245c4a03d43ddb638c4ff0b2d330c2af726ec5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/psr7/zipball/d7fe0a0eabc266c3dcf2f20aa12121044ff196a4",
-                "reference": "d7fe0a0eabc266c3dcf2f20aa12121044ff196a4",
+                "url": "https://api.github.com/repos/guzzle/psr7/zipball/64245c4a03d43ddb638c4ff0b2d330c2af726ec5",
+                "reference": "64245c4a03d43ddb638c4ff0b2d330c2af726ec5",
                 "shasum": ""
             },
             "require": {
@@ -589,7 +589,7 @@
                 "issues": "https://github.com/guzzle/psr7/issues",
                 "source": "https://github.com/guzzle/psr7/tree/1.x"
             },
-            "time": "2021-03-09T14:42:40+00:00"
+            "time": "2021-03-07T16:17:45+00:00"
         },
         {
             "name": "influxdb/influxdb-php",
@@ -2286,7 +2286,7 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.6.3",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
@@ -2303,6 +2303,7 @@
             "require-dev": {
                 "phpunit/phpunit": "^7.0"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -4932,12 +4933,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "e8bee16c337d9553fb737adf79d6aabe330fd982"
+                "reference": "92e1b7c4381c3c51e327b99c7ff067411e291783"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/e8bee16c337d9553fb737adf79d6aabe330fd982",
-                "reference": "e8bee16c337d9553fb737adf79d6aabe330fd982",
+                "url": "https://api.github.com/repos/symfony/console/zipball/92e1b7c4381c3c51e327b99c7ff067411e291783",
+                "reference": "92e1b7c4381c3c51e327b99c7ff067411e291783",
                 "shasum": ""
             },
             "require": {
@@ -5022,7 +5023,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-03-12T08:40:58+00:00"
+            "time": "2021-03-06T13:50:37+00:00"
         },
         {
             "name": "symfony/polyfill-intl-grapheme",
@@ -5888,7 +5889,9 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": [],
+    "stability-flags": {
+        "appwrite/sdk-generator": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
