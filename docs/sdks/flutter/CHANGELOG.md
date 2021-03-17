@@ -1,3 +1,8 @@
+## 0.4.0-dev.3
+
+- Added code formatting as part of the CI
+- Added custom Appwrite exceptions
+
 ## 0.4.0-dev.2
 
 - Minor fixes for custom exceptions
