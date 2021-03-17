@@ -144,6 +144,7 @@ App::get('/console/settings')
         $page
             ->setParam('customDomainsEnabled', ($target->isKnown() && !$target->isTest()))
             ->setParam('customDomainsTarget', $target->get())
+            ->setParam('smtpEnabled', (!empty(App::getEnv('_APP_SMTP_HOST'))))
         ;
 
         $layout

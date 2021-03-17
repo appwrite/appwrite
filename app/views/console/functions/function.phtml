@@ -117,7 +117,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                                             <b data-ls-bind="{{tag.$id}}"></b> &nbsp;
                                             <span class="text-fade" data-ls-bind="{{tag.command}}"></span>
                                             <div class="text-size-small margin-top-small clear">
-                                                <span class="pull-start" data-ls-bind="Created {{tag.dateCreated|timeSince}} &nbsp; | &nbsp; {{tag.size|humanFileSize}}"></span>
+                                                <span class="pull-start" data-ls-bind="Created {{tag.dateCreated|timeSince}} &nbsp; | &nbsp; {{tag.size|humanFileSize}}{{tag.size|humanFileUnit}}"></span>
 
                                                 <form data-ls-if="{{tag.$id}} !== {{project-function.tag}}" name="functions.deleteTag" class="pull-start"
                                                     data-analytics
@@ -596,9 +596,9 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
             <p><b>PowerShell</b></p>
 
             <div class="margin-bottom">
-                <textarea type="hidden" data-ls-bind="appwrite functions createTag ,
-    --functionId={{project-function.$id}} ,
-    --command='mycommand' ,
+                <textarea type="hidden" data-ls-bind="appwrite functions createTag `
+    --functionId={{project-function.$id}} `
+    --command='mycommand' `
     --code='/myrepo/myfunction'" data-forms-code="powershell" data-lang="powershell" data-lang-label="PowerShell"></textarea>
             </div>
 

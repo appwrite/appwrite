@@ -143,7 +143,6 @@ Appwrite's current structure is a combination of both [Monolithic](https://en.wi
 ├── docs # Docs and tutorials
 │   ├── examples
 │   ├── references
-│   ├── sdks
 │   ├── services
 │   ├── specs
 │   └── tutorials
@@ -157,13 +156,14 @@ Appwrite's current structure is a combination of both [Monolithic](https://en.wi
 │   └── Appwrite
 │       ├── Auth
 │       ├── Database
+│       ├── Detector
 │       ├── Docker
 │       ├── Event
 │       ├── Extend
+│       ├── Migration
 │       ├── Network
 │       ├── OpenSSL
-│       ├── Resize
-│       ├── Storage
+│       ├── Specification
 │       ├── Task
 │       ├── Template
 │       ├── URL
@@ -365,7 +365,6 @@ From time to time, our team will add tutorials that will help contributors find 
 * [Adding Support for a New OAuth2 Provider](./docs/tutorials/add-oauth2-provider.md)
 * [Appwrite Environment Variables](./docs/tutorials/environment-variables.md)
 * [Running in Production](./docs/tutorials/running-in-production.md)
-
 
 ## Other Ways to Help
 
