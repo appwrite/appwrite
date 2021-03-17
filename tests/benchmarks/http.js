@@ -1,5 +1,5 @@
 import http from 'k6/http';
-import { sleep, check } from 'k6';
+import { check } from 'k6';
 import { Counter } from 'k6/metrics';
 
 // A simple counter for http requests
@@ -20,10 +20,15 @@ export const options = {
 };
 
 export default function () {
-    const res = http.get('http://localhost:9501/v1/health/version?project=console');
+    const config = {
+      headers: {
+      'X-Appwrite-Key': '24356eb021863f81eb7dd77c7750304d0464e141cad6e9a8befa1f7d2b066fde190df3dab1e8d2639dbb82ee848da30501424923f4cd80d887ee40ad77ded62763ee489448523f6e39667f290f9a54b2ab8fad131a0bc985e6c0f760015f7f3411e40626c75646bb19d2bb2f7bf2f63130918220a206758cbc48845fd725a695',
+      'X-Appwrite-Project': '60479fe35d95d'
+    }}
 
-    const checkRes = check(res, {
+    const resDb = http.get('http://localhost:9501/v1/health/db', config);
+
+    check(resDb, {
         'status is 200': (r) => r.status === 200,
-        'response body': (r) => r.body.indexOf('0.7.0') !== -1,
     });
 }

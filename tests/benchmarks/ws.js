@@ -7,12 +7,12 @@ import { check } from 'k6';
 export let options = {
     stages: [
         { 
-            duration: '1m', 
-            target: 250
+            duration: '10s', 
+            target: 10
         },
         { 
-            duration: '1m', 
-            target: 250
+            duration: '30m', 
+            target: 10
         },
     ],
 }
