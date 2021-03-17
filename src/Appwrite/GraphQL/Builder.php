@@ -31,7 +31,7 @@ class Builder {
             Model::TYPE_INTEGER => Type::int(),
             Model::TYPE_FLOAT => Type::float(),
             Model::TYPE_JSON => self::json(),
-            Response::MODEL_NONE => Type::string(),
+            Response::MODEL_NONE => self::json(),
             Response::MODEL_ANY => self::json(),
         ];
     }
@@ -202,7 +202,6 @@ class Builder {
         }
         return $args;
     }
-    
 
     /**
     * This function goes through all the REST endpoints in the API and builds a 
@@ -226,7 +225,7 @@ class Builder {
                 $namespace = $route->getLabel('sdk.namespace', '');
                 $methodName = $namespace.'_'.$route->getLabel('sdk.method', '');
                 $responseModelName = $route->getLabel('sdk.response.model', "");
-                if ( $responseModelName !== "" && $responseModelName !== Response::MODEL_NONE ) {
+                if ( $responseModelName !== "" ) {
                     $responseModel = $response->getModel($responseModelName);
                     $type = self::getTypeMapping($responseModel, $response);
                     $description = $route->getDesc();
@@ -237,10 +236,8 @@ class Builder {
                         $response = $register->get('__response');
                         $result = $response->getPayload();
                         if ( $response->getCurrentModel() == Response::MODEL_ERROR_DEV ) {
-                            var_dump("***** There has been an dev exception.. *****");
                             throw new ExceptionDev($result['message'], $result['code'], $result['version'], $result['file'], $result['line'], $result['trace']);
                         } else if ( $response->getCurrentModel() == Response::MODEL_ERROR ) {
-                            var_dump("***** There has been an exception.. *****");
                             throw new Exception($result['message'], $result['code']);
                         }
                         return $result;

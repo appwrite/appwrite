@@ -319,7 +319,7 @@ class Response extends SwooleResponse
 
         $this->model = $model->getType();
 
-        if ($model->isAny()) {
+        if ($model->isAny() || $model->isNone()) {
             $this->payload = $document->getArrayCopy();
             return $this->payload;
         }
@@ -420,5 +420,10 @@ class Response extends SwooleResponse
     public static function isFilter(): bool 
     {
         return self::$filter != null;
+    }
+
+    public function noContent(): void 
+    {
+        $this->output(new Document(), self::MODEL_NONE);
     }
 }
