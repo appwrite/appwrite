@@ -1,7 +1,7 @@
 ## Getting Started
 
 ### Init your SDK
-Initialize your SDK code with your project ID which can be found in your project settings page and your new API secret Key from previous phase.
+Initialize your SDK code with your project ID which can be found in your project settings page and your new API secret Key from project's API keys section.
 
 ```php
 $client = new Client();
