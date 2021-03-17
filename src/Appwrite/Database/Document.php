@@ -146,13 +146,13 @@ class Document extends ArrayObject
      *
      * Get array child by key and value match
      *
-     * @param $key
-     * @param $value
+     * @param string $key
+     * @param string $value
      * @param array|null $scope
      *
      * @return Document|Document[]|mixed|null|array
      */
-    public function search($key, $value, $scope = null)
+    public function search(string $key, string $value, array $scope = null)
     {
         $array = (!\is_null($scope)) ? $scope : $this;
 

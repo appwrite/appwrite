@@ -46,7 +46,7 @@ class V05 extends Migration
         }
     }
 
-    protected function fixDocument(Document $document)
+    protected function fixDocument(Document $document): Document
     {
         $providers = Config::getParam('providers');
 

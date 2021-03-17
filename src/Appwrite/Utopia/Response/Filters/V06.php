@@ -118,7 +118,7 @@ class V06 extends Filter {
         return $parsedResponse;
     }
 
-    private function parseCollectionList(array $content)
+    private function parseCollectionList(array $content): array
     {
         foreach($content['collections'] as $key => $collection){
             $content['collections'][$key] = $this->parseCollection($collection);
@@ -126,14 +126,14 @@ class V06 extends Filter {
         return $content;
     }
 
-    private function parseCollection(array $content)
+    private function parseCollection(array $content): array
     {
         $content['$collection'] = Database::SYSTEM_COLLECTION_COLLECTIONS;
         $content['structure'] = true;
         return $content;
     }
 
-    private function parseFile(array $content)
+    private function parseFile(array $content): array
     {
         $content['$collection'] = Database::SYSTEM_COLLECTION_FILES;
         $content['algorithm'] = 'gzip';
@@ -149,7 +149,7 @@ class V06 extends Filter {
         return $content;
     }
 
-    private function parseCurrencyList(array  $content) 
+    private function parseCurrencyList(array  $content): array 
     {
         $content['locations'] = [];
         $currencies = $content['currencies'];
@@ -162,7 +162,7 @@ class V06 extends Filter {
         return $content;
     }
 
-    private function parseContinentList(array $content)
+    private function parseContinentList(array $content): array
     {
         $continents = $content['continents'];
         $parsedResponse = [];
@@ -173,7 +173,7 @@ class V06 extends Filter {
         return $content;
     }
 
-    private function parsePhoneList(array $content)
+    private function parsePhoneList(array $content): array
     {
         $phones = $content['phones'];
         $parsedResponse = [];
@@ -184,7 +184,7 @@ class V06 extends Filter {
         return $content;
     }
 
-    private function parseCountryList(array $content) 
+    private function parseCountryList(array $content): array 
     {
         $countries = $content['countries'];
         $parsedResponse = [];
@@ -195,7 +195,7 @@ class V06 extends Filter {
         return $content;
     }
 
-    private function parseLocale(array $content) 
+    private function parseLocale(array $content): array 
     {
         $content['ip'] = $content['ip'] ?? '';
         $content['countryCode'] = $content['countryCode'] ?? '--';
@@ -207,20 +207,20 @@ class V06 extends Filter {
         return $content;
     }
 
-    private function parseToken(array $content)
+    private function parseToken(array $content): array
     {
         $content['type'] = Auth::TOKEN_TYPE_RECOVERY;
         return $content;
     }
 
-    private function parseTeam(array $content)
+    private function parseTeam(array $content): array
     {
         $content['$collection'] = Database::SYSTEM_COLLECTION_TEAMS; 
         $content['$permissions'] = [];
         return $content;
     }
 
-    private function parseTeamList(array $content)
+    private function parseTeamList(array $content): array
     {
         $teams = $content['teams'];
         $parsedResponse = [];
@@ -231,7 +231,7 @@ class V06 extends Filter {
         return $content;
     }
 
-    private function parseLogList(array $content)
+    private function parseLogList(array $content): array
     {
         $logs = $content['logs'];
         $parsedResponse = [];
@@ -266,7 +266,7 @@ class V06 extends Filter {
         return $content;
     }
 
-    private function parseSessionList(array $content)
+    private function parseSessionList(array $content): array
     {
         $sessions = $content['sessions'];
         $parsedResponse = [];
@@ -301,13 +301,13 @@ class V06 extends Filter {
         return $content;
     }
 
-    private function parseSession(array $content) 
+    private function parseSession(array $content): array 
     {       
         $content['type'] = Auth::TOKEN_TYPE_LOGIN;
         return $content;
     }
 
-    private function parseUserList(array $content)
+    private function parseUserList(array $content): array
     {
         $users = $content['users'];
         $parsedResponse = [];
@@ -318,7 +318,7 @@ class V06 extends Filter {
         return $content;
     }
 
-    private function parseUser(array $content)
+    private function parseUser(array $content): array
     {
         foreach (Config::getParam('providers', []) as $key => $provider) {
             if (!$provider['enabled']) {

@@ -7,9 +7,9 @@ class OpenSSL
     const CIPHER_AES_128_GCM = 'aes-128-gcm';
 
     /**
-     * @param $data
-     * @param $method
-     * @param $key
+     * @param string $data
+     * @param string $method
+     * @param string $key
      * @param int    $options
      * @param string $iv
      * @param null   $tag
@@ -18,7 +18,7 @@ class OpenSSL
      *
      * @return string
      */
-    public static function encrypt($data, $method, $key, $options = 0, $iv = '', &$tag = null, $aad = '', $tag_length = 16)
+    public static function encrypt(string $data, string $method, string $key, int $options = 0, string $iv = '', string &$tag = null, string $aad = '', int $tag_length = 16)
     {
         return \openssl_encrypt($data, $method, $key, $options, $iv, $tag, $aad, $tag_length);
     }
@@ -50,12 +50,12 @@ class OpenSSL
     }
 
     /**
-     * @param $length
-     * @param null $crypto_strong
+     * @param int $length
+     * @param bool $crypto_strong
      *
      * @return false|string
      */
-    public static function randomPseudoBytes($length, &$crypto_strong = null)
+    public static function randomPseudoBytes(int $length, bool &$crypto_strong = null)
     {
         return \openssl_random_pseudo_bytes($length, $crypto_strong);
     }

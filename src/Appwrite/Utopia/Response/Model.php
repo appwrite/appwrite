@@ -71,7 +71,7 @@ abstract class Model
         return $this;
     }
 
-    public function getRequired()
+    public function getRequired(): array
     {
         $list = [];
 

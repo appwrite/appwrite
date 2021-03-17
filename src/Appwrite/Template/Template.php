@@ -98,12 +98,12 @@ class Template extends View
 
     /**
      * From Camel Case
-     * 
-     * @var string $input
-     * 
+     *
+     * @param string $input
+     *
      * @return string
      */
-    public static function fromCamelCaseToSnake($input): string
+    public static function fromCamelCaseToSnake(string $input): string
     {
         \preg_match_all('!([A-Z][A-Z0-9]*(?=$|[A-Z][a-z0-9])|[A-Za-z][a-z0-9]+)!', $input, $matches);
         $ret = $matches[0];

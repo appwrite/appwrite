@@ -22,7 +22,7 @@ class V06 extends Migration
         $this->projectDB->enableFilters();
     }
 
-    protected function fixDocument(Document $document)
+    protected function fixDocument(Document $document): Document
     {
         switch ($document->getAttribute('$collection')) {
             case Database::SYSTEM_COLLECTION_USERS:
