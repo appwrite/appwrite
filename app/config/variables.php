@@ -143,7 +143,7 @@ return [
             ],
             [
                 'name' => '_APP_REDIS_USER',
-                'description' => 'Redis server user.',
+                'description' => 'Redis server user. This is an optionl variable. Default value is an empty string.',
                 'introduction' => '0.7',
                 'default' => '',
                 'required' => false,
@@ -151,7 +151,7 @@ return [
             ],
             [
                 'name' => '_APP_REDIS_PASS',
-                'description' => 'Redis server password.',
+                'description' => 'Redis server password. This is an optionl variable. Default value is an empty string.',
                 'introduction' => '0.7',
                 'default' => '',
                 'required' => false,
