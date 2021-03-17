@@ -97,7 +97,7 @@ class Database
      *
      * @throws Exception
      */
-    public function setNamespace($namespace)
+    public function setNamespace(string $namespace)
     {
         $this->adapter->setNamespace($namespace);
 
