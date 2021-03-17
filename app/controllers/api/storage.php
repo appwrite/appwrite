@@ -18,7 +18,7 @@ use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileSize;
 use Utopia\Storage\Validator\Upload;
 use Utopia\Storage\Compression\Algorithms\GZIP;
-use Appwrite\Resize\Resize;
+use Utopia\Image\Image;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
@@ -332,17 +332,17 @@ App::get('/v1/storage/files/:fileId/preview')
             $source = $compressor->decompress($source);
         }
 
-        $resize = new Resize($source);
+        $image = new Image($source);
 
-        $resize->crop((int) $width, (int) $height);
+        $image->crop((int) $width, (int) $height);
 
         if (!empty($background)) {
-            $resize->setBackground('#'.$background);
+            $image->setBackground('#'.$background);
         }
 
         $output = (empty($output)) ? $type : $output;
 
-        $data = $resize->output($output, $quality);
+        $data = $image->output($output, $quality);
 
         $cache->save($key, $data);
 
@@ -353,7 +353,7 @@ App::get('/v1/storage/files/:fileId/preview')
             ->send($data)
         ;
 
-        unset($resize);
+        unset($image);
     });
 
 App::get('/v1/storage/files/:fileId/download')

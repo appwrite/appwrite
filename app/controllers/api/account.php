@@ -236,9 +236,11 @@ App::post('/v1/account/sessions')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
+        $countries = $locale->getText('countries');
+
         $session
             ->setAttribute('current', true)
-            ->setAttribute('countryName', (isset($countries[$session->getAttribute('countryCode')])) ? $countries[$session->getAttribute('countryCode')] : $locale->getText('locale.country.unknown'))
+            ->setAttribute('countryName', (isset($countries[strtoupper($session->getAttribute('countryCode'))])) ? $countries[strtoupper($session->getAttribute('countryCode'))] : $locale->getText('locale.country.unknown'))
         ;
         
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -253,8 +255,8 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createOAuth2Session')
     ->label('sdk.description', '/docs/references/account/create-session-oauth2.md')
-    ->label('sdk.response.code', 301)
-    ->label('sdk.response.type', 'text/html')
+    ->label('sdk.response.code', Response::STATUS_CODE_MOVED_PERMANENTLY)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_HTML)
     ->label('sdk.methodType', 'webAuth')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
@@ -816,8 +818,8 @@ App::get('/v1/account/sessions')
                 continue;
             }
 
-            $token->setAttribute('countryName', (isset($countries[$token->getAttribute('contryCode')]))
-                ? $countries[$token->getAttribute('contryCode')]
+            $token->setAttribute('countryName', (isset($countries[strtoupper($token->getAttribute('countryCode'))]))
+                ? $countries[strtoupper($token->getAttribute('countryCode'))]
                 : $locale->getText('locale.country.unknown'));
             $token->setAttribute('current', ($current == $token->getId()) ? true : false);
 

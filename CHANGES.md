@@ -2,17 +2,24 @@
 
 ## Features
 
-- Added Anonymous Login ([RFC-010](https://github.com/appwrite/rfc/blob/main/010-anonymous-login.md))
+- Added Anonymous Login ([RFC-010](https://github.com/appwrite/rfc/blob/main/010-anonymous-login.md), #914)
 - Added new Environment Variable to enable or disable Anonymous Login 
+- Added events for functions and executions (#971)
 
-# Version 0.7.1 (Not Released Yet)
+## Breaking Changes
+
+- Only logged in users can execute functions (for guests, use anonymous login)
+- Only the user who has triggered the execution get access to the relevant execution logs
+
+# Version 0.7.1
 
 ## Features
 
+- Better error logs on appwrite certificates worker
 - Added option for Redis authentication
 - Force adding a security email on setup
-- Better error logs on appwrite cretificates worker## Upgrades
 - SMTP is now disabled by default, no dummy SMTP is included in setup
+- Added a new endpoint that returns the server and SDKs latest versions numbers #941
 
 ## Upgrades
 
@@ -24,10 +31,20 @@
 - Upgraded influxdb/influxdb-php lib to version 1.15.2
 - Upgraded phpmailer/phpmailer lib to version 6.3.0
 - Upgraded adhocore/jwt lib to version 1.1.2
+- Upgraded domnikl/statsd to slickdeals/statsd version 3.0
  
 ## Bug Fixes
 
 - Updated missing storage env vars
+- Fixed a bug, that added a wrong timzone offset to user log timestamps
+- Fixed a bug, that Response format header was not added in the access-control-allow-header list.
+- Fixed a bug where countryName is unknown on sessions (#933)
+- Added missing event users.update.prefs (#952)
+- Fixed bug not allowing to reset document permissions (#977)
+
+## Security
+
+- Fixed an XSS vulnerability in the Appwrite console
 
 # Version 0.7.0
 
