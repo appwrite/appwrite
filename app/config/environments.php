@@ -106,6 +106,15 @@ $environments = [
         'logo' => 'dart.png',
         'supports' => [System::X86],
     ],
+    'dart-2.12' => [
+        'name' => 'Dart',
+        'version' => '2.12',
+        'base' => 'google/dart:2.12',
+        'image' => 'appwrite/env-dart-2.12:1.0.0',
+        'build' => '/usr/src/code/docker/environments/dart-2.12',
+        'logo' => 'dart.png',
+        'supports' => [System::X86],
+    ],
     'dotnet-3.1' => [
         'name' => '.NET',
         'version' => '3.1',
