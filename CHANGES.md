@@ -1,6 +1,13 @@
 # Version 0.8.0 (Not Released Yet)
 
+## Features
+
 - Anonymous login
+
+## Breaking Changes
+
+- Only logged in users can execute functions (for guests, use anonymous login)
+- Only the user who has triggered the execution get access to the relevant execution logs
 
 # Version 0.7.1
 

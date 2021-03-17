@@ -676,10 +676,12 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('response')
     ->inject('project')
     ->inject('projectDB')
-    ->action(function ($functionId, /*$async,*/ $response, $project, $projectDB) {
+    ->inject('user')
+    ->action(function ($functionId, /*$async,*/ $response, $project, $projectDB, $user) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Database\Document $user */
 
         Authorization::disable();
 
@@ -712,7 +714,7 @@ App::post('/v1/functions/:functionId/executions')
         $execution = $projectDB->createDocument([
             '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
             '$permissions' => [
-                'read' => $function->getPermissions()['execute'] ?? [],
+                'read' => (!empty($user->getId())) ? ['user:' . $user->getId()] : [],
                 'write' => [],
             ],
             'dateCreated' => time(),
