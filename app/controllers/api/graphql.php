@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\GraphQL\Builder;
 use GraphQL\GraphQL;
 use GraphQL\Type;
 use Appwrite\Utopia\Response;

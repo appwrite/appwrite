@@ -9,6 +9,9 @@ use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
 use Appwrite\GraphQL\Exception;
+use GraphQL\Error\Error;
+use GraphQL\Error\FormattedError;
+use Utopia\App;
 
 class Builder {
 
@@ -278,5 +281,16 @@ class Builder {
         var_dump("[INFO] Time Taken To Build Schema : ${time_elapsed_secs}s");
 
         return $schema; 
+    }
+
+    public static function errorFormatter(Error $error) {
+        $formattedError = FormattedError::createFromException($error); 
+        var_dump("***** IN ERROR FORMATTER ******");
+        $parentError = $error->getPrevious();
+        $formattedError['code'] = $parentError->getCode();
+        $formattedError['file'] = $parentError->getFile();
+        $formattedError['version'] = App::getEnv('_APP_VERSION', 'UNKNOWN');
+        $formattedError['line'] = $parentError->getLine();
+        return $formattedError;
     }
 }

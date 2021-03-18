@@ -550,5 +550,5 @@ App::delete('/v1/users/:userId')
         ;
 
         // TODO : Response filter implementation
-        $response->noContent();
+        $response->dynamic(new Document(), Response::MODEL_NONE);
     });

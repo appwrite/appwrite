@@ -281,7 +281,7 @@ class Response extends SwooleResponse
         $output = $this->output($document, $model);
 
         // If filter is set, parse the output
-        if(self::isFilter()){
+        if(self::isFilter()) {
             $output = self::getFilter()->parse($output, $model);
         }
 
@@ -289,16 +289,20 @@ class Response extends SwooleResponse
             case self::CONTENT_TYPE_JSON:
                 $this->json(!empty($output) ? $output : new stdClass());
                 break;
-
-            case self::CONTENT_TYPE_NULL:
-                break;
             
             case self::CONTENT_TYPE_YAML:
                 $this->yaml(!empty($output) ? $output : new stdClass());
                 break;
                 
+            case self::CONTENT_TYPE_NULL:
+                break;
+
             default :
-                $this->json(!empty($output) ? $output : new stdClass());
+                if ($model === self::MODEL_NONE) {
+                    $this->noContent();
+                } else {
+                    $this->json(!empty($output) ? $output : new stdClass());
+                }
                 break;
         }
     }
@@ -422,8 +426,4 @@ class Response extends SwooleResponse
         return self::$filter != null;
     }
 
-    public function noContent(): void 
-    {
-        $this->output(new Document(), self::MODEL_NONE);
-    }
 }
