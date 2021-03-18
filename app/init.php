@@ -31,6 +31,7 @@ use Utopia\Registry\Registry;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use PDO as PDONative;
+use Utopia\CLI\Console;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -511,12 +512,12 @@ App::setResource('schema', function($utopia, $response, $request, $register) {
         * Try to get the schema from the register. 
         * If there is no schema catch the exception and generate it.
         */
-        var_dump('[INFO] Getting Schema from register..');
+        Console::log('Getting Schema from register...');
         $schema = $register->get('_schema');
     } catch (Exception $e) {
-        var_dump('[INFO] Exception, Schema not present. Generating Schema');
+        Console::error('Schema not present. Generating Schema...');
         $schema = Builder::buildSchema($utopia, $response, $register);
-        $register->set('_schema', function () use ($schema){ // Register cache connection
+        $register->set('_schema', function () use ($schema){
             return $schema;
         });
     }

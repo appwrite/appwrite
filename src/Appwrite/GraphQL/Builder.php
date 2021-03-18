@@ -199,7 +199,7 @@ class Builder {
     * @return Schema
     */
     public static function buildSchema($utopia, $response, $register) {
-        Console::info("[INFO] Building GraphQL Schema...");
+        Console::log("[INFO] Building GraphQL Schema...");
         $start = microtime(true);
         
         self::init();
@@ -278,7 +278,7 @@ class Builder {
         ]);
 
         $time_elapsed_secs = microtime(true) - $start;
-        Console::info("[INFO] Time Taken To Build Schema : ${time_elapsed_secs}s");
+        Console::log("[INFO] Time Taken To Build Schema : ${time_elapsed_secs}s");
         return $schema; 
     }
 

@@ -102,7 +102,6 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         
         $app->run($request, $response);
     } catch (\Throwable $th) {
-        var_dump("*********** In http.php catching error  *************");
         Console::error('[Error] Type: '.get_class($th));
         Console::error('[Error] Message: '.$th->getMessage());
         Console::error('[Error] File: '.$th->getFile());

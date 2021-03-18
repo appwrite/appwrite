@@ -42,7 +42,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
 
     $route = $utopia->match($request);
 
-    var_dump("*********** In general.php init with route {$route->getURL()} *************");
+    // var_dump("*********** In general.php init with route {$route->getURL()} *************");
 
     if (!empty($route->getLabel('sdk.platform', [])) && empty($project->getId()) && ($route->getLabel('scope', '') !== 'public')) {
         throw new Exception('Missing or unknown project ID', 400);
@@ -213,10 +213,6 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
 
     // TDOO Check if user is god
 
-    // var_dump("*********** Allowed Scopes *********");
-    // var_dump($scopes);
-    // var_dump($scope);
-
     if (!\in_array($scope, $scopes)) {
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) { // Check if permission is denied because project is missing
             throw new Exception('Project not found', 404);
@@ -295,8 +291,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
 
     //$_SERVER = []; // Reset before reporting to error log to avoid keys being compromised
 
-    var_dump("*********** In general.php error->getCode() {$error->getCode()} *************");
-    var_dump("*********** In general.php code ${code} *************");
+    var_dump("*********** In general.php::error error->getCode() {$error->getCode()} *************");
 
     $output = ((App::isDevelopment())) ? [
         'message' => $error->getMessage(),

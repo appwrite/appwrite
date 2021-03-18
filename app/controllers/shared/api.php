@@ -22,8 +22,6 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     /** @var Appwrite\Event\Event $deletes */
     /** @var Appwrite\Event\Event $functions */
 
-    var_dump("*********** In api.php init *************");
-
     Storage::setDevice('files', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
     Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId()));
 
@@ -49,12 +47,9 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
 
     //TODO make sure we get array here
 
-
-    // var_dump($request->getParams());
-
-    // foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
-    //     $timeLimit->setParam('{param-'.$key.'}', (\is_array($value)) ? \json_encode($value) : $value);
-    // }
+    foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
+        $timeLimit->setParam('{param-'.$key.'}', (\is_array($value)) ? \json_encode($value) : $value);
+    }
 
     $abuse = new Abuse($timeLimit);
 
