@@ -259,8 +259,6 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     /** @var Utopia\View $layout */
     /** @var Appwrite\Database\Document $project */
 
-    var_dump("*********** In general.php error *************");
-
     $route = $utopia->match($request);
     $template = ($route) ? $route->getLabel('error', null) : null;
 

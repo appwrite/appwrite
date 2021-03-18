@@ -5,8 +5,6 @@ use GraphQL\GraphQL;
 use GraphQL\Type;
 use Appwrite\Utopia\Response;
 use GraphQL\Error\DebugFlag;
-use GraphQL\Error\Error;
-use GraphQL\Error\FormattedError;
 use Utopia\App;
 
 
@@ -26,17 +24,6 @@ App::post('/v1/graphql')
         /** @var Utopia\App $utopia */
         /** @var Utopia\Registry\Registry $register */
 
-        $myErrorFormatter = function(Error $error) {
-            $formattedError = FormattedError::createFromException($error); 
-            var_dump("***** IN ERROR FORMATTER ******");
-            $parentError = $error->getPrevious();
-            $formattedError['code'] = $parentError->getCode();
-            $formattedError['file'] = $parentError->getFile();
-            $formattedError['version'] = App::getEnv('_APP_VERSION', 'UNKNOWN');
-            $formattedError['line'] = $parentError->getLine();
-            return $formattedError;
-        };
-
         $query = $request->getPayload('query', '');
         $variables = $request->getPayload('variables', null);
         $response->setContentType(Response::CONTENT_TYPE_NULL);
@@ -47,12 +34,14 @@ App::post('/v1/graphql')
             return $response;
         });
 
+        $isDevelopment = App::isDevelopment();
+        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+
         try {
-            $debug = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
-            // $debug = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::RETHROW_INTERNAL_EXCEPTIONS;
+            $debug = $isDevelopment ? ( DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE ) : DebugFlag::NONE;
             $rootValue = [];
             $result = GraphQL::executeQuery($schema, $query, $rootValue, null, $variables)
-                                ->setErrorFormatter($myErrorFormatter);
+                                ->setErrorFormatter(Builder::getErrorFormatter($isDevelopment, $version));
             $output = $result->toArray($debug);
         } catch (\Exception $error) {
             $output = [

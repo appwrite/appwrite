@@ -11,7 +11,7 @@ use GraphQL\Type\Schema;
 use Appwrite\GraphQL\Exception;
 use GraphQL\Error\Error;
 use GraphQL\Error\FormattedError;
-use Utopia\App;
+use Utopia\CLI\Console;
 
 class Builder {
 
@@ -216,7 +216,7 @@ class Builder {
     * @return Schema
     */
     public static function buildSchema($utopia, $response, $register) {
-        var_dump("[INFO] Building GraphQL Schema...");
+        Console::info("[INFO] Building GraphQL Schema...");
         $start = microtime(true);
 
         self::init();
@@ -225,11 +225,14 @@ class Builder {
 
         foreach($utopia->getRoutes() as $method => $routes ){
             foreach($routes as $route) {
+
                 $namespace = $route->getLabel('sdk.namespace', '');
                 $methodName = $namespace.'_'.$route->getLabel('sdk.method', '');
                 $responseModelName = $route->getLabel('sdk.response.model', "");
+
                 if ( $responseModelName !== "" ) {
                     $responseModel = $response->getModel($responseModelName);
+                    
                     $type = self::getTypeMapping($responseModel, $response);
                     $description = $route->getDesc();
                     $args = self::getArgs($route->getParams(), $utopia);
@@ -245,12 +248,14 @@ class Builder {
                         }
                         return $result;
                     };
+
                     $field = [
                         'type' => $type,
                         'description' => $description, 
                         'args' => $args,
                         'resolve' => $resolve
                     ];
+
                     if ($method == 'GET') {
                         $queryFields[$methodName] = $field;
                     } else if ($method == 'POST' || $method == 'PUT' || $method == 'PATCH' || $method == 'DELETE') {
@@ -262,6 +267,7 @@ class Builder {
 
         ksort($queryFields);
         ksort($mutationFields);
+        
         $queryType = new ObjectType([
             'name' => 'Query',
             'description' => 'The root of all your queries',
@@ -278,19 +284,25 @@ class Builder {
         ]);
 
         $time_elapsed_secs = microtime(true) - $start;
-        var_dump("[INFO] Time Taken To Build Schema : ${time_elapsed_secs}s");
+        Console::info("[INFO] Time Taken To Build Schema : ${time_elapsed_secs}s");
 
         return $schema; 
     }
 
-    public static function errorFormatter(Error $error) {
-        $formattedError = FormattedError::createFromException($error); 
-        var_dump("***** IN ERROR FORMATTER ******");
-        $parentError = $error->getPrevious();
-        $formattedError['code'] = $parentError->getCode();
-        $formattedError['file'] = $parentError->getFile();
-        $formattedError['version'] = App::getEnv('_APP_VERSION', 'UNKNOWN');
-        $formattedError['line'] = $parentError->getLine();
-        return $formattedError;
+    public static function getErrorFormatter(bool $isDevelopment, string $version): callable 
+    {
+        $errorFormatter = function(Error $error) use ($isDevelopment, $version) {
+            $formattedError = FormattedError::createFromException($error);
+            $parentError = $error->getPrevious();
+            $formattedError['code'] = $parentError->getCode();
+            $formattedError['version'] = $version;
+            if($isDevelopment) {
+                $formattedError['file'] = $parentError->getFile();
+                $formattedError['line'] = $parentError->getLine();
+            }
+            return $formattedError;
+        };
+
+        return $errorFormatter;
     }
 }

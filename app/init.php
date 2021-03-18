@@ -505,12 +505,11 @@ App::setResource('geodb', function($register) {
 }, ['register']);
 
 App::setResource('schema', function($utopia, $response, $request, $register) {
-    
     $schema = null;
     try {
         /* 
-            Try to get the schema from the register. 
-            If there is no schema, an exception will be thrown
+        * Try to get the schema from the register. 
+        * If there is no schema catch the exception and generate it.
         */
         var_dump('[INFO] Getting Schema from register..');
         $schema = $register->get('_schema');
