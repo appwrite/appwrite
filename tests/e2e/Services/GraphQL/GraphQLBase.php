@@ -13,6 +13,8 @@ trait GraphQLBase
     static $GET_DOCUMENT = "get_document";
     static $UPDATE_DOCUMENT = "update_document";
     static $CREATE_USER = "create_user";
+    static $GET_USER = "get_user";
+    static $DELETE_USER = "delete_user";
     static $LIST_COUNTRIES = "list_countries";
     static $CREATE_KEY = "create_key";
     static $CREATE_ACCOUNT = "create_account";
@@ -367,6 +369,24 @@ trait GraphQLBase
             case self::$CREATE_USER :
                 return "mutation createUser(\$email: String!, \$password: String!, \$name: String){
                     users_create (email: \$email, password: \$password, name: \$name) {
+                        id
+                        name
+                        registration
+                        status
+                        email
+                        emailVerification
+                        prefs
+                    }
+                }"; 
+
+            case self::$DELETE_USER :
+                return "mutation deleteUser(\$userId: String!) {
+                    users_deleteUser(userId : \$userId) 
+                }";
+
+            case self::$GET_USER :
+                return "query getUser (\$userId : String!) {
+                    users_get(userId : \$userId) {
                         id
                         name
                         registration

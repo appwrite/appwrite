@@ -117,6 +117,78 @@ class GraphQLServerTest extends Scope
         $this->assertEquals(0, $data['status']);
         $this->assertEquals(false, $data['emailVerification']);
         $this->assertEquals([], $data['prefs']);
+
+        return ['userId' =>  $user['body']['data']['users_create']['id']];
+    }
+
+    /**
+    * @depends testUserCreate
+    */
+    public function testUserDelete(array $data) {
+        $projectId = $this->getProject()['$id'];
+        $key = '';
+        $query = $this->getQuery(self::$DELETE_USER);
+        
+        $variables = [
+            'userId' => $data['userId'],
+        ];
+
+        $graphQLPayload = [
+            "query" => $query,
+            "variables" => $variables
+        ];
+
+        $user = $this->client->call(Client::METHOD_POST, '/graphql', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $key
+        ], $graphQLPayload);
+
+        $errorMessage = "User (role: guest) missing scope (users.write)";
+        $this->assertEquals($user['headers']['status-code'], 401);
+        $this->assertEquals($user['body']['errors'][0]['message'], $errorMessage);
+        $this->assertIsArray($user['body']['data']);
+        $this->assertNull($user['body']['data']['users_deleteUser']);
+
+        $key = $this->createKey('test', ['users.write']);
+        $user = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $key
+        ]), $graphQLPayload);
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertNull($user['body']['errors']);
+        $this->assertIsArray($user['body']['data']);
+        $this->assertIsArray($user['body']['data']['users_deleteUser']);
+        $this->assertEquals([], $user['body']['data']['users_deleteUser']);
+
+        /**
+         * Try to fetch the user and check that its empty
+         */
+        $query = $this->getQuery(self::$GET_USER);
+        $key = $this->createKey('test', ['users.read']);
+        $variables = [
+            'userId' => $data['userId'],
+        ];
+
+        $graphQLPayload = [
+            "query" => $query,
+            "variables" => $variables
+        ];
+
+        $user = $this->client->call(Client::METHOD_POST, '/graphql', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $key
+        ], $graphQLPayload);
+
+        $errorMessage = "User not found";
+        $this->assertEquals($user['headers']['status-code'], 404);
+        $this->assertEquals($user['body']['errors'][0]['message'], $errorMessage);
+        $this->assertIsArray($user['body']['data']);
+        $this->assertNull($user['body']['data']['users_get']);
     }
 
 
