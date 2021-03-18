@@ -70,6 +70,9 @@ class GraphQLServerTest extends Scope
     }
 
     public function testUserCreate() {
+        /**
+         * Try to create a user without the required scope
+         */
         $projectId = $this->getProject()['$id'];
         $key = '';
         $query = $this->getQuery(self::$CREATE_USER);
@@ -97,6 +100,9 @@ class GraphQLServerTest extends Scope
         $this->assertIsArray($user['body']['data']);
         $this->assertNull($user['body']['data']['users_create']);
 
+        /**
+         * Create the user with the reqiured scopes
+         */
         $key = $this->createKey('test', ['users.write']);
         $user = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
             'origin' => 'http://localhost',
@@ -125,6 +131,9 @@ class GraphQLServerTest extends Scope
     * @depends testUserCreate
     */
     public function testUserDelete(array $data) {
+        /**
+         * Try to delete a user without the required scope
+         */
         $projectId = $this->getProject()['$id'];
         $key = '';
         $query = $this->getQuery(self::$DELETE_USER);
@@ -150,6 +159,9 @@ class GraphQLServerTest extends Scope
         $this->assertIsArray($user['body']['data']);
         $this->assertNull($user['body']['data']['users_deleteUser']);
 
+        /**
+         * Delete the user with the reqiured scopes
+         */
         $key = $this->createKey('test', ['users.write']);
         $user = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
             'origin' => 'http://localhost',
@@ -196,7 +208,9 @@ class GraphQLServerTest extends Scope
         $key = $this->createKey("test", ['locale.read']);
         $projectId = $this->getProject()['$id'];
         
-        // Check that locale can be fetched
+        /**
+         * Check that countries can be fetched
+         */
         $query = $this->getQuery(self::$LIST_COUNTRIES);
         $variables = [];
         $graphQLPayload = [
@@ -218,7 +232,9 @@ class GraphQLServerTest extends Scope
         $this->assertEquals(194, $data['sum']);
 
 
-        // Create a new key with no scopes granted
+        /**
+         * Create a key withouut any scopes
+         */
         $key = $this->createKey("test", []);
         $countries = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
