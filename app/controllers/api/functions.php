@@ -417,7 +417,7 @@ App::delete('/v1/functions/:functionId')
             ->setParam('document', $function->getArrayCopy())
         ;
 
-        $response->noContent();
+        $response->dynamic(new Document(), Response::MODEL_NONE);
     });
 
 App::post('/v1/functions/:functionId/tags')
@@ -655,7 +655,7 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
             ->setParam('storage', $tag->getAttribute('size', 0) * -1)
         ;
 
-        $response->noContent();
+        $response->dynamic(new Document(), Response::MODEL_NONE);
     });
 
 App::post('/v1/functions/:functionId/executions')

@@ -1088,7 +1088,7 @@ App::delete('/v1/account/sessions/:sessionId')
                     ->setParam('payload', $response->output($token, Response::MODEL_SESSION))
                 ;
 
-                return $response->noContent();
+                return $response->dynamic(new Document(), Response::MODEL_NONE);;
             }
         }
 
@@ -1159,7 +1159,7 @@ App::delete('/v1/account/sessions')
             ]), Response::MODEL_SESSION_LIST))
         ;
 
-        $response->noContent();
+        $response->dynamic(new Document(), Response::MODEL_NONE);
     });
 
 App::post('/v1/account/recovery')

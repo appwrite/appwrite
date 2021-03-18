@@ -246,7 +246,7 @@ App::delete('/v1/teams/:teamId')
             ->setParam('payload', $response->output($team, Response::MODEL_TEAM))
         ;
 
-        $response->noContent();
+        $response->dynamic(new Document(), Response::MODEL_NONE);
     });
 
 App::post('/v1/teams/:teamId/memberships')
@@ -714,5 +714,5 @@ App::delete('/v1/teams/:teamId/memberships/:inviteId')
             ->setParam('payload', $response->output($membership, Response::MODEL_MEMBERSHIP))
         ;
 
-        $response->noContent();
+        $response->dynamic(new Document(), Response::MODEL_NONE);
     });

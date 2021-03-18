@@ -501,7 +501,7 @@ App::delete('/v1/projects/:projectId')
             throw new Exception('Failed to remove project from DB', 500);
         }
 
-        $response->noContent();
+        $response->dynamic(new Document(), Response::MODEL_NONE);
     });
 
 // Webhooks
@@ -715,7 +715,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
             throw new Exception('Failed to remove webhook from DB', 500);
         }
 
-        $response->noContent();
+        $response->dynamic(new Document(), Response::MODEL_NONE);
     });
 
 // Keys
@@ -907,7 +907,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
             throw new Exception('Failed to remove key from DB', 500);
         }
 
-        $response->noContent();
+        $response->dynamic(new Document(), Response::MODEL_NONE);
     });
 
 // Tasks
@@ -1155,7 +1155,7 @@ App::delete('/v1/projects/:projectId/tasks/:taskId')
             throw new Exception('Failed to remove tasks from DB', 500);
         }
 
-        $response->noContent();
+        $response->dynamic(new Document(), Response::MODEL_NONE);
     });
 
 // Platforms
@@ -1362,7 +1362,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
             throw new Exception('Failed to remove platform from DB', 500);
         }
 
-        $response->noContent();
+        $response->dynamic(new Document(), Response::MODEL_NONE);
     });
 
 // Domains
@@ -1599,5 +1599,5 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
             throw new Exception('Failed to remove domains from DB', 500);
         }
 
-        $response->noContent();
+        $response->dynamic(new Document(), Response::MODEL_NONE);
     });

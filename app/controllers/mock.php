@@ -324,7 +324,7 @@ App::get('/v1/mock/tests/general/empty')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $response->noContent();
+        $response->dynamic(new Document(), Response::MODEL_NONE);
     });
 
 App::get('/v1/mock/tests/general/400-error')

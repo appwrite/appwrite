@@ -448,7 +448,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
         }
 
         // TODO : Response filter implementation
-        $response->noContent();
+        $response->dynamic(new Document(), Response::MODEL_NONE);
     });
 
 App::delete('/v1/users/:userId/sessions')
@@ -490,7 +490,7 @@ App::delete('/v1/users/:userId/sessions')
         ;
 
         // TODO : Response filter implementation
-        $response->noContent();
+        $response->dynamic(new Document(), Response::MODEL_NONE);
     });
 
 App::delete('/v1/users/:userId')

@@ -582,7 +582,7 @@ App::delete('/v1/storage/files/:fileId')
             ->setParam('payload', $response->output($file, Response::MODEL_FILE))
         ;
 
-        $response->noContent();
+        $response->dynamic(new Document(), Response::MODEL_NONE);
     });
 
 // App::get('/v1/storage/files/:fileId/scan')
