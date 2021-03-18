@@ -188,7 +188,7 @@ class Builder {
         return $type;
     }
     
-    
+
     /**
     * This function goes through all the REST endpoints in the API and builds a 
     * GraphQL schema for all those routes whose response model is neither empty nor NONE
@@ -201,7 +201,7 @@ class Builder {
     public static function buildSchema($utopia, $response, $register) {
         Console::info("[INFO] Building GraphQL Schema...");
         $start = microtime(true);
-
+        
         self::init();
         $queryFields = [];
         $mutationFields = [];
@@ -213,9 +213,9 @@ class Builder {
                 $methodName = $namespace.'_'.$route->getLabel('sdk.method', '');
                 $responseModelName = $route->getLabel('sdk.response.model', "");
 
-                if ( $responseModelName !== "" ) {
+                if ($responseModelName !== "") {
                     $responseModel = $response->getModel($responseModelName);
-                    
+
                     /* Create a GraphQL type for the current response model */
                     $type = self::getTypeMapping($responseModel, $response);
                     /* Get a description for this type */
@@ -279,20 +279,29 @@ class Builder {
 
         $time_elapsed_secs = microtime(true) - $start;
         Console::info("[INFO] Time Taken To Build Schema : ${time_elapsed_secs}s");
-
         return $schema; 
     }
 
+    /**
+     * Function to create an appropriate GraphQL Error Formatter
+     * Based on whether we're on a development build or production
+     * build of Appwrite. 
+     * 
+     * @param bool $isDevelopment
+     * @param string $version 
+     * @return callable
+     */
     public static function getErrorFormatter(bool $isDevelopment, string $version): callable 
     {
         $errorFormatter = function(Error $error) use ($isDevelopment, $version) {
             $formattedError = FormattedError::createFromException($error);
-            $parentError = $error->getPrevious();
-            $formattedError['code'] = $parentError->getCode();
+            /**  Previous error represents the actual error thrown by Appwrite server */
+            $previousError = $error->getPrevious();
+            $formattedError['code'] = $previousError->getCode();
             $formattedError['version'] = $version;
-            if($isDevelopment) {
-                $formattedError['file'] = $parentError->getFile();
-                $formattedError['line'] = $parentError->getLine();
+            if ($isDevelopment) {
+                $formattedError['file'] = $previousError->getFile();
+                $formattedError['line'] = $previousError->getLine();
             }
             return $formattedError;
         };
