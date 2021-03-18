@@ -32,7 +32,7 @@ return [
             [
                 'key' => 'flutter',
                 'name' => 'Flutter',
-                'version' => '0.4.0-dev.2',
+                'version' => '0.4.0-dev.3',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter',
                 'package' => 'https://pub.dev/packages/appwrite',
                 'enabled' => true,
@@ -284,12 +284,12 @@ return [
             [
                 'key' => 'dart',
                 'name' => 'Dart',
-                'version' => '0.3.1',
+                'version' => '0.4.0',
                 'url' => 'https://github.com/appwrite/sdk-for-dart',
                 'package' => 'https://pub.dev/packages/dart_appwrite',
                 'enabled' => true,
                 'beta' => true,
-                'dev' => true,
+                'dev' => false,
                 'hidden' => false,
                 'family' => APP_PLATFORM_SERVER,
                 'prism' => 'dart',

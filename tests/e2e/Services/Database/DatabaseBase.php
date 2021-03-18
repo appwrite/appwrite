@@ -434,7 +434,9 @@ trait DatabaseBase
         ], $this->getHeaders()), [
             'data' => [
                 'name' => 'Thor: Ragnarok'
-            ]
+            ],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
         ]);
 
         $this->assertEquals($document['headers']['status-code'], 200);

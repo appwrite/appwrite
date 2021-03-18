@@ -255,7 +255,6 @@ class FunctionsV1
                 ]);  // Async task rescheduale
 
                 $this->execute($trigger, $projectId, $executionId, $database, $function, /*$event*/'', /*$payload*/'', $data, $userId, $jwt);
-                
                 break;
 
             case 'http':
@@ -475,6 +474,26 @@ class FunctionsV1
         if (false === $function) {
             throw new Exception('Failed saving execution to DB', 500);
         }
+
+        $executionUpdate = new Event('v1-webhooks', 'WebhooksV1');
+
+        $executionUpdate
+            ->setParam('projectId', $projectId)
+            ->setParam('userId', $userId)
+            ->setParam('event', 'functions.executions.update')
+            ->setParam('payload', [
+                '$id' => $execution['$id'],
+                'functionId' => $execution['functionId'],
+                'dateCreated' => $execution['dateCreated'],
+                'trigger' => $execution['trigger'],
+                'status' => $execution['status'],
+                'exitCode' => $execution['exitCode'],
+                'stdout' => $execution['stdout'],
+                'stderr' => $execution['stderr'],
+                'time' => $execution['time']
+            ]);
+
+        $executionUpdate->trigger();
 
         $usage = new Event('v1-usage', 'UsageV1');
 
