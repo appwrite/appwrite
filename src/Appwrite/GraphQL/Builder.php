@@ -188,24 +188,7 @@ class Builder {
         return $type;
     }
     
-    /**
-    * Function to initialise the typeMapping array with the base cases of the recursion
-    *
-    * @param string $a
-    * @return void
-    */
-    protected static function getArgs(array $params, $utopia) {
-        $args = [];
-        foreach ($params as $key => $value) {
-            $args[$key] = [
-                'type' => self::getArgType($value['validator'],!$value['optional'], $utopia, $value['injections']),
-                'description' => $value['description'],
-                'defaultValue' => $value['default']
-            ];
-        }
-        return $args;
-    }
-
+    
     /**
     * This function goes through all the REST endpoints in the API and builds a 
     * GraphQL schema for all those routes whose response model is neither empty nor NONE
@@ -233,9 +216,20 @@ class Builder {
                 if ( $responseModelName !== "" ) {
                     $responseModel = $response->getModel($responseModelName);
                     
+                    /* Create a GraphQL type for the current response model */
                     $type = self::getTypeMapping($responseModel, $response);
+                    /* Get a description for this type */
                     $description = $route->getDesc();
-                    $args = self::getArgs($route->getParams(), $utopia);
+                    /* Create the args required for this type */
+                    $args = [];
+                    foreach ($route->getParams() as $key => $value) {
+                        $args[$key] = [
+                            'type' => self::getArgType($value['validator'],!$value['optional'], $utopia, $value['injections']),
+                            'description' => $value['description'],
+                            'defaultValue' => $value['default']
+                        ];
+                    }
+                    /* Define a resolve function that defines how to fetch data for this type */
                     $resolve = function ($type, $args, $context, $info) use (&$register, $route) {
                         $utopia = $register->get('__app');
                         $utopia->setRoute($route)->execute($route, $args);
