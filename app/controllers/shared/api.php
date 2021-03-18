@@ -122,8 +122,6 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
     /** @var Appwrite\Event\Event $functions */
     /** @var bool $mode */
 
-    var_dump("*********** In api.php shutdown *************");
-
     if (!empty($events->getParam('event'))) {
         if(empty($events->getParam('payload'))) {
             $events->setParam('payload', $response->getPayload());

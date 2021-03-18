@@ -296,7 +296,7 @@ class Builder {
         $errorFormatter = function(Error $error) use ($isDevelopment, $version) {
             $formattedError = FormattedError::createFromException($error);
             /**  Previous error represents the actual error thrown by Appwrite server */
-            $previousError = $error->getPrevious();
+            $previousError = $error->getPrevious() ?? $error;
             $formattedError['code'] = $previousError->getCode();
             $formattedError['version'] = $version;
             if ($isDevelopment) {
