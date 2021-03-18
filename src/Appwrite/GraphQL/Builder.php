@@ -53,7 +53,6 @@ class Builder {
     }
 
     /**
-    * Function to initialise the typeMapping array with the base cases of the recursion
     * If the map already contains the type, end the recursion and return.
     * Iterate through all the rules in the response model. Each rule is of the form 
     *        [
@@ -72,7 +71,7 @@ class Builder {
     *        ]
     *   If there are any field names containing characters other than a-z, A-Z, 0-9, _ , 
     *   we need to remove all those characters. Currently Appwrite's Response model has only the 
-    *   $ sign which is prohibited. So we're only replacing that. We need to replace this with a regex
+    *   $ sign which is prohibited by the GraphQL spec. So we're only replacing that. We need to replace this with a regex
     *   based approach.
     *
     * @param Model $model
@@ -98,7 +97,7 @@ class Builder {
                     $complexModel = $response->getModel($props['type']);
                     $type = self::getTypeMapping($complexModel, $response);
                 } catch (Exception $e) {
-                    var_dump("Could Not find model for : {$props['type']}");
+                    Console::error("Could Not find model for : {$props['type']}");
                 }
             }
             if ($props['array']) {
@@ -120,16 +119,17 @@ class Builder {
         return self::$typeMapping[$name];
     }
 
-    /**
-    * Function to initialise the typeMapping array with the base cases of the recursion
+    /** 
+    * Function to map a Utopia\Validator to a valid GraphQL Type 
     *
     * @param $validator
     * @param bool $required
     * @param $utopia
-    * @param bool $injections
-    * @return void
+    * @param $injections
+    * @return GraphQL\Type\Definition\Type
     */
-    protected static function getArgType($validator, bool $required, $utopia, $injections) {
+    protected static function getArgType($validator, bool $required, $utopia, $injections): Type 
+    {
         $validator = (\is_callable($validator)) ? call_user_func_array($validator, $utopia->getResources($injections)) : $validator;
         $type = [];
         switch ((!empty($validator)) ? \get_class($validator) : '') {
