@@ -2,6 +2,10 @@
 
 - Anonymous login
 
+## Upgrades
+
+- Upgraded utopia-php/abuse to version 0.4.0
+
 # Version 0.7.1
 
 ## Features
