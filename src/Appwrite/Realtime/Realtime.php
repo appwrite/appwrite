@@ -102,7 +102,7 @@ class Realtime
     static function identifyReceivers(array &$event, array &$subscriptions)
     {
         $receivers = [];
-        if ($subscriptions[$event['project']]) {
+        if (isset($subscriptions[$event['project']])) {
             foreach ($subscriptions[$event['project']] as $role => $subscription) {
                 foreach ($event['data']['channels'] as $channel) {
                     if (
