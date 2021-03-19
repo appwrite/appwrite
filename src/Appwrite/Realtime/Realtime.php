@@ -110,7 +110,7 @@ class Realtime
                         && (\in_array($role, $event['permissions']) || \in_array('*', $event['permissions']))
                     ) {
                         foreach (array_keys($subscriptions[$event['project']][$role][$channel]) as $ids) {
-                            $receivers[] = $ids;
+                            $receivers[$ids] = 0;
                         }
                         break;
                     }
@@ -118,7 +118,7 @@ class Realtime
             }
         }
 
-        return array_keys(array_flip($receivers));
+        return array_keys($receivers);
     }
 
     /**
