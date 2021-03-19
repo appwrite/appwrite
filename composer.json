@@ -60,7 +60,7 @@
         "slickdeals/statsd": "~3.0"
     },
     "require-dev": {
-        "appwrite/sdk-generator": "0.6.2",
+        "appwrite/sdk-generator": "0.6.3",
         "phpunit/phpunit": "9.4.2",
         "swoole/ide-helper": "4.5.5",
         "textalk/websocket": "1.5.2",

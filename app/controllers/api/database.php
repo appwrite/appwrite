@@ -535,20 +535,12 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
             throw new Exception('No document found', 404);
         }
 
-        //TODO check merge read write permissions
-
-        if (!empty($read)) { // Overwrite permissions only when passed
-            $data['$permissions']['read'] = $read;
-        }
-
-        if (!empty($write)) { // Overwrite permissions only when passed
-            $data['$permissions']['write'] = $write;
-        }
-
         $data = \array_merge($document->getArrayCopy(), $data);
 
         $data['$collection'] = $collection->getId(); // Make sure user don't switch collectionID
         $data['$id'] = $document->getId(); // Make sure user don't switch document unique ID
+        $data['$permissions']['read'] = $read;
+        $data['$permissions']['write'] = $write;
 
         if (empty($data)) {
             throw new Exception('Missing payload', 400);

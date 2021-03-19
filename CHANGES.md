@@ -1,6 +1,13 @@
 # Version 0.8.0 (Not Released Yet)
 
-- Anonymous login
+## Features
+- Anonymous login (#914)
+- Added events for functions and executions (#971)
+
+## Breaking Changes
+
+- Only logged in users can execute functions (for guests, use anonymous login)
+- Only the user who has triggered the execution get access to the relevant execution logs
 
 # Version 0.7.1
 
@@ -31,6 +38,7 @@
 - Fixed a bug, that Response format header was not added in the access-control-allow-header list.
 - Fixed a bug where countryName is unknown on sessions (#933)
 - Added missing event users.update.prefs (#952)
+- Fixed bug not allowing to reset document permissions (#977)
 
 ## Security
 

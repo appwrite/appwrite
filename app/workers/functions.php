@@ -149,6 +149,7 @@ class FunctionsV1 extends Worker
         $event = $this->args['event'] ?? '';
         $scheduleOriginal = $this->args['scheduleOriginal'] ?? '';
         $payload = (!empty($this->args['payload'])) ? json_encode($this->args['payload']) : '';
+        $userId = $this->args['userId'] ?? '';
 
         $database = new Database();
         $database->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
@@ -196,7 +197,7 @@ class FunctionsV1 extends Worker
 
                         Console::success('Triggered function: '.$event);
 
-                        $this->run('event', $projectId, '', $database, $function, $event, $payload);
+                        $this->run('event', $projectId, '', $database, $function, $event, $payload, $userId);
                     }
                 }
                 break;
@@ -251,9 +252,8 @@ class FunctionsV1 extends Worker
                     'trigger' => 'schedule',
                     'scheduleOriginal' => $function->getAttribute('schedule', ''),
                 ]);  // Async task rescheduale
-
-                $this->run($trigger, $projectId, $executionId, $database, $function);
                 
+                $this->run($trigger, $projectId, $executionId, $database, $function, $userId);
                 break;
 
             case 'http':
@@ -265,7 +265,7 @@ class FunctionsV1 extends Worker
                     throw new Exception('Function not found ('.$functionId.')');
                 }
 
-                $this->run($trigger, $projectId, $executionId, $database, $function);
+                $this->run($trigger, $projectId, $executionId, $database, $function, $userId);
                 break;
             
             default:
@@ -287,7 +287,7 @@ class FunctionsV1 extends Worker
      * 
      * @return void
      */
-    public function run(string $trigger, string $projectId, string $executionId, Database $database, Document $function, string $event = '', string $payload = ''): void
+    public function run(string $trigger, string $projectId, string $executionId, Database $database, Document $function, string $event = '', string $payload = '', string $userId = ''): void
     {
         global $list;
 
@@ -469,6 +469,26 @@ class FunctionsV1 extends Worker
         if (false === $function) {
             throw new Exception('Failed saving execution to DB', 500);
         }
+
+        $executionUpdate = new Event('v1-webhooks', 'WebhooksV1');
+
+        $executionUpdate
+            ->setParam('projectId', $projectId)
+            ->setParam('userId', $userId)
+            ->setParam('event', 'functions.executions.update')
+            ->setParam('payload', [
+                '$id' => $execution['$id'],
+                'functionId' => $execution['functionId'],
+                'dateCreated' => $execution['dateCreated'],
+                'trigger' => $execution['trigger'],
+                'status' => $execution['status'],
+                'exitCode' => $execution['exitCode'],
+                'stdout' => $execution['stdout'],
+                'stderr' => $execution['stderr'],
+                'time' => $execution['time']
+            ]);
+
+        $executionUpdate->trigger();
 
         $usage = new Event('v1-usage', 'UsageV1');
 
