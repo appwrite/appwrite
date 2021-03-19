@@ -27,5 +27,5 @@ echo $_ENV['APPWRITE_FUNCTION_ENV_VERSION']."\n";
 echo $_ENV['APPWRITE_FUNCTION_EVENT']."\n";
 echo $_ENV['APPWRITE_FUNCTION_EVENT_PAYLOAD']."\n";
 echo 'data:'.$_ENV['APPWRITE_FUNCTION_DATA']."\n";
-echo 'userId:'.$_ENV['APPWRITE_FUNCTION_USERID']."\n";
+echo 'userId:'.$_ENV['APPWRITE_FUNCTION_USER_ID']."\n";
 echo 'jwt:'.$_ENV['APPWRITE_FUNCTION_JWT']."\n";

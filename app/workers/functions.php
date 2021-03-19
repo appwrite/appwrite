@@ -345,9 +345,9 @@ class FunctionsV1
             'APPWRITE_FUNCTION_EVENT' => $event,
             'APPWRITE_FUNCTION_EVENT_PAYLOAD' => $payload,
             'APPWRITE_FUNCTION_DATA' => $data,
-            'APPWRITE_FUNCTION_USERID' => $userId,
+            'APPWRITE_FUNCTION_USER_ID' => $userId,
             'APPWRITE_FUNCTION_JWT' => $jwt,
-            'APPWRITE_PROJECT_ID' => $projectId,
+            'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
         ]);
 
         \array_walk($vars, function (&$value, $key) {
