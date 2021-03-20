@@ -414,7 +414,7 @@ services:
       - appwrite-redis:/data:rw
 
   clamav:
-    image: appwrite/clamav:1.2.0
+    image: appwrite/clamav:1.3.0
     container_name: appwrite-clamav
     networks:
       - appwrite

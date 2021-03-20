@@ -254,7 +254,10 @@ App::get('/v1/health/anti-virus')
         /** @var Appwrite\Utopia\Response $response */
 
         if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'disabled') { // Check if scans are enabled
-            throw new Exception('Anitvirus is disabled');
+            return $response->json([
+                'status' => 'disabled',
+                'version' => '',
+            ]);
         }
 
         $antiVirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),

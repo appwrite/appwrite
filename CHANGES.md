@@ -2,11 +2,15 @@
 
 - Anonymous login
 
-# Version 0.7.1 (Not Released Yet)
+## Upgrades
+
+- Upgraded ClamAV to version 1.3.0
+
+# Version 0.7.1
 
 ## Features
 
-- Better error logs on appwrite cretificates worker
+- Better error logs on appwrite certificates worker
 - Added option for Redis authentication
 - Force adding a security email on setup
 - SMTP is now disabled by default, no dummy SMTP is included in setup
@@ -22,10 +26,16 @@
 - Upgraded influxdb/influxdb-php lib to version 1.15.2
 - Upgraded phpmailer/phpmailer lib to version 6.3.0
 - Upgraded adhocore/jwt lib to version 1.1.2
+- Upgraded domnikl/statsd to slickdeals/statsd version 3.0
  
 ## Bug Fixes
 
 - Updated missing storage env vars
+- Fixed a bug, that added a wrong timzone offset to user log timestamps
+- Fixed a bug, that Response format header was not added in the access-control-allow-header list.
+- Fixed a bug where countryName is unknown on sessions (#933)
+- Added missing event users.update.prefs (#952)
+- Fixed bug not allowing to reset document permissions (#977)
 
 ## Security
 
