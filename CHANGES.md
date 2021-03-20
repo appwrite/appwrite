@@ -2,6 +2,10 @@
 
 - Anonymous login
 
+## Upgrades
+
+- Upgraded ClamAV to version 1.3.0
+
 # Version 0.7.1
 
 ## Features
