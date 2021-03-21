@@ -125,7 +125,7 @@ App::post('/v1/storage/files')
             '$collection' => Database::SYSTEM_COLLECTION_FILES,
             '$permissions' => [
                 'read' => (is_null($read)) ? ['user:'.$user->getId()] : $read, // By default set read permissions for user
-                'write' => (is_null($write)) ? ['user:'.$user->getId()] : $write, // By default write read permissions for user
+                'write' => (is_null($write)) ? ['user:'.$user->getId()] : $write, // By default set write permissions for user
             ],
             'dateCreated' => \time(),
             'folderId' => '',
