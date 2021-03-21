@@ -169,8 +169,8 @@ App::put('/v1/database/collections/:collectionId')
     ->label('sdk.response.model', Response::MODEL_COLLECTION)
     ->param('collectionId', '', new UID(), 'Collection unique ID.')
     ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.')
-    ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions(/docs/permissions) and get a full list of available permissions.')
-    ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default inherits the existing read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default inherits the existing write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('rules', [], function ($projectDB) { return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES], ['$collection' => Database::SYSTEM_COLLECTION_RULES, '$permissions' => ['read' => [], 'write' => []]])); }, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation.', true, ['projectDB'])
     ->inject('response')
     ->inject('projectDB')
@@ -187,6 +187,8 @@ App::put('/v1/database/collections/:collectionId')
         }
 
         $parsedRules = [];
+        $read = (is_null($read)) ? ($collection->getPermissions()['read'] ?? []) : $read; // By default inherit read permissions
+        $write = (is_null($write)) ? ($collection->getPermissions()['write'] ?? []) : $write; // By default inherit write permissions
 
         foreach ($rules as &$rule) {
             $parsedRules[] = \array_merge([
@@ -295,17 +297,19 @@ App::post('/v1/database/collections/:collectionId/documents')
     ->label('sdk.response.model', Response::MODEL_ANY)
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
-    ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('parentDocument', '', new UID(), 'Parent document unique ID. Use when you want your new document to be a child of a parent document.', true)
     ->param('parentProperty', '', new Key(), 'Parent document property name. Use when you want your new document to be a child of a parent document.', true)
     ->param('parentPropertyType', Document::SET_TYPE_ASSIGN, new WhiteList([Document::SET_TYPE_ASSIGN, Document::SET_TYPE_APPEND, Document::SET_TYPE_PREPEND], true), 'Parent document property connection type. You can set this value to **assign**, **append** or **prepend**, default value is assign. Use when you want your new document to be a child of a parent document.', true)
     ->inject('response')
     ->inject('projectDB')
+    ->inject('user')
     ->inject('audits')
-    ->action(function ($collectionId, $data, $read, $write, $parentDocument, $parentProperty, $parentPropertyType, $response, $projectDB, $audits) {
+    ->action(function ($collectionId, $data, $read, $write, $parentDocument, $parentProperty, $parentPropertyType, $response, $projectDB, $user, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
     
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
@@ -326,8 +330,8 @@ App::post('/v1/database/collections/:collectionId/documents')
 
         $data['$collection'] = $collectionId; // Adding this param to make API easier for developers
         $data['$permissions'] = [
-            'read' => $read,
-            'write' => $write,
+            'read' => (is_null($read)) ? ['user:'.$user->getId()] : $read, //  By default set read permissions for user
+            'write' => (is_null($write)) ? ['user:'.$user->getId()] : $write, //  By default set write permissions for user
         ];
 
         // Read parent document + validate not 404 + validate read / write permission like patch method
@@ -508,8 +512,8 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, new UID(), 'Document unique ID.')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
-    ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default inherits the existing read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default inherits the existing write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
     ->inject('projectDB')
     ->inject('audits')
@@ -522,7 +526,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         $document = $projectDB->getDocument($documentId, false);
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
-
+ 
         if (!\is_array($data)) {
             throw new Exception('Data param should be a valid JSON object', 400);
         }
@@ -539,8 +543,8 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
 
         $data['$collection'] = $collection->getId(); // Make sure user don't switch collectionID
         $data['$id'] = $document->getId(); // Make sure user don't switch document unique ID
-        $data['$permissions']['read'] = $read;
-        $data['$permissions']['write'] = $write;
+        $data['$permissions']['read'] = (is_null($read)) ? ($document->getPermissions()['read'] ?? []) : $read; // By default inherit read permissions
+        $data['$permissions']['write'] = (is_null($write)) ? ($document->getPermissions()['write'] ?? []) : $write; // By default inherit write permissions
 
         if (empty($data)) {
             throw new Exception('Missing payload', 400);
