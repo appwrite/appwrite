@@ -27,6 +27,7 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
 use Appwrite\Event\Realtime;
+use Appwrite\Extend\PDO;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\App;
 use Utopia\View;
@@ -35,11 +36,6 @@ use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
-use PDO as PDONative;
-use Swoole\Database\PDOConfig;
-use Swoole\Database\PDOPool;
-use Swoole\Database\RedisConfig;
-use Swoole\Database\RedisPool;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -155,11 +151,11 @@ $register->set('db', function () use ($register) {
     $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
 
     $pdo = new PDO("mysql:host={$dbHost};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
-        PDONative::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
-        PDONative::ATTR_TIMEOUT => 3, // Seconds
-        PDONative::ATTR_PERSISTENT => true,
-        PDONative::ATTR_DEFAULT_FETCH_MODE => PDONative::FETCH_ASSOC,
-        PDONative::ATTR_ERRMODE => PDONative::ERRMODE_EXCEPTION,
+        PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
+        PDO::ATTR_TIMEOUT => 3, // Seconds
+        PDO::ATTR_PERSISTENT => true,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     ));
 
     return $pdo;
