@@ -19,6 +19,9 @@ trait GraphQLBase
     static $CREATE_KEY = "create_key";
     static $CREATE_ACCOUNT = "create_account";
     static $CREATE_ACCOUNT_SESSION = "create_account_session";
+    static $CREATE_TEAM = "create_team";
+    static $CREATE_TEAM_MEMBERSHIP = "create_team_membership";
+    static $UPDATE_MEMBERSHIP_STATUS = "update_membership_status";
 
     /**
      * @var array
@@ -439,6 +442,46 @@ trait GraphQLBase
                         expire
                         ip
                         current
+                    }
+                }";
+
+            case self::$CREATE_TEAM:
+                return "mutation createTeam(\$name: String!, \$roles: [Json]){
+                    teams_create(name : \$name, roles: \$roles) {
+                        id
+                        name
+                        dateCreated,
+                        sum
+                    }
+                }";
+
+            case self::$CREATE_TEAM_MEMBERSHIP:
+                return "mutation createTeamMembership(\$teamId: String!, \$email: String!, \$name: String, \$roles: [Json]!, \$url: String!){
+                    teams_createMembership(teamId: \$teamId, email: \$email, name : \$name, roles: \$roles, url: \$url) {
+                        id
+                        userId
+                        teamId
+                        name 
+                        email
+                        invited 
+                        joined 
+                        confirm
+                        roles
+                    }
+                }";
+
+            case self::$UPDATE_MEMBERSHIP_STATUS : 
+                return "mutation updateTeamMembership(\$teamId: String!, \$inviteId: String!, \$userId: String!, \$secret: String!){
+                    teams_updateMembershipStatus(teamId: \$teamId, inviteId: \$inviteId, userId: \$userId, secret: \$secret ) {
+                        id
+                        userId
+                        teamId
+                        name 
+                        email
+                        invited 
+                        joined 
+                        confirm
+                        roles
                     }
                 }";
         }

@@ -359,4 +359,178 @@ class GraphQLClientTest extends Scope
         $this->assertEquals($updateDocumentVariables['write'], $permissions['write']);
     }
 
+    /**
+    * @depends testCreateCollection
+    * @depends testCreateAccounts
+    */
+    public function testTeamRole(array $collections, array $accounts) {
+        $projectId = $this->getProject()['$id'];
+        /**
+         * Account 1 creates a team
+         */
+        $query = $this->getQuery(self::$CREATE_TEAM);
+        $createTeamVariables = [
+            'name' => 'Test Team'
+        ];
+        $graphQLPayload = [
+            "query" => $query,
+            "variables" => $createTeamVariables
+        ];
+        $document = $this->client->call(Client::METHOD_POST, '/graphql', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $accounts['session1Cookie'],
+        ], $graphQLPayload);
+
+        $this->assertEquals($document['headers']['status-code'], 201);
+        $this->assertNull($document['body']['errors']);
+        $this->assertIsArray($document['body']['data']);
+        $this->assertIsArray($document['body']['data']['teams_create']);
+        $team = $document['body']['data']['teams_create'];
+        $this->assertArrayHasKey('id', $team);
+        $this->assertEquals($createTeamVariables['name'], $team['name'] );
+
+        /*
+        * Account 1 Creates a document with team permissions
+        */
+        $query = $this->getQuery(self::$CREATE_DOCUMENT);
+        $createDocumentVariables = [
+            'collectionId' => $collections['actorsId'],
+            'data' => [
+                'firstName' => 'Robert',
+                'lastName' => "Downey"
+            ],
+            'read' => ["team:{$team['id']}"],
+            'write' => ["team:{$team['id']}"],
+        ];
+        $graphQLPayload = [
+            "query" => $query,
+            "variables" => $createDocumentVariables
+        ];
+        $document = $this->client->call(Client::METHOD_POST, '/graphql', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $accounts['session1Cookie'],
+        ], $graphQLPayload);
+
+        $this->assertEquals($document['headers']['status-code'], 201);
+        $this->assertNull($document['body']['errors']);
+        $this->assertIsArray($document['body']['data']);
+        $this->assertIsArray($document['body']['data']['database_createDocument']);
+        $doc = $document['body']['data']['database_createDocument'];
+        $this->assertArrayHasKey('$id', $doc);
+        $this->assertEquals($collections['actorsId'], $doc['$collection']);
+        $this->assertEquals($createDocumentVariables['data']['firstName'], $doc['firstName']);
+        $this->assertEquals($createDocumentVariables['data']['lastName'], $doc['lastName']);
+        $permissions = $doc['$permissions'];
+        $this->assertEquals($createDocumentVariables['read'], $permissions['read']);
+        $this->assertEquals($createDocumentVariables['write'], $permissions['write']);
+
+        /*
+        * Account 1 tries to access it 
+        */
+        $query = $this->getQuery(self::$GET_DOCUMENT);
+        $getDocumentVariables = [
+            'collectionId' => $collections['actorsId'],
+            'documentId' => $doc['$id']
+        ];
+        $graphQLPayload = [
+            "query" => $query,
+            "variables" => $getDocumentVariables
+        ];
+        $document = $this->client->call(Client::METHOD_POST, '/graphql', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $accounts['session1Cookie'],
+        ], $graphQLPayload);
+
+        $this->assertEquals($document['headers']['status-code'], 200);
+        $this->assertNull($document['body']['errors']);
+        $this->assertIsArray($document['body']['data']);
+        $this->assertIsArray($document['body']['data']['database_getDocument']);
+        $doc = $document['body']['data']['database_getDocument'];
+        $this->assertArrayHasKey('$id', $doc);
+        $this->assertEquals($collections['actorsId'], $doc['$collection']);
+        $this->assertEquals($createDocumentVariables['data']['firstName'], $doc['firstName']);
+        $this->assertEquals($createDocumentVariables['data']['lastName'], $doc['lastName']);
+        $permissions = $doc['$permissions'];
+        $this->assertEquals($createDocumentVariables['read'], $permissions['read']);
+        $this->assertEquals($createDocumentVariables['write'], $permissions['write']);
+
+        /*
+        * Create a membership 
+        */
+        $email = uniqid().'friend@localhost.test';
+        $query = $this->getQuery(self::$CREATE_TEAM_MEMBERSHIP);
+        $createMembershipVariable = [
+            'teamId' => $team['id'] ,
+            'name' => 'Friend User',
+            'email' => $email,
+            'roles' => ['owner'],
+            'url' => 'http://localhost:5000/join-us#title'
+        ];
+        $graphQLPayload = [
+            "query" => $query,
+            "variables" => $createMembershipVariable
+        ];
+        $membership = $this->client->call(Client::METHOD_POST, '/graphql', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $accounts['session1Cookie'],
+        ], $graphQLPayload);
+
+        $this->assertEquals($membership['headers']['status-code'], 201);
+        $this->assertNull($membership['body']['errors']);
+        $this->assertIsArray($membership['body']['data']);
+        $this->assertIsArray($membership['body']['data']['teams_createMembership']);
+        $membership = $membership['body']['data']['teams_createMembership'];
+        $this->assertNotEmpty($membership['id']);
+        $this->assertNotEmpty($membership['userId']);
+        $this->assertNotEmpty($membership['teamId']);
+        $this->assertCount(1, $membership['roles']);
+        $this->assertIsInt($membership['joined']);
+        $this->assertEquals(false, $membership['confirm']);
+
+
+        $lastEmail = $this->getLastEmail();
+
+        $this->assertEquals($email, $lastEmail['to'][0]['address']);
+        $this->assertEquals('Friend User', $lastEmail['to'][0]['name']);
+        $this->assertEquals('Invitation to '.$createTeamVariables['name'].' Team at '.$this->getProject()['name'], $lastEmail['subject']);
+
+        $secret = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
+        $inviteUid = substr($lastEmail['text'], strpos($lastEmail['text'], '?inviteId=', 0) + 10, 13);
+        $userUid = substr($lastEmail['text'], strpos($lastEmail['text'], '&userId=', 0) + 8, 13);
+
+        /** Update membership status  */
+        $query = $this->getQuery(self::$UPDATE_MEMBERSHIP_STATUS);
+        $updateMembershipStatus = [
+            'teamId' => $team['id'] ,
+            'inviteId' => $inviteUid,
+            'userId' => $userUid,
+            'secret' => $secret,
+        ];
+        $graphQLPayload = [
+            "query" => $query,
+            "variables" => $updateMembershipStatus
+        ];
+        $updatedMembership = $this->client->call(Client::METHOD_POST, '/graphql', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $graphQLPayload);
+
+        $this->assertEquals($updatedMembership['headers']['status-code'], 200);
+        $this->assertNull($updatedMembership['body']['errors']);
+        $this->assertIsArray($updatedMembership['body']['data']);
+        $this->assertIsArray($updatedMembership['body']['data']['teams_updateMembershipStatus']);
+        $updatedMembership = $updatedMembership['body']['data']['teams_updateMembershipStatus'];
+        $this->assertNotEmpty($membership['id'], $updatedMembership['id']);
+        $this->assertEquals($membership['userId'],$updatedMembership['userId']);
+        $this->assertEquals($membership['teamId'], $updatedMembership['teamId']);
+        $this->assertCount(1, $updatedMembership['roles']);
+        $this->assertIsInt($updatedMembership['joined']);
+        $this->assertEquals(true, $updatedMembership['confirm']);
+
+    }
+
 }
