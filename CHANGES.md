@@ -9,6 +9,10 @@
 - Only logged in users can execute functions (for guests, use anonymous login)
 - Only the user who has triggered the execution get access to the relevant execution logs
 
+## Upgrades
+
+- Upgraded ClamAV to version 1.3.0
+
 # Version 0.7.1
 
 ## Features
