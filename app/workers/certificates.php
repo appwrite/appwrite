@@ -124,7 +124,7 @@ class CertificatesV1
             ." -w ".APP_STORAGE_CERTIFICATES
             ." -d {$domain->get()}", '', $stdout, $stderr);
 
-        if($stderr || $exit !== 0) {
+        if($exit !== 0) {
             throw new Exception('Failed to issue a certificate with message: '.$stderr);
         }
 
