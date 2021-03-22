@@ -2,6 +2,16 @@
 
 - Anonymous login
 
+## Upgrades
+
+- Upgraded ClamAV to version 1.3.0
+
+# Version 0.7.2 (Not Released Yet)
+
+## Bugs
+
+- Fixed certificates worker error on successful operations
+
 # Version 0.7.1
 
 ## Features
