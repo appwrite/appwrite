@@ -330,8 +330,8 @@ App::post('/v1/database/collections/:collectionId/documents')
 
         $data['$collection'] = $collectionId; // Adding this param to make API easier for developers
         $data['$permissions'] = [
-            'read' => (is_null($read)) ? ['user:'.$user->getId()] : $read, //  By default set read permissions for user
-            'write' => (is_null($write)) ? ['user:'.$user->getId()] : $write, //  By default set write permissions for user
+            'read' => (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? [], //  By default set read permissions for user
+            'write' => (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? [], //  By default set write permissions for user
         ];
 
         // Read parent document + validate not 404 + validate read / write permission like patch method
