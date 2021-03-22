@@ -3,8 +3,7 @@
 namespace Appwrite\Database\Pool;
 
 use Appwrite\Database\Pool;
-use Exception;
-use PDO;
+use Appwrite\Extend\PDO;
 use SplQueue;
 
 class PDOPool extends Pool
