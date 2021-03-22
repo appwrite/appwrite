@@ -7,7 +7,7 @@ class TestHook implements AfterTestHook
 {
     public function executeAfterTest(string $test, float $time): void
     {
-        printf("\n%s ended in %s seconds", 
+        printf("%s ended in %s seconds\n", 
            $test,
            $time
         );
