@@ -112,7 +112,16 @@ class FunctionsCustomClientTest extends Scope
         $executionId = $execution['body']['$id'] ?? '';
 
         $this->assertEquals(201, $execution['headers']['status-code']);
+       
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$function['body']['$id'].'/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'async' => 1,
+        ]);
 
+        $this->assertEquals(401, $execution['headers']['status-code']);
+       
         return [];
     }
 
@@ -188,7 +197,8 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals('completed', $executions['body']['executions'][0]['status']);
         $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['stdout']);
         $this->assertStringContainsString($this->getUser()['$id'], $executions['body']['executions'][0]['stdout']);
-
+      
         return [];
     }
+
 }
