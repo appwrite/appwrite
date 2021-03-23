@@ -636,7 +636,7 @@ class FunctionsCustomServerTest extends Scope
             ], $this->getHeaders()), [
                 'tag' => $tagId,
             ]);
-    
+
             $this->assertEquals(200, $tag['headers']['status-code']);
            
             $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([

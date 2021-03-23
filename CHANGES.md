@@ -2,6 +2,17 @@
 
 - Anonymous login
 
+## Upgrades
+
+- Upgraded ClamAV to version 1.3.0
+- Upgraded utopia-php/abuse to version 0.4.0
+
+# Version 0.7.2 (Not Released Yet)
+
+## Bugs
+
+- Fixed certificates worker error on successful operations
+
 # Version 0.7.1
 
 ## Features
@@ -31,6 +42,7 @@
 - Fixed a bug, that Response format header was not added in the access-control-allow-header list.
 - Fixed a bug where countryName is unknown on sessions (#933)
 - Added missing event users.update.prefs (#952)
+- Fixed bug not allowing to reset document permissions (#977)
 
 ## Security
 
