@@ -89,7 +89,7 @@ class Builder {
         $fields = [];
         $type = null;
         foreach ($rules as $key => $props) {
-            $keyWithoutSpecialChars = str_replace('$', '', $key);
+            $keyWithoutSpecialChars = str_replace('$', '_', $key);
             if (isset(self::$typeMapping[$props['type']])) {
                 $type = self::$typeMapping[$props['type']];
             } else {

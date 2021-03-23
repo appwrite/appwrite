@@ -1017,8 +1017,8 @@ App::delete('/v1/account')
         $response
             ->addCookie(Auth::$cookieName.'_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->noContent()
         ;
+        $response->dynamic(new Document(), Response::MODEL_NONE);
     });
 
 App::delete('/v1/account/sessions/:sessionId')

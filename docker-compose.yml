@@ -521,15 +521,19 @@ services:
   #   ports:
   #     - '3001:80'
   
-  # Dev Tools End   ------------------------------------------------------------------------------------------
-
-  graphiql:
-    container_name: graphiql
-    ports:
-        - '9506:4000'
+  graphql-explorer:
+    container_name: graphql-explorer
+    image: appwrite/docker-altair:0.0.1
+    restart: unless-stopped
+    networks:
+      - appwrite
+    ports: 
+      - 9506:3000
     environment:
-        - API_URL=http://localhost/v1/graphql
-    image: npalm/graphiql
+      - SERVER_URL=http://localhost/v1/graphql
+
+
+  # Dev Tools End   ------------------------------------------------------------------------------------------
 
 networks:
   gateway:
