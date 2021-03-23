@@ -607,10 +607,6 @@ App::post('/v1/account/sessions/anonymous')
 
         $protocol = $request->getProtocol();
 
-        if(App::getEnv('_APP_LOGIN_ANONYMOUS', 'enabled') !== 'enabled') {
-            throw new Exception('Anonymous login is disabled.', 412);
-        }
-
         if ($user->getId() || 'console' === $project->getId()) {
             throw new Exception('Failed to create anonymous user.', 401);
         }
