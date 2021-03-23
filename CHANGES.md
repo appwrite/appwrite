@@ -2,16 +2,25 @@
 
 - Anonymous login
 
+# Version 0.7.2 (Not Released Yet)
+
+## Features
+
+- When creating new resources from the client API, the current user gets both read & write permissions by default. (#1007)
+- Added timestamp to errors logs on the HTTP API container (#1002)
+- Added verbose tests output on the terminal and CI (#1006)
+
 ## Upgrades
 
 - Upgraded ClamAV to version 1.3.0
 - Upgraded utopia-php/abuse to version 0.4.0
 
-# Version 0.7.2 (Not Released Yet)
-
 ## Bugs
 
-- Fixed certificates worker error on successful operations
+- Fixed certificates worker error on successful operations (#1010)
+- Fixed head requests not responding (#998)
+- Fixed bug when using auth credential for the Redis container (#993)
+- Fixed server warning logs on 3** redirect endpoints (#1013)
 
 # Version 0.7.1
 
