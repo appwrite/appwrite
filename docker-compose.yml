@@ -523,7 +523,7 @@ services:
   
   graphql-explorer:
     container_name: graphql-explorer
-    image: appwrite/docker-altair:0.0.1
+    image: appwrite/docker-altair:0.1.0
     restart: unless-stopped
     networks:
       - appwrite
