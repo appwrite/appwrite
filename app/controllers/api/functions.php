@@ -27,6 +27,7 @@ App::post('/v1/functions')
     ->groups(['api', 'functions'])
     ->desc('Create Function')
     ->label('scope', 'functions.write')
+    ->label('event', 'functions.create')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'create')
@@ -265,6 +266,7 @@ App::put('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
     ->desc('Update Function')
     ->label('scope', 'functions.write')
+    ->label('event', 'functions.update')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'update')
@@ -330,6 +332,7 @@ App::patch('/v1/functions/:functionId/tag')
     ->groups(['api', 'functions'])
     ->desc('Update Function Tag')
     ->label('scope', 'functions.write')
+    ->label('event', 'functions.tags.update')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'updateTag')
@@ -387,6 +390,7 @@ App::delete('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
     ->desc('Delete Function')
     ->label('scope', 'functions.write')
+    ->label('event', 'functions.delete')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'delete')
@@ -424,6 +428,7 @@ App::post('/v1/functions/:functionId/tags')
     ->groups(['api', 'functions'])
     ->desc('Create Tag')
     ->label('scope', 'functions.write')
+    ->label('event', 'functions.tags.create')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'createTag')
@@ -601,6 +606,7 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
     ->groups(['api', 'functions'])
     ->desc('Delete Tag')
     ->label('scope', 'functions.write')
+    ->label('event', 'functions.tags.delete')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'deleteTag')
@@ -662,6 +668,7 @@ App::post('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('Create Execution')
     ->label('scope', 'execution.write')
+    ->label('event', 'functions.executions.create')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'createExecution')
@@ -676,10 +683,12 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('response')
     ->inject('project')
     ->inject('projectDB')
-    ->action(function ($functionId, /*$async,*/ $response, $project, $projectDB) {
+    ->inject('user')
+    ->action(function ($functionId, /*$async,*/ $response, $project, $projectDB, $user) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Database\Document $user */
 
         Authorization::disable();
 
@@ -712,7 +721,7 @@ App::post('/v1/functions/:functionId/executions')
         $execution = $projectDB->createDocument([
             '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
             '$permissions' => [
-                'read' => $function->getPermissions()['execute'] ?? [],
+                'read' => (!empty($user->getId())) ? ['user:' . $user->getId()] : [],
                 'write' => [],
             ],
             'dateCreated' => time(),

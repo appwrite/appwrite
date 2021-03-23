@@ -53,7 +53,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:0.7.0
+    appwrite/appwrite:0.7.1
 ```
 
 ### Windows
@@ -65,7 +65,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:0.7.0
+    appwrite/appwrite:0.7.1
 ```
 
 #### PowerShell
@@ -75,13 +75,13 @@ docker run -it --rm ,
     --volume /var/run/docker.sock:/var/run/docker.sock ,
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw ,
     --entrypoint="install" ,
-    appwrite/appwrite:0.7.0
+    appwrite/appwrite:0.7.1
 ```
 
 Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please note that on non-linux native hosts, the server might take a few minutes to start after installation completes.
 
 
-For advanced production and custom installation, check out our Docker [environment variables](docs/tutorials/environment-variables.md) docs. You can also use our public [docker-compose.yml](https://appwrite.io/docker-compose.yml) file to manually set up and environment.
+For advanced production and custom installation, check out our Docker [environment variables](docs/tutorials/environment-variables.md) docs. You can also use our public [docker-compose.yml](https://appwrite.io/docker-compose.yml) file to manually set up an environment.
 
 ### Upgrade from an Older Version
 
@@ -94,6 +94,7 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 * [Getting Started for Web](https://appwrite.io/docs/getting-started-for-web)
 * [Getting Started for Flutter](https://appwrite.io/docs/getting-started-for-flutter)
 * [Getting Started for Server](https://appwrite.io/docs/getting-started-for-server)
+* [Getting Started for CLI](https://appwrite.io/docs/command-line)
 * Getting Started for Android (Coming soon...)
 * Getting Started for iOS (Coming soon...)
 
@@ -132,13 +133,13 @@ Looking for more SDKs? - Help us by contributing a pull request to our [SDK Gene
 
 ## Contributing
 
-All code contributions - including those of people having commit access - must go through a pull request and approved by a core developer before being merged. This is to ensure proper review of all the code.
+All code contributions - including those of people having commit access - must go through a pull request and be approved by a core developer before being merged. This is to ensure a proper review of all the code.
 
 We truly ❤️ pull requests! If you wish to help, you can learn more about how you can contribute to this project in the [contribution guide](CONTRIBUTING.md).
 
 ## Security
 
-For security issues, kindly email us at [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue in GitHub.
+For security issues, kindly email us at [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue on GitHub.
 
 ## Follow Us
 
