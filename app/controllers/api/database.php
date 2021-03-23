@@ -283,6 +283,45 @@ App::delete('/v1/database/collections/:collectionId')
         $response->noContent();
     });
 
+App::post('/v1/database/collections/:collectionId/indexes')
+    ->desc('Create Index')
+    ->groups(['api', 'database'])
+    ->label('event', 'database.indexes.create')
+    ->label('scope', 'indexes.write')
+    ->label('sdk.namespace', 'database')
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.method', 'createIndex')
+    ->label('sdk.description', '/docs/references/database/create-index.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_INDEX)
+    ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
+    ->param('name', null, new Text(256), 'Index name.')
+    ->param('type', null, new Text(256), 'Index type.')
+    ->inject('response')
+    ->action(function ($collectionId, $name, $type, $response, $projectDB, $audits) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $audits */
+
+        try {
+            $data = $projectDB->createIndex($collectionId, $name, $type);
+        } catch (\Exception $exception) {
+            throw new Exception('Failed creating index', 500);
+        }
+
+        $audits
+            ->setParam('event', 'database.indexes.create')
+            ->setParam('resource', 'database/indexes/'.$data['$id'])
+            ->setParam('data', $data->getArrayCopy())
+        ;
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($data, Response::MODEL_INDEX)
+        ;
+    });
+
 App::post('/v1/database/collections/:collectionId/documents')
     ->desc('Create Document')
     ->groups(['api', 'database'])
