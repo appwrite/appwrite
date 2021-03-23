@@ -1,6 +1,6 @@
 ## Getting Started
 
-### Add your Flutter Platform
+### Add your Web Platform
 For you to init your SDK and interact with Appwrite services you need to add a web platform to your project. To add a new platform, go to your Appwrite console, choose the project you created in the step before and click the 'Add Platform' button.
 
 From the options, choose to add a **Web** platform and add your client app hostname. By adding your hostname to your project platform you are allowing cross-domain communication between your project and the Appwrite API.
