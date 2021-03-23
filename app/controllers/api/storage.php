@@ -251,7 +251,7 @@ App::get('/v1/storage/files/:fileId/preview')
     ->inject('response')
     ->inject('project')
     ->inject('projectDB')
-    ->action(function ($fileId, $width, $height, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $background, $output, $request, $response, $project, $projectDB) {
+    ->action(function ($fileId, $width, $height, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $projectDB) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
