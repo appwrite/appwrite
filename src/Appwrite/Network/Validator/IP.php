@@ -10,7 +10,7 @@
  * @license The MIT License (MIT) <http://www.opensource.org/licenses/mit-license.php>
  */
 
-namespace Utopia\Validator;
+namespace Appwrite\Network\Validator;
 
 use Exception;
 use Utopia\Validator;
