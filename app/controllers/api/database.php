@@ -283,13 +283,102 @@ App::delete('/v1/database/collections/:collectionId')
         $response->noContent();
     });
 
+App::post('/v1/database/collections/:collectionId/attributes')
+    ->desc('Create Attribute')
+    ->groups(['api', 'database'])
+    ->label('event', 'database.attributes.create')
+    ->label('scope', 'attributes.write')
+    ->label('sdk.namespace', 'database')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.method', 'createAttribute')
+    ->label('sdk.description', '/docs/references/database/create-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE)
+    ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
+    ->param('id', null, new Text(256), 'Attribute ID.')
+    ->param('type', null, new Text(256), 'Attribute type.')
+    ->param('size', null, new Integer(), 'Attribute size.')
+    ->param('array', null, new Boolean(), 'Is array flag.')
+    ->inject('response')
+    ->action(function ($collectionId, $id, $type, $size, $array, $response, $projectDB, $audits) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $audits */
+
+        try {
+            $data = $projectDB->createAttribute($collectionId, $id, $type, $size, $array);
+        } catch (\Exception $exception) {
+            throw new Exception('Failed creating attribute', 500);
+        }
+
+        $audits
+            ->setParam('event', 'database.attributes.create')
+            ->setParam('resource', 'database/attributes/'.$data['$id'])
+            ->setParam('data', $data->getArrayCopy())
+        ;
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($data, Response::MODEL_ATTRIBUTE)
+        ;
+    });
+
+App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
+    ->desc('Delete Attribute')
+    ->groups(['api', 'database'])
+    ->label('scope', 'attributes.write')
+    ->label('event', 'database.attributes.delete')
+    ->label('sdk.namespace', 'database')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.method', 'deleteAttribute')
+    ->label('sdk.description', '/docs/references/database/delete-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('collectionId', '', new UID(), 'Collection unique ID.')
+    ->param('attributeId', '', new UID(), 'Attribute unique ID.')
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('events')
+    ->inject('audits')
+    ->inject('deletes')
+    ->action(function ($collectionId, $attributeId, $response, $projectDB, $events, $audits, $deletes) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $events */
+        /** @var Appwrite\Event\Event $audits */
+
+        $attribute = $projectDB->getDocument($attributeId, false);
+
+        if (!$projectDB->deleteAttribute($collectionId, $attributeId)) {
+            throw new Exception('Failed to remove attribute from DB', 500);
+        }
+
+        $deletes
+            ->setParam('type', DELETE_TYPE_DOCUMENT)
+            ->setParam('document', $attribute)
+        ;
+
+        $events
+            ->setParam('payload', $response->output($attribute, Response::MODEL_ATTRIBUTE))
+        ;
+
+        $audits
+            ->setParam('event', 'database.attributes.delete')
+            ->setParam('resource', 'database/attributes/'.$attribute->getId())
+            ->setParam('data', $attribute->getArrayCopy())
+        ;
+
+        $response->noContent();
+    });
+
 App::post('/v1/database/collections/:collectionId/indexes')
     ->desc('Create Index')
     ->groups(['api', 'database'])
     ->label('event', 'database.indexes.create')
     ->label('scope', 'indexes.write')
     ->label('sdk.namespace', 'database')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.method', 'createIndex')
     ->label('sdk.description', '/docs/references/database/create-index.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
@@ -320,6 +409,32 @@ App::post('/v1/database/collections/:collectionId/indexes')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($data, Response::MODEL_INDEX)
         ;
+    });
+
+App::get('v1/database/collections/:/collectionId/indexes')
+    ->desc('List Indexes')
+    ->groups(['api', 'database'])
+    ->label('scope', 'indexes.read')
+    ->label('sdk.namespace', 'database')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.method', 'listIndexes')
+    ->label('sdk.description', '/docs/references/database/list-indexes.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_INDEX_LIST)
+    ->inject('response')
+    ->inject('projectDB')
+    ->action(function ($response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+
+        // $results = $projectDB->getIndexes([
+        // ]);
+
+        // $response->dynamic(new Document([
+            // 'sum' => $projectDB->getSum(),
+            // 'collections' => $results
+        // ]), Response::MODEL_INDEX_LIST);
     });
 
 App::post('/v1/database/collections/:collectionId/documents')
