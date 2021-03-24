@@ -666,8 +666,6 @@ trait RealtimeBase
         $this->assertEquals($execution['headers']['status-code'], 201);
         $this->assertNotEmpty($execution['body']['$id']);
 
-        sleep(6); 
-
         $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('timestamp', $response);
