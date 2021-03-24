@@ -70,7 +70,7 @@ class IP extends Validator
      */
     public function getType()
     {
-        return self::TYPE_STRING;
+        return 'string';
     }
 
     /**
