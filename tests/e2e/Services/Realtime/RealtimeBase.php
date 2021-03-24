@@ -22,7 +22,7 @@ trait RealtimeBase
         ];
         return new WebSocketClient('ws://appwrite-traefik/v1/realtime?' . http_build_query($query), [
             'headers' => $headers,
-            'timeout' => 10,
+            'timeout' => 60,
         ]);
     }
 
