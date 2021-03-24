@@ -483,18 +483,7 @@ class FunctionsV1 extends Worker
             ->setParam('projectId', $projectId)
             ->setParam('userId', $userId)
             ->setParam('event', 'functions.executions.update')
-            ->setParam('payload', [
-                '$id' => $execution['$id'],
-                '$permissions' => $execution['$permissions'],
-                'functionId' => $execution['functionId'],
-                'dateCreated' => $execution['dateCreated'],
-                'trigger' => $execution['trigger'],
-                'status' => $execution['status'],
-                'exitCode' => $execution['exitCode'],
-                'stdout' => $execution['stdout'],
-                'stderr' => $execution['stderr'],
-                'time' => $execution['time']
-            ]);
+            ->setParam('payload', $execution->getArrayCopy());
 
         $executionUpdate->trigger();
 
