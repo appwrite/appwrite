@@ -25,11 +25,11 @@ class RealtimeChannelsTest extends TestCase
         'collections',
         'collections.1',
         'collections.1.documents',
-        'collections.2',
-        'collections.2.documents',
         'documents',
         'documents.1',
-        'documents.2',
+        'executions',
+        'executions.1',
+        'functions.1',
     ];
 
     public function setUp(): void

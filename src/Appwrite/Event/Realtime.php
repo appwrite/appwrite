@@ -140,7 +140,15 @@ class Realtime
                 $this->permissions = $this->payload->getAttribute('$permissions.read');
 
                 break;
-        }
+            case strpos($this->event, 'functions.executions.') === 0:
+                if (!empty($this->payload->getAttribute('$permissions.read'))) {
+                    $this->channels[] = 'executions';
+                    $this->channels[] = 'executions.' . $this->payload->getId();
+                    $this->channels[] = 'functions.' . $this->payload->getAttribute('functionId');
+                    $this->permissions = $this->payload->getAttribute('$permissions.read');
+                }
+                break;
+            }
     }
 
     /**

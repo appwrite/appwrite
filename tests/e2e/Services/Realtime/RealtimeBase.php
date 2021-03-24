@@ -598,4 +598,92 @@ trait RealtimeBase
 
         $client->close();
     }
+
+    public function testChannelExecutions()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        $client = $this->getWebsocket(['executions'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_'.$projectId.'=' . $session
+        ]);
+        $response = json_decode($client->receive(), true);
+        $this->assertCount(1, $response);
+        $this->assertArrayHasKey('executions', $response);
+
+        /**
+         * Test File Create
+         */
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Test',
+            'env' => 'php-7.4',
+            'execute' => ['*'],
+            'timeout' => 10,
+        ]);
+
+        $functionId = $function['body']['$id'] ?? '';
+
+        $this->assertEquals($function['headers']['status-code'], 201);
+        $this->assertNotEmpty($function['body']['$id']);
+
+        $tag = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/tags', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'command' => 'php index.php',
+            'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/timeout.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
+        ]);
+
+        $tagId = $tag['body']['$id'] ?? '';
+
+        $this->assertEquals($tag['headers']['status-code'], 201);
+        $this->assertNotEmpty($tag['body']['$id']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/tag', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'tag' => $tagId,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals($execution['headers']['status-code'], 201);
+        $this->assertNotEmpty($execution['body']['$id']);
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('timestamp', $response);
+        $this->assertCount(3, $response['channels']);
+        $this->assertContains('executions', $response['channels']);
+        $this->assertContains('executions.' . $execution['body']['$id'], $response['channels']);
+        $this->assertContains('functions.' . $execution['body']['functionId'], $response['channels']);
+        $this->assertEquals('functions.executions.create', $response['event']);
+        $this->assertNotEmpty($response['payload']);
+
+        sleep(6); 
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('timestamp', $response);
+        $this->assertCount(3, $response['channels']);
+        $this->assertContains('executions', $response['channels']);
+        $this->assertContains('executions.' . $execution['body']['$id'], $response['channels']);
+        $this->assertContains('functions.' . $execution['body']['functionId'], $response['channels']);
+        $this->assertEquals('functions.executions.update', $response['event']);
+        $this->assertNotEmpty($response['payload']);
+
+        $client->close();
+    }
 }
