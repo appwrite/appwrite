@@ -620,7 +620,7 @@ trait RealtimeBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ], $this->getHeaders()), [
+        ]), [
             'name' => 'Test',
             'env' => 'php-7.4',
             'execute' => ['*'],
@@ -636,7 +636,7 @@ trait RealtimeBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ], $this->getHeaders()), [
+        ]), [
             'command' => 'php index.php',
             'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/timeout.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
         ]);
@@ -650,7 +650,7 @@ trait RealtimeBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ], $this->getHeaders()), [
+        ]), [
             'tag' => $tagId,
         ]);
 
@@ -661,7 +661,7 @@ trait RealtimeBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ], $this->getHeaders()), []);
+        ]), []);
 
         $this->assertEquals($execution['headers']['status-code'], 201);
         $this->assertNotEmpty($execution['body']['$id']);
