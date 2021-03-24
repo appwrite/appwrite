@@ -6,6 +6,7 @@ use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
+use Appwrite\Event\Realtime;
 use Appwrite\Resque\Worker;
 use Cron\CronExpression;
 use Swoole\Runtime;
@@ -486,6 +487,14 @@ class FunctionsV1 extends Worker
             ->setParam('payload', $execution->getArrayCopy());
 
         $executionUpdate->trigger();
+
+        $realtimeUpdate = new Realtime('', '', []);
+
+        $realtimeUpdate
+            ->setEvent('functions.executions.update')
+            ->setProject($projectId)
+            ->setPayload($execution->getArrayCopy())
+            ->trigger();
 
         $usage = new Event('v1-usage', 'UsageV1');
 
