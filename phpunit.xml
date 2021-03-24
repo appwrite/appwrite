@@ -8,6 +8,9 @@
          processIsolation="false"
          stopOnFailure="false"
         >
+    <extensions>
+        <extension class="Appwrite\Tests\TestHook" />
+    </extensions>
     <testsuites>
         <testsuite name="Application Test Suite">
             <directory>./tests/e2e/</directory>

@@ -15,7 +15,10 @@
         }
     },
     "autoload-dev": {
-        "psr-4": {"Tests\\E2E\\": "tests/e2e"}
+        "psr-4": {
+            "Tests\\E2E\\": "tests/e2e",
+            "Appwrite\\Tests\\": "tests/extensions"
+        }
     },
     "require": {
         "php": ">=7.4.0",
@@ -35,8 +38,8 @@
         "appwrite/php-clamav": "1.0.*",
 
         "utopia-php/framework": "0.12.*",
-        "utopia-php/abuse": "0.3.*",
-        "utopia-php/analytics": "0.1.*",
+        "utopia-php/abuse": "0.4.*",
+        "utopia-php/analytics": "0.2.*",
         "utopia-php/audit": "0.5.*",
         "utopia-php/cache": "0.2.*",
         "utopia-php/cli": "0.10.0",

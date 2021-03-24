@@ -256,6 +256,8 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     $template = ($route) ? $route->getLabel('error', null) : null;
 
     if (php_sapi_name() === 'cli') {
+        Console::error('[Error] Timestamp: '.date('c', time()));
+        
         if($route) {
             Console::error('[Error] Method: '.$route->getMethod());
             Console::error('[Error] URL: '.$route->getURL());
