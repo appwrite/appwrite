@@ -23,15 +23,10 @@ $register->set('db', function () {
 
     return $pdo;
 });
-$register->set('influxdb', function () { // Register DB connection
-    $host = App::getEnv('_APP_INFLUXDB_HOST', '');
-    $port = App::getEnv('_APP_INFLUXDB_PORT', '');
+$register->set('cache', function () { // Register cache connection
+    $redis = new Redis();
+    $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
+    $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
-    if (empty($host) || empty($port)) {
-        return;
-    }
-
-    $client = new InfluxDB\Client($host, $port, '', '', false, false, 5);
-
-    return $client;
+    return $redis;
 });
