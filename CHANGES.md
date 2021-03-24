@@ -12,8 +12,8 @@
 
 ## Upgrades
 
-- Upgraded ClamAV to version 1.3.0
 - Upgraded utopia-php/abuse to version 0.4.0
+- Upgraded utopia-php/analytics to version 0.2.0
 
 ## Bugs
 
