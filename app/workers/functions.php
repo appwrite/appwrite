@@ -485,6 +485,7 @@ class FunctionsV1 extends Worker
             ->setParam('event', 'functions.executions.update')
             ->setParam('payload', [
                 '$id' => $execution['$id'],
+                '$permissions' => $execution['$permissions'],
                 'functionId' => $execution['functionId'],
                 'dateCreated' => $execution['dateCreated'],
                 'trigger' => $execution['trigger'],
