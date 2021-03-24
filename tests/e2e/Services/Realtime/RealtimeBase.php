@@ -22,7 +22,7 @@ trait RealtimeBase
         ];
         return new WebSocketClient('ws://appwrite-traefik/v1/realtime?' . http_build_query($query), [
             'headers' => $headers,
-            'timeout' => 5,
+            'timeout' => 10,
         ]);
     }
 
@@ -659,9 +659,8 @@ trait RealtimeBase
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), []);
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), []);
 
         $this->assertEquals($execution['headers']['status-code'], 201);
         $this->assertNotEmpty($execution['body']['$id']);
