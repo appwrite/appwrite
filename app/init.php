@@ -170,6 +170,18 @@ $register->set('redisPool', function () {
 
     return $pool;
 });
+$register->set('influxdb', function () { // Register DB connection
+    $host = App::getEnv('_APP_INFLUXDB_HOST', '');
+    $port = App::getEnv('_APP_INFLUXDB_PORT', '');
+
+    if (empty($host) || empty($port)) {
+        return;
+    }
+
+    $client = new InfluxDB\Client($host, $port, '', '', false, false, 5);
+
+    return $client;
+});
 $register->set('statsd', function () { // Register DB connection
     $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
     $port = App::getEnv('_APP_STATSD_PORT', 8125);
@@ -178,13 +190,6 @@ $register->set('statsd', function () { // Register DB connection
     $statsd = new \Domnikl\Statsd\Client($connection);
 
     return $statsd;
-});
-$register->set('cache', function () { // Register cache connection
-    $redis = new Redis();
-    $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
-    $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
-
-    return $redis;
 });
 $register->set('smtp', function () {
     $mail = new PHPMailer(true);
