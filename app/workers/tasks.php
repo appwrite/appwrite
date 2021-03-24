@@ -10,7 +10,7 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Resque\Worker;
 use Cron\CronExpression;
 
-require_once __DIR__.'/../init.php';
+require_once __DIR__.'/../workers.php';
 
 Console::title('Tasks V1 Worker');
 

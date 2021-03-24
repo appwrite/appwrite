@@ -11,7 +11,7 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Resque\Worker;
 
-require_once __DIR__.'/../init.php';
+require_once __DIR__.'/../workers.php';
 
 Console::title('Certificates V1 Worker');
 
