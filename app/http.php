@@ -3,9 +3,9 @@
 require_once __DIR__.'/../vendor/autoload.php';
 
 use Appwrite\Database\Validator\Authorization;
+use Appwrite\Utopia\Response;
 use Utopia\Swoole\Files;
 use Utopia\Swoole\Request;
-use Appwrite\Utopia\Response;
 use Swoole\Process;
 use Swoole\Http\Server;
 use Swoole\Http\Request as SwooleRequest;
@@ -71,7 +71,7 @@ $http->on('start', function (Server $http) use ($payloadSize) {
     });
 });
 
-$http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) {
+$http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register) {
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
 
@@ -87,6 +87,17 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
         return;
     }
+
+    $db = $register->get('dbPool')->get();
+    $redis = $register->get('redisPool')->get();
+
+    $register->set('db', function () use (&$db) {
+        return $db;
+    });
+    
+    $register->set('cache', function () use (&$redis) { // Register cache connection
+        return $redis;
+    });
 
     $app = new App('UTC');
     
@@ -107,6 +118,14 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         else {
             $swooleResponse->end('500: Server Error');
         }
+    } finally {
+        /** @var PDOPool $dbPool */
+        $dbPool = $register->get('dbPool');
+        $dbPool->put($db);
+
+        /** @var RedisPool $redisPool */
+        $redisPool = $register->get('redisPool');
+        $redisPool->put($redis);
     }
 });
 

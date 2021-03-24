@@ -24,6 +24,8 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
+use Appwrite\Database\Pool\PDOPool;
+use Appwrite\Database\Pool\RedisPool;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
 use Appwrite\Event\Realtime;
@@ -144,7 +146,32 @@ Database::addFilter('encrypt',
 /*
  * Registry
  */
-$register->set('db', function () use ($register) {
+$register->set('dbPool', function () { // Register DB connection
+    $dbHost = App::getEnv('_APP_DB_HOST', '');
+    $dbUser = App::getEnv('_APP_DB_USER', '');
+    $dbPass = App::getEnv('_APP_DB_PASS', '');
+    $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
+    $pool = new PDOPool(10, $dbHost, $dbScheme, $dbUser, $dbPass);
+
+    return $pool;
+});
+
+$register->set('redisPool', function () {
+    $user = App::getEnv('_APP_REDIS_USER', '');
+    $pass = App::getEnv('_APP_REDIS_PASS', '');
+    $auth = [];
+    if ($user) {
+        $auth[] = $user;
+    }
+    if ($pass) {
+        $auth[] = $pass;
+    }
+
+    $pool = new RedisPool(10, App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''), $auth);
+
+    return $pool;
+});
+$register->set('db', function () {
     $dbHost = App::getEnv('_APP_DB_HOST', '');
     $dbUser = App::getEnv('_APP_DB_USER', '');
     $dbPass = App::getEnv('_APP_DB_PASS', '');

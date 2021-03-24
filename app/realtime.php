@@ -38,32 +38,6 @@ $server->set([
 $subscriptions = [];
 $connections = [];
 
-$register->set('dbPool', function () { // Register DB connection
-    $dbHost = App::getEnv('_APP_DB_HOST', '');
-    $dbUser = App::getEnv('_APP_DB_USER', '');
-    $dbPass = App::getEnv('_APP_DB_PASS', '');
-    $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
-    $pool = new PDOPool(20, $dbHost, $dbScheme, $dbUser, $dbPass);
-
-    return $pool;
-});
-
-$register->set('redisPool', function () {
-    $user = App::getEnv('_APP_REDIS_USER', '');
-    $pass = App::getEnv('_APP_REDIS_PASS', '');
-    $auth = [];
-    if ($user) {
-        $auth[] = $user;
-    }
-    if ($pass) {
-        $auth[] = $pass;
-    }
-
-    $pool = new RedisPool(20, App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''), $auth);
-
-    return $pool;
-});
-
 $server->on('workerStart', function ($server, $workerId) use (&$subscriptions, &$connections, &$register) {
     Console::success('Worker ' . $workerId . ' started succefully');
 
