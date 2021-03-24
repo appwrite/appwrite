@@ -21,7 +21,7 @@ class UsageV1 extends Worker
     {
     }
 
-    public function execute(): void
+    public function run(): void
     {
         global $register;
 
