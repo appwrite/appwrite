@@ -12,7 +12,7 @@ abstract class Worker
 
     abstract public function init(): void;
     
-    abstract public function execute(): void;
+    abstract public function run(): void;
     
     abstract public function shutdown(): void;
 
@@ -23,7 +23,7 @@ abstract class Worker
 
     public function perform()
     {
-        $this->execute();
+        $this->run();
     }
 
     public function tearDown(): void

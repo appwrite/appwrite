@@ -37,6 +37,7 @@
 - Force adding a security email on setup
 - SMTP is now disabled by default, no dummy SMTP is included in setup
 - Added a new endpoint that returns the server and SDKs latest versions numbers #941
+- Custom data strings, userId, and JWT available for cloud functions #967
 
 ## Upgrades
 
