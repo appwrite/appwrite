@@ -666,16 +666,6 @@ trait RealtimeBase
         $this->assertEquals($execution['headers']['status-code'], 201);
         $this->assertNotEmpty($execution['body']['$id']);
 
-        $response = json_decode($client->receive(), true);
-
-        $this->assertArrayHasKey('timestamp', $response);
-        $this->assertCount(3, $response['channels']);
-        $this->assertContains('executions', $response['channels']);
-        $this->assertContains('executions.' . $execution['body']['$id'], $response['channels']);
-        $this->assertContains('functions.' . $execution['body']['functionId'], $response['channels']);
-        $this->assertEquals('functions.executions.create', $response['event']);
-        $this->assertNotEmpty($response['payload']);
-
         sleep(6); 
 
         $response = json_decode($client->receive(), true);
