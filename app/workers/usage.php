@@ -37,10 +37,10 @@ class UsageV1 extends Worker
         $httpMethod = $this->args['httpMethod'];
         $httpRequest = $this->args['httpRequest'];
 
-        $functionId = $this->args['functionId'];
-        $functionExecution = $this->args['functionExecution'];
-        $functionExecutionTime = $this->args['functionExecutionTime'];
-        $functionStatus = $this->args['functionStatus'];
+        $functionId = $this->args['functionId'] ?? null;
+        $functionExecution = $this->args['functionExecution'] ?? null;
+        $functionExecutionTime = $this->args['functionExecutionTime'] ?? null;
+        $functionStatus = $this->args['functionStatus'] ?? null;
 
         $tags = ",project={$projectId},version=".App::getEnv('_APP_VERSION', 'UNKNOWN').'';
 
