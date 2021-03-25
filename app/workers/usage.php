@@ -29,13 +29,13 @@ class UsageV1 extends Worker
 
         $projectId = $this->args['projectId'];
 
-        $storage = $this->args['storage'];
-
         $networkRequestSize = $this->args['networkRequestSize'];
         $networkResponseSize = $this->args['networkResponseSize'];
+
+        $storage = $this->args['storage'] ?? null;
         
-        $httpMethod = $this->args['httpMethod'];
-        $httpRequest = $this->args['httpRequest'];
+        $httpMethod = $this->args['httpMethod'] ?? null;
+        $httpRequest = $this->args['httpRequest'] ?? null;
 
         $functionId = $this->args['functionId'] ?? null;
         $functionExecution = $this->args['functionExecution'] ?? null;
