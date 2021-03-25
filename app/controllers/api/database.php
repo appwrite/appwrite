@@ -324,6 +324,60 @@ App::post('/v1/database/collections/:collectionId/attributes')
         ;
     });
 
+App::get('v1/database/collections/:collectionId/attributes')
+    ->desc('List Attributes')
+    ->groups(['api', 'database'])
+    ->label('scope', 'attributes.read')
+    ->label('sdk.namespace', 'database')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.method', 'listAttributes')
+    ->label('sdk.description', '/docs/references/database/list-attributes.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_LIST)
+    ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
+    ->inject('response')
+    ->inject('projectDB')
+    ->action(function ($collectionId, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+
+        // $results = $projectDB->getAttributes([
+        // ]);
+
+        // $response->dynamic(new Document([
+            // 'sum' => $projectDB->getSum(),
+            // 'collections' => $results
+        // ]), Response::MODEL_ATTRIBUTE_LIST);
+    });
+
+App::get('v1/database/collections/:collectionId/attributes/:attributeId')
+    ->desc('Get Attribute')
+    ->groups(['api', 'database'])
+    ->label('scope', 'attributes.read')
+    ->label('sdk.namespace', 'database')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.method', 'listAttributes')
+    ->label('sdk.description', '/docs/references/database/get-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE)
+    ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
+    ->param('attributeId', '', new UID(), 'Attribute unique ID.')
+    ->inject('response')
+    ->inject('projectDB')
+    ->action(function ($collectionId, $attributeId, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+
+        // $results = $projectDB->getAttribute([
+        // ]);
+
+        // $response->dynamic(new Document([
+            // 'collections' => $results
+        // ]), Response::MODEL_ATTRIBUTE);
+    });
+
 App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
     ->desc('Delete Attribute')
     ->groups(['api', 'database'])
@@ -335,7 +389,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
     ->label('sdk.description', '/docs/references/database/delete-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('collectionId', '', new UID(), 'Collection unique ID.')
+    ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('attributeId', '', new UID(), 'Attribute unique ID.')
     ->inject('response')
     ->inject('projectDB')
@@ -411,7 +465,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
         ;
     });
 
-App::get('v1/database/collections/:/collectionId/indexes')
+App::get('v1/database/collections/:collectionId/indexes')
     ->desc('List Indexes')
     ->groups(['api', 'database'])
     ->label('scope', 'indexes.read')
@@ -422,6 +476,7 @@ App::get('v1/database/collections/:/collectionId/indexes')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_INDEX_LIST)
+    ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->inject('response')
     ->inject('projectDB')
     ->action(function ($response, $projectDB) {
@@ -435,6 +490,81 @@ App::get('v1/database/collections/:/collectionId/indexes')
             // 'sum' => $projectDB->getSum(),
             // 'collections' => $results
         // ]), Response::MODEL_INDEX_LIST);
+    });
+
+App::get('v1/database/collections/:collectionId/indexes/:indexId')
+    ->desc('Get Index')
+    ->groups(['api', 'database'])
+    ->label('scope', 'indexes.read')
+    ->label('sdk.namespace', 'database')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.method', 'listIndexes')
+    ->label('sdk.description', '/docs/references/database/get-index.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_INDEX)
+    ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
+    ->param('indexId', null, new UID(), 'Index unique ID')
+    ->inject('response')
+    ->inject('projectDB')
+    ->action(function ($collectionId, $indexId, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+
+        // $results = $projectDB->getIndex([
+        // ]);
+
+        // $response->dynamic(new Document([
+            // 'collections' => $results
+        // ]), Response::MODEL_INDEX);
+    });
+
+App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
+    ->desc('Delete Index')
+    ->groups(['api', 'database'])
+    ->label('scope', 'indexes.write')
+    ->label('event', 'database.indexes.delete')
+    ->label('sdk.namespace', 'database')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.method', 'deleteIndex')
+    ->label('sdk.description', '/docs/references/database/delete-index.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
+    ->param('indexId', '', new UID(), 'Attribute unique ID.')
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('events')
+    ->inject('audits')
+    ->inject('deletes')
+    ->action(function ($collectionId, $indexId, $response, $projectDB, $events, $audits, $deletes) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $events */
+        /** @var Appwrite\Event\Event $audits */
+
+        $index = $projectDB->getDocument($indexId, false);
+
+        if (!$projectDB->deleteAttribute($collectionId, $indexId)) {
+            throw new Exception('Failed to remove attribute from DB', 500);
+        }
+
+        $deletes
+            ->setParam('type', DELETE_TYPE_DOCUMENT)
+            ->setParam('document', $index)
+        ;
+
+        $events
+            ->setParam('payload', $response->output($index, Response::MODEL_INDEX))
+        ;
+
+        $audits
+            ->setParam('event', 'database.indexes.delete')
+            ->setParam('resource', 'database/attributes/'.$index->getId())
+            ->setParam('data', $index->getArrayCopy())
+        ;
+
+        $response->noContent();
     });
 
 App::post('/v1/database/collections/:collectionId/documents')
