@@ -488,13 +488,9 @@ class FunctionsV1 extends Worker
 
         $executionUpdate->trigger();
 
-        $realtimeUpdate = new Realtime('', '', []);
+        $realtimeUpdate = new Realtime($projectId, 'functions.executions.update', $execution->getArrayCopy());
 
-        $realtimeUpdate
-            ->setEvent('functions.executions.update')
-            ->setProject($projectId)
-            ->setPayload($execution->getArrayCopy())
-            ->trigger();
+        $realtimeUpdate->trigger();
 
         $usage = new Event('v1-usage', 'UsageV1');
 
