@@ -41,6 +41,19 @@ users = Appwrite::Users.new(client);
 result = users.create(email: 'email@example.com', password: 'password');
 ```
 
+### Error Handling
+The Appwrite Ruby SDK raises `Appwrite::Exception` object with `message`, `code` and `response` properties. You can handle any errors by catching `Appwrite::Exception` and present the `message` to the user or handle it yourself based on the provided error information. Below is an example.
+
+```ruby
+users = Appwrite::Users.new(client);
+
+begin
+    result = users.create(email: 'email@example.com', password: 'password');
+rescue Appwrite::Exception => error
+    puts error.message
+end
+```
+
 ### Learn more
 You can use followng resources to learn more and get help
 - 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-server)
