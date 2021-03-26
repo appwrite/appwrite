@@ -24,7 +24,7 @@ void main() async {
 ```
 
 ### Error handling
-The Appwrite dart SDK raises `AppwriteException` object with `message`, `code` and `response` properties. You can handle any errors by catching `AppwriteException` and present the `message` to the user or handle it yourself based on the provided error information. Below is an example.
+The Appwrite Dart SDK raises `AppwriteException` object with `message`, `code` and `response` properties. You can handle any errors by catching `AppwriteException` and present the `message` to the user or handle it yourself based on the provided error information. Below is an example.
 
 ```dart
 Users users = Users(client);
