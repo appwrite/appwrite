@@ -5,27 +5,6 @@ For you to init your SDK and interact with Appwrite services you need to add a w
 
 From the options, choose to add a **Web** platform and add your client app hostname. By adding your hostname to your project platform you are allowing cross-domain communication between your project and the Appwrite API.
 
-### Get Appwrite Web SDK
-#### NPM
-Use Javascript package manager, NPM from your command line to add Appwrite SDK to your project.
-
-```sh
-npm install appwrite
-```
-
-If you're using a bundler (like Browserify or webpack), you can import the Appwrite module when you need it:
-
-```sh
-import * as Appwrite from "appwrite";
-```
-
-#### CDN
-To install with a CDN (content delivery network) add the following scripts to the bottom of your tag, but before you use any Appwrite services:
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/appwrite@2.0.0"></script>
-```
-
 ### Init your SDK
 Initialize your SDK code with your project ID which can be found in your project settings page.
 
