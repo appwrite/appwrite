@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Storage;
 
 use CURLFile;
 use Tests\E2E\Client;
+use Utopia\Image\Image;
 
 trait StorageBase
 {
@@ -73,25 +74,75 @@ trait StorageBase
         $this->assertEquals(200, $file2['headers']['status-code']);
         $this->assertEquals('image/png', $file2['headers']['content-type']);
         $this->assertNotEmpty($file2['body']);
-
-        $file3 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/download', array_merge([
+        
+        //new image preview features
+        $file3 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/preview', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), [
+            'width' => 300,
+            'height' => 100,
+            'borderRadius' => '50',
+            'opacity' => '0.5',
+            'output' => 'png',
+            'rotation' => '45',
+        ]);
+        
 
         $this->assertEquals(200, $file3['headers']['status-code']);
-        $this->assertEquals('attachment; filename="logo.png"', $file3['headers']['content-disposition']);
         $this->assertEquals('image/png', $file3['headers']['content-type']);
         $this->assertNotEmpty($file3['body']);
 
-        $file4 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/view', array_merge([
+        $image = new \Imagick();
+        $image->readImageBlob($file3['body']);
+        $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.png');
+
+        $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
+        $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
+        $this->assertEquals('PNG', $image->getImageFormat());
+
+
+        $file4 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'width' => 200,
+            'height' => 80,
+            'borderWidth' => '5',
+            'borderColor' => 'ff0000',
+            'output' => 'jpg',
+        ]);
+        
+        $this->assertEquals(200, $file4['headers']['status-code']);
+        $this->assertEquals('image/jpeg', $file4['headers']['content-type']);
+        $this->assertNotEmpty($file4['body']);
+        
+        $image = new \Imagick();
+        $image->readImageBlob($file4['body']);
+        $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.jpg');
+
+        $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
+        $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
+        $this->assertEquals('JPEG', $image->getImageFormat());
+
+        $file5 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/download', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals(200, $file4['headers']['status-code']);
-        $this->assertEquals('image/png', $file4['headers']['content-type']);
-        $this->assertNotEmpty($file4['body']);
+        $this->assertEquals(200, $file5['headers']['status-code']);
+        $this->assertEquals('attachment; filename="logo.png"', $file5['headers']['content-disposition']);
+        $this->assertEquals('image/png', $file5['headers']['content-type']);
+        $this->assertNotEmpty($file5['body']);
+
+        $file6 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/view', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $file6['headers']['status-code']);
+        $this->assertEquals('image/png', $file6['headers']['content-type']);
+        $this->assertNotEmpty($file6['body']);
 
         /**
          * Test for FAILURE
