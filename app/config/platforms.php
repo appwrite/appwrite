@@ -28,6 +28,36 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-web.git',
                 'gitRepoName' => 'sdk-for-web',
                 'gitUserName' => 'appwrite',
+                'demos' => [
+                    [
+                        'icon' => 'react.svg',
+                        'name' => 'Todo App (React JS)',
+                        'description' => 'A simple Todo app that uses both the Appwrite account and database APIs.',
+                        'repo' => 'https://github.com/appwrite/demo-todo-with-react',
+                        'url' => '',
+                    ],
+                    [
+                        'icon' => 'vue.svg',
+                        'name' => 'Todo App (Vue JS)',
+                        'description' => 'A simple Todo app that uses both the Appwrite account and database APIs.',
+                        'repo' => 'https://github.com/appwrite/demo-todo-with-vue',
+                        'url' => '',
+                    ],
+                    [
+                        'icon' => 'angular.svg',
+                        'name' => 'Todo App (Angular.js)',
+                        'description' => 'A simple Todo app that uses both the Appwrite account and database APIs.',
+                        'repo' => 'https://github.com/appwrite/demo-todo-with-angular',
+                        'url' => '',
+                    ],
+                    [
+                        'icon' => 'svelte.svg',
+                        'name' => 'Todo App (Svelte)',
+                        'description' => 'A simple Todo app that uses both the Appwrite account and database APIs.',
+                        'repo' => 'https://github.com/appwrite/demo-todo-with-svelte',
+                        'url' => '',
+                    ],
+                ]
             ],
             [
                 'key' => 'flutter',
