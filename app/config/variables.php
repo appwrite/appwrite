@@ -27,7 +27,7 @@ return [
                 'name' => '_APP_OPTIONS_FORCE_HTTPS',
                 'description' => 'Allows you to force HTTPS connection to your API. This feature redirects any HTTP call to HTTPS and adds the \'Strict-Transport-Security\' header to all HTTP responses. By default, set to \'disabled\'. To enable, set to \'enabled\'. This feature will work only when your ports are set to default 80 and 443.',
                 'introduction' => '',
-                'default' => 'enabled',
+                'default' => 'disabled',
                 'required' => false,
                 'question' => '',
             ],
