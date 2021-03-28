@@ -6,6 +6,10 @@
 - Added new Environment Variable to enable or disable Anonymous Login 
 - Added events for functions and executions (#971)
 
+## Bugs
+
+- Fixed default value for HTTPS force option
+
 ## Breaking Changes
 
 - Only logged in users can execute functions (for guests, use anonymous login)
