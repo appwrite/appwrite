@@ -109,7 +109,7 @@ App::post('/v1/account')
             throw new Exception('Account already exists', 409);
         }
 
-        Authorization::enable();
+        Authorization::reset();
 
         Authorization::unsetRole('role:'.Auth::USER_ROLE_GUEST);
         Authorization::setRole('user:'.$user->getId());
@@ -487,7 +487,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     throw new Exception('Account already exists', 409);
                 }
 
-                Authorization::enable();
+                Authorization::reset();
 
                 if (false === $user) {
                     throw new Exception('Failed saving user to DB', 500);
@@ -516,6 +516,15 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             'ip' => $request->getIP(),
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
         ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
+
+        $isAnonymousUser = is_null($user->getAttribute('email')) && is_null($user->getAttribute('password'));
+
+        if ($isAnonymousUser) {
+            $user
+                ->setAttribute('name', $oauth2->getUserName($accessToken))
+                ->setAttribute('email', $oauth2->getUserEmail($accessToken))
+            ;
+        }
 
         $user
             ->setAttribute('oauth2'.\ucfirst($provider), $oauth2ID)
@@ -564,6 +573,130 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->redirect($state['success'])
         ;
+    });
+
+App::post('/v1/account/sessions/anonymous')
+    ->desc('Create Anonymous Session')
+    ->groups(['api', 'account'])
+    ->label('event', 'account.sessions.create')
+    ->label('scope', 'public')
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'createAnonymousSession')
+    ->label('sdk.description', '/docs/references/account/create-session-anonymous.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SESSION)
+    ->label('abuse-limit', 50)
+    ->label('abuse-key', 'ip:{ip}')
+    ->inject('request')
+    ->inject('response')
+    ->inject('locale')
+    ->inject('user')
+    ->inject('project')
+    ->inject('projectDB')
+    ->inject('geodb')
+    ->inject('audits')
+    ->action(function ($request, $response, $locale, $user, $project, $projectDB, $geodb, $audits) {
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Locale\Locale $locale */
+        /** @var Appwrite\Database\Document $user */
+        /** @var Appwrite\Database\Document $project */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var MaxMind\Db\Reader $geodb */
+        /** @var Appwrite\Event\Event $audits */
+
+        $protocol = $request->getProtocol();
+
+        if ($user->getId() || 'console' === $project->getId()) {
+            throw new Exception('Failed to create anonymous user.', 401);
+        }
+
+        Authorization::disable();
+        try {
+            $user = $projectDB->createDocument([
+                '$collection' => Database::SYSTEM_COLLECTION_USERS,
+                '$permissions' => [
+                    'read' => ['*'], 
+                    'write' => ['user:{self}']
+                ],
+                'email' => null,
+                'emailVerification' => false,
+                'status' => Auth::USER_STATUS_UNACTIVATED,
+                'password' => null,
+                'passwordUpdate' => \time(),
+                'registration' => \time(),
+                'reset' => false,
+                'name' => null
+            ]);
+        } catch (Exception $th) {
+            throw new Exception('Failed saving user to DB', 500);
+        }
+
+        Authorization::reset();
+
+        if (false === $user) {
+            throw new Exception('Failed saving user to DB', 500);
+        }
+
+        // Create session token
+
+        $detector = new Detector($request->getUserAgent('UNKNOWN'));
+        $record = $geodb->get($request->getIP());
+        $secret = Auth::tokenGenerator();
+        $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $session = new Document(array_merge(
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
+                '$permissions' => ['read' => ['user:' . $user['$id']], 'write' => ['user:' . $user['$id']]],
+                'userId' => $user->getId(),
+                'type' => Auth::TOKEN_TYPE_LOGIN,
+                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'expire' => $expiry,
+                'userAgent' => $request->getUserAgent('UNKNOWN'),
+                'ip' => $request->getIP(),
+                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+            ],
+            $detector->getOS(),
+            $detector->getClient(),
+            $detector->getDevice()
+        ));
+
+        $user->setAttribute('tokens', $session, Document::SET_TYPE_APPEND);
+
+        Authorization::setRole('user:'.$user->getId());
+
+        $user = $projectDB->updateDocument($user->getArrayCopy());
+
+        if (false === $user) {
+            throw new Exception('Failed saving user to DB', 500);
+        }
+
+        $audits
+            ->setParam('userId', $user->getId())
+            ->setParam('event', 'account.sessions.create')
+            ->setParam('resource', 'users/'.$user->getId())
+        ;
+
+        if (!Config::getParam('domainVerification')) {
+            $response
+                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
+            ;
+        }
+
+        $response
+            ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+        ;
+
+        $session
+            ->setAttribute('current', true)
+            ->setAttribute('countryName', (isset($countries[$session->getAttribute('countryCode')])) ? $countries[$session->getAttribute('countryCode')] : $locale->getText('locale.country.unknown'))
+        ;
+
+        $response->dynamic($session, Response::MODEL_SESSION);
     });
 
 App::post('/v1/account/jwt')
@@ -880,7 +1013,12 @@ App::patch('/v1/account/email')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
 
-        if (!Auth::passwordVerify($password, $user->getAttribute('password'))) { // Double check user password
+        $isAnonymousUser = is_null($user->getAttribute('email')) && is_null($user->getAttribute('password')); // Check if request is from an anonymous account for converting
+
+        if (
+            !$isAnonymousUser &&
+            !Auth::passwordVerify($password, $user->getAttribute('password'))
+        ) { // Double check user password
             throw new Exception('Invalid credentials', 401);
         }
 
@@ -898,10 +1036,14 @@ App::patch('/v1/account/email')
 
         // TODO after this user needs to confirm mail again
 
-        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
-            'email' => $email,
-            'emailVerification' => false,
-        ]));
+        $user = $projectDB->updateDocument(\array_merge(
+            $user->getArrayCopy(),
+            ($isAnonymousUser ? [ 'password' => Auth::passwordHash($password) ] : []),
+            [
+                'email' => $email,
+                'emailVerification' => false,
+            ]
+        ));
 
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500);

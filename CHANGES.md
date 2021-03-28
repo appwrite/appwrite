@@ -1,6 +1,15 @@
 # Version 0.8.0 (Not Released Yet)
 
-- Anonymous login
+## Features
+
+- Added Anonymous Login ([RFC-010](https://github.com/appwrite/rfc/blob/main/010-anonymous-login.md), #914)
+- Added new Environment Variable to enable or disable Anonymous Login 
+- Added events for functions and executions (#971)
+
+## Breaking Changes
+
+- Only logged in users can execute functions (for guests, use anonymous login)
+- Only the user who has triggered the execution get access to the relevant execution logs
 
 # Version 0.7.2 (Not Released Yet)
 
@@ -31,6 +40,7 @@
 - Force adding a security email on setup
 - SMTP is now disabled by default, no dummy SMTP is included in setup
 - Added a new endpoint that returns the server and SDKs latest versions numbers #941
+- Custom data strings, userId, and JWT available for cloud functions #967
 
 ## Upgrades
 
