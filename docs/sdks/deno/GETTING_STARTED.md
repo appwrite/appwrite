@@ -52,6 +52,19 @@ promise.then(function (response) {
 });
 ```
 
+### Error Handling
+The Appwrite Deno SDK raises `AppwriteException` object with `message`, `code` and `response` properties. You can handle any errors by catching `AppwriteException` and present the `message` to the user or handle it yourself based on the provided error information. Below is an example.
+
+```typescript
+let users = new sdk.Users(client);
+
+try {
+    let res = await users.create('email@example.com', 'password');
+} catch(e) {
+    console.log(e.message);
+}
+```
+
 ### Learn more
 You can use followng resources to learn more and get help
 - 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-server)
