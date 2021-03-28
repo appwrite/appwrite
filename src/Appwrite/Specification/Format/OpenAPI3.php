@@ -164,7 +164,16 @@ class OpenAPI3 extends Format
             }
 
             if ((!empty($scope))) { //  && 'public' != $scope
-                $temp['security'][] = $route->getLabel('sdk.security', $this->security);
+                $securities = ['Project' => []];
+                
+                foreach($route->getLabel('sdk.security', []) as $security) {
+                    if(array_key_exists($security, $this->keys)) {
+                        $securities[$security] = [];
+                    }
+                }
+                
+                $temp['x-appwrite']['auth'] = array_slice($securities, 0, 2);
+                $temp['security'][] = $securities;
             }
 
             $body = [

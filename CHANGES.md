@@ -3,8 +3,8 @@
 ## Features
 
 - Added Anonymous Login ([RFC-010](https://github.com/appwrite/rfc/blob/main/010-anonymous-login.md), #914)
-- Added new Environment Variable to enable or disable Anonymous Login 
 - Added events for functions and executions (#971)
+- Added JWT support
 
 ## Bugs
 
