@@ -73,6 +73,10 @@ class Swagger2 extends Format
             $output['securityDefinitions']['Key']['x-appwrite'] = ['demo' => '919c2d18fb5d4...a2ae413da83346ad2'];
         }
         
+        if (isset($output['securityDefinitions']['JWT'])) {
+            $output['securityDefinitions']['JWT']['x-appwrite'] = ['demo' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...'];
+        }
+        
         if (isset($output['securityDefinitions']['Locale'])) {
             $output['securityDefinitions']['Locale']['x-appwrite'] = ['demo' => 'en'];
         }
@@ -169,7 +173,7 @@ class Swagger2 extends Format
                         $securities[$security] = [];
                     }
                 }
-                
+
                 $temp['x-appwrite']['auth'] = array_slice($securities, 0, 2);
                 $temp['security'][] = $securities;
             }

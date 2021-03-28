@@ -74,6 +74,10 @@ class OpenAPI3 extends Format
         if (isset($output['components']['securitySchemes']['Key'])) {
             $output['components']['securitySchemes']['Key']['x-appwrite'] = ['demo' => '919c2d18fb5d4...a2ae413da83346ad2'];
         }
+
+        if (isset($output['securityDefinitions']['JWT'])) {
+            $output['securityDefinitions']['JWT']['x-appwrite'] = ['demo' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...'];
+        }
         
         if (isset($output['components']['securitySchemes']['Locale'])) {
             $output['components']['securitySchemes']['Locale']['x-appwrite'] = ['demo' => 'en'];
@@ -171,7 +175,7 @@ class OpenAPI3 extends Format
                         $securities[$security] = [];
                     }
                 }
-                
+
                 $temp['x-appwrite']['auth'] = array_slice($securities, 0, 2);
                 $temp['security'][] = $securities;
             }
