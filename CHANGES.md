@@ -15,7 +15,7 @@
 - Only logged in users can execute functions (for guests, use anonymous login)
 - Only the user who has triggered the execution get access to the relevant execution logs
 
-# Version 0.7.2 (Not Released Yet)
+# Version 0.7.2
 
 ## Features
 
