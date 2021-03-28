@@ -1,6 +1,12 @@
 # Version 0.8.0 (Not Released Yet)
 
+## Features
+
 - Anonymous login
+
+## Bugs
+
+- Fixed default value for HTTPS force option
 
 # Version 0.7.2 (Not Released Yet)
 
