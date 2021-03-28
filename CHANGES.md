@@ -2,7 +2,7 @@
 
 - Anonymous login
 
-# Version 0.7.2 (Not Released Yet)
+# Version 0.7.2
 
 ## Features
 
