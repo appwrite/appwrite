@@ -102,7 +102,7 @@ $environments = [
         'version' => '1.8',
         'base' => 'hayd/deno:alpine-1.8.2',
         'image' => 'appwrite/env-deno-1.8:1.0.0',
-        'build' => '/usr/src/code/docker/environments/deno-1.6',
+        'build' => '/usr/src/code/docker/environments/deno-1.8',
         'logo' => 'deno.png',
         'supports' => [System::X86, System::PPC, System::ARM],
     ],
