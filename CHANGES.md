@@ -1,6 +1,7 @@
 # Version 0.8.0 (Not Released Yet)
 
 ## Features
+- Realtime Integration (#948)
 - Anonymous login (#914)
 - Added events for functions and executions (#971)
 
