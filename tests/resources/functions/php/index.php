@@ -25,4 +25,4 @@ echo $_ENV['APPWRITE_FUNCTION_ENV_NAME']."\n";
 echo $_ENV['APPWRITE_FUNCTION_ENV_VERSION']."\n";
 // echo $result['$id'];
 echo $_ENV['APPWRITE_FUNCTION_EVENT']."\n";
-echo $_ENV['APPWRITE_FUNCTION_EVENT_PAYLOAD']."\n";
+echo $_ENV['APPWRITE_FUNCTION_EVENT_DATA']."\n";

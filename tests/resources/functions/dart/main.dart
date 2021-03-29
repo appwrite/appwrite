@@ -22,5 +22,5 @@ void main() { // Init SDK
   print(Platform.environment["APPWRITE_FUNCTION_ENV_VERSION"]);
   // print(result['$id']);
   print(Platform.environment["APPWRITE_FUNCTION_EVENT"]);
-  print(Platform.environment["APPWRITE_FUNCTION_EVENT_PAYLOAD"]);
+  print(Platform.environment["APPWRITE_FUNCTION_EVENT_DATA"]);
 }
