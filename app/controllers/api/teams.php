@@ -243,7 +243,7 @@ App::delete('/v1/teams/:teamId')
         }
 
         $events
-            ->setParam('payload', $response->output($team, Response::MODEL_TEAM))
+            ->setParam('eventData', $response->output($team, Response::MODEL_TEAM))
         ;
 
         $response->noContent();
@@ -711,7 +711,7 @@ App::delete('/v1/teams/:teamId/memberships/:inviteId')
         ;
 
         $events
-            ->setParam('payload', $response->output($membership, Response::MODEL_MEMBERSHIP))
+            ->setParam('eventData', $response->output($membership, Response::MODEL_MEMBERSHIP))
         ;
 
         $response->noContent();

@@ -1005,7 +1005,7 @@ App::delete('/v1/account')
         ;
 
         $events
-            ->setParam('payload', $response->output($user, Response::MODEL_USER))
+            ->setParam('eventData', $response->output($user, Response::MODEL_USER))
         ;
 
         if (!Config::getParam('domainVerification')) {
@@ -1085,7 +1085,7 @@ App::delete('/v1/account/sessions/:sessionId')
                 }
 
                 $events
-                    ->setParam('payload', $response->output($token, Response::MODEL_SESSION))
+                    ->setParam('eventData', $response->output($token, Response::MODEL_SESSION))
                 ;
 
                 return $response->noContent();
@@ -1153,7 +1153,7 @@ App::delete('/v1/account/sessions')
         }
                     
         $events
-            ->setParam('payload', $response->output(new Document([
+            ->setParam('eventData', $response->output(new Document([
                 'sum' => count($tokens),
                 'sessions' => $tokens
             ]), Response::MODEL_SESSION_LIST))
@@ -1278,7 +1278,7 @@ App::post('/v1/account/recovery')
         ;
 
         $events
-            ->setParam('payload',
+            ->setParam('eventData',
                 $response->output($recovery->setAttribute('secret', $secret),
                 Response::MODEL_TOKEN
             ))
@@ -1481,7 +1481,7 @@ App::post('/v1/account/verification')
         ;
 
         $events
-            ->setParam('payload',
+            ->setParam('eventData',
                 $response->output($verification->setAttribute('secret', $verificationSecret),
                 Response::MODEL_TOKEN
             ))

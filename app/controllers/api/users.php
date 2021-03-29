@@ -443,7 +443,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
                 }
 
                 $events
-                    ->setParam('payload', $response->output($user, Response::MODEL_USER))
+                    ->setParam('eventData', $response->output($user, Response::MODEL_USER))
                 ;
             }
         }
@@ -487,7 +487,7 @@ App::delete('/v1/users/:userId/sessions')
         }
 
         $events
-            ->setParam('payload', $response->output($user, Response::MODEL_USER))
+            ->setParam('eventData', $response->output($user, Response::MODEL_USER))
         ;
 
         // TODO : Response filter implementation
@@ -547,7 +547,7 @@ App::delete('/v1/users/:userId')
         ;
 
         $events
-            ->setParam('payload', $response->output($user, Response::MODEL_USER))
+            ->setParam('eventData', $response->output($user, Response::MODEL_USER))
         ;
 
         // TODO : Response filter implementation

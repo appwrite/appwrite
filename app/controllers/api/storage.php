@@ -579,7 +579,7 @@ App::delete('/v1/storage/files/:fileId')
         ;
 
         $events
-            ->setParam('payload', $response->output($file, Response::MODEL_FILE))
+            ->setParam('eventData', $response->output($file, Response::MODEL_FILE))
         ;
 
         $response->noContent();
