@@ -27,6 +27,7 @@ class Database
 
     // Auth, Account and Users (private to user)
     const SYSTEM_COLLECTION_USERS = 'users';
+    const SYSTEM_COLLECTION_SESSIONS = 'sessions';
     const SYSTEM_COLLECTION_TOKENS = 'tokens';
 
     // Teams (shared among team members)

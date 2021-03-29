@@ -190,10 +190,11 @@ App::post('/v1/account/sessions')
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge(
             [
-                '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
+                '$collection' => Database::SYSTEM_COLLECTION_SESSIONS,
                 '$permissions' => ['read' => ['user:'.$profile->getId()], 'write' => ['user:'.$profile->getId()]],
                 'userId' => $profile->getId(),
-                'type' => Auth::TOKEN_TYPE_LOGIN,
+                'provider' => Auth::SESSION_PROVIDER_EMAIL,
+                'providerUid' => $email,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'expire' => $expiry,
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -210,7 +211,7 @@ App::post('/v1/account/sessions')
             throw new Exception('Failed saving session to DB', 500);
         }
 
-        $profile->setAttribute('tokens', $session, Document::SET_TYPE_APPEND);
+        $profile->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
 
         $profile = $projectDB->updateDocument($profile->getArrayCopy());
 
@@ -441,7 +442,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             throw new Exception('Missing ID from OAuth2 provider', 400);
         }
 
-        $current = Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
+        $current = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret);
 
         if ($current) {
             $projectDB->deleteDocument($current); //throw new Exception('User already logged in', 401);
@@ -451,7 +452,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             'limit' => 1,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                'oauth2'.\ucfirst($provider).'='.$oauth2ID,
+                'sessions.provider='.$provider,
+                'sessions.providerUid='.$oauth2ID
             ],
         ]) : $user;
 
@@ -506,10 +508,12 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $secret = Auth::tokenGenerator();
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $session = new Document(array_merge([
-            '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
+            '$collection' => Database::SYSTEM_COLLECTION_SESSIONS,
             '$permissions' => ['read' => ['user:'.$user['$id']], 'write' => ['user:'.$user['$id']]],
             'userId' => $user->getId(),
-            'type' => Auth::TOKEN_TYPE_LOGIN,
+            'provider' => $provider,
+            'providerUid' => $oauth2ID,
+            'providerToken' => $accessToken,
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -527,10 +531,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         $user
-            ->setAttribute('oauth2'.\ucfirst($provider), $oauth2ID)
-            ->setAttribute('oauth2'.\ucfirst($provider).'AccessToken', $accessToken)
             ->setAttribute('status', Auth::USER_STATUS_ACTIVATED)
-            ->setAttribute('tokens', $session, Document::SET_TYPE_APPEND)
+            ->setAttribute('sessions', $session, Document::SET_TYPE_APPEND)
         ;
 
         Authorization::setRole('user:'.$user->getId());
@@ -648,10 +650,10 @@ App::post('/v1/account/sessions/anonymous')
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $session = new Document(array_merge(
             [
-                '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
+                '$collection' => Database::SYSTEM_COLLECTION_SESSIONS,
                 '$permissions' => ['read' => ['user:' . $user['$id']], 'write' => ['user:' . $user['$id']]],
                 'userId' => $user->getId(),
-                'type' => Auth::TOKEN_TYPE_LOGIN,
+                'provider' => Auth::SESSION_PROVIDER_ANONYMOUS,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'expire' => $expiry,
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -663,7 +665,7 @@ App::post('/v1/account/sessions/anonymous')
             $detector->getDevice()
         ));
 
-        $user->setAttribute('tokens', $session, Document::SET_TYPE_APPEND);
+        $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
 
         Authorization::setRole('user:'.$user->getId());
 
@@ -716,16 +718,18 @@ App::post('/v1/account/jwt')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
             
-        $tokens = $user->getAttribute('tokens', []);
-        $session = new Document();
+        $sessions = $user->getAttribute('sessions', []);
+        $current = new Document();
 
-        foreach ($tokens as $token) { /** @var Appwrite\Database\Document $token */
-            if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
-                $session = $token;
+        foreach ($sessions as $session) { 
+            /** @var Appwrite\Database\Document $session */
+
+            if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                $current = $session;
             }
         }
 
-        if($session->isEmpty()) {
+        if($current->isEmpty()) {
             throw new Exception('No valid session found', 401);
         }
         
@@ -739,7 +743,7 @@ App::post('/v1/account/jwt')
                 // 'scopes' => ['user'],
                 // 'iss'    => 'http://api.mysite.com',
                 'userId' => $user->getId(),
-                'sessionId' => $session->getId(),
+                'sessionId' => $current->getId(),
             ])]), Response::MODEL_JWT);
     });
 
@@ -804,22 +808,19 @@ App::get('/v1/account/sessions')
         /** @var Appwrite\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
 
-        $tokens = $user->getAttribute('tokens', []);
-        $sessions = [];
+        $sessions = $user->getAttribute('sessions', []);
         $countries = $locale->getText('countries');
-        $current = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
+        $current = Auth::sessionVerify($sessions, Auth::$secret);
 
-        foreach ($tokens as $token) { /* @var $token Document */
-            if (Auth::TOKEN_TYPE_LOGIN != $token->getAttribute('type')) {
-                continue;
-            }
+        foreach ($sessions as $key => $session) { 
+            /** @var Document $session */
 
-            $token->setAttribute('countryName', (isset($countries[strtoupper($token->getAttribute('countryCode'))]))
-                ? $countries[strtoupper($token->getAttribute('countryCode'))]
+            $session->setAttribute('countryName', (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
+                ? $countries[strtoupper($session->getAttribute('countryCode'))]
                 : $locale->getText('locale.country.unknown'));
-            $token->setAttribute('current', ($current == $token->getId()) ? true : false);
+            $session->setAttribute('current', ($current == $session->getId()) ? true : false);
 
-            $sessions[] = $token;
+            $sessions[$key] = $session;
         }
 
         $response->dynamic(new Document([
@@ -1192,14 +1193,16 @@ App::delete('/v1/account/sessions/:sessionId')
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
-            ? Auth::tokenVerify($user->getAttribute('tokens'), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)
+            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
             : $sessionId;
                 
-        $tokens = $user->getAttribute('tokens', []);
+        $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($tokens as $token) { /* @var $token Document */
-            if (($sessionId == $token->getId()) && Auth::TOKEN_TYPE_LOGIN == $token->getAttribute('type')) {
-                if (!$projectDB->deleteDocument($token->getId())) {
+        foreach ($sessions as $session) { 
+            /** @var Document $session */
+
+            if (($sessionId == $session->getId())) {
+                if (!$projectDB->deleteDocument($session->getId())) {
                     throw new Exception('Failed to remove token from DB', 500);
                 }
 
@@ -1215,10 +1218,10 @@ App::delete('/v1/account/sessions/:sessionId')
                     ;
                 }
                 
-                $token->setAttribute('current', false);
+                $session->setAttribute('current', false);
 
-                if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
-                    $token->setAttribute('current', true);
+                if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                    $session->setAttribute('current', true);
 
                     $response
                         ->addCookie(Auth::$cookieName.'_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
@@ -1227,7 +1230,7 @@ App::delete('/v1/account/sessions/:sessionId')
                 }
 
                 $events
-                    ->setParam('payload', $response->output($token, Response::MODEL_SESSION))
+                    ->setParam('payload', $response->output($session, Response::MODEL_SESSION))
                 ;
 
                 return $response->noContent();
@@ -1264,10 +1267,12 @@ App::delete('/v1/account/sessions')
         /** @var Appwrite\Event\Event $events */
 
         $protocol = $request->getProtocol();
-        $tokens = $user->getAttribute('tokens', []);
+        $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($tokens as $token) { /* @var $token Document */
-            if (!$projectDB->deleteDocument($token->getId())) {
+        foreach ($sessions as $session) { 
+            /** @var Document $session */
+
+            if (!$projectDB->deleteDocument($session->getId())) {
                 throw new Exception('Failed to remove token from DB', 500);
             }
 
@@ -1283,10 +1288,10 @@ App::delete('/v1/account/sessions')
                 ;
             }
 
-            $token->setAttribute('current', false);
+            $session->setAttribute('current', false);
 
-            if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
-                $token->setAttribute('current', true);
+            if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                $session->setAttribute('current', true);
                 $response
                     ->addCookie(Auth::$cookieName.'_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
                     ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
@@ -1296,8 +1301,8 @@ App::delete('/v1/account/sessions')
                     
         $events
             ->setParam('payload', $response->output(new Document([
-                'sum' => count($tokens),
-                'sessions' => $tokens
+                'sum' => count($sessions),
+                'sessions' => $sessions
             ]), Response::MODEL_SESSION_LIST))
         ;
 
