@@ -40,6 +40,19 @@ $users = new Users($client);
 $result = $users->create('email@example.com', 'password');
 ```
 
+### Error Handling
+The Appwrite PHP SDK raises `AppwriteException` object with `message`, `code` and `response` properties. You can handle any errors by catching `AppwriteException` and present the `message` to the user or handle it yourself based on the provided error information. Below is an example.
+
+```php
+$users = new Users($client);
+try {
+    $result = $users->create('email@example.com', 'password');
+} catch(AppwriteException $error) {
+    echo $error->message;
+}
+
+```
+
 ### Learn more
 You can use followng resources to learn more and get help
 - 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-server)

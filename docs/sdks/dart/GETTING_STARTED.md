@@ -23,6 +23,21 @@ void main() async {
 }
 ```
 
+### Error handling
+The Appwrite Dart SDK raises `AppwriteException` object with `message`, `code` and `response` properties. You can handle any errors by catching `AppwriteException` and present the `message` to the user or handle it yourself based on the provided error information. Below is an example.
+
+```dart
+Users users = Users(client);
+
+try {
+  final response = await users.create(email: ‘email@example.com’,password: ‘password’, name: ‘name’);
+  print(response.data);
+} on AppwriteException catch(e) {
+  //show message to user or do other operation based on error as required
+  print(e.message);
+}
+```
+
 ### Learn more
 You can use followng resources to learn more and get help
 - 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-server)

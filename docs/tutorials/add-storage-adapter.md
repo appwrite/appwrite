@@ -37,7 +37,7 @@ In this phase we will add support to the new storage adapter in Appwrite.
 * Note for this to happen, your PR in the first phase should have been merged and new version of [utopia-php/storage](https://github.com/utopia-php/storage) library released.
 
 ### Upgrade the utopia-php/storage dependency
-Upgrade the utopia-php/sotrage dependency in `composer.json` file.
+Upgrade the utopia-php/storage dependency in `composer.json` file.
 
 ### Introduce new environment variables
 If required for the new adapter, may be for credentials, introduce new environment variables. The storage envorinment variables are prefixed as `_APP_STORAGE_DEVICE`. Please read [Adding Environment Variables]() guidelines in order to properly introduce new environment variables.

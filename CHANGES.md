@@ -1,16 +1,21 @@
 # Version 0.8.0 (Not Released Yet)
 
 ## Features
-- Realtime Integration (#948)
-- Anonymous login (#914)
+- Realtime Integration ([RFC-014](https://github.com/appwrite/rfc/blob/main/014-realtime-api.md), #948)
+- Added Anonymous Login ([RFC-010](https://github.com/appwrite/rfc/blob/main/010-anonymous-login.md), #914)
+- Added new Environment Variable to enable or disable Anonymous Login 
 - Added events for functions and executions (#971)
+
+## Bugs
+
+- Fixed default value for HTTPS force option
 
 ## Breaking Changes
 
 - Only logged in users can execute functions (for guests, use anonymous login)
 - Only the user who has triggered the execution get access to the relevant execution logs
 
-# Version 0.7.2 (Not Released Yet)
+# Version 0.7.2
 
 ## Features
 
