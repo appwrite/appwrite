@@ -227,7 +227,6 @@ class Auth
             if ($session->isSet('secret') &&
                 $session->isSet('expire') &&
                 $session->isSet('provider') &&
-                $session->isSet('providerUid') &&
                 $session->getAttribute('secret') === self::hash($secret) &&
                 $session->getAttribute('expire') >= \time()) {
                 return (string)$session->getId();
