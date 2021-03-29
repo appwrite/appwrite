@@ -70,6 +70,15 @@ $environments = [
         'logo' => 'python.png',
         'supports' => [System::X86, System::PPC, System::ARM],
     ],
+    'python-3.9' => [
+        'name' => 'Python',
+        'version' => '3.9',
+        'base' => 'python:3.9-alpine',
+        'image' => 'appwrite/env-python-3.9:1.0.0',
+        'build' => '/usr/src/code/docker/environments/python-3.9',
+        'logo' => 'python.png',
+        'supports' => [System::X86, System::PPC, System::ARM],
+    ],
     'deno-1.2' => [
         'name' => 'Deno',
         'version' => '1.2',
