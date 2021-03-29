@@ -44,7 +44,7 @@ class Session extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Session Provider Token.',
                 'default' => '',
-                'example' => '1592981250',
+                'example' => 'MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3',
             ])
             ->addRule('ip', [
                 'type' => self::TYPE_STRING,
