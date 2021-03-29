@@ -1,5 +1,7 @@
 <?php
 
+use Ahc\Jwt\JWT;
+use Appwrite\Auth\Auth;
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
@@ -27,6 +29,7 @@ App::post('/v1/functions')
     ->groups(['api', 'functions'])
     ->desc('Create Function')
     ->label('scope', 'functions.write')
+    ->label('event', 'functions.create')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'create')
@@ -265,6 +268,7 @@ App::put('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
     ->desc('Update Function')
     ->label('scope', 'functions.write')
+    ->label('event', 'functions.update')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'update')
@@ -294,7 +298,7 @@ App::put('/v1/functions/:functionId')
         }
 
         $original = $function->getAttribute('schedule', '');
-        $cron = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? CronExpression::factory($schedule) : null;
+        $cron = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? new CronExpression($schedule) : null;
         $next = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : null;
 
         $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
@@ -330,6 +334,7 @@ App::patch('/v1/functions/:functionId/tag')
     ->groups(['api', 'functions'])
     ->desc('Update Function Tag')
     ->label('scope', 'functions.write')
+    ->label('event', 'functions.tags.update')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'updateTag')
@@ -359,7 +364,7 @@ App::patch('/v1/functions/:functionId/tag')
         }
 
         $schedule = $function->getAttribute('schedule', '');
-        $cron = (empty($function->getAttribute('tag')) && !empty($schedule)) ? CronExpression::factory($schedule) : null;
+        $cron = (empty($function->getAttribute('tag')) && !empty($schedule)) ? new CronExpression($schedule) : null;
         $next = (empty($function->getAttribute('tag')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : null;
 
         $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
@@ -387,6 +392,7 @@ App::delete('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
     ->desc('Delete Function')
     ->label('scope', 'functions.write')
+    ->label('event', 'functions.delete')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'delete')
@@ -424,6 +430,7 @@ App::post('/v1/functions/:functionId/tags')
     ->groups(['api', 'functions'])
     ->desc('Create Tag')
     ->label('scope', 'functions.write')
+    ->label('event', 'functions.tags.create')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'createTag')
@@ -435,7 +442,7 @@ App::post('/v1/functions/:functionId/tags')
     ->label('sdk.response.model', Response::MODEL_TAG)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('command', '', new Text('1028'), 'Code execution command.')
-    ->param('code', null, new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', false)
+    ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', false)
     ->inject('request')
     ->inject('response')
     ->inject('projectDB')
@@ -601,6 +608,7 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
     ->groups(['api', 'functions'])
     ->desc('Delete Tag')
     ->label('scope', 'functions.write')
+    ->label('event', 'functions.tags.delete')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'deleteTag')
@@ -662,6 +670,7 @@ App::post('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('Create Execution')
     ->label('scope', 'execution.write')
+    ->label('event', 'functions.executions.create')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'createExecution')
@@ -672,14 +681,17 @@ App::post('/v1/functions/:functionId/executions')
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
     ->param('functionId', '', new UID(), 'Function unique ID.')
+    ->param('data', '', new Text(8192), 'String of custom data to send to function.', true)
     // ->param('async', 1, new Range(0, 1), 'Execute code asynchronously. Pass 1 for true, 0 for false. Default value is 1.', true)
     ->inject('response')
     ->inject('project')
     ->inject('projectDB')
-    ->action(function ($functionId, /*$async,*/ $response, $project, $projectDB) {
+    ->inject('user')
+    ->action(function ($functionId, $data, /*$async,*/ $response, $project, $projectDB, $user) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Database\Document $user */
 
         Authorization::disable();
 
@@ -712,7 +724,7 @@ App::post('/v1/functions/:functionId/executions')
         $execution = $projectDB->createDocument([
             '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
             '$permissions' => [
-                'read' => $function->getPermissions()['execute'] ?? [],
+                'read' => (!empty($user->getId())) ? ['user:' . $user->getId()] : [],
                 'write' => [],
             ],
             'dateCreated' => time(),
@@ -730,12 +742,36 @@ App::post('/v1/functions/:functionId/executions')
         if (false === $execution) {
             throw new Exception('Failed saving execution to DB', 500);
         }
-    
+        
+        $jwt = ''; // initialize
+        if (!empty($user->getId())) { // If userId exists, generate a JWT for function
+            
+            $tokens = $user->getAttribute('tokens', []);
+            $session = new Document();
+
+            foreach ($tokens as $token) { /** @var Appwrite\Database\Document $token */
+                if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                    $session = $token;
+                }
+            }
+
+            if(!$session->isEmpty()) {
+                $jwtObj = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+                $jwt = $jwtObj->encode([
+                    'userId' => $user->getId(),
+                    'sessionId' => $session->getId(),
+                ]);
+            }
+        }
+
         Resque::enqueue('v1-functions', 'FunctionsV1', [
             'projectId' => $project->getId(),
             'functionId' => $function->getId(),
             'executionId' => $execution->getId(),
             'trigger' => 'http',
+            'data' => $data,
+            'userId' => $user->getId(),
+            'jwt' => $jwt,
         ]);
 
         $response

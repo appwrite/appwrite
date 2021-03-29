@@ -38,7 +38,7 @@ script:
 - docker-compose logs appwrite-worker-functions
 - docker-compose exec appwrite doctor
 - docker-compose exec appwrite vars
-- docker-compose exec appwrite test
+- docker-compose exec appwrite test --debug
 
 deploy:
   - provider: script

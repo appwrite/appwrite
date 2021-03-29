@@ -204,7 +204,7 @@ $collections = [
                 'key' => 'email',
                 'type' => Database::SYSTEM_VAR_TYPE_EMAIL,
                 'default' => '',
-                'required' => true,
+                'required' => false,
                 'array' => false,
             ],
             [
@@ -222,7 +222,7 @@ $collections = [
                 'key' => 'password',
                 'type' => Database::SYSTEM_VAR_TYPE_TEXT,
                 'default' => '',
-                'required' => true,
+                'required' => false,
                 'array' => false,
             ],
             [

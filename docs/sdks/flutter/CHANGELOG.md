@@ -1,3 +1,30 @@
+## 0.4.0
+
+- Improved code quality
+- Enabled access to private storage files
+- Easier integration for preview images with the image widget
+- Added custom Appwrite exceptions
+- Breaking: getFilePreview, getFileDownload and getFileView now return Future instead of String
+
+## 0.4.0-dev.3
+
+- Added code formatting as part of the CI
+- Added custom Appwrite exceptions
+
+## 0.4.0-dev.2
+
+- Minor fixes for custom exceptions
+
+## 0.4.0-dev.1
+
+- Improved code quality
+- Enabled access to private storage file
+- Added easier integration for preview images and the Image widget
+
+## 0.3.0
+
+- Upgraded to work with Appwrite 0.7
+
 ## 0.3.0-dev.2
 
 - Fix for an error when using a self-signed certificate for Web

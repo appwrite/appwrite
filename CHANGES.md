@@ -1,3 +1,76 @@
+# Version 0.8.0 (Not Released Yet)
+
+## Features
+
+- Added Anonymous Login ([RFC-010](https://github.com/appwrite/rfc/blob/main/010-anonymous-login.md), #914)
+- Added new Environment Variable to enable or disable Anonymous Login 
+- Added events for functions and executions (#971)
+
+## Bugs
+
+- Fixed default value for HTTPS force option
+
+## Breaking Changes
+
+- Only logged in users can execute functions (for guests, use anonymous login)
+- Only the user who has triggered the execution get access to the relevant execution logs
+
+# Version 0.7.2
+
+## Features
+
+- When creating new resources from the client API, the current user gets both read & write permissions by default. (#1007)
+- Added timestamp to errors logs on the HTTP API container (#1002)
+- Added verbose tests output on the terminal and CI (#1006)
+
+## Upgrades
+
+- Upgraded utopia-php/abuse to version 0.4.0
+- Upgraded utopia-php/analytics to version 0.2.0
+
+## Bugs
+
+- Fixed certificates worker error on successful operations (#1010)
+- Fixed head requests not responding (#998)
+- Fixed bug when using auth credential for the Redis container (#993)
+- Fixed server warning logs on 3** redirect endpoints (#1013)
+
+# Version 0.7.1
+
+## Features
+
+- Better error logs on appwrite certificates worker
+- Added option for Redis authentication
+- Force adding a security email on setup
+- SMTP is now disabled by default, no dummy SMTP is included in setup
+- Added a new endpoint that returns the server and SDKs latest versions numbers #941
+- Custom data strings, userId, and JWT available for cloud functions #967
+
+## Upgrades
+
+- Upgraded redis extenstion lib to version 5.3.3
+- Upgraded maxmind extenstion lib to version 1.10.0
+- Upgraded utopia-php/cli lib to version 0.10.0
+- Upgraded matomo/device-detector lib to version 4.1.0
+- Upgraded dragonmantank/cron-expression lib to version 3.1.0
+- Upgraded influxdb/influxdb-php lib to version 1.15.2
+- Upgraded phpmailer/phpmailer lib to version 6.3.0
+- Upgraded adhocore/jwt lib to version 1.1.2
+- Upgraded domnikl/statsd to slickdeals/statsd version 3.0
+ 
+## Bug Fixes
+
+- Updated missing storage env vars
+- Fixed a bug, that added a wrong timzone offset to user log timestamps
+- Fixed a bug, that Response format header was not added in the access-control-allow-header list.
+- Fixed a bug where countryName is unknown on sessions (#933)
+- Added missing event users.update.prefs (#952)
+- Fixed bug not allowing to reset document permissions (#977)
+
+## Security
+
+- Fixed an XSS vulnerability in the Appwrite console
+
 # Version 0.7.0
 
 ## Features

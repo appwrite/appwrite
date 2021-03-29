@@ -202,8 +202,8 @@ App::get('/v1/users/:userId/sessions')
         foreach ($sessions as $key => $session) { 
             /** @var Document $session */
 
-            $session->setAttribute('countryName', (isset($countries[$session->getAttribute('contryCode')]))
-                ? $countries[$session->getAttribute('contryCode')]
+            $session->setAttribute('countryName', (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
+                ? $countries[strtoupper($session->getAttribute('countryCode'))]
                 : $locale->getText('locale.country.unknown'));
             $session->setAttribute('current', false);
 
@@ -370,6 +370,7 @@ App::patch('/v1/users/:userId/status')
 App::patch('/v1/users/:userId/prefs')
     ->desc('Update User Preferences')
     ->groups(['api', 'users'])
+    ->label('event', 'users.update.prefs')
     ->label('scope', 'users.write')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'users')
