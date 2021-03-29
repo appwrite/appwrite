@@ -43,6 +43,17 @@ users = Users(client)
 result = users.create('email@example.com', 'password')
 ```
 
+### Error Handling
+The Appwrite Python SDK raises `AppwriteException` object with `message`, `code` and `response` properties. You can handle any errors by catching `AppwriteException` and present the `message` to the user or handle it yourself based on the provided error information. Below is an example.
+
+```python
+users = Users(client)
+try:
+  result = users.create('email@example.com', 'password')
+except AppwriteException as e:
+  print(e.message)
+```
+
 ### Learn more
 You can use followng resources to learn more and get help
 - 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-server)

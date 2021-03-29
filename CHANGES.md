@@ -1,17 +1,39 @@
 # Version 0.8.0 (Not Released Yet)
 
 ## Features
-- Anonymous login (#914)
+
+- Added Anonymous Login ([RFC-010](https://github.com/appwrite/rfc/blob/main/010-anonymous-login.md), #914)
+- Added new Environment Variable to enable or disable Anonymous Login 
 - Added events for functions and executions (#971)
+
+## Bugs
+
+- Fixed default value for HTTPS force option
 
 ## Breaking Changes
 
 - Only logged in users can execute functions (for guests, use anonymous login)
 - Only the user who has triggered the execution get access to the relevant execution logs
 
+# Version 0.7.2
+
+## Features
+
+- When creating new resources from the client API, the current user gets both read & write permissions by default. (#1007)
+- Added timestamp to errors logs on the HTTP API container (#1002)
+- Added verbose tests output on the terminal and CI (#1006)
+
 ## Upgrades
 
-- Upgraded ClamAV to version 1.3.0
+- Upgraded utopia-php/abuse to version 0.4.0
+- Upgraded utopia-php/analytics to version 0.2.0
+
+## Bugs
+
+- Fixed certificates worker error on successful operations (#1010)
+- Fixed head requests not responding (#998)
+- Fixed bug when using auth credential for the Redis container (#993)
+- Fixed server warning logs on 3** redirect endpoints (#1013)
 
 # Version 0.7.1
 

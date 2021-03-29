@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "00a80774fb5a4984181b29f2f037a0e5",
+    "content-hash": "a5a066bf0b739b7b412149aeb0e9a396",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -364,18 +364,18 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/guzzle.git",
-                "reference": "01129f635f45659fd4764a533777d069a978bc9d"
+                "reference": "de6f1e58e735754b888649495ed4cb9ae3b19589"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/01129f635f45659fd4764a533777d069a978bc9d",
-                "reference": "01129f635f45659fd4764a533777d069a978bc9d",
+                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/de6f1e58e735754b888649495ed4cb9ae3b19589",
+                "reference": "de6f1e58e735754b888649495ed4cb9ae3b19589",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
                 "guzzlehttp/promises": "^1.4",
-                "guzzlehttp/psr7": "^1.7",
+                "guzzlehttp/psr7": "^1.7 || ^2.0",
                 "php": "^7.2.5 || ^8.0",
                 "psr/http-client": "^1.0"
             },
@@ -383,6 +383,7 @@
                 "psr/http-client-implementation": "1.0"
             },
             "require-dev": {
+                "bamarni/composer-bin-plugin": "^1.4.1",
                 "ext-curl": "*",
                 "php-http/client-integration-tests": "^3.0",
                 "phpunit/phpunit": "^8.5.5 || ^9.3.5",
@@ -397,7 +398,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "7.3-dev"
+                    "dev-master": "7.4-dev"
                 }
             },
             "autoload": {
@@ -459,7 +460,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-03-15T07:56:29+00:00"
+            "time": "2021-03-23T14:07:59+00:00"
         },
         {
             "name": "guzzlehttp/promises",
@@ -519,46 +520,47 @@
         },
         {
             "name": "guzzlehttp/psr7",
-            "version": "1.x-dev",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/psr7.git",
-                "reference": "a67cdbf85690e54a7b92fe91c297b20d2607c0b2"
+                "reference": "c0dcda9f54d145bd4d062a6d15f54931a67732f9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/psr7/zipball/a67cdbf85690e54a7b92fe91c297b20d2607c0b2",
-                "reference": "a67cdbf85690e54a7b92fe91c297b20d2607c0b2",
+                "url": "https://api.github.com/repos/guzzle/psr7/zipball/c0dcda9f54d145bd4d062a6d15f54931a67732f9",
+                "reference": "c0dcda9f54d145bd4d062a6d15f54931a67732f9",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.4.0",
-                "psr/http-message": "~1.0",
-                "ralouphie/getallheaders": "^2.0.5 || ^3.0.0"
+                "php": "^7.2.5 || ^8.0",
+                "psr/http-factory": "^1.0",
+                "psr/http-message": "^1.0",
+                "ralouphie/getallheaders": "^3.0"
             },
             "provide": {
+                "psr/http-factory-implementation": "1.0",
                 "psr/http-message-implementation": "1.0"
             },
             "require-dev": {
-                "ext-zlib": "*",
-                "phpunit/phpunit": "~4.8.36 || ^5.7.27 || ^6.5.14 || ^7.5.20 || ^8.5.8 || ^9.3.10"
+                "bamarni/composer-bin-plugin": "^1.4.1",
+                "http-interop/http-factory-tests": "^0.9",
+                "phpunit/phpunit": "^8.5.8 || ^9.3.10"
             },
             "suggest": {
                 "laminas/laminas-httphandlerrunner": "Emit PSR-7 responses"
             },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.7-dev"
+                    "dev-master": "2.0-dev"
                 }
             },
             "autoload": {
                 "psr-4": {
                     "GuzzleHttp\\Psr7\\": "src/"
-                },
-                "files": [
-                    "src/functions_include.php"
-                ]
+                }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
@@ -573,6 +575,11 @@
                 {
                     "name": "Tobias Schultze",
                     "homepage": "https://github.com/Tobion"
+                },
+                {
+                    "name": "Márk Sági-Kazár",
+                    "email": "mark.sagikazar@gmail.com",
+                    "homepage": "https://sagikazarmark.hu"
                 }
             ],
             "description": "PSR-7 message implementation that also provides common utility methods",
@@ -588,9 +595,9 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/psr7/issues",
-                "source": "https://github.com/guzzle/psr7/tree/1.x"
+                "source": "https://github.com/guzzle/psr7/tree/2.0.0-beta1"
             },
-            "time": "2021-03-15T11:15:53+00:00"
+            "time": "2021-03-21T17:21:36+00:00"
         },
         {
             "name": "influxdb/influxdb-php",
@@ -905,6 +912,62 @@
                 "source": "https://github.com/php-fig/http-client/tree/master"
             },
             "time": "2020-09-19T09:12:31+00:00"
+        },
+        {
+            "name": "psr/http-factory",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/http-factory.git",
+                "reference": "36fa03d50ff82abcae81860bdaf4ed9a1510c7cd"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/http-factory/zipball/36fa03d50ff82abcae81860bdaf4ed9a1510c7cd",
+                "reference": "36fa03d50ff82abcae81860bdaf4ed9a1510c7cd",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0.0",
+                "psr/http-message": "^1.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Http\\Message\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "https://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interfaces for PSR-7 HTTP message factories",
+            "keywords": [
+                "factory",
+                "http",
+                "message",
+                "psr",
+                "psr-17",
+                "psr-7",
+                "request",
+                "response"
+            ],
+            "support": {
+                "source": "https://github.com/php-fig/http-factory/tree/master"
+            },
+            "time": "2020-09-17T16:52:55+00:00"
         },
         {
             "name": "psr/http-message",
@@ -1273,21 +1336,21 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.3.1",
+            "version": "0.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "23c2eb533bca8f3ef5548ae265398fa7d4d39a1c"
+                "reference": "2b8cc40a67c045c137b44d1a11326f494acf50a4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/23c2eb533bca8f3ef5548ae265398fa7d4d39a1c",
-                "reference": "23c2eb533bca8f3ef5548ae265398fa7d4d39a1c",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/2b8cc40a67c045c137b44d1a11326f494acf50a4",
+                "reference": "2b8cc40a67c045c137b44d1a11326f494acf50a4",
                 "shasum": ""
             },
             "require": {
                 "ext-pdo": "*",
-                "php": ">=7.1"
+                "php": ">=7.4"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.4",
@@ -1319,22 +1382,22 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.3.1"
+                "source": "https://github.com/utopia-php/abuse/tree/0.4.0"
             },
-            "time": "2020-12-21T17:28:03+00:00"
+            "time": "2021-03-17T20:21:24+00:00"
         },
         {
             "name": "utopia-php/analytics",
-            "version": "0.1.0",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/analytics.git",
-                "reference": "a1f2a1672a927bef8cd4d9b47e5cfbc856a3c72f"
+                "reference": "adfc2d057a7f6ab618a77c8a20ed3e35485ff416"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/analytics/zipball/a1f2a1672a927bef8cd4d9b47e5cfbc856a3c72f",
-                "reference": "a1f2a1672a927bef8cd4d9b47e5cfbc856a3c72f",
+                "url": "https://api.github.com/repos/utopia-php/analytics/zipball/adfc2d057a7f6ab618a77c8a20ed3e35485ff416",
+                "reference": "adfc2d057a7f6ab618a77c8a20ed3e35485ff416",
                 "shasum": ""
             },
             "require": {
@@ -1374,9 +1437,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/analytics/issues",
-                "source": "https://github.com/utopia-php/analytics/tree/0.1.0"
+                "source": "https://github.com/utopia-php/analytics/tree/0.2.0"
             },
-            "time": "2021-02-03T17:07:09+00:00"
+            "time": "2021-03-23T21:33:07+00:00"
         },
         {
             "name": "utopia-php/audit",
@@ -1643,16 +1706,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.12.1",
+            "version": "0.12.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "ba17789a16527d24b4fb11ddc359901a295fbf2f"
+                "reference": "78be43a0eb711f3677769dfb445e5111bfafaa88"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/ba17789a16527d24b4fb11ddc359901a295fbf2f",
-                "reference": "ba17789a16527d24b4fb11ddc359901a295fbf2f",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/78be43a0eb711f3677769dfb445e5111bfafaa88",
+                "reference": "78be43a0eb711f3677769dfb445e5111bfafaa88",
                 "shasum": ""
             },
             "require": {
@@ -1686,9 +1749,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.12.1"
+                "source": "https://github.com/utopia-php/framework/tree/0.12.3"
             },
-            "time": "2021-03-17T22:14:05+00:00"
+            "time": "2021-03-22T22:02:23+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -1953,16 +2016,16 @@
         },
         {
             "name": "utopia-php/swoole",
-            "version": "0.2.2",
+            "version": "0.2.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/swoole.git",
-                "reference": "17510e90499e73273245c534a05bca522d4ffb37"
+                "reference": "45c42aae7e7d3f9f82bf194c2cfa5499b674aefe"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/17510e90499e73273245c534a05bca522d4ffb37",
-                "reference": "17510e90499e73273245c534a05bca522d4ffb37",
+                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/45c42aae7e7d3f9f82bf194c2cfa5499b674aefe",
+                "reference": "45c42aae7e7d3f9f82bf194c2cfa5499b674aefe",
                 "shasum": ""
             },
             "require": {
@@ -2003,9 +2066,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/swoole/issues",
-                "source": "https://github.com/utopia-php/swoole/tree/0.2.2"
+                "source": "https://github.com/utopia-php/swoole/tree/0.2.3"
             },
-            "time": "2021-03-17T22:51:07+00:00"
+            "time": "2021-03-22T22:39:24+00:00"
         },
         {
             "name": "utopia-php/system",
@@ -2287,11 +2350,11 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.6.3",
+            "version": "0.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "583248c57c5bcbd9c74f8312cc7fc3ab6cda51a3"
+                "reference": "12a6a4b723137d5449c84ee2915b1ab3586e2162"
             },
             "require": {
                 "ext-curl": "*",
@@ -2304,7 +2367,6 @@
             "require-dev": {
                 "phpunit/phpunit": "^7.0"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -2322,7 +2384,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2021-03-07T08:45:05+00:00"
+            "time": "2021-03-23T09:26:18+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",
@@ -4934,12 +4996,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "36e4ff2188cb5af6e6e94560b4aaa8042933aa58"
+                "reference": "5da8b675121f9f4419b7052caa0cc6118a3ccd47"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/36e4ff2188cb5af6e6e94560b4aaa8042933aa58",
-                "reference": "36e4ff2188cb5af6e6e94560b4aaa8042933aa58",
+                "url": "https://api.github.com/repos/symfony/console/zipball/5da8b675121f9f4419b7052caa0cc6118a3ccd47",
+                "reference": "5da8b675121f9f4419b7052caa0cc6118a3ccd47",
                 "shasum": ""
             },
             "require": {
@@ -5025,7 +5087,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-03-17T16:56:09+00:00"
+            "time": "2021-03-23T14:20:07+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
@@ -5033,12 +5095,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/deprecation-contracts.git",
-                "reference": "49dc45a74cbac5fffc6417372a9f5ae1682ca0b4"
+                "reference": "5f38c8804a9e97d23e0c8d63341088cd8a22d627"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/49dc45a74cbac5fffc6417372a9f5ae1682ca0b4",
-                "reference": "49dc45a74cbac5fffc6417372a9f5ae1682ca0b4",
+                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/5f38c8804a9e97d23e0c8d63341088cd8a22d627",
+                "reference": "5f38c8804a9e97d23e0c8d63341088cd8a22d627",
                 "shasum": ""
             },
             "require": {
@@ -5093,7 +5155,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-02-25T16:38:04+00:00"
+            "time": "2021-03-23T23:28:01+00:00"
         },
         {
             "name": "symfony/polyfill-intl-grapheme",
@@ -5513,12 +5575,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/service-contracts.git",
-                "reference": "3d72b4bfab3e991aa66906aa301aa479de4ca6ee"
+                "reference": "1309413986521646bb0ba91140afdc2a61ed8cfe"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/service-contracts/zipball/3d72b4bfab3e991aa66906aa301aa479de4ca6ee",
-                "reference": "3d72b4bfab3e991aa66906aa301aa479de4ca6ee",
+                "url": "https://api.github.com/repos/symfony/service-contracts/zipball/1309413986521646bb0ba91140afdc2a61ed8cfe",
+                "reference": "1309413986521646bb0ba91140afdc2a61ed8cfe",
                 "shasum": ""
             },
             "require": {
@@ -5585,7 +5647,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-03-16T09:10:58+00:00"
+            "time": "2021-03-23T23:28:01+00:00"
         },
         {
             "name": "symfony/string",
@@ -5727,12 +5789,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "37e48403c21e06f63bc27d7ccd997fbb72b0ae2a"
+                "reference": "116bfb0bc9ec2a39db93431b7fe67144164d251e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/37e48403c21e06f63bc27d7ccd997fbb72b0ae2a",
-                "reference": "37e48403c21e06f63bc27d7ccd997fbb72b0ae2a",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/116bfb0bc9ec2a39db93431b7fe67144164d251e",
+                "reference": "116bfb0bc9ec2a39db93431b7fe67144164d251e",
                 "shasum": ""
             },
             "require": {
@@ -5798,7 +5860,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-03-10T10:07:14+00:00"
+            "time": "2021-03-22T08:23:49+00:00"
         },
         {
             "name": "vimeo/psalm",
@@ -5959,9 +6021,7 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "appwrite/sdk-generator": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
