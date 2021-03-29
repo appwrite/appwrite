@@ -650,10 +650,10 @@ App::post('/v1/account/sessions/anonymous')
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $session = new Document(array_merge(
             [
-                '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
+                '$collection' => Database::SYSTEM_COLLECTION_SESSIONS,
                 '$permissions' => ['read' => ['user:' . $user['$id']], 'write' => ['user:' . $user['$id']]],
                 'userId' => $user->getId(),
-                'type' => Auth::TOKEN_TYPE_LOGIN,
+                'provider' => Auth::SESSION_PROVIDER_ANONYMOUS,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'expire' => $expiry,
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -665,7 +665,7 @@ App::post('/v1/account/sessions/anonymous')
             $detector->getDevice()
         ));
 
-        $user->setAttribute('tokens', $session, Document::SET_TYPE_APPEND);
+        $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
 
         Authorization::setRole('user:'.$user->getId());
 

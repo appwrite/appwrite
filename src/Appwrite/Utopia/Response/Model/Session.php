@@ -31,20 +31,20 @@ class Session extends Model
             ->addRule('provider', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Session Provider.',
-                'default' => 0,
-                'example' => 1592981250,
+                'default' => '',
+                'example' => 'email',
             ])
             ->addRule('providerUid', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Session Provider User ID.',
-                'default' => 0,
-                'example' => 1592981250,
+                'default' => '',
+                'example' => 'user@example.com',
             ])
             ->addRule('providerToken', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Session Provider Token.',
-                'default' => 0,
-                'example' => 1592981250,
+                'default' => '',
+                'example' => '1592981250',
             ])
             ->addRule('ip', [
                 'type' => self::TYPE_STRING,

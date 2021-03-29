@@ -334,7 +334,7 @@ $collections = [
                 'key' => 'providerUid',
                 'type' => Database::SYSTEM_VAR_TYPE_TEXT,
                 'default' => '',
-                'required' => true,
+                'required' => false,
                 'array' => false,
             ],
             [
