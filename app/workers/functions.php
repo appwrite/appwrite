@@ -147,7 +147,7 @@ class FunctionsV1
         $trigger = $this->args['trigger'] ?? '';
         $event = $this->args['event'] ?? '';
         $scheduleOriginal = $this->args['scheduleOriginal'] ?? '';
-        $eventData= (!empty($this->args['eventData'])) ? json_encode($this->args['eventData']) : '';
+        $eventData = (!empty($this->args['eventData'])) ? json_encode($this->args['eventData']) : '';
         $data = $this->args['data'] ?? '';
         $userId = $this->args['userId'] ?? '';
         $jwt = $this->args['jwt'] ?? '';
