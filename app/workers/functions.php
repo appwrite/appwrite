@@ -453,26 +453,34 @@ class FunctionsV1
 
         $executionStart = \microtime(true);
         $envs = \array_merge(\array_values($tmpvars), ["executionStart={$executionStart}"]);
-        var_dump($envs);
+        // var_dump($envs);
 
         /*
          * Create execution via Docker API
          */
         $ch = \curl_init();
-        var_dump($executionStart);
 
         \curl_setopt($ch, CURLOPT_URL, "http://localhost/containers/{$container}/exec");
         \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         \curl_setopt($ch, CURLOPT_POST, 1);
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, [
-            "Env" => $envs,
-            "Cmd" => $command,
-        ]);
 
-        $headers = array();
-        $headers[] = 'Content-Type: application/json';
+        $body = array( 
+            "Env" => $envs,
+            "Cmd" => $command
+        );
+        var_dump($body);
+        $body = json_encode($body);
+        var_dump($body);
+
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, $body); 
+
+        $headers = [ 
+            'Content-Type: application/json',
+            'Content-Length: ' . \strlen($body)
+        ];
         \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        var_dump($headers);
 
         $result = \curl_exec($ch);
         var_dump($result);
