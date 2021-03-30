@@ -34,58 +34,6 @@
             this.headers = new Headers({
                 'x-sdk-version': 'appwrite:web:1.0.0',
             });
-            /**
-             * Set Project
-             *
-             * Your project ID
-             *
-             * @param value string
-             *
-             * @return this
-             */
-            this.setProject = (value) => {
-                this.headers.set('X-Appwrite-Project', value);
-                this.config.project = value;
-                return this;
-            };
-            /**
-             * Set Key
-             *
-             * Your secret API key
-             *
-             * @param value string
-             *
-             * @return this
-             */
-            this.setKey = (value) => {
-                this.headers.set('X-Appwrite-Key', value);
-                this.config.key = value;
-                return this;
-            };
-            /**
-             * Set Locale
-             *
-             * @param value string
-             *
-             * @return this
-             */
-            this.setLocale = (value) => {
-                this.headers.set('X-Appwrite-Locale', value);
-                this.config.locale = value;
-                return this;
-            };
-            /**
-             * Set Mode
-             *
-             * @param value string
-             *
-             * @return this
-             */
-            this.setMode = (value) => {
-                this.headers.set('X-Appwrite-Mode', value);
-                this.config.mode = value;
-                return this;
-            };
             this.account = {
                 /**
                  * Get Account
@@ -3878,6 +3826,58 @@
             this.config.endpoint = endpoint;
             return this;
         }
+        /**
+         * Set Project
+         *
+         * Your project ID
+         *
+         * @param value string
+         *
+         * @return {this}
+         */
+        setProject(value) {
+            this.headers.set('X-Appwrite-Project', value);
+            this.config.project = value;
+            return this;
+        }
+        /**
+         * Set Key
+         *
+         * Your secret API key
+         *
+         * @param value string
+         *
+         * @return {this}
+         */
+        setKey(value) {
+            this.headers.set('X-Appwrite-Key', value);
+            this.config.key = value;
+            return this;
+        }
+        /**
+         * Set Locale
+         *
+         * @param value string
+         *
+         * @return {this}
+         */
+        setLocale(value) {
+            this.headers.set('X-Appwrite-Locale', value);
+            this.config.locale = value;
+            return this;
+        }
+        /**
+         * Set Mode
+         *
+         * @param value string
+         *
+         * @return {this}
+         */
+        setMode(value) {
+            this.headers.set('X-Appwrite-Mode', value);
+            this.config.mode = value;
+            return this;
+        }
         call(method, url, headers = new Headers(), params = {}) {
             var _a;
             return __awaiter(this, void 0, void 0, function* () {
@@ -3946,6 +3946,5 @@
     }
 
     exports.Appwrite = Appwrite;
-    exports.AppwriteException = AppwriteException;
 
 })));
