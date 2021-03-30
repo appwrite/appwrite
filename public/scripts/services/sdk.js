@@ -2,10 +2,11 @@
     "use strict";
 
     window.ls.container.set('sdk', function (window, router) {
-        var sdk = new window.Appwrite();
+        const { Appwrite } = window.Appwrite;
+        const sdk = new Appwrite();
 
         sdk
-            .setEndpoint(APP_ENV.API)
+            .setEndpoint(window.location.origin + APP_ENV.API)
             .setProject(router.params.project || '')
             .setLocale(APP_ENV.LOCALE)
             .setMode('admin')

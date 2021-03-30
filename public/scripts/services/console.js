@@ -2,10 +2,11 @@
     "use strict";
 
     window.ls.container.set('console', function (window) {
-        var sdk = new window.Appwrite();
+        const { Appwrite } = window.Appwrite;
+        const sdk = new Appwrite();
 
         sdk
-            .setEndpoint(APP_ENV.API)
+            .setEndpoint(window.location.origin + APP_ENV.API)
             .setProject('console')
             .setLocale(APP_ENV.LOCALE)
         ;
