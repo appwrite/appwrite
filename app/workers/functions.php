@@ -16,7 +16,7 @@ require_once __DIR__.'/../init.php';
 
 Console::title('Functions V1 Worker');
 
-Runtime::setHookFlags(SWOOLE_HOOK_ALL);
+// Runtime::setHookFlags(SWOOLE_HOOK_ALL);
 
 Console::success(APP_NAME.' functions worker v1 has started');
 
@@ -343,6 +343,14 @@ class FunctionsV1
             'APPWRITE_FUNCTION_EVENT_PAYLOAD' => $payload,
         ]);
 
+        $tmpvars = $vars;
+        \array_walk($tmpvars, function (&$value, $key) {
+            $key = $this->filterEnvKey($key);
+            $value = \escapeshellarg((empty($value)) ? 'null' : $value);
+            // $value = "--env {$key}={$value}";
+            $value = "{$key}={$value}";
+        });
+
         \array_walk($vars, function (&$value, $key) {
             $key = $this->filterEnvKey($key);
             $value = \escapeshellarg((empty($value)) ? 'null' : $value);
@@ -441,10 +449,79 @@ class FunctionsV1
         $stdout = '';
         $stderr = '';
 
+
+
         $executionStart = \microtime(true);
+        $envs = \array_merge(\array_values($tmpvars), ["executionStart={$executionStart}"]);
+        var_dump($envs);
+
+        /*
+         * Create execution via Docker API
+         */
+        $ch = \curl_init();
+        var_dump($executionStart);
+
+        \curl_setopt($ch, CURLOPT_URL, "http://localhost/containers/{$container}/exec");
+        \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        \curl_setopt($ch, CURLOPT_POST, 1);
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, [
+            "Env" => $envs,
+            "Cmd" => $command,
+        ]);
+
+        $headers = array();
+        $headers[] = 'Content-Type: application/json';
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $result = \curl_exec($ch);
+        var_dump($result);
+
+        if (\curl_errno($ch)) {
+            echo 'Error:' . \curl_error($ch);
+        }
+
+        \curl_close($ch);
+
+        /*
+         * Query for event 'exec_die'
+         */
+        // $ch = \curl_init();
+//
+        // $URL = 'http://localhost/events';
+        // $params = [
+            // 'filter' => json_encode([
+                // 'type' => 'container',
+                // 'container' => $container,
+                // 'event' => 'exec_die',
+            // ]),
+            // 'since' => \floor($executionStart)
+            // 'until' => $executionStart + +App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)
+        // ];
+        // $URL = $URL . '?' . \http_build_query($params);
+        // var_dump($URL);
+//
+        // \curl_setopt($ch, CURLOPT_URL, $URL);
+        // \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
+        // \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
+        // $headers = array();
+        // $headers[] = 'Content-Type: application/json';
+        // \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        // $result = \curl_exec($ch);
+//
+        // if (\curl_errno($ch)) {
+            // echo 'Error:' . \curl_error($ch);
+        // }
+        // var_dump($result);
+        // var_dump(\microtime(true) - $executionStart);
+//
+        // \curl_close($ch);
+
         
-        $exitCode = Console::execute("docker exec ".\implode(" ", $vars)." {$container} {$command}"
-            , '', $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
+        // $exitCode = Console::execute("docker exec ".\implode(" ", $vars)." {$container} {$command}"
+            // , '', $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
 
         $executionEnd = \microtime(true);
         $executionTime = ($executionEnd - $executionStart);
