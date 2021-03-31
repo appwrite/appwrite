@@ -450,10 +450,9 @@ class FunctionsV1
         $stderr = '';
 
 
-
         $executionStart = \microtime(true);
-        $envs = \array_merge(\array_values($tmpvars), ["executionStart={$executionStart}"]);
-        // var_dump($envs);
+        $envs = array_values($tmpvars);
+        $envs[] = "executionStart={$executionStart}";
 
         /*
          * Create execution via Docker API
@@ -465,30 +464,26 @@ class FunctionsV1
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         \curl_setopt($ch, CURLOPT_POST, 1);
 
-        $body = array( 
+        $body = array(
             "Env" => $envs,
             "Cmd" => \explode(' ', $command),
             "AttachStdout" => true,
             "AttachStderr" => true
         );
-        var_dump($body);
         $body = json_encode($body);
-        var_dump($body);
 
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, $body); 
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
 
-        $headers = [ 
+        $headers = [
             'Content-Type: application/json',
             'Content-Length: ' . \strlen($body)
         ];
         \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        var_dump($headers);
 
         $result = \curl_exec($ch);
         $resultDecoded = json_decode($result, true);
         $execId = $resultDecoded['Id'];
 
-        var_dump($result);
 
         if (\curl_errno($ch)) {
             echo 'Error:' . \curl_error($ch);
@@ -497,10 +492,8 @@ class FunctionsV1
         \curl_close($ch);
 
 
-
         /*
-         * Maybe just creating the function doesnt start it?
-         * Currently throws errors
+         * Start execution without detatching - will receive stdout/stderr as response
          */
 
         $ch = \curl_init();
@@ -508,46 +501,44 @@ class FunctionsV1
         \curl_setopt($ch, CURLOPT_URL, $URL);
         \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
         \curl_setopt($ch, CURLOPT_POST, 1);
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([]));
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, '{}');
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
-        $headers = array();
-        $headers[] = 'Content-Type: application/json';
+        $headers = [
+            'Content-Type: application/json',
+            'Content-Length: 2',
+        ];
         \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         $result = \curl_exec($ch);
+        var_dump($result);
 
         if (\curl_errno($ch)) {
             echo 'Error:' . \curl_error($ch);
         }
-        var_dump($result);
 
         \curl_close($ch);
 
+        sleep(1);
 
-
-
-
-
-        sleep(5);
+        // TODO@kodumbeats: set up listener for /events for exec_start and exec_die 
+        // We need this to get accurate 
+            // $params = [
+                // 'filter' => json_encode([
+                    // 'type' => 'container',
+                    // 'container' => $container,
+                    // 'event' => 'exec_die',
+                // ]),
+                // 'since' => \floor($executionStart)
+                // 'until' => $executionStart + +App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)
+        //      ];
+            // $URL = $URL . '?' . \http_build_query($params);
         /*
-         * Query for event 'exec_die'
+         * Get execution details
          */
         $ch = \curl_init();
 
         $URL = "http://localhost/exec/{$execId}/json";
-        // $params = [
-            // 'filter' => json_encode([
-                // 'type' => 'container',
-                // 'container' => $container,
-                // 'event' => 'exec_die',
-            // ]),
-            // 'since' => \floor($executionStart)
-            // 'until' => $executionStart + +App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)
-        // ];
-        // $URL = $URL . '?' . \http_build_query($params);
-        // var_dump($URL);
-
         \curl_setopt($ch, CURLOPT_URL, $URL);
         \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -557,11 +548,12 @@ class FunctionsV1
         \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         $result = \curl_exec($ch);
+        $execData = json_decode($result, true); // Can get the exit code from this call.
+        $exitCode = $execData['ExitCode'];
 
         if (\curl_errno($ch)) {
             echo 'Error:' . \curl_error($ch);
         }
-        var_dump($result);
 
         \curl_close($ch);
 
@@ -581,8 +573,10 @@ class FunctionsV1
             'tagId' => $tag->getId(),
             'status' => $functionStatus,
             'exitCode' => $exitCode,
-            'stdout' => \mb_substr($stdout, -4000), // log last 4000 chars output
-            'stderr' => \mb_substr($stderr, -4000), // log last 4000 chars output
+            // 'stdout' => \mb_substr($stdout, -4000), // log last 4000 chars output
+            'stdout' => 'Not added yet',
+            // 'stderr' => \mb_substr($stderr, -4000), // log last 4000 chars output
+            'stderr' => 'Not added yet',
             'time' => $executionTime,
         ]));
         
