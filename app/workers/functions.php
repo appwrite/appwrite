@@ -472,6 +472,7 @@ class FunctionsV1
         );
         $body = json_encode($body);
 
+        $createExecStart = microtime(true);
         \curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
 
         $headers = [
@@ -491,11 +492,14 @@ class FunctionsV1
 
         \curl_close($ch);
 
+        $createExecTime = microtime(true)- $createExecStart;
+        var_dump($createExecTime);
 
         /*
          * Start execution without detatching - will receive stdout/stderr as response
          */
 
+        $startExecStart = microtime(true);
         $ch = \curl_init();
         $URL = "http://localhost/exec/{$execId}/start";
         \curl_setopt($ch, CURLOPT_URL, $URL);
@@ -513,11 +517,14 @@ class FunctionsV1
         $result = \curl_exec($ch);
         var_dump($result);
 
+
         if (\curl_errno($ch)) {
             echo 'Error:' . \curl_error($ch);
         }
 
         \curl_close($ch);
+        $startExecTime = microtime(true)- $startExecStart;
+        var_dump($startExecTime);
 
         sleep(1);
 
