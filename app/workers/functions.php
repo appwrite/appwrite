@@ -467,7 +467,9 @@ class FunctionsV1
 
         $body = array( 
             "Env" => $envs,
-            "Cmd" => $command
+            "Cmd" => \explode(' ', $command),
+            "AttachStdout" => true,
+            "AttachStderr" => true
         );
         var_dump($body);
         $body = json_encode($body);
@@ -483,6 +485,9 @@ class FunctionsV1
         var_dump($headers);
 
         $result = \curl_exec($ch);
+        $resultDecoded = json_decode($result, true);
+        $execId = $resultDecoded['Id'];
+
         var_dump($result);
 
         if (\curl_errno($ch)) {
@@ -491,12 +496,46 @@ class FunctionsV1
 
         \curl_close($ch);
 
+
+
+        /*
+         * Maybe just creating the function doesnt start it?
+         * Currently throws errors
+         */
+
+        $ch = \curl_init();
+        $URL = "http://localhost/exec/{$execId}/start";
+        \curl_setopt($ch, CURLOPT_URL, $URL);
+        \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
+        \curl_setopt($ch, CURLOPT_POST, 1);
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([]));
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
+        $headers = array();
+        $headers[] = 'Content-Type: application/json';
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $result = \curl_exec($ch);
+
+        if (\curl_errno($ch)) {
+            echo 'Error:' . \curl_error($ch);
+        }
+        var_dump($result);
+
+        \curl_close($ch);
+
+
+
+
+
+
+        sleep(5);
         /*
          * Query for event 'exec_die'
          */
-        // $ch = \curl_init();
-//
-        // $URL = 'http://localhost/events';
+        $ch = \curl_init();
+
+        $URL = "http://localhost/exec/{$execId}/json";
         // $params = [
             // 'filter' => json_encode([
                 // 'type' => 'container',
@@ -508,24 +547,23 @@ class FunctionsV1
         // ];
         // $URL = $URL . '?' . \http_build_query($params);
         // var_dump($URL);
-//
-        // \curl_setopt($ch, CURLOPT_URL, $URL);
-        // \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
-        // \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
-        // $headers = array();
-        // $headers[] = 'Content-Type: application/json';
-        // \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        \curl_setopt($ch, CURLOPT_URL, $URL);
+        \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
-        // $result = \curl_exec($ch);
-//
-        // if (\curl_errno($ch)) {
-            // echo 'Error:' . \curl_error($ch);
-        // }
-        // var_dump($result);
-        // var_dump(\microtime(true) - $executionStart);
-//
-        // \curl_close($ch);
+        $headers = array();
+        $headers[] = 'Content-Type: application/json';
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $result = \curl_exec($ch);
+
+        if (\curl_errno($ch)) {
+            echo 'Error:' . \curl_error($ch);
+        }
+        var_dump($result);
+
+        \curl_close($ch);
 
         
         // $exitCode = Console::execute("docker exec ".\implode(" ", $vars)." {$container} {$command}"
