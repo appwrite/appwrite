@@ -63,7 +63,7 @@ $server->on('workerStart', function ($server, $workerId) use (&$subscriptions, &
                 Console::error('Pub/sub failed (worker: ' . $workerId . ')');
             }
 
-            $redis->subscribe(['realtime'], function ($redis, $channel, $payload) use ($server, &$connections, &$subscriptions) {
+            $redis->subscribe(['realtime'], function ($redis, $channel, $payload) use ($server, $workerId, &$subscriptions) {
                 /**
                  * Supported Resources:
                  *  - Collection
@@ -79,6 +79,12 @@ $server->on('workerStart', function ($server, $workerId) use (&$subscriptions, &
                 $event = json_decode($payload, true);
 
                 $receivers = Realtime::identifyReceivers($event, $subscriptions);
+
+                if (App::isDevelopment() && !empty($receivers)) {
+                    Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
+                    Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode($receivers));
+                    Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
+                }
 
                 foreach ($receivers as $receiver) {
                     if ($server->exist($receiver) && $server->isEstablished($receiver)) {
@@ -212,6 +218,11 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
             'code' => $th->getCode(),
             'message' => $th->getMessage()
         ];
+        if (App::isDevelopment()) {
+            Console::error("[Error] Connection Error");
+            Console::error("[Error] Code: " . $response['code']);
+            Console::error("[Error] Message: " . $response['message']);
+        }
         $server->push($connection, json_encode($response));
         $server->close($connection);
     }
