@@ -141,6 +141,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_USAGE_STATS
 
   appwrite-worker-usage:
     image: appwrite/appwrite:<?php echo $version."\n"; ?>

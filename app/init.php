@@ -378,7 +378,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     /** @var Appwrite\Database\Document $project */
     /** @var Appwrite\Database\Database $consoleDB */
     /** @var Appwrite\Database\Database $projectDB */
-    /** @var bool $mode */
+    /** @var string $mode */
 
     Authorization::setDefaultStatus(true);
 

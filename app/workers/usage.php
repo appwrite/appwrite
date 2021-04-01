@@ -25,12 +25,13 @@ class UsageV1 extends Worker
     {
         global $register;
 
+        /** @var \Domnikl\Statsd\Client $statsd */
         $statsd = $register->get('statsd', true);
 
         $projectId = $this->args['projectId'];
 
-        $networkRequestSize = $this->args['networkRequestSize'];
-        $networkResponseSize = $this->args['networkResponseSize'];
+        $networkRequestSize = $this->args['networkRequestSize'] ?? 0;
+        $networkResponseSize = $this->args['networkResponseSize'] ?? 0;
 
         $storage = $this->args['storage'] ?? null;
         
@@ -42,7 +43,10 @@ class UsageV1 extends Worker
         $functionExecutionTime = $this->args['functionExecutionTime'] ?? null;
         $functionStatus = $this->args['functionStatus'] ?? null;
 
-        $tags = ",project={$projectId},version=".App::getEnv('_APP_VERSION', 'UNKNOWN').'';
+        $realtimeConnections = $this->args['realtimeConnections'] ?? null;
+        $realtimeMessages = $this->args['realtimeMessages'] ?? null;
+
+        $tags = ",project={$projectId},version=".App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         // the global namespace is prepended to every key (optional)
         $statsd->setNamespace('appwrite.usage');
@@ -53,8 +57,15 @@ class UsageV1 extends Worker
         
         if($functionExecution >= 1) {
             $statsd->increment('executions.all'.$tags.',functionId='.$functionId.',functionStatus='.$functionStatus);
-            var_dump($tags.',functionId='.$functionId.',functionStatus='.$functionStatus);
             $statsd->count('executions.time'.$tags.',functionId='.$functionId, $functionExecutionTime);
+        }
+
+        if($realtimeConnections >= 1) {
+            $statsd->count('realtime.clients'.$tags, $realtimeConnections);
+        }
+
+        if($realtimeMessages >= 1) {
+            $statsd->count('realtime.message'.$tags, $realtimeMessages);
         }
 
         $statsd->count('network.inbound'.$tags, $networkRequestSize);

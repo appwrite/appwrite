@@ -4,12 +4,15 @@ require_once __DIR__ . '/init.php';
 
 use Appwrite\Database\Pool\PDOPool;
 use Appwrite\Database\Pool\RedisPool;
+use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Realtime\Realtime;
 use Appwrite\Utopia\Response;
-use Swoole\Process;
 use Swoole\Http\Request;
 use Swoole\Http\Response as SwooleResponse;
+use Swoole\Process;
+use Swoole\Table;
+use Swoole\Timer;
 use Swoole\WebSocket\Frame;
 use Swoole\WebSocket\Server;
 use Utopia\App;
@@ -38,7 +41,46 @@ $server->set([
 $subscriptions = [];
 $connections = [];
 
-$server->on('workerStart', function ($server, $workerId) use (&$subscriptions, &$connections, &$register) {
+$stats = new Table(4096, 1);
+$stats->column('projectId', Table::TYPE_STRING, 64);
+$stats->column('connections', Table::TYPE_INT);
+$stats->column('messages', Table::TYPE_INT);
+$stats->create();
+
+/**
+ * Sends usage stats every 10 seconds.
+ */
+Timer::tick(10000, function () use (&$stats) {
+    /** @var Table $stats */
+    foreach ($stats as $projectId => $value) {
+        if (empty($value['connections']) && empty($value['messages'])) {
+            continue;
+        }
+
+        $connections = $value['connections'];
+        $messages = $value['messages'];
+
+        $usage = new Event('v1-usage', 'UsageV1');
+        $usage
+            ->setParam('projectId', $projectId)
+            ->setParam('realtimeConnections', $connections)
+            ->setParam('realtimeMessages', $messages)
+            ->setParam('networkRequestSize', 0)
+            ->setParam('networkResponseSize', 0);
+
+        $stats->set($projectId, array(
+            'projectId' => $projectId,
+            'messages' => 0,
+            'connections' => 0
+        ));
+
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+            $usage->trigger();
+        }
+    }
+});
+
+$server->on('workerStart', function ($server, $workerId) use (&$subscriptions, &$register, &$stats) {
     Console::success('Worker ' . $workerId . ' started succefully');
 
     $attempts = 0;
@@ -63,7 +105,7 @@ $server->on('workerStart', function ($server, $workerId) use (&$subscriptions, &
                 Console::error('Pub/sub failed (worker: ' . $workerId . ')');
             }
 
-            $redis->subscribe(['realtime'], function ($redis, $channel, $payload) use ($server, $workerId, &$subscriptions) {
+            $redis->subscribe(['realtime'], function ($redis, $channel, $payload) use ($server, $workerId, &$subscriptions, &$stats) {
                 /**
                  * Supported Resources:
                  *  - Collection
@@ -98,6 +140,9 @@ $server->on('workerStart', function ($server, $workerId) use (&$subscriptions, &
                         $server->close($receiver);
                     }
                 }
+                if (($num = count($receivers)) > 0) {
+                    $stats->incr($event['project'], 'messages', $num);
+                }
             });
         } catch (\Throwable $th) {
             Console::error('Pub/sub error: ' . $th->getMessage());
@@ -124,7 +169,7 @@ $server->on('start', function (Server $server) {
     });
 });
 
-$server->on('open', function (Server $server, Request $request) use (&$connections, &$subscriptions, &$register) {
+$server->on('open', function (Server $server, Request $request) use (&$connections, &$subscriptions, &$register, &$stats) {
     $app = new App('UTC');
     $connection = $request->fd;
     $request = new SwooleRequest($request);
@@ -135,11 +180,11 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
     $register->set('db', function () use (&$db) {
         return $db;
     });
-    
+
     $register->set('cache', function () use (&$redis) { // Register cache connection
         return $redis;
     });
-    
+
     Console::info("Connection open (user: {$connection}, worker: {$server->getWorkerId()})");
 
     App::setResource('request', function () use ($request) {
@@ -213,6 +258,8 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
         Realtime::subscribe($project->getId(), $connection, $roles, $subscriptions, $connections, $channels);
 
         $server->push($connection, json_encode($channels));
+
+        $stats->incr($project->getId(), 'connections');
     } catch (\Throwable $th) {
         $response = [
             'code' => $th->getCode(),
