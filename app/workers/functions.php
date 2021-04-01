@@ -514,9 +514,8 @@ class FunctionsV1
         ];
         \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
-        $result = \curl_exec($ch);
-        var_dump($result);
-
+        $startData = \curl_exec($ch);
+        var_dump($startData);
 
         if (\curl_errno($ch)) {
             echo 'Error:' . \curl_error($ch);
@@ -525,8 +524,6 @@ class FunctionsV1
         \curl_close($ch);
         $startExecTime = microtime(true)- $startExecStart;
         var_dump($startExecTime);
-
-        sleep(1);
 
         // TODO@kodumbeats: set up listener for /events for exec_start and exec_die 
         // We need this to get accurate 
@@ -564,7 +561,6 @@ class FunctionsV1
 
         \curl_close($ch);
 
-        
         // $exitCode = Console::execute("docker exec ".\implode(" ", $vars)." {$container} {$command}"
             // , '', $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
 
@@ -572,7 +568,7 @@ class FunctionsV1
         $executionTime = ($executionEnd - $executionStart);
         $functionStatus = ($exitCode === 0) ? 'completed' : 'failed';
 
-        Console::info("Function executed in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
+        Console::info("Function executed in " . ($startExecTime) . " seconds with exit code {$exitCode}");
 
         Authorization::disable();
         
@@ -581,10 +577,10 @@ class FunctionsV1
             'status' => $functionStatus,
             'exitCode' => $exitCode,
             // 'stdout' => \mb_substr($stdout, -4000), // log last 4000 chars output
-            'stdout' => 'Not added yet',
+            'stdout' => ($exitCode === 0) ? \mb_substr($startData, -4000) : '',
             // 'stderr' => \mb_substr($stderr, -4000), // log last 4000 chars output
-            'stderr' => 'Not added yet',
-            'time' => $executionTime,
+            'stderr' => (!$exitCode === 0) ? \mb_substr($startData, -4000) : '',
+            'time' => $startExecTime,
         ]));
         
         Authorization::reset();
