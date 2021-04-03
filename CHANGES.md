@@ -5,7 +5,8 @@
 - Added Anonymous Login ([RFC-010](https://github.com/appwrite/rfc/blob/main/010-anonymous-login.md), #914)
 - Added new Environment Variable to enable or disable Anonymous Login 
 - Added events for functions and executions (#971)
-
+- Splited token & session models to become 2 different internal entities (#922)
+- Added Dart 2.12 as a new Cloud Functions runtime (#989)
 ## Bugs
 
 - Fixed default value for HTTPS force option
