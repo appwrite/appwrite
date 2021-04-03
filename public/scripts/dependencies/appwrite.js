@@ -2054,10 +2054,11 @@
              * function execution process will start asynchronously.
              *
              * @param {string} functionId
+             * @param {string} data 
              * @throws {Error}
              * @return {Promise}             
              */
-            createExecution: function(functionId) {
+            createExecution: function(functionId, data) {
                 if(functionId === undefined) {
                     throw new Error('Missing required parameter: "functionId"');
                 }
@@ -2065,6 +2066,10 @@
                 let path = '/functions/{functionId}/executions'.replace(new RegExp('{functionId}', 'g'), functionId);
 
                 let payload = {};
+
+                if (data) {
+                    payload['data'] = data;   
+                }
 
                 return http
                     .post(path, {

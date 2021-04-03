@@ -38,17 +38,19 @@ App::post('/v1/storage/files')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FILE)
     ->param('file', [], new File(), 'Binary file.', false)
-    ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->inject('request')
     ->inject('response')
     ->inject('projectDB')
+    ->inject('user')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($file, $read, $write, $request, $response, $projectDB, $audits, $usage) {
+    ->action(function ($file, $read, $write, $request, $response, $projectDB, $user, $audits, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $usage */
 
@@ -122,8 +124,8 @@ App::post('/v1/storage/files')
         $file = $projectDB->createDocument([
             '$collection' => Database::SYSTEM_COLLECTION_FILES,
             '$permissions' => [
-                'read' => $read,
-                'write' => $write,
+                'read' => (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? [], // By default set read permissions for user
+                'write' => (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? [], // By default set write permissions for user
             ],
             'dateCreated' => \time(),
             'folderId' => '',
@@ -579,7 +581,7 @@ App::delete('/v1/storage/files/:fileId')
         ;
 
         $events
-            ->setParam('payload', $response->output($file, Response::MODEL_FILE))
+            ->setParam('eventData', $response->output($file, Response::MODEL_FILE))
         ;
 
         $response->noContent();

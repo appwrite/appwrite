@@ -78,7 +78,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
         ->setParam('projectId', $project->getId())
         ->setParam('userId', $user->getId())
         ->setParam('event', $route->getLabel('event', ''))
-        ->setParam('payload', [])
+        ->setParam('eventData', [])
         ->setParam('functionId', null)	
         ->setParam('executionId', null)	
         ->setParam('trigger', 'event')
@@ -178,8 +178,8 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
     /** @var bool $mode */
 
     if (!empty($events->getParam('event'))) {
-        if(empty($events->getParam('payload'))) {
-            $events->setParam('payload', $response->getPayload());
+        if(empty($events->getParam('eventData'))) {
+            $events->setParam('eventData', $response->getPayload());
         }
 
         $webhooks = clone $events;

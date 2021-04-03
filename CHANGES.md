@@ -2,7 +2,11 @@
 
 ## Features
 
-- Anonymous login
+- Added Anonymous Login ([RFC-010](https://github.com/appwrite/rfc/blob/main/010-anonymous-login.md), #914)
+- Added new Environment Variable to enable or disable Anonymous Login 
+- Added events for functions and executions (#971)
+- Splited token & session models to become 2 different internal entities (#922)
+- Added Dart 2.12 as a new Cloud Functions runtime (#989)
 - Added option to disable email/password
 - Added option to disable anonymous login (need to merge and apply changed)
 - Added option to disable JWT auth
@@ -10,16 +14,46 @@
 - Option to limit number of users (good for app launches + god account PR)
 - Added 2 new endpoints to the projects API to allow new settings
 - Enabled 501 errors (Not Implemented) from the error handler
+## Bugs
 
-# Version 0.7.1 (Not Released Yet)
+- Fixed default value for HTTPS force option
+
+## Breaking Changes
+
+- Only logged in users can execute functions (for guests, use anonymous login)
+- Only the user who has triggered the execution get access to the relevant execution logs
+- Function execution env `APPWRITE_FUNCTION_EVENT_PAYLOAD` renamed to `APPWRITE_FUNCTION_EVENT_DATA`
+
+# Version 0.7.2
 
 ## Features
 
-- Better error logs on appwrite cretificates worker
+- When creating new resources from the client API, the current user gets both read & write permissions by default. (#1007)
+- Added timestamp to errors logs on the HTTP API container (#1002)
+- Added verbose tests output on the terminal and CI (#1006)
+
+## Upgrades
+
+- Upgraded utopia-php/abuse to version 0.4.0
+- Upgraded utopia-php/analytics to version 0.2.0
+
+## Bugs
+
+- Fixed certificates worker error on successful operations (#1010)
+- Fixed head requests not responding (#998)
+- Fixed bug when using auth credential for the Redis container (#993)
+- Fixed server warning logs on 3** redirect endpoints (#1013)
+
+# Version 0.7.1
+
+## Features
+
+- Better error logs on appwrite certificates worker
 - Added option for Redis authentication
 - Force adding a security email on setup
 - SMTP is now disabled by default, no dummy SMTP is included in setup
 - Added a new endpoint that returns the server and SDKs latest versions numbers #941
+- Custom data strings, userId, and JWT available for cloud functions #967
 
 ## Upgrades
 
@@ -31,10 +65,16 @@
 - Upgraded influxdb/influxdb-php lib to version 1.15.2
 - Upgraded phpmailer/phpmailer lib to version 6.3.0
 - Upgraded adhocore/jwt lib to version 1.1.2
+- Upgraded domnikl/statsd to slickdeals/statsd version 3.0
  
 ## Bug Fixes
 
 - Updated missing storage env vars
+- Fixed a bug, that added a wrong timzone offset to user log timestamps
+- Fixed a bug, that Response format header was not added in the access-control-allow-header list.
+- Fixed a bug where countryName is unknown on sessions (#933)
+- Added missing event users.update.prefs (#952)
+- Fixed bug not allowing to reset document permissions (#977)
 
 ## Security
 

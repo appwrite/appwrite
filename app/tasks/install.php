@@ -124,7 +124,7 @@ $cli
 
             $input[$var['name']] = Console::confirm($var['question'].' (default: \''.$var['default'].'\')');
 
-            if(empty($input[$key])) {
+            if(empty($input[$var['name']])) {
                 $input[$var['name']] = $var['default'];
             }
         }

@@ -27,7 +27,7 @@ return [
                 'name' => '_APP_OPTIONS_FORCE_HTTPS',
                 'description' => 'Allows you to force HTTPS connection to your API. This feature redirects any HTTP call to HTTPS and adds the \'Strict-Transport-Security\' header to all HTTP responses. By default, set to \'enabled\'. To disable, set to \'disabled\'. This feature will work only when your ports are set to default 80 and 443.',
                 'introduction' => '',
-                'default' => 'enabled',
+                'default' => 'disabled',
                 'required' => false,
                 'question' => '',
             ],
@@ -107,8 +107,8 @@ return [
                 'name' => '_APP_SYSTEM_SECURITY_EMAIL_ADDRESS',
                 'description' => 'This is the email address used to issue SSL certificates for custom domains or the user agent in your webhooks payload.',
                 'introduction' => '0.7.0',
-                'default' => '',
-                'required' => true,
+                'default' => 'certs@appwrite.io',
+                'required' => false,
                 'question' => '',
             ],
             [
@@ -118,7 +118,7 @@ return [
                 'default' => 'enabled',
                 'required' => false,
                 'question' => '',
-            ],
+            ]
         ],
     ],
     [
@@ -143,7 +143,7 @@ return [
             ],
             [
                 'name' => '_APP_REDIS_USER',
-                'description' => 'Redis server user.',
+                'description' => 'Redis server user. This is an optional variable. Default value is an empty string.',
                 'introduction' => '0.7',
                 'default' => '',
                 'required' => false,
@@ -151,7 +151,7 @@ return [
             ],
             [
                 'name' => '_APP_REDIS_PASS',
-                'description' => 'Redis server password.',
+                'description' => 'Redis server password. This is an optional variable. Default value is an empty string.',
                 'introduction' => '0.7',
                 'default' => '',
                 'required' => false,
