@@ -7,7 +7,7 @@
 - Added events for functions and executions (#971)
 - Splited token & session models to become 2 different internal entities (#922)
 - Added Dart 2.12 as a new Cloud Functions runtime (#989)
-- Updated all the console bottom control to be consistent. Dropped the `+` icon
+- Updated all the console bottom control to be consistent. Dropped the `+` icon (#1062)
 ## Bugs
 
 - Fixed default value for HTTPS force option
