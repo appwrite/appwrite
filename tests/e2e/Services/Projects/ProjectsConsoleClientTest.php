@@ -422,6 +422,14 @@ class ProjectsConsoleClientTest extends Scope
         
         $this->assertEquals($response['headers']['status-code'], 501);
 
+        $response = $this->client->call(Client::METHOD_POST, '/account/anonymous', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), []);
+
+        $this->assertEquals($response['headers']['status-code'], 501);
+
         // Cleanup
 
         foreach ($auth as $index => $method) {

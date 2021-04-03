@@ -613,9 +613,10 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
 App::post('/v1/account/sessions/anonymous')
     ->desc('Create Anonymous Session')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'auth'])
     ->label('event', 'account.sessions.create')
     ->label('scope', 'public')
+    ->label('auth.type', 'anonymous')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createAnonymousSession')
@@ -649,6 +650,22 @@ App::post('/v1/account/sessions/anonymous')
             throw new Exception('Failed to create anonymous user.', 401);
         }
 
+        $limit = $project->getAttribute('usersAuthLimit', 0);
+
+        if ($limit !== 0) {
+            $projectDB->getCollection([ // Count users
+                'filters' => [
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                ],
+            ]);
+
+            $sum = $projectDB->getSum();
+
+            if($sum >= $limit) {
+                throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
+            }
+        }
+
         Authorization::disable();
         try {
             $user = $projectDB->createDocument([
@@ -669,7 +686,6 @@ App::post('/v1/account/sessions/anonymous')
         } catch (Exception $th) {
             throw new Exception('Failed saving user to DB', 500);
         }
-
         Authorization::reset();
 
         if (false === $user) {
