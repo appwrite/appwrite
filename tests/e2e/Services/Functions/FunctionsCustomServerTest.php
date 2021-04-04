@@ -486,6 +486,14 @@ class FunctionsCustomServerTest extends Scope
                 'timeout' => 15,
             ],
             [
+                'language' => 'Python',
+                'version' => '3.9',
+                'name' => 'python-3.9',
+                'code' => $functions.'/python.tar.gz',
+                'command' => 'python main.py',
+                'timeout' => 15,
+            ],
+            [
                 'language' => 'Node.js',
                 'version' => '14.5',
                 'name' => 'node-14.5',
