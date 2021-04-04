@@ -16,6 +16,14 @@ return [
                 'question' => '',
             ],
             [
+                'name' => '_APP_LOCALE',
+                'description' => 'Set your Appwrite\'s locale. By default, the locale is set to \'en\'.',
+                'introduction' => '',
+                'default' => 'en',
+                'required' => false,
+                'question' => '',
+            ],
+            [
                 'name' => '_APP_OPTIONS_ABUSE',
                 'description' => 'Allows you to disable abuse checks and API rate limiting. By default, set to \'enabled\'. To cancel the abuse checking, set to \'disabled\'. It is not recommended to disable this check-in a production environment.',
                 'introduction' => '',

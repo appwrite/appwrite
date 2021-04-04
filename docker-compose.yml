@@ -75,6 +75,7 @@ services:
       - influxdb
     environment:
       - _APP_ENV
+      - _APP_LOCALE
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
