@@ -103,12 +103,6 @@ class CertificatesV1
 
         $certificate = (!empty($certificate) && $certificate instanceof $certificate) ? $certificate->getArrayCopy() : [];
 
-        if(!empty($certificate)
-            && isset($certificate['issueDate'])
-            && (($certificate['issueDate'] + ($expiry)) > \time())) { // Check last issue time
-                throw new Exception('Renew isn\'t required');
-        }
-
         $staging = (App::isProduction()) ? '' : ' --dry-run';
         $email = App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS');
 
@@ -123,38 +117,12 @@ class CertificatesV1
             ." --email ".$email
             ." -w ".APP_STORAGE_CERTIFICATES
             ." --config-dir ".APP_STORAGE_CERTIFICATES
-            ." --keep-until-expiring "
-            ." --dry-run "
-            ." --test-cert "
+            ." --keep-until-expiring " // Default is to renew 30 days before expiration.
             ." -d {$domain->get()}", '', $stdout, $stderr);
 
         if($exit !== 0) {
             throw new Exception('Failed to issue a certificate with message: '.$stderr);
         }
-
-        // $path = APP_STORAGE_CERTIFICATES.'/'.$domain->get();
-//
-        // if(!\is_readable($path)) {
-            // if (!\mkdir($path, 0755, true)) {
-                // throw new Exception('Failed to create path...');
-            // }
-        // }
-//
-        // if(!@\rename('/etc/letsencrypt/live/'.$domain->get().'/cert.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/cert.pem')) {
-            // throw new Exception('Failed to rename certificate cert.pem: '.\json_encode($stdout));
-        // }
-//
-        // if(!@\rename('/etc/letsencrypt/live/'.$domain->get().'/chain.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/chain.pem')) {
-            // throw new Exception('Failed to rename certificate chain.pem: '.\json_encode($stdout));
-        // }
-//
-        // if(!@\rename('/etc/letsencrypt/live/'.$domain->get().'/fullchain.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/fullchain.pem')) {
-            // throw new Exception('Failed to rename certificate fullchain.pem: '.\json_encode($stdout));
-        // }
-//
-        // if(!@\rename('/etc/letsencrypt/live/'.$domain->get().'/privkey.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/privkey.pem')) {
-            // throw new Exception('Failed to rename certificate privkey.pem: '.\json_encode($stdout));
-        // }
 
         $certificate = \array_merge($certificate, [
             '$collection' => Database::SYSTEM_COLLECTION_CERTIFICATES,
