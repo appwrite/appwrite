@@ -225,7 +225,7 @@ class FunctionsV1
                     return;
                 }
 
-                $cron = CronExpression::factory($function->getAttribute('schedule'));
+                $cron = new CronExpression($function->getAttribute('schedule'));
                 $next = (int) $cron->getNextRunDate()->format('U');
 
                 $function

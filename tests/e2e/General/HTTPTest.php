@@ -26,7 +26,7 @@ class HTTPTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
         $this->assertEquals('Appwrite', $response['headers']['server']);
         $this->assertEquals('GET, POST, PUT, PATCH, DELETE', $response['headers']['access-control-allow-methods']);
-        $this->assertEquals('Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-SDK-Version, Cache-Control, Expires, Pragma, X-Fallback-Cookies', $response['headers']['access-control-allow-headers']);
+        $this->assertEquals('Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, Cache-Control, Expires, Pragma, X-Fallback-Cookies', $response['headers']['access-control-allow-headers']);
         $this->assertEquals('X-Fallback-Cookies', $response['headers']['access-control-expose-headers']);
         $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
         $this->assertEquals('true', $response['headers']['access-control-allow-credentials']);
@@ -185,5 +185,28 @@ class HTTPTest extends Scope
         $this->assertEquals($body['continents']['AF'], 'Africa');
         $this->assertEquals($body['continents']['AN'], 'Antarctica');
         $this->assertEquals($body['continents']['AS'], 'Asia');
+    }
+
+    public function testVersions() {
+
+        /**
+         * Test without header
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/versions', array_merge([
+            'content-type' => 'application/json',
+        ], $this->getHeaders()));
+
+        $body = $response['body'];
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsString($body['server']);
+        $this->assertIsString($body['client-web']);
+        $this->assertIsString($body['client-flutter']);
+        $this->assertIsString($body['console-web']);
+        $this->assertIsString($body['server-nodejs']);
+        $this->assertIsString($body['server-deno']);
+        $this->assertIsString($body['server-php']);
+        $this->assertIsString($body['server-python']);
+        $this->assertIsString($body['server-ruby']);
+        $this->assertIsString($body['server-cli']);
     }
 }

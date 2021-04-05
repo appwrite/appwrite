@@ -94,7 +94,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         return;
     }
 
-    $app = new App('America/New_York');
+    $app = new App('UTC');
     
     try {
         Authorization::cleanRoles();

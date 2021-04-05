@@ -14,11 +14,11 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
 
 FROM php:8.0-cli-alpine as step1
 
-ENV PHP_REDIS_VERSION=5.3.2 \
+ENV PHP_REDIS_VERSION=5.3.3 \
     PHP_SWOOLE_VERSION=v4.6.3 \
     PHP_IMAGICK_VERSION=master \
     PHP_YAML_VERSION=2.2.1 \
-    PHP_MAXMINDDB_VERSION=v1.9.0
+    PHP_MAXMINDDB_VERSION=v1.10.0
 
 RUN \
   apk add --no-cache --virtual .deps \
@@ -110,8 +110,11 @@ ENV _APP_SERVER=swoole \
     _APP_INFLUXDB_PORT=8086 \
     _APP_STATSD_HOST=telegraf \
     _APP_STATSD_PORT=8125 \
-    _APP_SMTP_HOST=smtp \
-    _APP_SMTP_PORT=25 \
+    _APP_SMTP_HOST= \
+    _APP_SMTP_PORT= \
+    _APP_SMTP_SECURE= \
+    _APP_SMTP_USERNAME= \
+    _APP_SMTP_PASSWORD= \
     _APP_FUNCTIONS_TIMEOUT=900 \
     _APP_FUNCTIONS_CONTAINERS=10 \
     _APP_FUNCTIONS_CPUS=1 \
@@ -126,9 +129,6 @@ ENV _APP_SERVER=swoole \
     # 1 Day = 86400 s
     _APP_MAINTENANCE_RETENTION_ABUSE=86400 \
     _APP_MAINTENANCE_INTERVAL=86400
-#ENV _APP_SMTP_SECURE ''
-#ENV _APP_SMTP_USERNAME ''
-#ENV _APP_SMTP_PASSWORD ''
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 

@@ -42,7 +42,7 @@ $cli
         $production = ($git) ? (Console::confirm('Type "Appwrite" to push code to production git repos') == 'Appwrite') : false;
         $message = ($git) ? Console::confirm('Please enter your commit message:') : '';
 
-        if(!in_array($version, ['0.6.2', '0.7.0'])) {
+        if(!in_array($version, ['0.6.x', '0.7.x'])) {
             throw new Exception('Unknown version given');
         }
 
@@ -67,6 +67,8 @@ $cli
                 $target = \realpath(__DIR__.'/..').'/sdks/git/'.$language['key'].'/';
                 $readme = \realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'/README.md');
                 $readme = ($readme) ? \file_get_contents($readme) : '';
+                $gettingStarted = \realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'/GETTING_STARTED.md');
+                $gettingStarted = ($gettingStarted) ? \file_get_contents($gettingStarted) : '';
                 $examples = \realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'/EXAMPLES.md');
                 $examples = ($examples) ? \file_get_contents($examples) : '';
                 $changelog = \realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'/CHANGELOG.md');
@@ -96,6 +98,15 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config = new CLI();
                         $config->setComposerVendor('appwrite');
                         $config->setComposerPackage('cli');
+                        $config->setExecutableName('appwrite');
+                        $config->setLogo("
+    _                            _ _           ___   __   _____ 
+   /_\  _ __  _ ____      ___ __(_) |_ ___    / __\ / /   \_   \
+  //_\\| '_ \| '_ \ \ /\ / / '__| | __/ _ \  / /   / /     / /\/
+ /  _  \ |_) | |_) \ V  V /| |  | | ||  __/ / /___/ /___/\/ /_  
+ \_/ \_/ .__/| .__/ \_/\_/ |_|  |_|\__\___| \____/\____/\____/  
+       |_|   |_|                                                  
+ ");
                         break;
                     case 'php':
                         $config = new PHP();
@@ -178,6 +189,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setShareVia('appwrite_io')
                     ->setWarning($warning)
                     ->setReadme($readme)
+                    ->setGettingStarted($gettingStarted)
                     ->setChangelog($changelog)
                     ->setExamples($examples)
                 ;

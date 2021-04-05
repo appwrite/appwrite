@@ -110,14 +110,22 @@ class CertificatesV1
         }
 
         $staging = (App::isProduction()) ? '' : ' --dry-run';
+        $email = App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS');
 
-        $response = \shell_exec("certbot certonly --webroot --noninteractive --agree-tos{$staging}"
-            ." --email ".App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', 'security@localhost.test')
+        if(empty($email)) {
+            throw new Exception('You must set a valid security email address (_APP_SYSTEM_SECURITY_EMAIL_ADDRESS) to issue an SSL certificate');
+        }
+
+        $stdout = '';
+        $stderr = '';
+
+        $exit = Console::execute("certbot certonly --webroot --noninteractive --agree-tos{$staging}"
+            ." --email ".$email
             ." -w ".APP_STORAGE_CERTIFICATES
-            ." -d {$domain->get()}");
+            ." -d {$domain->get()}", '', $stdout, $stderr);
 
-        if(!$response) {
-            throw new Exception('Failed to issue a certificate');
+        if($exit !== 0) {
+            throw new Exception('Failed to issue a certificate with message: '.$stderr);
         }
 
         $path = APP_STORAGE_CERTIFICATES.'/'.$domain->get();
@@ -129,19 +137,19 @@ class CertificatesV1
         }
         
         if(!@\rename('/etc/letsencrypt/live/'.$domain->get().'/cert.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/cert.pem')) {
-            throw new Exception('Failed to rename certificate cert.pem: '.\json_encode($response));
+            throw new Exception('Failed to rename certificate cert.pem: '.\json_encode($stdout));
         }
 
         if(!@\rename('/etc/letsencrypt/live/'.$domain->get().'/chain.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/chain.pem')) {
-            throw new Exception('Failed to rename certificate chain.pem: '.\json_encode($response));
+            throw new Exception('Failed to rename certificate chain.pem: '.\json_encode($stdout));
         }
 
         if(!@\rename('/etc/letsencrypt/live/'.$domain->get().'/fullchain.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/fullchain.pem')) {
-            throw new Exception('Failed to rename certificate fullchain.pem: '.\json_encode($response));
+            throw new Exception('Failed to rename certificate fullchain.pem: '.\json_encode($stdout));
         }
 
         if(!@\rename('/etc/letsencrypt/live/'.$domain->get().'/privkey.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/privkey.pem')) {
-            throw new Exception('Failed to rename certificate privkey.pem: '.\json_encode($response));
+            throw new Exception('Failed to rename certificate privkey.pem: '.\json_encode($stdout));
         }
 
         $certificate = \array_merge($certificate, [
@@ -154,7 +162,7 @@ class CertificatesV1
             'issueDate' => \time(),
             'renewDate' => $renew,
             'attempts' => 0,
-            'log' => \json_encode($response),
+            'log' => \json_encode($stdout),
         ]);
 
         $certificate = $consoleDB->createDocument($certificate);
