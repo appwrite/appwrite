@@ -7,6 +7,9 @@
 - Added events for functions and executions (#971)
 - Splited token & session models to become 2 different internal entities (#922)
 - Added Dart 2.12 as a new Cloud Functions runtime (#989)
+- ClamAV is now disabled by default to allow lower min requirments for Appwrite (#1064)
+- Added a new env var named `_APP_LOCALE` that allow to change the default `en` locale value (#1056)
+
 ## Bugs
 
 - Fixed default value for HTTPS force option
