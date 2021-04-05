@@ -479,7 +479,7 @@ class FunctionsV1
         $execId = $resultParsed['Id'];
 
         if (\curl_errno($ch)) {
-            echo 'Error:' . \curl_error($ch);
+            throw new Exception('Failed to create execution: ' . \curl_error($ch), 500);
         }
 
         \curl_close($ch);
