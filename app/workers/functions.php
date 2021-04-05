@@ -487,6 +487,7 @@ class FunctionsV1
         /*
          * Start execution without detatching - will receive stdout/stderr as response
          * TODO Run curl request in Swoole coroutine
+         * TODO Demux sdtout/stderr into separate streams
          */
 
         $executionStart = \microtime(true);
@@ -499,6 +500,14 @@ class FunctionsV1
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         \curl_setopt($ch, CURLOPT_TIMEOUT, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
 
+        // Exec logs come back as a stream
+        $execStream = '';
+        $callback = function ($ch, $str) use (&$execStream) {
+            $execStream .= $str;//$str has the chunks of data streamed back. 
+            return strlen($str);//don't touch this
+        };
+        \curl_setopt($ch, CURLOPT_WRITEFUNCTION, $callback);
+
         $headers = [
             'Content-Type: application/json',
             'Content-Length: 2',
@@ -507,8 +516,9 @@ class FunctionsV1
 
         $execData = \curl_exec($ch);
 
+        $execError = '';
         if (\curl_errno($ch)) {
-            echo 'Error:' . \curl_error($ch);
+            echo 'Error:' . \curl_error($ch) . "\n";
         }
 
         \curl_close($ch);
@@ -532,12 +542,19 @@ class FunctionsV1
         $result = \curl_exec($ch);
         $resultParsed = \json_decode($result, true);
         $exitCode = $resultParsed['ExitCode'];
+        $execRunning = $resultParsed['Running']; //bool
+        $execPid = $resultParsed['Pid'];
 
         if (\curl_errno($ch)) {
             echo 'Error:' . \curl_error($ch);
         }
 
         \curl_close($ch);
+
+        if ($execRunning) {
+            // TODO kill running process via its PID
+            $exitCode = 124; // Arbitrary, but borrowed from linux timeout EXIT_TIMEDOUT
+        }
 
         $functionStatus = ($exitCode === 0) ? 'completed' : 'failed';
         $executionTime = $executionEnd - $executionStart;
@@ -550,8 +567,8 @@ class FunctionsV1
             'tagId' => $tag->getId(),
             'status' => $functionStatus,
             'exitCode' => $exitCode,
-            'stdout' => ($exitCode === 0) ? \mb_substr($execData, -4000) : '',
-            'stderr' => (!$exitCode === 0) ? \mb_substr($execData, -4000) : '',
+            'stdout' => ($exitCode === 0) ? \mb_substr($execStream, -4000) : '',
+            'stderr' => ($exitCode !== 0) ? \mb_substr($execStream, -4000) : '',
             'time' => $executionTime,
         ]));
         
