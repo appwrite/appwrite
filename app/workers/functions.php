@@ -487,7 +487,6 @@ class FunctionsV1
         /*
          * Start execution without detatching - will receive stdout/stderr as response
          * TODO Run curl request in Swoole coroutine
-         * TODO include timeout from $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900))
          */
 
         $executionStart = \microtime(true);
@@ -498,6 +497,7 @@ class FunctionsV1
         \curl_setopt($ch, CURLOPT_POST, 1);
         \curl_setopt($ch, CURLOPT_POSTFIELDS, '{}');
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
 
         $headers = [
             'Content-Type: application/json',
