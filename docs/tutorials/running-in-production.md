@@ -30,6 +30,27 @@ If you decide to set up a load balancer for a specific container, make sure that
 
 There are three Appwrite containers that do keep their state are the MariaDB, Redis, and InfluxDB containers that are used for storing data, cache, and stats (in this order). To scale them out, all you need to do is set up a standard cluster (same as you would with any other app using these technologies) according to your needs and performance.
 
+## [ Optional ] Enable ClamAV
+
+### Enable ClamAV Service on Docker Compose
+Once you install Appwrite, in the `docker-compose.yml` file, the ClamAV service is disabled, you can simply enable the service by uncommenting the following lines in the `docker-compose.yml` file by removing preceeding `#` in each line.
+
+```yml
+  clamav:
+    image: appwrite/clamav:1.2.0
+    container_name: appwrite-clamav
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-uploads:/storage/uploads
+```
+
+### Enable ClamAV in Appwrite container
+In order to enable ClamAV service to scan the storage, in `appwrite` service, in `docker-compose.yml` under `depends_on` uncomment the line containing `clamav`. After that update the environment variables.
+Using the environment variable `_APP_STORAGE_ANTIVIRUS`, you can either disable or enable the antivirus. To enable it, in the environment section, find `_APP_STORAGE_ANTIVIRUS` and set its value to **enabled**, then set `_APP_STORAGE_ANTIVIRUS_HOST` to `clamav` and `_APP_STORAGE_ANTIVIRUS_PORT` to `3310`. This will enable the antivirus checking during new file uploads.
+
+Finally, you can now restart the `appwrite` service and start the `clamav` service. You can do that simply by using `docker-compose up -d` command. This should start the `clamav` service as well as recreate the `appwrite` service.
+
 ## Sending Emails
 
 Sending emails is hard. There are a lot of SPAM rules and configurations to master in order to set a functional SMTP server. The SMTP server that comes packaged with Appwrite is great for development but needs some work done to function well against SPAM filters. You can find some guidelines in this [tutorial]([https://www.digitalocean.com/community/tutorials/how-to-use-an-spf-record-to-prevent-spoofing-improve-e-mail-reliability](https://www.digitalocean.com/community/tutorials/how-to-use-an-spf-record-to-prevent-spoofing-improve-e-mail-reliability)).
