@@ -309,7 +309,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_ANTIVIRUS',
-                'description' => 'This variable allows you to disable the internal anti-virus scans. This value is set to \'enabled\' by default, to cancel the scans set the value to \'disabled\'. When disabled, it\'s recommended to turn off the ClamAV container for better resource usage.',
+                'description' => 'This variable allows you to disable the internal anti-virus scans. This value is set to \'disabled\' by default, to enable the scans set the value to \'enabled\'. Before enabling, you must add the ClamAV service and depend on it on main Appwrite service.',
                 'introduction' => '',
                 'default' => 'disabled',
                 'required' => false,
