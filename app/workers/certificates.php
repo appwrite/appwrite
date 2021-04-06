@@ -57,9 +57,6 @@ class CertificatesV1
         
         // Options
         $domain = new Domain((!empty($domain)) ? $domain : '');
-        $expiry = 60 * 60 * 24 * 30 * 2; // 60 days
-        $safety = 60 * 60; // 1 hour
-        $renew  = (\time() + $expiry);
 
         if(empty($domain->get())) {
             throw new Exception('Missing domain');
@@ -132,7 +129,6 @@ class CertificatesV1
             ],
             'domain' => $domain->get(),
             'issueDate' => \time(),
-            'renewDate' => $renew,
             'attempts' => 0,
             'log' => \json_encode($stdout),
         ]);
@@ -166,7 +162,8 @@ class CertificatesV1
             throw new Exception('Failed to save SSL configuration');
         }
 
-        ResqueScheduler::enqueueAt($renew + $safety, 'v1-certificates', 'CertificatesV1', [
+        $tomorrow = 60 * 60 * 24; // one day
+        ResqueScheduler::enqueueAt($tomorrow, 'v1-certificates', 'CertificatesV1', [
             'document' => [],
             'domain' => $domain->get(),
             'validateTarget' => $validateTarget,
