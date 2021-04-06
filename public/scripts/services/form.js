@@ -42,6 +42,12 @@
             let ref = json;
 
             if (name && 'FORM' !== element.tagName) {
+                if (name.startsWith('[')) { // Check for array names
+                    let splitName = name.split('.');
+                    if (splitName.length > 1 && splitName[0].endsWith(']')) {
+                        name = splitName[splitName.length-1];
+                    }
+                }
                 if ('FIELDSET' === element.tagName) { // Fieldset Array / Object
                     if (castTo === 'object') {
 
