@@ -44,6 +44,7 @@ $connections = [];
 $stats = new Table(4096, 1);
 $stats->column('projectId', Table::TYPE_STRING, 64);
 $stats->column('connections', Table::TYPE_INT);
+$stats->column('connectionsTotal', Table::TYPE_INT);
 $stats->column('messages', Table::TYPE_INT);
 $stats->create();
 
@@ -68,11 +69,11 @@ Timer::tick(10000, function () use (&$stats) {
             ->setParam('networkRequestSize', 0)
             ->setParam('networkResponseSize', 0);
 
-        $stats->set($projectId, array(
+        $stats->set($projectId, [
             'projectId' => $projectId,
             'messages' => 0,
             'connections' => 0
-        ));
+        ]);
 
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $usage->trigger();
@@ -86,6 +87,37 @@ $server->on('workerStart', function ($server, $workerId) use (&$subscriptions, &
     $attempts = 0;
     $start = time();
     $redisPool = $register->get('redisPool');
+
+    /**
+     * Sending current connections to project channels on the console project every 5 seconds.
+     */
+    $server->tick(5000, function () use (&$server, &$subscriptions, &$stats) {
+        if (
+            array_key_exists('console', $subscriptions)
+            && array_key_exists('role:member', $subscriptions['console'])
+            && array_key_exists('project', $subscriptions['console']['role:member'])
+        ) {
+            $payload = [];
+            foreach ($stats as $projectId => $value) {
+                $payload[$projectId] = $value['connectionsTotal'];
+            }
+            foreach ($subscriptions['console']['role:member']['project'] as $connection => $value) {
+                foreach ($stats as $projectId => $value) {
+                    $server->push(
+                        $connection,
+                        json_encode([
+                            'event' => 'stats.connections',
+                            'channels' => ['project'],
+                            'timestamp' => time(),
+                            'payload' => $payload
+                        ]),
+                        SWOOLE_WEBSOCKET_OPCODE_TEXT,
+                        SWOOLE_WEBSOCKET_FLAG_FIN | SWOOLE_WEBSOCKET_FLAG_COMPRESS
+                    );
+                }
+            }
+        }
+    });
 
     while ($attempts < 300) {
         try {
@@ -206,17 +238,17 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
         $console = $app->getResource('console');
 
         /*
-        *  Project Check
-        */
+         *  Project Check
+         */
         if (empty($project->getId())) {
             throw new Exception('Missing or unknown project ID', 1008);
         }
 
         /*
-        * Abuse Check
-        *
-        * Abuse limits are connecting 128 times per minute and ip address.
-        */
+         * Abuse Check
+         *
+         * Abuse limits are connecting 128 times per minute and ip address.
+         */
         $timeLimit = new TimeLimit('url:{url},ip:{ip}', 128, 60, function () use ($db) {
             return $db;
         });
@@ -232,10 +264,10 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
         }
 
         /*
-        * Validate Client Domain - Check to avoid CSRF attack.
-        * Adding Appwrite API domains to allow XDOMAIN communication.
-        * Skip this check for non-web platforms which are not required to send an origin header.
-        */
+         * Validate Client Domain - Check to avoid CSRF attack.
+         * Adding Appwrite API domains to allow XDOMAIN communication.
+         * Skip this check for non-web platforms which are not required to send an origin header.
+         */
         $origin = $request->getOrigin();
         $originValidator = new Origin(\array_merge($project->getAttribute('platforms', []), $console->getAttribute('platforms', [])));
 
@@ -260,6 +292,7 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
         $server->push($connection, json_encode($channels));
 
         $stats->incr($project->getId(), 'connections');
+        $stats->incr($project->getId(), 'connectionsTotal');
     } catch (\Throwable $th) {
         $response = [
             'code' => $th->getCode(),
@@ -290,7 +323,8 @@ $server->on('message', function (Server $server, Frame $frame) {
     $server->close($frame->fd);
 });
 
-$server->on('close', function (Server $server, int $connection) use (&$connections, &$subscriptions) {
+$server->on('close', function (Server $server, int $connection) use (&$connections, &$subscriptions, &$stats) {
+    $stats->decr($connections[$connection]['projectId'], 'connectionsTotal');
     Realtime::unsubscribe($connection, $subscriptions, $connections);
     Console::info('Connection close: ' . $connection);
 });
