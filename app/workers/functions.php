@@ -516,7 +516,6 @@ class FunctionsV1
 
         $execData = \curl_exec($ch);
 
-        $execError = '';
         if (\curl_errno($ch)) {
             echo 'Error:' . \curl_error($ch) . "\n";
         }
@@ -551,8 +550,15 @@ class FunctionsV1
 
         \curl_close($ch);
 
+        /*
+         * Kill stray exec process if still running at this point
+         */
         if ($execRunning) {
-            // TODO kill running process via its PID
+            $killStdout = '';
+            $killStderr = '';
+
+            $killProcess = Console::execute("docker exec {$container} kill {$execPid}",'', $killStdout, $killStderr, 900);
+
             $exitCode = 124; // Arbitrary, but borrowed from linux timeout EXIT_TIMEDOUT
         }
 
