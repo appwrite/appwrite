@@ -4,6 +4,10 @@
     window.ls.container.set('form', function () {
 
         function cast(value, to) {
+            if (value && Array.isArray(value) && to !== 'array') {
+                value = value.map(element => cast(element, to));
+                return value;
+            }
             switch (to) {
                 case 'int':
                 case 'integer':
