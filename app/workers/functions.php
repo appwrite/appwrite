@@ -448,9 +448,6 @@ class FunctionsV1
             Console::info('Container is ready to run');
         }
         
-        $stdout = '';
-        $stderr = '';
-
         /*
          * Create execution via Docker API
          */
@@ -485,9 +482,7 @@ class FunctionsV1
         \curl_close($ch);
 
         /*
-         * Start execution without detatching - will receive stdout/stderr as response
-         * TODO Run curl request in Swoole coroutine
-         * TODO Demux sdtout/stderr into separate streams
+         * Start execution without detatching - receives stdout/stderr as stream
          */
 
         $executionStart = \microtime(true);
@@ -496,17 +491,9 @@ class FunctionsV1
         \curl_setopt($ch, CURLOPT_URL, $URL);
         \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
         \curl_setopt($ch, CURLOPT_POST, 1);
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, '{}');
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, '{}'); // body is required
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         \curl_setopt($ch, CURLOPT_TIMEOUT, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
-
-        // Exec logs come back as a stream
-        $execStream = '';
-        $callback = function ($ch, $str) use (&$execStream) {
-            $execStream .= $str;//$str has the chunks of data streamed back. 
-            return strlen($str);//don't touch this
-        };
-        \curl_setopt($ch, CURLOPT_WRITEFUNCTION, $callback);
 
         $headers = [
             'Content-Type: application/json',
@@ -514,10 +501,46 @@ class FunctionsV1
         ];
         \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
+        /*
+         * Exec logs come back with STDOUT+STDERR multiplexed into a single stream.
+         * Each frame of the stream has the following format: 
+         *   header := [8]byte{STREAM_TYPE, 0, 0, 0, SIZE1, SIZE2, SIZE3, SIZE4}
+         *     STREAM_TYPE is of the following: [0=>'stdin', 1=>'stdout', 2=>'stderr']
+         *     SIZE1, SIZE2, SIZE3, SIZE4 are the four bytes of the uint32 size encoded as big endian.
+         *     Following the header is the payload, which is the specified number of bytes of STREAM_TYPE.
+         *
+         * To assign the appropriate stream:
+         *   - unpack as an unsigned char ('C*')
+         *   - check the first byte of the header to assign stream
+         *   - pack up stream, omitting the 8 bytes of header
+         *   - concat to stream
+         */
+
+        $stdout = '';
+        $stderr = '';
+
+        $callback = function ($ch, $str) use (&$stdout, &$stderr) {
+            $rawStream = unpack('C*', $str);
+            $stream = $rawStream[1]; // 1-based index, not 0-based
+            switch ($stream) { // only 1 or 2, as set while creating exec 
+                case 1:
+                    $packed = pack('C*', ...\array_slice($rawStream, 8));
+                    $stdout .= $packed;
+                    break;
+                case 2:
+                    $packed = pack('C*', ...\array_slice($rawStream, 8));
+                    $stderr .= $packed;
+                    break;
+            }
+            return strlen($str); // must return full frame from callback
+        };
+        \curl_setopt($ch, CURLOPT_WRITEFUNCTION, $callback);
+
+
         $execData = \curl_exec($ch);
 
         if (\curl_errno($ch)) {
-            echo 'Error:' . \curl_error($ch) . "\n";
+            throw new Exception('Failed to run execution: ' . \curl_error($ch), 500);
         }
 
         \curl_close($ch);
@@ -545,7 +568,7 @@ class FunctionsV1
         $execPid = $resultParsed['Pid'];
 
         if (\curl_errno($ch)) {
-            echo 'Error:' . \curl_error($ch);
+            throw new Exception('Failed to get execution: ' . \curl_error($ch), 500);
         }
 
         \curl_close($ch);
@@ -553,12 +576,10 @@ class FunctionsV1
         /*
          * Kill stray exec process if still running at this point
          */
+        $killStdout = '';
+        $killStderr = '';
         if ($execRunning) {
-            $killStdout = '';
-            $killStderr = '';
-
             $killProcess = Console::execute("docker exec {$container} kill {$execPid}",'', $killStdout, $killStderr, 900);
-
             $exitCode = 124; // Arbitrary, but borrowed from linux timeout EXIT_TIMEDOUT
         }
 
@@ -573,8 +594,8 @@ class FunctionsV1
             'tagId' => $tag->getId(),
             'status' => $functionStatus,
             'exitCode' => $exitCode,
-            'stdout' => ($exitCode === 0) ? \mb_substr($execStream, -4000) : '',
-            'stderr' => ($exitCode !== 0) ? \mb_substr($execStream, -4000) : '',
+            'stdout' => \mb_substr($stdout, -4000) ?? '',
+            'stderr' => \mb_substr($stderr, -4000) ?? '',
             'time' => $executionTime,
         ]));
         
