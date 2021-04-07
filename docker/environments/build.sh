@@ -10,7 +10,7 @@ echo 'Deno 1.6...'
 docker buildx build --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/386,linux/ppc64le -t appwrite/env-deno-1.6:1.0.0 ./docker/environments/deno-1.6/ --push
 
 echo 'Deno 1.8...'
-docker buildx build --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/386,linux/ppc64le -t appwrite/env-deno-1.8:1.0.0 ./docker/environments/deno-1.8/ --push
+docker buildx build --platform linux/amd64,linux/386 -t appwrite/env-deno-1.8:1.0.0 ./docker/environments/deno-1.8/ --push
 
 echo 'Node 14.5...'
 docker buildx build --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le -t appwrite/env-node-14.5:1.0.0 ./docker/environments/node-14.5/ --push

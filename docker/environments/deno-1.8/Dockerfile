@@ -1,4 +1,4 @@
-FROM hayd/deno:alpine-1.8.2
+FROM hayd/deno:alpine-1.8.3
 
 LABEL maintainer="team@appwrite.io"
 
