@@ -271,7 +271,7 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
         $origin = $request->getOrigin();
         $originValidator = new Origin(\array_merge($project->getAttribute('platforms', []), $console->getAttribute('platforms', [])));
 
-        if (!$originValidator->isValid($origin)) {
+        if (!$originValidator->isValid($origin) && $project->getId() !== 'console') {
             throw new Exception($originValidator->getDescription(), 1008);
         }
 
