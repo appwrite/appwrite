@@ -651,6 +651,12 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
             }
         }
 
+        Resque::enqueue('v1-functions', 'FunctionsV1', [
+            'functionId' => $function->getId(),
+            'tagId' => $tag->getId(),
+            'trigger' => 'delete',
+        ]);
+
         $usage
             ->setParam('storage', $tag->getAttribute('size', 0) * -1)
         ;
