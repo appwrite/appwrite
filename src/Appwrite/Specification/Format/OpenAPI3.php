@@ -83,7 +83,9 @@ class OpenAPI3 extends Format
             $output['components']['securitySchemes']['Mode']['x-appwrite'] = ['demo' => ''];
         }
 
-        foreach ($this->routes as $route) { /* @var $route \Utopia\Route */
+        $usedModels = [];
+
+        foreach ($this->routes as $route) { /** @var \Utopia\Route $route */
             $url = \str_replace('/v1', '', $route->getURL());
             $scope = $route->getLabel('scope', '');
             $hide = $route->getLabel('sdk.hide', false);
@@ -146,6 +148,7 @@ class OpenAPI3 extends Format
                     // ],
                 ];
             } else {
+                $usedModels[] = $model->getType();
                 $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
                     'description' => $model->getName(),
                     'content' => [
@@ -236,7 +239,7 @@ class OpenAPI3 extends Format
                         $node['schema']['format'] = 'format';
                         $node['schema']['x-example'] = 'password';
                         break;
-                    case 'Utopia\Validator\Range': /* @var $validator \Utopia\Validator\Range */
+                    case 'Utopia\Validator\Range': /** @var \Utopia\Validator\Range $validator */
                         $node['schema']['type'] = 'integer';
                         $node['schema']['format'] = 'int32';
                         $node['schema']['x-example'] = $validator->getMin();
@@ -253,7 +256,7 @@ class OpenAPI3 extends Format
                         $node['schema']['format'] = 'url';
                         $node['schema']['x-example'] = 'https://example.com';
                         break;
-                    case 'Utopia\Validator\WhiteList': /* @var $validator \Utopia\Validator\WhiteList */
+                    case 'Utopia\Validator\WhiteList': /** @var \Utopia\Validator\WhiteList $validator */
                         $node['schema']['type'] = 'string';
                         $node['schema']['x-example'] = $validator->getList()[0];
                         break;
@@ -309,6 +312,10 @@ class OpenAPI3 extends Format
         }
 
         foreach ($this->models as $model) {
+            if (!in_array($model->getType(), $usedModels)) {
+                continue;
+            }
+
             $required = $model->getRequired();
             $rules = $model->getRules();
 
