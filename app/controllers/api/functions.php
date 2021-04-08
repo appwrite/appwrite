@@ -417,6 +417,21 @@ App::delete('/v1/functions/:functionId')
             ->setParam('document', $function->getArrayCopy())
         ;
 
+        $tags = $projectDB->getCollection([
+            'filters' => [
+                '$collection='.Database::SYSTEM_COLLECTION_TAGS,
+                'functionId='.$function->getId(),
+            ],
+        ]);
+
+        foreach($tags as &$tag) {
+            Resque::enqueue('v1-functions', 'FunctionsV1', [
+                'functionId' => $function->getId(),
+                'tagId' => $tag->getId(),
+                'trigger' => 'delete',
+            ]);
+        }
+
         $response->noContent();
     });
 
