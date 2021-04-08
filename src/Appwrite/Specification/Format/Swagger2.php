@@ -4,6 +4,7 @@ namespace Appwrite\Specification\Format;
 
 use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
+use Appwrite\Utopia\Response\Model;
 use stdClass;
 
 class Swagger2 extends Format
@@ -311,7 +312,13 @@ class Swagger2 extends Format
 
             $output['paths'][$url][\strtolower($route->getMethod())] = $temp;
         }
-
+        foreach ($this->models as $model) {
+            foreach ($model->getRules() as $rule) {
+                if (!in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])) {
+                    $usedModels[] = $rule['type'];
+                }
+            }
+        }
         foreach ($this->models as $model) {
             if (!in_array($model->getType(), $usedModels)) {
                 continue;
