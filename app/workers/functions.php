@@ -143,6 +143,7 @@ class FunctionsV1
 
         $projectId = $this->args['projectId'] ?? '';
         $functionId = $this->args['functionId'] ?? '';
+        $tagId = $this->args['tagId'] ?? '';
         $executionId = $this->args['executionId'] ?? '';
         $trigger = $this->args['trigger'] ?? '';
         $event = $this->args['event'] ?? '';
@@ -265,6 +266,16 @@ class FunctionsV1
                 }
 
                 $this->execute($trigger, $projectId, $executionId, $database, $function);
+                break;
+
+            case 'delete':
+
+                $container = 'appwrite-function-'.$tagId;
+
+                $stdout = '';
+                $stderr = '';
+                Console::execute("docker container rm --force {$container}", '', $stdout, $stderr, 30);
+
                 break;
             
             default:
