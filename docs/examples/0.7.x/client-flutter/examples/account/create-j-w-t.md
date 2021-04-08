@@ -1,3 +1,4 @@
+```dart
 import 'package:appwrite/appwrite.dart';
 
 void main() { // Init SDK
@@ -18,3 +19,4 @@ void main() { // Init SDK
       print(error.response);
   });
 }
+```
