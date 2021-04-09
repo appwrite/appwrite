@@ -342,10 +342,15 @@ App::get('/v1/storage/files/:fileId/preview')
         $image = new Image($source);
 
         $image->crop((int) $width, (int) $height);
+        
+        if (!empty($opacity)) {
+            $image->setOpacity($opacity);
+        }
 
         if (!empty($background)) {
             $image->setBackground('#'.$background);
         }
+
         
         if (!empty($borderWidth) ) {
             $image->setBorder($borderWidth, '#'.$borderColor);
@@ -353,10 +358,6 @@ App::get('/v1/storage/files/:fileId/preview')
 
         if (!empty($borderRadius)) {
             $image->setBorderRadius($borderRadius);
-        }
-
-        if (!empty($opacity)) {
-            $image->setOpacity($opacity);
         }
 
         if (!empty($rotation)) {
@@ -367,7 +368,7 @@ App::get('/v1/storage/files/:fileId/preview')
 
         $data = $image->output($output, $quality);
 
-        // $cache->save($key, $data);
+        $cache->save($key, $data);
 
         $response
             ->setContentType($outputs[$output])
