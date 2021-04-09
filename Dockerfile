@@ -53,7 +53,7 @@ RUN \
   make && make install && \
   cd .. && \
   ## Imagick Extension
-  git clone --depth 1 --branch $PHP_IMAGICK_VERSION -https://github.com/Imagick/imagick && \
+  git clone --depth 1 --branch $PHP_IMAGICK_VERSION https://github.com/Imagick/imagick && \
   cd imagick && \
   phpize && \
   ./configure && \
