@@ -346,13 +346,13 @@ App::get('/v1/storage/files/:fileId/preview')
         if (!empty($background)) {
             $image->setBackground('#'.$background);
         }
+        
+        if (!empty($borderWidth) ) {
+            $image->setBorder($borderWidth, '#'.$borderColor);
+        }
 
         if (!empty($borderRadius)) {
             $image->setBorderRadius($borderRadius);
-        }
-
-        if (!empty($borderWidth) && !empty($borderColor)  ) {
-            $image->setBorder($borderWidth, '#'.$borderColor);
         }
 
         if (!empty($opacity)) {
@@ -367,7 +367,7 @@ App::get('/v1/storage/files/:fileId/preview')
 
         $data = $image->output($output, $quality);
 
-        $cache->save($key, $data);
+        // $cache->save($key, $data);
 
         $response
             ->setContentType($outputs[$output])
