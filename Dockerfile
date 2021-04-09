@@ -16,7 +16,7 @@ FROM php:8.0-cli-alpine as step1
 
 ENV PHP_REDIS_VERSION=5.3.4 \
     PHP_SWOOLE_VERSION=v4.6.4 \
-    PHP_IMAGICK_VERSION=3.4.4 \
+    PHP_IMAGICK_VERSION=master \
     PHP_YAML_VERSION=2.2.1 \
     PHP_MAXMINDDB_VERSION=v1.10.0
 
@@ -39,41 +39,36 @@ RUN docker-php-ext-install sockets
 
 RUN \
   # Redis Extension
-  git clone https://github.com/phpredis/phpredis.git && \
+  git clone --depth 1 --branch $PHP_REDIS_VERSION https://github.com/phpredis/phpredis.git && \
   cd phpredis && \
-  git checkout $PHP_REDIS_VERSION && \
   phpize && \
   ./configure && \
   make && make install && \
   cd .. && \
   ## Swoole Extension
-  git clone https://github.com/swoole/swoole-src.git && \
+  git clone --depth 1 --branch $PHP_SWOOLE_VERSION https://github.com/swoole/swoole-src.git && \
   cd swoole-src && \
-  git checkout $PHP_SWOOLE_VERSION && \
   phpize && \
   ./configure --enable-http2 && \
   make && make install && \
   cd .. && \
   ## Imagick Extension
-  git clone https://github.com/Imagick/imagick && \
+  git clone --depth 1 --branch $PHP_IMAGICK_VERSION -https://github.com/Imagick/imagick && \
   cd imagick && \
-  git checkout $PHP_IMAGICK_VERSION && \
   phpize && \
   ./configure && \
   make && make install && \
   cd .. && \
   ## YAML Extension
-  git clone https://github.com/php/pecl-file_formats-yaml && \
+  git clone --depth 1 --branch $PHP_YAML_VERSION https://github.com/php/pecl-file_formats-yaml && \
   cd pecl-file_formats-yaml && \
-  git checkout $PHP_YAML_VERSION && \
   phpize && \
   ./configure && \
   make && make install && \
   cd .. && \
   ## Maxminddb extension
-  git clone https://github.com/maxmind/MaxMind-DB-Reader-php.git && \
+  git clone --depth 1 --branch $PHP_MAXMINDDB_VERSION https://github.com/maxmind/MaxMind-DB-Reader-php.git && \
   cd MaxMind-DB-Reader-php && \
-  git checkout $PHP_MAXMINDDB_VERSION && \
   cd ext && \
   phpize && \
   ./configure && \
