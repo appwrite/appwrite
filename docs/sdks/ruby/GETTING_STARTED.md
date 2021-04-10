@@ -12,6 +12,7 @@ client
     .set_endpoint(ENV["APPWRITE_ENDPOINT"]) # Your API Endpoint
     .set_project(ENV["APPWRITE_PROJECT"]) # Your project ID
     .set_key(ENV["APPWRITE_SECRET"]) # Your secret API key
+    .setSelfSigned() # Use only on dev mode with a self-signed SSL cert
 ;
 ```
 
@@ -34,6 +35,7 @@ client
     .set_endpoint(ENV["APPWRITE_ENDPOINT"]) # Your API Endpoint
     .set_project(ENV["APPWRITE_PROJECT"]) # Your project ID
     .set_key(ENV["APPWRITE_SECRET"]) # Your secret API key
+    .setSelfSigned() # Use only on dev mode with a self-signed SSL cert
 ;
 
 users = Appwrite::Users.new(client);

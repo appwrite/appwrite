@@ -24,6 +24,9 @@ docker buildx build --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64
 echo 'Python 3.8...'
 docker buildx build --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/386,linux/ppc64le -t appwrite/env-python-3.8:1.0.0 ./docker/environments/python-3.8/ --push
 
+echo 'Python 3.9...'
+docker buildx build --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/386,linux/ppc64le -t appwrite/env-python-3.9:1.0.0 ./docker/environments/python-3.9/ --push
+
 echo 'Ruby 2.7...'
 docker buildx build --platform linux/amd64,linux/arm64,linux/386,linux/ppc64le -t appwrite/env-ruby-2.7:1.0.2 ./docker/environments/ruby-2.7/ --push
 
@@ -32,6 +35,9 @@ docker buildx build --platform linux/amd64,linux/arm64,linux/386,linux/ppc64le -
 
 echo 'Dart 2.10...'
 docker buildx build --platform linux/amd64 -t appwrite/env-dart-2.10:1.0.0 ./docker/environments/dart-2.10/ --push
+
+echo 'Dart 2.12...'
+docker buildx build --platform linux/amd64 -t appwrite/env-dart-2.12:1.0.0 ./docker/environments/dart-2.12/ --push
 
 echo '.NET 3.1...'
 docker buildx build --platform linux/amd64,linux/arm64 -t appwrite/env-dotnet-3.1:1.0.0 ./docker/environments/dotnet-3.1/ --push
