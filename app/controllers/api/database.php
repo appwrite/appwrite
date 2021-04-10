@@ -271,7 +271,7 @@ App::delete('/v1/database/collections/:collectionId')
         ;
 
         $events
-            ->setParam('payload', $response->output($collection, Response::MODEL_COLLECTION))
+            ->setParam('eventData', $response->output($collection, Response::MODEL_COLLECTION))
         ;
 
         $audits
@@ -614,7 +614,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         }
 
         $events
-            ->setParam('payload', $response->output($document, Response::MODEL_ANY))
+            ->setParam('eventData', $response->output($document, Response::MODEL_ANY))
         ;
         
         $audits

@@ -83,6 +83,7 @@ ARG VERSION=dev
 
 ENV _APP_SERVER=swoole \
     _APP_ENV=production \
+    _APP_LOCALE=en \
     _APP_DOMAIN=localhost \
     _APP_DOMAIN_TARGET=localhost \
     _APP_HOME=https://appwrite.io \

@@ -1,8 +1,27 @@
 # Version 0.8.0 (Not Released Yet)
 
-- Anonymous login
+## Features
 
-# Version 0.7.2 (Not Released Yet)
+- Added Anonymous Login ([RFC-010](https://github.com/appwrite/rfc/blob/main/010-anonymous-login.md), #914)
+- Added new Environment Variable to enable or disable Anonymous Login 
+- Added events for functions and executions (#971)
+- Splited token & session models to become 2 different internal entities (#922)
+- Added Dart 2.12 as a new Cloud Functions runtime (#989)
+- ClamAV is now disabled by default to allow lower min requirments for Appwrite (#1064)
+- Added a new env var named `_APP_LOCALE` that allow to change the default `en` locale value (#1056)
+- Updated all the console bottom control to be consistent. Dropped the `+` icon (#1062)
+
+## Bugs
+
+- Fixed default value for HTTPS force option
+
+## Breaking Changes
+
+- Only logged in users can execute functions (for guests, use anonymous login)
+- Only the user who has triggered the execution get access to the relevant execution logs
+- Function execution env `APPWRITE_FUNCTION_EVENT_PAYLOAD` renamed to `APPWRITE_FUNCTION_EVENT_DATA`
+
+# Version 0.7.2
 
 ## Features
 
@@ -31,6 +50,7 @@
 - Force adding a security email on setup
 - SMTP is now disabled by default, no dummy SMTP is included in setup
 - Added a new endpoint that returns the server and SDKs latest versions numbers #941
+- Custom data strings, userId, and JWT available for cloud functions #967
 
 ## Upgrades
 
