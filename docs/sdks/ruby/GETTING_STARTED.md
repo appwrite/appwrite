@@ -12,6 +12,7 @@ client
     .set_endpoint(ENV["APPWRITE_ENDPOINT"]) # Your API Endpoint
     .set_project(ENV["APPWRITE_PROJECT"]) # Your project ID
     .set_key(ENV["APPWRITE_SECRET"]) # Your secret API key
+    .setSelfSigned() # Use only on dev mode with a self-signed SSL cert
 ;
 ```
 
@@ -34,11 +35,25 @@ client
     .set_endpoint(ENV["APPWRITE_ENDPOINT"]) # Your API Endpoint
     .set_project(ENV["APPWRITE_PROJECT"]) # Your project ID
     .set_key(ENV["APPWRITE_SECRET"]) # Your secret API key
+    .setSelfSigned() # Use only on dev mode with a self-signed SSL cert
 ;
 
 users = Appwrite::Users.new(client);
 
 result = users.create(email: 'email@example.com', password: 'password');
+```
+
+### Error Handling
+The Appwrite Ruby SDK raises `Appwrite::Exception` object with `message`, `code` and `response` properties. You can handle any errors by catching `Appwrite::Exception` and present the `message` to the user or handle it yourself based on the provided error information. Below is an example.
+
+```ruby
+users = Appwrite::Users.new(client);
+
+begin
+    result = users.create(email: 'email@example.com', password: 'password');
+rescue Appwrite::Exception => error
+    puts error.message
+end
 ```
 
 ### Learn more
