@@ -38,7 +38,7 @@ class WebhooksV1 extends Worker
         $projectId = $this->args['projectId'] ?? '';
         $userId = $this->args['userId'] ?? '';
         $event = $this->args['event'] ?? '';
-        $payload = \json_encode($this->args['payload']);
+        $eventData = \json_encode($this->args['eventData']);
 
         // Webhook
 
@@ -68,7 +68,7 @@ class WebhooksV1 extends Worker
             $ch = \curl_init($url);
 
             \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-            \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+            \curl_setopt($ch, CURLOPT_POSTFIELDS, $eventData);
             \curl_setopt($ch, CURLOPT_HEADER, 0);
             \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
             \curl_setopt($ch, CURLOPT_USERAGENT, \sprintf(APP_USERAGENT,
@@ -80,7 +80,7 @@ class WebhooksV1 extends Worker
                 CURLOPT_HTTPHEADER,
                 [
                     'Content-Type: application/json',
-                    'Content-Length: '.\strlen($payload),
+                    'Content-Length: '.\strlen($eventData),
                     'X-'.APP_NAME.'-Webhook-Id: '.$id,
                     'X-'.APP_NAME.'-Webhook-Event: '.$event,
                     'X-'.APP_NAME.'-Webhook-Name: '.$name,
