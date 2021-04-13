@@ -397,10 +397,12 @@ App::delete('/v1/functions/:functionId')
     ->inject('response')
     ->inject('projectDB')
     ->inject('deletes')
-    ->action(function ($functionId, $response, $projectDB, $deletes) {
+    ->inject('project')
+    ->action(function ($functionId, $response, $projectDB, $deletes, $project) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $deletes */
+        /** @var Appwrite\Database\Document $project */
 
         $function = $projectDB->getDocument($functionId);
 
@@ -419,6 +421,7 @@ App::delete('/v1/functions/:functionId')
 
         // db deletion and delete event handled in functions worker
         Resque::enqueue('v1-functions', 'FunctionsV1', [
+            'projectId' => $project->getId(),
             'functionId' => $function->getId(),
             'trigger' => 'delete',
         ]);
