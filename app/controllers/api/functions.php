@@ -408,29 +408,20 @@ App::delete('/v1/functions/:functionId')
             throw new Exception('Function not found', 404);
         }
 
-        if (!$projectDB->deleteDocument($function->getId())) {
-            throw new Exception('Failed to remove function from DB', 500);
-        }
+        // if (!$projectDB->deleteDocument($function->getId())) {
+            // throw new Exception('Failed to remove function from DB', 500);
+        // }
 
-        $deletes
-            ->setParam('type', DELETE_TYPE_DOCUMENT)
-            ->setParam('document', $function->getArrayCopy())
-        ;
+        // $deletes
+            // ->setParam('type', DELETE_TYPE_DOCUMENT)
+            // ->setParam('document', $function->getArrayCopy())
+        // ;
 
-        $tags = $projectDB->getCollection([
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_TAGS,
-                'functionId='.$function->getId(),
-            ],
+        // db deletion and delete event handled in functions worker
+        Resque::enqueue('v1-functions', 'FunctionsV1', [
+            'functionId' => $function->getId(),
+            'trigger' => 'delete',
         ]);
-
-        foreach($tags as &$tag) {
-            Resque::enqueue('v1-functions', 'FunctionsV1', [
-                'functionId' => $function->getId(),
-                'tagId' => $tag->getId(),
-                'trigger' => 'delete',
-            ]);
-        }
 
         $response->noContent();
     });
