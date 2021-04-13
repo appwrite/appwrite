@@ -313,7 +313,7 @@ class FunctionsV1
 
                     Authorization::reset();
 
-                    var_dump($tags);
+
                     foreach($tags as $tag) {
                         $exitCode = $this->removeContainer($tag->getId());
                         if ($exitCode === 0) {
@@ -326,7 +326,6 @@ class FunctionsV1
 
                 Authorization::disable();
 
-                $function = $database->getDocument($functionId); 
                 if (!$database->deleteDocument($function->getId())) {
                     throw new Exception('Failed to remove function from DB', 500);
                 }
