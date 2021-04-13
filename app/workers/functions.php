@@ -334,6 +334,7 @@ class FunctionsV1
                 Authorization::reset();
 
                 Resque::enqueue('v1-deletes', 'DeletesV1', [
+                    'projectId' => $projectId,
                     'type' => DELETE_TYPE_DOCUMENT,
                     'document' => $function->getArrayCopy(),
                 ]);
