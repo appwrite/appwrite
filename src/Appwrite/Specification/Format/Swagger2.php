@@ -248,14 +248,18 @@ class Swagger2 extends Format
                     case 'Utopia\Validator\Length':
                         $node['type'] = 'string';
                         break;
-                    case 'Utopia\Validator\Host':
+                    case 'Appwrite\Network\Validator\Host':
                         $node['type'] = 'string';
                         $node['format'] = 'url';
                         $node['x-example'] = 'https://example.com';
                         break;
                     case 'Utopia\Validator\WhiteList': /** @var \Utopia\Validator\WhiteList $validator */
-                        $node['type'] = 'string';
+                        $node['type'] = $validator->getType();
                         $node['x-example'] = $validator->getList()[0];
+
+                        if ($validator->getType() === 'integer') {
+                            $node['format'] = 'int32';
+                        }
                         break;
                     default:
                         $node['type'] = 'string';
