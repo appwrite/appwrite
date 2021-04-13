@@ -313,6 +313,7 @@ class FunctionsV1
 
                     Authorization::reset();
 
+                    $sum = count($tags);
 
                     foreach($tags as $tag) {
                         $exitCode = $this->removeContainer($tag->getId());
@@ -334,7 +335,7 @@ class FunctionsV1
 
                 Resque::enqueue('v1-deletes', 'DeletesV1', [
                     'type' => DELETE_TYPE_DOCUMENT,
-                    'document' => $function,
+                    'document' => $function->getArrayCopy(),
                 ]);
                 break;
             
