@@ -7,6 +7,10 @@
 
 - Fixed default value for HTTPS force option
 
+## Breaking Changes (Read before upgrading!)
+
+- Rename `deleteuser` to `delete` on Users Api
+
 # Version 0.7.2
 
 ## Features
