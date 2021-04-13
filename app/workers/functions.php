@@ -269,13 +269,74 @@ class FunctionsV1
                 break;
 
             case 'delete':
+                Authorization::disable();
+                $function = $database->getDocument($functionId); 
+                Authorization::reset();
 
-                $container = 'appwrite-function-'.$tagId;
+                $exitCode = 0;
 
-                $stdout = '';
-                $stderr = '';
-                Console::execute("docker container rm --force {$container}", '', $stdout, $stderr, 30);
+                // tagId is populated if only one tag is deleted
+                if (!empty($tagId)) {
+                    $exitCode = $this->removeContainer($tagId);
 
+                    if ($exitCode !== 0) {
+                        Console::warning('Failed to remove container appwrite-function-'.$tagId);
+                    } else {
+                        Console::info('Successfully removed container appwrite-function-'.$tagId);
+                    }
+                    break;
+                }
+
+                // Continues if deleting function
+                // Since the number of tags is unknown, handle deletion in chunks.
+                $count = 0;
+                $chunk = 0;
+                $limit = 50;
+                $tags = [];
+                $sum = $limit;
+
+                while($sum === $limit) {
+                    $chunk++;
+
+                    Authorization::disable();
+
+                    $tags = $database->getCollection([
+                        'limit' => $limit,
+                        'offset' => $count,
+                        'orderField' => '$id',
+                        'orderType' => 'ASC',
+                        'filters' => [
+                            '$collection='.Database::SYSTEM_COLLECTION_TAGS,
+                            'functionId='.$function->getId(),
+                        ],
+                    ]);
+
+                    Authorization::reset();
+
+                    var_dump($tags);
+                    foreach($tags as $tag) {
+                        $exitCode = $this->removeContainer($tag->getId());
+                        if ($exitCode === 0) {
+                            $count++;
+                        } 
+                    }
+                }
+
+                Console::info("Removed {$count} containers");
+
+                Authorization::disable();
+
+                $function = $database->getDocument($functionId); 
+                if (!$database->deleteDocument($function->getId())) {
+                    throw new Exception('Failed to remove function from DB', 500);
+                }
+
+                Authorization::reset();
+
+                Resque::enqueue('v1-deletes', 'DeletesV1', [
+                    'type' => DELETE_TYPE_DOCUMENT,
+                    'document' => $function,
+                ]);
                 break;
             
             default:
@@ -557,6 +618,24 @@ class FunctionsV1
         }
 
         return $output;
+    }
+
+    /**
+     * Remove container by tagId
+     *
+     * @param string $tagId
+     *
+     * @return int
+     */
+    protected function removeContainer(string $tagId): int
+    {
+        $stdout = '';
+        $stderr = '';
+        $container = 'appwrite-function-'.$tagId;
+
+        $exitCode = Console::execute("docker rm -f {$container}", '', $stdout, $stderr, 30);
+
+        return $exitCode;
     }
 
     public function tearDown(): void
