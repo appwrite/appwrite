@@ -18,7 +18,7 @@ require_once __DIR__.'/../workers.php';
 
 Console::title('Functions V1 Worker');
 
-// Runtime::setHookFlags(SWOOLE_HOOK_ALL);
+Runtime::setHookFlags(SWOOLE_HOOK_ALL);
 
 Console::success(APP_NAME.' functions worker v1 has started');
 
@@ -352,14 +352,6 @@ class FunctionsV1 extends Worker
             'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
         ]);
 
-        $tmpvars = $vars;
-        \array_walk($tmpvars, function (&$value, $key) {
-            $key = $this->filterEnvKey($key);
-            $value = \escapeshellarg((empty($value)) ? 'null' : $value);
-            // $value = "--env {$key}={$value}";
-            $value = "{$key}={$value}";
-        });
-
         \array_walk($vars, function (&$value, $key) {
             $key = $this->filterEnvKey($key);
             $value = \escapeshellarg((empty($value)) ? 'null' : $value);
@@ -458,126 +450,16 @@ class FunctionsV1 extends Worker
         $stdout = '';
         $stderr = '';
 
-
         $executionStart = \microtime(true);
-        $envs = array_values($tmpvars);
-        $envs[] = "executionStart={$executionStart}";
-
-        /*
-         * Create execution via Docker API
-         */
-        $ch = \curl_init();
-
-        \curl_setopt($ch, CURLOPT_URL, "http://localhost/containers/{$container}/exec");
-        \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
-        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        \curl_setopt($ch, CURLOPT_POST, 1);
-
-        $body = array(
-            "Env" => $envs,
-            "Cmd" => \explode(' ', $command),
-            "AttachStdout" => true,
-            "AttachStderr" => true
-        );
-        $body = json_encode($body);
-
-        $createExecStart = microtime(true);
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
-
-        $headers = [
-            'Content-Type: application/json',
-            'Content-Length: ' . \strlen($body)
-        ];
-        \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-
-        $result = \curl_exec($ch);
-        $resultDecoded = json_decode($result, true);
-        $execId = $resultDecoded['Id'];
-
-
-        if (\curl_errno($ch)) {
-            echo 'Error:' . \curl_error($ch);
-        }
-
-        \curl_close($ch);
-
-        $createExecTime = microtime(true)- $createExecStart;
-        var_dump($createExecTime);
-
-        /*
-         * Start execution without detatching - will receive stdout/stderr as response
-         */
-
-        $startExecStart = microtime(true);
-        $ch = \curl_init();
-        $URL = "http://localhost/exec/{$execId}/start";
-        \curl_setopt($ch, CURLOPT_URL, $URL);
-        \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
-        \curl_setopt($ch, CURLOPT_POST, 1);
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, '{}');
-        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-
-        $headers = [
-            'Content-Type: application/json',
-            'Content-Length: 2',
-        ];
-        \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-
-        $startData = \curl_exec($ch);
-        var_dump($startData);
-
-        if (\curl_errno($ch)) {
-            echo 'Error:' . \curl_error($ch);
-        }
-
-        \curl_close($ch);
-        $startExecTime = microtime(true)- $startExecStart;
-        var_dump($startExecTime);
-
-        // TODO@kodumbeats: set up listener for /events for exec_start and exec_die 
-        // We need this to get accurate 
-            // $params = [
-                // 'filter' => json_encode([
-                    // 'type' => 'container',
-                    // 'container' => $container,
-                    // 'event' => 'exec_die',
-                // ]),
-                // 'since' => \floor($executionStart)
-                // 'until' => $executionStart + +App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)
-        //      ];
-            // $URL = $URL . '?' . \http_build_query($params);
-        /*
-         * Get execution details
-         */
-        $ch = \curl_init();
-
-        $URL = "http://localhost/exec/{$execId}/json";
-        \curl_setopt($ch, CURLOPT_URL, $URL);
-        \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
-        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-
-        $headers = array();
-        $headers[] = 'Content-Type: application/json';
-        \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-
-        $result = \curl_exec($ch);
-        $execData = json_decode($result, true); // Can get the exit code from this call.
-        $exitCode = $execData['ExitCode'];
-
-        if (\curl_errno($ch)) {
-            echo 'Error:' . \curl_error($ch);
-        }
-
-        \curl_close($ch);
-
-        // $exitCode = Console::execute("docker exec ".\implode(" ", $vars)." {$container} {$command}"
-            // , '', $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
+        
+        $exitCode = Console::execute("docker exec ".\implode(" ", $vars)." {$container} {$command}"
+            , '', $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
 
         $executionEnd = \microtime(true);
         $executionTime = ($executionEnd - $executionStart);
         $functionStatus = ($exitCode === 0) ? 'completed' : 'failed';
 
-        Console::info("Function executed in " . ($startExecTime) . " seconds with exit code {$exitCode}");
+        Console::info("Function executed in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
 
         Authorization::disable();
         
@@ -585,11 +467,9 @@ class FunctionsV1 extends Worker
             'tagId' => $tag->getId(),
             'status' => $functionStatus,
             'exitCode' => $exitCode,
-            // 'stdout' => \mb_substr($stdout, -4000), // log last 4000 chars output
-            'stdout' => ($exitCode === 0) ? \mb_substr($startData, -4000) : '',
-            // 'stderr' => \mb_substr($stderr, -4000), // log last 4000 chars output
-            'stderr' => (!$exitCode === 0) ? \mb_substr($startData, -4000) : '',
-            'time' => $startExecTime,
+            'stdout' => \mb_substr($stdout, -4000), // log last 4000 chars output
+            'stderr' => \mb_substr($stderr, -4000), // log last 4000 chars output
+            'time' => $executionTime,
         ]));
         
         Authorization::reset();
