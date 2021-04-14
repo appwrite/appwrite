@@ -14,7 +14,7 @@ use Utopia\Config\Config;
 
 require_once __DIR__.'/../init.php';
 
-Runtime::enableCoroutine(FALSE);
+Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 Console::title('Functions V1 Worker');
 Console::success(APP_NAME.' functions worker v1 has started');
@@ -63,6 +63,8 @@ $warmupEnd = \microtime(true);
 $warmupTime = $warmupEnd - $warmupStart;
 
 Console::success('Finished warmup in '.$warmupTime.' seconds');
+
+Runtime::setHookFlags(0);
 
 /**
  * List function servers
