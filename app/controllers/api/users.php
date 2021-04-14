@@ -4,7 +4,7 @@ use Utopia\App;
 use Utopia\Exception;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\WhiteList;
-use Utopia\Validator\Email;
+use Appwrite\Network\Validator\Email;
 use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Audit\Audit;

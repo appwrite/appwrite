@@ -18,41 +18,6 @@ $auth = $this->getParam('auth', []);
 
             <h2>Users</h2>
 
-            <div data-ui-modal class="box modal close" data-button-text="" data-button-class="fly round" data-button-icon="icon-plus">
-                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
-
-                <h1>Create User</h1>
-
-                <form
-                    data-analytics
-                    data-analytics-activity
-                    data-analytics-event="submit"
-                    data-analytics-category="console"
-                    data-analytics-label="Create User"
-                    data-service="users.create"
-                    data-event="submit"
-                    data-success="alert,trigger,reset"
-                    data-success-param-alert-text="Created user successfully"
-                    data-success-param-trigger-events="users.create"
-                    data-failure="alert"
-                    data-failure-param-alert-text="Failed to create user"
-                    data-failure-param-alert-classname="error">
-
-                    <label for="user-name">Name</label>
-                    <input type="text" class="full-width" id="user-name" name="name" required autocomplete="off" maxlength="128" />
-
-                    <label for="user-email">Email</label>
-                    <input type="email" class="full-width" id="user-email" name="email" required autocomplete="off" />
-
-                    <label for="user-password">Password</label>
-                    <input type="password" class="full-width" id="user-password" name="password" required pattern=".{6,}" title="Six or more characters" autocomplete="off" />
-
-                    <hr />
-
-                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                </form>
-            </div>
-
             <form class="box padding-small margin-bottom search"
                 data-service="users.list"
                 data-event="submit"
@@ -138,7 +103,7 @@ $auth = $this->getParam('auth', []);
                     </div>
                 </div>
 
-                <div class="clear text-align-center paging">
+                <div class="pull-end text-align-center paging">
                     <form
                         data-service="users.list"
                         data-event="submit"
@@ -167,40 +132,46 @@ $auth = $this->getParam('auth', []);
                         <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-users.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                     </form>
                 </div>
+
+                <div data-ui-modal class="box modal close" data-button-text="Add User">
+                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                    <h1>Create User</h1>
+
+                    <form
+                        data-analytics
+                        data-analytics-activity
+                        data-analytics-event="submit"
+                        data-analytics-category="console"
+                        data-analytics-label="Create User"
+                        data-service="users.create"
+                        data-event="submit"
+                        data-success="alert,trigger,reset"
+                        data-success-param-alert-text="Created user successfully"
+                        data-success-param-trigger-events="users.create"
+                        data-failure="alert"
+                        data-failure-param-alert-text="Failed to create user"
+                        data-failure-param-alert-classname="error">
+
+                        <label for="user-name">Name</label>
+                        <input type="text" class="full-width" id="user-name" name="name" required autocomplete="off" maxlength="128" />
+
+                        <label for="user-email">Email</label>
+                        <input type="email" class="full-width" id="user-email" name="email" required autocomplete="off" />
+
+                        <label for="user-password">Password</label>
+                        <input type="password" class="full-width" id="user-password" name="password" required pattern=".{6,}" title="Six or more characters" autocomplete="off" />
+
+                        <hr />
+
+                        <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                    </form>
+                </div>
             </div>
         </li>
 
         <li data-state="/console/users/teams?project={{router.params.project}}">
             <h2>Teams</h2>
-
-            <div data-ui-modal class="box modal close" data-button-text="" data-button-class="fly round" data-button-icon="icon-plus">
-                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
-
-                <h1>Create Team</h1>
-
-                <form
-                    data-analytics
-                    data-analytics-activity
-                    data-analytics-event="submit"
-                    data-analytics-category="console"
-                    data-analytics-label="Create Team"
-                    data-service="teams.create"
-                    data-event="submit"
-                    data-success="alert,trigger,reset"
-                    data-success-param-alert-text="Created team successfully"
-                    data-success-param-trigger-events="filter-teams-changed,teams.create"
-                    data-failure="alert"
-                    data-failure-param-alert-text="Failed to create team"
-                    data-failure-param-alert-classname="error">
-
-                    <label for="team-name">Name</label>
-                    <input type="text" class="full-width" id="team-name" name="name" required autocomplete="off" maxlength="128" />
-                    
-                    <hr />
-
-                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                </form>
-            </div>
 
             <form class="box padding-small margin-bottom search"
                 data-service="teams.list"
@@ -240,7 +211,7 @@ $auth = $this->getParam('auth', []);
                 </div>
 
                 <div data-ls-if="0 != {{project-teams.sum}}">
-                <div class="margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-teams.sum}}"></span> results found</div>
+                    <div class="margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-teams.sum}}"></span> results found</div>
 
                     <div class="box margin-bottom">
                         <table class="vertical">
@@ -268,7 +239,7 @@ $auth = $this->getParam('auth', []);
                     </div>
                 </div>
 
-                <div class="clear text-align-center paging">
+                <div class="pull-end text-align-center paging">
                     <form
                         data-service="teams.list"
                         data-event="submit"
@@ -295,6 +266,35 @@ $auth = $this->getParam('auth', []);
                         data-success="state"
                         data-success-param-state-keys="search,offset">
                         <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-teams.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                    </form>
+                </div>
+
+                <div data-ui-modal class="box modal close" data-button-text="Add Team">
+                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                    <h1>Create Team</h1>
+
+                    <form
+                        data-analytics
+                        data-analytics-activity
+                        data-analytics-event="submit"
+                        data-analytics-category="console"
+                        data-analytics-label="Create Team"
+                        data-service="teams.create"
+                        data-event="submit"
+                        data-success="alert,trigger,reset"
+                        data-success-param-alert-text="Created team successfully"
+                        data-success-param-trigger-events="filter-teams-changed,teams.create"
+                        data-failure="alert"
+                        data-failure-param-alert-text="Failed to create team"
+                        data-failure-param-alert-classname="error">
+
+                        <label for="team-name">Name</label>
+                        <input type="text" class="full-width" id="team-name" name="name" required autocomplete="off" maxlength="128" />
+                        
+                        <hr />
+
+                        <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                     </form>
                 </div>
             </div>

@@ -6,7 +6,7 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\Validator\URL;
+use Appwrite\Network\Validator\URL;
 use Utopia\Validator\Range;
 use Utopia\Validator\Integer;
 use Utopia\Config\Config;

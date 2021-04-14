@@ -3,9 +3,9 @@
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Config\Config;
-use Utopia\Validator\Email;
+use Appwrite\Network\Validator\Email;
 use Utopia\Validator\Text;
-use Utopia\Validator\Host;
+use Appwrite\Network\Validator\Host;
 use Utopia\Validator\Range;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\WhiteList;

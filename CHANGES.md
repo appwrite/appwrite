@@ -14,6 +14,10 @@
 - Option to limit number of users (good for app launches + god account PR)
 - Added 2 new endpoints to the projects API to allow new settings
 - Enabled 501 errors (Not Implemented) from the error handler
+- ClamAV is now disabled by default to allow lower min requirments for Appwrite (#1064)
+- Added a new env var named `_APP_LOCALE` that allow to change the default `en` locale value (#1056)
+- Updated all the console bottom control to be consistent. Dropped the `+` icon (#1062)
+
 ## Bugs
 
 - Fixed default value for HTTPS force option

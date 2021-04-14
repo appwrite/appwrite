@@ -314,7 +314,7 @@ App::setResource('layout', function($locale) {
 }, ['locale']);
 
 App::setResource('locale', function() {
-    return new Locale('en');
+    return new Locale(App::getEnv('_APP_LOCALE', 'en'));
 });
 
 // Queues
