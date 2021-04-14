@@ -20,7 +20,7 @@ class CollectionsTest extends TestCase
     public function testDuplicateRules()
     {
         foreach ($this->collections as $collection) {
-            if ($collection['rules']) {
+            if (in_array('rules', $collection)) {
                 foreach ($collection['rules'] as $check) {
                     $occurences = 0;
                     foreach ($collection['rules'] as $rule) {
