@@ -614,9 +614,9 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         }
 
         $events
-            ->setParam('payload', $response->output($document, Response::MODEL_DOCUMENT))
+            ->setParam('eventData', $response->output($document, Response::MODEL_DOCUMENT))
         ;
-        
+
         $audits
             ->setParam('event', 'database.documents.delete')
             ->setParam('resource', 'database/document/'.$document->getId())
