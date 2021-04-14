@@ -25,6 +25,8 @@ $environments = Config::getParam('environments');
  */
 $warmupStart = \microtime(true);
 
+Runtime::setHookFlags(SWOOLE_HOOK_ALL);
+
 Co\run(function() use ($environments) {  // Warmup: make sure images are ready to run fast 🚀
     Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
