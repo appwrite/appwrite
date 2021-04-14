@@ -621,10 +621,12 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
     ->inject('response')
     ->inject('projectDB')
     ->inject('usage')
-    ->action(function ($functionId, $tagId, $response, $projectDB, $usage) {
+    ->inject('project')
+    ->action(function ($functionId, $tagId, $response, $projectDB, $usage, $project) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $usage */
+        /** @var Appwrite\Database\Document $project */
 
         $function = $projectDB->getDocument($functionId);
 
@@ -661,6 +663,7 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
         }
 
         Resque::enqueue('v1-functions', 'FunctionsV1', [
+            'projectId' => $project->getId(),
             'functionId' => $function->getId(),
             'tagId' => $tag->getId(),
             'trigger' => 'delete',
