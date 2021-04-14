@@ -126,7 +126,7 @@ return [
                 'default' => 'enabled',
                 'required' => false,
                 'question' => '',
-            ],
+            ]
         ],
     ],
     [

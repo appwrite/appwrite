@@ -271,7 +271,7 @@ App::delete('/v1/database/collections/:collectionId')
         ;
 
         $events
-            ->setParam('payload', $response->output($collection, Response::MODEL_COLLECTION))
+            ->setParam('eventData', $response->output($collection, Response::MODEL_COLLECTION))
         ;
 
         $audits
