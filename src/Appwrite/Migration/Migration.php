@@ -75,11 +75,10 @@ abstract class Migration
             ]);
 
             $sum = \count($all);
-            Runtime::setHookFlags(SWOOLE_HOOK_ALL);
+            Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
             Console::log('Migrating: ' . $offset . ' / ' . $this->projectDB->getSum());
             \Co\run(function () use ($all, $callback) {
-                Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
                 foreach ($all as $document) {
                     go(function () use ($document, $callback) {
