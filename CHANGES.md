@@ -15,8 +15,9 @@
 
 - Fixed default value for HTTPS force option
 
-## Breaking Changes
+## Breaking Changes (Read before upgrading!)
 
+- Rename `deleteuser` to `delete` on Users Api
 - Only logged in users can execute functions (for guests, use anonymous login)
 - Only the user who has triggered the execution get access to the relevant execution logs
 - Function execution env `APPWRITE_FUNCTION_EVENT_PAYLOAD` renamed to `APPWRITE_FUNCTION_EVENT_DATA`
