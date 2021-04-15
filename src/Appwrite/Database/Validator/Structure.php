@@ -4,6 +4,7 @@ namespace Appwrite\Database\Validator;
 
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
+use Appwrite\Network\Validator as NetworkValidator;
 use Utopia\Validator;
 
 class Structure extends Validator
@@ -187,13 +188,13 @@ class Structure extends Validator
                     $validator = new Validator\Boolean();
                     break;
                 case self::RULE_TYPE_EMAIL:
-                    $validator = new Validator\Email();
+                    $validator = new NetworkValidator\Email();
                     break;
                 case self::RULE_TYPE_URL:
-                    $validator = new Validator\URL();
+                    $validator = new NetworkValidator\URL();
                     break;
                 case self::RULE_TYPE_IP:
-                    $validator = new Validator\IP();
+                    $validator = new NetworkValidator\IP();
                     break;
                 case self::RULE_TYPE_WILDCARD:
                     $validator = new Validator\Mock();
