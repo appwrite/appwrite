@@ -26,10 +26,10 @@ class V07 extends Migration
 
         switch ($document->getAttribute('$collection')) {
             case Database::SYSTEM_COLLECTION_USERS:
+                /**
+                 * Remove deprecated OAuth2 properties in the Users Documents.
+                 */
                 foreach ($providers as $key => $provider) {
-                    /**
-                     * Remove deprecated OAuth2 properties in the Users Documents.
-                     */
                     if (!empty($document->getAttribute('oauth2' . \ucfirst($key)))) {
                         $document->removeAttribute('oauth2' . \ucfirst($key));
                     }
@@ -37,17 +37,17 @@ class V07 extends Migration
                     if (!empty($document->getAttribute('oauth2' . \ucfirst($key) . 'AccessToken'))) {
                         $document->removeAttribute('oauth2' . \ucfirst($key) . 'AccessToken');
                     }
-                    
-                    /**
-                     * Invalidate all Login Tokens, since they can't be migrated to the new structure.
-                     * Reason for it is the missing distinction between E-Mail and OAuth2 tokens.
-                     */
-                    $tokens = array_filter($document->getAttribute('tokens', []), function($token) {
-                        return ($token->getAttribute('type') != Auth::TOKEN_TYPE_LOGIN);
-                    });
-
-                    $document->setAttribute('tokens', array_values($tokens));
                 }
+
+                /**
+                 * Invalidate all Login Tokens, since they can't be migrated to the new structure.
+                 * Reason for it is the missing distinction between E-Mail and OAuth2 tokens.
+                 */
+                $tokens = array_filter($document->getAttribute('tokens', []), function ($token) {
+                    return ($token->getAttribute('type') != Auth::TOKEN_TYPE_LOGIN);
+                });
+                $document->setAttribute('tokens', array_values($tokens));
+
                 break;
         }
 

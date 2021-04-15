@@ -14,22 +14,22 @@ abstract class Migration
     /**
      * @var PDO
      */
-    protected PDO $db;
+    protected $db;
 
     /**
      * @var int
      */
-    protected int $limit = 50;
+    protected $limit = 50;
 
     /**
      * @var Document
      */
-    protected Document $project;
+    protected $project;
 
     /**
      * @var Database
      */
-    protected Database $projectDB;
+    protected $projectDB;
 
     /**
      * Migration constructor.
