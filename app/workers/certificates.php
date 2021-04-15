@@ -162,7 +162,7 @@ class CertificatesV1
             throw new Exception('Failed to save SSL configuration');
         }
 
-        $tomorrow = 60 * 60 * 24; // one day
+        $tomorrow = \time() + (60 * 60 * 24); // 24 hours from now
         ResqueScheduler::enqueueAt($tomorrow, 'v1-certificates', 'CertificatesV1', [
             'document' => [],
             'domain' => $domain->get(),
