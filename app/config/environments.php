@@ -106,6 +106,15 @@ $environments = [
         'logo' => 'deno.png',
         'supports' => [System::X86, System::PPC, System::ARM],
     ],
+    'deno-1.8' => [
+        'name' => 'Deno',
+        'version' => '1.8',
+        'base' => 'hayd/deno:alpine-1.8.2',
+        'image' => 'appwrite/env-deno-1.8:1.0.0',
+        'build' => '/usr/src/code/docker/environments/deno-1.8',
+        'logo' => 'deno.png',
+        'supports' => [System::X86, System::PPC, System::ARM],
+    ],
     'dart-2.10' => [
         'name' => 'Dart',
         'version' => '2.10',
