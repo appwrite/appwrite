@@ -38,7 +38,7 @@ $avatarCallback = function ($type, $code, $width, $height, $quality, $response) 
 
     $output = 'png';
     $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT'; // 45 days cache
-    $key = \md5('/v1/avatars/:type/:code-' . $code . $width . $height . $quality . $output);
+    $key = \md5('/v1/avatars/'.$type.'/:code-' . $code . $width . $height . $quality . $output);
     $path = $set[$code];
     $type = 'png';
 
