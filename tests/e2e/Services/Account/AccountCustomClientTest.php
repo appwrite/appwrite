@@ -261,7 +261,7 @@ class AccountCustomClientTest extends Scope
     /**
      * @depends testCreateAnonymousAccount
      */
-    public function testUpdateAnonymousAccountPassword($session):array
+    public function testUpdateAnonymousAccountPassword($session)
     {
         /**
          * Test for FAILURE
@@ -278,13 +278,13 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($response['headers']['status-code'], 400);
 
-        return [];
+        return $session;
     }
 
     /**
      * @depends testUpdateAnonymousAccountPassword
      */
-    public function testUpdateAnonymousAccountEmail($session):array
+    public function testUpdateAnonymousAccountEmail($session)
     {
         $email = uniqid().'new@localhost.test';
 
@@ -301,12 +301,12 @@ class AccountCustomClientTest extends Scope
             'password' => '',
         ]);
 
-        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         return [];
     }
 
-    public function testConvertAnonymousAccount():array
+    public function testConvertAnonymousAccount()
     {
         $session = $this->testCreateAnonymousAccount();
         $email = uniqid().'new@localhost.test';
@@ -372,7 +372,7 @@ class AccountCustomClientTest extends Scope
         return [];
     }
 
-    public function testConvertAnonymousAccountOAuth2():array
+    public function testConvertAnonymousAccountOAuth2()
     {
         $session = $this->testCreateAnonymousAccount();
         $provider = 'mock';
