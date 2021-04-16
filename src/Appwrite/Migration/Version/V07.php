@@ -38,7 +38,6 @@ class V07 extends Migration
                         $document->removeAttribute('oauth2' . \ucfirst($key) . 'AccessToken');
                     }
                 }
-
                 /**
                  * Invalidate all Login Tokens, since they can't be migrated to the new structure.
                  * Reason for it is the missing distinction between E-Mail and OAuth2 tokens.
