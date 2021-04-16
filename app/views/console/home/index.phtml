@@ -327,7 +327,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
         data-analytics-activity
         data-analytics-event="submit"
         data-analytics-category="console"
-        data-analytics-label="Create Project Platform (Flutter / Android)"
+        data-analytics-label="Create Project Platform (Android)"
         data-service="projects.createPlatform"
         data-scope="console"
         data-event="submit"
@@ -339,7 +339,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
         data-failure-param-alert-classname="error">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-        <input type="hidden" name="type" data-ls-bind="flutter-android" />
+        <input type="hidden" name="type" data-ls-bind="android" />
 
         <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
         <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My Android App" maxlength="128" />
