@@ -192,6 +192,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setGettingStarted($gettingStarted)
                     ->setChangelog($changelog)
                     ->setExamples($examples)
+                    ->setTwitter(APP_SOCIAL_TWITTER_HANDLE)
+                    ->setDiscord(APP_SOCIAL_DISCORD_CHANNEL, APP_SOCIAL_DISCORD)
                 ;
                 
                 try {

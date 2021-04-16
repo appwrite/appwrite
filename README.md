@@ -1,3 +1,4 @@
+<br />
 <p align="center">
     <a href="https://appwrite.io" target="_blank"><img width="260" height="39" src="https://appwrite.io/images/github-logo.png" alt="Appwrite Logo"></a>
     <br />
