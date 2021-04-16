@@ -98,7 +98,11 @@ class CertificatesV1
 
         // throw new Exception('cert issued at'.date('d.m.Y H:i', $certificate['issueDate']).' | renew date is: '.date('d.m.Y H:i', ($certificate['issueDate'] + ($expiry))).' | condition is '.$condition);
 
+        $now = \time();
+        $tomorrow = $now + (60 * 60 * 24); // 24 hours from now
+
         $certificate = (!empty($certificate) && $certificate instanceof $certificate) ? $certificate->getArrayCopy() : [];
+        $issueDate = $certificate['issueDate'] ?? $now;
 
         $staging = (App::isProduction()) ? '' : ' --dry-run';
         $email = App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS');
@@ -128,7 +132,8 @@ class CertificatesV1
                 'write' => [],
             ],
             'domain' => $domain->get(),
-            'issueDate' => \time(),
+            'issueDate' => $issueDate,
+            'checkDate' => $tomorrow, 
             'attempts' => 0,
             'log' => \json_encode($stdout),
         ]);
@@ -141,7 +146,7 @@ class CertificatesV1
 
         if(!empty($document)) {
             $document = \array_merge($document, [
-                'updated' => \time(),
+                'updated' => $now,
                 'certificateId' => $certificate->getId(),
             ]);
     
@@ -162,7 +167,6 @@ class CertificatesV1
             throw new Exception('Failed to save SSL configuration');
         }
 
-        $tomorrow = \time() + (60 * 60 * 24); // 24 hours from now
         ResqueScheduler::enqueueAt($tomorrow, 'v1-certificates', 'CertificatesV1', [
             'document' => [],
             'domain' => $domain->get(),
