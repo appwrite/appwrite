@@ -14,7 +14,7 @@ use Utopia\Config\Config;
 
 require_once __DIR__.'/../init.php';
 
-Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+// Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 Console::title('Functions V1 Worker');
 Console::success(APP_NAME.' functions worker v1 has started');
@@ -26,7 +26,7 @@ $environments = Config::getParam('environments');
  */
 $warmupStart = \microtime(true);
 
-Co\run(function() use ($environments) {  // Warmup: make sure images are ready to run fast 🚀
+// Co\run(function() use ($environments) {  // Warmup: make sure images are ready to run fast 🚀
 
     $dockerUser = App::getEnv('DOCKERHUB_PULL_USERNAME', null);
     $dockerPass = App::getEnv('DOCKERHUB_PULL_PASSWORD', null);
@@ -40,7 +40,7 @@ Co\run(function() use ($environments) {  // Warmup: make sure images are ready t
     }
 
     foreach($environments as $environment) {
-        go(function() use ($environment) {
+        // go(function() use ($environment) {
             $stdout = '';
             $stderr = '';
         
@@ -55,16 +55,14 @@ Co\run(function() use ($environments) {  // Warmup: make sure images are ready t
             if(!empty($stderr)) {
                 Console::error($stderr);
             }
-        });
+        // });
     }
-});
+// });
 
 $warmupEnd = \microtime(true);
 $warmupTime = $warmupEnd - $warmupStart;
 
 Console::success('Finished warmup in '.$warmupTime.' seconds');
-
-Runtime::setHookFlags(0);
 
 /**
  * List function servers
