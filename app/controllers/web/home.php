@@ -295,7 +295,7 @@ App::get('/specs/:format')
 
         foreach ($utopia->getRoutes() as $key => $method) {
             foreach ($method as $route) { /** @var \Utopia\Route $route */
-                $routeSecurity = $route->getLabel('sdk.security', []);
+                $routeSecurity = $route->getLabel('sdk.auth', []);
                 $sdkPlatofrms = [];
 
                 foreach ($routeSecurity as $value) {

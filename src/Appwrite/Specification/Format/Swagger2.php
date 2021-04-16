@@ -172,7 +172,7 @@ class Swagger2 extends Format
             if ((!empty($scope))) { //  && 'public' != $scope
                 $securities = ['Project' => []];
                 
-                foreach($route->getLabel('sdk.security', []) as $security) {
+                foreach($route->getLabel('sdk.auth', []) as $security) {
                     if(array_key_exists($security, $this->keys)) {
                         $securities[$security] = [];
                     }
