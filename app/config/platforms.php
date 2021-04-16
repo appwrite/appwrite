@@ -267,12 +267,12 @@ return [
             [
                 'key' => 'dotnet',
                 'name' => '.NET',
-                'version' => '0.1.0',
+                'version' => '0.2.0',
                 'url' => 'https://github.com/appwrite/sdk-for-dotnet',
                 'package' => 'https://www.nuget.org/packages/Appwrite',
                 'enabled' => true,
                 'beta' => true,
-                'dev' => true,
+                'dev' => false,
                 'hidden' => false,
                 'family' => APP_PLATFORM_SERVER,
                 'prism' => 'csharp',
@@ -301,7 +301,7 @@ return [
             [
                 'key' => 'cli',
                 'name' => 'Command Line',
-                'version' => '0.7.0',
+                'version' => '0.6.0',
                 'url' => 'https://github.com/appwrite/sdk-for-cli',
                 'package' => 'https://github.com/appwrite/sdk-for-cli',
                 'enabled' => true,
