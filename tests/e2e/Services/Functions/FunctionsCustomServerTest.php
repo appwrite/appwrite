@@ -457,7 +457,6 @@ class FunctionsCustomServerTest extends Scope
         $functionsDir = realpath(__DIR__ . '/../../../resources/functions');
         $envs = require('app/config/environments.php');
 
-
         /**
          * Command for rebuilding code packages:
          *  bash tests/resources/functions/package-*.sh
@@ -613,7 +612,7 @@ class FunctionsCustomServerTest extends Scope
 
         $fileId = $file['body']['$id'] ?? '';
 
-        foreach ($envs as $key => $env) {
+        foreach ($functions as $key => $env) {
             $name = $key ?? '';
             $language = $env['name'] ?? '';
             $version = $env['version'] ?? '';
