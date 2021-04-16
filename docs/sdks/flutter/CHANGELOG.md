@@ -1,3 +1,11 @@
+## 0.4.0
+
+- Improved code quality
+- Enabled access to private storage files
+- Easier integration for preview images with the image widget
+- Added custom Appwrite exceptions
+- Breaking: getFilePreview, getFileDownload and getFileView now return Future instead of String
+
 ## 0.4.0-dev.3
 
 - Added code formatting as part of the CI

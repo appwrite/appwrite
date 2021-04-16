@@ -22,7 +22,7 @@ namespace dotnet
             Console.WriteLine(Environment.GetEnvironmentVariable("APPWRITE_FUNCTION_ENV_NAME"));
             Console.WriteLine(Environment.GetEnvironmentVariable("APPWRITE_FUNCTION_ENV_VERSION"));
             Console.WriteLine(Environment.GetEnvironmentVariable("APPWRITE_FUNCTION_EVENT"));
-            Console.WriteLine(Environment.GetEnvironmentVariable("APPWRITE_FUNCTION_EVENT_PAYLOAD"));
+            Console.WriteLine(Environment.GetEnvironmentVariable("APPWRITE_FUNCTION_EVENT_DATA"));
         }
     }
 }

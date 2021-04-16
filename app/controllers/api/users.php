@@ -4,7 +4,7 @@ use Utopia\App;
 use Utopia\Exception;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\WhiteList;
-use Utopia\Validator\Email;
+use Appwrite\Network\Validator\Email;
 use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Audit\Audit;
@@ -23,7 +23,7 @@ App::post('/v1/users')
     ->groups(['api', 'users'])
     ->label('event', 'users.create')
     ->label('scope', 'users.write')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'create')
     ->label('sdk.description', '/docs/references/users/create-user.md')
@@ -81,7 +81,7 @@ App::get('/v1/users')
     ->desc('List Users')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'list')
     ->label('sdk.description', '/docs/references/users/list-users.md')
@@ -118,7 +118,7 @@ App::get('/v1/users/:userId')
     ->desc('Get User')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/users/get-user.md')
@@ -145,7 +145,7 @@ App::get('/v1/users/:userId/prefs')
     ->desc('Get User Preferences')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getPrefs')
     ->label('sdk.description', '/docs/references/users/get-user-prefs.md')
@@ -174,7 +174,7 @@ App::get('/v1/users/:userId/sessions')
     ->desc('Get User Sessions')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getSessions')
     ->label('sdk.description', '/docs/references/users/get-user-sessions.md')
@@ -196,21 +196,18 @@ App::get('/v1/users/:userId/sessions')
             throw new Exception('User not found', 404);
         }
 
-        $tokens = $user->getAttribute('tokens', []);
-        $sessions = [];
+        $sessions = $user->getAttribute('sessions', []);
         $countries = $locale->getText('countries');
 
-        foreach ($tokens as $token) { /* @var $token Document */
-            if (Auth::TOKEN_TYPE_LOGIN != $token->getAttribute('type')) {
-                continue;
-            }
+        foreach ($sessions as $key => $session) { 
+            /** @var Document $session */
 
-            $token->setAttribute('countryName', (isset($countries[strtoupper($token->getAttribute('countryCode'))]))
-                ? $countries[strtoupper($token->getAttribute('countryCode'))]
+            $session->setAttribute('countryName', (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
+                ? $countries[strtoupper($session->getAttribute('countryCode'))]
                 : $locale->getText('locale.country.unknown'));
-            $token->setAttribute('current', false);
+            $session->setAttribute('current', false);
 
-            $sessions[] = $token;
+            $sessions[$key] = $session;
         }
 
         $response->dynamic(new Document([
@@ -223,7 +220,7 @@ App::get('/v1/users/:userId/logs')
     ->desc('Get User Logs')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getLogs')
     ->label('sdk.description', '/docs/references/users/get-user-logs.md')
@@ -338,7 +335,7 @@ App::patch('/v1/users/:userId/status')
     ->groups(['api', 'users'])
     ->label('event', 'users.update.status')
     ->label('scope', 'users.write')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updateStatus')
     ->label('sdk.description', '/docs/references/users/update-user-status.md')
@@ -375,7 +372,7 @@ App::patch('/v1/users/:userId/prefs')
     ->groups(['api', 'users'])
     ->label('event', 'users.update.prefs')
     ->label('scope', 'users.write')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updatePrefs')
     ->label('sdk.description', '/docs/references/users/update-user-prefs.md')
@@ -412,7 +409,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->groups(['api', 'users'])
     ->label('event', 'users.sessions.delete')
     ->label('scope', 'users.write')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'deleteSession')
     ->label('sdk.description', '/docs/references/users/delete-user-session.md')
@@ -434,16 +431,18 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
             throw new Exception('User not found', 404);
         }
 
-        $tokens = $user->getAttribute('tokens', []);
+        $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($tokens as $token) { /* @var $token Document */
-            if ($sessionId == $token->getId()) {
-                if (!$projectDB->deleteDocument($token->getId())) {
+        foreach ($sessions as $session) { 
+            /** @var Document $session */
+
+            if ($sessionId == $session->getId()) {
+                if (!$projectDB->deleteDocument($session->getId())) {
                     throw new Exception('Failed to remove token from DB', 500);
                 }
 
                 $events
-                    ->setParam('payload', $response->output($user, Response::MODEL_USER))
+                    ->setParam('eventData', $response->output($user, Response::MODEL_USER))
                 ;
             }
         }
@@ -457,7 +456,7 @@ App::delete('/v1/users/:userId/sessions')
     ->groups(['api', 'users'])
     ->label('event', 'users.sessions.delete')
     ->label('scope', 'users.write')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'deleteSessions')
     ->label('sdk.description', '/docs/references/users/delete-user-sessions.md')
@@ -478,16 +477,18 @@ App::delete('/v1/users/:userId/sessions')
             throw new Exception('User not found', 404);
         }
 
-        $tokens = $user->getAttribute('tokens', []);
+        $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($tokens as $token) { /* @var $token Document */
-            if (!$projectDB->deleteDocument($token->getId())) {
+        foreach ($sessions as $session) { 
+            /** @var Document $session */
+
+            if (!$projectDB->deleteDocument($session->getId())) {
                 throw new Exception('Failed to remove token from DB', 500);
             }
         }
 
         $events
-            ->setParam('payload', $response->output($user, Response::MODEL_USER))
+            ->setParam('eventData', $response->output($user, Response::MODEL_USER))
         ;
 
         // TODO : Response filter implementation
@@ -499,10 +500,10 @@ App::delete('/v1/users/:userId')
     ->groups(['api', 'users'])
     ->label('event', 'users.delete')
     ->label('scope', 'users.write')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'deleteUser')
-    ->label('sdk.description', '/docs/references/users/delete-user.md')
+    ->label('sdk.method', 'delete')
+    ->label('sdk.description', '/docs/references/users/delete.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('userId', '', function () {return new UID();}, 'User unique ID.')
@@ -547,7 +548,7 @@ App::delete('/v1/users/:userId')
         ;
 
         $events
-            ->setParam('payload', $response->output($user, Response::MODEL_USER))
+            ->setParam('eventData', $response->output($user, Response::MODEL_USER))
         ;
 
         // TODO : Response filter implementation

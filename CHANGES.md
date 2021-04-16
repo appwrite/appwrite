@@ -1,10 +1,52 @@
 # Version 0.8.0 (Not Released Yet)
 
-- Anonymous login
+## Features
+
+- Added Anonymous Login ([RFC-010](https://github.com/appwrite/rfc/blob/main/010-anonymous-login.md), #914)
+- Added events for functions and executions (#971)
+- Added JWT support
+- Splited token & session models to become 2 different internal entities (#922)
+- Added Dart 2.12 as a new Cloud Functions runtime (#989)
+- ClamAV is now disabled by default to allow lower min requirments for Appwrite (#1064)
+- Added a new env var named `_APP_LOCALE` that allow to change the default `en` locale value (#1056)
+- Updated all the console bottom control to be consistent. Dropped the `+` icon (#1062)
+- Added runtime functions environment for Python 3.9
+- Added runtime functions environment for Deno 1.8
+
+## Bugs
+
+- Fixed default value for HTTPS force option
+- Fixed form array casting in dashboard
+- Fixed collection document rule form in dashboard 
+
+## Breaking Changes (Read before upgrading!)
+
+- Rename `deleteuser` to `delete` on Users Api
+- Only logged in users can execute functions (for guests, use anonymous login)
+- Only the user who has triggered the execution get access to the relevant execution logs
+- Function execution env `APPWRITE_FUNCTION_EVENT_PAYLOAD` renamed to `APPWRITE_FUNCTION_EVENT_DATA`
+- Introdcues rate limits for:
+  - Team invite (10 requests in every 60 minutes per IP address)
+
+# Version 0.7.2
+
+## Features
+
+- When creating new resources from the client API, the current user gets both read & write permissions by default. (#1007)
+- Added timestamp to errors logs on the HTTP API container (#1002)
+- Added verbose tests output on the terminal and CI (#1006)
 
 ## Upgrades
 
-- Upgraded ClamAV to version 1.3.0
+- Upgraded utopia-php/abuse to version 0.4.0
+- Upgraded utopia-php/analytics to version 0.2.0
+
+## Bugs
+
+- Fixed certificates worker error on successful operations (#1010)
+- Fixed head requests not responding (#998)
+- Fixed bug when using auth credential for the Redis container (#993)
+- Fixed server warning logs on 3** redirect endpoints (#1013)
 
 # Version 0.7.1
 
@@ -15,6 +57,7 @@
 - Force adding a security email on setup
 - SMTP is now disabled by default, no dummy SMTP is included in setup
 - Added a new endpoint that returns the server and SDKs latest versions numbers #941
+- Custom data strings, userId, and JWT available for cloud functions #967
 
 ## Upgrades
 
