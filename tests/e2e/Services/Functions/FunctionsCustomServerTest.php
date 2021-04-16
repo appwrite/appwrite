@@ -613,8 +613,8 @@ class FunctionsCustomServerTest extends Scope
         $fileId = $file['body']['$id'] ?? '';
 
         foreach ($functions as $key => $env) {
-            $name = $key ?? '';
-            $language = $env['name'] ?? '';
+            $name = $env['name'] ?? '';
+            $language = $env['language'] ?? '';
             $version = $env['version'] ?? '';
             $code = $env['code'] ?? '';
             $command = $env['command'] ?? '';
