@@ -12,40 +12,6 @@
         <li data-state="/console/database?project={{router.params.project}}">
             <h2>Collections</h2>
 
-            <div data-ui-modal class="box modal close" data-button-text="" data-button-class="fly round" data-button-icon="icon-plus">
-                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
-
-                <h1>New Collection</h1>
-
-                <form
-                    data-analytics
-                    data-analytics-activity
-                    data-analytics-event="submit"
-                    data-analytics-category="console"
-                    data-analytics-label="Create Database Collection"
-                    data-service="database.createCollection"
-                    data-event="submit"
-                    data-scope="sdk"
-                    data-success="alert,reset,redirect,trigger"
-                    data-success-param-alert-text="Collection created successfully"
-                    data-success-param-redirect-url="/console/database/collection/settings?id={{serviceData.$id}}&project={{router.params.project}}"
-                    data-success-param-trigger-events="database.createCollection"
-                    data-failure="alert"
-                    data-failure-param-alert-text="Failed to create collection"
-                    data-failure-param-alert-classname="error">
-
-                    <label for="user-name">Name</label>
-                    <input type="text" class="full-width" id="collection-name" name="name" required autocomplete="off" maxlength="128" />
-
-                    <input type="hidden" id="collection-read" name="read" required data-cast-to="json" value="<?php echo htmlentities(json_encode([])); ?>" />
-                    <input type="hidden" id="collection-write" name="write" required data-cast-to="json" value="<?php echo htmlentities(json_encode([])); ?>" />
-
-                    <hr />
-
-                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                </form>
-            </div>
-
             <div class="margin-top"
                 data-service="database.listCollections"
                 data-event="load,database.createCollection,database.updateCollection,database.deleteCollection"
@@ -76,7 +42,7 @@
                     </ul>
                 </div>
 
-                <div class="clear text-align-center paging">
+                <div class="pull-end text-align-center paging">
                     <form
                         data-service="database.listCollections"
                         data-event="submit"
@@ -105,6 +71,41 @@
                         <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-collections.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                     </form>
                 </div>
+
+                <div data-ui-modal class="modal close box sticky-footer" data-button-text="Add Collection">
+                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                    <h1>New Collection</h1>
+
+                    <form
+                        data-analytics
+                        data-analytics-activity
+                        data-analytics-event="submit"
+                        data-analytics-category="console"
+                        data-analytics-label="Create Database Collection"
+                        data-service="database.createCollection"
+                        data-event="submit"
+                        data-scope="sdk"
+                        data-success="alert,reset,redirect,trigger"
+                        data-success-param-alert-text="Collection created successfully"
+                        data-success-param-redirect-url="/console/database/collection/settings?id={{serviceData.$id}}&project={{router.params.project}}"
+                        data-success-param-trigger-events="database.createCollection"
+                        data-failure="alert"
+                        data-failure-param-alert-text="Failed to create collection"
+                        data-failure-param-alert-classname="error">
+
+                        <label for="user-name">Name</label>
+                        <input type="text" class="full-width" id="collection-name" name="name" required autocomplete="off" maxlength="128" />
+
+                        <input type="hidden" id="collection-read" name="read" required data-cast-to="json" value="<?php echo htmlentities(json_encode([])); ?>" />
+                        <input type="hidden" id="collection-write" name="write" required data-cast-to="json" value="<?php echo htmlentities(json_encode([])); ?>" />
+
+                        <hr />
+
+                        <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                    </form>
+                </div>
+
             </li>
             <!-- <li data-state="/console/database/usage?project={{router.params.project}}">
                 <h2>Usage</h2>

@@ -318,7 +318,7 @@ App::setResource('layout', function($locale) {
 }, ['locale']);
 
 App::setResource('locale', function() {
-    return new Locale('en');
+    return new Locale(App::getEnv('_APP_LOCALE', 'en'));
 });
 
 // Queues
@@ -424,7 +424,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
 
     if (empty($user->getId()) // Check a document has been found in the DB
         || Database::SYSTEM_COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
-        || !Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)) { // Validate user has valid login token
+        || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)) { // Validate user has valid login token
         $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
     }
 

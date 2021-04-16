@@ -271,7 +271,7 @@ App::delete('/v1/database/collections/:collectionId')
         ;
 
         $events
-            ->setParam('payload', $response->output($collection, Response::MODEL_COLLECTION))
+            ->setParam('eventData', $response->output($collection, Response::MODEL_COLLECTION))
         ;
 
         $audits
@@ -294,7 +294,7 @@ App::post('/v1/database/collections/:collectionId/documents')
     ->label('sdk.description', '/docs/references/database/create-document.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('sdk.response.model', Response::MODEL_DOCUMENT)
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
     ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
@@ -401,7 +401,7 @@ App::post('/v1/database/collections/:collectionId/documents')
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($data, Response::MODEL_ANY)
+            ->dynamic($data, Response::MODEL_DOCUMENT)
         ;
     });
 
@@ -478,7 +478,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
     ->label('sdk.description', '/docs/references/database/get-document.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('sdk.response.model', Response::MODEL_DOCUMENT)
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, new UID(), 'Document unique ID.')
     ->inject('response')
@@ -494,7 +494,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
             throw new Exception('No document found', 404);
         }
 
-        $response->dynamic($document, Response::MODEL_ANY);
+        $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
 App::patch('/v1/database/collections/:collectionId/documents/:documentId')
@@ -508,7 +508,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->label('sdk.description', '/docs/references/database/update-document.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('sdk.response.model', Response::MODEL_DOCUMENT)
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, new UID(), 'Document unique ID.')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
@@ -566,7 +566,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
             ->setParam('data', $data->getArrayCopy())
         ;
 
-        $response->dynamic($data, Response::MODEL_ANY);
+        $response->dynamic($data, Response::MODEL_DOCUMENT);
     });
 
 App::delete('/v1/database/collections/:collectionId/documents/:documentId')
@@ -614,9 +614,9 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         }
 
         $events
-            ->setParam('payload', $response->output($document, Response::MODEL_ANY))
+            ->setParam('eventData', $response->output($document, Response::MODEL_DOCUMENT))
         ;
-        
+
         $audits
             ->setParam('event', 'database.documents.delete')
             ->setParam('resource', 'database/document/'.$document->getId())
