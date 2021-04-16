@@ -437,6 +437,8 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(204, $function['headers']['status-code']);
         $this->assertEmpty($function['body']);
 
+        sleep(5); // DB deletion happens in function worker and is not instant
+
         $function = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
