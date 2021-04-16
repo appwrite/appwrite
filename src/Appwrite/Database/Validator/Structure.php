@@ -197,7 +197,7 @@ class Structure extends Validator
                     $validator = new NetworkValidator\IP();
                     break;
                 case self::RULE_TYPE_WILDCARD:
-                    $validator = new Validator\Mock();
+                    $validator = new Validator\Wildcard();
                     break;
                 case self::RULE_TYPE_DOCUMENT:
                     $validator = new Collection($this->database, (isset($rule['list'])) ? $rule['list'] : []);
