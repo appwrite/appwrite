@@ -2285,11 +2285,11 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.7.0",
+            "version": "dev-feat-preps-for-0.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "12a6a4b723137d5449c84ee2915b1ab3586e2162"
+                "reference": "5bb8ceaf0ff9da85fcca840285d6896a7594f435"
             },
             "require": {
                 "ext-curl": "*",
@@ -2319,7 +2319,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2021-03-23T09:26:18+00:00"
+            "time": "2021-03-28T22:18:36+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",
