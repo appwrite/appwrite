@@ -222,7 +222,7 @@ trait LocaleBase
         return [];
     }
 
-    public function testLangaugaes(): array
+    public function testLanguagaes(): array
     {
         /**
          * Test for SUCCESS
