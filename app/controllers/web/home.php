@@ -226,6 +226,12 @@ App::get('/specs/:format')
                     'description' => 'Your project ID',
                     'in' => 'header',
                 ],
+                'JWT' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-JWT',
+                    'description' => 'Your secret JSON Web Token',
+                    'in' => 'header',
+                ],
                 'Locale' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Locale',
