@@ -10,6 +10,7 @@ $client
     ->setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
     ->setProject('5df5acd0d48c2') // Your project ID
     ->setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
+    ->setSelfSigned() // Use only on dev mode with a self-signed SSL cert
 ;
 ```
 
@@ -33,11 +34,25 @@ $client
     ->setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
     ->setProject('5df5acd0d48c2') // Your project ID
     ->setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
+    ->setSelfSigned() // Use only on dev mode with a self-signed SSL cert
 ;
 
 $users = new Users($client);
 
 $result = $users->create('email@example.com', 'password');
+```
+
+### Error Handling
+The Appwrite PHP SDK raises `AppwriteException` object with `message`, `code` and `response` properties. You can handle any errors by catching `AppwriteException` and present the `message` to the user or handle it yourself based on the provided error information. Below is an example.
+
+```php
+$users = new Users($client);
+try {
+    $result = $users->create('email@example.com', 'password');
+} catch(AppwriteException $error) {
+    echo $error->message;
+}
+
 ```
 
 ### Learn more
