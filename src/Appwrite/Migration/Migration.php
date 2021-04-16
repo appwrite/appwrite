@@ -14,22 +14,22 @@ abstract class Migration
     /**
      * @var PDO
      */
-    protected PDO $db;
+    protected $db;
 
     /**
      * @var int
      */
-    protected int $limit = 50;
+    protected $limit = 50;
 
     /**
      * @var Document
      */
-    protected Document $project;
+    protected $project;
 
     /**
      * @var Database
      */
-    protected Database $projectDB;
+    protected $projectDB;
 
     /**
      * Migration constructor.
@@ -89,8 +89,8 @@ abstract class Migration
                         if (empty($new->getId())) {
                             throw new Exception('Missing ID');
                         }
-                        
-                        if (!array_diff_assoc($new->getArrayCopy(), $old)) {
+
+                        if (!$this->check_diff_multi($new->getArrayCopy(), $old)) {
                             return;
                         }
 
@@ -110,6 +110,33 @@ abstract class Migration
 
             $offset += $this->limit;
         }
+    }
+
+    public function check_diff_multi($array1, $array2){
+        $result = array();
+    
+        foreach($array1 as $key => $val) {
+            if(is_array($val) && isset($array2[$key])) {
+                $tmp = $this->check_diff_multi($val, $array2[$key]);
+                if($tmp) {
+                    $result[$key] = $tmp;
+                }
+            }
+            elseif(!isset($array2[$key])) {
+                $result[$key] = null;
+            }
+            elseif($val !== $array2[$key]) {
+                $result[$key] = $array2[$key];
+            }
+    
+            if(isset($array2[$key])) {
+                unset($array2[$key]);
+            }
+        }
+    
+        $result = array_merge($result, $array2);
+    
+        return $result;
     }
 
     /**
