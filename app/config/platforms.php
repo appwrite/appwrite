@@ -272,7 +272,7 @@ return [
                 'package' => 'https://www.nuget.org/packages/Appwrite',
                 'enabled' => true,
                 'beta' => true,
-                'dev' => false,
+                'dev' => true,
                 'hidden' => false,
                 'family' => APP_PLATFORM_SERVER,
                 'prism' => 'csharp',
