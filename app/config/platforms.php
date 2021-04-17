@@ -28,6 +28,36 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-web.git',
                 'gitRepoName' => 'sdk-for-web',
                 'gitUserName' => 'appwrite',
+                'demos' => [
+                    [
+                        'icon' => 'react.svg',
+                        'name' => 'Todo App with React JS',
+                        'description' => 'A simple Todo app that uses both the Appwrite account and database APIs.',
+                        'source' => 'https://github.com/appwrite/todo-with-react',
+                        'url' => 'https://appwrite-todo-with-react.vercel.app/',
+                    ],
+                    [
+                        'icon' => 'vue.svg',
+                        'name' => 'Todo App with Vue JS',
+                        'description' => 'A simple Todo app that uses both the Appwrite account and database APIs.',
+                        'source' => 'https://github.com/appwrite/todo-with-vue',
+                        'url' => 'https://appwrite-todo-with-vue.vercel.app/',
+                    ],
+                    [
+                        'icon' => 'angular.svg',
+                        'name' => 'Todo App with Angular.js',
+                        'description' => 'A simple Todo app that uses both the Appwrite account and database APIs.',
+                        'source' => 'https://github.com/appwrite/todo-with-angular',
+                        'url' => 'https://appwrite-todo-with-angular.vercel.app/',
+                    ],
+                    [
+                        'icon' => 'svelte.svg',
+                        'name' => 'Todo App with Svelte',
+                        'description' => 'A simple Todo app that uses both the Appwrite account and database APIs.',
+                        'source' => 'https://github.com/appwrite/todo-with-svelte',
+                        'url' => 'https://appwrite-todo-with-svelte.vercel.app/',
+                    ],
+                ]
             ],
             [
                 'key' => 'flutter',
