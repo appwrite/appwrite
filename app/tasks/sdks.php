@@ -143,8 +143,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'dart':
                         $config = new Dart();
                         $config->setPackageName('dart_appwrite');
-                        $warning = $warning."\n\n > This is the Dart SDK for integrating with Appwrite from your Dart server-side code.
-                            If you're looking for the Flutter SDK you should check [appwrite/sdk-for-flutter](https://github.com/appwrite/sdk-for-flutter)";
+                        $warning = $warning."\n\n > This is the Dart SDK for integrating with Appwrite from your Dart server-side code. If you're looking for the Flutter SDK you should check [appwrite/sdk-for-flutter](https://github.com/appwrite/sdk-for-flutter)";
                         break;
                     case 'go':
                         $config = new Go();
