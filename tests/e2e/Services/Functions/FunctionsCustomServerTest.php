@@ -581,6 +581,14 @@ class FunctionsCustomServerTest extends Scope
                 'command' => 'dotnet dotnet.dll',
                 'timeout' => 15,
             ],
+            [
+                'language' => 'Kotlin',
+                'version' => '1.1.61',
+                'name' => 'kotlin-1.1.61',
+                'code' => $functions.'/kotlin-1.1.61.tar.gz',
+                'command' => 'kotlin main.kt',
+                'timeout' => 15,
+            ],
         ];
 
         sleep(count($envs) * 20);
