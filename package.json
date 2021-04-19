@@ -3,14 +3,19 @@
   "version": "0.1.0",
   "license": "BSD-3-Clause",
   "repository": "public",
+  "scripts": {
+    "build": "npm run gulp:less && npm run gulp:import && npm run gulp:build",
+    "gulp:less": "gulp less",
+    "gulp:import": "gulp import",
+    "gulp:build": "gulp build"
+  },
   "devDependencies": {
-    "yargs-parser": ">=20.2.0",
     "gulp": "^4.0.2",
     "gulp-clean-css": "^4.3.0",
     "gulp-concat": "^2.6.1",
     "gulp-jsmin": "^0.1.5",
     "gulp-less": "^4.0.1",
-    "jest": "^26.4.2",
-    "ls-service-form2json": "^1.0.0"
+    "ls-service-form2json": "^1.0.0",
+    "yargs-parser": "^20.2.7"
   }
 }

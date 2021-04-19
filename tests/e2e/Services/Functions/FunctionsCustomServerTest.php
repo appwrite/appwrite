@@ -542,6 +542,14 @@ class FunctionsCustomServerTest extends Scope
                 'timeout' => 15,
             ],
             [
+                'language' => 'Deno',
+                'version' => '1.8',
+                'name' => 'deno-1.8',
+                'code' => $functions.'/deno.tar.gz',
+                'command' => 'deno run --allow-env index.ts',
+                'timeout' => 15,
+            ],
+            [
                 'language' => 'Dart',
                 'version' => '2.10',
                 'name' => 'dart-2.10',

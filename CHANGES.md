@@ -3,9 +3,15 @@
 ## Features
 
 - Anonymous login
+
 ## Bugs
 
 - Fixed default value for HTTPS force option
+
+## Breaking Changes (Read before upgrading!)
+
+- Introdcues rate limits for:
+  - Team invite (10 requests in every 60 minutes per IP address)
 
 # Version 0.7.2
 
