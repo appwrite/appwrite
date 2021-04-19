@@ -518,6 +518,11 @@ class FunctionsCustomServerTest extends Scope
                 'command' => 'deno run --allow-env index.ts',
                 'timeout' => 15,
             ],
+            'deno-1.8' => [
+                'code' => $functionsDir.'/deno.tar.gz',
+                'command' => 'deno run --allow-env index.ts',
+                'timeout' => 15,
+            ],
             'dart-2.10' => [
                 'code' => $functionsDir.'/dart.tar.gz',
                 'command' => 'dart main.dart',
@@ -539,7 +544,7 @@ class FunctionsCustomServerTest extends Scope
                 'timeout' => 15,
             ]
         ];
-        
+
         foreach ($envs as $key => $env) {
             $envs[$key] = array_merge($env, $functions[$key]);
         }
