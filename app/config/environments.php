@@ -86,7 +86,7 @@ $environments = [
         'image' => 'appwrite/env-deno-1.2:1.0.0',
         'build' => '/usr/src/code/docker/environments/deno-1.2',
         'logo' => 'deno.png',
-        'supports' => [System::X86, System::PPC, System::ARM],
+        'supports' => [System::X86],
     ],
     'deno-1.5' => [
         'name' => 'Deno',
@@ -95,7 +95,7 @@ $environments = [
         'image' => 'appwrite/env-deno-1.5:1.0.0',
         'build' => '/usr/src/code/docker/environments/deno-1.5',
         'logo' => 'deno.png',
-        'supports' => [System::X86, System::PPC, System::ARM],
+        'supports' => [System::X86],
     ],
     'deno-1.6' => [
         'name' => 'Deno',
@@ -104,7 +104,7 @@ $environments = [
         'image' => 'appwrite/env-deno-1.6:1.0.0',
         'build' => '/usr/src/code/docker/environments/deno-1.6',
         'logo' => 'deno.png',
-        'supports' => [System::X86, System::PPC, System::ARM],
+        'supports' => [System::X86],
     ],
     'deno-1.8' => [
         'name' => 'Deno',
