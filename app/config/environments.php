@@ -151,6 +151,15 @@ $environments = [
         'logo' => 'dotnet.png',
         'supports' => [System::X86, System::ARM],
     ],
+    'kotlin-1.1.61' => [
+        'name' => 'Kotlin',
+        'version' => '1.1.61',
+        'base' => 'zenika/kotlin',
+        'image' => 'appwrite/env-kotlin-1.1.61:1.0.0',
+        'build' => '/usr/src/code/docker/environments/kotlin-1.1.61',
+        'logo' => 'kotlin.png',
+        'supports' => [System::X86],
+    ],
 ];
 
 $allowList = empty(App::getEnv('_APP_FUNCTIONS_ENVS', null)) ? false : \explode(',', App::getEnv('_APP_FUNCTIONS_ENVS', null));

@@ -47,3 +47,6 @@ docker buildx build --platform linux/amd64,linux/arm64 -t appwrite/env-dotnet-3.
 
 echo '.NET 5.0...'
 docker buildx build --platform linux/amd64,linux/arm64 -t appwrite/env-dotnet-5.0:1.0.0 ./docker/environments/dotnet-5.0/ --push
+
+echo '.NET 5.0...'
+docker buildx build --platform linux/amd64 -t appwrite/env-kotlin-1.1.61:1.0.0 ./docker/environments/kotlin-1.1.61/ --push
