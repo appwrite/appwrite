@@ -3,8 +3,8 @@
 ## Features
 
 - Added Anonymous Login ([RFC-010](https://github.com/appwrite/rfc/blob/main/010-anonymous-login.md), #914)
-- Added new Environment Variable to enable or disable Anonymous Login 
 - Added events for functions and executions (#971)
+- Added JWT support
 - Splited token & session models to become 2 different internal entities (#922)
 - Added Dart 2.12 as a new Cloud Functions runtime (#989)
 - Added option to disable email/password
@@ -17,16 +17,23 @@
 - ClamAV is now disabled by default to allow lower min requirments for Appwrite (#1064)
 - Added a new env var named `_APP_LOCALE` that allow to change the default `en` locale value (#1056)
 - Updated all the console bottom control to be consistent. Dropped the `+` icon (#1062)
+- Added runtime functions environment for Python 3.9
+- Added runtime functions environment for Deno 1.8
 
 ## Bugs
 
 - Fixed default value for HTTPS force option
+- Fixed form array casting in dashboard
+- Fixed collection document rule form in dashboard 
 
-## Breaking Changes
+## Breaking Changes (Read before upgrading!)
 
+- Rename `deleteuser` to `delete` on Users Api
 - Only logged in users can execute functions (for guests, use anonymous login)
 - Only the user who has triggered the execution get access to the relevant execution logs
 - Function execution env `APPWRITE_FUNCTION_EVENT_PAYLOAD` renamed to `APPWRITE_FUNCTION_EVENT_DATA`
+- Introdcues rate limits for:
+  - Team invite (10 requests in every 60 minutes per IP address)
 
 # Version 0.7.2
 
