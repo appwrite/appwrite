@@ -4,6 +4,7 @@ namespace Appwrite\Specification\Format;
 
 use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
+use Appwrite\Utopia\Response\Model;
 use stdClass;
 
 class Swagger2 extends Format
@@ -73,6 +74,10 @@ class Swagger2 extends Format
             $output['securityDefinitions']['Key']['x-appwrite'] = ['demo' => '919c2d18fb5d4...a2ae413da83346ad2'];
         }
         
+        if (isset($output['securityDefinitions']['JWT'])) {
+            $output['securityDefinitions']['JWT']['x-appwrite'] = ['demo' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...'];
+        }
+        
         if (isset($output['securityDefinitions']['Locale'])) {
             $output['securityDefinitions']['Locale']['x-appwrite'] = ['demo' => 'en'];
         }
@@ -81,7 +86,9 @@ class Swagger2 extends Format
             $output['securityDefinitions']['Mode']['x-appwrite'] = ['demo' => ''];
         }
 
-        foreach ($this->routes as $route) { /* @var $route \Utopia\Route */
+        $usedModels = [];
+
+        foreach ($this->routes as $route) { /** @var \Utopia\Route $route */
             $url = \str_replace('/v1', '', $route->getURL());
             $scope = $route->getLabel('scope', '');
             $hide = $route->getLabel('sdk.hide', false);
@@ -148,6 +155,7 @@ class Swagger2 extends Format
                     ],
                 ];
             } else {
+                $usedModels[] = $model->getType();
                 $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
                     'description' => $model->getName(),
                     'schema' => [
@@ -162,7 +170,16 @@ class Swagger2 extends Format
             }
 
             if ((!empty($scope))) { //  && 'public' != $scope
-                $temp['security'][] = $route->getLabel('sdk.security', $this->security);
+                $securities = ['Project' => []];
+                
+                foreach($route->getLabel('sdk.auth', []) as $security) {
+                    if(array_key_exists($security, $this->keys)) {
+                        $securities[$security] = [];
+                    }
+                }
+
+                $temp['x-appwrite']['auth'] = array_slice($securities, 0, 2);
+                $temp['security'][] = $securities;
             }
        
             $body = [
@@ -232,7 +249,7 @@ class Swagger2 extends Format
                         $node['format'] = 'format';
                         $node['x-example'] = 'password';
                         break;
-                    case 'Utopia\Validator\Range': /* @var $validator \Utopia\Validator\Range */
+                    case 'Utopia\Validator\Range': /** @var \Utopia\Validator\Range $validator */
                         $node['type'] = 'integer';
                         $node['format'] = 'int32';
                         $node['x-example'] = $validator->getMin();
@@ -249,7 +266,7 @@ class Swagger2 extends Format
                         $node['format'] = 'url';
                         $node['x-example'] = 'https://example.com';
                         break;
-                    case 'Utopia\Validator\WhiteList': /* @var $validator \Utopia\Validator\WhiteList */
+                    case 'Utopia\Validator\WhiteList': /** @var \Utopia\Validator\WhiteList $validator */
                         $node['type'] = 'string';
                         $node['x-example'] = $validator->getList()[0];
                         break;
@@ -308,8 +325,18 @@ class Swagger2 extends Format
 
             $output['paths'][$url][\strtolower($route->getMethod())] = $temp;
         }
-
         foreach ($this->models as $model) {
+            foreach ($model->getRules() as $rule) {
+                if (!in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])) {
+                    $usedModels[] = $rule['type'];
+                }
+            }
+        }
+        foreach ($this->models as $model) {
+            if (!in_array($model->getType(), $usedModels) && $model->getType() !== 'error') {
+                continue;
+            }
+
             $required = $model->getRequired();
             $rules = $model->getRules();
 

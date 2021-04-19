@@ -41,7 +41,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
 
     $route = $utopia->match($request);
 
-    if (!empty($route->getLabel('sdk.platform', [])) && empty($project->getId()) && ($route->getLabel('scope', '') !== 'public')) {
+    if (!empty($route->getLabel('sdk.auth', [])) && empty($project->getId()) && ($route->getLabel('scope', '') !== 'public')) {
         throw new Exception('Missing or unknown project ID', 400);
     }
 
@@ -256,6 +256,8 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     $template = ($route) ? $route->getLabel('error', null) : null;
 
     if (php_sapi_name() === 'cli') {
+        Console::error('[Error] Timestamp: '.date('c', time()));
+        
         if($route) {
             Console::error('[Error] Method: '.$route->getMethod());
             Console::error('[Error] URL: '.$route->getURL());

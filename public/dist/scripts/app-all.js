@@ -188,8 +188,9 @@ let path='/functions/{functionId}/executions'.replace(new RegExp('{functionId}',
 if(limit){payload['limit']=limit;}
 if(offset){payload['offset']=offset;}
 if(orderType){payload['orderType']=orderType;}
-return http.get(path,{'content-type':'application/json',},payload);},createExecution:function(functionId){if(functionId===undefined){throw new Error('Missing required parameter: "functionId"');}
-let path='/functions/{functionId}/executions'.replace(new RegExp('{functionId}','g'),functionId);let payload={};return http.post(path,{'content-type':'application/json',},payload);},getExecution:function(functionId,executionId){if(functionId===undefined){throw new Error('Missing required parameter: "functionId"');}
+return http.get(path,{'content-type':'application/json',},payload);},createExecution:function(functionId,data){if(functionId===undefined){throw new Error('Missing required parameter: "functionId"');}
+let path='/functions/{functionId}/executions'.replace(new RegExp('{functionId}','g'),functionId);let payload={};if(data){payload['data']=data;}
+return http.post(path,{'content-type':'application/json',},payload);},getExecution:function(functionId,executionId){if(functionId===undefined){throw new Error('Missing required parameter: "functionId"');}
 if(executionId===undefined){throw new Error('Missing required parameter: "executionId"');}
 let path='/functions/{functionId}/executions/{executionId}'.replace(new RegExp('{functionId}','g'),functionId).replace(new RegExp('{executionId}','g'),executionId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},updateTag:function(functionId,tag){if(functionId===undefined){throw new Error('Missing required parameter: "functionId"');}
 if(tag===undefined){throw new Error('Missing required parameter: "tag"');}
@@ -2211,9 +2212,11 @@ match=text.match(new RegExp(regex,'gi'))
 if(!match){return fail}
 for(i=0,len=match.length;i<len;i++){if(!process(match[i])){return fail}}
 return(date.getTime()/1000)}
-return{format:format,strtotime:strtotime}}(),true);})(window);(function(window){"use strict";window.ls.container.set('env',function(){return APP_ENV;},true);})(window);(function(window){"use strict";window.ls.container.set('form',function(){function cast(value,to){switch(to){case'int':case'integer':value=parseInt(value);break;case'numeric':value=Number(value);break;case'string':value=value.toString();break;case'json':value=(value)?JSON.parse(value):[];break;case'array':value=(value&&value.constructor&&value.constructor===Array)?value:[value];break;case'array-empty':value=[];break;case'bool':case'boolean':value=(value==='false')?false:value;value=!!value;break;}
+return{format:format,strtotime:strtotime}}(),true);})(window);(function(window){"use strict";window.ls.container.set('env',function(){return APP_ENV;},true);})(window);(function(window){"use strict";window.ls.container.set('form',function(){function cast(value,to){if(value&&Array.isArray(value)&&to!=='array'){value=value.map(element=>cast(element,to));return value;}
+switch(to){case'int':case'integer':value=parseInt(value);break;case'numeric':value=Number(value);break;case'string':value=value.toString();break;case'json':value=(value)?JSON.parse(value):[];break;case'array':value=(value&&value.constructor&&value.constructor===Array)?value:[value];break;case'array-empty':value=[];break;case'bool':case'boolean':value=(value==='false')?false:value;value=!!value;break;}
 return value;}
-function toJson(element,json){json=json||{};let name=element.getAttribute('name');let type=element.getAttribute('type');let castTo=element.getAttribute('data-cast-to');let ref=json;if(name&&'FORM'!==element.tagName){if('FIELDSET'===element.tagName){if(castTo==='object'){if(json[name]===undefined){json[name]={};}
+function toJson(element,json){json=json||{};let name=element.getAttribute('name');let type=element.getAttribute('type');let castTo=element.getAttribute('data-cast-to');let ref=json;if(name&&'FORM'!==element.tagName){if(name.startsWith('[')){let splitName=name.split('.');if(splitName.length>1&&splitName[0].endsWith(']')){name=splitName[splitName.length-1];}}
+if('FIELDSET'===element.tagName){if(castTo==='object'){if(json[name]===undefined){json[name]={};}
 ref=json[name];}
 else{if(!Array.isArray(json[name])){json[name]=[];}
 json[name].push({});ref=json[name][json[name].length-1];}}

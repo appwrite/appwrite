@@ -40,7 +40,7 @@ const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
 const APP_CACHE_BUSTER = 145;
-const APP_VERSION_STABLE = '0.7.1';
+const APP_VERSION_STABLE = '0.8.0';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_CACHE = '/storage/cache';
@@ -61,6 +61,11 @@ const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_CERTIFICATES = 'certificates';
+// Auth Types
+const APP_AUTH_TYPE_SESSION = 'Session';
+const APP_AUTH_TYPE_JWT = 'JWT';
+const APP_AUTH_TYPE_KEY = 'Key';
+const APP_AUTH_TYPE_ADMIN = 'Admin';
 
 $register = new Registry();
 
@@ -313,7 +318,7 @@ App::setResource('layout', function($locale) {
 }, ['locale']);
 
 App::setResource('locale', function() {
-    return new Locale('en');
+    return new Locale(App::getEnv('_APP_LOCALE', 'en'));
 });
 
 // Queues
@@ -419,7 +424,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
 
     if (empty($user->getId()) // Check a document has been found in the DB
         || Database::SYSTEM_COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
-        || !Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)) { // Validate user has valid login token
+        || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)) { // Validate user has valid login token
         $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
     }
 

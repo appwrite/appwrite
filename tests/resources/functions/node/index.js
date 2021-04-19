@@ -20,4 +20,4 @@ console.log(process.env.APPWRITE_FUNCTION_ENV_NAME);
 console.log(process.env.APPWRITE_FUNCTION_ENV_VERSION);
 // console.log(result['$id']);
 console.log(process.env.APPWRITE_FUNCTION_EVENT);
-console.log(process.env.APPWRITE_FUNCTION_EVENT_PAYLOAD);
+console.log(process.env.APPWRITE_FUNCTION_EVENT_DATA);

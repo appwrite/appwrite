@@ -92,7 +92,7 @@ After finishing the installation process, you can start writing and editing code
 
 
 #### Advanced Topics
-We love to create issues that are good for begginers and label them as `good for begginers` or `hacktoberfest`, but some more advanced topics might require extra knowledge. Below is a list of links you can use to learn more about some of the more advance topics that will help you master the Appwrite codebase.
+We love to create issues that are good for beginners and label them as `good first issue` or `hacktoberfest`, but some more advanced topics might require extra knowledge. Below is a list of links you can use to learn more about some of the more advance topics that will help you master the Appwrite codebase.
 
 ##### Tools and Libs
 - [Docker](https://www.docker.com/get-started)
@@ -365,6 +365,7 @@ From time to time, our team will add tutorials that will help contributors find 
 * [Adding Support for a New OAuth2 Provider](./docs/tutorials/add-oauth2-provider.md)
 * [Appwrite Environment Variables](./docs/tutorials/environment-variables.md)
 * [Running in Production](./docs/tutorials/running-in-production.md)
+* [Adding Storage Adapter](./docs/tutorials/add-storage-adapter.md)
 
 ## Other Ways to Help
 
