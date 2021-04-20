@@ -33,7 +33,7 @@ class FunctionsCustomClientTest extends Scope
                 'account.create',
                 'account.delete',
             ],
-            'schedule' => '* * * * *',
+            'schedule' => '0 0 1 1 *',
             'timeout' => 10,
         ]);
 
@@ -64,7 +64,7 @@ class FunctionsCustomClientTest extends Scope
                 'account.create',
                 'account.delete',
             ],
-            'schedule' => '* * * * *',
+            'schedule' => '0 0 1 1 *',
             'timeout' => 10,
         ]);
 

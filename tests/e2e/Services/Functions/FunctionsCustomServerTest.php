@@ -35,7 +35,7 @@ class FunctionsCustomServerTest extends Scope
                 'account.create',
                 'account.delete',
             ],
-            'schedule' => '* * * * *',
+            'schedule' => '0 0 1 1 *',
             'timeout' => 10,
         ]);
 
@@ -57,7 +57,7 @@ class FunctionsCustomServerTest extends Scope
             'account.create',
             'account.delete',
         ], $response1['body']['events']);
-        $this->assertEquals('* * * * *', $response1['body']['schedule']);
+        $this->assertEquals('0 0 1 1 *', $response1['body']['schedule']);
         $this->assertEquals(10, $response1['body']['timeout']);
        
         /**
@@ -142,7 +142,7 @@ class FunctionsCustomServerTest extends Scope
                 'account.update.name',
                 'account.update.email',
             ],
-            'schedule' => '* * * * 1',
+            'schedule' => '0 0 1 2 *',
             'timeout' => 5,
         ]);
 
@@ -161,7 +161,7 @@ class FunctionsCustomServerTest extends Scope
             'account.update.name',
             'account.update.email',
         ], $response1['body']['events']);
-        $this->assertEquals('* * * * 1', $response1['body']['schedule']);
+        $this->assertEquals('0 0 1 2 *', $response1['body']['schedule']);
         $this->assertEquals(5, $response1['body']['timeout']);
        
         /**
@@ -549,7 +549,7 @@ class FunctionsCustomServerTest extends Scope
             $envs[$key] = array_merge($env, $functions[$key]);
         }
 
-        sleep(count($envs) * 20);
+        //sleep(count($envs) * 20);
         fwrite(STDERR, ".");
 
         /**
@@ -822,5 +822,20 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
         $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
         $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['stdout']);
+    }
+
+    public function testCleanUp(): void
+    {
+        $functions = $this->client->call(Client::METHOD_GET, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        foreach ($functions['body']['functions'] as $function) {
+            $this->client->call(Client::METHOD_DELETE, '/functions/'.$function['$id'], array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+        }
     }
 }
