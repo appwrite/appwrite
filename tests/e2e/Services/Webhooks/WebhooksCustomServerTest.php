@@ -461,8 +461,6 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($execution['headers']['status-code'], 201);
         $this->assertNotEmpty($execution['body']['$id']);
 
-        sleep(7);
-
         $webhook = $this->getLastRequest();
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -473,7 +471,8 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
 
-        sleep(7); 
+        // wait for timeout function to complete (sleep(5);)
+        sleep(6); 
 
         $webhook = $this->getLastRequest();
 
