@@ -463,16 +463,16 @@ class FunctionsCustomServerTest extends Scope
          *  bash tests/resources/functions/package-*.sh
          */
         $functions = [
-            'node-14.5' => [
-                'code' => $functionsDir.'/node.tar.gz',
-                'command' => 'node index.js',
-                'timeout' => 15,
-            ],
-            'node-15.5' => [
-                'code' => $functionsDir.'/node.tar.gz',
-                'command' => 'node index.js',
-                'timeout' => 15,
-            ],
+            // 'node-14.5' => [
+            //     'code' => $functionsDir.'/node.tar.gz',
+            //     'command' => 'node index.js',
+            //     'timeout' => 15,
+            // ],
+            // 'node-15.5' => [
+            //     'code' => $functionsDir.'/node.tar.gz',
+            //     'command' => 'node index.js',
+            //     'timeout' => 15,
+            // ],
             'php-7.4' => [
                 'code' => $functionsDir.'/php.tar.gz',
                 'command' => 'php index.php',
@@ -483,66 +483,66 @@ class FunctionsCustomServerTest extends Scope
                 'command' => 'php index.php',
                 'timeout' => 15,
             ],
-            'ruby-2.7' => [
-                'code' => $functionsDir.'/ruby.tar.gz',
-                'command' => 'ruby app.rb',
-                'timeout' => 15,
-            ],
-            'ruby-3.0' => [
-                'code' => $functionsDir.'/ruby.tar.gz',
-                'command' => 'ruby app.rb',
-                'timeout' => 15,
-            ],
-            'python-3.8' => [
-                'code' => $functionsDir.'/python.tar.gz',
-                'command' => 'python main.py',
-                'timeout' => 15,
-            ],
-            'python-3.9' => [
-                'code' => $functionsDir.'/python.tar.gz',
-                'command' => 'python main.py',
-                'timeout' => 15,
-            ],
-            'deno-1.2' => [
-                'code' => $functionsDir.'/deno.tar.gz',
-                'command' => 'deno run --allow-env index.ts',
-                'timeout' => 15,
-            ],
-            'deno-1.5' => [
-                'code' => $functionsDir.'/deno.tar.gz',
-                'command' => 'deno run --allow-env index.ts',
-                'timeout' => 15,
-            ],
-            'deno-1.6' => [
-                'code' => $functionsDir.'/deno.tar.gz',
-                'command' => 'deno run --allow-env index.ts',
-                'timeout' => 15,
-            ],
-            'deno-1.8' => [
-                'code' => $functionsDir.'/deno.tar.gz',
-                'command' => 'deno run --allow-env index.ts',
-                'timeout' => 15,
-            ],
-            'dart-2.10' => [
-                'code' => $functionsDir.'/dart.tar.gz',
-                'command' => 'dart main.dart',
-                'timeout' => 15,
-            ],
-            'dart-2.12' => [
-                'code' => $functionsDir.'/dart.tar.gz',
-                'command' => 'dart main.dart',
-                'timeout' => 15,
-            ],
-            'dotnet-3.1' => [
-                'code' => $functionsDir.'/dotnet-3.1.tar.gz',
-                'command' => 'dotnet dotnet.dll',
-                'timeout' => 15,
-            ],
-            'dotnet-5.0' => [
-                'code' => $functionsDir.'/dotnet-5.0.tar.gz',
-                'command' => 'dotnet dotnet.dll',
-                'timeout' => 15,
-            ]
+            // 'ruby-2.7' => [
+            //     'code' => $functionsDir.'/ruby.tar.gz',
+            //     'command' => 'ruby app.rb',
+            //     'timeout' => 15,
+            // ],
+            // 'ruby-3.0' => [
+            //     'code' => $functionsDir.'/ruby.tar.gz',
+            //     'command' => 'ruby app.rb',
+            //     'timeout' => 15,
+            // ],
+            // 'python-3.8' => [
+            //     'code' => $functionsDir.'/python.tar.gz',
+            //     'command' => 'python main.py',
+            //     'timeout' => 15,
+            // ],
+            // 'python-3.9' => [
+            //     'code' => $functionsDir.'/python.tar.gz',
+            //     'command' => 'python main.py',
+            //     'timeout' => 15,
+            // ],
+            // 'deno-1.2' => [
+            //     'code' => $functionsDir.'/deno.tar.gz',
+            //     'command' => 'deno run --allow-env index.ts',
+            //     'timeout' => 15,
+            // ],
+            // 'deno-1.5' => [
+            //     'code' => $functionsDir.'/deno.tar.gz',
+            //     'command' => 'deno run --allow-env index.ts',
+            //     'timeout' => 15,
+            // ],
+            // 'deno-1.6' => [
+            //     'code' => $functionsDir.'/deno.tar.gz',
+            //     'command' => 'deno run --allow-env index.ts',
+            //     'timeout' => 15,
+            // ],
+            // 'deno-1.8' => [
+            //     'code' => $functionsDir.'/deno.tar.gz',
+            //     'command' => 'deno run --allow-env index.ts',
+            //     'timeout' => 15,
+            // ],
+            // 'dart-2.10' => [
+            //     'code' => $functionsDir.'/dart.tar.gz',
+            //     'command' => 'dart main.dart',
+            //     'timeout' => 15,
+            // ],
+            // 'dart-2.12' => [
+            //     'code' => $functionsDir.'/dart.tar.gz',
+            //     'command' => 'dart main.dart',
+            //     'timeout' => 15,
+            // ],
+            // 'dotnet-3.1' => [
+            //     'code' => $functionsDir.'/dotnet-3.1.tar.gz',
+            //     'command' => 'dotnet dotnet.dll',
+            //     'timeout' => 15,
+            // ],
+            // 'dotnet-5.0' => [
+            //     'code' => $functionsDir.'/dotnet-5.0.tar.gz',
+            //     'command' => 'dotnet dotnet.dll',
+            //     'timeout' => 15,
+            // ]
         ];
 
         foreach ($envs as $key => $env) {
