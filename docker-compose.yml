@@ -423,7 +423,7 @@ services:
   #     - appwrite-uploads:/storage/uploads
       
   influxdb:
-    image: influxdb:1.8-alpine
+    image: appwrite/influxdb:1.0.0
     container_name: appwrite-influxdb
     networks:
       - appwrite
@@ -431,7 +431,7 @@ services:
       - appwrite-influxdb:/var/lib/influxdb:rw
 
   telegraf:
-    image: appwrite/telegraf:1.0.0
+    image: appwrite/telegraf:1.1.0
     container_name: appwrite-telegraf
     networks:
       - appwrite
@@ -450,16 +450,16 @@ services:
   # Webgrind - A nice UI for exploring and debugging code-level stuff
 
   maildev: # used mainly for dev tests
-    image: djfarrelly/maildev
-    container_name: appwrite-maildev
+    image: appwrite/mailcatcher:1.0.0
+    container_name: appwrite-mailcatcher
     ports:
-      - '9503:80'
+      - '9503:1080'
     networks:
       - appwrite
 
   request-catcher: # used mainly for dev tests
-    image: smarterdm/http-request-catcher
-    container_name: appwrite-request-catcher
+    image: appwrite/requestcatcher:1.0.0
+    container_name: appwrite-requestcatcher
     ports:
       - '9504:5000'
     networks:

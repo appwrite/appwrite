@@ -5,13 +5,14 @@
 - Added Anonymous Login ([RFC-010](https://github.com/appwrite/rfc/blob/main/010-anonymous-login.md), #914)
 - Added events for functions and executions (#971)
 - Added JWT support
+- Added ARM support
 - Splited token & session models to become 2 different internal entities (#922)
 - Added Dart 2.12 as a new Cloud Functions runtime (#989)
+- Added Python 3.9 as a new Cloud Functions runtime
+- Added Deno 1.8 as a new Cloud Functions runtime (#989)
 - ClamAV is now disabled by default to allow lower min requirments for Appwrite (#1064)
 - Added a new env var named `_APP_LOCALE` that allow to change the default `en` locale value (#1056)
 - Updated all the console bottom control to be consistent. Dropped the `+` icon (#1062)
-- Added runtime functions environment for Python 3.9
-- Added runtime functions environment for Deno 1.8
 
 ## Bugs
 

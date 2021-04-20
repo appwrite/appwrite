@@ -43,7 +43,7 @@ echo 'Dart 2.12...'
 docker buildx build --platform linux/amd64 -t appwrite/env-dart-2.12:1.0.0 ./docker/environments/dart-2.12/ --push
 
 echo '.NET 3.1...'
-docker buildx build --platform linux/amd64,linux/arm64 -t appwrite/env-dotnet-3.1:1.0.0 ./docker/environments/dotnet-3.1/ --push
+docker buildx build --platform linux/amd64 -t appwrite/env-dotnet-3.1:1.0.0 ./docker/environments/dotnet-3.1/ --push
 
 echo '.NET 5.0...'
 docker buildx build --platform linux/amd64,linux/arm64 -t appwrite/env-dotnet-5.0:1.0.0 ./docker/environments/dotnet-5.0/ --push
