@@ -546,7 +546,11 @@ class FunctionsCustomServerTest extends Scope
         ];
 
         foreach ($envs as $key => $env) {
-            $envs[$key] = array_merge($env, $functions[$key]);
+            if (array_key_exists($key, $functions)) {
+                $envs[$key] = array_merge($env, $functions[$key]);
+            } else {
+                unset($envs[$key]);
+            }
         }
 
         sleep(count($envs) * 20);
