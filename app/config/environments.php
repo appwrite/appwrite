@@ -151,13 +151,13 @@ $environments = [
         'logo' => 'dotnet.png',
         'supports' => [System::X86, System::ARM],
     ],
-    'kotlin-1.1.61' => [
-        'name' => 'Kotlin',
-        'version' => '1.1.61',
-        'base' => 'zenika/kotlin',
-        'image' => 'appwrite/env-kotlin-1.1.61:1.0.0',
-        'build' => '/usr/src/code/docker/environments/kotlin-1.1.61',
-        'logo' => 'kotlin.png',
+    'java-11' => [
+        'name' => 'Java',
+        'version' => '11',
+        'base' => 'openjdk/11-jre',
+        'image' => 'appwrite/env-java-11:1.0.0',
+        'build' => '/usr/src/code/docker/environments/java-11',
+        'logo' => 'java.png',
         'supports' => [System::X86],
     ],
 ];
