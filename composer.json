@@ -50,7 +50,6 @@
         "utopia-php/preloader": "0.2.*",
         "utopia-php/domains": "1.1.*",
         "utopia-php/swoole": "0.2.*",
-        "utopia-php/system": "0.4.*",
         "utopia-php/storage": "0.4.*",
         "utopia-php/image": "0.2.*",
 
