@@ -109,6 +109,7 @@ class V06 extends Filter {
 
             case Response::MODEL_ANY :
             case Response::MODEL_DOCUMENT :
+            case Response::MODEL_PREFERENCES :
                 $parsedResponse = $content;
                 break;
 
