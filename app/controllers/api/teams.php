@@ -3,9 +3,9 @@
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Config\Config;
-use Utopia\Validator\Email;
+use Appwrite\Network\Validator\Email;
 use Utopia\Validator\Text;
-use Utopia\Validator\Host;
+use Appwrite\Network\Validator\Host;
 use Utopia\Validator\Range;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\WhiteList;
@@ -261,6 +261,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
+    ->label('abuse-limit', 10)
     ->param('teamId', '', new UID(), 'Team unique ID.')
     ->param('email', '', new Email(), 'New team member email.')
     ->param('name', '', new Text(128), 'New team member name. Max length: 128 chars.', true)

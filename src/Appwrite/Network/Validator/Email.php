@@ -1,18 +1,20 @@
 <?php
 
-namespace Appwrite\Database\Validator;
+namespace Appwrite\Network\Validator;
 
 use Utopia\Validator;
 
-class Key extends Validator
+/**
+ * Email
+ *
+ * Validate that an variable is a valid email address
+ *
+ * @package Utopia\Validator
+ */
+class Email extends Validator
 {
     /**
-     * @var string
-     */
-    protected $message = 'Parameter must contain only letters with no spaces or special chars and be shorter than 32 chars';
-
-    /**
-     * Get Description.
+     * Get Description
      *
      * Returns validator description
      *
@@ -20,34 +22,26 @@ class Key extends Validator
      */
     public function getDescription()
     {
-        return $this->message;
+        return 'Value must be a valid email address';
     }
 
     /**
-     * Is valid.
+     * Is valid
      *
-     * Returns true if valid or false if not.
+     * Validation will pass when $value is valid email address.
      *
-     * @param $value
-     *
+     * @param  mixed $value
      * @return bool
      */
     public function isValid($value)
     {
-        if (!\is_string($value)) {
-            return false;
-        }
-        
-        if (\preg_match('/[^A-Za-z0-9\-\_]/', $value)) {
-            return false;
-        }
-
-        if (\mb_strlen($value) > 32) {
+        if (!\filter_var($value, FILTER_VALIDATE_EMAIL)) {
             return false;
         }
 
         return true;
     }
+
     /**
      * Is array
      *

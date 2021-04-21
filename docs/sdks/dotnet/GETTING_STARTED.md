@@ -14,6 +14,7 @@ static async Task Main(string[] args)
     .setEndpoint('http://[HOSTNAME_OR_IP]/v1') // Make sure your endpoint is accessible
     .setProject('5ff3379a01d25') // Your project ID
     .setKey('cd868c7af8bdc893b4...93b7535db89')
+    .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
   ;
 
   var users = Users(client);

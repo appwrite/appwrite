@@ -84,17 +84,17 @@ return [
     ],
     'database.documents.create' => [
         'description' => 'This event triggers when a database document is created.',
-        'model' => Response::MODEL_ANY,
+        'model' => Response::MODEL_DOCUMENT,
         'note' => '',
     ],
     'database.documents.update' => [
         'description' => 'This event triggers when a database document is updated.',
-        'model' => Response::MODEL_ANY,
+        'model' => Response::MODEL_DOCUMENT,
         'note' => '',
     ],
     'database.documents.delete' => [
         'description' => 'This event triggers when a database document is deleted.',
-        'model' => Response::MODEL_ANY,
+        'model' => Response::MODEL_DOCUMENT,
         'note' => '',
     ],
     'storage.files.create' => [

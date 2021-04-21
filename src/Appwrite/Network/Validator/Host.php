@@ -5,14 +5,24 @@ namespace Appwrite\Network\Validator;
 use Utopia\Validator;
 
 /**
- * Domain
+ * Host
  *
- * Validate that an variable is a valid domain address
+ * Validate that a host is allowed from given whitelisted hosts list
  *
  * @package Utopia\Validator
  */
-class Domain extends Validator
+class Host extends Validator
 {
+    protected $whitelist = [];
+
+    /**
+     * @param array $whitelist
+     */
+    public function __construct(array $whitelist)
+    {
+        $this->whitelist = $whitelist;
+    }
+
     /**
      * Get Description
      *
@@ -22,34 +32,30 @@ class Domain extends Validator
      */
     public function getDescription()
     {
-        return 'Value must be a valid domain';
+        return 'URL host must be one of: ' . \implode(', ', $this->whitelist);
     }
 
     /**
      * Is valid
      *
-     * Validation will pass when $value is valid domain.
-     *
-     * Validates domain names against RFC 1034, RFC 1035, RFC 952, RFC 1123, RFC 2732, RFC 2181, and RFC 1123.
+     * Validation will pass when $value starts with one of the given hosts
      *
      * @param  mixed $value
      * @return bool
      */
     public function isValid($value)
     {
-        if (empty($value)) {
+        $urlValidator = new URL();
+
+        if (!$urlValidator->isValid($value)) {
             return false;
         }
 
-        if (!is_string($value)) {
-            return false;
+        if (\in_array(\parse_url($value, PHP_URL_HOST), $this->whitelist)) {
+            return true;
         }
 
-        if (\filter_var($value, FILTER_VALIDATE_DOMAIN) === false) {
-            return false;
-        }
-
-        return true;
+        return false;
     }
 
     /**
