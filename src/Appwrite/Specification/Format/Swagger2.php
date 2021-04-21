@@ -202,12 +202,12 @@ class Swagger2 extends Format
                         $node['type'] = 'string';
                         $node['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                         break;
-                    case 'Utopia\Validator\Email':
+                    case 'Appwrite\Network\Validator\Email':
                         $node['type'] = 'string';
                         $node['format'] = 'email';
                         $node['x-example'] = 'email@example.com';
                         break;
-                    case 'Utopia\Validator\URL':
+                    case 'Appwrite\Network\Validator\URL':
                         $node['type'] = 'string';
                         $node['format'] = 'url';
                         $node['x-example'] = 'https://example.com';

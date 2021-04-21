@@ -205,12 +205,12 @@ class OpenAPI3 extends Format
                         $node['schema']['type'] = 'string';
                         $node['schema']['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                         break;
-                    case 'Utopia\Validator\Email':
+                    case 'Appwrite\Network\Validator\Email':
                         $node['schema']['type'] = 'string';
                         $node['schema']['format'] = 'email';
                         $node['schema']['x-example'] = 'email@example.com';
                         break;
-                    case 'Utopia\Validator\URL':
+                    case 'Appwrite\Network\Validator\URL':
                         $node['schema']['type'] = 'string';
                         $node['schema']['format'] = 'url';
                         $node['schema']['x-example'] = 'https://example.com';
