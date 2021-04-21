@@ -1,1 +1,1 @@
-appwrite teams create --name="[NAME]" "--roles[]=" 
+appwrite teams create --name="[NAME]" --roles="" 

@@ -1,3 +1,11 @@
+## 0.5.0-dev.1
+
+- Upgraded to Null-safety, minimum Dart SDK required 2.12.0 and minimum Flutter SDK version required 2.0.0
+- Upgraded all underlying dependencies to null safe version
+- All of Avatars service now return Future<Response></Response> instead of String like the Storage getFilePreview, getFileView and getFileDownload
+- Upgraded to Null-safety, minimum Dart SDK required 2.12.0
+- Upgraded all underlying dependencies to null safe version
+
 ## 0.4.0
 
 - Improved code quality
