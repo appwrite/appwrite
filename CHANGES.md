@@ -13,7 +13,6 @@
 - ClamAV is now disabled by default to allow lower min requirments for Appwrite (#1064)
 - Added a new env var named `_APP_LOCALE` that allow to change the default `en` locale value (#1056)
 - Updated all the console bottom control to be consistent. Dropped the `+` icon (#1062)
-- Deprecated User status `0` to avoid confusion about the unactivated status of a user
 
 ## Bugs
 
@@ -29,6 +28,11 @@
 - Function execution env `APPWRITE_FUNCTION_EVENT_PAYLOAD` renamed to `APPWRITE_FUNCTION_EVENT_DATA`
 - Introdcues rate limits for:
   - Team invite (10 requests in every 60 minutes per IP address)
+- Refactored user status to user active
+  - User active attribute is now `boolean`
+  - Event `user.update.status` is now `user.update.active`
+  - Endpoint `/v1/users/:userId/status` is now `/v1/users/:userId/active`
+  - SDK method `updateStatus` is now `updateActive`
 
 # Version 0.7.2
 
