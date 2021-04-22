@@ -72,6 +72,10 @@
         {
             "type": "git",
             "url": "https://github.com/appwrite/sdk-generator"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/appwrite/php-runtimes"
         }
     ],
     "provide": {
