@@ -10,19 +10,19 @@ use ReflectionMethod;
 abstract class MigrationTest extends TestCase
 {
     /**
-     * @var PDO
+     * @var \PDO
      */
-    protected \PDO $pdo;
+    protected $pdo;
 
     /**
      * @var Migration
      */
-    protected Migration $migration;
+    protected $migration;
 
     /**
      * @var ReflectionMethod
      */
-    protected ReflectionMethod $method;
+    protected $method;
 
     /**
      * Runs every document fix twice, to prevent corrupted data on multiple migrations.

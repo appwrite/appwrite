@@ -30,9 +30,9 @@ class User extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'User status. 0 for Unactivated, 1 for active and 2 is blocked.',
-                'default' => 0,
-                'example' => 0,
+                'description' => 'User status. 1 for active and 2 is blocked.',
+                'default' => 1,
+                'example' => 1,
             ])
             ->addRule('email', [
                 'type' => self::TYPE_STRING,

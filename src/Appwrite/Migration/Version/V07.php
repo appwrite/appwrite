@@ -47,6 +47,13 @@ class V07 extends Migration
                 });
                 $document->setAttribute('tokens', array_values($tokens));
 
+                /**
+                 * Remove deprecated user status 0.
+                 */
+                if ($document->getAttribute('status') === 0) {
+                    $document->setAttribute('status', 1);
+                }
+
                 break;
         }
 

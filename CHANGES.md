@@ -13,6 +13,7 @@
 - ClamAV is now disabled by default to allow lower min requirments for Appwrite (#1064)
 - Added a new env var named `_APP_LOCALE` that allow to change the default `en` locale value (#1056)
 - Updated all the console bottom control to be consistent. Dropped the `+` icon (#1062)
+- Deprecated User status `0` to avoid confusion about the unactivated status of a user
 
 ## Bugs
 

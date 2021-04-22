@@ -9,7 +9,6 @@ class Auth
     /**
      * User Status.
      */
-    const USER_STATUS_UNACTIVATED = 0;
     const USER_STATUS_ACTIVATED = 1;
     const USER_STATUS_BLOCKED = 2;
 

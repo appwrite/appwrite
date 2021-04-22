@@ -28,6 +28,7 @@ class MigrationV07Test extends MigrationTest
             '$id' => 'unique',
             '$collection' => Database::SYSTEM_COLLECTION_USERS,
             'oauth2Github' => 123,
+            'status' => 0,
             'oauth2GithubAccessToken' => 456,
             'tokens' => [
                 new Document([
@@ -57,6 +58,8 @@ class MigrationV07Test extends MigrationTest
             ]
         ]));
         
+        $this->assertEquals(1, $document->getAttribute('status'));
+
         $this->assertEquals($document->getAttribute('oauth2Github', null), null);
         $this->assertEquals($document->getAttribute('oauth2GithubAccessToken', null), null);
 
