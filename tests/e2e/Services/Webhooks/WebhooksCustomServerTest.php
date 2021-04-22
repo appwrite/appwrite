@@ -177,7 +177,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], $name);
         $this->assertIsInt($webhook['data']['registration']);
-        $this->assertEquals($webhook['data']['status'], 0);
+        $this->assertEquals($webhook['data']['status'], 1);
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals($webhook['data']['emailVerification'], false);
         $this->assertEquals($webhook['data']['prefs'], []);

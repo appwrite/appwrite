@@ -30,7 +30,7 @@ class V06Test extends TestCase
             '$id' => '5e5ea5c16897e',
             'name' => 'John Doe',
             'registration' => 1592981250,
-            'status' => 0,
+            'status' => 1,
             'email' => 'john@appwrite.io',
             'emailVerification' => false,
             'prefs' => [
@@ -47,11 +47,11 @@ class V06Test extends TestCase
         $this->assertEquals($parsedResponse['$id'], '5e5ea5c16897e');
         $this->assertEquals($parsedResponse['name'], 'John Doe');
         $this->assertEquals($parsedResponse['registration'], 1592981250);
-        $this->assertEquals($parsedResponse['status'], 0);
+        $this->assertEquals($parsedResponse['status'], 1);
         $this->assertEquals($parsedResponse['email'], 'john@appwrite.io');
         $this->assertEquals($parsedResponse['emailVerification'], false);
         $this->assertEquals($parsedResponse['prefs'], ['theme' => 'pink', 'timezone' => 'UTC']);
-        $this->assertEquals($parsedResponse['status'], 0);
+        $this->assertEquals($parsedResponse['status'], 1);
         $this->assertEquals($parsedResponse['roles'], Authorization::getRoles() ?? []);
     }
 
@@ -64,7 +64,7 @@ class V06Test extends TestCase
                     '$id' => '5e5ea5c16897e',
                     'name' => 'John Doe',
                     'registration' => 1592981250,
-                    'status' => 0,
+                    'status' => 1,
                     'email' => 'john@appwrite.io',
                     'emailVerification' => false,
                     'prefs' => [
@@ -84,11 +84,10 @@ class V06Test extends TestCase
         $this->assertEquals($parsedResponse['users'][0]['$id'], '5e5ea5c16897e');
         $this->assertEquals($parsedResponse['users'][0]['name'], 'John Doe');
         $this->assertEquals($parsedResponse['users'][0]['registration'], 1592981250);
-        $this->assertEquals($parsedResponse['users'][0]['status'], 0);
+        $this->assertEquals($parsedResponse['users'][0]['status'], 1);
         $this->assertEquals($parsedResponse['users'][0]['email'], 'john@appwrite.io');
         $this->assertEquals($parsedResponse['users'][0]['emailVerification'], false);
         $this->assertEquals($parsedResponse['users'][0]['prefs'], ['theme' => 'pink', 'timezone' => 'UTC']);
-        $this->assertEquals($parsedResponse['users'][0]['status'], 0);
         $this->assertEquals($parsedResponse['users'][0]['roles'], Authorization::getRoles() ?? []);
     }
 
