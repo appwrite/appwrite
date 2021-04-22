@@ -119,7 +119,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/torstendittmann/php-runtimes",
-                "reference": "da5e566738bb2803b574d7bedaea0b4448a3b317"
+                "reference": "e7adbf06f8aed062213a33eda247510e4cf0809a"
             },
             "require": {
                 "php": ">=8.0",
@@ -155,7 +155,7 @@
                 "php",
                 "runtimes"
             ],
-            "time": "2021-04-21T12:20:31+00:00"
+            "time": "2021-04-22T08:03:37+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
