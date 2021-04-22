@@ -36,7 +36,7 @@
         "ext-sockets": "*",
 
         "appwrite/php-clamav": "1.1.*",
-        "appwrite/php-runtimes": "dev-init",
+        "appwrite/php-runtimes": "0.1.*",
 
         "utopia-php/framework": "0.12.*",
         "utopia-php/abuse": "0.4.*",
@@ -72,10 +72,6 @@
         {
             "type": "git",
             "url": "https://github.com/appwrite/sdk-generator"
-        },
-        {
-            "type": "git",
-            "url": "https://github.com/torstendittmann/php-runtimes"
         }
     ],
     "provide": {
