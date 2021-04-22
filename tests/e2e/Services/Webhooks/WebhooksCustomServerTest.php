@@ -177,7 +177,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], $name);
         $this->assertIsInt($webhook['data']['registration']);
-        $this->assertEquals($webhook['data']['status'], 1);
+        $this->assertEquals($webhook['data']['active'], true);
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals($webhook['data']['emailVerification'], false);
         $this->assertEquals($webhook['data']['prefs'], []);
@@ -229,11 +229,11 @@ class WebhooksCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/status', array_merge([
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/active', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'status' => 2,
+            'active' => false,
         ]);
 
         $this->assertEquals($user['headers']['status-code'], 200);
@@ -244,7 +244,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
         $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'users.update.status');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'users.update.active');
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
@@ -252,7 +252,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], $data['name']);
         $this->assertIsInt($webhook['data']['registration']);
-        $this->assertEquals($webhook['data']['status'], 2);
+        $this->assertEquals($webhook['data']['active'], false);
         $this->assertEquals($webhook['data']['email'], $data['email']);
         $this->assertEquals($webhook['data']['emailVerification'], false);
         $this->assertEquals($webhook['data']['prefs']['a'], 'b');
@@ -288,7 +288,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], $data['name']);
         $this->assertIsInt($webhook['data']['registration']);
-        $this->assertEquals($webhook['data']['status'], 2);
+        $this->assertEquals($webhook['data']['active'], false);
         $this->assertEquals($webhook['data']['email'], $data['email']);
         $this->assertEquals($webhook['data']['emailVerification'], false);
         $this->assertEquals($webhook['data']['prefs']['a'], 'b');

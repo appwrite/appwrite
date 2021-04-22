@@ -98,7 +98,7 @@ App::post('/v1/account')
                 ],
                 'email' => $email,
                 'emailVerification' => false,
-                'status' => Auth::USER_STATUS_ACTIVATED,
+                'active' => true,
                 'password' => Auth::passwordHash($password),
                 'passwordUpdate' => \time(),
                 'registration' => \time(),
@@ -180,7 +180,7 @@ App::post('/v1/account/sessions')
             throw new Exception('Invalid credentials', 401); // Wrong password or username
         }
 
-        if (Auth::USER_STATUS_BLOCKED == $profile->getAttribute('status')) { // Account is blocked
+        if ($profile->getAttribute('active') === false) { // Account is blocked
             throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
         }
 
@@ -478,7 +478,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         '$permissions' => ['read' => ['*'], 'write' => ['user:{self}']],
                         'email' => $email,
                         'emailVerification' => true,
-                        'status' => Auth::USER_STATUS_ACTIVATED, // Email should already be authenticated by OAuth2 provider
+                        'active' => true,
                         'password' => Auth::passwordHash(Auth::passwordGenerator()),
                         'passwordUpdate' => \time(),
                         'registration' => \time(),
@@ -497,7 +497,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
         }
 
-        if (Auth::USER_STATUS_BLOCKED == $user->getAttribute('status')) { // Account is blocked
+        if ($user->getAttribute('active') === false) { // Account is blocked
             throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
         }
 
@@ -531,7 +531,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         $user
-            ->setAttribute('status', Auth::USER_STATUS_ACTIVATED)
             ->setAttribute('sessions', $session, Document::SET_TYPE_APPEND)
         ;
 
@@ -629,7 +628,7 @@ App::post('/v1/account/sessions/anonymous')
                 ],
                 'email' => null,
                 'emailVerification' => false,
-                'status' => Auth::USER_STATUS_ACTIVATED,
+                'active' => true,
                 'password' => null,
                 'passwordUpdate' => \time(),
                 'registration' => \time(),
@@ -1128,7 +1127,7 @@ App::delete('/v1/account')
 
         $protocol = $request->getProtocol();
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
-            'status' => Auth::USER_STATUS_BLOCKED,
+            'active' => false,
         ]));
 
         if (false === $user) {
@@ -1361,7 +1360,7 @@ App::post('/v1/account/recovery')
             throw new Exception('User not found', 404); // TODO maybe hide this
         }
 
-        if (Auth::USER_STATUS_BLOCKED == $profile->getAttribute('status')) { // Account is blocked
+        if ($profile->getAttribute('active') === false) { // Account is blocked
             throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
         }
 

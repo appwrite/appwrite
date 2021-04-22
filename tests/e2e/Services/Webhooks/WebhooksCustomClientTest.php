@@ -50,7 +50,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], $name);
         $this->assertIsInt($webhook['data']['registration']);
-        $this->assertEquals($webhook['data']['status'], 1);
+        $this->assertEquals($webhook['data']['active'], true);
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals($webhook['data']['emailVerification'], false);
         $this->assertEquals($webhook['data']['prefs'], []);
@@ -119,7 +119,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], $name);
         $this->assertIsInt($webhook['data']['registration']);
-        $this->assertEquals($webhook['data']['status'], 2);
+        $this->assertEquals($webhook['data']['active'], false);
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals($webhook['data']['emailVerification'], false);
         $this->assertEquals($webhook['data']['prefs'], []);
@@ -389,7 +389,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], $newName);
         $this->assertIsInt($webhook['data']['registration']);
-        $this->assertEquals($webhook['data']['status'], 1);
+        $this->assertEquals($webhook['data']['active'], true);
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals($webhook['data']['emailVerification'], false);
         $this->assertEquals($webhook['data']['prefs'], []);
@@ -433,7 +433,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], 'New Name');
         $this->assertIsInt($webhook['data']['registration']);
-        $this->assertEquals($webhook['data']['status'], 1);
+        $this->assertEquals($webhook['data']['active'], true);
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals($webhook['data']['emailVerification'], false);
         $this->assertEquals($webhook['data']['prefs'], []);
@@ -479,7 +479,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], 'New Name');
         $this->assertIsInt($webhook['data']['registration']);
-        $this->assertEquals($webhook['data']['status'], 1);
+        $this->assertEquals($webhook['data']['active'], true);
         $this->assertEquals($webhook['data']['email'], $newEmail);
         $this->assertEquals($webhook['data']['emailVerification'], false);
         $this->assertEquals($webhook['data']['prefs'], []);
@@ -526,7 +526,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], 'New Name');
         $this->assertIsInt($webhook['data']['registration']);
-        $this->assertEquals($webhook['data']['status'], 1);
+        $this->assertEquals($webhook['data']['active'], true);
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals($webhook['data']['emailVerification'], false);
         $this->assertEquals($webhook['data']['prefs'], [

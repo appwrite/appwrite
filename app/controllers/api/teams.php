@@ -322,7 +322,7 @@ App::post('/v1/teams/:teamId/memberships')
                     ],
                     'email' => $email,
                     'emailVerification' => false,
-                    'status' => Auth::USER_STATUS_ACTIVATED,
+                    'active' => true,
                     'password' => Auth::passwordHash(Auth::passwordGenerator()),
                     'passwordUpdate' => \time(),
                     'registration' => \time(),

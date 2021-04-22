@@ -97,12 +97,12 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($response['headers']['status-code'], 200);
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $id . '/status', [
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $id . '/active', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'status' => 2,
+            'active' => false,
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);

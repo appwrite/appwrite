@@ -30,7 +30,7 @@ class V06Test extends TestCase
             '$id' => '5e5ea5c16897e',
             'name' => 'John Doe',
             'registration' => 1592981250,
-            'status' => 1,
+            'active' => true,
             'email' => 'john@appwrite.io',
             'emailVerification' => false,
             'prefs' => [
@@ -64,7 +64,7 @@ class V06Test extends TestCase
                     '$id' => '5e5ea5c16897e',
                     'name' => 'John Doe',
                     'registration' => 1592981250,
-                    'status' => 1,
+                    'active' => true,
                     'email' => 'john@appwrite.io',
                     'emailVerification' => false,
                     'prefs' => [

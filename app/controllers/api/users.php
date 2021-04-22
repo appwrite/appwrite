@@ -5,6 +5,7 @@ use Utopia\Exception;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\WhiteList;
 use Appwrite\Network\Validator\Email;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Audit\Audit;
@@ -60,7 +61,7 @@ App::post('/v1/users')
                 ],
                 'email' => $email,
                 'emailVerification' => false,
-                'status' => Auth::USER_STATUS_ACTIVATED,
+                'active' => true,
                 'password' => Auth::passwordHash($password),
                 'passwordUpdate' => \time(),
                 'registration' => \time(),
@@ -330,20 +331,20 @@ App::get('/v1/users/:userId/logs')
         $response->dynamic(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
     });
 
-App::patch('/v1/users/:userId/status')
+App::patch('/v1/users/:userId/active')
     ->desc('Update User Status')
     ->groups(['api', 'users'])
-    ->label('event', 'users.update.status')
+    ->label('event', 'users.update.active')
     ->label('scope', 'users.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'updateStatus')
-    ->label('sdk.description', '/docs/references/users/update-user-status.md')
+    ->label('sdk.method', 'updateActive')
+    ->label('sdk.description', '/docs/references/users/update-user-active.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User unique ID.')
-    ->param('status', '', new WhiteList([Auth::USER_STATUS_ACTIVATED, Auth::USER_STATUS_BLOCKED], true), 'User Status code. To activate the user pass '.Auth::USER_STATUS_ACTIVATED.', to block the user pass '.Auth::USER_STATUS_BLOCKED.'.')
+    ->param('active', '', new Boolean(), 'User Status. To activate the user pass true, to disable the user pass false.')
     ->inject('response')
     ->inject('projectDB')
     ->action(function ($userId, $status, $response, $projectDB) {
@@ -357,7 +358,7 @@ App::patch('/v1/users/:userId/status')
         }
 
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
-            'status' => (int)$status,
+            'active' => $status,
         ]));
 
         if (false === $user) {

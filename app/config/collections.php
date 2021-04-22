@@ -209,9 +209,9 @@ $collections = [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Status',
-                'key' => 'status',
-                'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,
+                'label' => 'Active',
+                'key' => 'active',
+                'type' => Database::SYSTEM_VAR_TYPE_BOOLEAN,
                 'default' => '',
                 'required' => true,
                 'array' => false,

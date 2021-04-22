@@ -141,7 +141,7 @@ class WebhooksTest extends Scope
 
         $this->assertNotEmpty($webhook['data']);
         $this->assertNotEmpty($webhook['data']['$id']);
-        $this->assertIsNumeric($webhook['data']['status']);
+        $this->assertIsBool($webhook['data']['active']);
         $this->assertIsNumeric($webhook['data']['registration']);
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals($webhook['data']['name'], $name);

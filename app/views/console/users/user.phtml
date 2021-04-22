@@ -33,7 +33,7 @@
             <li data-state="/console/users/user?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Overview</h2>
 
-                <div data-ls-if="{{user.status}} === <?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none" class="box padding-small danger margin-bottom-xxl text-align-center">
+                <div data-ls-if="{{user.status}} === false" style="display: none" class="box padding-small danger margin-bottom-xxl text-align-center">
                     This user account is blocked.
                 </div>
 
@@ -136,14 +136,14 @@
                             <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
                         </ul>
 
-                        <div data-ls-if="{{user.status}} !== <?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none">
-                            <form name="users.updateStatus" class="margin-bottom"
+                        <div data-ls-if="{{user.status}}" style="display: none">
+                            <form name="users.updateActive" class="margin-bottom"
                                 data-analytics
                                 data-analytics-activity
                                 data-analytics-event="submit"
                                 data-analytics-category="console"
                                 data-analytics-label="Update User Status"
-                                data-service="users.updateStatus"
+                                data-service="users.updateActive"
                                 data-event="submit"
                                 data-param-user-id="{{router.params.id}}"
                                 data-success="alert,trigger"
@@ -153,18 +153,18 @@
                                 data-failure-param-alert-text="Failed to block user"
                                 data-failure-param-alert-classname="error">
 
-                                <button name="status" type="submit" class="danger fill" value="<?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>" data-cast-to="integer">Block Account</button>
+                                <button name="status" type="submit" class="danger fill" value="false" data-cast-to="integer">Block Account</button>
                             </form>
                         </div>
 
-                        <div data-ls-if="{{user.status}} === <?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none">
-                            <form name="users.updateStatus" class="margin-bottom"
+                        <div data-ls-if="{{user.status}} === false" style="display: none">
+                            <form name="users.updateActive" class="margin-bottom"
                                 data-analytics
                                 data-analytics-activity
                                 data-analytics-event="submit"
                                 data-analytics-category="console"
                                 data-analytics-label="Update User Status"
-                                data-service="users.updateStatus"
+                                data-service="users.updateActive"
                                 data-event="submit"
                                 data-param-user-id="{{router.params.id}}"
                                 data-success="alert,trigger"
@@ -174,7 +174,7 @@
                                 data-failure-param-alert-text="Failed to activate user"
                                 data-failure-param-alert-classname="error">
 
-                                <button name="status" type="submit" class="fill" value="<?php echo \Appwrite\Auth\Auth::USER_STATUS_ACTIVATED; ?>" data-cast-to="integer">Activate Account</button>
+                                <button name="status" type="submit" class="fill" value="true" data-cast-to="integer">Activate Account</button>
                             </form>
                         </div>
                     </div>

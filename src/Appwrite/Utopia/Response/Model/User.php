@@ -28,11 +28,11 @@ class User extends Model
                 'default' => 0,
                 'example' => 1592981250,
             ])
-            ->addRule('status', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'User status. 1 for active and 2 is blocked.',
-                'default' => 1,
-                'example' => 1,
+            ->addRule('active', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'User status. true is for enabled and false is blocked.',
+                'default' => true,
+                'example' => true,
             ])
             ->addRule('email', [
                 'type' => self::TYPE_STRING,

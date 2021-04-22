@@ -50,9 +50,13 @@ class V07 extends Migration
                 /**
                  * Remove deprecated user status 0.
                  */
-                if ($document->getAttribute('status') === 0) {
-                    $document->setAttribute('status', 1);
+                if ($document->getAttribute('status') === 0 || $document->getAttribute('status') === 1) {
+                    $document->setAttribute('active', true);
                 }
+                if ($document->getAttribute('status') === 2) {
+                    $document->setAttribute('active', false);
+                }
+                $document->removeAttribute('status');
 
                 break;
         }

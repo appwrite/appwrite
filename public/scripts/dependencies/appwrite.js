@@ -5035,16 +5035,16 @@
             },
 
             /**
-             * Update User Status
+             * Update User Active Status
              *
              * Update the user status by its unique ID.
              *
              * @param {string} userId
-             * @param {string} status
+             * @param {boolean} status
              * @throws {Error}
              * @return {Promise}             
              */
-            updateStatus: function(userId, status) {
+            updateActive: function(userId, status) {
                 if(userId === undefined) {
                     throw new Error('Missing required parameter: "userId"');
                 }
@@ -5053,7 +5053,7 @@
                     throw new Error('Missing required parameter: "status"');
                 }
                 
-                let path = '/users/{userId}/status'.replace(new RegExp('{userId}', 'g'), userId);
+                let path = '/users/{userId}/active'.replace(new RegExp('{userId}', 'g'), userId);
 
                 let payload = {};
 

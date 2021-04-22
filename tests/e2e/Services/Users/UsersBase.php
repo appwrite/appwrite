@@ -23,7 +23,7 @@ trait UsersBase
         $this->assertEquals($user['headers']['status-code'], 201);
         $this->assertEquals($user['body']['name'], 'Project User');
         $this->assertEquals($user['body']['email'], 'users.service@example.com');
-        $this->assertEquals($user['body']['status'], 1);
+        $this->assertEquals($user['body']['active'], true);
         $this->assertGreaterThan(0, $user['body']['registration']);
 
         return ['userId' => $user['body']['$id']];
@@ -45,7 +45,7 @@ trait UsersBase
         $this->assertEquals($user['headers']['status-code'], 200);
         $this->assertEquals($user['body']['name'], 'Project User');
         $this->assertEquals($user['body']['email'], 'users.service@example.com');
-        $this->assertEquals($user['body']['status'], 1);
+        $this->assertEquals($user['body']['active'], true);
         $this->assertGreaterThan(0, $user['body']['registration']);
 
         $sessions = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/sessions', array_merge([
@@ -101,15 +101,15 @@ trait UsersBase
         /**
          * Test for SUCCESS
          */
-        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/status', array_merge([
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/active', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'status' => 2,
+            'active' => false,
         ]);
 
         $this->assertEquals($user['headers']['status-code'], 200);
-        $this->assertEquals($user['body']['status'], 2);
+        $this->assertEquals($user['body']['active'], false);
 
         $user = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'], array_merge([
             'content-type' => 'application/json',
@@ -117,7 +117,7 @@ trait UsersBase
         ], $this->getHeaders()));
 
         $this->assertEquals($user['headers']['status-code'], 200);
-        $this->assertEquals($user['body']['status'], 2);
+        $this->assertEquals($user['body']['active'], false);
 
         return $data;
     }
