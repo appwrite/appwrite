@@ -1,5 +1,5 @@
 <?php
-$environments = $this->getParam('environments', []);
+$runtimes = $this->getParam('runtimes', []);
 ?>
 <div class="cover">
     <h1 class="zone xl margin-bottom-large">
@@ -40,7 +40,7 @@ $environments = $this->getParam('environments', []);
                         <ul data-ls-loop="project-functions.functions" data-ls-as="function" class="list">
                             <li class="clear">
                                 <div class="pull-start margin-end avatar-container">
-                                    <img src="" data-ls-attrs="src=/images/environments/{{function.env|envLogo}}?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Function Env." class="avatar" loading="lazy" width="60" height="60" />
+                                    <img src="" data-ls-attrs="src=/images/runtimes/{{function.env|envLogo}}?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Function Env." class="avatar" loading="lazy" width="60" height="60" />
                                 </div>
 
                                 <a data-ls-attrs="href=/console/functions/function?id={{function.$id}}&project={{router.params.project}}" class="button pull-end">Settings</a>
@@ -109,10 +109,10 @@ $environments = $this->getParam('environments', []);
                             <label for="name">Name</label>
                             <input type="text" id="name" name="name" required autocomplete="off" class="margin-bottom" maxlength="128" />
                             
-                            <label for="env">Environment</label>
+                            <label for="env">Runtimes</label>
                             <select name="env" id="env" required class="margin-bottom-xl">
-                                <?php foreach($environments as $key => $environment): ?>
-                                    <option value="<?php echo $this->escape($key); ?>"><?php echo $this->escape($environment['name']); ?> <?php echo $this->escape($environment['version']); ?></option>
+                                <?php foreach($runtimes as $key => $runtime): ?>
+                                    <option value="<?php echo $this->escape($key); ?>"><?php echo $this->escape($runtime['name']); ?> <?php echo $this->escape($runtime['version']); ?></option>
                                 <?php endforeach; ?>
                             </select>
 

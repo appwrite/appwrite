@@ -36,6 +36,7 @@
         "ext-sockets": "*",
 
         "appwrite/php-clamav": "1.1.*",
+        "appwrite/php-runtimes": "0.2.*",
 
         "utopia-php/framework": "0.12.*",
         "utopia-php/abuse": "0.4.*",
@@ -49,7 +50,6 @@
         "utopia-php/preloader": "0.2.*",
         "utopia-php/domains": "1.1.*",
         "utopia-php/swoole": "0.2.*",
-        "utopia-php/system": "0.4.*",
         "utopia-php/storage": "0.4.*",
         "utopia-php/image": "0.2.*",
 

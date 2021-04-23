@@ -283,7 +283,6 @@ services:
       - /tmp:/tmp:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./docker:/usr/src/code/docker
     depends_on:
       - redis
       - mariadb
