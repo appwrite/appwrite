@@ -2,6 +2,7 @@ dist: xenial
 
 arch:
   - amd64
+  - arm64
 
 os: linux
 
@@ -10,9 +11,6 @@ language: shell
 notifications:
   email:
   - team@appwrite.io
-  
-services:
-- docker
 
 before_install:
 - curl -fsSL https://get.docker.com | sh
@@ -27,6 +25,7 @@ before_install:
 - docker --version
 - docker buildx create --use
 - chmod -R u+x ./.travis-ci
+- export COMPOSE_INTERACTIVE_NO_CLI=1
 
 install:
 - docker-compose up -d
@@ -38,7 +37,7 @@ script:
 - docker-compose logs appwrite-worker-functions
 - docker-compose exec appwrite doctor
 - docker-compose exec appwrite vars
-- docker-compose exec appwrite test
+- docker-compose exec appwrite test --debug
 
 deploy:
   - provider: script

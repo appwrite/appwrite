@@ -41,7 +41,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
 
     $route = $utopia->match($request);
 
-    if (!empty($route->getLabel('sdk.platform', [])) && empty($project->getId()) && ($route->getLabel('scope', '') !== 'public')) {
+    if (!empty($route->getLabel('sdk.auth', [])) && empty($project->getId()) && ($route->getLabel('scope', '') !== 'public')) {
         throw new Exception('Missing or unknown project ID', 400);
     }
 
@@ -117,7 +117,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         ->addHeader('Server', 'Appwrite')
         ->addHeader('X-Content-Type-Options', 'nosniff')
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-SDK-Version, Cache-Control, Expires, Pragma')
+        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, Cache-Control, Expires, Pragma')
         ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
         ->addHeader('Access-Control-Allow-Origin', $refDomain)
         ->addHeader('Access-Control-Allow-Credentials', 'true')
@@ -237,7 +237,7 @@ App::options(function ($request, $response) {
     $response
         ->addHeader('Server', 'Appwrite')
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-SDK-Version, Cache-Control, Expires, Pragma, X-Fallback-Cookies')
+        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, Cache-Control, Expires, Pragma, X-Fallback-Cookies')
         ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
         ->addHeader('Access-Control-Allow-Origin', $origin)
         ->addHeader('Access-Control-Allow-Credentials', 'true')
@@ -256,6 +256,8 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     $template = ($route) ? $route->getLabel('error', null) : null;
 
     if (php_sapi_name() === 'cli') {
+        Console::error('[Error] Timestamp: '.date('c', time()));
+        
         if($route) {
             Console::error('[Error] Method: '.$route->getMethod());
             Console::error('[Error] URL: '.$route->getURL());
@@ -269,7 +271,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
 
     $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
-    switch ($error->getCode()) {
+    switch ($error->getCode()) { // Don't show 500 errors!
         case 400: // Error allowed publicly
         case 401: // Error allowed publicly
         case 402: // Error allowed publicly
@@ -278,6 +280,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
         case 409: // Error allowed publicly
         case 412: // Error allowed publicly
         case 429: // Error allowed publicly
+        case 501: // Error allowed publicly
             $code = $error->getCode();
             $message = $error->getMessage();
             break;

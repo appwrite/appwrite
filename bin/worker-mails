@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ -z "$_APP_REDIS_USER" ] || [ -z "$_APP_REDIS_PASS" ]
+if [ -z "$_APP_REDIS_USER" ] && [ -z "$_APP_REDIS_PASS" ]
 then
     REDIS_BACKEND="${_APP_REDIS_HOST}:${_APP_REDIS_PORT}"
 else

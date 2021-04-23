@@ -20,4 +20,4 @@ console.log(Deno.env.get("APPWRITE_FUNCTION_ENV_NAME") || '');
 console.log(Deno.env.get("APPWRITE_FUNCTION_ENV_VERSION") || '');
 // console.log(result['$id']"));
 console.log(Deno.env.get("APPWRITE_FUNCTION_EVENT") || '');
-console.log(Deno.env.get("APPWRITE_FUNCTION_EVENT_PAYLOAD") || '');
+console.log(Deno.env.get("APPWRITE_FUNCTION_EVENT_DATA") || '');

@@ -15,6 +15,7 @@ use Appwrite\Utopia\Response\Model\Collection;
 use Appwrite\Utopia\Response\Model\Continent;
 use Appwrite\Utopia\Response\Model\Country;
 use Appwrite\Utopia\Response\Model\Currency;
+use Appwrite\Utopia\Response\Model\Document as ModelDocument;
 use Appwrite\Utopia\Response\Model\Domain;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
@@ -39,6 +40,7 @@ use Appwrite\Utopia\Response\Model\Tag;
 use Appwrite\Utopia\Response\Model\Task;
 use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
+use Appwrite\Utopia\Response\Model\Mock; // Keep last
 use stdClass;
 
 /**
@@ -60,6 +62,7 @@ class Response extends SwooleResponse
     const MODEL_COLLECTION = 'collection';
     const MODEL_COLLECTION_LIST = 'collectionList';
     const MODEL_RULE = 'rule';
+    const MODEL_DOCUMENT = 'document';
     const MODEL_DOCUMENT_LIST = 'documentList';
 
     // Users
@@ -115,6 +118,9 @@ class Response extends SwooleResponse
     const MODEL_PLATFORM_LIST = 'platformList';
     const MODEL_DOMAIN = 'domain';
     const MODEL_DOMAIN_LIST = 'domainList';
+    
+    // Tests (keep last)
+    const MODEL_MOCK = 'mock';
 
     /**
      * @var Filter
@@ -141,7 +147,7 @@ class Response extends SwooleResponse
             ->setModel(new ErrorDev())
             // Lists
             ->setModel(new BaseList('Collections List', self::MODEL_COLLECTION_LIST, 'collections', self::MODEL_COLLECTION))
-            ->setModel(new BaseList('Documents List', self::MODEL_DOCUMENT_LIST, 'documents', self::MODEL_ANY))
+            ->setModel(new BaseList('Documents List', self::MODEL_DOCUMENT_LIST, 'documents', self::MODEL_DOCUMENT))
             ->setModel(new BaseList('Users List', self::MODEL_USER_LIST, 'users', self::MODEL_USER))
             ->setModel(new BaseList('Sessions List', self::MODEL_SESSION_LIST, 'sessions', self::MODEL_SESSION))
             ->setModel(new BaseList('Logs List', self::MODEL_LOG_LIST, 'logs', self::MODEL_LOG, false))
@@ -165,6 +171,7 @@ class Response extends SwooleResponse
             // Entities
             ->setModel(new Permissions())
             ->setModel(new Collection())
+            ->setModel(new ModelDocument())
             ->setModel(new Rule())
             ->setModel(new Log())
             ->setModel(new User())
@@ -191,6 +198,8 @@ class Response extends SwooleResponse
             ->setModel(new Phone())
             // Verification
             // Recovery
+            // Tests (keep last)
+            ->setModel(new Mock())
         ;
 
         parent::__construct($response);

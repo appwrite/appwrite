@@ -27,7 +27,7 @@ return http.post(path,{'content-type':'application/json',},payload);},delete:fun
 if(password===undefined){throw new Error('Missing required parameter: "password"');}
 let path='/account/email';let payload={};if(email){payload['email']=email;}
 if(password){payload['password']=password;}
-return http.patch(path,{'content-type':'application/json',},payload);},createJWT:function(){let path='/account/jwt';let payload={};return http.post(path,{'content-type':'application/json',},payload);},getLogs:function(){let path='/account/logs';let payload={};return http.get(path,{'content-type':'application/json',},payload);},updateName:function(name){if(name===undefined){throw new Error('Missing required parameter: "name"');}
+return http.patch(path,{'content-type':'application/json',},payload);},getLogs:function(){let path='/account/logs';let payload={};return http.get(path,{'content-type':'application/json',},payload);},updateName:function(name){if(name===undefined){throw new Error('Missing required parameter: "name"');}
 let path='/account/name';let payload={};if(name){payload['name']=name;}
 return http.patch(path,{'content-type':'application/json',},payload);},updatePassword:function(password,oldPassword){if(password===undefined){throw new Error('Missing required parameter: "password"');}
 if(oldPassword===undefined){throw new Error('Missing required parameter: "oldPassword"');}
@@ -188,8 +188,9 @@ let path='/functions/{functionId}/executions'.replace(new RegExp('{functionId}',
 if(limit){payload['limit']=limit;}
 if(offset){payload['offset']=offset;}
 if(orderType){payload['orderType']=orderType;}
-return http.get(path,{'content-type':'application/json',},payload);},createExecution:function(functionId){if(functionId===undefined){throw new Error('Missing required parameter: "functionId"');}
-let path='/functions/{functionId}/executions'.replace(new RegExp('{functionId}','g'),functionId);let payload={};return http.post(path,{'content-type':'application/json',},payload);},getExecution:function(functionId,executionId){if(functionId===undefined){throw new Error('Missing required parameter: "functionId"');}
+return http.get(path,{'content-type':'application/json',},payload);},createExecution:function(functionId,data){if(functionId===undefined){throw new Error('Missing required parameter: "functionId"');}
+let path='/functions/{functionId}/executions'.replace(new RegExp('{functionId}','g'),functionId);let payload={};if(data){payload['data']=data;}
+return http.post(path,{'content-type':'application/json',},payload);},getExecution:function(functionId,executionId){if(functionId===undefined){throw new Error('Missing required parameter: "functionId"');}
 if(executionId===undefined){throw new Error('Missing required parameter: "executionId"');}
 let path='/functions/{functionId}/executions/{executionId}'.replace(new RegExp('{functionId}','g'),functionId).replace(new RegExp('{executionId}','g'),executionId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},updateTag:function(functionId,tag){if(functionId===undefined){throw new Error('Missing required parameter: "functionId"');}
 if(tag===undefined){throw new Error('Missing required parameter: "tag"');}
@@ -243,7 +244,14 @@ if(legalTaxId){payload['legalTaxId']=legalTaxId;}
 return http.patch(path,{'content-type':'application/json',},payload);},delete:function(projectId,password){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
 if(password===undefined){throw new Error('Missing required parameter: "password"');}
 let path='/projects/{projectId}'.replace(new RegExp('{projectId}','g'),projectId);let payload={};if(password){payload['password']=password;}
-return http.delete(path,{'content-type':'application/json',},payload);},listDomains:function(projectId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
+return http.delete(path,{'content-type':'application/json',},payload);},updateAuthLimit:function(projectId,limit){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
+if(limit===undefined){throw new Error('Missing required parameter: "limit"');}
+let path='/projects/{projectId}/auth/limit'.replace(new RegExp('{projectId}','g'),projectId);let payload={};if(typeof limit!=='undefined'){payload['limit']=limit;}
+return http.patch(path,{'content-type':'application/json',},payload);},updateAuthStatus:function(projectId,method,status){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
+if(method===undefined){throw new Error('Missing required parameter: "method"');}
+if(status===undefined){throw new Error('Missing required parameter: "status"');}
+let path='/projects/{projectId}/auth/{method}'.replace(new RegExp('{projectId}','g'),projectId).replace(new RegExp('{method}','g'),method);let payload={};if(status){payload['status']=status;}
+return http.patch(path,{'content-type':'application/json',},payload);},listDomains:function(projectId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
 let path='/projects/{projectId}/domains'.replace(new RegExp('{projectId}','g'),projectId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},createDomain:function(projectId,domain){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
 if(domain===undefined){throw new Error('Missing required parameter: "domain"');}
 let path='/projects/{projectId}/domains'.replace(new RegExp('{projectId}','g'),projectId);let payload={};if(domain){payload['domain']=domain;}

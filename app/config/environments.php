@@ -70,6 +70,15 @@ $environments = [
         'logo' => 'python.png',
         'supports' => [System::X86, System::PPC, System::ARM],
     ],
+    'python-3.9' => [
+        'name' => 'Python',
+        'version' => '3.9',
+        'base' => 'python:3.9-alpine',
+        'image' => 'appwrite/env-python-3.9:1.0.0',
+        'build' => '/usr/src/code/docker/environments/python-3.9',
+        'logo' => 'python.png',
+        'supports' => [System::X86, System::PPC, System::ARM],
+    ],
     'deno-1.2' => [
         'name' => 'Deno',
         'version' => '1.2',
@@ -77,7 +86,7 @@ $environments = [
         'image' => 'appwrite/env-deno-1.2:1.0.0',
         'build' => '/usr/src/code/docker/environments/deno-1.2',
         'logo' => 'deno.png',
-        'supports' => [System::X86, System::PPC, System::ARM],
+        'supports' => [System::X86],
     ],
     'deno-1.5' => [
         'name' => 'Deno',
@@ -86,7 +95,7 @@ $environments = [
         'image' => 'appwrite/env-deno-1.5:1.0.0',
         'build' => '/usr/src/code/docker/environments/deno-1.5',
         'logo' => 'deno.png',
-        'supports' => [System::X86, System::PPC, System::ARM],
+        'supports' => [System::X86],
     ],
     'deno-1.6' => [
         'name' => 'Deno',
@@ -95,7 +104,16 @@ $environments = [
         'image' => 'appwrite/env-deno-1.6:1.0.0',
         'build' => '/usr/src/code/docker/environments/deno-1.6',
         'logo' => 'deno.png',
-        'supports' => [System::X86, System::PPC, System::ARM],
+        'supports' => [System::X86],
+    ],
+    'deno-1.8' => [
+        'name' => 'Deno',
+        'version' => '1.8',
+        'base' => 'hayd/deno:alpine-1.8.2',
+        'image' => 'appwrite/env-deno-1.8:1.0.0',
+        'build' => '/usr/src/code/docker/environments/deno-1.8',
+        'logo' => 'deno.png',
+        'supports' => [System::X86],
     ],
     'dart-2.10' => [
         'name' => 'Dart',
@@ -106,6 +124,15 @@ $environments = [
         'logo' => 'dart.png',
         'supports' => [System::X86],
     ],
+    'dart-2.12' => [
+        'name' => 'Dart',
+        'version' => '2.12',
+        'base' => 'google/dart:2.12',
+        'image' => 'appwrite/env-dart-2.12:1.0.0',
+        'build' => '/usr/src/code/docker/environments/dart-2.12',
+        'logo' => 'dart.png',
+        'supports' => [System::X86],
+    ],
     'dotnet-3.1' => [
         'name' => '.NET',
         'version' => '3.1',
@@ -113,7 +140,7 @@ $environments = [
         'image' => 'appwrite/env-dotnet-3.1:1.0.0',
         'build' => '/usr/src/code/docker/environments/dotnet-3.1',
         'logo' => 'dotnet.png',
-        'supports' => [System::X86, System::ARM],
+        'supports' => [System::X86],
     ],
     'dotnet-5.0' => [
         'name' => '.NET',

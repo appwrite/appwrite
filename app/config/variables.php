@@ -16,6 +16,14 @@ return [
                 'question' => '',
             ],
             [
+                'name' => '_APP_LOCALE',
+                'description' => 'Set your Appwrite\'s locale. By default, the locale is set to \'en\'.',
+                'introduction' => '',
+                'default' => 'en',
+                'required' => false,
+                'question' => '',
+            ],
+            [
                 'name' => '_APP_OPTIONS_ABUSE',
                 'description' => 'Allows you to disable abuse checks and API rate limiting. By default, set to \'enabled\'. To cancel the abuse checking, set to \'disabled\'. It is not recommended to disable this check-in a production environment.',
                 'introduction' => '',
@@ -25,9 +33,9 @@ return [
             ],
             [
                 'name' => '_APP_OPTIONS_FORCE_HTTPS',
-                'description' => 'Allows you to force HTTPS connection to your API. This feature redirects any HTTP call to HTTPS and adds the \'Strict-Transport-Security\' header to all HTTP responses. By default, set to \'disabled\'. To enable, set to \'enabled\'. This feature will work only when your ports are set to default 80 and 443.',
+                'description' => 'Allows you to force HTTPS connection to your API. This feature redirects any HTTP call to HTTPS and adds the \'Strict-Transport-Security\' header to all HTTP responses. By default, set to \'enabled\'. To disable, set to \'disabled\'. This feature will work only when your ports are set to default 80 and 443.',
                 'introduction' => '',
-                'default' => 'enabled',
+                'default' => 'disabled',
                 'required' => false,
                 'question' => '',
             ],
@@ -115,8 +123,8 @@ return [
                 'name' => '_APP_SYSTEM_SECURITY_EMAIL_ADDRESS',
                 'description' => 'This is the email address used to issue SSL certificates for custom domains or the user agent in your webhooks payload.',
                 'introduction' => '0.7.0',
-                'default' => '',
-                'required' => true,
+                'default' => 'certs@appwrite.io',
+                'required' => false,
                 'question' => '',
             ],
             [
@@ -126,7 +134,7 @@ return [
                 'default' => 'enabled',
                 'required' => false,
                 'question' => '',
-            ],
+            ]
         ],
     ],
     [
@@ -151,7 +159,7 @@ return [
             ],
             [
                 'name' => '_APP_REDIS_USER',
-                'description' => 'Redis server user.',
+                'description' => 'Redis server user. This is an optional variable. Default value is an empty string.',
                 'introduction' => '0.7',
                 'default' => '',
                 'required' => false,
@@ -159,7 +167,7 @@ return [
             ],
             [
                 'name' => '_APP_REDIS_PASS',
-                'description' => 'Redis server password.',
+                'description' => 'Redis server password. This is an optional variable. Default value is an empty string.',
                 'introduction' => '0.7',
                 'default' => '',
                 'required' => false,
@@ -317,9 +325,9 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_ANTIVIRUS',
-                'description' => 'This variable allows you to disable the internal anti-virus scans. This value is set to \'enabled\' by default, to cancel the scans set the value to \'disabled\'. When disabled, it\'s recommended to turn off the ClamAV container for better resource usage.',
+                'description' => 'This variable allows you to disable the internal anti-virus scans. This value is set to \'disabled\' by default, to enable the scans set the value to \'enabled\'. Before enabling, you must add the ClamAV service and depend on it on main Appwrite service.',
                 'introduction' => '',
-                'default' => 'enabled',
+                'default' => 'disabled',
                 'required' => false,
                 'question' => '',
             ],
@@ -389,7 +397,7 @@ return [
                 'name' => '_APP_FUNCTIONS_ENVS',
                 'description' => 'This option allows you to limit the available environments for cloud functions. This option is very useful for low-cost servers to safe disk space.\n\nTo enable/activate this option, pass a list of allowed environments separated by a comma.\n\nCurrently, supported environments are: ' . \implode(', ', \array_keys(Config::getParam('providers'))),
                 'introduction' => '0.7.0',
-                'default' => 'node-14.5,deno-1.6,php-7.4,python-3.8,ruby-3.0,dotnet-5.0',
+                'default' => 'node-14.5,deno-1.8,php-7.4,python-3.9,ruby-3.0,dotnet-5.0',
                 'required' => false,
                 'question' => '',
             ],
