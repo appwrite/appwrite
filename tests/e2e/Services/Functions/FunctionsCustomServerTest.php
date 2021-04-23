@@ -35,7 +35,7 @@ class FunctionsCustomServerTest extends Scope
                 'account.create',
                 'account.delete',
             ],
-            'schedule' => '* * * * *',
+            'schedule' => '0 0 1 1 *',
             'timeout' => 10,
         ]);
 
@@ -57,7 +57,7 @@ class FunctionsCustomServerTest extends Scope
             'account.create',
             'account.delete',
         ], $response1['body']['events']);
-        $this->assertEquals('* * * * *', $response1['body']['schedule']);
+        $this->assertEquals('0 0 1 1 *', $response1['body']['schedule']);
         $this->assertEquals(10, $response1['body']['timeout']);
        
         /**
@@ -183,7 +183,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'command' => 'php function.php',
+            'command' => 'php index.php',
             'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
         ]);
 
@@ -192,7 +192,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $tag['headers']['status-code']);
         $this->assertNotEmpty($tag['body']['$id']);
         $this->assertIsInt($tag['body']['dateCreated']);
-        $this->assertEquals('php function.php', $tag['body']['command']);
+        $this->assertEquals('php index.php', $tag['body']['command']);
         $this->assertGreaterThan(10000, $tag['body']['size']);
        
         /**
@@ -308,28 +308,28 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('', $execution['body']['stderr']);
         $this->assertEquals(0, $execution['body']['time']);
 
-        // $execution = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/executions/'.$executionId, array_merge([
-        //     'content-type' => 'application/json',
-        //     'x-appwrite-project' => $this->getProject()['$id'],
-        // ], $this->getHeaders()));
+        sleep(10);
 
-        // $this->assertNotEmpty($execution['body']['$id']);
-        // $this->assertNotEmpty($execution['body']['functionId']);
-        // $this->assertIsInt($execution['body']['dateCreated']);
-        // $this->assertEquals($data['functionId'], $execution['body']['functionId']);
-        // $this->assertEquals('completed', $execution['body']['status']);
-        // $this->assertEquals(0, $execution['body']['exitCode']);
-        // $this->assertStringContainsString('APPWRITE_FUNCTION_ID', $execution['body']['stdout']);
-        // $this->assertStringContainsString('APPWRITE_FUNCTION_NAME', $execution['body']['stdout']);
-        // $this->assertStringContainsString('APPWRITE_FUNCTION_TAG', $execution['body']['stdout']);
-        // $this->assertStringContainsString('APPWRITE_FUNCTION_TRIGGER', $execution['body']['stdout']);
-        // $this->assertStringContainsString('APPWRITE_FUNCTION_ENV_NAME', $execution['body']['stdout']);
-        // $this->assertStringContainsString('APPWRITE_FUNCTION_ENV_VERSION', $execution['body']['stdout']);
-        // $this->assertStringContainsString('Hello World', $execution['body']['stdout']);
-        // $this->assertStringContainsString($execution['body']['functionId'], $execution['body']['stdout']);
-        // $this->assertEquals('', $execution['body']['stderr']);
-        // $this->assertGreaterThan(0.100, $execution['body']['time']);
-        // $this->assertLessThan(0.500, $execution['body']['time']);
+        $execution = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/executions/'.$executionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertNotEmpty($execution['body']['$id']);
+        $this->assertNotEmpty($execution['body']['functionId']);
+        $this->assertIsInt($execution['body']['dateCreated']);
+        $this->assertEquals($data['functionId'], $execution['body']['functionId']);
+        $this->assertEquals('completed', $execution['body']['status']);
+        $this->assertEquals(0, $execution['body']['exitCode']);
+        $this->assertStringContainsString($execution['body']['functionId'], $execution['body']['stdout']);
+        $this->assertStringContainsString($data['tagId'], $execution['body']['stdout']);
+        $this->assertStringContainsString('Test1', $execution['body']['stdout']);
+        $this->assertStringContainsString('http', $execution['body']['stdout']);
+        $this->assertStringContainsString('PHP', $execution['body']['stdout']);
+        $this->assertStringContainsString('7.4', $execution['body']['stdout']);
+        $this->assertEquals('', $execution['body']['stderr']);
+        $this->assertGreaterThan(0.100, $execution['body']['time']);
+        $this->assertLessThan(0.500, $execution['body']['time']);
 
         /**
          * Test for FAILURE

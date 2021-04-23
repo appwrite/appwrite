@@ -33,7 +33,7 @@ class FunctionsCustomClientTest extends Scope
                 'account.create',
                 'account.delete',
             ],
-            'schedule' => '* * * * *',
+            'schedule' => '0 0 1 1 *',
             'timeout' => 10,
         ]);
 
@@ -64,7 +64,7 @@ class FunctionsCustomClientTest extends Scope
                 'account.create',
                 'account.delete',
             ],
-            'schedule' => '* * * * *',
+            'schedule' => '0 0 1 1 *',
             'timeout' => 10,
         ]);
 
@@ -75,7 +75,7 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'command' => 'php function.php',
+            'command' => 'php index.php',
             'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
         ]);
 

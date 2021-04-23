@@ -13,15 +13,13 @@
     </extensions>
     <testsuites>
         <testsuite name="Application Test Suite">
+            <directory>./tests/unit/</directory>
             <file>./tests/e2e/Client.php</file>
             <directory>./tests/e2e/General</directory>
             <directory>./tests/e2e/Scopes</directory>
             <directory>./tests/e2e/Services/Account</directory>
             <directory>./tests/e2e/Services/Avatars</directory>
             <directory>./tests/e2e/Services/Database</directory>
-            <file>./tests/e2e/Services/Functions/FunctionsBase.php</file>
-            <file>./tests/e2e/Services/Functions/FunctionsCustomServerTest.php</file>
-            <file>./tests/e2e/Services/Functions/FunctionsCustomClientTest.php</file>
             <directory>./tests/e2e/Services/Health</directory>
             <directory>./tests/e2e/Services/Locale</directory>
             <directory>./tests/e2e/Services/Projects</directory>
@@ -30,7 +28,9 @@
             <directory>./tests/e2e/Services/Users</directory>
             <directory>./tests/e2e/Services/Webhooks</directory>
             <directory>./tests/e2e/Services/Workers</directory>
-            <directory>./tests/unit/</directory>
+            <file>./tests/e2e/Services/Functions/FunctionsBase.php</file>
+            <file>./tests/e2e/Services/Functions/FunctionsCustomServerTest.php</file>
+            <file>./tests/e2e/Services/Functions/FunctionsCustomClientTest.php</file>
         </testsuite>
     </testsuites>
 </phpunit>
