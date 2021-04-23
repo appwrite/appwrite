@@ -323,7 +323,10 @@ App::get('/console/users')
 
         $page = new View(__DIR__.'/../../views/console/users/index.phtml');
 
-        $page->setParam('providers', Config::getParam('providers'));
+        $page
+            ->setParam('auth', Config::getParam('auth'))
+            ->setParam('providers', Config::getParam('providers'))
+        ;
 
         $layout
             ->setParam('title', APP_NAME.' - Users')
