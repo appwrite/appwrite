@@ -370,11 +370,11 @@ App::get('/specs/:format')
 
         $models = $response->getModels();
 
-        // foreach ($models as $key => $value) {
-        //     if($platform !== APP_PLATFORM_CONSOLE && !$value->isPublic()) {
-        //         unset($models[$key]);
-        //     }
-        // }
+        foreach ($models as $key => $value) {
+            if($platform !== APP_PLATFORM_CONSOLE && !$value->isPublic()) {
+                unset($models[$key]);
+            }
+        }
 
         switch ($format) {
             case 'swagger2':
