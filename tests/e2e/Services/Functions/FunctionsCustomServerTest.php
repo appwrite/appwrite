@@ -142,7 +142,7 @@ class FunctionsCustomServerTest extends Scope
                 'account.update.name',
                 'account.update.email',
             ],
-            'schedule' => '* * * * 1',
+            'schedule' => '0 0 1 1 *',
             'timeout' => 5,
         ]);
 
@@ -161,7 +161,7 @@ class FunctionsCustomServerTest extends Scope
             'account.update.name',
             'account.update.email',
         ], $response1['body']['events']);
-        $this->assertEquals('* * * * 1', $response1['body']['schedule']);
+        $this->assertEquals('0 0 1 1 *', $response1['body']['schedule']);
         $this->assertEquals(5, $response1['body']['timeout']);
        
         /**
