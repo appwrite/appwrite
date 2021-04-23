@@ -311,10 +311,10 @@
              *
              * Use this endpoint to allow a new user to register a new account in your
              * project. After the user registration completes successfully, you can use
-             * the [/account/verfication](/docs/client/account#createVerification) route
-             * to start verifying the user email address. To allow the new user to login
-             * to their new account, you need to create a new [account
-             * session](/docs/client/account#createSession).
+             * the [/account/verfication](/docs/client/account#accountCreateVerification)
+             * route to start verifying the user email address. To allow the new user to
+             * login to their new account, you need to create a new [account
+             * session](/docs/client/account#accountCreateSession).
              *
              * @param {string} email
              * @param {string} password
@@ -335,15 +335,15 @@
 
                 let payload = {};
 
-                if(email) {
+                if(typeof email !== 'undefined') {
                     payload['email'] = email;
                 }
 
-                if(password) {
+                if(typeof password !== 'undefined') {
                     payload['password'] = password;
                 }
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
@@ -402,38 +402,16 @@
 
                 let payload = {};
 
-                if(email) {
+                if(typeof email !== 'undefined') {
                     payload['email'] = email;
                 }
 
-                if(password) {
+                if(typeof password !== 'undefined') {
                     payload['password'] = password;
                 }
 
                 return http
                     .patch(path, {
-                        'content-type': 'application/json',
-                    }, payload);
-            },
-
-            /**
-             * Create Account JWT
-             *
-             * Use this endpoint to create a JSON Web Token. You can use the resulting JWT
-             * to authenticate on behalf of the current user when working with the
-             * Appwrite server-side API and SDKs. The JWT secret is valid for 15 minutes
-             * from its creation and will be invalid if the user will logout.
-             *
-             * @throws {Error}
-             * @return {Promise}             
-             */
-            createJWT: function() {
-                let path = '/account/jwt';
-
-                let payload = {};
-
-                return http
-                    .post(path, {
                         'content-type': 'application/json',
                     }, payload);
             },
@@ -476,7 +454,7 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
@@ -510,11 +488,11 @@
 
                 let payload = {};
 
-                if(password) {
+                if(typeof password !== 'undefined') {
                     payload['password'] = password;
                 }
 
-                if(oldPassword) {
+                if(typeof oldPassword !== 'undefined') {
                     payload['oldPassword'] = oldPassword;
                 }
 
@@ -562,7 +540,7 @@
 
                 let payload = {};
 
-                if(prefs) {
+                if(typeof prefs !== 'undefined') {
                     payload['prefs'] = prefs;
                 }
 
@@ -579,8 +557,9 @@
              * When the user clicks the confirmation link he is redirected back to your
              * app password reset URL with the secret key and email address values
              * attached to the URL query string. Use the query string params to submit a
-             * request to the [PUT /account/recovery](/docs/client/account#updateRecovery)
-             * endpoint to complete the process.
+             * request to the [PUT
+             * /account/recovery](/docs/client/account#accountUpdateRecovery) endpoint to
+             * complete the process.
              *
              * @param {string} email
              * @param {string} url
@@ -600,11 +579,11 @@
 
                 let payload = {};
 
-                if(email) {
+                if(typeof email !== 'undefined') {
                     payload['email'] = email;
                 }
 
-                if(url) {
+                if(typeof url !== 'undefined') {
                     payload['url'] = url;
                 }
 
@@ -620,7 +599,7 @@
              * Use this endpoint to complete the user account password reset. Both the
              * **userId** and **secret** arguments will be passed as query parameters to
              * the redirect URL you have provided when sending your request to the [POST
-             * /account/recovery](/docs/client/account#createRecovery) endpoint.
+             * /account/recovery](/docs/client/account#accountCreateRecovery) endpoint.
              * 
              * Please note that in order to avoid a [Redirect
              * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
@@ -655,19 +634,19 @@
 
                 let payload = {};
 
-                if(userId) {
+                if(typeof userId !== 'undefined') {
                     payload['userId'] = userId;
                 }
 
-                if(secret) {
+                if(typeof secret !== 'undefined') {
                     payload['secret'] = secret;
                 }
 
-                if(password) {
+                if(typeof password !== 'undefined') {
                     payload['password'] = password;
                 }
 
-                if(passwordAgain) {
+                if(typeof passwordAgain !== 'undefined') {
                     payload['passwordAgain'] = passwordAgain;
                 }
 
@@ -721,11 +700,11 @@
 
                 let payload = {};
 
-                if(email) {
+                if(typeof email !== 'undefined') {
                     payload['email'] = email;
                 }
 
-                if(password) {
+                if(typeof password !== 'undefined') {
                     payload['password'] = password;
                 }
 
@@ -851,7 +830,7 @@
              * should redirect the user back to your app and allow you to complete the
              * verification process by verifying both the **userId** and **secret**
              * parameters. Learn more about how to [complete the verification
-             * process](/docs/client/account#updateVerification). 
+             * process](/docs/client/account#accountUpdateVerification). 
              * 
              * Please note that in order to avoid a [Redirect
              * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md),
@@ -872,7 +851,7 @@
 
                 let payload = {};
 
-                if(url) {
+                if(typeof url !== 'undefined') {
                     payload['url'] = url;
                 }
 
@@ -908,11 +887,11 @@
 
                 let payload = {};
 
-                if(userId) {
+                if(typeof userId !== 'undefined') {
                     payload['userId'] = userId;
                 }
 
-                if(secret) {
+                if(typeof secret !== 'undefined') {
                     payload['secret'] = secret;
                 }
 
@@ -1421,19 +1400,19 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(read) {
+                if(typeof read !== 'undefined') {
                     payload['read'] = read;
                 }
 
-                if(write) {
+                if(typeof write !== 'undefined') {
                     payload['write'] = write;
                 }
 
-                if(rules) {
+                if(typeof rules !== 'undefined') {
                     payload['rules'] = rules;
                 }
 
@@ -1502,19 +1481,19 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(read) {
+                if(typeof read !== 'undefined') {
                     payload['read'] = read;
                 }
 
-                if(write) {
+                if(typeof write !== 'undefined') {
                     payload['write'] = write;
                 }
 
-                if(rules) {
+                if(typeof rules !== 'undefined') {
                     payload['rules'] = rules;
                 }
 
@@ -1616,7 +1595,7 @@
              *
              * Create a new Document. Before using this route, you should create a new
              * collection resource using either a [server
-             * integration](/docs/server/database?sdk=nodejs#createCollection) API or
+             * integration](/docs/server/database#databaseCreateCollection) API or
              * directly from your database console.
              *
              * @param {string} collectionId
@@ -1650,27 +1629,27 @@
 
                 let payload = {};
 
-                if(data) {
+                if(typeof data !== 'undefined') {
                     payload['data'] = data;
                 }
 
-                if(read) {
+                if(typeof read !== 'undefined') {
                     payload['read'] = read;
                 }
 
-                if(write) {
+                if(typeof write !== 'undefined') {
                     payload['write'] = write;
                 }
 
-                if(parentDocument) {
+                if(typeof parentDocument !== 'undefined') {
                     payload['parentDocument'] = parentDocument;
                 }
 
-                if(parentProperty) {
+                if(typeof parentProperty !== 'undefined') {
                     payload['parentProperty'] = parentProperty;
                 }
 
-                if(parentPropertyType) {
+                if(typeof parentPropertyType !== 'undefined') {
                     payload['parentPropertyType'] = parentPropertyType;
                 }
 
@@ -1749,15 +1728,15 @@
 
                 let payload = {};
 
-                if(data) {
+                if(typeof data !== 'undefined') {
                     payload['data'] = data;
                 }
 
-                if(read) {
+                if(typeof read !== 'undefined') {
                     payload['read'] = read;
                 }
 
-                if(write) {
+                if(typeof write !== 'undefined') {
                     payload['write'] = write;
                 }
 
@@ -1875,31 +1854,31 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(execute) {
+                if(typeof execute !== 'undefined') {
                     payload['execute'] = execute;
                 }
 
-                if(env) {
+                if(typeof env !== 'undefined') {
                     payload['env'] = env;
                 }
 
-                if(vars) {
+                if(typeof vars !== 'undefined') {
                     payload['vars'] = vars;
                 }
 
-                if(events) {
+                if(typeof events !== 'undefined') {
                     payload['events'] = events;
                 }
 
-                if(schedule) {
+                if(typeof schedule !== 'undefined') {
                     payload['schedule'] = schedule;
                 }
 
-                if(timeout) {
+                if(typeof timeout !== 'undefined') {
                     payload['timeout'] = timeout;
                 }
 
@@ -1965,27 +1944,27 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(execute) {
+                if(typeof execute !== 'undefined') {
                     payload['execute'] = execute;
                 }
 
-                if(vars) {
+                if(typeof vars !== 'undefined') {
                     payload['vars'] = vars;
                 }
 
-                if(events) {
+                if(typeof events !== 'undefined') {
                     payload['events'] = events;
                 }
 
-                if(schedule) {
+                if(typeof schedule !== 'undefined') {
                     payload['schedule'] = schedule;
                 }
 
-                if(timeout) {
+                if(typeof timeout !== 'undefined') {
                     payload['timeout'] = timeout;
                 }
 
@@ -2024,8 +2003,8 @@
              *
              * Get a list of all the current user function execution logs. You can use the
              * query params to filter your results. On admin mode, this endpoint will
-             * return a list of all of the project's teams. [Learn more about different
-             * API modes](/docs/admin).
+             * return a list of all of the project's executions. [Learn more about
+             * different API modes](/docs/admin).
              *
              * @param {string} functionId
              * @param {string} search
@@ -2152,7 +2131,7 @@
 
                 let payload = {};
 
-                if(tag) {
+                if(typeof tag !== 'undefined') {
                     payload['tag'] = tag;
                 }
 
@@ -2244,11 +2223,11 @@
 
                 let payload = {};
 
-                if(command) {
+                if(typeof command !== 'undefined') {
                     payload['command'] = command;
                 }
 
-                if(code) {
+                if(typeof code !== 'undefined') {
                     payload['code'] = code;
                 }
 
@@ -2807,47 +2786,47 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(teamId) {
+                if(typeof teamId !== 'undefined') {
                     payload['teamId'] = teamId;
                 }
 
-                if(description) {
+                if(typeof description !== 'undefined') {
                     payload['description'] = description;
                 }
 
-                if(logo) {
+                if(typeof logo !== 'undefined') {
                     payload['logo'] = logo;
                 }
 
-                if(url) {
+                if(typeof url !== 'undefined') {
                     payload['url'] = url;
                 }
 
-                if(legalName) {
+                if(typeof legalName !== 'undefined') {
                     payload['legalName'] = legalName;
                 }
 
-                if(legalCountry) {
+                if(typeof legalCountry !== 'undefined') {
                     payload['legalCountry'] = legalCountry;
                 }
 
-                if(legalState) {
+                if(typeof legalState !== 'undefined') {
                     payload['legalState'] = legalState;
                 }
 
-                if(legalCity) {
+                if(typeof legalCity !== 'undefined') {
                     payload['legalCity'] = legalCity;
                 }
 
-                if(legalAddress) {
+                if(typeof legalAddress !== 'undefined') {
                     payload['legalAddress'] = legalAddress;
                 }
 
-                if(legalTaxId) {
+                if(typeof legalTaxId !== 'undefined') {
                     payload['legalTaxId'] = legalTaxId;
                 }
 
@@ -2911,43 +2890,43 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(description) {
+                if(typeof description !== 'undefined') {
                     payload['description'] = description;
                 }
 
-                if(logo) {
+                if(typeof logo !== 'undefined') {
                     payload['logo'] = logo;
                 }
 
-                if(url) {
+                if(typeof url !== 'undefined') {
                     payload['url'] = url;
                 }
 
-                if(legalName) {
+                if(typeof legalName !== 'undefined') {
                     payload['legalName'] = legalName;
                 }
 
-                if(legalCountry) {
+                if(typeof legalCountry !== 'undefined') {
                     payload['legalCountry'] = legalCountry;
                 }
 
-                if(legalState) {
+                if(typeof legalState !== 'undefined') {
                     payload['legalState'] = legalState;
                 }
 
-                if(legalCity) {
+                if(typeof legalCity !== 'undefined') {
                     payload['legalCity'] = legalCity;
                 }
 
-                if(legalAddress) {
+                if(typeof legalAddress !== 'undefined') {
                     payload['legalAddress'] = legalAddress;
                 }
 
-                if(legalTaxId) {
+                if(typeof legalTaxId !== 'undefined') {
                     payload['legalTaxId'] = legalTaxId;
                 }
 
@@ -2979,12 +2958,81 @@
 
                 let payload = {};
 
-                if(password) {
+                if(typeof password !== 'undefined') {
                     payload['password'] = password;
                 }
 
                 return http
                     .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Update Project users limit
+             *
+             *
+             * @param {string} projectId
+             * @param {string} limit
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            updateAuthLimit: function(projectId, limit) {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                if(limit === undefined) {
+                    throw new Error('Missing required parameter: "limit"');
+                }
+                
+                let path = '/projects/{projectId}/auth/limit'.replace(new RegExp('{projectId}', 'g'), projectId);
+
+                let payload = {};
+
+                if(typeof limit !== 'undefined') {
+                    payload['limit'] = limit;
+                }
+
+                return http
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Update Project auth method status. Use this endpoint to enable or disable a given auth method for this project.
+             *
+             *
+             * @param {string} projectId
+             * @param {string} method
+             * @param {boolean} status
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            updateAuthStatus: function(projectId, method, status) {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                if(method === undefined) {
+                    throw new Error('Missing required parameter: "method"');
+                }
+                
+                if(status === undefined) {
+                    throw new Error('Missing required parameter: "status"');
+                }
+                
+                let path = '/projects/{projectId}/auth/{method}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{method}', 'g'), method);
+
+                let payload = {};
+
+                if(typeof status !== 'undefined') {
+                    payload['status'] = status;
+                }
+
+                return http
+                    .patch(path, {
                         'content-type': 'application/json',
                     }, payload);
             },
@@ -3034,7 +3082,7 @@
 
                 let payload = {};
 
-                if(domain) {
+                if(typeof domain !== 'undefined') {
                     payload['domain'] = domain;
                 }
 
@@ -3178,11 +3226,11 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(scopes) {
+                if(typeof scopes !== 'undefined') {
                     payload['scopes'] = scopes;
                 }
 
@@ -3252,11 +3300,11 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(scopes) {
+                if(typeof scopes !== 'undefined') {
                     payload['scopes'] = scopes;
                 }
 
@@ -3318,15 +3366,15 @@
 
                 let payload = {};
 
-                if(provider) {
+                if(typeof provider !== 'undefined') {
                     payload['provider'] = provider;
                 }
 
-                if(appId) {
+                if(typeof appId !== 'undefined') {
                     payload['appId'] = appId;
                 }
 
-                if(secret) {
+                if(typeof secret !== 'undefined') {
                     payload['secret'] = secret;
                 }
 
@@ -3389,23 +3437,23 @@
 
                 let payload = {};
 
-                if(type) {
+                if(typeof type !== 'undefined') {
                     payload['type'] = type;
                 }
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(key) {
+                if(typeof key !== 'undefined') {
                     payload['key'] = key;
                 }
 
-                if(store) {
+                if(typeof store !== 'undefined') {
                     payload['store'] = store;
                 }
 
-                if(hostname) {
+                if(typeof hostname !== 'undefined') {
                     payload['hostname'] = hostname;
                 }
 
@@ -3473,19 +3521,19 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(key) {
+                if(typeof key !== 'undefined') {
                     payload['key'] = key;
                 }
 
-                if(store) {
+                if(typeof store !== 'undefined') {
                     payload['store'] = store;
                 }
 
-                if(hostname) {
+                if(typeof hostname !== 'undefined') {
                     payload['hostname'] = hostname;
                 }
 
@@ -3596,39 +3644,39 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(status) {
+                if(typeof status !== 'undefined') {
                     payload['status'] = status;
                 }
 
-                if(schedule) {
+                if(typeof schedule !== 'undefined') {
                     payload['schedule'] = schedule;
                 }
 
-                if(security) {
+                if(typeof security !== 'undefined') {
                     payload['security'] = security;
                 }
 
-                if(httpMethod) {
+                if(typeof httpMethod !== 'undefined') {
                     payload['httpMethod'] = httpMethod;
                 }
 
-                if(httpUrl) {
+                if(typeof httpUrl !== 'undefined') {
                     payload['httpUrl'] = httpUrl;
                 }
 
-                if(httpHeaders) {
+                if(typeof httpHeaders !== 'undefined') {
                     payload['httpHeaders'] = httpHeaders;
                 }
 
-                if(httpUser) {
+                if(typeof httpUser !== 'undefined') {
                     payload['httpUser'] = httpUser;
                 }
 
-                if(httpPass) {
+                if(typeof httpPass !== 'undefined') {
                     payload['httpPass'] = httpPass;
                 }
 
@@ -3721,39 +3769,39 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(status) {
+                if(typeof status !== 'undefined') {
                     payload['status'] = status;
                 }
 
-                if(schedule) {
+                if(typeof schedule !== 'undefined') {
                     payload['schedule'] = schedule;
                 }
 
-                if(security) {
+                if(typeof security !== 'undefined') {
                     payload['security'] = security;
                 }
 
-                if(httpMethod) {
+                if(typeof httpMethod !== 'undefined') {
                     payload['httpMethod'] = httpMethod;
                 }
 
-                if(httpUrl) {
+                if(typeof httpUrl !== 'undefined') {
                     payload['httpUrl'] = httpUrl;
                 }
 
-                if(httpHeaders) {
+                if(typeof httpHeaders !== 'undefined') {
                     payload['httpHeaders'] = httpHeaders;
                 }
 
-                if(httpUser) {
+                if(typeof httpUser !== 'undefined') {
                     payload['httpUser'] = httpUser;
                 }
 
-                if(httpPass) {
+                if(typeof httpPass !== 'undefined') {
                     payload['httpPass'] = httpPass;
                 }
 
@@ -3881,27 +3929,27 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(events) {
+                if(typeof events !== 'undefined') {
                     payload['events'] = events;
                 }
 
-                if(url) {
+                if(typeof url !== 'undefined') {
                     payload['url'] = url;
                 }
 
-                if(security) {
+                if(typeof security !== 'undefined') {
                     payload['security'] = security;
                 }
 
-                if(httpUser) {
+                if(typeof httpUser !== 'undefined') {
                     payload['httpUser'] = httpUser;
                 }
 
-                if(httpPass) {
+                if(typeof httpPass !== 'undefined') {
                     payload['httpPass'] = httpPass;
                 }
 
@@ -3983,27 +4031,27 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(events) {
+                if(typeof events !== 'undefined') {
                     payload['events'] = events;
                 }
 
-                if(url) {
+                if(typeof url !== 'undefined') {
                     payload['url'] = url;
                 }
 
-                if(security) {
+                if(typeof security !== 'undefined') {
                     payload['security'] = security;
                 }
 
-                if(httpUser) {
+                if(typeof httpUser !== 'undefined') {
                     payload['httpUser'] = httpUser;
                 }
 
-                if(httpPass) {
+                if(typeof httpPass !== 'undefined') {
                     payload['httpPass'] = httpPass;
                 }
 
@@ -4115,15 +4163,15 @@
 
                 let payload = {};
 
-                if(file) {
+                if(typeof file !== 'undefined') {
                     payload['file'] = file;
                 }
 
-                if(read) {
+                if(typeof read !== 'undefined') {
                     payload['read'] = read;
                 }
 
-                if(write) {
+                if(typeof write !== 'undefined') {
                     payload['write'] = write;
                 }
 
@@ -4187,11 +4235,11 @@
 
                 let payload = {};
 
-                if(read) {
+                if(typeof read !== 'undefined') {
                     payload['read'] = read;
                 }
 
-                if(write) {
+                if(typeof write !== 'undefined') {
                     payload['write'] = write;
                 }
 
@@ -4451,11 +4499,11 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(roles) {
+                if(typeof roles !== 'undefined') {
                     payload['roles'] = roles;
                 }
 
@@ -4514,7 +4562,7 @@
 
                 let payload = {};
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
@@ -4603,8 +4651,8 @@
              * 
              * Use the 'URL' parameter to redirect the user from the invitation email back
              * to your app. When the user is redirected, use the [Update Team Membership
-             * Status](/docs/client/teams#updateMembershipStatus) endpoint to allow the
-             * user to accept the invitation to the team.
+             * Status](/docs/client/teams#teamsUpdateMembershipStatus) endpoint to allow
+             * the user to accept the invitation to the team.
              * 
              * Please note that in order to avoid a [Redirect
              * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
@@ -4640,19 +4688,19 @@
 
                 let payload = {};
 
-                if(email) {
+                if(typeof email !== 'undefined') {
                     payload['email'] = email;
                 }
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
-                if(roles) {
+                if(typeof roles !== 'undefined') {
                     payload['roles'] = roles;
                 }
 
-                if(url) {
+                if(typeof url !== 'undefined') {
                     payload['url'] = url;
                 }
 
@@ -4728,11 +4776,11 @@
 
                 let payload = {};
 
-                if(userId) {
+                if(typeof userId !== 'undefined') {
                     payload['userId'] = userId;
                 }
 
-                if(secret) {
+                if(typeof secret !== 'undefined') {
                     payload['secret'] = secret;
                 }
 
@@ -4809,15 +4857,15 @@
 
                 let payload = {};
 
-                if(email) {
+                if(typeof email !== 'undefined') {
                     payload['email'] = email;
                 }
 
-                if(password) {
+                if(typeof password !== 'undefined') {
                     payload['password'] = password;
                 }
 
-                if(name) {
+                if(typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
 
@@ -4947,7 +4995,7 @@
 
                 let payload = {};
 
-                if(prefs) {
+                if(typeof prefs !== 'undefined') {
                     payload['prefs'] = prefs;
                 }
 
@@ -5057,7 +5105,7 @@
 
                 let payload = {};
 
-                if(status) {
+                if(typeof status !== 'undefined') {
                     payload['status'] = status;
                 }
 

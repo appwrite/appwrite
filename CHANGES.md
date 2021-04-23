@@ -8,6 +8,13 @@
 - Added ARM support
 - Splited token & session models to become 2 different internal entities (#922)
 - Added Dart 2.12 as a new Cloud Functions runtime (#989)
+- Added option to disable email/password
+- Added option to disable anonymous login (need to merge and apply changed)
+- Added option to disable JWT auth
+- Added option to disable team invites
+- Option to limit number of users (good for app launches + god account PR)
+- Added 2 new endpoints to the projects API to allow new settings
+- Enabled 501 errors (Not Implemented) from the error handler
 - Added Python 3.9 as a new Cloud Functions runtime
 - Added Deno 1.8 as a new Cloud Functions runtime (#989)
 - ClamAV is now disabled by default to allow lower min requirments for Appwrite (#1064)
