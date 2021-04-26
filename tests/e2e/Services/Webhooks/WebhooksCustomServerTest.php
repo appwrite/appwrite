@@ -453,7 +453,6 @@ class WebhooksCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        sleep(10);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$data['functionId'].'/executions', array_merge([
             'content-type' => 'application/json',
