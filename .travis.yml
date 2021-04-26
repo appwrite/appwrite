@@ -37,8 +37,10 @@ script:
 - docker-compose logs appwrite-worker-functions
 - docker-compose exec appwrite doctor
 - docker-compose exec appwrite vars
-- docker-compose exec appwrite test --debug
-- docker-compose logs appwrite
+- docker-compose exec appwrite test --debug --testsuite unit
+- docker-compose exec appwrite test --debug --testsuite webhooks
+- docker-compose exec appwrite test --debug --testsuite functions
+- docker-compose exec appwrite test --debug --testsuite e2e
 
 deploy:
   - provider: script
