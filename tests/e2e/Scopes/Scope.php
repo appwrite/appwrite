@@ -46,7 +46,7 @@ abstract class Scope extends TestCase
 
     protected function getLastRequest():array
     {
-        sleep(4);
+        sleep(5);
         
         $resquest = json_decode(file_get_contents('http://request-catcher:5000/__last_request__'), true);
         $resquest['data'] = json_decode($resquest['data'], true);
