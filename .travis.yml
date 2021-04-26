@@ -23,26 +23,29 @@ before_install:
     echo "${DOCKERHUB_PULL_PASSWORD}" | docker login --username "${DOCKERHUB_PULL_USERNAME}" --password-stdin
   fi
 - docker --version
+- sudo curl -L "https://github.com/docker/compose/releases/download/1.29.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+- sudo chmod +x /usr/local/bin/docker-compose
+- docker-compose --version
 - docker buildx create --use
 - chmod -R u+x ./.travis-ci
 - export COMPOSE_INTERACTIVE_NO_CLI=1
 
 install:
-- docker compose --env-file ./.env.ci up -d 
+- docker-compose --env-file ./.env.ci up -d 
 - sleep 30 
 
 script:
 - docker ps
-- docker compose logs appwrite
-- docker compose logs appwrite-worker-functions
-- docker compose exec appwrite doctor
-- docker compose exec appwrite vars
-- docker compose exec appwrite test --debug --testsuite unit
-- docker compose exec appwrite test --debug --testsuite e2e
-- docker compose exec appwrite test --debug --testsuite webhooks
-- docker compose exec appwrite test --debug --testsuite functions
-- docker compose exec appwrite test --debug --testsuite services
-- docker compose logs appwrite-worker-webhooks
+- docker-compose logs appwrite
+- docker-compose logs appwrite-worker-functions
+- docker-compose exec appwrite doctor
+- docker-compose exec appwrite vars
+- docker-compose exec appwrite test --debug --testsuite unit
+- docker-compose exec appwrite test --debug --testsuite e2e
+- docker-compose exec appwrite test --debug --testsuite webhooks
+- docker-compose exec appwrite test --debug --testsuite functions
+- docker-compose exec appwrite test --debug --testsuite services
+- docker-compose logs appwrite-worker-webhooks
 
 deploy:
   - provider: script
