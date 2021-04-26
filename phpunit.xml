@@ -21,6 +21,7 @@
             <directory>./tests/e2e/Scopes</directory>
         </testsuite>
         <testsuite name="webhooks">
+            <directory>./tests/e2e/Services/Projects</directory>
             <directory>./tests/e2e/Services/Webhooks</directory>
         </testsuite>
         <testsuite name="functions">
@@ -34,7 +35,6 @@
             <directory>./tests/e2e/Services/Database</directory>
             <directory>./tests/e2e/Services/Health</directory>
             <directory>./tests/e2e/Services/Locale</directory>
-            <directory>./tests/e2e/Services/Projects</directory>
             <directory>./tests/e2e/Services/Storage</directory>
             <directory>./tests/e2e/Services/Teams</directory>
             <directory>./tests/e2e/Services/Users</directory>
