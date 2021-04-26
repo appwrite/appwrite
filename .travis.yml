@@ -28,7 +28,7 @@ before_install:
 - export COMPOSE_INTERACTIVE_NO_CLI=1
 
 install:
-- docker-compose --env-file ./env.ci up -d 
+- docker-compose --env-file ./.env.ci up -d 
 - sleep 30 
 
 script:
