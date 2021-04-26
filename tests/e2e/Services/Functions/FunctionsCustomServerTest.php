@@ -7,7 +7,6 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\CLI\Console;
 
 class FunctionsCustomServerTest extends Scope
 {
