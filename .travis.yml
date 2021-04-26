@@ -28,8 +28,8 @@ before_install:
 - export COMPOSE_INTERACTIVE_NO_CLI=1
 
 install:
-- docker-compose up -d
-- sleep 300
+- docker-compose --env-file ./env.ci up -d 
+- sleep 30 
 
 script:
 - docker ps
