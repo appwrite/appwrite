@@ -476,14 +476,6 @@ class WebhooksCustomServerTest extends Scope
         sleep(10);
 
         $webhook = $this->getLastRequest();
-        $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/executions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        var_dump($webhook);
-        var_dump('id: ',$execution['body']['$id']);
-        var_dump($function['body']);
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
