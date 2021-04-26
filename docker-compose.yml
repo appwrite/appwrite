@@ -466,6 +466,7 @@ services:
 
   adminer:
     image: adminer
+    container_name: appwrite-adminer
     restart: always
     ports:
       - 9505:8080
