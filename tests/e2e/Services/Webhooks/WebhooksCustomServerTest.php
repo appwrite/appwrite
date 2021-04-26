@@ -453,6 +453,8 @@ class WebhooksCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
+        sleep(10);
+
         $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$data['functionId'].'/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -460,7 +462,6 @@ class WebhooksCustomServerTest extends Scope
 
         $this->assertEquals($execution['headers']['status-code'], 201);
         $this->assertNotEmpty($execution['body']['$id']);
-        sleep(10);
 
         $webhook = $this->getLastRequest();
 
