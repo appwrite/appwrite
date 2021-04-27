@@ -196,17 +196,18 @@ class Database
      * @param string $id
      * @param bool $mock is mocked data allowed?
      * @param bool $decode enable decoding?
+     * @param string $permission permissions to read
      *
      * @return Document
      */
-    public function getDocument($id, bool $mock = true, bool $decode = true)
+    public function getDocument($id, bool $mock = true, bool $decode = true, string $permission = 'read')
     {
         if (\is_null($id)) {
             return new Document();
         }
 
         $document = new Document((isset($this->mocks[$id]) && $mock) ? $this->mocks[$id] : $this->adapter->getDocument($id));
-        $validator = new Authorization($document, 'read');
+        $validator = new Authorization($document, $permission);
 
         if (!$validator->isValid($document->getPermissions())) { // Check if user has read access to this document
             return new Document();
