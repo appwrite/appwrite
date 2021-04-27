@@ -170,7 +170,13 @@ $register->set('influxdb', function () { // Register DB connection
         return;
     }
 
-    $client = new InfluxDB\Client($host, $port, '', '', false, false, 5);
+    $client = new InfluxDB2\Client([
+        'url' => "http://{$host}". $port ? ':' . $port : '',
+        'token' => '', 
+        'bucket' => 'telegraf/autogen',
+        'org' => '',
+        'precision' => InfluxDB2\Model\WritePrecision::S
+    ]);
 
     return $client;
 });
