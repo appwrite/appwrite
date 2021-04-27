@@ -21,8 +21,8 @@
             <directory>./tests/e2e/Scopes</directory>
         </testsuite>
         <testsuite name="webhooks">
-            <directory>./tests/e2e/Services/Projects</directory>
             <directory>./tests/e2e/Services/Webhooks</directory>
+            <directory>./tests/e2e/Services/Projects</directory>
         </testsuite>
         <testsuite name="functions">
             <file>./tests/e2e/Services/Functions/FunctionsBase.php</file>

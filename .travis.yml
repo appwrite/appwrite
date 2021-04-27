@@ -31,7 +31,7 @@ before_install:
 
 install:
 - docker-compose --env-file ./.env.ci up -d 
-- sleep 30 
+- sleep 60 
 
 script:
 - docker ps
