@@ -44,6 +44,7 @@ script:
 - docker-compose exec appwrite test --debug --testsuite webhooks
 - docker-compose exec appwrite test --debug --testsuite functions
 - docker-compose exec appwrite test --debug --testsuite services
+- docker-compose logs influxdb
 
 deploy:
   - provider: script
