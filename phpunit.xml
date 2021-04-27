@@ -22,7 +22,6 @@
         </testsuite>
         <testsuite name="webhooks">
             <directory>./tests/e2e/Services/Webhooks</directory>
-            <directory>./tests/e2e/Services/Projects</directory>
         </testsuite>
         <testsuite name="functions">
             <file>./tests/e2e/Services/Functions/FunctionsBase.php</file>
@@ -30,6 +29,7 @@
             <file>./tests/e2e/Services/Functions/FunctionsCustomClientTest.php</file>
         </testsuite>
         <testsuite name="services">
+            <directory>./tests/e2e/Services/Projects</directory>
             <directory>./tests/e2e/Services/Account</directory>
             <directory>./tests/e2e/Services/Avatars</directory>
             <directory>./tests/e2e/Services/Database</directory>
