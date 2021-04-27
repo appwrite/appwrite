@@ -18,7 +18,7 @@ ENV PHP_REDIS_VERSION=5.3.4 \
     PHP_SWOOLE_VERSION=v4.6.6 \
     PHP_IMAGICK_VERSION=master \
     PHP_YAML_VERSION=2.2.1 \
-    PHP_MAXMINDDB_VERSION=v1.10.0
+    PHP_MAXMINDDB_VERSION=v1.10.1
 
 RUN \
   apk add --no-cache --virtual .deps \
