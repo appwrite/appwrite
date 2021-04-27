@@ -17,6 +17,7 @@
 - Enabled 501 errors (Not Implemented) from the error handler
 - Added Python 3.9 as a new Cloud Functions runtime
 - Added Deno 1.8 as a new Cloud Functions runtime (#989)
+- Upgraded to PVP 8.0 (#713)
 - ClamAV is now disabled by default to allow lower min requirments for Appwrite (#1064)
 - Added a new env var named `_APP_LOCALE` that allow to change the default `en` locale value (#1056)
 - Updated all the console bottom control to be consistent. Dropped the `+` icon (#1062)
