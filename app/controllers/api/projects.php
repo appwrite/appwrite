@@ -206,7 +206,6 @@ App::get('/v1/projects/:projectId/usage')
                 ],
             ];
     
-            /** @var InfluxDB2\Client */
             $client = $register->get('influxdb');
     
             $requests = [];
@@ -216,12 +215,13 @@ App::get('/v1/projects/:projectId/usage')
             if ($client) {
                 $start = $period[$range]['start']->format(DateTime::RFC3339);
                 $end = $period[$range]['end']->format(DateTime::RFC3339);
-                $database = $client->createQueryApi();
+                $database = $client->selectDB('telegraf');
     
                 // Requests
                 $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_requests_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-
-                foreach ($result as $point) {
+                $points = $result->getPoints();
+    
+                foreach ($points as $point) {
                     $requests[] = [
                         'value' => (!empty($point['value'])) ? $point['value'] : 0,
                         'date' => \strtotime($point['time']),
@@ -230,8 +230,9 @@ App::get('/v1/projects/:projectId/usage')
     
                 // Network
                 $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_network_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-
-                foreach ($result as $point) {
+                $points = $result->getPoints();
+    
+                foreach ($points as $point) {
                     $network[] = [
                         'value' => (!empty($point['value'])) ? $point['value'] : 0,
                         'date' => \strtotime($point['time']),
@@ -240,8 +241,9 @@ App::get('/v1/projects/:projectId/usage')
     
                 // Functions
                 $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-
-                foreach ($result as $point) {
+                $points = $result->getPoints();
+    
+                foreach ($points as $point) {
                     $functions[] = [
                         'value' => (!empty($point['value'])) ? $point['value'] : 0,
                         'date' => \strtotime($point['time']),

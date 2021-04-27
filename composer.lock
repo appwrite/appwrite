@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c9d5c1577bc385cc6ec9c7b989709224",
+    "content-hash": "32ceddda707fb8f625f84eec08dc3871",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -648,50 +648,70 @@
             "time": "2021-04-26T09:17:50+00:00"
         },
         {
-            "name": "influxdata/influxdb-client-php",
-            "version": "1.12.0",
+            "name": "influxdb/influxdb-php",
+            "version": "1.15.2",
             "source": {
                 "type": "git",
-                "url": "https://github.com/influxdata/influxdb-client-php.git",
-                "reference": "e04f802a4d9c52b5b497077673269e8463fdb6ea"
+                "url": "https://github.com/influxdata/influxdb-php.git",
+                "reference": "d6e59f4f04ab9107574fda69c2cbe36671253d03"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/influxdata/influxdb-client-php/zipball/e04f802a4d9c52b5b497077673269e8463fdb6ea",
-                "reference": "e04f802a4d9c52b5b497077673269e8463fdb6ea",
+                "url": "https://api.github.com/repos/influxdata/influxdb-php/zipball/d6e59f4f04ab9107574fda69c2cbe36671253d03",
+                "reference": "d6e59f4f04ab9107574fda69c2cbe36671253d03",
                 "shasum": ""
             },
             "require": {
-                "ext-curl": "*",
-                "ext-json": "*",
-                "ext-mbstring": "*",
-                "guzzlehttp/guzzle": "^6.2|^7.0.1",
-                "php": ">=7.1"
+                "guzzlehttp/guzzle": "^6.0|^7.0",
+                "php": "^5.5 || ^7.0 || ^8.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^7.4|^9.1",
-                "squizlabs/php_codesniffer": "~2.6"
+                "dms/phpunit-arraysubset-asserts": "^0.2.1",
+                "phpunit/phpunit": "^9.5"
+            },
+            "suggest": {
+                "ext-curl": "Curl extension, needed for Curl driver",
+                "stefanotorresi/influxdb-php-async": "An asyncronous client for InfluxDB, implemented via ReactPHP."
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "InfluxDB2\\": "src/InfluxDB2"
+                    "InfluxDB\\": "src/InfluxDB"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
-            "description": "InfluxDB (v2+) Client Library for PHP",
-            "homepage": "https://www.github.com/influxdata/influxdb-client-php",
+            "authors": [
+                {
+                    "name": "Stephen Hoogendijk",
+                    "email": "stephen@tca0.nl"
+                },
+                {
+                    "name": "Daniel Martinez",
+                    "email": "danimartcas@hotmail.com"
+                },
+                {
+                    "name": "Gianluca Arbezzano",
+                    "email": "gianarb92@gmail.com"
+                }
+            ],
+            "description": "InfluxDB client library for PHP",
             "keywords": [
-                "influxdb"
+                "client",
+                "influxdata",
+                "influxdb",
+                "influxdb class",
+                "influxdb client",
+                "influxdb library",
+                "time series"
             ],
             "support": {
-                "issues": "https://github.com/influxdata/influxdb-client-php/issues",
-                "source": "https://github.com/influxdata/influxdb-client-php/tree/1.12.0"
+                "issues": "https://github.com/influxdata/influxdb-php/issues",
+                "source": "https://github.com/influxdata/influxdb-php/tree/1.15.2"
             },
-            "time": "2021-04-01T06:28:57+00:00"
+            "time": "2020-12-26T17:45:17+00:00"
         },
         {
             "name": "matomo/device-detector",
