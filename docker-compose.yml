@@ -423,7 +423,7 @@ services:
   #     - appwrite-uploads:/storage/uploads
       
   influxdb:
-    image: appwrite/influxdb:1.0.0
+    image: influxdb:1.7-alpine
     container_name: appwrite-influxdb
     networks:
       - appwrite
