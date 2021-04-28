@@ -306,7 +306,7 @@ class WebhooksCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Test',
-            'env' => 'php-7.4',
+            'env' => 'php-8.0',
             'execute' => ['*'],
             'timeout' => 10,
         ]);
@@ -348,7 +348,7 @@ class WebhooksCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Test',
-            'env' => 'php-7.4',
+            'env' => 'php-8.0',
             'execute' => ['*'],
             'vars' => [
                 'key1' => 'value1',
