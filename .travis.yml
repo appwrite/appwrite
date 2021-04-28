@@ -26,9 +26,9 @@ before_install:
 - docker buildx create --use
 - chmod -R u+x ./.travis-ci
 - export COMPOSE_INTERACTIVE_NO_CLI=1
+- ./.travis-ci/prepare.sh
 
 install:
-- ./.travis-ci/prepare.sh
 - docker-compose up -d
 - sleep 10 
 

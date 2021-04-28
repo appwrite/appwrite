@@ -156,7 +156,7 @@ class Client
      */
     public function call(string $method, string $path = '', array $headers = [], array $params = [])
     {
-        usleep(128);
+        usleep(50000);
         $headers            = array_merge($this->headers, $headers);
         $ch                 = curl_init($this->endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : ''));
         $responseHeaders    = [];
