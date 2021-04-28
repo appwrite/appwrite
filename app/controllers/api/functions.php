@@ -802,7 +802,9 @@ App::get('/v1/functions/:functionId/executions')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         
+        Authorization::disable();
         $function = $projectDB->getDocument($functionId);
+        Authorization::reset();
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
@@ -844,7 +846,9 @@ App::get('/v1/functions/:functionId/executions/:executionId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         
+        Authorization::disable();
         $function = $projectDB->getDocument($functionId);
+        Authorization::reset();
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
