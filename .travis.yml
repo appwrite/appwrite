@@ -28,7 +28,7 @@ before_install:
 - export COMPOSE_INTERACTIVE_NO_CLI=1
 
 install:
-- echo "_APP_FUNCTIONS_ENVS=php-8.0" >> .env
+- ./.travis-ci/prepare.sh
 - docker-compose up -d
 - sleep 10 
 

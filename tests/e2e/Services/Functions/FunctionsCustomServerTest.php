@@ -325,7 +325,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('Test1', $execution['body']['stdout']);
         $this->assertStringContainsString('http', $execution['body']['stdout']);
         $this->assertStringContainsString('PHP', $execution['body']['stdout']);
-        $this->assertStringContainsString('7.4', $execution['body']['stdout']);
+        $this->assertStringContainsString('8.0', $execution['body']['stdout']);
         $this->assertEquals('', $execution['body']['stderr']);
         $this->assertGreaterThan(0.100, $execution['body']['time']);
         $this->assertLessThan(0.500, $execution['body']['time']);
