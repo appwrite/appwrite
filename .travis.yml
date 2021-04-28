@@ -31,7 +31,7 @@ before_install:
 
 install:
 - docker-compose --env-file ./.env.ci up -d 
-- sleep 60 
+- sleep 10 
 
 script:
 - docker ps
@@ -44,7 +44,6 @@ script:
 - docker-compose exec appwrite test --debug --testsuite webhooks
 - docker-compose exec appwrite test --debug --testsuite functions
 - docker-compose exec appwrite test --debug --testsuite services
-- docker-compose logs influxdb
 
 deploy:
   - provider: script
