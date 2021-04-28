@@ -18,8 +18,6 @@ before_install:
 - mkdir -p $HOME/.docker
 - echo '{"experimental":"enabled"}' | sudo tee $HOME/.docker/config.json
 - sudo service docker start
-- if [ "$TRAVIS_CPU_ARCH" = "amd64" ]; then sudo curl -L "https://github.com/docker/compose/releases/download/1.29.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose; fi
-- if [ "$TRAVIS_CPU_ARCH" = "amd64" ]; then sudo chmod +x /usr/local/bin/docker-compose; fi
 - >
   if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
     echo "${DOCKERHUB_PULL_PASSWORD}" | docker login --username "${DOCKERHUB_PULL_USERNAME}" --password-stdin
@@ -30,7 +28,7 @@ before_install:
 - export COMPOSE_INTERACTIVE_NO_CLI=1
 
 install:
-- docker-compose --env-file ./.env.ci up -d 
+- docker-compose up -d
 - sleep 10 
 
 script:
