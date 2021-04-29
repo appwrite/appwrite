@@ -17,6 +17,7 @@
 - Enabled 501 errors (Not Implemented) from the error handler
 - Added Python 3.9 as a new Cloud Functions runtime
 - Added Deno 1.8 as a new Cloud Functions runtime (#989)
+- Upgraded to PHP 8.0 (#713)
 - ClamAV is now disabled by default to allow lower min requirments for Appwrite (#1064)
 - Added a new env var named `_APP_LOCALE` that allow to change the default `en` locale value (#1056)
 - Updated all the console bottom control to be consistent. Dropped the `+` icon (#1062)
@@ -30,9 +31,12 @@
 ## Breaking Changes (Read before upgrading!)
 
 - Rename `deleteuser` to `delete` on Users Api
+- Environment variable `_APP_FUNCTIONS_ENVS` renamed to `_APP_FUNCTIONS_RUNTIMES`
 - Only logged in users can execute functions (for guests, use anonymous login)
 - Only the user who has triggered the execution get access to the relevant execution logs
-- Function execution env `APPWRITE_FUNCTION_EVENT_PAYLOAD` renamed to `APPWRITE_FUNCTION_EVENT_DATA`
+- Function execution environment variable `APPWRITE_FUNCTION_EVENT_PAYLOAD` renamed to `APPWRITE_FUNCTION_EVENT_DATA`
+- Function execution environment variable `APPWRITE_FUNCTION_ENV_NAME` renamed to `APPWRITE_FUNCTION_RUNTIME_NAME`
+- Function execution environment variable `APPWRITE_FUNCTION_ENV_VERSION` renamed to `APPWRITE_FUNCTION_RUNTIME_VERSION`
 - Introdcues rate limits for:
   - Team invite (10 requests in every 60 minutes per IP address)
 

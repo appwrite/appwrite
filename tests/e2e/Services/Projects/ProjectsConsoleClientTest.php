@@ -149,6 +149,8 @@ class ProjectsConsoleClientTest extends Scope
     {
         $id = $data['projectId'] ?? '';
 
+        sleep(30);
+
         /**
          * Test for SUCCESS
          */

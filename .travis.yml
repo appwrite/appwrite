@@ -26,6 +26,8 @@ before_install:
 - docker buildx create --use
 - chmod -R u+x ./.travis-ci
 - export COMPOSE_INTERACTIVE_NO_CLI=1
+# Only pass a single runtime for CI stability
+- echo "_APP_FUNCTIONS_ENVS=php-8.0" >> .env
 
 install:
 - docker-compose up -d

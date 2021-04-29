@@ -19,8 +19,8 @@ class CollectionsTest extends TestCase
 
     public function testDuplicateRules()
     {
-        foreach ($this->collections as $collection) {
-            if ($collection['rules']) {
+        foreach ($this->collections as $key => $collection) {
+            if (array_key_exists('rules', $collection)) {
                 foreach ($collection['rules'] as $check) {
                     $occurences = 0;
                     foreach ($collection['rules'] as $rule) {

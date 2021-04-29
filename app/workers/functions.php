@@ -14,21 +14,19 @@ use Utopia\Config\Config;
 
 require_once __DIR__.'/../init.php';
 
+Runtime::enableCoroutine(0);
+
 Console::title('Functions V1 Worker');
-
-Runtime::setHookFlags(SWOOLE_HOOK_ALL);
-
 Console::success(APP_NAME.' functions worker v1 has started');
 
-$environments = Config::getParam('environments');
+$runtimes = Config::getParam('runtimes');
 
 /**
  * Warmup Docker Images
  */
 $warmupStart = \microtime(true);
 
-Co\run(function() use ($environments) {  // Warmup: make sure images are ready to run fast 🚀
-    Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+Co\run(function() use ($runtimes) {  // Warmup: make sure images are ready to run fast 🚀
 
     $dockerUser = App::getEnv('DOCKERHUB_PULL_USERNAME', null);
     $dockerPass = App::getEnv('DOCKERHUB_PULL_PASSWORD', null);
@@ -41,14 +39,14 @@ Co\run(function() use ($environments) {  // Warmup: make sure images are ready t
         Console::log('Docker Login'. $stdout.$stderr);
     }
 
-    foreach($environments as $environment) {
-        go(function() use ($environment) {
+    foreach($runtimes as $runtime) {
+        go(function() use ($runtime) {
             $stdout = '';
             $stderr = '';
         
-            Console::info('Warming up '.$environment['name'].' '.$environment['version'].' environment...');
+            Console::info('Warming up '.$runtime['name'].' '.$runtime['version'].' environment...');
         
-            Console::execute('docker pull '.$environment['image'], '', $stdout, $stderr);
+            Console::execute('docker pull '.$runtime['image'], '', $stdout, $stderr);
         
             if(!empty($stdout)) {
                 Console::log($stdout);
@@ -293,7 +291,7 @@ class FunctionsV1
     {
         global $list;
 
-        $environments = Config::getParam('environments');
+        $runtimes = Config::getParam('runtimes');
 
         Authorization::disable();
         $tag = $database->getDocument($function->getAttribute('tag', ''));
@@ -327,11 +325,11 @@ class FunctionsV1
         
         Authorization::reset();
 
-        $environment = (isset($environments[$function->getAttribute('env', '')]))
-            ? $environments[$function->getAttribute('env', '')]
+        $runtime = (isset($runtimes[$function->getAttribute('env', '')]))
+            ? $runtimes[$function->getAttribute('env', '')]
             : null;
 
-        if(\is_null($environment)) {
+        if(\is_null($runtime)) {
             throw new Exception('Environment "'.$function->getAttribute('env', '').' is not supported');
         }
 
@@ -340,8 +338,8 @@ class FunctionsV1
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
             'APPWRITE_FUNCTION_TAG' => $tag->getId(),
             'APPWRITE_FUNCTION_TRIGGER' => $trigger,
-            'APPWRITE_FUNCTION_ENV_NAME' => $environment['name'],
-            'APPWRITE_FUNCTION_ENV_VERSION' => $environment['version'],
+            'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
+            'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
             'APPWRITE_FUNCTION_EVENT' => $event,
             'APPWRITE_FUNCTION_EVENT_DATA' => $eventData,
             'APPWRITE_FUNCTION_DATA' => $data,
@@ -419,7 +417,7 @@ class FunctionsV1
                 " --volume {$tagPathTargetDir}:/tmp:rw".
                 " --workdir /usr/local/src".
                 " ".\implode(" ", $vars).
-                " {$environment['image']}".
+                " {$runtime['image']}".
                 " sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'"
             , '', $stdout, $stderr, 30);
 
