@@ -39,8 +39,6 @@ class WebhooksV1
         $event = $this->args['event'] ?? '';
         $eventData = \json_encode($this->args['eventData']);
 
-        var_dump($event, $eventData = \json_encode($this->args['eventData']));
-
         // Webhook
 
         Authorization::disable();

@@ -386,7 +386,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_FUNCTIONS_ENVS',
+                'name' => '_APP_FUNCTIONS_RUNTIMES',
                 'description' => 'This option allows you to limit the available environments for cloud functions. This option is very useful for low-cost servers to safe disk space.\n\nTo enable/activate this option, pass a list of allowed environments separated by a comma.\n\nCurrently, supported environments are: ' . \implode(', ', \array_keys(Config::getParam('providers'))),
                 'introduction' => '0.7.0',
                 'default' => 'node-14.5,deno-1.8,php-7.4,python-3.9,ruby-3.0,dotnet-5.0',

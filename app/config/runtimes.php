@@ -8,7 +8,7 @@ use Appwrite\Runtimes\Runtimes;
  */
 $runtimes = new Runtimes();
 
-$allowList = empty(App::getEnv('_APP_FUNCTIONS_ENVS')) ? [] : \explode(',', App::getEnv('_APP_FUNCTIONS_ENVS'));
+$allowList = empty(App::getEnv('_APP_FUNCTIONS_RUNTIMES')) ? [] : \explode(',', App::getEnv('_APP_FUNCTIONS_RUNTIMES'));
 
 $runtimes = $runtimes->getAll(filter: $allowList);
 

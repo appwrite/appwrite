@@ -111,7 +111,7 @@ services:
       - _APP_FUNCTIONS_CPUS
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
-      - _APP_FUNCTIONS_ENVS
+      - _APP_FUNCTIONS_RUNTIMES
 
   appwrite-worker-usage:
     entrypoint: worker-usage
@@ -299,7 +299,7 @@ services:
       - _APP_DB_PASS
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_FUNCTIONS_CONTAINERS
-      - _APP_FUNCTIONS_ENVS
+      - _APP_FUNCTIONS_RUNTIMES
       - _APP_FUNCTIONS_CPUS
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
