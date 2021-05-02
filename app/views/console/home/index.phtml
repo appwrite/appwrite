@@ -390,6 +390,105 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                 <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
             </form>
         </li>
+        <li>
+            <h2 style="display: none">&nbsp;&nbsp;Linux&nbsp;&nbsp;</h2>
+
+            <form
+                data-analytics
+                data-analytics-activity
+                data-analytics-event="submit"
+                data-analytics-category="console"
+                data-analytics-label="Create Project Platform (Flutter / Linux)"
+                data-service="projects.createPlatform"
+                data-scope="console"
+                data-event="submit"
+                data-success="alert,trigger,reset"
+                data-success-param-alert-text="Registered new platform successfully"
+                data-success-param-trigger-events="projects.createPlatform"
+                data-failure="alert"
+                data-failure-param-alert-text="Failed to register platform"
+                data-failure-param-alert-classname="error">
+
+                <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                <input type="hidden" name="type" data-ls-bind="flutter-linux" />
+
+                <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
+                <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My Linux App" maxlength="128" />
+
+                <label for="key">Package Name <span class="tooltip large" data-tooltip="Your application name"><i class="icon-question"></i></span></label>
+                <input type="text" class="full-width" name="key" required autocomplete="off" placeholder="appname" />
+
+                <hr />
+
+                <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
+            </form>
+        </li>
+        <li>
+            <h2 style="display: none">&nbsp;&nbsp;MacOS&nbsp;&nbsp;</h2>
+
+            <form
+                data-analytics
+                data-analytics-activity
+                data-analytics-event="submit"
+                data-analytics-category="console"
+                data-analytics-label="Create Project Platform (Flutter / Mac OS)"
+                data-service="projects.createPlatform"
+                data-scope="console"
+                data-event="submit"
+                data-success="alert,trigger,reset"
+                data-success-param-alert-text="Registered new platform successfully"
+                data-success-param-trigger-events="projects.createPlatform"
+                data-failure="alert"
+                data-failure-param-alert-text="Failed to register platform"
+                data-failure-param-alert-classname="error">
+
+                <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                <input type="hidden" name="type" data-ls-bind="flutter-macos" />
+
+                <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
+                <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My Mac OS App" maxlength="128" />
+
+                <label for="key">Bundle ID <span class="tooltip large" data-tooltip="You can find your Bundle Identifier in the General tab for your app's primary target in Xcode."><i class="icon-question"></i></span></label>
+                <input type="text" class="full-width" name="key" required autocomplete="off" placeholder="com.company.appname" />
+
+                <hr />
+
+                <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
+            </form>
+        </li>
+        <li>
+            <h2 style="display: none">&nbsp;&nbsp;Windows&nbsp;&nbsp;</h2>
+
+            <form
+                data-analytics
+                data-analytics-activity
+                data-analytics-event="submit"
+                data-analytics-category="console"
+                data-analytics-label="Create Project Platform (Flutter / Windows)"
+                data-service="projects.createPlatform"
+                data-scope="console"
+                data-event="submit"
+                data-success="alert,trigger,reset"
+                data-success-param-alert-text="Registered new platform successfully"
+                data-success-param-trigger-events="projects.createPlatform"
+                data-failure="alert"
+                data-failure-param-alert-text="Failed to register platform"
+                data-failure-param-alert-classname="error">
+
+                <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                <input type="hidden" name="type" data-ls-bind="flutter-macos" />
+
+                <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
+                <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My Windows App" maxlength="128" />
+
+                <label for="key">Package Name <span class="tooltip large" data-tooltip="Your application name"><i class="icon-question"></i></span></label>
+                <input type="text" class="full-width" name="key" required autocomplete="off" placeholder="appname" />
+
+                <hr />
+
+                <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
+            </form>
+        </li>
     </ul>
 </div>
 
