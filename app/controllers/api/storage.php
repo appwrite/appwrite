@@ -179,11 +179,9 @@ App::get('/v1/storage/files')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $results = $dbForInternal->find('files', [], $limit, $offset);
-
         $response->dynamic2(new Document([
-            'sum' => $limit,
-            'files' => $results
+            'sum' => $dbForInternal->count('files', [], 5000),
+            'files' => $dbForInternal->find('files', [], $limit, $offset)
         ]), Response::MODEL_FILE_LIST);
     });
 
