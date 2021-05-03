@@ -20,7 +20,6 @@ trait StorageBase
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'read' => ['*'],
             'write' => ['*'],
-            'folderId' => 'xyz',
         ]);
 
         $this->assertEquals($file['headers']['status-code'], 201);
@@ -61,10 +60,10 @@ trait StorageBase
         //$this->assertEquals('aes-128-gcm', $file1['body']['fileOpenSSLCipher']);
         //$this->assertNotEmpty($file1['body']['fileOpenSSLTag']);
         //$this->assertNotEmpty($file1['body']['fileOpenSSLIV']);
-        $this->assertIsArray($file1['body']['$permissions']['read']);
-        $this->assertIsArray($file1['body']['$permissions']['write']);
-        $this->assertCount(1, $file1['body']['$permissions']['read']);
-        $this->assertCount(1, $file1['body']['$permissions']['write']);
+        $this->assertIsArray($file1['body']['$read']);
+        $this->assertIsArray($file1['body']['$write']);
+        $this->assertCount(1, $file1['body']['$read']);
+        $this->assertCount(1, $file1['body']['$write']);
 
         $file2 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/preview', array_merge([
             'content-type' => 'application/json',
@@ -100,7 +99,6 @@ trait StorageBase
         $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
         $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
         $this->assertEquals('PNG', $image->getImageFormat());
-
 
         $file4 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/preview', array_merge([
             'content-type' => 'application/json',
@@ -203,10 +201,10 @@ trait StorageBase
         //$this->assertEquals('aes-128-gcm', $file['body']['fileOpenSSLCipher']);
         //$this->assertNotEmpty($file['body']['fileOpenSSLTag']);
         //$this->assertNotEmpty($file['body']['fileOpenSSLIV']);
-        $this->assertIsArray($file['body']['$permissions']['read']);
-        $this->assertIsArray($file['body']['$permissions']['write']);
-        $this->assertCount(1, $file['body']['$permissions']['read']);
-        $this->assertCount(1, $file['body']['$permissions']['write']);
+        $this->assertIsArray($file['body']['$read']);
+        $this->assertIsArray($file['body']['$write']);
+        $this->assertCount(1, $file['body']['$read']);
+        $this->assertCount(1, $file['body']['$write']);
         
         /**
          * Test for FAILURE

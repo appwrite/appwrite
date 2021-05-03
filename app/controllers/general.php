@@ -14,8 +14,6 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\Origin;
-use Utopia\Storage\Device\Local;
-use Utopia\Storage\Storage;
 use Appwrite\Utopia\Response\Filters\V06;
 use Utopia\CLI\Console;
 use Utopia\Database\Validator\Authorization as Authorization2;
