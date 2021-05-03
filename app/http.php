@@ -12,6 +12,7 @@ use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Database\Validator\Authorization as Authorization2;
 
 // xdebug_start_trace('/tmp/trace');
 
@@ -99,6 +100,9 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     try {
         Authorization::cleanRoles();
         Authorization::setRole('*');
+
+        Authorization2::cleanRoles();
+        Authorization2::setRole('*');
 
         $app->run($request, $response);
     } catch (\Throwable $th) {

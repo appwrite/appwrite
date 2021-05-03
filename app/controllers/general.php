@@ -18,6 +18,7 @@ use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Appwrite\Utopia\Response\Filters\V06;
 use Utopia\CLI\Console;
+use Utopia\Database\Validator\Authorization as Authorization2;
 
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
@@ -189,21 +190,26 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
             $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
 
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
+            Authorization2::setDefaultStatus(false);  // Cancel security segmentation for API keys.
         }
     }
 
     if ($user->getId()) {
         Authorization::setRole('user:'.$user->getId());
+        Authorization2::setRole('user:'.$user->getId());
     }
 
     Authorization::setRole('role:'.$role);
+    Authorization2::setRole('role:'.$role);
 
     \array_map(function ($node) {
         if (isset($node['teamId']) && isset($node['roles'])) {
             Authorization::setRole('team:'.$node['teamId']);
+            Authorization2::setRole('team:'.$node['teamId']);
 
             foreach ($node['roles'] as $nodeRole) { // Set all team roles
                 Authorization::setRole('team:'.$node['teamId'].'/'.$nodeRole);
+                Authorization2::setRole('team:'.$node['teamId'].'/'.$nodeRole);
             }
         }
     }, $user->getAttribute('memberships', []));

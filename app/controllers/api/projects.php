@@ -45,10 +45,14 @@ App::post('/v1/projects')
     ->inject('response')
     ->inject('consoleDB')
     ->inject('projectDB')
-    ->action(function ($name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $consoleDB, $projectDB) {
+    ->inject('dbForInternal')
+    ->inject('dbForExternal')
+    ->action(function ($name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $consoleDB, $projectDB, $dbForInternal, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForExternal */
 
         $team = $projectDB->getDocument($teamId);
 
@@ -87,6 +91,34 @@ App::post('/v1/projects')
         }
 
         $consoleDB->createNamespace($project->getId());
+
+        $collections = Config::getParam('collections2', []); /** @var array $collections */
+
+        $dbForInternal->setNamespace('project_internal_'.$project->getId());
+        $dbForInternal->create();
+        $dbForExternal->setNamespace('project_external_'.$project->getId());
+        $dbForExternal->create();
+
+        foreach ($collections as $key => $collection) {
+            $dbForInternal->createCollection($key);
+
+            foreach ($collection['attributes'] as $i => $attribute) {
+                $dbForInternal->createAttribute(
+                    $key,
+                    $attribute['$id'],
+                    $attribute['type'],
+                    $attribute['size'],
+                    $attribute['required'],
+                    $attribute['signed'],
+                    $attribute['array'],
+                    $attribute['filters'],
+                );
+            }
+
+            foreach ($collection['indexes'] as $i => $index) {
+                
+            }
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

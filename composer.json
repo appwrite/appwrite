@@ -42,9 +42,10 @@
         "utopia-php/abuse": "0.4.*",
         "utopia-php/analytics": "0.2.*",
         "utopia-php/audit": "0.5.*",
-        "utopia-php/cache": "0.2.*",
+        "utopia-php/cache": "0.4.*",
         "utopia-php/cli": "0.10.*",
         "utopia-php/config": "0.2.*",
+        "utopia-php/database": "v0.x-dev",
         "utopia-php/locale": "0.3.*",
         "utopia-php/registry": "0.4.*",
         "utopia-php/preloader": "0.2.*",
@@ -71,6 +72,10 @@
         {
             "type": "git",
             "url": "https://github.com/appwrite/sdk-generator"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/utopia-php/database"
         }
     ],
     "provide": {

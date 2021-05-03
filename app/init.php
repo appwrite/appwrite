@@ -30,6 +30,11 @@ use Utopia\Registry\Registry;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use PDO as PDONative;
+use Utopia\Cache\Adapter\None;
+use Utopia\Cache\Cache;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Database as DatabaseDatabase;
+use Utopia\Database\Validator\Authorization as Authorization2;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -79,6 +84,7 @@ Config::load('auth', __DIR__.'/config/auth.php');
 Config::load('providers', __DIR__.'/config/providers.php');
 Config::load('platforms', __DIR__.'/config/platforms.php');
 Config::load('collections', __DIR__.'/config/collections.php');
+Config::load('collections2', __DIR__.'/config/collections2.php');
 Config::load('runtimes', __DIR__.'/config/runtimes.php');
 Config::load('roles', __DIR__.'/config/roles.php');  // User roles and scopes
 Config::load('scopes', __DIR__.'/config/scopes.php');  // User roles and scopes
@@ -388,6 +394,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     /** @var bool $mode */
 
     Authorization::setDefaultStatus(true);
+    Authorization2::setDefaultStatus(true);
 
     Auth::setCookieName('a_session_'.$project->getId());
 
@@ -432,6 +439,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     if (APP_MODE_ADMIN === $mode) {
         if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
+            Authorization2::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         } else {
             $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
         }
@@ -468,11 +476,13 @@ App::setResource('project', function($consoleDB, $request) {
     /** @var Appwrite\Database\Database $consoleDB */
 
     Authorization::disable();
+    Authorization2::disable();
 
     $project = $consoleDB->getDocument($request->getParam('project',
         $request->getHeader('x-appwrite-project', '')));
 
     Authorization::reset();
+    Authorization2::reset();
 
     return $project;
 }, ['consoleDB', 'request']);
@@ -497,6 +507,24 @@ App::setResource('projectDB', function($register, $project) {
     $projectDB->setMocks(Config::getParam('collections', []));
 
     return $projectDB;
+}, ['register', 'project']);
+
+App::setResource('dbForInternal', function($register, $project) {
+    $cache = new Cache(new None());
+
+    $database = new DatabaseDatabase(new MariaDB($register->get('db')), $cache);
+    $database->setNamespace('project_internal_'.$project->getId());
+
+    return $database;
+}, ['register', 'project']);
+
+App::setResource('dbForExternal', function($register, $project) {
+    $cache = new Cache(new None());
+
+    $database = new DatabaseDatabase(new MariaDB($register->get('db')), $cache);
+    $database->setNamespace('project_external_'.$project->getId());
+
+    return $database;
 }, ['register', 'project']);
 
 App::setResource('mode', function($request) {
