@@ -15,6 +15,7 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
 FROM php:8.0-cli-alpine as step1
 
 ENV PHP_REDIS_VERSION=5.3.4 \
+    PHP_MONGODB_VERSION=1.9.1 \
     PHP_SWOOLE_VERSION=v4.6.6 \
     PHP_IMAGICK_VERSION=master \
     PHP_YAML_VERSION=2.2.1 \
@@ -41,6 +42,14 @@ RUN \
   # Redis Extension
   git clone --depth 1 --branch $PHP_REDIS_VERSION https://github.com/phpredis/phpredis.git && \
   cd phpredis && \
+  phpize && \
+  ./configure && \
+  make && make install && \
+  cd .. && \
+  # Mongodb Extension
+  git clone --depth 1 --branch $PHP_MONGODB_VERSION https://github.com/mongodb/mongo-php-driver.git && \
+  cd mongo-php-driver && \
+  git submodule update --init && \
   phpize && \
   ./configure && \
   make && make install && \
@@ -156,6 +165,7 @@ WORKDIR /usr/src/code
 COPY --from=step0 /usr/local/src/vendor /usr/src/code/vendor
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/mongodb.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yaml.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/maxminddb.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/ 
