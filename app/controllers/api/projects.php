@@ -94,9 +94,9 @@ App::post('/v1/projects')
 
         $collections = Config::getParam('collections2', []); /** @var array $collections */
 
-        $dbForInternal->setNamespace('project_internal_'.$project->getId());
+        $dbForInternal->setNamespace('project_'.$project->getId().'_internal');
         $dbForInternal->create();
-        $dbForExternal->setNamespace('project_external_'.$project->getId());
+        $dbForExternal->setNamespace('project_'.$project->getId().'_external');
         $dbForExternal->create();
 
         foreach ($collections as $key => $collection) {

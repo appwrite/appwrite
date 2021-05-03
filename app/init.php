@@ -30,7 +30,7 @@ use Utopia\Registry\Registry;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use PDO as PDONative;
-use Utopia\Cache\Adapter\None;
+use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database as DatabaseDatabase;
@@ -510,19 +510,20 @@ App::setResource('projectDB', function($register, $project) {
 }, ['register', 'project']);
 
 App::setResource('dbForInternal', function($register, $project) {
-    $cache = new Cache(new None());
+    $cache = new Cache(new RedisCache($register->get('cache')));
 
     $database = new DatabaseDatabase(new MariaDB($register->get('db')), $cache);
-    $database->setNamespace('project_internal_'.$project->getId());
+    $database->setNamespace('project_'.$project->getId().'_internal');
 
     return $database;
 }, ['register', 'project']);
 
 App::setResource('dbForExternal', function($register, $project) {
-    $cache = new Cache(new None());
+    $cache = new Cache(new RedisCache($register->get('cache')));
 
     $database = new DatabaseDatabase(new MariaDB($register->get('db')), $cache);
     $database->setNamespace('project_external_'.$project->getId());
+    $database->setNamespace('project_'.$project->getId().'_external');
 
     return $database;
 }, ['register', 'project']);
