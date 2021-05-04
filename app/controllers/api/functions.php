@@ -192,8 +192,7 @@ App::get('/v1/functions/:functionId/usage')
                     'group' => '1d',
                 ],
             ];
-
-            /** @var InfluxDB2\Client $client */
+    
             $client = $register->get('influxdb');
     
             $executions = [];
@@ -203,12 +202,13 @@ App::get('/v1/functions/:functionId/usage')
             if ($client) {
                 $start = $period[$range]['start']->format(DateTime::RFC3339);
                 $end = $period[$range]['end']->format(DateTime::RFC3339);
-                $database = $client->createQueryApi();
+                $database = $client->selectDB('telegraf');
     
                 // Executions
                 $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+                $points = $result->getPoints();
     
-                foreach ($result as $point) {
+                foreach ($points as $point) {
                     $executions[] = [
                         'value' => (!empty($point['value'])) ? $point['value'] : 0,
                         'date' => \strtotime($point['time']),
@@ -217,8 +217,9 @@ App::get('/v1/functions/:functionId/usage')
     
                 // Failures
                 $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' AND "functionStatus"=\'failed\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+                $points = $result->getPoints();
     
-                foreach ($result as $point) {
+                foreach ($points as $point) {
                     $failures[] = [
                         'value' => (!empty($point['value'])) ? $point['value'] : 0,
                         'date' => \strtotime($point['time']),
@@ -227,8 +228,9 @@ App::get('/v1/functions/:functionId/usage')
     
                 // Compute
                 $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_time" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+                $points = $result->getPoints();
     
-                foreach ($result as $point) {
+                foreach ($points as $point) {
                     $compute[] = [
                         'value' => round((!empty($point['value'])) ? $point['value'] / 1000 : 0, 2), // minutes
                         'date' => \strtotime($point['time']),
