@@ -522,8 +522,16 @@ App::setResource('dbForExternal', function($register, $project) {
     $cache = new Cache(new RedisCache($register->get('cache')));
 
     $database = new DatabaseDatabase(new MariaDB($register->get('db')), $cache);
-    $database->setNamespace('project_external_'.$project->getId());
     $database->setNamespace('project_'.$project->getId().'_external');
+
+    return $database;
+}, ['register', 'project']);
+
+App::setResource('dbForConsole', function($register, $project) {
+    $cache = new Cache(new RedisCache($register->get('cache')));
+
+    $database = new DatabaseDatabase(new MariaDB($register->get('db')), $cache);
+    $database->setNamespace('project_console_internal');
 
     return $database;
 }, ['register', 'project']);
