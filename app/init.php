@@ -170,7 +170,12 @@ $register->set('influxdb', function () { // Register DB connection
         return;
     }
 
-    $client = new InfluxDB\Client($host, $port, '', '', false, false, 5);
+    $client = new InfluxDB2\Client([
+        'url' => "http://{$host}:{$port}",
+        'bucket' => 'telegraf/autogen',
+        'timeout' => 5,
+        'verifySSL' => false
+    ]);
 
     return $client;
 });
@@ -190,10 +195,10 @@ $register->set('cache', function () { // Register cache connection
     $pass = App::getEnv('_APP_REDIS_PASS','');
     $auth = [];
     if(!empty($user)) {
-        $auth["user"] = $user;
+        $auth['user'] = $user;
     }
     if(!empty($pass)) {
-        $auth["pass"] = $pass;
+        $auth['pass'] = $pass;
     }
     if(!empty($auth)) {
         $redis->auth($auth);
