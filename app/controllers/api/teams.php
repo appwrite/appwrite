@@ -341,7 +341,17 @@ App::post('/v1/teams/:teamId/memberships')
                     'emailVerification' => false,
                     'status' => Auth::USER_STATUS_UNACTIVATED,
                     'password' => Auth::passwordHash(Auth::passwordGenerator()),
-                    'passwordUpdate' => \time(),
+                    /** 
+                     * Set the password update time to 0 for users created 
+                     * with a team invite. This will allow us to distinguish b/w 
+                     * new and old appwrite users. 
+                     * if (passwordUpdate == 0) {
+                     *      // new appwrite user created with oauth/anonymous/team invite
+                     * } else {
+                     *      // existing appwrite user
+                     * } 
+                     */
+                    'passwordUpdate' => 0,
                     'registration' => \time(),
                     'reset' => false,
                     'name' => $name,
@@ -580,7 +590,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
         }
 
         if ($userId != $membership->getAttribute('userId')) {
-            throw new Exception('Invite not belong to current user ('.$user->getAttribute('email').')', 401);
+            throw new Exception('Invite does not belong to current user ('.$user->getAttribute('email').')', 401);
         }
 
         if (empty($user->getId())) {
@@ -594,7 +604,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
         }
 
         if ($membership->getAttribute('userId') !== $user->getId()) {
-            throw new Exception('Invite not belong to current user ('.$user->getAttribute('email').')', 401);
+            throw new Exception('Invite does not belong to current user ('.$user->getAttribute('email').')', 401);
         }
 
         $membership // Attach user to team

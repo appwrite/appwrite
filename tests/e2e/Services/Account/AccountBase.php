@@ -509,6 +509,33 @@ trait AccountBase
         
         $this->assertEquals($response['headers']['status-code'], 400);
 
+        /**
+         * Existing user tries to update password by passing wrong old password -> SHOULD FAIL
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]), [
+            'password' => 'new-password',
+            'oldPassword' => $password,
+        ]);
+        $this->assertEquals($response['headers']['status-code'], 401);
+
+        /**
+         * Existing user tries to update password without passing old password -> SHOULD FAIL 
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]), [
+            'password' => 'new-password'
+        ]);
+        $this->assertEquals($response['headers']['status-code'], 401);
+
         $data['password'] = 'new-password';
 
         return $data;

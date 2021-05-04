@@ -264,7 +264,7 @@ class AccountCustomClientTest extends Scope
     public function testUpdateAnonymousAccountPassword($session)
     {
         /**
-         * Test for FAILURE
+         * Anonymous account updates password without old password -> SHOULD PASS
          */
         $response = $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
             'origin' => 'http://localhost',
@@ -276,7 +276,44 @@ class AccountCustomClientTest extends Scope
             'oldPassword' => '',
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertIsArray($response['body']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertIsNumeric($response['body']['registration']);
+
+        /**
+         * Anonymous account tries to update password again without old password -> SHOULD FAIL
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]), [
+            'password' => 'new-password'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 401);
+
+        /**
+         * Anonymous account updates password with new and old password -> SHOULD PASS
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]), [
+            'password' => 'newer-password',
+            'oldPassword' => 'new-password',
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertIsArray($response['body']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertIsNumeric($response['body']['registration']);
 
         return $session;
     }
