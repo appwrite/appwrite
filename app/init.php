@@ -169,8 +169,9 @@ $register->set('influxdb', function () { // Register DB connection
     if (empty($host) || empty($port)) {
         return;
     }
-
+    $driver = new InfluxDB\Driver\Curl(dsn: "http://{$host}:{$port}");
     $client = new InfluxDB\Client(host: $host, port: $port, timeout: 5);
+    $client->setDriver($driver);
 
     return $client;
 });

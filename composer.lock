@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e1895c2ac913b340a77d06030122f42e",
+    "content-hash": "32ceddda707fb8f625f84eec08dc3871",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -649,11 +649,17 @@
         },
         {
             "name": "influxdb/influxdb-php",
-            "version": "dev-fix-php-8",
+            "version": "1.15.2",
             "source": {
                 "type": "git",
-                "url": "https://github.com/torstendittmann/influxdb-php",
-                "reference": "a784e08b0bf1658b11ff14c86942c9ba7a77709f"
+                "url": "https://github.com/influxdata/influxdb-php.git",
+                "reference": "d6e59f4f04ab9107574fda69c2cbe36671253d03"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/influxdata/influxdb-php/zipball/d6e59f4f04ab9107574fda69c2cbe36671253d03",
+                "reference": "d6e59f4f04ab9107574fda69c2cbe36671253d03",
+                "shasum": ""
             },
             "require": {
                 "guzzlehttp/guzzle": "^6.0|^7.0",
@@ -673,19 +679,7 @@
                     "InfluxDB\\": "src/InfluxDB"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "InfluxDB\\Test\\": "tests"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "vendor/bin/phpunit"
-                ],
-                "test-ci": [
-                    "vendor/bin/phpunit -v --coverage-clover=clover.xml"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -713,7 +707,11 @@
                 "influxdb library",
                 "time series"
             ],
-            "time": "2021-05-04T12:12:20+00:00"
+            "support": {
+                "issues": "https://github.com/influxdata/influxdb-php/issues",
+                "source": "https://github.com/influxdata/influxdb-php/tree/1.15.2"
+            },
+            "time": "2020-12-26T17:45:17+00:00"
         },
         {
             "name": "matomo/device-detector",
@@ -5927,7 +5925,6 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "influxdb/influxdb-php": 20,
         "appwrite/sdk-generator": 20
     },
     "prefer-stable": false,
