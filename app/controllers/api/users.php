@@ -152,7 +152,7 @@ App::get('/v1/users/:userId/prefs')
     ->label('sdk.description', '/docs/references/users/get-user-prefs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('sdk.response.model', Response::MODEL_PREFERENCES)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->inject('response')
     ->inject('projectDB')
@@ -168,7 +168,7 @@ App::get('/v1/users/:userId/prefs')
 
         $prefs = $user->getAttribute('prefs', new \stdClass());
 
-        $response->dynamic(new Document($prefs), Response::MODEL_ANY);
+        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
 App::get('/v1/users/:userId/sessions')
@@ -379,7 +379,7 @@ App::patch('/v1/users/:userId/prefs')
     ->label('sdk.description', '/docs/references/users/update-user-prefs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('sdk.response.model', Response::MODEL_PREFERENCES)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
     ->inject('response')
@@ -402,7 +402,7 @@ App::patch('/v1/users/:userId/prefs')
             throw new Exception('Failed saving user to DB', 500);
         }
 
-        $response->dynamic(new Document($prefs), Response::MODEL_ANY);
+        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
 App::delete('/v1/users/:userId/sessions/:sessionId')

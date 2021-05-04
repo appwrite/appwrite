@@ -163,22 +163,21 @@ class AuthTest extends TestCase
         $this->assertEquals(Auth::tokenVerify($tokens3, Auth::TOKEN_TYPE_RECOVERY, 'false-secret'), false);
     }
 
-
-    public function testIsPreviliggedUser()
+    public function testIsPrivilegedUser()
     {
-        $this->assertEquals(false, Auth::isPreviliggedUser([]));
-        $this->assertEquals(false, Auth::isPreviliggedUser(['role:'.Auth::USER_ROLE_GUEST => true]));
-        $this->assertEquals(false, Auth::isPreviliggedUser(['role:'.Auth::USER_ROLE_MEMBER => true]));
-        $this->assertEquals(true, Auth::isPreviliggedUser(['role:'.Auth::USER_ROLE_ADMIN => true]));
-        $this->assertEquals(true, Auth::isPreviliggedUser(['role:'.Auth::USER_ROLE_DEVELOPER => true]));
-        $this->assertEquals(true, Auth::isPreviliggedUser(['role:'.Auth::USER_ROLE_OWNER => true]));
-        $this->assertEquals(false, Auth::isPreviliggedUser(['role:'.Auth::USER_ROLE_APP => true]));
-        $this->assertEquals(false, Auth::isPreviliggedUser(['role:'.Auth::USER_ROLE_SYSTEM => true]));
+        $this->assertEquals(false, Auth::isPrivilegedUser([]));
+        $this->assertEquals(false, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_GUEST => true]));
+        $this->assertEquals(false, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_MEMBER => true]));
+        $this->assertEquals(true, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_ADMIN => true]));
+        $this->assertEquals(true, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_DEVELOPER => true]));
+        $this->assertEquals(true, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_OWNER => true]));
+        $this->assertEquals(false, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_APP => true]));
+        $this->assertEquals(false, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_SYSTEM => true]));
 
-        $this->assertEquals(false, Auth::isPreviliggedUser(['role:'.Auth::USER_ROLE_APP => true, 'role:'.Auth::USER_ROLE_APP => true]));
-        $this->assertEquals(false, Auth::isPreviliggedUser(['role:'.Auth::USER_ROLE_APP => true, 'role:'.Auth::USER_ROLE_GUEST => true]));
-        $this->assertEquals(true, Auth::isPreviliggedUser(['role:'.Auth::USER_ROLE_OWNER => true, 'role:'.Auth::USER_ROLE_GUEST => true]));
-        $this->assertEquals(true, Auth::isPreviliggedUser(['role:'.Auth::USER_ROLE_OWNER => true, 'role:'.Auth::USER_ROLE_ADMIN => true, 'role:'.Auth::USER_ROLE_DEVELOPER => true]));
+        $this->assertEquals(false, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_APP => true, 'role:'.Auth::USER_ROLE_APP => true]));
+        $this->assertEquals(false, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_APP => true, 'role:'.Auth::USER_ROLE_GUEST => true]));
+        $this->assertEquals(true, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_OWNER => true, 'role:'.Auth::USER_ROLE_GUEST => true]));
+        $this->assertEquals(true, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_OWNER => true, 'role:'.Auth::USER_ROLE_ADMIN => true, 'role:'.Auth::USER_ROLE_DEVELOPER => true]));
     }
     
     public function testIsAppUser()

@@ -31,9 +31,10 @@ $oauthDefaultFailure = App::getEnv('_APP_HOME').'/auth/oauth2/failure';
 
 App::post('/v1/account')
     ->desc('Create Account')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'auth'])
     ->label('event', 'account.create')
     ->label('scope', 'public')
+    ->label('auth.type', 'emailPassword')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'create')
@@ -72,6 +73,22 @@ App::post('/v1/account')
 
             if (!empty($whitlistDomains) && !\in_array(\substr(\strrchr($email, '@'), 1), $whitlistDomains)) {
                 throw new Exception('Console registration is restricted to specific domains. Contact your administrator for more information.', 401);
+            }
+        }
+
+        $limit = $project->getAttribute('usersAuthLimit', 0);
+
+        if ($limit !== 0) {
+            $projectDB->getCollection([ // Count users
+                'filters' => [
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                ],
+            ]);
+
+            $sum = $projectDB->getSum();
+
+            if($sum >= $limit) {
+                throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
             }
         }
 
@@ -133,9 +150,10 @@ App::post('/v1/account')
 
 App::post('/v1/account/sessions')
     ->desc('Create Account Session')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'auth'])
     ->label('event', 'account.sessions.create')
     ->label('scope', 'public')
+    ->label('auth.type', 'emailPassword')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createSession')
@@ -469,7 +487,23 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 ],
             ]);
 
-            if (!$user || empty($user->getId())) { // Last option -> create user alone, generate random password
+            if (!$user || empty($user->getId())) { // Last option -> create the user, generate random password
+                $limit = $project->getAttribute('usersAuthLimit', 0);
+        
+                if ($limit !== 0) {
+                    $projectDB->getCollection([ // Count users
+                        'filters' => [
+                            '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                        ],
+                    ]);
+        
+                    $sum = $projectDB->getSum();
+        
+                    if($sum >= $limit) {
+                        throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
+                    }
+                }
+                
                 Authorization::disable();
 
                 try {
@@ -578,9 +612,10 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
 App::post('/v1/account/sessions/anonymous')
     ->desc('Create Anonymous Session')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'auth'])
     ->label('event', 'account.sessions.create')
     ->label('scope', 'public')
+    ->label('auth.type', 'anonymous')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createAnonymousSession')
@@ -618,6 +653,22 @@ App::post('/v1/account/sessions/anonymous')
             throw new Exception('Cannot create an anonymous user when logged in.', 401);
         }
 
+        $limit = $project->getAttribute('usersAuthLimit', 0);
+
+        if ($limit !== 0) {
+            $projectDB->getCollection([ // Count users
+                'filters' => [
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                ],
+            ]);
+
+            $sum = $projectDB->getSum();
+
+            if($sum >= $limit) {
+                throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
+            }
+        }
+
         Authorization::disable();
         try {
             $user = $projectDB->createDocument([
@@ -638,7 +689,6 @@ App::post('/v1/account/sessions/anonymous')
         } catch (Exception $th) {
             throw new Exception('Failed saving user to DB', 500);
         }
-
         Authorization::reset();
 
         if (false === $user) {
@@ -706,8 +756,9 @@ App::post('/v1/account/sessions/anonymous')
 
 App::post('/v1/account/jwt')
     ->desc('Create Account JWT')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'auth'])
     ->label('scope', 'account')
+    ->label('auth.type', 'jwt')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createJWT')
@@ -779,7 +830,7 @@ App::get('/v1/account/prefs')
     ->label('sdk.description', '/docs/references/account/get-prefs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('sdk.response.model', Response::MODEL_PREFERENCES)
     ->inject('response')
     ->inject('user')
     ->action(function ($response, $user) {
@@ -788,7 +839,7 @@ App::get('/v1/account/prefs')
 
         $prefs = $user->getAttribute('prefs', new \stdClass());
 
-        $response->dynamic(new Document($prefs), Response::MODEL_ANY);
+        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
 App::get('/v1/account/sessions')
@@ -1072,7 +1123,7 @@ App::patch('/v1/account/prefs')
     ->label('sdk.description', '/docs/references/account/update-prefs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('sdk.response.model', Response::MODEL_USER)
     ->param('prefs', [], new Assoc(), 'Prefs key-value JSON object.')
     ->inject('response')
     ->inject('user')
@@ -1345,7 +1396,7 @@ App::post('/v1/account/recovery')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
 
-        $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
@@ -1435,7 +1486,7 @@ App::post('/v1/account/recovery')
 
         $recovery  // Hide secret for clients, sp
             ->setAttribute('secret',
-                ($isPreviliggedUser || $isAppUser) ? $secret : '');
+                ($isPrivilegedUser || $isAppUser) ? $secret : '');
 
         $audits
             ->setParam('userId', $profile->getId())
@@ -1563,7 +1614,7 @@ App::post('/v1/account/verification')
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $mails */
 
-        $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $verificationSecret = Auth::tokenGenerator();
@@ -1638,7 +1689,7 @@ App::post('/v1/account/verification')
 
         $verification  // Hide secret for clients, sp
             ->setAttribute('secret',
-                ($isPreviliggedUser || $isAppUser) ? $verificationSecret : '');
+                ($isPrivilegedUser || $isAppUser) ? $verificationSecret : '');
 
         $audits
             ->setParam('userId', $user->getId())

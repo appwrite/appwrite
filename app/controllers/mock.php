@@ -370,7 +370,7 @@ App::get('/v1/mock/tests/general/oauth2')
     ->param('scope', '', new Text(100), 'OAuth2 scope list.')
     ->param('state', '', new Text(1024), 'OAuth2 state.')
     ->inject('response')
-    ->action(function ($clientId, $redirectURI, $scope, $state, $response) {
+    ->action(function ($client_id, $redirectURI, $scope, $state, $response) {
         /** @var Appwrite\Utopia\Response $response */
 
         $response->redirect($redirectURI.'?'.\http_build_query(['code' => 'abcdef', 'state' => $state]));
@@ -387,14 +387,14 @@ App::get('/v1/mock/tests/general/oauth2/token')
     ->param('client_secret', '', new Text(100), 'OAuth2 scope list.')
     ->param('code', '', new Text(100), 'OAuth2 state.')
     ->inject('response')
-    ->action(function ($clientId, $redirectURI, $clientSecret, $code, $response) {
+    ->action(function ($client_id, $redirectURI, $client_secret, $code, $response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        if ($clientId != '1') {
+        if ($client_id != '1') {
             throw new Exception('Invalid client ID');
         }
 
-        if ($clientSecret != '123456') {
+        if ($client_secret != '123456') {
             throw new Exception('Invalid client secret');
         }
 

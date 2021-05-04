@@ -236,7 +236,7 @@ class Auth
      * 
      * @return bool
      */
-    public static function isPreviliggedUser(array $roles): bool
+    public static function isPrivilegedUser(array $roles): bool
     {
         if(
             array_key_exists('role:'.self::USER_ROLE_OWNER, $roles) ||

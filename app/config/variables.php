@@ -33,7 +33,7 @@ return [
             ],
             [
                 'name' => '_APP_OPTIONS_FORCE_HTTPS',
-                'description' => 'Allows you to force HTTPS connection to your API. This feature redirects any HTTP call to HTTPS and adds the \'Strict-Transport-Security\' header to all HTTP responses. By default, set to \'disabled\'. To enable, set to \'enabled\'. This feature will work only when your ports are set to default 80 and 443.',
+                'description' => 'Allows you to force HTTPS connection to your API. This feature redirects any HTTP call to HTTPS and adds the \'Strict-Transport-Security\' header to all HTTP responses. By default, set to \'enabled\'. To disable, set to \'disabled\'. This feature will work only when your ports are set to default 80 and 443.',
                 'introduction' => '',
                 'default' => 'disabled',
                 'required' => false,
@@ -386,8 +386,16 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_FUNCTIONS_ENVS',
+                'name' => '_APP_FUNCTIONS_RUNTIMES',
                 'description' => 'This option allows you to limit the available environments for cloud functions. This option is very useful for low-cost servers to safe disk space.\n\nTo enable/activate this option, pass a list of allowed environments separated by a comma.\n\nCurrently, supported environments are: ' . \implode(', ', \array_keys(Config::getParam('providers'))),
+                'introduction' => '0.8.0',
+                'default' => 'node-15.5,deno-1.8,php-8.0,python-3.9,ruby-3.0,dotnet-5.0',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_FUNCTIONS_ENVS',
+                'description' => 'Deprectated with 0.8.0, use \'_APP_FUNCTIONS_RUNTIMES\' instead!',
                 'introduction' => '0.7.0',
                 'default' => 'node-14.5,deno-1.8,php-7.4,python-3.9,ruby-3.0,dotnet-5.0',
                 'required' => false,
