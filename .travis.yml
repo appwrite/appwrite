@@ -37,15 +37,15 @@ script:
 - docker ps -a
 - docker-compose logs appwrite
 - docker-compose logs mariadb
-# - docker-compose logs appwrite-worker-functions
-# - docker-compose exec appwrite doctor
-# - docker-compose exec appwrite vars
-# - docker-compose exec appwrite test --debug
+- docker-compose logs appwrite-worker-functions
+- docker-compose exec appwrite doctor
+- docker-compose exec appwrite vars
+- docker-compose exec appwrite test --debug
 
-# deploy:
-#   - provider: script
-#     edge: true
-#     script: ./.travis-ci/deploy.sh
-#     on:
-#       repo: appwrite/appwrite
-#       branch: deploy
+deploy:
+  - provider: script
+    edge: true
+    script: ./.travis-ci/deploy.sh
+    on:
+      repo: appwrite/appwrite
+      branch: deploy
