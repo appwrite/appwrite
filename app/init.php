@@ -527,14 +527,14 @@ App::setResource('dbForExternal', function($register, $project) {
     return $database;
 }, ['register', 'project']);
 
-App::setResource('dbForConsole', function($register, $project) {
+App::setResource('dbForConsole', function($register) {
     $cache = new Cache(new RedisCache($register->get('cache')));
 
     $database = new DatabaseDatabase(new MariaDB($register->get('db')), $cache);
-    $database->setNamespace('project_console_internal');
+    $database->setNamespace('project_console');
 
     return $database;
-}, ['register', 'project']);
+}, ['register']);
 
 App::setResource('mode', function($request) {
     /** @var Utopia\Swoole\Request $request */

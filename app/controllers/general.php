@@ -22,7 +22,7 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $clients, $dbForConsole) {
+App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $clients) {
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Database\Document $console */
@@ -30,37 +30,6 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     /** @var Appwrite\Database\Document $user */
     /** @var Utopia\Locale\Locale $locale */
     /** @var array $clients */
-    /** @var Utopia\Database\Database $dbForConsole */
-
-    if(!$dbForConsole->exists()) {
-
-        Console::success('init database!!');
-
-        $collections = Config::getParam('collections2', []); /** @var array $collections */
-
-        $dbForConsole->create();
-
-        foreach ($collections as $key => $collection) {
-            $dbForConsole->createCollection($key);
-
-            foreach ($collection['attributes'] as $i => $attribute) {
-                $dbForConsole->createAttribute(
-                    $key,
-                    $attribute['$id'],
-                    $attribute['type'],
-                    $attribute['size'],
-                    $attribute['required'],
-                    $attribute['signed'],
-                    $attribute['array'],
-                    $attribute['filters'],
-                );
-            }
-
-            foreach ($collection['indexes'] as $i => $index) {
-                
-            }
-        }
-    }
 
     $localeParam = (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
 
@@ -260,7 +229,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         throw new Exception('Password reset is required', 412);
     }
 
-}, ['utopia', 'request', 'response', 'console', 'project', 'user', 'locale', 'clients', 'dbForConsole']);
+}, ['utopia', 'request', 'response', 'console', 'project', 'user', 'locale', 'clients']);
 
 App::options(function ($request, $response) {
     /** @var Utopia\Swoole\Request $request */

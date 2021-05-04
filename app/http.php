@@ -12,6 +12,7 @@ use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
 use Utopia\Database\Validator\Authorization as Authorization2;
 
 // xdebug_start_trace('/tmp/trace');
@@ -50,6 +51,41 @@ $http->on('AfterReload', function($serv, $workerId) {
 });
 
 $http->on('start', function (Server $http) use ($payloadSize) {
+
+    /** @var Utopia\Database\Database $dbForConsole */
+    $app = new App('UTC');
+    $dbForConsole = $app->getResource('dbForConsole');
+
+    if(!$dbForConsole->exists()) {
+        Console::success('[Setup] - Server database init started...');
+
+        $collections = Config::getParam('collections2', []); /** @var array $collections */
+
+        $dbForConsole->create();
+
+        foreach ($collections as $key => $collection) {
+            $dbForConsole->createCollection($key);
+
+            foreach ($collection['attributes'] as $i => $attribute) {
+                $dbForConsole->createAttribute(
+                    $key,
+                    $attribute['$id'],
+                    $attribute['type'],
+                    $attribute['size'],
+                    $attribute['required'],
+                    $attribute['signed'],
+                    $attribute['array'],
+                    $attribute['filters'],
+                );
+            }
+
+            foreach ($collection['indexes'] as $i => $index) {
+                
+            }
+        }
+
+        Console::success('[Setup] - Server database init completed...');
+    }
 
     Console::success('Server started succefully (max payload is '.number_format($payloadSize).' bytes)');
 
