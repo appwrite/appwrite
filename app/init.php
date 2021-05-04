@@ -170,7 +170,7 @@ $register->set('influxdb', function () { // Register DB connection
         return;
     }
 
-    $client = new InfluxDB\Client($host, $port, '', '', false, false, 5);
+    $client = new InfluxDB\Client(host: $host, port: $port, timeout: 5);
 
     return $client;
 });
