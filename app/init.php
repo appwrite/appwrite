@@ -33,7 +33,7 @@ use PDO as PDONative;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MariaDB;
-use Utopia\Database\Database as DatabaseDatabase;
+use Utopia\Database\Database as Database2;
 use Utopia\Database\Validator\Authorization as Authorization2;
 
 const APP_NAME = 'Appwrite';
@@ -131,6 +131,27 @@ Database::addFilter('encrypt',
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
         $tag = null;
         
+        return json_encode([
+            'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
+            'method' => OpenSSL::CIPHER_AES_128_GCM,
+            'iv' => bin2hex($iv),
+            'tag' => bin2hex($tag),
+            'version' => '1',
+        ]);
+    },
+    function($value) {
+        $value = json_decode($value, true);
+        $key = App::getEnv('_APP_OPENSSL_KEY_V'.$value['version']);
+
+        return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+    }
+);
+
+Database2::addFilter('encrypt',
+    function($value) {
+        $key = App::getEnv('_APP_OPENSSL_KEY_V1');
+        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+        $tag = null;
         return json_encode([
             'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
             'method' => OpenSSL::CIPHER_AES_128_GCM,
@@ -512,7 +533,7 @@ App::setResource('projectDB', function($register, $project) {
 App::setResource('dbForInternal', function($register, $project) {
     $cache = new Cache(new RedisCache($register->get('cache')));
 
-    $database = new DatabaseDatabase(new MariaDB($register->get('db')), $cache);
+    $database = new Database2(new MariaDB($register->get('db')), $cache);
     $database->setNamespace('project_'.$project->getId().'_internal');
 
     return $database;
@@ -521,7 +542,7 @@ App::setResource('dbForInternal', function($register, $project) {
 App::setResource('dbForExternal', function($register, $project) {
     $cache = new Cache(new RedisCache($register->get('cache')));
 
-    $database = new DatabaseDatabase(new MariaDB($register->get('db')), $cache);
+    $database = new Database2(new MariaDB($register->get('db')), $cache);
     $database->setNamespace('project_'.$project->getId().'_external');
 
     return $database;
@@ -530,7 +551,7 @@ App::setResource('dbForExternal', function($register, $project) {
 App::setResource('dbForConsole', function($register) {
     $cache = new Cache(new RedisCache($register->get('cache')));
 
-    $database = new DatabaseDatabase(new MariaDB($register->get('db')), $cache);
+    $database = new Database2(new MariaDB($register->get('db')), $cache);
     $database->setNamespace('project_console');
 
     return $database;
