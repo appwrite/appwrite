@@ -280,13 +280,9 @@ Before running the command, make sure you have proper write permissions to the A
 ```bash
 docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x -t appwrite/appwrite:dev --push .
 ```
-**Build Functions Envs**
+**Build Functions Runtimes**
 
-Build envs for all supported cloud functions (multicore builds)
-
-```bash
-bash ./docker/environments/build.sh
-```
+The Runtimes for all supported cloud functions (multicore builds) can be found at the [appwrite/php-runtimes](https://github.com/appwrite/php-runtimes) repository.
 
 ## Tests
 

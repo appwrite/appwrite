@@ -31,10 +31,11 @@ $oauthDefaultFailure = App::getEnv('_APP_HOME').'/auth/oauth2/failure';
 
 App::post('/v1/account')
     ->desc('Create Account')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'auth'])
     ->label('event', 'account.create')
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('auth.type', 'emailPassword')
+    ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'create')
     ->label('sdk.description', '/docs/references/account/create.md')
@@ -72,6 +73,22 @@ App::post('/v1/account')
 
             if (!empty($whitlistDomains) && !\in_array(\substr(\strrchr($email, '@'), 1), $whitlistDomains)) {
                 throw new Exception('Console registration is restricted to specific domains. Contact your administrator for more information.', 401);
+            }
+        }
+
+        $limit = $project->getAttribute('usersAuthLimit', 0);
+
+        if ($limit !== 0) {
+            $projectDB->getCollection([ // Count users
+                'filters' => [
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                ],
+            ]);
+
+            $sum = $projectDB->getSum();
+
+            if($sum >= $limit) {
+                throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
             }
         }
 
@@ -133,10 +150,11 @@ App::post('/v1/account')
 
 App::post('/v1/account/sessions')
     ->desc('Create Account Session')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'auth'])
     ->label('event', 'account.sessions.create')
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('auth.type', 'emailPassword')
+    ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createSession')
     ->label('sdk.description', '/docs/references/account/create-session.md')
@@ -252,7 +270,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->groups(['api', 'account'])
     ->label('error', __DIR__.'/../../views/general/error.phtml')
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createOAuth2Session')
     ->label('sdk.description', '/docs/references/account/create-session-oauth2.md')
@@ -469,7 +487,23 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 ],
             ]);
 
-            if (!$user || empty($user->getId())) { // Last option -> create user alone, generate random password
+            if (!$user || empty($user->getId())) { // Last option -> create the user, generate random password
+                $limit = $project->getAttribute('usersAuthLimit', 0);
+        
+                if ($limit !== 0) {
+                    $projectDB->getCollection([ // Count users
+                        'filters' => [
+                            '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                        ],
+                    ]);
+        
+                    $sum = $projectDB->getSum();
+        
+                    if($sum >= $limit) {
+                        throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
+                    }
+                }
+                
                 Authorization::disable();
 
                 try {
@@ -579,10 +613,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
 App::post('/v1/account/sessions/anonymous')
     ->desc('Create Anonymous Session')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'auth'])
     ->label('event', 'account.sessions.create')
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('auth.type', 'anonymous')
+    ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createAnonymousSession')
     ->label('sdk.description', '/docs/references/account/create-session-anonymous.md')
@@ -611,8 +646,28 @@ App::post('/v1/account/sessions/anonymous')
 
         $protocol = $request->getProtocol();
 
-        if ($user->getId() || 'console' === $project->getId()) {
+        if ('console' === $project->getId()) {
             throw new Exception('Failed to create anonymous user.', 401);
+        }
+
+        if ($user->getId()) {
+            throw new Exception('Cannot create an anonymous user when logged in.', 401);
+        }
+
+        $limit = $project->getAttribute('usersAuthLimit', 0);
+
+        if ($limit !== 0) {
+            $projectDB->getCollection([ // Count users
+                'filters' => [
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                ],
+            ]);
+
+            $sum = $projectDB->getSum();
+
+            if($sum >= $limit) {
+                throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
+            }
         }
 
         Authorization::disable();
@@ -635,7 +690,6 @@ App::post('/v1/account/sessions/anonymous')
         } catch (Exception $th) {
             throw new Exception('Failed saving user to DB', 500);
         }
-
         Authorization::reset();
 
         if (false === $user) {
@@ -703,10 +757,10 @@ App::post('/v1/account/sessions/anonymous')
 
 App::post('/v1/account/jwt')
     ->desc('Create Account JWT')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'auth'])
     ->label('scope', 'account')
-    ->label('docs', false) // Hidden for now - private beta
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('auth.type', 'jwt')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createJWT')
     ->label('sdk.description', '/docs/references/account/create-jwt.md')
@@ -751,7 +805,7 @@ App::get('/v1/account')
     ->desc('Get Account')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/account/get.md')
@@ -771,13 +825,13 @@ App::get('/v1/account/prefs')
     ->desc('Get Account Preferences')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getPrefs')
     ->label('sdk.description', '/docs/references/account/get-prefs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('sdk.response.model', Response::MODEL_PREFERENCES)
     ->inject('response')
     ->inject('user')
     ->action(function ($response, $user) {
@@ -786,14 +840,14 @@ App::get('/v1/account/prefs')
 
         $prefs = $user->getAttribute('prefs', new \stdClass());
 
-        $response->dynamic(new Document($prefs), Response::MODEL_ANY);
+        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
 App::get('/v1/account/sessions')
     ->desc('Get Account Sessions')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getSessions')
     ->label('sdk.description', '/docs/references/account/get-sessions.md')
@@ -833,7 +887,7 @@ App::get('/v1/account/logs')
     ->desc('Get Account Logs')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getLogs')
     ->label('sdk.description', '/docs/references/account/get-logs.md')
@@ -910,7 +964,7 @@ App::patch('/v1/account/name')
     ->groups(['api', 'account'])
     ->label('event', 'account.update.name')
     ->label('scope', 'account')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateName')
     ->label('sdk.description', '/docs/references/account/update-name.md')
@@ -950,7 +1004,7 @@ App::patch('/v1/account/password')
     ->groups(['api', 'account'])
     ->label('event', 'account.update.password')
     ->label('scope', 'account')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePassword')
     ->label('sdk.description', '/docs/references/account/update-password.md')
@@ -995,7 +1049,7 @@ App::patch('/v1/account/email')
     ->groups(['api', 'account'])
     ->label('event', 'account.update.email')
     ->label('scope', 'account')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateEmail')
     ->label('sdk.description', '/docs/references/account/update-email.md')
@@ -1064,13 +1118,13 @@ App::patch('/v1/account/prefs')
     ->groups(['api', 'account'])
     ->label('event', 'account.update.prefs')
     ->label('scope', 'account')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePrefs')
     ->label('sdk.description', '/docs/references/account/update-prefs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('sdk.response.model', Response::MODEL_USER)
     ->param('prefs', [], new Assoc(), 'Prefs key-value JSON object.')
     ->inject('response')
     ->inject('user')
@@ -1103,7 +1157,7 @@ App::delete('/v1/account')
     ->groups(['api', 'account'])
     ->label('event', 'account.delete')
     ->label('scope', 'account')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', '/docs/references/account/delete.md')
@@ -1169,7 +1223,7 @@ App::delete('/v1/account/sessions/:sessionId')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'account.sessions.delete')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'deleteSession')
     ->label('sdk.description', '/docs/references/account/delete-session.md')
@@ -1245,7 +1299,7 @@ App::delete('/v1/account/sessions')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'account.sessions.delete')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'deleteSessions')
     ->label('sdk.description', '/docs/references/account/delete-sessions.md')
@@ -1314,7 +1368,7 @@ App::post('/v1/account/recovery')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'account.recovery.create')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createRecovery')
     ->label('sdk.description', '/docs/references/account/create-recovery.md')
@@ -1343,7 +1397,7 @@ App::post('/v1/account/recovery')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
 
-        $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
@@ -1433,7 +1487,7 @@ App::post('/v1/account/recovery')
 
         $recovery  // Hide secret for clients, sp
             ->setAttribute('secret',
-                ($isPreviliggedUser || $isAppUser) ? $secret : '');
+                ($isPrivilegedUser || $isAppUser) ? $secret : '');
 
         $audits
             ->setParam('userId', $profile->getId())
@@ -1452,7 +1506,7 @@ App::put('/v1/account/recovery')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'account.recovery.update')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateRecovery')
     ->label('sdk.description', '/docs/references/account/update-recovery.md')
@@ -1531,7 +1585,7 @@ App::post('/v1/account/verification')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'account.verification.create')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createVerification')
     ->label('sdk.description', '/docs/references/account/create-verification.md')
@@ -1561,7 +1615,7 @@ App::post('/v1/account/verification')
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $mails */
 
-        $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $verificationSecret = Auth::tokenGenerator();
@@ -1636,7 +1690,7 @@ App::post('/v1/account/verification')
 
         $verification  // Hide secret for clients, sp
             ->setAttribute('secret',
-                ($isPreviliggedUser || $isAppUser) ? $verificationSecret : '');
+                ($isPrivilegedUser || $isAppUser) ? $verificationSecret : '');
 
         $audits
             ->setParam('userId', $user->getId())
@@ -1655,7 +1709,7 @@ App::put('/v1/account/verification')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'account.verification.update')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateVerification')
     ->label('sdk.description', '/docs/references/account/update-verification.md')

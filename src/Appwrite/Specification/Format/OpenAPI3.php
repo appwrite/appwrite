@@ -74,6 +74,10 @@ class OpenAPI3 extends Format
         if (isset($output['components']['securitySchemes']['Key'])) {
             $output['components']['securitySchemes']['Key']['x-appwrite'] = ['demo' => '919c2d18fb5d4...a2ae413da83346ad2'];
         }
+
+        if (isset($output['securityDefinitions']['JWT'])) {
+            $output['securityDefinitions']['JWT']['x-appwrite'] = ['demo' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...'];
+        }
         
         if (isset($output['components']['securitySchemes']['Locale'])) {
             $output['components']['securitySchemes']['Locale']['x-appwrite'] = ['demo' => 'en'];
@@ -83,7 +87,9 @@ class OpenAPI3 extends Format
             $output['components']['securitySchemes']['Mode']['x-appwrite'] = ['demo' => ''];
         }
 
-        foreach ($this->routes as $route) { /* @var $route \Utopia\Route */
+        $usedModels = [];
+
+        foreach ($this->routes as $route) { /** @var \Utopia\Route $route */
             $url = \str_replace('/v1', '', $route->getURL());
             $scope = $route->getLabel('scope', '');
             $hide = $route->getLabel('sdk.hide', false);
@@ -146,6 +152,7 @@ class OpenAPI3 extends Format
                     // ],
                 ];
             } else {
+                $usedModels[] = $model->getType();
                 $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
                     'description' => $model->getName(),
                     'content' => [
@@ -164,7 +171,16 @@ class OpenAPI3 extends Format
             }
 
             if ((!empty($scope))) { //  && 'public' != $scope
-                $temp['security'][] = $route->getLabel('sdk.security', $this->security);
+                $securities = ['Project' => []];
+                
+                foreach($route->getLabel('sdk.auth', []) as $security) {
+                    if(array_key_exists($security, $this->keys)) {
+                        $securities[$security] = [];
+                    }
+                }
+
+                $temp['x-appwrite']['auth'] = array_slice($securities, 0, 2);
+                $temp['security'][] = $securities;
             }
 
             $body = [
@@ -236,7 +252,7 @@ class OpenAPI3 extends Format
                         $node['schema']['format'] = 'format';
                         $node['schema']['x-example'] = 'password';
                         break;
-                    case 'Utopia\Validator\Range': /* @var $validator \Utopia\Validator\Range */
+                    case 'Utopia\Validator\Range': /** @var \Utopia\Validator\Range $validator */
                         $node['schema']['type'] = 'integer';
                         $node['schema']['format'] = 'int32';
                         $node['schema']['x-example'] = $validator->getMin();
@@ -253,7 +269,7 @@ class OpenAPI3 extends Format
                         $node['schema']['format'] = 'url';
                         $node['schema']['x-example'] = 'https://example.com';
                         break;
-                    case 'Utopia\Validator\WhiteList': /* @var $validator \Utopia\Validator\WhiteList */
+                    case 'Utopia\Validator\WhiteList': /** @var \Utopia\Validator\WhiteList $validator */
                         $node['schema']['type'] = 'string';
                         $node['schema']['x-example'] = $validator->getList()[0];
                         break;
@@ -307,8 +323,18 @@ class OpenAPI3 extends Format
 
             $output['paths'][$url][\strtolower($route->getMethod())] = $temp;
         }
-
         foreach ($this->models as $model) {
+            foreach ($model->getRules() as $rule) {
+                if (!in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])) {
+                    $usedModels[] = $rule['type'];
+                }
+            }
+        }
+        foreach ($this->models as $model) {
+            if (!in_array($model->getType(), $usedModels) && $model->getType() !== 'error') {
+                continue;
+            }
+
             $required = $model->getRequired();
             $rules = $model->getRules();
 

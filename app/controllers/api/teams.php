@@ -25,7 +25,7 @@ App::post('/v1/teams')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.create')
     ->label('scope', 'teams.write')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'create')
     ->label('sdk.description', '/docs/references/teams/create-team.md')
@@ -44,7 +44,7 @@ App::post('/v1/teams')
 
         Authorization::disable();
 
-        $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $team = $projectDB->createDocument([
@@ -54,7 +54,7 @@ App::post('/v1/teams')
                 'write' => ['team:{self}/owner'],
             ],
             'name' => $name,
-            'sum' => ($isPreviliggedUser || $isAppUser) ? 0 : 1,
+            'sum' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
             'dateCreated' => \time(),
         ]);
 
@@ -64,7 +64,7 @@ App::post('/v1/teams')
             throw new Exception('Failed saving team to DB', 500);
         }
 
-        if (!$isPreviliggedUser && !$isAppUser) { // Don't add user on server mode
+        if (!$isPrivilegedUser && !$isAppUser) { // Don't add user on server mode
             $membership = new Document([
                 '$collection' => Database::SYSTEM_COLLECTION_MEMBERSHIPS,
                 '$permissions' => [
@@ -100,7 +100,7 @@ App::get('/v1/teams')
     ->desc('List Teams')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'list')
     ->label('sdk.description', '/docs/references/teams/list-teams.md')
@@ -137,7 +137,7 @@ App::get('/v1/teams/:teamId')
     ->desc('Get Team')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/teams/get-team.md')
@@ -165,7 +165,7 @@ App::put('/v1/teams/:teamId')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.update')
     ->label('scope', 'teams.write')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'update')
     ->label('sdk.description', '/docs/references/teams/update-team.md')
@@ -202,7 +202,7 @@ App::delete('/v1/teams/:teamId')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.delete')
     ->label('scope', 'teams.write')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', '/docs/references/teams/delete-team.md')
@@ -251,16 +251,18 @@ App::delete('/v1/teams/:teamId')
 
 App::post('/v1/teams/:teamId/memberships')
     ->desc('Create Team Membership')
-    ->groups(['api', 'teams'])
+    ->groups(['api', 'teams', 'auth'])
     ->label('event', 'teams.memberships.create')
     ->label('scope', 'teams.write')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('auth.type', 'invites')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'createMembership')
     ->label('sdk.description', '/docs/references/teams/create-team-membership.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
+    ->label('abuse-limit', 10)
     ->param('teamId', '', new UID(), 'Team unique ID.')
     ->param('email', '', new Email(), 'New team member email.')
     ->param('name', '', new Text(128), 'New team member name. Max length: 128 chars.', true)
@@ -281,7 +283,7 @@ App::post('/v1/teams/:teamId/memberships')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $mails */
 
-        $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $name = (empty($name)) ? $email : $name;
@@ -309,6 +311,22 @@ App::post('/v1/teams/:teamId/memberships')
         ]);
 
         if (empty($invitee)) { // Create new user if no user with same email found
+
+            $limit = $project->getAttribute('usersAuthLimit', 0);
+        
+            if ($limit !== 0 && $project->getId() !== 'console') { // check users limit, console invites are allways allowed.
+                $projectDB->getCollection([ // Count users
+                    'filters' => [
+                        '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                    ],
+                ]);
+    
+                $sum = $projectDB->getSum();
+    
+                if($sum >= $limit) {
+                    throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
+                }
+            }
 
             Authorization::disable();
 
@@ -353,7 +371,7 @@ App::post('/v1/teams/:teamId/memberships')
             }
         }
 
-        if (!$isOwner && !$isPreviliggedUser && !$isAppUser) { // Not owner, not admin, not app (server)
+        if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
             throw new Exception('User is not allowed to send invitations for this team', 401);
         }
 
@@ -369,12 +387,12 @@ App::post('/v1/teams/:teamId/memberships')
             'teamId' => $team->getId(),
             'roles' => $roles,
             'invited' => \time(),
-            'joined' => ($isPreviliggedUser || $isAppUser) ? \time() : 0,
-            'confirm' => ($isPreviliggedUser || $isAppUser),
+            'joined' => ($isPrivilegedUser || $isAppUser) ? \time() : 0,
+            'confirm' => ($isPrivilegedUser || $isAppUser),
             'secret' => Auth::hash($secret),
         ]);
 
-        if ($isPreviliggedUser || $isAppUser) { // Allow admin to create membership
+        if ($isPrivilegedUser || $isAppUser) { // Allow admin to create membership
             Authorization::disable();
             $membership = $projectDB->createDocument($membership->getArrayCopy());
 
@@ -426,7 +444,7 @@ App::post('/v1/teams/:teamId/memberships')
             ->setParam('{{text-cta}}', '#ffffff')
         ;
 
-        if (!$isPreviliggedUser && !$isAppUser) { // No need in comfirmation when in admin or app mode
+        if (!$isPrivilegedUser && !$isAppUser) { // No need in comfirmation when in admin or app mode
             $mails
                 ->setParam('event', 'teams.membership.create')
                 ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name')))
@@ -457,7 +475,7 @@ App::get('/v1/teams/:teamId/memberships')
     ->desc('Get Team Memberships')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'getMemberships')
     ->label('sdk.description', '/docs/references/teams/get-team-members.md')
@@ -511,7 +529,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.memberships.update.status')
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'updateMembershipStatus')
     ->label('sdk.description', '/docs/references/teams/update-team-membership-status.md')
@@ -658,7 +676,7 @@ App::delete('/v1/teams/:teamId/memberships/:inviteId')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.memberships.delete')
     ->label('scope', 'teams.write')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'deleteMembership')
     ->label('sdk.description', '/docs/references/teams/delete-team-membership.md')

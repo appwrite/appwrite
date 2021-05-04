@@ -306,7 +306,7 @@ class WebhooksCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Test',
-            'env' => 'php-7.4',
+            'env' => 'php-8.0',
             'execute' => ['*'],
             'timeout' => 10,
         ]);
@@ -348,7 +348,7 @@ class WebhooksCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Test',
-            'env' => 'php-7.4',
+            'env' => 'php-8.0',
             'execute' => ['*'],
             'vars' => [
                 'key1' => 'value1',
@@ -453,6 +453,7 @@ class WebhooksCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
+
         $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$data['functionId'].'/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -472,7 +473,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
 
         // wait for timeout function to complete (sleep(5);)
-        sleep(6); 
+        sleep(10);
 
         $webhook = $this->getLastRequest();
 

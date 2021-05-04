@@ -2,6 +2,7 @@ dist: xenial
 
 arch:
   - amd64
+  - arm64
 
 os: linux
 
@@ -10,9 +11,6 @@ language: shell
 notifications:
   email:
   - team@appwrite.io
-  
-services:
-- docker
 
 before_install:
 - curl -fsSL https://get.docker.com | sh
@@ -27,6 +25,9 @@ before_install:
 - docker --version
 - docker buildx create --use
 - chmod -R u+x ./.travis-ci
+- export COMPOSE_INTERACTIVE_NO_CLI=1
+# Only pass a single runtime for CI stability
+- echo "_APP_FUNCTIONS_ENVS=php-8.0" >> .env
 
 install:
 - docker-compose up -d

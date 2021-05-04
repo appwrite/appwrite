@@ -28,23 +28,23 @@ class UsageV1 extends Worker
         /** @var \Domnikl\Statsd\Client $statsd */
         $statsd = $register->get('statsd', true);
 
-        $projectId = $this->args['projectId'];
+        $projectId = $this->args['projectId'] ?? '';
+
+        $storage = $this->args['storage'] ?? 0;
 
         $networkRequestSize = $this->args['networkRequestSize'] ?? 0;
         $networkResponseSize = $this->args['networkResponseSize'] ?? 0;
-
-        $storage = $this->args['storage'] ?? null;
         
-        $httpMethod = $this->args['httpMethod'] ?? null;
-        $httpRequest = $this->args['httpRequest'] ?? null;
+        $httpMethod = $this->args['httpMethod'] ?? '';
+        $httpRequest = $this->args['httpRequest'] ?? 0;
 
-        $functionId = $this->args['functionId'] ?? null;
-        $functionExecution = $this->args['functionExecution'] ?? null;
-        $functionExecutionTime = $this->args['functionExecutionTime'] ?? null;
-        $functionStatus = $this->args['functionStatus'] ?? null;
+        $functionId = $this->args['functionId'];
+        $functionExecution = $this->args['functionExecution'] ?? 0;
+        $functionExecutionTime = $this->args['functionExecutionTime'] ?? 0;
+        $functionStatus = $this->args['functionStatus'] ?? '';
 
-        $realtimeConnections = $this->args['realtimeConnections'] ?? null;
-        $realtimeMessages = $this->args['realtimeMessages'] ?? null;
+        $realtimeConnections = $this->args['realtimeConnections'] ?? 0;
+        $realtimeMessages = $this->args['realtimeMessages'] ?? 0;
 
         $tags = ",project={$projectId},version=".App::getEnv('_APP_VERSION', 'UNKNOWN');
 
