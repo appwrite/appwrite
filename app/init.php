@@ -552,7 +552,7 @@ App::setResource('dbForConsole', function($register) {
     $cache = new Cache(new RedisCache($register->get('cache')));
 
     $database = new Database2(new MariaDB($register->get('db')), $cache);
-    $database->setNamespace('project_console');
+    $database->setNamespace('project_console_internal');
 
     return $database;
 }, ['register']);
