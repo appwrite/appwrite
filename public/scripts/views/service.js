@@ -234,11 +234,11 @@
           }
         }
 
-        if (data[key]) {
+        if (typeof data[key] !== 'undefined') {
           result = data[key];
         }
 
-        if (!result) {
+        if (typeof result === 'undefined') {
           result = "";
         }
 

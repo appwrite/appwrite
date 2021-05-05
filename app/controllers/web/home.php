@@ -226,6 +226,12 @@ App::get('/specs/:format')
                     'description' => 'Your project ID',
                     'in' => 'header',
                 ],
+                'JWT' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-JWT',
+                    'description' => 'Your secret JSON Web Token',
+                    'in' => 'header',
+                ],
                 'Locale' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Locale',
@@ -244,6 +250,12 @@ App::get('/specs/:format')
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Key',
                     'description' => 'Your secret API key',
+                    'in' => 'header',
+                ],
+                'JWT' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-JWT',
+                    'description' => 'Your secret JSON Web Token',
                     'in' => 'header',
                 ],
                 'Locale' => [
@@ -266,6 +278,12 @@ App::get('/specs/:format')
                     'description' => 'Your secret API key',
                     'in' => 'header',
                 ],
+                'JWT' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-JWT',
+                    'description' => 'Your secret JSON Web Token',
+                    'in' => 'header',
+                ],
                 'Locale' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Locale',
@@ -281,14 +299,32 @@ App::get('/specs/:format')
             ],
         ];
 
-        $security = [
-            APP_PLATFORM_CLIENT => ['Project' => []],
-            APP_PLATFORM_SERVER => ['Project' => [], 'Key' => []],
-            APP_PLATFORM_CONSOLE => ['Project' => [], 'Key' => []],
-        ];
-
         foreach ($utopia->getRoutes() as $key => $method) {
             foreach ($method as $route) { /** @var \Utopia\Route $route */
+                $routeSecurity = $route->getLabel('sdk.auth', []);
+                $sdkPlatofrms = [];
+
+                foreach ($routeSecurity as $value) {
+                    switch ($value) {
+                        case APP_AUTH_TYPE_SESSION:
+                            $sdkPlatofrms[] = APP_PLATFORM_CLIENT;
+                            break;
+                        case APP_AUTH_TYPE_KEY:
+                            $sdkPlatofrms[] = APP_PLATFORM_SERVER;
+                            break;
+                        case APP_AUTH_TYPE_JWT:
+                            $sdkPlatofrms[] = APP_PLATFORM_SERVER;
+                            break;
+                        case APP_AUTH_TYPE_ADMIN:
+                            $sdkPlatofrms[] = APP_PLATFORM_CONSOLE;
+                            break;
+                    }
+                }
+
+                if(empty($routeSecurity)) {
+                    $sdkPlatofrms[] = APP_PLATFORM_CLIENT;
+                }
+
                 if (!$route->getLabel('docs', true)) {
                     continue;
                 }
@@ -305,7 +341,7 @@ App::get('/specs/:format')
                     continue;
                 }
 
-                if ($platform !== APP_PLATFORM_CONSOLE && !\in_array($platforms[$platform], $route->getLabel('sdk.platform', []))) {
+                if ($platform !== APP_PLATFORM_CONSOLE && !\in_array($platforms[$platform], $sdkPlatofrms)) {
                     continue;
                 }
 
@@ -342,11 +378,11 @@ App::get('/specs/:format')
 
         switch ($format) {
             case 'swagger2':
-                $format = new Swagger2($utopia, $services, $routes, $models, $keys[$platform], $security[$platform]);
+                $format = new Swagger2($utopia, $services, $routes, $models, $keys[$platform]);
                 break;
 
             case 'open-api3':
-                $format = new OpenAPI3($utopia, $services, $routes, $models, $keys[$platform], $security[$platform]);
+                $format = new OpenAPI3($utopia, $services, $routes, $models, $keys[$platform]);
                 break;
             
             default:

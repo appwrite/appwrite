@@ -2,14 +2,42 @@
 
 ## Features
 
-- Anonymous login
+- Added Anonymous Login ([RFC-010](https://github.com/appwrite/rfc/blob/main/010-anonymous-login.md), #914)
+- Added events for functions and executions (#971)
+- Added JWT support
+- Added ARM support
+- Splitted token & session models to become 2 different internal entities (#922)
+- Added Dart 2.12 as a new Cloud Functions runtime (#989)
+- Added option to disable email/password
+- Added option to disable anonymous login (need to merge and apply changed)
+- Added option to disable JWT auth
+- Added option to disable team invites
+- Option to limit number of users (good for app launches + god account PR)
+- Added 2 new endpoints to the projects API to allow new settings
+- Enabled 501 errors (Not Implemented) from the error handler
+- Added Python 3.9 as a new Cloud Functions runtime
+- Added Deno 1.8 as a new Cloud Functions runtime (#989)
+- Upgraded to PHP 8.0 (#713)
+- ClamAV is now disabled by default to allow lower min requirments for Appwrite (#1064)
+- Added a new env var named `_APP_LOCALE` that allow to change the default `en` locale value (#1056)
+- Updated all the console bottom control to be consistent. Dropped the `+` icon (#1062)
+- Added Response Models for Documents and Preferences 
 
 ## Bugs
 
 - Fixed default value for HTTPS force option
+- Fixed form array casting in dashboard
+- Fixed collection document rule form in dashboard 
 
 ## Breaking Changes (Read before upgrading!)
 
+- Rename `deleteuser` to `delete` on Users Api
+- Environment variable `_APP_FUNCTIONS_ENVS` renamed to `_APP_FUNCTIONS_RUNTIMES`
+- Only logged in users can execute functions (for guests, use anonymous login)
+- Only the user who has triggered the execution get access to the relevant execution logs
+- Function execution environment variable `APPWRITE_FUNCTION_EVENT_PAYLOAD` renamed to `APPWRITE_FUNCTION_EVENT_DATA`
+- Function execution environment variable `APPWRITE_FUNCTION_ENV_NAME` renamed to `APPWRITE_FUNCTION_RUNTIME_NAME`
+- Function execution environment variable `APPWRITE_FUNCTION_ENV_VERSION` renamed to `APPWRITE_FUNCTION_RUNTIME_VERSION`
 - Introdcues rate limits for:
   - Team invite (10 requests in every 60 minutes per IP address)
 
@@ -42,6 +70,7 @@
 - Force adding a security email on setup
 - SMTP is now disabled by default, no dummy SMTP is included in setup
 - Added a new endpoint that returns the server and SDKs latest versions numbers #941
+- Custom data strings, userId, and JWT available for cloud functions #967
 
 ## Upgrades
 
