@@ -116,7 +116,14 @@ App::post('/v1/projects')
             }
 
             foreach ($collection['indexes'] as $i => $index) {
-                
+                $dbForInternal->createIndex(
+                    $key,
+                    $index['$id'],
+                    $index['type'],
+                    $index['attributes'],
+                    $index['lengths'],
+                    $index['orders'],
+                );
             }
         }
 

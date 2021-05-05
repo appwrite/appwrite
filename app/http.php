@@ -52,9 +52,8 @@ $http->on('AfterReload', function($serv, $workerId) {
 
 $http->on('start', function (Server $http) use ($payloadSize) {
 
-    /** @var Utopia\Database\Database $dbForConsole */
     $app = new App('UTC');
-    $dbForConsole = $app->getResource('dbForConsole');
+    $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
 
     if(!$dbForConsole->exists()) {
         Console::success('[Setup] - Server database init started...');
@@ -80,7 +79,14 @@ $http->on('start', function (Server $http) use ($payloadSize) {
             }
 
             foreach ($collection['indexes'] as $i => $index) {
-                
+                $dbForConsole->createIndex(
+                    $key,
+                    $index['$id'],
+                    $index['type'],
+                    $index['attributes'],
+                    $index['lengths'],
+                    $index['orders'],
+                );
             }
         }
 

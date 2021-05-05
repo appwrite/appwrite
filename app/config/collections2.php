@@ -135,7 +135,148 @@ $collections = [
 
             ],
         ],
+        'indexes' => [
+            [
+                '$id' => '_key_email',
+                'type' => Database::INDEX_UNIQUE,
+                'attributes' => ['email'],
+                'lengths' => [1024],
+                'orders' => [Database::ORDER_ASC],
+            ]
+        ],
+    ],
+
+    'teams' => [
+        '$collection' => Database::COLLECTIONS,
+        '$id' => 'teams',
+        'name' => 'Teams',
+        'attributes' => [
+            [
+                '$id' => 'name',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 128,
+                'signed' => true,
+                'required' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'dateCreated',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'sum',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+        ],
         'indexes' => [],
+    ],
+
+    'memberships' => [
+        '$collection' => Database::COLLECTIONS,
+        '$id' => 'memberships',
+        'name' => 'Memberships',
+        'attributes' => [
+            [
+                '$id' => 'teamId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'userId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'roles',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 128,
+                'signed' => true,
+                'required' => false,
+                'array' => true,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'invited',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'joined',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'confirm',
+                'type' => Database::VAR_BOOLEAN,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'secret',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 256,
+                'signed' => true,
+                'required' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+        ],
+        'indexes' => [
+            [
+                '$id' => '_key_team',
+                'type' => Database::INDEX_UNIQUE,
+                'attributes' => ['teamId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => '_key_user',
+                'type' => Database::INDEX_UNIQUE,
+                'attributes' => ['userId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ]
+        ],
     ],
     
     'files' => [
@@ -285,7 +426,15 @@ $collections = [
                 'filters' => [],
             ],
         ],
-        'indexes' => [],
+        'indexes' => [
+            [
+                '$id' => '_key_bucket',
+                'type' => Database::INDEX_UNIQUE,
+                'attributes' => ['bucketId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ]
+        ],
     ],
     
     'functions' => [
@@ -425,7 +574,8 @@ $collections = [
                 'filters' => [],
             ],
         ],
-        'indexes' => [],
+        'indexes' => [
+        ],
     ],
     
     'tags' => [
@@ -485,7 +635,15 @@ $collections = [
                 'filters' => [],
             ],
         ],
-        'indexes' => [],
+        'indexes' => [
+            [
+                '$id' => '_key_function',
+                'type' => Database::INDEX_UNIQUE,
+                'attributes' => ['functionId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ]
+        ],
     ],
 
     'executions' => [
@@ -585,7 +743,15 @@ $collections = [
                 'filters' => [],
             ],
         ],
-        'indexes' => [],
+        'indexes' => [
+            [
+                '$id' => '_key_function',
+                'type' => Database::INDEX_UNIQUE,
+                'attributes' => ['functionId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ]
+        ],
     ],
 ];
 
