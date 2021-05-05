@@ -99,7 +99,7 @@ App::get('/v1/functions')
 
         $response->dynamic2(new Document([
             'sum' => $dbForInternal->count('functions', [], 5000),
-            'functions' => $dbForInternal->find('functions', [], $limit, $offset, [], [])
+            'functions' => $dbForInternal->find('functions', [], $limit, $offset)
         ]), Response::MODEL_FUNCTION_LIST);
     });
 
