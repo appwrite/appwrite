@@ -50,15 +50,20 @@ $http->on('AfterReload', function($serv, $workerId) {
     Console::success('Reload completed...');
 });
 
-$http->on('start', function (Server $http) use ($payloadSize) {
+Files::load(__DIR__ . '/../public');
 
+include __DIR__ . '/controllers/general.php';
+
+$http->on('start', function (Server $http) use ($payloadSize, $register) {
     $app = new App('UTC');
     $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
 
     if(!$dbForConsole->exists()) {
         Console::success('[Setup] - Server database init started...');
-
+        
         $collections = Config::getParam('collections2', []); /** @var array $collections */
+
+        $register->get('cache')->flushAll();
 
         $dbForConsole->create();
 
@@ -103,10 +108,6 @@ $http->on('start', function (Server $http) use ($payloadSize) {
         $http->shutdown();
     });
 });
-
-Files::load(__DIR__ . '/../public');
-
-include __DIR__ . '/controllers/general.php';
 
 $domain = App::getEnv('_APP_DOMAIN', '');
 
