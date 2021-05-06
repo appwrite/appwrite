@@ -682,7 +682,7 @@ App::post('/v1/account/sessions/anonymous')
                 'emailVerification' => false,
                 'status' => Auth::USER_STATUS_UNACTIVATED,
                 'password' => null,
-                'passwordUpdate' => 0,
+                'passwordUpdate' => \time(),
                 'registration' => \time(),
                 'reset' => false,
                 'name' => null
