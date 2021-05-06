@@ -342,14 +342,9 @@ App::post('/v1/teams/:teamId/memberships')
                     'status' => Auth::USER_STATUS_UNACTIVATED,
                     'password' => Auth::passwordHash(Auth::passwordGenerator()),
                     /** 
-                     * Set the password update time to 0 for users created 
-                     * with a team invite. This will allow us to distinguish b/w 
-                     * new and old appwrite users. 
-                     * if (passwordUpdate == 0) {
-                     *      // new appwrite user created with oauth/anonymous/team invite
-                     * } else {
-                     *      // existing appwrite user
-                     * } 
+                     * Set the password update time to 0 for users created using 
+                     * team Invite and OAuth to allow password updates without an 
+                     * old password 
                      */
                     'passwordUpdate' => 0,
                     'registration' => \time(),
