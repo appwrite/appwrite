@@ -359,6 +359,27 @@ App::get('/v1/mock/tests/general/500-error')
         throw new Exception('Mock 500 error', 500);
     });
 
+App::get('/v1/mock/tests/general/502-error')
+    ->desc('502 Error')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('sdk.auth', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'general')
+    ->label('sdk.method', 'error502')
+    ->label('sdk.description', 'Mock a an 502 bad gateway.')
+    ->label('sdk.response.code', Response::STATUS_CODE_BAD_GATEWAY)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_TEXT)
+    ->label('sdk.mock', true)
+    ->inject('response')
+    ->action(function ($response) {
+        /** @var Appwrite\Utopia\Response $response */
+
+        $response
+            ->setStatusCode(502)
+            ->text('This is a text error')
+        ;
+    });
+
 App::get('/v1/mock/tests/general/oauth2')
     ->desc('OAuth Login')
     ->groups(['mock'])
