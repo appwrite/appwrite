@@ -406,12 +406,12 @@ App::setResource('clients', function($request, $console, $project) {
     return $clients;
 }, ['request', 'console', 'project']);
 
-App::setResource('user', function($mode, $project, $console, $request, $response, $projectDB, $consoleDB) {
+App::setResource('user', function($mode, $project, $console, $request, $response, $dbForInternal, $dbForConsole) {
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
-    /** @var Appwrite\Database\Document $project */
-    /** @var Appwrite\Database\Database $consoleDB */
-    /** @var Appwrite\Database\Database $projectDB */
+    /** @var Utopia\Database\Document $project */
+    /** @var Utopia\Database\Database $dbForInternal */
+    /** @var Utopia\Database\Database $dbForConsole */
     /** @var bool $mode */
 
     Authorization::setDefaultStatus(true);
@@ -437,14 +437,14 @@ App::setResource('user', function($mode, $project, $console, $request, $response
         $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
     }
 
-    Auth::$unique = $session['id'];
-    Auth::$secret = $session['secret'];
+    Auth::$unique = $session['id'] ?? '';
+    Auth::$secret = $session['secret'] ?? '';
 
     if (APP_MODE_ADMIN !== $mode) {
-        $user = $projectDB->getDocument(Auth::$unique);
+        $user = $dbForInternal->getDocument('users', Auth::$unique);
     }
     else {
-        $user = $consoleDB->getDocument(Auth::$unique);
+        $user = $dbForConsole->getDocument('users', Auth::$unique);
 
         $user
             ->setAttribute('$id', 'admin-'.$user->getAttribute('$id'))
@@ -481,7 +481,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
         $jwtSessionId = $payload['sessionId'] ?? '';
 
         if($jwtUserId && $jwtSessionId) {
-            $user = $projectDB->getDocument($jwtUserId);
+            $user = $dbForInternal->getDocument('users', $jwtUserId);
         }
 
         if (empty($user->search('$id', $jwtSessionId, $user->getAttribute('tokens')))) { // Match JWT to active token
@@ -490,7 +490,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     }
 
     return $user;
-}, ['mode', 'project', 'console', 'request', 'response', 'projectDB', 'consoleDB']);
+}, ['mode', 'project', 'console', 'request', 'response', 'dbForInternal', 'dbForConsole']);
 
 App::setResource('project', function($consoleDB, $request) {
     /** @var Utopia\Swoole\Request $request */
@@ -500,7 +500,7 @@ App::setResource('project', function($consoleDB, $request) {
     Authorization2::disable();
 
     $project = $consoleDB->getDocument($request->getParam('project',
-        $request->getHeader('x-appwrite-project', '')));
+        $request->getHeader('x-appwrite-project', 'console')));
 
     Authorization::reset();
     Authorization2::reset();

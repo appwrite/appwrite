@@ -1,30 +1,30 @@
 <?php
 
-use Ahc\Jwt\JWT;
-use Utopia\App;
-use Utopia\Exception;
-use Utopia\Config\Config;
-use Utopia\Validator\Assoc;
-use Utopia\Validator\Text;
-use Appwrite\Network\Validator\Email;
-use Utopia\Validator\WhiteList;
-use Appwrite\Network\Validator\Host;
-use Appwrite\Network\Validator\URL;
-use Utopia\Audit\Audit;
-use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
-use Appwrite\Database\Database;
-use Appwrite\Database\Document;
-use Appwrite\Database\Exception\Duplicate;
-use Appwrite\Database\Validator\UID;
-use Appwrite\Database\Validator\Authorization;
 use Appwrite\Detector\Detector;
 use Appwrite\Template\Template;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as URLParser;
 use Appwrite\Utopia\Response;
+use Appwrite\Network\Validator\Email;
+use Appwrite\Network\Validator\Host;
+use Appwrite\Network\Validator\URL;
+use Utopia\App;
+use Utopia\Exception;
+use Utopia\Config\Config;
+use Utopia\Validator\Assoc;
+use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 use Utopia\Validator\ArrayList;
+use Utopia\Audit\Audit;
+use Utopia\Audit\Adapters\MySQL as AuditAdapter;
+use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
+use Ahc\Jwt\JWT;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\UID;
 
 $oauthDefaultSuccess = App::getEnv('_APP_HOME').'/auth/oauth2/success';
 $oauthDefaultFailure = App::getEnv('_APP_HOME').'/auth/oauth2/failure';
@@ -49,13 +49,13 @@ App::post('/v1/account')
     ->inject('request')
     ->inject('response')
     ->inject('project')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('audits')
-    ->action(function ($email, $password, $name, $request, $response, $project, $projectDB, $audits) {
+    ->action(function ($email, $password, $name, $request, $response, $project, $dbForInternal, $audits) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
 
         if ('console' === $project->getId()) {
@@ -79,40 +79,21 @@ App::post('/v1/account')
         $limit = $project->getAttribute('usersAuthLimit', 0);
 
         if ($limit !== 0) {
-            $projectDB->getCollection([ // Count users
-                'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                ],
-            ]);
-
-            $sum = $projectDB->getSum();
+            $sum = $dbForInternal->count('users'); // Count users TODO: add a 10k limit here.
 
             if($sum >= $limit) {
                 throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
             }
         }
 
-        $profile = $projectDB->getCollectionFirst([ // Get user by email address
-            'limit' => 1,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                'email='.$email,
-            ],
-        ]);
-
-        if (!empty($profile)) {
-            throw new Exception('Account already exists', 409);
-        }
-
         Authorization::disable();
 
         try {
-            $user = $projectDB->createDocument([
-                '$collection' => Database::SYSTEM_COLLECTION_USERS,
-                '$permissions' => [
-                    'read' => ['*'],
-                    'write' => ['user:{self}'],
-                ],
+            $userId = $dbForInternal->getId();
+            $user = $dbForInternal->createDocument('users', new Document([
+                '$id' => $userId,
+                '$read' => ['*'],
+                '$write' => ['user:'.$userId],
                 'email' => $email,
                 'emailVerification' => false,
                 'status' => Auth::USER_STATUS_UNACTIVATED,
@@ -121,7 +102,11 @@ App::post('/v1/account')
                 'registration' => \time(),
                 'reset' => false,
                 'name' => $name,
-            ], ['email' => $email]);
+                'prefs' => [],
+                'sessions' => [],
+                'tokens' => [],
+                'memberships' => [],
+            ]));
         } catch (Duplicate $th) {
             throw new Exception('Account already exists', 409);
         }
@@ -142,10 +127,8 @@ App::post('/v1/account')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($user, Response::MODEL_USER)
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($user, Response::MODEL_USER);
     });
 
 App::post('/v1/account/sessions')
@@ -167,28 +150,23 @@ App::post('/v1/account/sessions')
     ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
     ->inject('request')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('locale')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($email, $password, $request, $response, $projectDB, $locale, $geodb, $audits) {
+    ->action(function ($email, $password, $request, $response, $dbForInternal, $locale, $geodb, $audits) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
 
         $protocol = $request->getProtocol();
-        $profile = $projectDB->getCollectionFirst([ // Get user by email address
-            'limit' => 1,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                'email='.$email,
-            ],
-        ]);
+        
+        $profile = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [$email])], 1); // Get user by email address
 
-        if (false == $profile || !Auth::passwordVerify($password, $profile->getAttribute('password'))) {
+        if (!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'))) {
             $audits
                 //->setParam('userId', $profile->getId())
                 ->setParam('event', 'account.sesssions.failed')
@@ -208,9 +186,7 @@ App::post('/v1/account/sessions')
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge(
             [
-                '$collection' => Database::SYSTEM_COLLECTION_SESSIONS,
-                '$permissions' => ['read' => ['user:'.$profile->getId()], 'write' => ['user:'.$profile->getId()]],
-                'userId' => $profile->getId(),
+                '$id' => $dbForInternal->getId(),
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => $email,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
@@ -223,15 +199,9 @@ App::post('/v1/account/sessions')
 
         Authorization::setRole('user:'.$profile->getId());
 
-        $session = $projectDB->createDocument($session->getArrayCopy());
-
-        if (false === $session) {
-            throw new Exception('Failed saving session to DB', 500);
-        }
-
         $profile->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
 
-        $profile = $projectDB->updateDocument($profile->getArrayCopy());
+        $profile = $dbForInternal->updateDocument('users', $profile->getId(), $profile);
 
         if (false === $profile) {
             throw new Exception('Failed saving user to DB', 500);
@@ -262,7 +232,7 @@ App::post('/v1/account/sessions')
             ->setAttribute('countryName', (isset($countries[strtoupper($session->getAttribute('countryCode'))])) ? $countries[strtoupper($session->getAttribute('countryCode'))] : $locale->getText('locale.country.unknown'))
         ;
         
-        $response->dynamic($session, Response::MODEL_SESSION);
+        $response->dynamic2($session, Response::MODEL_SESSION);
     });
 
 App::get('/v1/account/sessions/oauth2/:provider')
@@ -388,15 +358,15 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('response')
     ->inject('project')
     ->inject('user')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $projectDB, $geodb, $audits) use ($oauthDefaultSuccess) {
+    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $dbForInternal, $geodb, $audits) use ($oauthDefaultSuccess) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
-        /** @var Appwrite\Database\Document $user */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Document $user */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
         
@@ -460,13 +430,19 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             throw new Exception('Missing ID from OAuth2 provider', 400);
         }
 
-        $current = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret);
+        $sessions = $user->getAttribute('sessions', []);
+        $current = Auth::sessionVerify($sessions, Auth::$secret);
 
-        if ($current) {
-            $projectDB->deleteDocument($current); //throw new Exception('User already logged in', 401);
+        if($current) { // Delete current session of new one.
+            foreach ($sessions as $key => $session) {
+                if ($current === $session['$id']) {
+                    unset($sessions[$key]);
+                    $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('sessions', $sessions));
+                }
+            }
         }
 
-        $user = (empty($user->getId())) ? $projectDB->getCollectionFirst([ // Get user by provider id
+        $user = (empty($user->getId())) ? $dbForInternal->getCollectionFirst([ // Get user by provider id
             'limit' => 1,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_USERS,
@@ -479,25 +455,13 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $name = $oauth2->getUserName($accessToken);
             $email = $oauth2->getUserEmail($accessToken);
 
-            $user = $projectDB->getCollectionFirst([ // Get user by provider email address
-                'limit' => 1,
-                'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                    'email='.$email,
-                ],
-            ]);
+            $user = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [$email])], 1); // Get user by email address
 
             if (!$user || empty($user->getId())) { // Last option -> create the user, generate random password
                 $limit = $project->getAttribute('usersAuthLimit', 0);
         
                 if ($limit !== 0) {
-                    $projectDB->getCollection([ // Count users
-                        'filters' => [
-                            '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                        ],
-                    ]);
-        
-                    $sum = $projectDB->getSum();
+                    $sum = $dbForInternal->count('users'); // Count users TODO: add a 10k limit here.
         
                     if($sum >= $limit) {
                         throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
@@ -507,9 +471,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 Authorization::disable();
 
                 try {
-                    $user = $projectDB->createDocument([
-                        '$collection' => Database::SYSTEM_COLLECTION_USERS,
-                        '$permissions' => ['read' => ['*'], 'write' => ['user:{self}']],
+                    $userId = $dbForInternal->getId();
+                    $user = $dbForInternal->createDocument('users', new Document([
+                        '$id' => $userId,
+                        '$read' => ['*'],
+                        '$write' => ['user:'.$userId],
                         'email' => $email,
                         'emailVerification' => true,
                         'status' => Auth::USER_STATUS_ACTIVATED, // Email should already be authenticated by OAuth2 provider
@@ -518,16 +484,12 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'registration' => \time(),
                         'reset' => false,
                         'name' => $name,
-                    ], ['email' => $email]);
+                    ]));
                 } catch (Duplicate $th) {
                     throw new Exception('Account already exists', 409);
                 }
 
                 Authorization::reset();
-
-                if (false === $user) {
-                    throw new Exception('Failed saving user to DB', 500);
-                }
             }
         }
 
@@ -542,9 +504,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $secret = Auth::tokenGenerator();
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $session = new Document(array_merge([
-            '$collection' => Database::SYSTEM_COLLECTION_SESSIONS,
-            '$permissions' => ['read' => ['user:'.$user['$id']], 'write' => ['user:'.$user['$id']]],
-            'userId' => $user->getId(),
+            '$id' => $dbForInternal->getId(),
             'provider' => $provider,
             'providerUid' => $oauth2ID,
             'providerToken' => $accessToken,
@@ -571,7 +531,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         Authorization::setRole('user:'.$user->getId());
 
-        $user = $projectDB->updateDocument($user->getArrayCopy());
+        $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
 
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500);
@@ -631,16 +591,16 @@ App::post('/v1/account/sessions/anonymous')
     ->inject('locale')
     ->inject('user')
     ->inject('project')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($request, $response, $locale, $user, $project, $projectDB, $geodb, $audits) {
+    ->action(function ($request, $response, $locale, $user, $project, $dbForInternal, $geodb, $audits) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
-        /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Database\Document $project */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
 
@@ -657,13 +617,7 @@ App::post('/v1/account/sessions/anonymous')
         $limit = $project->getAttribute('usersAuthLimit', 0);
 
         if ($limit !== 0) {
-            $projectDB->getCollection([ // Count users
-                'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                ],
-            ]);
-
-            $sum = $projectDB->getSum();
+            $sum = $dbForInternal->count('users'); // Count users TODO: add a 10k limit here.
 
             if($sum >= $limit) {
                 throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
@@ -672,12 +626,11 @@ App::post('/v1/account/sessions/anonymous')
 
         Authorization::disable();
         try {
-            $user = $projectDB->createDocument([
-                '$collection' => Database::SYSTEM_COLLECTION_USERS,
-                '$permissions' => [
-                    'read' => ['*'], 
-                    'write' => ['user:{self}']
-                ],
+            $userId = $dbForInternal->getId();
+            $user = $dbForInternal->createDocument('users', new Document([
+                '$id' => $userId,
+                '$read' => ['*'], 
+                '$write' => ['user:'.$userId],
                 'email' => null,
                 'emailVerification' => false,
                 'status' => Auth::USER_STATUS_UNACTIVATED,
@@ -686,7 +639,7 @@ App::post('/v1/account/sessions/anonymous')
                 'registration' => \time(),
                 'reset' => false,
                 'name' => null
-            ]);
+            ]));
         } catch (Exception $th) {
             throw new Exception('Failed saving user to DB', 500);
         }
@@ -704,9 +657,7 @@ App::post('/v1/account/sessions/anonymous')
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $session = new Document(array_merge(
             [
-                '$collection' => Database::SYSTEM_COLLECTION_SESSIONS,
-                '$permissions' => ['read' => ['user:' . $user['$id']], 'write' => ['user:' . $user['$id']]],
-                'userId' => $user->getId(),
+                '$id' => $dbForInternal->getId(),
                 'provider' => Auth::SESSION_PROVIDER_ANONYMOUS,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'expire' => $expiry,
@@ -723,7 +674,7 @@ App::post('/v1/account/sessions/anonymous')
 
         Authorization::setRole('user:'.$user->getId());
 
-        $user = $projectDB->updateDocument($user->getArrayCopy());
+        $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
 
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500);
@@ -752,7 +703,7 @@ App::post('/v1/account/sessions/anonymous')
             ->setAttribute('countryName', (isset($countries[$session->getAttribute('countryCode')])) ? $countries[$session->getAttribute('countryCode')] : $locale->getText('locale.country.unknown'))
         ;
 
-        $response->dynamic($session, Response::MODEL_SESSION);
+        $response->dynamic2($session, Response::MODEL_SESSION);
     });
 
 App::post('/v1/account/jwt')
@@ -770,7 +721,7 @@ App::post('/v1/account/jwt')
     ->inject('user')
     ->action(function ($response, $user) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Database\Document $user */
             
         $sessions = $user->getAttribute('sessions', []);
         $current = new Document();
@@ -789,16 +740,15 @@ App::post('/v1/account/jwt')
         
         $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic(new Document(['jwt' => $jwt->encode([
-                // 'uid'    => 1,
-                // 'aud'    => 'http://site.com',
-                // 'scopes' => ['user'],
-                // 'iss'    => 'http://api.mysite.com',
-                'userId' => $user->getId(),
-                'sessionId' => $current->getId(),
-            ])]), Response::MODEL_JWT);
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2(new Document(['jwt' => $jwt->encode([
+            // 'uid'    => 1,
+            // 'aud'    => 'http://site.com',
+            // 'scopes' => ['user'],
+            // 'iss'    => 'http://api.mysite.com',
+            'userId' => $user->getId(),
+            'sessionId' => $current->getId(),
+        ])]), Response::MODEL_JWT);
     });
 
 App::get('/v1/account')
@@ -816,9 +766,9 @@ App::get('/v1/account')
     ->inject('user')
     ->action(function ($response, $user) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Database\Document $user */
 
-        $response->dynamic($user, Response::MODEL_USER);
+        $response->dynamic2($user, Response::MODEL_USER);
     });
 
 App::get('/v1/account/prefs')
@@ -836,11 +786,11 @@ App::get('/v1/account/prefs')
     ->inject('user')
     ->action(function ($response, $user) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Database\Document $user */
 
         $prefs = $user->getAttribute('prefs', new \stdClass());
 
-        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
+        $response->dynamic2(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
 App::get('/v1/account/sessions')
@@ -859,7 +809,7 @@ App::get('/v1/account/sessions')
     ->inject('locale')
     ->action(function ($response, $user, $locale) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
 
         $sessions = $user->getAttribute('sessions', []);
@@ -877,7 +827,7 @@ App::get('/v1/account/sessions')
             $sessions[$key] = $session;
         }
 
-        $response->dynamic(new Document([
+        $response->dynamic2(new Document([
             'sum' => count($sessions),
             'sessions' => $sessions
         ]), Response::MODEL_SESSION_LIST);
@@ -903,7 +853,7 @@ App::get('/v1/account/logs')
     ->action(function ($response, $register, $project, $user, $locale, $geodb) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
-        /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
 
@@ -956,7 +906,7 @@ App::get('/v1/account/logs')
 
         }
 
-        $response->dynamic(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
+        $response->dynamic2(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
     });
 
 App::patch('/v1/account/name')
@@ -974,21 +924,15 @@ App::patch('/v1/account/name')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.')
     ->inject('response')
     ->inject('user')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('audits')
-    ->action(function ($name, $response, $user, $projectDB, $audits) {
+    ->action(function ($name, $response, $user, $dbForInternal, $audits) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $user */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Document $user */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
 
-        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
-            'name' => $name,
-        ]));
-
-        if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
-        }
+        $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('name', $name));
 
         $audits
             ->setParam('userId', $user->getId())
@@ -996,7 +940,7 @@ App::patch('/v1/account/name')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 
-        $response->dynamic($user, Response::MODEL_USER);
+        $response->dynamic2($user, Response::MODEL_USER);
     });
 
 App::patch('/v1/account/password')
@@ -1015,25 +959,19 @@ App::patch('/v1/account/password')
     ->param('oldPassword', '', new Password(), 'Old user password. Must be between 6 to 32 chars.')
     ->inject('response')
     ->inject('user')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('audits')
-    ->action(function ($password, $oldPassword, $response, $user, $projectDB, $audits) {
+    ->action(function ($password, $oldPassword, $response, $user, $dbForInternal, $audits) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $user */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Document $user */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
 
         if (!Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
             throw new Exception('Invalid credentials', 401);
         }
 
-        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
-            'password' => Auth::passwordHash($password),
-        ]));
-
-        if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
-        }
+        $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('password', Auth::passwordHash($password)));
 
         $audits
             ->setParam('userId', $user->getId())
@@ -1041,7 +979,7 @@ App::patch('/v1/account/password')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 
-        $response->dynamic($user, Response::MODEL_USER);
+        $response->dynamic2($user, Response::MODEL_USER);
     });
 
 App::patch('/v1/account/email')
@@ -1060,12 +998,12 @@ App::patch('/v1/account/email')
     ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
     ->inject('response')
     ->inject('user')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('audits')
-    ->action(function ($email, $password, $response, $user, $projectDB, $audits) {
+    ->action(function ($email, $password, $response, $user, $dbForInternal, $audits) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $user */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Document $user */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
 
         $isAnonymousUser = is_null($user->getAttribute('email')) && is_null($user->getAttribute('password')); // Check if request is from an anonymous account for converting
@@ -1077,28 +1015,17 @@ App::patch('/v1/account/email')
             throw new Exception('Invalid credentials', 401);
         }
 
-        $profile = $projectDB->getCollectionFirst([ // Get user by email address
-            'limit' => 1,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                'email='.$email,
-            ],
-        ]);
+        $profile = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [$email])], 1); // Get user by email address
 
-        if (!empty($profile)) {
+        if ($profile) {
             throw new Exception('User already registered', 400);
         }
 
-        // TODO after this user needs to confirm mail again
-
-        $user = $projectDB->updateDocument(\array_merge(
-            $user->getArrayCopy(),
-            ($isAnonymousUser ? [ 'password' => Auth::passwordHash($password) ] : []),
-            [
-                'email' => $email,
-                'emailVerification' => false,
-            ]
-        ));
+        $user = $dbForInternal->updateDocument('users', $user->getId(), $user
+            ->setAttribute('password', $isAnonymousUser ? Auth::passwordHash($password) : $user->getAttribute('password', ''))
+            ->setAttribute('email', $email)
+            ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
+        );
 
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500);
@@ -1110,7 +1037,7 @@ App::patch('/v1/account/email')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 
-        $response->dynamic($user, Response::MODEL_USER);
+        $response->dynamic2($user, Response::MODEL_USER);
     });
 
 App::patch('/v1/account/prefs')
@@ -1128,28 +1055,22 @@ App::patch('/v1/account/prefs')
     ->param('prefs', [], new Assoc(), 'Prefs key-value JSON object.')
     ->inject('response')
     ->inject('user')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('audits')
-    ->action(function ($prefs, $response, $user, $projectDB, $audits) {
+    ->action(function ($prefs, $response, $user, $dbForInternal, $audits) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $user */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Document $user */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
-        
-        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
-            'prefs' => $prefs,
-        ]));
 
-        if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
-        }
+        $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
 
         $audits
             ->setParam('event', 'account.update.prefs')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 
-        $response->dynamic($user, Response::MODEL_USER);
+        $response->dynamic2($user, Response::MODEL_USER);
     });
 
 App::delete('/v1/account')
@@ -1166,21 +1087,20 @@ App::delete('/v1/account')
     ->inject('request')
     ->inject('response')
     ->inject('user')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($request, $response, $user, $projectDB, $audits, $events) {
+    ->action(function ($request, $response, $user, $dbForInternal, $audits, $events) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $user */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Document $user */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
 
         $protocol = $request->getProtocol();
-        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
-            'status' => Auth::USER_STATUS_BLOCKED,
-        ]));
+        $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('status', Auth::USER_STATUS_BLOCKED));
+
 
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500);
@@ -1202,7 +1122,7 @@ App::delete('/v1/account')
         ;
 
         $events
-            ->setParam('eventData', $response->output($user, Response::MODEL_USER))
+            ->setParam('eventData', $response->output2($user, Response::MODEL_USER))
         ;
 
         if (!Config::getParam('domainVerification')) {
@@ -1234,14 +1154,14 @@ App::delete('/v1/account/sessions/:sessionId')
     ->inject('request')
     ->inject('response')
     ->inject('user')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($sessionId, $request, $response, $user, $projectDB, $audits, $events) {
+    ->action(function ($sessionId, $request, $response, $user, $dbForInternal, $audits, $events) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $user */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Document $user */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
 
@@ -1252,13 +1172,11 @@ App::delete('/v1/account/sessions/:sessionId')
                 
         $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($sessions as $session) { 
+        foreach ($sessions as $key => $session) { 
             /** @var Document $session */
 
-            if (($sessionId == $session->getId())) {
-                if (!$projectDB->deleteDocument($session->getId())) {
-                    throw new Exception('Failed to remove token from DB', 500);
-                }
+            if ($sessionId == $session->getId()) {
+                unset($sessions[$key]);
 
                 $audits
                     ->setParam('userId', $user->getId())
@@ -1283,8 +1201,10 @@ App::delete('/v1/account/sessions/:sessionId')
                     ;
                 }
 
+                $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('sessions', $sessions));
+
                 $events
-                    ->setParam('eventData', $response->output($session, Response::MODEL_SESSION))
+                    ->setParam('eventData', $response->output2($session, Response::MODEL_SESSION))
                 ;
 
                 return $response->noContent();
@@ -1309,14 +1229,14 @@ App::delete('/v1/account/sessions')
     ->inject('request')
     ->inject('response')
     ->inject('user')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($request, $response, $user, $projectDB, $audits, $events) {
+    ->action(function ($request, $response, $user, $dbForInternal, $audits, $events) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $user */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Document $user */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
 
@@ -1325,10 +1245,6 @@ App::delete('/v1/account/sessions')
 
         foreach ($sessions as $session) { 
             /** @var Document $session */
-
-            if (!$projectDB->deleteDocument($session->getId())) {
-                throw new Exception('Failed to remove token from DB', 500);
-            }
 
             $audits
                 ->setParam('userId', $user->getId())
@@ -1352,9 +1268,11 @@ App::delete('/v1/account/sessions')
                 ;
             }
         }
+
+        $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('sessions', []));
                     
         $events
-            ->setParam('eventData', $response->output(new Document([
+            ->setParam('eventData', $response->output2(new Document([
                 'sum' => count($sessions),
                 'sessions' => $sessions
             ]), Response::MODEL_SESSION_LIST))
@@ -1381,16 +1299,16 @@ App::post('/v1/account/recovery')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients'])
     ->inject('request')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('project')
     ->inject('locale')
     ->inject('mails')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($email, $url, $request, $response, $projectDB, $project, $locale, $mails, $audits, $events) {
+    ->action(function ($email, $url, $request, $response, $dbForInternal, $project, $locale, $mails, $audits, $events) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Database\Document $project */
         /** @var Utopia\Locale\Locale $locale */
         /** @var Appwrite\Event\Event $mails */
@@ -1400,15 +1318,9 @@ App::post('/v1/account/recovery')
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
-        $profile = $projectDB->getCollectionFirst([ // Get user by email address
-            'limit' => 1,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                'email='.$email,
-            ],
-        ]);
+        $profile = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [$email])], 1); // Get user by email address
 
-        if (empty($profile)) {
+        if (!$profile) {
             throw new Exception('User not found', 404); // TODO maybe hide this
         }
 
@@ -1418,9 +1330,7 @@ App::post('/v1/account/recovery')
 
         $secret = Auth::tokenGenerator();
         $recovery = new Document([
-            '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
-            '$permissions' => ['read' => ['user:'.$profile->getId()], 'write' => ['user:'.$profile->getId()]],
-            'userId' => $profile->getId(),
+            '$id' => $dbForInternal->getId(),
             'type' => Auth::TOKEN_TYPE_RECOVERY,
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => \time() + Auth::TOKEN_EXPIRATION_RECOVERY,
@@ -1430,19 +1340,9 @@ App::post('/v1/account/recovery')
             
         Authorization::setRole('user:'.$profile->getId());
 
-        $recovery = $projectDB->createDocument($recovery->getArrayCopy());
-
-        if (false === $recovery) {
-            throw new Exception('Failed saving recovery to DB', 500);
-        }
-
         $profile->setAttribute('tokens', $recovery, Document::SET_TYPE_APPEND);
 
-        $profile = $projectDB->updateDocument($profile->getArrayCopy());
-
-        if (false === $profile) {
-            throw new Exception('Failed to save user to DB', 500);
-        }
+        $profile = $dbForInternal->updateDocument('users', $profile->getId(), $profile);
 
         $url = Template::parseURL($url);
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret]);
@@ -1480,7 +1380,7 @@ App::post('/v1/account/recovery')
 
         $events
             ->setParam('eventData',
-                $response->output($recovery->setAttribute('secret', $secret),
+                $response->output2($recovery->setAttribute('secret', $secret),
                 Response::MODEL_TOKEN
             ))
         ;
@@ -1495,10 +1395,8 @@ App::post('/v1/account/recovery')
             ->setParam('resource', 'users/'.$profile->getId())
         ;
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($recovery, Response::MODEL_TOKEN)
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($recovery, Response::MODEL_TOKEN);
     });
 
 App::put('/v1/account/recovery')
@@ -1520,30 +1418,25 @@ App::put('/v1/account/recovery')
     ->param('password', '', new Password(), 'New password. Must be between 6 to 32 chars.')
     ->param('passwordAgain', '', new Password(), 'New password again. Must be between 6 to 32 chars.')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('audits')
-    ->action(function ($userId, $secret, $password, $passwordAgain, $response, $projectDB, $audits) {
+    ->action(function ($userId, $secret, $password, $passwordAgain, $response, $dbForInternal, $audits) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
     
         if ($password !== $passwordAgain) {
             throw new Exception('Passwords must match', 400);
         }
 
-        $profile = $projectDB->getCollectionFirst([ // Get user by email address
-            'limit' => 1,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                '$id='.$userId,
-            ],
-        ]);
+        $profile = $dbForInternal->getDocument('users', $userId);
 
-        if (empty($profile)) {
+        if ($profile->isEmpty()) {
             throw new Exception('User not found', 404); // TODO maybe hide this
         }
 
-        $recovery = Auth::tokenVerify($profile->getAttribute('tokens', []), Auth::TOKEN_TYPE_RECOVERY, $secret);
+        $tokens = $profile->getAttribute('tokens', []);
+        $recovery = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_RECOVERY, $secret);
 
         if (!$recovery) {
             throw new Exception('Invalid recovery token', 401);
@@ -1551,23 +1444,25 @@ App::put('/v1/account/recovery')
 
         Authorization::setRole('user:'.$profile->getId());
 
-        $profile = $projectDB->updateDocument(\array_merge($profile->getArrayCopy(), [
-            'password' => Auth::passwordHash($password),
-            'passwordUpdate' => \time(),
-            'emailVerification' => true,
-        ]));
-
-        if (false === $profile) {
-            throw new Exception('Failed saving user to DB', 500);
-        }
+        $profile = $dbForInternal->updateDocument('users', $profile->getId(), $profile
+            ->setAttribute('password', Auth::passwordHash($password))
+            ->setAttribute('passwordUpdate', \time())
+            ->setAttribute('emailVerification', true)
+        );
 
         /**
          * We act like we're updating and validating
          *  the recovery token but actually we don't need it anymore.
          */
-        if (!$projectDB->deleteDocument($recovery)) {
-            throw new Exception('Failed to remove recovery from DB', 500);
+
+        foreach ($tokens as $key => $token) {
+            if($recovery === $token->getId()) {
+                $recovery = $token;
+                unset($tokens[$key]);
+            }
         }
+
+        $dbForInternal->updateDocument('users', $profile->getId(), $profile->setAttribute('tokens', $tokens));
 
         $audits
             ->setParam('userId', $profile->getId())
@@ -1575,9 +1470,7 @@ App::put('/v1/account/recovery')
             ->setParam('resource', 'users/'.$profile->getId())
         ;
 
-        $recovery = $profile->search('$id', $recovery, $profile->getAttribute('tokens', []));
-
-        $response->dynamic($recovery, Response::MODEL_TOKEN);
+        $response->dynamic2($recovery, Response::MODEL_TOKEN);
     });
 
 App::post('/v1/account/verification')
@@ -1599,17 +1492,17 @@ App::post('/v1/account/verification')
     ->inject('response')
     ->inject('project')
     ->inject('user')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('locale')
     ->inject('audits')
     ->inject('events')
     ->inject('mails')
-    ->action(function ($url, $request, $response, $project, $user, $projectDB, $locale, $audits, $events, $mails) {
+    ->action(function ($url, $request, $response, $project, $user, $dbForInternal, $locale, $audits, $events, $mails) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
-        /** @var Appwrite\Database\Document $user */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Document $user */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Locale\Locale $locale */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
@@ -1621,9 +1514,7 @@ App::post('/v1/account/verification')
         $verificationSecret = Auth::tokenGenerator();
         
         $verification = new Document([
-            '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
-            '$permissions' => ['read' => ['user:'.$user->getId()], 'write' => ['user:'.$user->getId()]],
-            'userId' => $user->getId(),
+            '$id' => $dbForInternal->getId(),
             'type' => Auth::TOKEN_TYPE_VERIFICATION,
             'secret' => Auth::hash($verificationSecret), // One way hash encryption to protect DB leak
             'expire' => \time() + Auth::TOKEN_EXPIRATION_CONFIRM,
@@ -1633,19 +1524,9 @@ App::post('/v1/account/verification')
             
         Authorization::setRole('user:'.$user->getId());
 
-        $verification = $projectDB->createDocument($verification->getArrayCopy());
-
-        if (false === $verification) {
-            throw new Exception('Failed saving verification to DB', 500);
-        }
-
         $user->setAttribute('tokens', $verification, Document::SET_TYPE_APPEND);
 
-        $user = $projectDB->updateDocument($user->getArrayCopy());
-
-        if (false === $user) {
-            throw new Exception('Failed to save user to DB', 500);
-        }
+        $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
         
         $url = Template::parseURL($url);
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret]);
@@ -1683,7 +1564,7 @@ App::post('/v1/account/verification')
 
         $events
             ->setParam('eventData',
-                $response->output($verification->setAttribute('secret', $verificationSecret),
+                $response->output2($verification->setAttribute('secret', $verificationSecret),
                 Response::MODEL_TOKEN
             ))
         ;
@@ -1698,10 +1579,8 @@ App::post('/v1/account/verification')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($verification, Response::MODEL_TOKEN)
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($verification, Response::MODEL_TOKEN);
     });
 
 App::put('/v1/account/verification')
@@ -1722,27 +1601,22 @@ App::put('/v1/account/verification')
     ->param('secret', '', new Text(256), 'Valid verification token.')
     ->inject('response')
     ->inject('user')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('audits')
-    ->action(function ($userId, $secret, $response, $user, $projectDB, $audits) {
+    ->action(function ($userId, $secret, $response, $user, $dbForInternal, $audits) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $user */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Document $user */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
 
-        $profile = $projectDB->getCollectionFirst([ // Get user by email address
-            'limit' => 1,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                '$id='.$userId,
-            ],
-        ]);
+        $profile = $dbForInternal->getDocument('users', $userId);
 
-        if (empty($profile)) {
+        if ($profile->isEmpty()) {
             throw new Exception('User not found', 404); // TODO maybe hide this
         }
 
-        $verification = Auth::tokenVerify($profile->getAttribute('tokens', []), Auth::TOKEN_TYPE_VERIFICATION, $secret);
+        $tokens = $profile->getAttribute('tokens', []);
+        $verification = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_VERIFICATION, $secret);
 
         if (!$verification) {
             throw new Exception('Invalid verification token', 401);
@@ -1750,9 +1624,7 @@ App::put('/v1/account/verification')
 
         Authorization::setRole('user:'.$profile->getId());
 
-        $profile = $projectDB->updateDocument(\array_merge($profile->getArrayCopy(), [
-            'emailVerification' => true,
-        ]));
+        $profile = $dbForInternal->updateDocument('users', $profile->getId(), $profile->setAttribute('emailVerification', true));
 
         if (false === $profile) {
             throw new Exception('Failed saving user to DB', 500);
@@ -1762,9 +1634,14 @@ App::put('/v1/account/verification')
          * We act like we're updating and validating
          *  the verification token but actually we don't need it anymore.
          */
-        if (!$projectDB->deleteDocument($verification)) {
-            throw new Exception('Failed to remove verification from DB', 500);
+        foreach ($tokens as $key => $token) {
+            if($token->getId() === $verification) {
+                $verification = $token;
+                unset($tokens[$key]);
+            }
         }
+
+        $dbForInternal->updateDocument('users', $profile->getId(), $profile->setAttribute('tokens', $tokens));
 
         $audits
             ->setParam('userId', $profile->getId())
@@ -1772,7 +1649,5 @@ App::put('/v1/account/verification')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 
-        $verification = $profile->search('$id', $verification, $profile->getAttribute('tokens', []));
-
-        $response->dynamic($verification, Response::MODEL_TOKEN);
+        $response->dynamic2($verification, Response::MODEL_TOKEN);
     });

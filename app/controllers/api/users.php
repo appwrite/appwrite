@@ -1,5 +1,8 @@
 <?php
 
+use Appwrite\Auth\Auth;
+use Appwrite\Auth\Validator\Password;
+use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Validator\Assoc;
@@ -9,13 +12,9 @@ use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Audit\Audit;
 use Utopia\Audit\Adapters\MySQL as AuditAdapter;
-use Appwrite\Auth\Auth;
-use Appwrite\Auth\Validator\Password;
-use Appwrite\Database\Database;
-use Appwrite\Database\Document;
-use Appwrite\Database\Exception\Duplicate;
-use Appwrite\Database\Validator\UID;
-use Appwrite\Utopia\Response;
+use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Validator\UID;
 use DeviceDetector\DeviceDetector;
 
 App::post('/v1/users')
@@ -34,30 +33,17 @@ App::post('/v1/users')
     ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($email, $password, $name, $response, $projectDB) {
+    ->inject('dbForInternal')
+    ->action(function ($email, $password, $name, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
-
-        $profile = $projectDB->getCollectionFirst([ // Get user by email address
-            'limit' => 1,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                'email='.$email,
-            ],
-        ]);
-
-        if (!empty($profile)) {
-            throw new Exception('User already registered', 409);
-        }
+        /** @var Utopia\Database\Database $dbForInternal */
 
         try {
-            $user = $projectDB->createDocument([
-                '$collection' => Database::SYSTEM_COLLECTION_USERS,
-                '$permissions' => [
-                    'read' => ['*'],
-                    'write' => ['user:{self}'],
-                ],
+            $userId = $dbForInternal->getId();
+            $user = $dbForInternal->createDocument('users', new Document([
+                '$id' => $userId,
+                '$read' => ['*'],
+                '$write' => ['user:'.$userId],
                 'email' => $email,
                 'emailVerification' => false,
                 'status' => Auth::USER_STATUS_UNACTIVATED,
@@ -66,15 +52,17 @@ App::post('/v1/users')
                 'registration' => \time(),
                 'reset' => false,
                 'name' => $name,
-            ], ['email' => $email]);
+                'prefs' => [],
+                'sessions' => [],
+                'tokens' => [],
+                'memberships' => [],
+            ]));
         } catch (Duplicate $th) {
             throw new Exception('Account already exists', 409);
         }
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($user, Response::MODEL_USER)
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($user, Response::MODEL_USER);
     });
 
 App::get('/v1/users')
@@ -93,23 +81,16 @@ App::get('/v1/users')
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
+    ->inject('dbForInternal')
+    ->action(function ($search, $limit, $offset, $orderType, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
 
-        $results = $projectDB->getCollection([
-            'limit' => $limit,
-            'offset' => $offset,
-            'orderType' => $orderType,
-            'search' => $search,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_USERS,
-            ],
-        ]);
+        $results = $dbForInternal->find('users', [], $limit, $offset);
+        $sum = $dbForInternal->count('users', [], 5000);
 
-        $response->dynamic(new Document([
-            'sum' => $projectDB->getSum(),
+        $response->dynamic2(new Document([
+            'sum' => $sum,
             'users' => $results
         ]), Response::MODEL_USER_LIST);
     });
@@ -127,18 +108,18 @@ App::get('/v1/users/:userId')
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($userId, $response, $projectDB) {
+    ->inject('dbForInternal')
+    ->action(function ($userId, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
 
-        $user = $projectDB->getDocument($userId);
+        $user = $dbForInternal->getDocument('users', $userId);
 
-        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+        if (empty($user->getId())) {
             throw new Exception('User not found', 404);
         }
 
-        $response->dynamic($user, Response::MODEL_USER);
+        $response->dynamic2($user, Response::MODEL_USER);
     });
 
 App::get('/v1/users/:userId/prefs')
@@ -154,20 +135,20 @@ App::get('/v1/users/:userId/prefs')
     ->label('sdk.response.model', Response::MODEL_PREFERENCES)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($userId, $response, $projectDB) {
+    ->inject('dbForInternal')
+    ->action(function ($userId, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
 
-        $user = $projectDB->getDocument($userId);
+        $user = $dbForInternal->getDocument('users', $userId);
 
-        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+        if (empty($user->getId())) {
             throw new Exception('User not found', 404);
         }
 
         $prefs = $user->getAttribute('prefs', new \stdClass());
 
-        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
+        $response->dynamic2(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
 App::get('/v1/users/:userId/sessions')
@@ -183,16 +164,16 @@ App::get('/v1/users/:userId/sessions')
     ->label('sdk.response.model', Response::MODEL_SESSION_LIST)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('locale')
-    ->action(function ($userId, $response, $projectDB, $locale) {
+    ->action(function ($userId, $response, $dbForInternal, $locale) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Locale\Locale $locale */
 
-        $user = $projectDB->getDocument($userId);
+        $user = $dbForInternal->getDocument('users', $userId);
 
-        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+        if (empty($user->getId())) {
             throw new Exception('User not found', 404);
         }
 
@@ -210,11 +191,11 @@ App::get('/v1/users/:userId/sessions')
             $sessions[$key] = $session;
         }
 
-        $response->dynamic(new Document([
+        $response->dynamic2(new Document([
             'sum' => count($sessions),
             'sessions' => $sessions
         ]), Response::MODEL_SESSION_LIST);
-    }, ['response', 'projectDB', 'locale']);
+    }, ['response', 'dbForInternal', 'locale']);
 
 App::get('/v1/users/:userId/logs')
     ->desc('Get User Logs')
@@ -231,20 +212,20 @@ App::get('/v1/users/:userId/logs')
     ->inject('response')
     ->inject('register')
     ->inject('project')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function ($userId, $response, $register, $project, $projectDB, $locale, $geodb) {
+    ->action(function ($userId, $response, $register, $project, $dbForInternal, $locale, $geodb) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Registry\Registry $register */
         /** @var Appwrite\Database\Document $project */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
         
-        $user = $projectDB->getDocument($userId);
+        $user = $dbForInternal->getDocument('users', $userId);
 
-        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+        if (empty($user->getId())) {
             throw new Exception('User not found', 404);
         }
 
@@ -327,7 +308,7 @@ App::get('/v1/users/:userId/logs')
             }
         }
 
-        $response->dynamic(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
+        $response->dynamic2(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
     });
 
 App::patch('/v1/users/:userId/status')
@@ -345,26 +326,20 @@ App::patch('/v1/users/:userId/status')
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('status', '', new WhiteList([Auth::USER_STATUS_ACTIVATED, Auth::USER_STATUS_BLOCKED, Auth::USER_STATUS_UNACTIVATED], true), 'User Status code. To activate the user pass '.Auth::USER_STATUS_ACTIVATED.', to block the user pass '.Auth::USER_STATUS_BLOCKED.' and for disabling the user pass '.Auth::USER_STATUS_UNACTIVATED)
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($userId, $status, $response, $projectDB) {
+    ->inject('dbForInternal')
+    ->action(function ($userId, $status, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
 
-        $user = $projectDB->getDocument($userId);
+        $user = $dbForInternal->getDocument('users', $userId);
 
-        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+        if (empty($user->getId())) {
             throw new Exception('User not found', 404);
         }
 
-        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
-            'status' => (int)$status,
-        ]));
+        $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('status', (int)$status));
 
-        if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
-        }
-
-        $response->dynamic($user, Response::MODEL_USER);
+        $response->dynamic2($user, Response::MODEL_USER);
     });
 
 App::patch('/v1/users/:userId/prefs')
@@ -382,26 +357,20 @@ App::patch('/v1/users/:userId/prefs')
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($userId, $prefs, $response, $projectDB) {
+    ->inject('dbForInternal')
+    ->action(function ($userId, $prefs, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
 
-        $user = $projectDB->getDocument($userId);
+        $user = $dbForInternal->getDocument('users', $userId);
 
-        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+        if ($user->isEmpty()) {
             throw new Exception('User not found', 404);
         }
 
-        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
-            'prefs' => $prefs,
-        ]));
+        $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
 
-        if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
-        }
-
-        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
+        $response->dynamic2(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
 App::delete('/v1/users/:userId/sessions/:sessionId')
@@ -418,32 +387,34 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('sessionId', null, new UID(), 'User unique session ID.')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('events')
-    ->action(function ($userId, $sessionId, $response, $projectDB, $events) {
+    ->action(function ($userId, $sessionId, $response, $dbForInternal, $events) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $events */
 
-        $user = $projectDB->getDocument($userId);
+        $user = $dbForInternal->getDocument('users', $userId);
 
-        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+        if (empty($user->getId())) {
             throw new Exception('User not found', 404);
         }
 
         $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($sessions as $session) { 
+        foreach ($sessions as $key => $session) { 
             /** @var Document $session */
 
             if ($sessionId == $session->getId()) {
-                if (!$projectDB->deleteDocument($session->getId())) {
-                    throw new Exception('Failed to remove token from DB', 500);
-                }
+                unset($sessions[$key]);
 
+                $user->setAttribute('sessions', $sessions);
+                
                 $events
-                    ->setParam('eventData', $response->output($user, Response::MODEL_USER))
+                    ->setParam('eventData', $response->output2($user, Response::MODEL_USER))
                 ;
+
+                $dbForInternal->updateDocument('users', $user->getId(), $user);
             }
         }
 
@@ -464,31 +435,25 @@ App::delete('/v1/users/:userId/sessions')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('events')
-    ->action(function ($userId, $response, $projectDB, $events) {
+    ->action(function ($userId, $response, $dbForInternal, $events) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $events */
 
-        $user = $projectDB->getDocument($userId);
+        $user = $dbForInternal->getDocument('users', $userId);
 
-        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+        if (empty($user->getId())) {
             throw new Exception('User not found', 404);
         }
 
         $sessions = $user->getAttribute('sessions', []);
-
-        foreach ($sessions as $session) { 
-            /** @var Document $session */
-
-            if (!$projectDB->deleteDocument($session->getId())) {
-                throw new Exception('Failed to remove token from DB', 500);
-            }
-        }
+        
+        $dbForInternal->updateDocument('users', $user->getId(), $user);
 
         $events
-            ->setParam('eventData', $response->output($user, Response::MODEL_USER))
+            ->setParam('eventData', $response->output2($user, Response::MODEL_USER))
         ;
 
         // TODO : Response filter implementation
@@ -508,39 +473,29 @@ App::delete('/v1/users/:userId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('userId', '', function () {return new UID();}, 'User unique ID.')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('events')
     ->inject('deletes')
-    ->action(function ($userId, $response, $projectDB, $events, $deletes) {
+    ->action(function ($userId, $response, $dbForInternal, $events, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $deletes */
         
-        $user = $projectDB->getDocument($userId);
+        $user = $dbForInternal->getDocument('users', $userId);
 
-        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+        if ($user->isEmpty()) {
             throw new Exception('User not found', 404);
         }
-        if (!$projectDB->deleteDocument($userId)) {
+
+        if (!$dbForInternal->deleteDocument('users', $userId)) {
             throw new Exception('Failed to remove user from DB', 500);
         }
-
-        if (!$projectDB->deleteUniqueKey(md5('users:email='.$user->getAttribute('email', null)))) {
-            throw new Exception('Failed to remove unique key from DB', 500);
-        }
         
-        $reservedId = $projectDB->createDocument([
-            '$collection' => Database::SYSTEM_COLLECTION_RESERVED,
-            '$id' => $userId,
-            '$permissions' => [
-                'read' => ['*'],
-            ],
-        ]);
-
-        if (false === $reservedId) {
-            throw new Exception('Failed saving reserved id to DB', 500);
-        }
+        // $dbForInternal->createDocument('users', new Document([
+        //     '$id' => $userId,
+        //     '$read' => ['*'],
+        // ]));
 
         $deletes
             ->setParam('type', DELETE_TYPE_DOCUMENT)
@@ -548,7 +503,7 @@ App::delete('/v1/users/:userId')
         ;
 
         $events
-            ->setParam('eventData', $response->output($user, Response::MODEL_USER))
+            ->setParam('eventData', $response->output2($user, Response::MODEL_USER))
         ;
 
         // TODO : Response filter implementation

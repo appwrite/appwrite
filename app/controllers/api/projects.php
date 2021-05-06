@@ -54,9 +54,9 @@ App::post('/v1/projects')
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
 
-        $team = $projectDB->getDocument($teamId);
+        $team = $dbForInternal->getDocument('teams', $teamId);
 
-        if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+        if ($team->isEmpty()) {
             throw new Exception('Team not found', 404);
         }
 
