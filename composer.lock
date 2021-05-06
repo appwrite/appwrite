@@ -1923,7 +1923,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database",
-                "reference": "a41bbe4674c2fea3ce84942e40f7c57b4903a918"
+                "reference": "11a149d2fd04b73c9fddffb93e96efc78d4a6039"
             },
             "require": {
                 "ext-mongodb": "*",
@@ -1970,7 +1970,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2021-05-05T13:43:40+00:00"
+            "time": "2021-05-06T20:03:31+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2679,7 +2679,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "5bb8ceaf0ff9da85fcca840285d6896a7594f435"
+                "reference": "a8d90fd59db39ec04914692bd6ab06e013977b77"
             },
             "require": {
                 "ext-curl": "*",
@@ -2687,7 +2687,7 @@
                 "ext-mbstring": "*",
                 "matthiasmullie/minify": "^1.3",
                 "php": ">=7.0.0",
-                "twig/twig": "^2.12"
+                "twig/twig": "^2.14"
             },
             "require-dev": {
                 "phpunit/phpunit": "^7.0"
@@ -2709,7 +2709,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2021-03-28T22:18:36+00:00"
+            "time": "2021-05-05T12:50:58+00:00"
         },
         {
             "name": "composer/semver",
@@ -2794,16 +2794,16 @@
         },
         {
             "name": "composer/xdebug-handler",
-            "version": "2.0.0",
+            "version": "2.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/composer/xdebug-handler.git",
-                "reference": "31d57697eb1971712a08031cfaff5a846d10bdf5"
+                "reference": "964adcdd3a28bf9ed5d9ac6450064e0d71ed7496"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/composer/xdebug-handler/zipball/31d57697eb1971712a08031cfaff5a846d10bdf5",
-                "reference": "31d57697eb1971712a08031cfaff5a846d10bdf5",
+                "url": "https://api.github.com/repos/composer/xdebug-handler/zipball/964adcdd3a28bf9ed5d9ac6450064e0d71ed7496",
+                "reference": "964adcdd3a28bf9ed5d9ac6450064e0d71ed7496",
                 "shasum": ""
             },
             "require": {
@@ -2838,7 +2838,7 @@
             "support": {
                 "irc": "irc://irc.freenode.org/composer",
                 "issues": "https://github.com/composer/xdebug-handler/issues",
-                "source": "https://github.com/composer/xdebug-handler/tree/2.0.0"
+                "source": "https://github.com/composer/xdebug-handler/tree/2.0.1"
             },
             "funding": [
                 {
@@ -2854,7 +2854,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-04-09T19:40:06+00:00"
+            "time": "2021-05-05T19:37:51+00:00"
         },
         {
             "name": "dnoegel/php-xdg-base-dir",
