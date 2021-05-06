@@ -31,17 +31,13 @@
       // Cycle system -> light -> dark -> repeat
       let cycle = function (c) {
         userTheme = window.localStorage.getItem('user-theme');
-        console.log('cycle');
         if (userTheme == 'theme-system') {
-          console.log('cycle to light');
           setTheme('theme-light');
           window.localStorage.setItem('user-theme', 'theme-light')
         } else if (userTheme == 'theme-light') {
-          console.log('cycle to dark');
           setTheme('theme-dark');
           window.localStorage.setItem('user-theme', 'theme-dark');
         } else {
-          console.log('cycle to system');
           window.localStorage.setItem('user-theme', 'theme-system');
           if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
             setTheme('theme-light');
