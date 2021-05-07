@@ -3,12 +3,12 @@
 global $utopia, $request, $response;
 
 use Appwrite\Database\Document;
+use Appwrite\Network\Validator\Host;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Validator\Numeric;
 use Utopia\Validator\Text;
 use Utopia\Validator\ArrayList;
-use Utopia\Validator\Host;
 use Utopia\Storage\Validator\File;
 
 App::get('/v1/mock/tests/foo')

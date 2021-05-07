@@ -218,12 +218,12 @@ class OpenAPI3 extends Format
                         $node['schema']['type'] = 'string';
                         $node['schema']['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                         break;
-                    case 'Utopia\Validator\Email':
+                    case 'Appwrite\Network\Validator\Email':
                         $node['schema']['type'] = 'string';
                         $node['schema']['format'] = 'email';
                         $node['schema']['x-example'] = 'email@example.com';
                         break;
-                    case 'Utopia\Validator\URL':
+                    case 'Appwrite\Network\Validator\URL':
                         $node['schema']['type'] = 'string';
                         $node['schema']['format'] = 'url';
                         $node['schema']['x-example'] = 'https://example.com';
@@ -264,14 +264,18 @@ class OpenAPI3 extends Format
                     case 'Utopia\Validator\Length':
                         $node['schema']['type'] = 'string';
                         break;
-                    case 'Utopia\Validator\Host':
+                    case 'Appwrite\Network\Validator\Host':
                         $node['schema']['type'] = 'string';
                         $node['schema']['format'] = 'url';
                         $node['schema']['x-example'] = 'https://example.com';
                         break;
                     case 'Utopia\Validator\WhiteList': /** @var \Utopia\Validator\WhiteList $validator */
-                        $node['schema']['type'] = 'string';
+                        $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = $validator->getList()[0];
+
+                        if ($validator->getType() === 'integer') {
+                            $node['format'] = 'int32';
+                        }
                         break;
                     default:
                         $node['schema']['type'] = 'string';
