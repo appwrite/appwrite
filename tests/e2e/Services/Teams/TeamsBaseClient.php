@@ -72,7 +72,7 @@ trait TeamsBaseClient
         $this->assertEquals('Invitation to '.$teamName.' Team at '.$this->getProject()['name'], $lastEmail['subject']);
 
         $secret = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
-        $inviteUid = substr($lastEmail['text'], strpos($lastEmail['text'], '?inviteId=', 0) + 10, 13);
+        $inviteUid = substr($lastEmail['text'], strpos($lastEmail['text'], '?membershipId=', 0) + 10, 13);
         $userUid = substr($lastEmail['text'], strpos($lastEmail['text'], '&userId=', 0) + 8, 13);
 
         /**

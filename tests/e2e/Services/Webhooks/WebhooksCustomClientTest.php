@@ -714,7 +714,7 @@ class WebhooksCustomClientTest extends Scope
     {
         $teamUid = $data['teamId'] ?? '';
         $secret = $data['secret'] ?? '';
-        $inviteUid = $data['inviteId'] ?? '';
+        $inviteUid = $data['membershipId'] ?? '';
         $userUid = $data['userId'] ?? '';
 
         /**
