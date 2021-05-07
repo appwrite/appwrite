@@ -714,13 +714,13 @@ class WebhooksCustomClientTest extends Scope
     {
         $teamUid = $data['teamId'] ?? '';
         $secret = $data['secret'] ?? '';
-        $inviteUid = $data['membershipId'] ?? '';
+        $membershipUid = $data['membershipId'] ?? '';
         $userUid = $data['userId'] ?? '';
 
         /**
          * Test for SUCCESS
          */
-        $team = $this->client->call(Client::METHOD_PATCH, '/teams/'.$teamUid.'/memberships/'.$inviteUid.'/status', array_merge([
+        $team = $this->client->call(Client::METHOD_PATCH, '/teams/'.$teamUid.'/memberships/'.$membershipUid.'/status', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
