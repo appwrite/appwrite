@@ -484,6 +484,10 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'registration' => \time(),
                         'reset' => false,
                         'name' => $name,
+                        'prefs' => [],
+                        'sessions' => [],
+                        'tokens' => [],
+                        'memberships' => [],
                     ]));
                 } catch (Duplicate $th) {
                     throw new Exception('Account already exists', 409);
@@ -638,7 +642,11 @@ App::post('/v1/account/sessions/anonymous')
                 'passwordUpdate' => \time(),
                 'registration' => \time(),
                 'reset' => false,
-                'name' => null
+                'name' => null,
+                'prefs' => [],
+                'sessions' => [],
+                'tokens' => [],
+                'memberships' => [],
             ]));
         } catch (Exception $th) {
             throw new Exception('Failed saving user to DB', 500);
