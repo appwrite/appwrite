@@ -39,8 +39,8 @@ return [ // Ordered by ABC.
     ],
     'bitrix24' => [
         'name' => 'Bitrix24',
-        'developers' => 'https://developer.amazon.com/apps-and-games/services-and-apis',
-        'icon' => 'icon-amazon',
+        'developers' => 'https://training.bitrix24.com/rest_help/oauth/authentication.php',
+        'icon' => 'icon-bitrix24',
         'enabled' => true,
         'form' => false,
         'beta' => false,

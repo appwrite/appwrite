@@ -5,7 +5,7 @@ namespace Appwrite\Auth\OAuth2;
 use Appwrite\Auth\OAuth2;
 
 // Reference Material
-// https://dev.1c-bitrix.ru/learning/course/index.php?COURSE_ID=99&LESSON_ID=2486
+// https://training.bitrix24.com/rest_help/oauth/authentication.php
 
 class Bitrix24 extends OAuth2
 {
