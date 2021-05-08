@@ -37,6 +37,15 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false
     ],
+    'bitrix24' => [
+        'name' => 'Bitrix24',
+        'developers' => 'https://developer.amazon.com/apps-and-games/services-and-apis',
+        'icon' => 'icon-amazon',
+        'enabled' => true,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+    ],
     'box' => [
         'name' => 'Box',
         'developers' => 'https://developer.box.com/reference/',
