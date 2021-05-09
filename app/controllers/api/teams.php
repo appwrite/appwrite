@@ -613,6 +613,12 @@ App::delete('/v1/teams/:teamId/memberships/:inviteId')
             throw new Exception('Team IDs don\'t match', 404);
         }
 
+        $user = $dbForInternal->getDocument('users', $membership->getAttribute('userId'));
+
+        if ($user->isEmpty()) {
+            throw new Exception('User not found', 404);
+        }
+
         $team = $dbForInternal->getDocument('teams', $teamId);
 
         if (empty($team->getId())) {
@@ -622,6 +628,23 @@ App::delete('/v1/teams/:teamId/memberships/:inviteId')
         if (!$dbForInternal->deleteDocument('memberships', $membership->getId())) {
             throw new Exception('Failed to remove membership from DB', 500);
         }
+
+        $memberships = $user->getAttribute('memberships', []);
+
+        foreach ($memberships as $key => $child) { 
+            /** @var Document $child */
+
+            if ($inviteId == $child->getId()) {
+                unset($memberships[$key]);
+                break;
+            }
+        }
+
+        Authorization::disable();
+
+        $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('memberships', $memberships));
+
+        Authorization::reset();
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
             $team = $dbForInternal->updateDocument('teams', $team->getId(), $team->setAttribute('sum', $team->getAttribute('sum', 0) - 1));
