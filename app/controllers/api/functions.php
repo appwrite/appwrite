@@ -98,7 +98,7 @@ App::get('/v1/functions')
         /** @var Utopia\Database\Database $dbForInternal */
 
         $response->dynamic2(new Document([
-            'sum' => $dbForInternal->count('functions', [], 5000),
+            'sum' => $dbForInternal->count('functions', [], APP_LIMIT_COUNT),
             'functions' => $dbForInternal->find('functions', [], $limit, $offset)
         ]), Response::MODEL_FUNCTION_LIST);
     });
@@ -537,7 +537,7 @@ App::get('/v1/functions/:functionId/tags')
         
         $sum = $dbForInternal->count('tags', [
             new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]),
-        ], 5000);
+        ], APP_LIMIT_COUNT);
 
         $response->dynamic2(new Document([
             'sum' => $sum,
@@ -793,7 +793,7 @@ App::get('/v1/functions/:functionId/executions')
         
         $sum = $dbForInternal->count('executions', [
             new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]),
-        ], 5000);
+        ], APP_LIMIT_COUNT);
 
         $response->dynamic2(new Document([
             'sum' => $sum,

@@ -79,7 +79,7 @@ App::post('/v1/account')
         $limit = $project->getAttribute('usersAuthLimit', 0);
 
         if ($limit !== 0) {
-            $sum = $dbForInternal->count('users'); // Count users TODO: add a 10k limit here.
+            $sum = $dbForInternal->count('users', [], APP_LIMIT_USERS);
 
             if($sum >= $limit) {
                 throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
@@ -461,7 +461,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $limit = $project->getAttribute('usersAuthLimit', 0);
         
                 if ($limit !== 0) {
-                    $sum = $dbForInternal->count('users'); // Count users TODO: add a 10k limit here.
+                    $sum = $dbForInternal->count('users', [], APP_LIMIT_COUNT);
         
                     if($sum >= $limit) {
                         throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
@@ -621,7 +621,7 @@ App::post('/v1/account/sessions/anonymous')
         $limit = $project->getAttribute('usersAuthLimit', 0);
 
         if ($limit !== 0) {
-            $sum = $dbForInternal->count('users'); // Count users TODO: add a 10k limit here.
+            $sum = $dbForInternal->count('users', [], APP_LIMIT_COUNT);
 
             if($sum >= $limit) {
                 throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);

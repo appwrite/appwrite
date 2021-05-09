@@ -50,7 +50,7 @@ App::post('/v1/teams')
         $teamId = $dbForInternal->getId();
         $team = $dbForInternal->createDocument('teams', new Document([
             '$id' => $teamId ,
-            '$read' => ['team:'.$teamId ],
+            '$read' => ['team:'.$teamId],
             '$write' => ['team:'.$teamId .'/owner'],
             'name' => $name,
             'sum' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
@@ -76,7 +76,6 @@ App::post('/v1/teams')
 
             // Attach user to team
             $user->setAttribute('memberships', $membership, Document::SET_TYPE_APPEND);
-
             $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
         }
 
@@ -106,7 +105,7 @@ App::get('/v1/teams')
         /** @var Utopia\Database\Database $dbForInternal */
 
         $results = $dbForInternal->find('teams', [], $limit, $offset);
-        $sum = $dbForInternal->count('teams', [], 5000);
+        $sum = $dbForInternal->count('teams', [], APP_LIMIT_COUNT);
 
         $response->dynamic2(new Document([
             'sum' => $sum,
@@ -203,9 +202,8 @@ App::delete('/v1/teams/:teamId')
         ], 2000, 0); // TODO fix members limit
 
         // TODO delete all members individually from the user object
-
-        foreach ($memberships as $member) {
-            if (!$dbForInternal->deleteDocument('memberships', $member->getId())) {
+        foreach ($memberships as $membership) {
+            if (!$dbForInternal->deleteDocument('memberships', $membership->getId())) {
                 throw new Exception('Failed to remove membership for team from DB', 500);
             }
         }
@@ -265,7 +263,6 @@ App::post('/v1/teams/:teamId/memberships')
             throw new Exception('Team not found', 404);
         }
 
-        $memberships = $dbForInternal->findFirst('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$team->getId()])], 2000, 0);
         $invitee = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [$email])], 1); // Get user by email address
 
         if (empty($invitee)) { // Create new user if no user with same email found
@@ -273,7 +270,7 @@ App::post('/v1/teams/:teamId/memberships')
             $limit = $project->getAttribute('usersAuthLimit', 0);
         
             if ($limit !== 0 && $project->getId() !== 'console') { // check users limit, console invites are allways allowed.
-                $sum = $dbForInternal->count('users'); // Count users TODO: add a 10k limit here.
+                $sum = $dbForInternal->count('users', [], APP_LIMIT_USERS);
     
                 if($sum >= $limit) {
                     throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
@@ -296,8 +293,10 @@ App::post('/v1/teams/:teamId/memberships')
                     'registration' => \time(),
                     'reset' => false,
                     'name' => $name,
+                    'prefs' => [],
                     'sessions' => [],
                     'tokens' => [],
+                    'memberships' => [],
                 ]));
             } catch (Duplicate $th) {
                 throw new Exception('Account already exists', 409);
@@ -306,17 +305,7 @@ App::post('/v1/teams/:teamId/memberships')
             Authorization::reset();
         }
 
-        $isOwner = false;
-
-        foreach ($memberships as $member) {
-            if ($member->getAttribute('userId') ==  $invitee->getId()) {
-                throw new Exception('User has already been invited or is already a member of this team', 409);
-            }
-
-            if ($member->getAttribute('userId') == $user->getId() && \in_array('owner', $member->getAttribute('roles', []))) {
-                $isOwner = true;
-            }
-        }
+        $isOwner = Authorization::isRole('team:'.$team->getId().'/owner');;
 
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
             throw new Exception('User is not allowed to send invitations for this team', 401);
@@ -339,7 +328,11 @@ App::post('/v1/teams/:teamId/memberships')
 
         if ($isPrivilegedUser || $isAppUser) { // Allow admin to create membership
             Authorization::disable();
-            $membership = $dbForInternal->createDocument('memberships', $membership);
+            try {
+                $membership = $dbForInternal->createDocument('memberships', $membership);
+            } catch (Duplicate $th) {
+                throw new Exception('User has already been invited or is already a member of this team', 409);
+            }
 
             $team = $dbForInternal->updateDocument('teams', $team->getId(), $team->setAttribute('sum', $team->getAttribute('sum', 0) + 1));
 
@@ -350,7 +343,11 @@ App::post('/v1/teams/:teamId/memberships')
 
             Authorization::reset();
         } else {
-            $membership = $dbForInternal->createDocument('memberships', $membership);
+            try {
+                $membership = $dbForInternal->createDocument('memberships', $membership);
+            } catch (Duplicate $th) {
+                throw new Exception('User has already been invited or is already a member of this team', 409);
+            }
         }
 
         $url = Template::parseURL($url);
@@ -433,7 +430,7 @@ App::get('/v1/teams/:teamId/memberships')
         }
 
         $memberships = $dbForInternal->find('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], $limit, $offset);
-        $sum = $dbForInternal->count('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], 5000);
+        $sum = $dbForInternal->count('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], APP_LIMIT_COUNT);
         $users = [];
 
         foreach ($memberships as $membership) {
@@ -486,7 +483,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
         $membership = $dbForInternal->getDocument('memberships', $inviteId);
 
         if (empty($membership->getId())) {
-            throw new Exception('Invite not found', 404);
+            throw new Exception('Membership not found', 404);
         }
 
         if ($membership->getAttribute('teamId') !== $teamId) {
