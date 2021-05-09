@@ -458,10 +458,6 @@ class FunctionsV1
         
         Authorization::reset();
 
-        if (false === $function) {
-            throw new Exception('Failed saving execution to DB', 500);
-        }
-
         $executionUpdate = new Event('v1-webhooks', 'WebhooksV1');
 
         $executionUpdate

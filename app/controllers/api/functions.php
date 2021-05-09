@@ -66,10 +66,6 @@ App::post('/v1/functions')
             'timeout' => $timeout,
         ]));
 
-        if (false === $function) {
-            throw new Exception('Failed saving function to DB', 500);
-        }
-
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic2($function, Response::MODEL_FUNCTION)
@@ -299,10 +295,6 @@ App::put('/v1/functions/:functionId')
             'timeout' => $timeout,
         ])));
 
-        if (false === $function) {
-            throw new Exception('Failed saving function to DB', 500);
-        }
-
         if ($next && $schedule !== $original) {
             ResqueScheduler::enqueueAt($next, 'v1-functions', 'FunctionsV1', [
                 'projectId' => $project->getId(),
@@ -364,10 +356,6 @@ App::patch('/v1/functions/:functionId/tag')
                 'executionId' => null,
                 'trigger' => 'schedule',
             ]);  // Async task rescheduale
-        }
-
-        if (false === $function) {
-            throw new Exception('Failed saving function to DB', 500);
         }
 
         $response->dynamic2($function, Response::MODEL_FUNCTION);
@@ -488,10 +476,6 @@ App::post('/v1/functions/:functionId/tags')
             'path' => $path,
             'size' => $size,
         ]));
-
-        if (false === $tag) {
-            throw new Exception('Failed saving tag to DB', 500);
-        }
 
         $usage
             ->setParam('storage', $tag->getAttribute('size', 0))
@@ -632,10 +616,6 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
             $function = $dbForInternal->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
                 'tag' => '',
             ])));
-    
-            if (false === $function) {
-                throw new Exception('Failed saving function to DB', 500);
-            }
         }
 
         $usage
@@ -715,10 +695,6 @@ App::post('/v1/functions/:functionId/executions')
         ]));
 
         Authorization::reset();
-
-        if (false === $execution) {
-            throw new Exception('Failed saving execution to DB', 500);
-        }
         
         $jwt = ''; // initialize
         if (!empty($user->getId())) { // If userId exists, generate a JWT for function

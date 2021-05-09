@@ -139,10 +139,6 @@ App::post('/v1/storage/files')
             'openSSLIV' => \bin2hex($iv),
         ]));
 
-        if (false === $file) {
-            throw new Exception('Failed saving file to DB', 500);
-        }
-
         $audits
             ->setParam('event', 'storage.files.create')
             ->setParam('resource', 'storage/files/'.$file->getId())
@@ -525,10 +521,6 @@ App::put('/v1/storage/files/:fileId')
             '$write' => $write,
             'bucketId' => '',
         ])));
-
-        if (false === $file) {
-            throw new Exception('Failed saving file to DB', 500);
-        }
 
         $audits
             ->setParam('event', 'storage.files.update')

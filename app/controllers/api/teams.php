@@ -549,6 +549,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
         Authorization::setRole('user:'.$userId);
 
         $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
+        $membership = $dbForInternal->updateDocument('memberships', $membership->getId(), $membership);
 
         Authorization::disable();
 

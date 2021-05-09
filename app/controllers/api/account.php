@@ -117,10 +117,6 @@ App::post('/v1/account')
         Authorization::setRole('user:'.$user->getId());
         Authorization::setRole('role:'.Auth::USER_ROLE_MEMBER);
 
-        if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
-        }
-
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.create')
@@ -203,10 +199,6 @@ App::post('/v1/account/sessions')
 
         $profile = $dbForInternal->updateDocument('users', $profile->getId(), $profile);
 
-        if (false === $profile) {
-            throw new Exception('Failed saving user to DB', 500);
-        }
-        
         $audits
             ->setParam('userId', $profile->getId())
             ->setParam('event', 'account.sessions.create')
@@ -537,10 +529,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
 
-        if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
-        }
-
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.sessions.create')
@@ -629,33 +617,27 @@ App::post('/v1/account/sessions/anonymous')
         }
 
         Authorization::disable();
-        try {
-            $userId = $dbForInternal->getId();
-            $user = $dbForInternal->createDocument('users', new Document([
-                '$id' => $userId,
-                '$read' => ['*'], 
-                '$write' => ['user:'.$userId],
-                'email' => null,
-                'emailVerification' => false,
-                'status' => Auth::USER_STATUS_UNACTIVATED,
-                'password' => null,
-                'passwordUpdate' => \time(),
-                'registration' => \time(),
-                'reset' => false,
-                'name' => null,
-                'prefs' => [],
-                'sessions' => [],
-                'tokens' => [],
-                'memberships' => [],
-            ]));
-        } catch (Exception $th) {
-            throw new Exception('Failed saving user to DB', 500);
-        }
-        Authorization::reset();
 
-        if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
-        }
+        $userId = $dbForInternal->getId();
+        $user = $dbForInternal->createDocument('users', new Document([
+            '$id' => $userId,
+            '$read' => ['*'], 
+            '$write' => ['user:'.$userId],
+            'email' => null,
+            'emailVerification' => false,
+            'status' => Auth::USER_STATUS_UNACTIVATED,
+            'password' => null,
+            'passwordUpdate' => \time(),
+            'registration' => \time(),
+            'reset' => false,
+            'name' => null,
+            'prefs' => [],
+            'sessions' => [],
+            'tokens' => [],
+            'memberships' => [],
+        ]));
+
+        Authorization::reset();
 
         // Create session token
 
@@ -683,10 +665,6 @@ App::post('/v1/account/sessions/anonymous')
         Authorization::setRole('user:'.$user->getId());
 
         $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
-
-        if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
-        }
 
         $audits
             ->setParam('userId', $user->getId())
@@ -1035,10 +1013,6 @@ App::patch('/v1/account/email')
             ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
         );
 
-        if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
-        }
-        
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.update.email')
@@ -1108,11 +1082,6 @@ App::delete('/v1/account')
 
         $protocol = $request->getProtocol();
         $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('status', Auth::USER_STATUS_BLOCKED));
-
-
-        if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
-        }
 
         //TODO delete all tokens or only current session?
         //TODO delete all user data according to GDPR. Make sure everything is backed up and backups are deleted later
@@ -1633,10 +1602,6 @@ App::put('/v1/account/verification')
         Authorization::setRole('user:'.$profile->getId());
 
         $profile = $dbForInternal->updateDocument('users', $profile->getId(), $profile->setAttribute('emailVerification', true));
-
-        if (false === $profile) {
-            throw new Exception('Failed saving user to DB', 500);
-        }
 
         /**
          * We act like we're updating and validating
