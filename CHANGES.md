@@ -38,8 +38,9 @@
 - Function execution environment variable `APPWRITE_FUNCTION_EVENT_PAYLOAD` renamed to `APPWRITE_FUNCTION_EVENT_DATA`  (#1045)
 - Function execution environment variable `APPWRITE_FUNCTION_ENV_NAME` renamed to `APPWRITE_FUNCTION_RUNTIME_NAME` (#1101)
 - Function execution environment variable `APPWRITE_FUNCTION_ENV_VERSION` renamed to `APPWRITE_FUNCTION_RUNTIME_VERSION` (#1101)
-- Introdcues rate limits for:
+- Introduces rate limits for:
   - Team invite (10 requests in every 60 minutes per IP address) (#1088)
+- Rename param `inviteId` to the more accurate `membershipId` in the Teams API (#1129)
 
 # Version 0.7.2
 
