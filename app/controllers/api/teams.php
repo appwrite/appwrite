@@ -351,7 +351,7 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
         $url = Template::parseURL($url);
-        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['inviteId' => $membership->getId(), 'teamId' => $team->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
+        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'teamId' => $team->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
         $url = Template::unParseURL($url);
 
         $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
@@ -449,7 +449,7 @@ App::get('/v1/teams/:teamId/memberships')
         ]), Response::MODEL_MEMBERSHIP_LIST);
     });
 
-App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
+App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->desc('Update Team Membership Status')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.memberships.update.status')
@@ -462,7 +462,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
     ->param('teamId', '', new UID(), 'Team unique ID.')
-    ->param('inviteId', '', new UID(), 'Invite unique ID.')
+    ->param('membershipId', '', new UID(), 'Membership ID.')
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('secret', '', new Text(256), 'Secret key.')
     ->inject('request')
@@ -471,7 +471,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
     ->inject('dbForInternal')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($teamId, $inviteId, $userId, $secret, $request, $response, $user, $dbForInternal, $geodb, $audits) {
+    ->action(function ($teamId, $membershipId, $userId, $secret, $request, $response, $user, $dbForInternal, $geodb, $audits) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
@@ -480,7 +480,8 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
         /** @var Appwrite\Event\Event $audits */
 
         $protocol = $request->getProtocol();
-        $membership = $dbForInternal->getDocument('memberships', $inviteId);
+
+        $membership = $dbForInternal->getDocument('memberships', $membershipId);
 
         if (empty($membership->getId())) {
             throw new Exception('Membership not found', 404);
@@ -580,7 +581,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
         , Response::MODEL_MEMBERSHIP);
     });
 
-App::delete('/v1/teams/:teamId/memberships/:inviteId')
+App::delete('/v1/teams/:teamId/memberships/:membershipId')
     ->desc('Delete Team Membership')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.memberships.delete')
@@ -592,18 +593,18 @@ App::delete('/v1/teams/:teamId/memberships/:inviteId')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('teamId', '', new UID(), 'Team unique ID.')
-    ->param('inviteId', '', new UID(), 'Invite unique ID.')
+    ->param('membershipId', '', new UID(), 'Membership ID.')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($teamId, $inviteId, $response, $dbForInternal, $audits, $events) {
+    ->action(function ($teamId, $membershipId, $response, $dbForInternal, $audits, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
 
-        $membership = $dbForInternal->getDocument('memberships', $inviteId);
+        $membership = $dbForInternal->getDocument('memberships', $membershipId);
 
         if (empty($membership->getId())) {
             throw new Exception('Invite not found', 404);
@@ -634,7 +635,7 @@ App::delete('/v1/teams/:teamId/memberships/:inviteId')
         foreach ($memberships as $key => $child) { 
             /** @var Document $child */
 
-            if ($inviteId == $child->getId()) {
+            if ($membershipId == $child->getId()) {
                 unset($memberships[$key]);
                 break;
             }
