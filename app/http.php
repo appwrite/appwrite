@@ -68,6 +68,7 @@ include __DIR__ . '/controllers/general.php';
 
 function certificateSetup($domain)
 {
+    if($domain=='localhost' || (bool)ip2long($domain)) return;
     $domains = Config::getParam('domains', []);
     if (!in_array($domain, $domains)) {
         //schedule
