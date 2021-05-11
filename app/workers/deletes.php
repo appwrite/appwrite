@@ -5,6 +5,7 @@ use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
+use Swoole\FastCGI\Record\Data;
 use Utopia\Storage\Device\Local;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
@@ -34,6 +35,8 @@ class DeletesV1
     {
         $projectId = $this->args['projectId'];   
         $type = $this->args['type'];
+
+        var_dump("In deletes worker with type ". $type);
         
         switch (strval($type)) {
             case DELETE_TYPE_DOCUMENT:
@@ -51,6 +54,9 @@ class DeletesV1
                         break;
                     case Database::SYSTEM_COLLECTION_COLLECTIONS:
                         $this->deleteDocuments($document, $projectId);
+                        break;
+                    case Database::SYSTEM_COLLECTION_TEAMS:
+                        $this->deleteMemberships($document, $projectId);
                         break;
                     default:
                         Console::error('No lazy delete operation available for document of type: '.$document->getCollection());
@@ -95,6 +101,15 @@ class DeletesV1
         $this->deleteByGroup([
             '$collection='.$collectionId
         ], $this->getProjectDB($projectId));   
+    }
+
+    protected function deleteMemberships(Document $document, $projectId) {
+        var_dump("Deleting memberships");
+        // Delete Memberships
+        $this->deleteByGroup([
+            '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
+            'teamId='.$document->getId(),
+        ], $this->getProjectDB($projectId));
     }
 
     protected function deleteProject(Document $document)
