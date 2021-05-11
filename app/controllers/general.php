@@ -63,7 +63,9 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
                     ],
                     'domain' => $domain->get(),
                 ];
+                Authorization::disable();
                 $dbDomain = $consoleDB->createDocument($dbDomain);
+                Authorization::enable();
 
                 Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in 30 seconds.
                     Make sure your domain points to your server IP or restart your Appwrite server to try again.'); // TODO move this to installation script
