@@ -13,6 +13,7 @@ use Swoole\Http\Response as SwooleResponse;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Domains\Domain;
 
 // xdebug_start_trace('/tmp/trace');
 
@@ -66,35 +67,40 @@ Files::load(__DIR__ . '/../public');
 
 include __DIR__ . '/controllers/general.php';
 
-function certificateSetup($domain)
-{
-    if($domain=='localhost' || (bool)ip2long($domain)) return;
-    $domains = Config::getParam('domains', []);
-    if (!in_array($domain, $domains)) {
-        //schedule
-        Console::info('adding ' . $domain . ' to list of domains already checked');
-        array_push($domains, $domain);
-        Config::setParam('domains', $domains);
-
-        Console::info('Issuing a TLS certificate for the master domain (' . $domain . ') in 30 seconds.
-            Make sure your domain points to your server IP or restart your Appwrite server to try again.'); // TODO move this to installation script
-
-        ResqueScheduler::enqueueAt(\time() + 30, 'v1-certificates', 'CertificatesV1', [
-            'document' => [],
-            'domain' => $domain,
-            'validateTarget' => false,
-            'validateCNAME' => false,
-        ]);
-    }
-
-}
-
 $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) {
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
 
     $domain = $request->getHostname();
-    certificateSetup($domain);
+    $validDomains = Config::getParam('validDomains', []);
+    if (!array_key_exists($domain, $validDomains)) {
+        $domainCheck = new Domain(!empty($domain) ? $domain : '');
+        if (empty($domainCheck->get()) || !$domainCheck->isKnown() || $domainCheck->isTest()()) {
+            $validDomains[$domain] = false;
+        } else {
+            $validDomains[$domain] = true;
+        }
+        Config::setParam('validDomains', $validDomains);
+    }
+    if ($validDomains[$domain]) {
+        $issuedDomains = Config::getParam('issuedDomains', []);
+        if (!array_key_exists($domain, $issuedDomains)) {
+            //schedule
+            Console::info('adding ' . $domain . ' to list of domains already checked');
+            $issuedDomains[$domain] = true;
+            Config::setParam('issuedDomains', $issuedDomains);
+
+            Console::info('Issuing a TLS certificate for the master domain (' . $domain . ') in 30 seconds.
+                Make sure your domain points to your server IP or restart your Appwrite server to try again.'); // TODO move this to installation script
+
+            ResqueScheduler::enqueueAt(\time() + 30, 'v1-certificates', 'CertificatesV1', [
+                'document' => [],
+                'domain' => $domain,
+                'validateTarget' => false,
+                'validateCNAME' => false,
+            ]);
+        }
+    }
 
     if(Files::isFileLoaded($request->getURI())) {
         $time = (60 * 60 * 24 * 365 * 2); // 45 days cache
