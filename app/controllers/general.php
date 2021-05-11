@@ -39,7 +39,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
     if (!array_key_exists($domain, $checkedDomains)) {
         $domain = new Domain(!empty($domain) ? $domain : '');
 
-        if (empty($domain->get()) || !$domain->isKnown() || $domain->isTest()()) {
+        if (empty($domain->get()) || !$domain->isKnown() || $domain->isTest()) {
             $checkedDomains[$domain->get()] = false;
             Console::info($domain->get() . ' is not a valid domain. Skipping certificate generation.');
         } else {
