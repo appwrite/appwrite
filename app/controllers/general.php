@@ -44,7 +44,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
             Console::info($domain->get() . ' is not a valid domain. Skipping certificate generation.');
         } else {
             Console::info($domain->get() . ' is a valid domain.');
-
+            Authorization::disable();
             $dbDomain = $consoleDB->getCollectionFirst([
                 'limit' => 1,
                 'offset' => 0,
@@ -63,7 +63,6 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
                     ],
                     'domain' => $domain->get(),
                 ];
-                Authorization::disable();
                 $dbDomain = $consoleDB->createDocument($dbDomain);
                 Authorization::enable();
 
