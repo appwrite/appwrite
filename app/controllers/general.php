@@ -23,15 +23,65 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $clients) {
+App::init(function ($utopia, $request, $response, $console, $project, $consoleDB, $user, $locale, $clients) {
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
+    /** @var Appwrite\Database\Database $consoleDB */
     /** @var Appwrite\Database\Document $console */
     /** @var Appwrite\Database\Document $project */
     /** @var Appwrite\Database\Document $user */
     /** @var Utopia\Locale\Locale $locale */
     /** @var bool $mode */
     /** @var array $clients */
+    
+    $domain = $request->getHostname();
+    $checkedDomains = Config::getParam('checkedDomains', []);
+    if (!array_key_exists($domain, $checkedDomains)) {
+        $domain = new Domain(!empty($domain) ? $domain : '');
+
+        if (empty($domain->get()) || !$domain->isKnown() || $domain->isTest()()) {
+            $checkedDomains[$domain->get()] = false;
+            Console::info($domain->get() . ' is not a valid domain. Skipping certificate generation.');
+        } else {
+            Console::info($domain->get() . ' is a valid domain.');
+
+            $dbDomain = $consoleDB->getCollectionFirst([
+                'limit' => 1,
+                'offset' => 0,
+                'filters' => [
+                    '$collection=' . Database::SYSTEM_COLLECTION_CERTIFICATES,
+                    'domain=' . $domain->get(),
+                ],
+            ]);
+
+            if (empty($dbDomain)) {
+                $dbDomain = [
+                    '$collection' => Database::SYSTEM_COLLECTION_CERTIFICATES,
+                    '$permissions' => [
+                        'read' => [],
+                        'write' => [],
+                    ],
+                    'domain' => $domain->get(),
+                ];
+                $dbDomain = $consoleDB->createDocument($dbDomain);
+
+                Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in 30 seconds.
+                    Make sure your domain points to your server IP or restart your Appwrite server to try again.'); // TODO move this to installation script
+
+                ResqueScheduler::enqueueAt(\time() + 30, 'v1-certificates', 'CertificatesV1', [
+                    'document' => [],
+                    'domain' => $domain->get(),
+                    'validateTarget' => false,
+                    'validateCNAME' => false,
+                ]);
+            }
+
+            $checkedDomains[$domain] = true;
+
+        }
+        Console::info('adding ' . $domain->get() . ' to list of domains already checked');
+        Config::setParam('checkedDomains', $checkedDomains);
+    }
 
     $localeParam = (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
 
@@ -226,7 +276,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         throw new Exception('Password reset is required', 412);
     }
 
-}, ['utopia', 'request', 'response', 'console', 'project', 'user', 'locale', 'clients']);
+}, ['utopia', 'request', 'response', 'console', 'project', 'consoleDB', 'user', 'locale', 'clients']);
 
 App::options(function ($request, $response) {
     /** @var Utopia\Swoole\Request $request */
