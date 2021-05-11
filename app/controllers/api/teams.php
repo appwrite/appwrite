@@ -228,8 +228,6 @@ App::delete('/v1/teams/:teamId')
             throw new Exception('Failed to remove team from DB', 500);
         }
 
-        var_dump("Deleting team". $teamId);
-        
         $deletes
             ->setParam('type', DELETE_TYPE_DOCUMENT)
             ->setParam('document', $team)

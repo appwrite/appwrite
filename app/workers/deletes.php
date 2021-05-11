@@ -35,8 +35,6 @@ class DeletesV1
     {
         $projectId = $this->args['projectId'];   
         $type = $this->args['type'];
-
-        var_dump("In deletes worker with type ". $type);
         
         switch (strval($type)) {
             case DELETE_TYPE_DOCUMENT:
@@ -104,7 +102,6 @@ class DeletesV1
     }
 
     protected function deleteMemberships(Document $document, $projectId) {
-        var_dump("Deleting memberships");
         // Delete Memberships
         $this->deleteByGroup([
             '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
