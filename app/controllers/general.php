@@ -76,7 +76,6 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
             $domains[$domain->get()] = true;
 
         }
-        Console::info('adding ' . $domain->get() . ' to list of domains already checked');
         Config::setParam('domains', $domains);
     }
 
