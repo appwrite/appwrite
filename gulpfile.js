@@ -74,6 +74,7 @@ const configApp  = {
         'public/scripts/views/general/switch.js',
         'public/scripts/views/general/theme.js',
         'public/scripts/views/general/version.js',
+        'public/scripts/views/general/newsletter.js',
         
         'public/scripts/views/paging/back.js',
         'public/scripts/views/paging/next.js',

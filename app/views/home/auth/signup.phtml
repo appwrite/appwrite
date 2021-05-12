@@ -9,6 +9,7 @@
 
     <form name="account.create"
         data-analytics
+        data-newsletter
         data-analytics-activity
         data-analytics-event="submit"
         data-analytics-category="home"
@@ -37,6 +38,13 @@
                 <input type="checkbox" required />
             </div>
             By signing up, you agree to the <a data-ls-attrs="href={{env.HOME}}/policy/terms" tabindex="-1" target="_blank" rel="noopener">Terms and Conditions</a> and <a data-ls-attrs="href={{env.HOME}}/policy/privacy" target="_blank" tabindex="-1" rel="noopener">Privacy Policy</a>
+        </div>
+
+        <div class="newsletter margin-top margin-bottom-large">
+            <div class="pull-start margin-end-small margin-bottom">
+                <input id="newsletter" type="checkbox" />
+            </div>
+            Sign up for our <a data-ls-attrs="href={{env.HOME}}/updates" tabindex="-1" target="_blank" rel="noopener">monthly newsletter</a> <span class="text-fade">(optional)</span>.
         </div>
 
         <button type="submit">Sign Up</button>
