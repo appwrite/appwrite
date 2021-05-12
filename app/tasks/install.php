@@ -8,11 +8,15 @@ use Utopia\Analytics\GoogleAnalytics;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\View;
+use Utopia\Validator\Text;
 
 $cli
     ->task('install')
     ->desc('Install Appwrite')
-    ->action(function () {
+    ->param('httpPort', '', new Text(4), 'Server HTTP port', true)
+    ->param('httpsPort', '', new Text(4), 'Server HTTPS port', true)
+    ->param('unattended','N', new Text(1), 'A secure encryption key, make sure to make a backup of your key in a secure location')
+    ->action(function ($httpPort, $httpsPort, $unattended) {
         /**
          * 1. Start - DONE
          * 2. Check for older setup and get older version - DONE
@@ -108,16 +112,20 @@ $cli
             }
         }
 
-        $httpPort = Console::confirm('Choose your server HTTP port: (default: '.$defaultHTTPPort.')');
-        $httpPort = ($httpPort) ? $httpPort : $defaultHTTPPort;
+        if(empty($httpPort)) {
+            $httpPort = Console::confirm('Choose your server HTTP port: (default: '.$defaultHTTPPort.')');
+            $httpPort = ($httpPort) ? $httpPort : $defaultHTTPPort;
+        }
 
-        $httpsPort = Console::confirm('Choose your server HTTPS port: (default: '.$defaultHTTPSPort.')');
-        $httpsPort = ($httpsPort) ? $httpsPort : $defaultHTTPSPort;
+        if(empty($httpsPort)) {
+            $httpsPort = Console::confirm('Choose your server HTTPS port: (default: '.$defaultHTTPSPort.')');
+            $httpsPort = ($httpsPort) ? $httpsPort : $defaultHTTPSPort;
+        }
     
         $input = [];
 
         foreach($vars as $key => $var) {
-            if(!$var['required']) {
+            if(!$var['required'] || $unattended === 'Y') {
                 $input[$var['name']] = $var['default'];
                 continue;
             }
