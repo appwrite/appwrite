@@ -61,11 +61,11 @@ $cli
             Console::log('🟢 Abuse protection is enabled');
         }
 
-        $authWhitelistGod = App::getEnv('_APP_CONSOLE_WHITELIST_GOD', null);
+        $authWhitelistRoot = App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', null);
         $authWhitelistEmails = App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null);
         $authWhitelistIPs = App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null);
 
-        if(empty($authWhitelistGod)
+        if(empty($authWhitelistRoot)
             && empty($authWhitelistEmails)
             && empty($authWhitelistIPs)
         ) {

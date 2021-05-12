@@ -1,5 +1,5 @@
 <?php
-$god = ($this->getParam('god') !== 'disabled');
+$root = ($this->getParam('root') !== 'disabled');
 ?>
 <div class="zone medium signup">
     <h1 class="zone xl margin-bottom-large margin-top">
@@ -26,8 +26,8 @@ $god = ($this->getParam('god') !== 'disabled');
         data-failure-param-alert-text="Registration Failed. Please try again later"
         data-failure-param-alert-classname="error">
 
-        <?php if($god): ?>
-            <p>Please create your first god account</p>
+        <?php if($root): ?>
+            <p>Please create your root account</p>
         <?php endif; ?>
 
         <label>Name</label>
@@ -51,7 +51,7 @@ $god = ($this->getParam('god') !== 'disabled');
 
 </div>
 
-<?php if(!$god): ?>
+<?php if(!$root): ?>
 <div class="zone medium text-align-center">
     <a href="/auth/signin">Already have an account?</a>
 </div>

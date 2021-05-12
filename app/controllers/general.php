@@ -208,7 +208,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         }
     }, $user->getAttribute('memberships', []));
 
-    // TDOO Check if user is god
+    // TDOO Check if user is root
 
     if (!\in_array($scope, $scopes)) {
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) { // Check if permission is denied because project is missing

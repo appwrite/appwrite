@@ -76,7 +76,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_LOCALE
-      - _APP_CONSOLE_WHITELIST_GOD
+      - _APP_CONSOLE_WHITELIST_ROOT
       - _APP_CONSOLE_WHITELIST_EMAILS
       - _APP_CONSOLE_WHITELIST_IPS
       - _APP_SYSTEM_EMAIL_NAME

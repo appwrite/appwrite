@@ -12,7 +12,7 @@
 - Added option to disable anonymous login (need to merge and apply changed) (#947)
 - Added option to disable JWT auth (#947)
 - Added option to disable team invites (#947)
-- Option to limit number of users (good for app launches + god account PR) (#947)
+- Option to limit number of users (good for app launches + root account PR) (#947)
 - Added 2 new endpoints to the projects API to allow new settings 
 - Enabled 501 errors (Not Implemented) from the error handler
 - Added Python 3.9 as a new Cloud Functions runtime (#1044)

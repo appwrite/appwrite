@@ -57,9 +57,9 @@ App::get('/')
         ;
 
         if ('console' === $project->getId()) {
-            $whitlistGod = $project->getAttribute('authWhitelistGod');
+            $whitlistRoot = App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled');
 
-            if($whitlistGod !== 'disabled') {
+            if($whitlistRoot !== 'disabled') {
                 $projectDB->getCollection([ // Count users
                     'filters' => [
                         '$collection='.Database::SYSTEM_COLLECTION_USERS,
@@ -88,7 +88,7 @@ App::get('/auth/signin')
         $page = new View(__DIR__.'/../../views/home/auth/signin.phtml');
 
         $page
-            ->setParam('god', App::getEnv('_APP_CONSOLE_WHITELIST_GOD', 'enabled'))
+            ->setParam('root', App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled'))
         ;
 
         $layout
@@ -106,7 +106,7 @@ App::get('/auth/signup')
         $page = new View(__DIR__.'/../../views/home/auth/signup.phtml');
 
         $page
-            ->setParam('god', App::getEnv('_APP_CONSOLE_WHITELIST_GOD', 'enabled'))
+            ->setParam('root', App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled'))
         ;
 
         $layout
