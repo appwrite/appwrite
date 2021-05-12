@@ -1,6 +1,6 @@
 <?php
 $home = $this->getParam('home', '');
-$version = $this->getParam('version', '').'.'.APP_CACHE_BUSTER;
+$version = $this->getParam('version', '') . '.' . APP_CACHE_BUSTER;
 ?>
 <footer class="clear margin-top-large">
     <ul class="copyright pull-start">
@@ -11,6 +11,14 @@ $version = $this->getParam('version', '').'.'.APP_CACHE_BUSTER;
                 data-analytics-category="console/footer"
                 data-analytics-label="GitHub Link"
                 href="https://github.com/appwrite/appwrite" target="_blank" rel="noopener"><i class="icon-github-circled"></i> GitHub</a>
+        </li>
+        <li>
+            <a class="link-animation-enabled"
+                data-analytics
+                data-analytics-event="click"
+                data-analytics-category="console/footer"
+                data-analytics-label="Discord Link"
+                href="https://appwrite.io/discord" target="_blank" rel="noopener"><i class="icon-discord"></i> Discord</a>
         </li>
         <li>
             <a class="link-animation-enabled"
