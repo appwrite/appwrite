@@ -41,9 +41,8 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
 
         if (empty($domain->get()) || !$domain->isKnown() || $domain->isTest()) {
             $checkedDomains[$domain->get()] = false;
-            Console::info($domain->get() . ' is not a valid domain. Skipping certificate generation.');
+            Console::warning($domain->get() . ' is not a publicly accessible domain. Skipping SSL certificate generation.');
         } else {
-            Console::info($domain->get() . ' is a valid domain.');
             Authorization::disable();
             $dbDomain = $consoleDB->getCollectionFirst([
                 'limit' => 1,
@@ -66,8 +65,8 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
                 $dbDomain = $consoleDB->createDocument($dbDomain);
                 Authorization::enable();
 
-                Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in 30 seconds.
-                    Make sure your domain points to your server IP or restart your Appwrite server to try again.'); // TODO move this to installation script
+                Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in ~30 seconds.
+.'); // TODO move this to installation script
 
                 ResqueScheduler::enqueueAt(\time() + 30, 'v1-certificates', 'CertificatesV1', [
                     'document' => [],
