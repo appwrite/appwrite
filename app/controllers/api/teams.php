@@ -446,7 +446,7 @@ App::post('/v1/teams/:teamId/memberships')
 
         if (!$isPrivilegedUser && !$isAppUser) { // No need in comfirmation when in admin or app mode
             $mails
-                ->setParam('event', 'teams.membership.create')
+                ->setParam('event', 'teams.memberships.create')
                 ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name')))
                 ->setParam('recipient', $email)
                 ->setParam('name', $name)
@@ -458,7 +458,7 @@ App::post('/v1/teams/:teamId/memberships')
 
         $audits
             ->setParam('userId', $invitee->getId())
-            ->setParam('event', 'teams.membership.create')
+            ->setParam('event', 'teams.memberships.create')
             ->setParam('resource', 'teams/'.$teamId)
         ;
 
@@ -650,7 +650,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $audits
             ->setParam('userId', $user->getId())
-            ->setParam('event', 'teams.membership.update')
+            ->setParam('event', 'teams.memberships.update.status')
             ->setParam('resource', 'teams/'.$teamId)
         ;
 
@@ -726,7 +726,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
 
         $audits
             ->setParam('userId', $membership->getAttribute('userId'))
-            ->setParam('event', 'teams.membership.delete')
+            ->setParam('event', 'teams.memberships.delete')
             ->setParam('resource', 'teams/'.$teamId)
         ;
 
