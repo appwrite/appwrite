@@ -39,11 +39,11 @@ class Platform extends Model
                 'default' => '',
                 'example' => 'com.company.appname',
             ])
-            // ->addRule('store', [
-            //     'type' => self::TYPE_STRING,
-            //     'description' => 'Link to platform store.',
-            //     'example' => '',
-            // ])
+            ->addRule('store', [
+                'type' => self::TYPE_STRING,
+                'description' => 'App store or Google Play store ID.',
+                'example' => '',
+            ])
             ->addRule('hostname', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Web app hostname. Empty string for other platforms.',

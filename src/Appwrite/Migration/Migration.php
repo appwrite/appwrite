@@ -87,7 +87,8 @@ abstract class Migration
                         $new = call_user_func($callback, $document);
 
                         if (empty($new->getId())) {
-                            throw new Exception('Missing ID');
+                            Console::warning('Skipped Document due to missing ID.');
+                            return;
                         }
 
                         if (!$this->check_diff_multi($new->getArrayCopy(), $old)) {

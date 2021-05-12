@@ -11,7 +11,7 @@ $analytics      = $this->getParam('analytics', 'UA-26264668-9');
 $mode           = $this->getParam('mode', '');
 $canonical      = $this->getParam('canonical', '');
 $locale         = $this->getParam('locale', null);
-$environments   = $this->getParam('environments', null);
+$runtimes       = $this->getParam('runtimes', null);
 
 if(!empty($platforms)) {
     $platforms = array_map(function($platform) {
@@ -78,7 +78,7 @@ if(!empty($platforms)) {
             SETUP: '<?php echo $this->escape($this->getParam('setup')); ?>',
             API: '/v1',
             PROJECT: 'console',
-            ENVIRONMENTS: <?php echo json_encode($environments); ?>,
+            RUNTIMES: <?php echo json_encode($runtimes); ?>,
             PLATFORMS: <?php echo json_encode($platforms); ?>,
             LOCALE: '<?php echo $this->escape($locale->getText('settings.locale')); ?>',
             PREFIX: '<?php echo $this->escape($this->getParam('prefix')); ?>',

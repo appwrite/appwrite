@@ -53,6 +53,7 @@ const APP_SOCIAL_LINKEDIN = 'https://www.linkedin.com/company/appwrite';
 const APP_SOCIAL_INSTAGRAM = 'https://www.instagram.com/appwrite.io';
 const APP_SOCIAL_GITHUB = 'https://github.com/appwrite';
 const APP_SOCIAL_DISCORD = 'https://appwrite.io/discord';
+const APP_SOCIAL_DISCORD_CHANNEL = '564160730845151244';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite'; 
 // Deletion Types
@@ -79,7 +80,7 @@ Config::load('auth', __DIR__.'/config/auth.php');
 Config::load('providers', __DIR__.'/config/providers.php');
 Config::load('platforms', __DIR__.'/config/platforms.php');
 Config::load('collections', __DIR__.'/config/collections.php');
-Config::load('environments', __DIR__.'/config/environments.php');
+Config::load('runtimes', __DIR__.'/config/runtimes.php');
 Config::load('roles', __DIR__.'/config/roles.php');  // User roles and scopes
 Config::load('scopes', __DIR__.'/config/scopes.php');  // User roles and scopes
 Config::load('services', __DIR__.'/config/services.php');  // List of services
@@ -169,8 +170,9 @@ $register->set('influxdb', function () { // Register DB connection
     if (empty($host) || empty($port)) {
         return;
     }
-
-    $client = new InfluxDB\Client($host, $port, '', '', false, false, 5);
+    $driver = new InfluxDB\Driver\Curl(dsn: "http://{$host}:{$port}");
+    $client = new InfluxDB\Client(host: $host, port: $port, timeout: 5);
+    $client->setDriver($driver);
 
     return $client;
 });

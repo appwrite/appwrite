@@ -95,7 +95,7 @@ services:
       - _APP_FUNCTIONS_CPUS
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
-      - _APP_FUNCTIONS_ENVS
+      - _APP_FUNCTIONS_RUNTIMES
 
   appwrite-worker-usage:
     image: appwrite/appwrite:<?php echo $version."\n"; ?>
@@ -267,6 +267,7 @@ services:
       - _APP_FUNCTIONS_CPUS
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
+      - _APP_FUNCTIONS_RUNTIMES
       - _APP_USAGE_STATS
 
   appwrite-worker-mails:

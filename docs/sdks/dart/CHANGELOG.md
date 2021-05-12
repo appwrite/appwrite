@@ -1,3 +1,8 @@
+## 0.5.0-dev.1
+
+- Upgraded to Null-safety, minimum Dart SDK required 2.12.0
+- Upgraded all underlying dependencies to null safe version
+
 ## 0.3.1
 
 - Minor fixes for custom exceptions
