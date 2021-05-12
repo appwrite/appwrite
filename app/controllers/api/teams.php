@@ -508,16 +508,31 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception('Membership not found', 404);
         }
 
-        if ($membership->getAttribute('teamId') !== $teamId) {
-            throw new Exception('Team IDs don\'t match', 404);
+        $memberships = $projectDB->getCollection([
+            'limit' => 2000,
+            'offset' => 0,
+            'filters' => [
+                '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
+                'teamId='.$team->getId(),
+            ],
+        ]);
+
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
+        $isAppUser = Auth::isAppUser(Authorization::$roles);
+        $isOwner = false;
+
+        foreach ($memberships as $member) {
+            if ($member->getAttribute('userId') == $user->getId() && \in_array('owner', $member->getAttribute('roles', []))) {
+                $isOwner = true;
+            }
+        }
+        
+        if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
+            throw new Exception('User is not allowed to modify roles', 401);
         }
 
-        // Only team owner or api key should be allowed to make this request.
-
-        $membership // Update the roles
-            ->setAttribute('roles', $roles)
-        ;
-
+        // Update the roles
+        $membership->setAttribute('roles', $roles);
         $membership = $projectDB->updateDocument($membership->getArrayCopy());
 
         if (false === $membership) {
@@ -526,12 +541,11 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
 
         $audits
             ->setParam('userId', $user->getId())
-            ->setParam('event', 'teams.membership.update')
+            ->setParam('event', 'teams.memberships.update')
             ->setParam('resource', 'teams/'.$teamId)
         ;
 
         $response->dynamic(new Document($membership->getArrayCopy()), Response::MODEL_MEMBERSHIP);
-
     });
 
 App::get('/v1/teams/:teamId/memberships')
