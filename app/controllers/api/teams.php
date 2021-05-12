@@ -444,7 +444,7 @@ App::post('/v1/teams/:teamId/memberships')
             ->setParam('{{text-cta}}', '#ffffff')
         ;
 
-        if (!$isPrivilegedUser && !$isAppUser) { // No need in comfirmation when in admin or app mode
+        if (!$isPrivilegedUser && !$isAppUser) { // No need of confirmation when in admin or app mode
             $mails
                 ->setParam('event', 'teams.membership.create')
                 ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name')))
@@ -469,6 +469,110 @@ App::post('/v1/teams/:teamId/memberships')
                 'name' => $name,
             ])), Response::MODEL_MEMBERSHIP)
         ;
+    });
+
+App::patch('/v1/teams/:teamId/memberships/:membershipId')
+    ->desc('Update Membership Roles')
+    ->groups(['api', 'teams'])
+    ->label('event', 'teams.memberships.update')
+    ->label('scope', 'public')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'teams')
+    ->label('sdk.method', 'updateMembershipRoles')
+    ->label('sdk.description', '/docs/references/teams/update-team-membership-roles.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
+    ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->param('membershipId', '', new UID(), 'Membership ID.')
+    ->param('roles', [], new ArrayList(new Key()), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('user')
+    ->inject('projectDB')
+    ->inject('audits')
+    ->action(function ($teamId, $membershipId, $roles, $request, $response, $user, $projectDB,$audits) {
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Document $user */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $audits */
+
+        $membership = $projectDB->getDocument($membershipId);
+        if (empty($membership->getId()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $membership->getCollection()) {
+            throw new Exception('Membership not found', 404);
+        }
+
+        if ($membership->getAttribute('teamId') !== $teamId) {
+            throw new Exception('Team IDs don\'t match', 404);
+        }
+
+        $team = $projectDB->getDocument($teamId);
+        if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+            throw new Exception('Team not found', 404);
+        }
+
+        $userId = $membership->getAttribute('userId', '');
+        $user = $projectDB->getCollectionFirst([ // Get user
+            'limit' => 1,
+            'filters' => [
+                '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                '$id='.$userId,
+            ],
+        ]);
+
+        if (empty($user) || $user->getId() === null) {
+            throw new Exception("User associated with Membership Id not found", 404);
+        }
+
+        $membership // Update the roles
+            ->setAttribute('roles', $roles)
+        ;
+
+        $user
+            ->setAttribute('memberships', $membership, Document::SET_TYPE_APPEND)
+        ;
+
+        $user = $projectDB->updateDocument($user->getArrayCopy());
+
+        if (false === $user) {
+            throw new Exception('Failed saving user to DB', 500);
+        }
+
+        Authorization::disable();
+
+        $team = $projectDB->updateDocument(\array_merge($team->getArrayCopy(), [
+            'sum' => $team->getAttribute('sum', 0) + 1,
+        ]));
+
+        Authorization::reset();
+
+        if (false === $team) {
+            throw new Exception('Failed saving team to DB', 500);
+        }
+
+        $audits
+            ->setParam('userId', $user->getId())
+            ->setParam('event', 'teams.membership.update')
+            ->setParam('resource', 'teams/'.$teamId)
+        ;
+
+        if (!Config::getParam('domainVerification')) {
+            $response
+                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
+            ;
+        }
+
+        $response
+            ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+        ;
+
+        $response->dynamic(new Document(\array_merge($membership->getArrayCopy(), [
+            'email' => $user->getAttribute('email'),
+            'name' => $user->getAttribute('name'),
+        ])), Response::MODEL_MEMBERSHIP);
+
     });
 
 App::get('/v1/teams/:teamId/memberships')

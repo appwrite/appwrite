@@ -197,6 +197,11 @@ return [
         'model' => Response::MODEL_MEMBERSHIP,
         'note' => 'version >= 0.7',
     ],
+    'teams.memberships.update' => [
+        'description' => 'This event triggers when a team membership is updated.',
+        'model' => Response::MODEL_MEMBERSHIP,
+        'note' => 'version >= 0.8',
+    ],
     'teams.memberships.update.status' => [
         'description' => 'This event triggers when a team memberships status is updated.',
         'model' => Response::MODEL_MEMBERSHIP,
