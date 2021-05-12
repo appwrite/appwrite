@@ -498,6 +498,11 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
 
+        $team = $projectDB->getDocument($teamId);
+        if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+            throw new Exception('Team not found', 404);
+        }
+
         $membership = $projectDB->getDocument($membershipId);
         if (empty($membership->getId()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $membership->getCollection()) {
             throw new Exception('Membership not found', 404);
@@ -507,48 +512,16 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception('Team IDs don\'t match', 404);
         }
 
-        $team = $projectDB->getDocument($teamId);
-        if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
-            throw new Exception('Team not found', 404);
-        }
-
-        $userId = $membership->getAttribute('userId', '');
-        $user = $projectDB->getCollectionFirst([ // Get user
-            'limit' => 1,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                '$id='.$userId,
-            ],
-        ]);
-
-        if (empty($user) || $user->getId() === null) {
-            throw new Exception("User associated with Membership Id not found", 404);
-        }
+        // Only team owner or api key should be allowed to make this request.
 
         $membership // Update the roles
             ->setAttribute('roles', $roles)
         ;
 
-        $user
-            ->setAttribute('memberships', $membership, Document::SET_TYPE_APPEND)
-        ;
+        $membership = $projectDB->updateDocument($membership->getArrayCopy());
 
-        $user = $projectDB->updateDocument($user->getArrayCopy());
-
-        if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
-        }
-
-        Authorization::disable();
-
-        $team = $projectDB->updateDocument(\array_merge($team->getArrayCopy(), [
-            'sum' => $team->getAttribute('sum', 0) + 1,
-        ]));
-
-        Authorization::reset();
-
-        if (false === $team) {
-            throw new Exception('Failed saving team to DB', 500);
+        if (false === $membership) {
+            throw new Exception('Failed updating membership', 500);
         }
 
         $audits
@@ -557,21 +530,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
             ->setParam('resource', 'teams/'.$teamId)
         ;
 
-        if (!Config::getParam('domainVerification')) {
-            $response
-                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
-            ;
-        }
-
-        $response
-            ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-        ;
-
-        $response->dynamic(new Document(\array_merge($membership->getArrayCopy(), [
-            'email' => $user->getAttribute('email'),
-            'name' => $user->getAttribute('name'),
-        ])), Response::MODEL_MEMBERSHIP);
+        $response->dynamic(new Document($membership->getArrayCopy()), Response::MODEL_MEMBERSHIP);
 
     });
 
