@@ -66,7 +66,7 @@ return [
             [
                 'name' => '_APP_CONSOLE_WHITELIST_GOD',
                 'description' => 'This option allows you to disable the creation of new users on the Appwrite console. When enabled only 1 user will be able to use the registration form. New users can be added by invting them to your project. By default this option is enabled.',
-                'introduction' => '',
+                'introduction' => '0.8.0',
                 'default' => 'enabled',
                 'required' => false,
                 'question' => '',

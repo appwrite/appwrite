@@ -64,11 +64,9 @@ $cli
         $authWhitelistGod = App::getEnv('_APP_CONSOLE_WHITELIST_GOD', null);
         $authWhitelistEmails = App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null);
         $authWhitelistIPs = App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null);
-        $authWhitelistDomains = App::getEnv('_APP_CONSOLE_WHITELIST_DOMAINS', null);
 
         if(empty($authWhitelistGod)
             && empty($authWhitelistEmails)
-            && empty($authWhitelistDomains)
             && empty($authWhitelistIPs)
         ) {
             Console::log('🔴 Console access limits are disabled');
