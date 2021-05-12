@@ -294,7 +294,7 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
         $memberships = $projectDB->getCollection([
-            'limit' => 50,
+            'limit' => 2000,
             'offset' => 0,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
