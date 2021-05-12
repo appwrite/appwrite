@@ -1,7 +1,7 @@
 # Version 0.8.0 (Not Released Yet)
 
 ## Features
-
+- Refactoring SSL generation to work on every request so no domain environment variable is required for SSL generation (#1133)
 - Added Anonymous Login ([RFC-010](https://github.com/appwrite/rfc/blob/main/010-anonymous-login.md), #914)
 - Added events for functions and executions (#971)
 - Added JWT support (#784)
