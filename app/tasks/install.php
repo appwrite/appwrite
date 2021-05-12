@@ -15,8 +15,8 @@ $cli
     ->desc('Install Appwrite')
     ->param('httpPort', '', new Text(4), 'Server HTTP port', true)
     ->param('httpsPort', '', new Text(4), 'Server HTTPS port', true)
-    ->param('unattended','N', new Text(1), 'A secure encryption key, make sure to make a backup of your key in a secure location')
-    ->action(function ($httpPort, $httpsPort, $unattended) {
+    ->param('interactive','Y', new Text(1), 'A secure encryption key, make sure to make a backup of your key in a secure location')
+    ->action(function ($httpPort, $httpsPort, $interactive) {
         /**
          * 1. Start - DONE
          * 2. Check for older setup and get older version - DONE
@@ -125,7 +125,7 @@ $cli
         $input = [];
 
         foreach($vars as $key => $var) {
-            if(!$var['required'] || $unattended === 'Y') {
+            if(!$var['required'] || !Console::isInteractive() || $interactive !== 'Y') {
                 $input[$var['name']] = $var['default'];
                 continue;
             }
