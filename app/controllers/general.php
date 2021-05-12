@@ -14,8 +14,6 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\Origin;
-use Utopia\Storage\Device\Local;
-use Utopia\Storage\Storage;
 use Appwrite\Utopia\Response\Filters\V06;
 use Utopia\CLI\Console;
 
@@ -35,12 +33,12 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
     /** @var array $clients */
     
     $domain = $request->getHostname();
-    $checkedDomains = Config::getParam('checkedDomains', []);
-    if (!array_key_exists($domain, $checkedDomains)) {
+    $domains = Config::getParam('domains', []);
+    if (!array_key_exists($domain, $domains)) {
         $domain = new Domain(!empty($domain) ? $domain : '');
 
         if (empty($domain->get()) || !$domain->isKnown() || $domain->isTest()) {
-            $checkedDomains[$domain->get()] = false;
+            $domains[$domain->get()] = false;
             Console::warning($domain->get() . ' is not a publicly accessible domain. Skipping SSL certificate generation.');
         } else {
             Authorization::disable();
@@ -65,22 +63,21 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
                 $dbDomain = $consoleDB->createDocument($dbDomain);
                 Authorization::enable();
 
-                Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in ~30 seconds.
-.'); // TODO move this to installation script
+                Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in ~30 seconds..'); // TODO move this to installation script
 
                 ResqueScheduler::enqueueAt(\time() + 30, 'v1-certificates', 'CertificatesV1', [
-                    'document' => [],
+                    'document' => $dbDomain,
                     'domain' => $domain->get(),
                     'validateTarget' => false,
                     'validateCNAME' => false,
                 ]);
             }
 
-            $checkedDomains[$domain->get()] = true;
+            $domains[$domain->get()] = true;
 
         }
         Console::info('adding ' . $domain->get() . ' to list of domains already checked');
-        Config::setParam('checkedDomains', $checkedDomains);
+        Config::setParam('domains', $domains);
     }
 
     $localeParam = (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
