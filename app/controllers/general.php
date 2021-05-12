@@ -72,9 +72,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
                     'validateCNAME' => false,
                 ]);
             }
-
             $domains[$domain->get()] = true;
-
         }
         Config::setParam('domains', $domains);
     }
