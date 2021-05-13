@@ -157,6 +157,7 @@ trait TeamsBaseClient
         $this->assertIsInt($response['body']['joined']);
         $this->assertEquals(true, $response['body']['confirm']);
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+        $data['session'] = $session;
 
         /**
          * New User tries to update password without old password -> SHOULD PASS
@@ -211,11 +212,6 @@ trait TeamsBaseClient
         $this->assertIsNumeric($response['body']['registration']);
         $this->assertEquals($response['body']['email'], $email);
         $this->assertEquals($response['body']['name'], $name);
-
-        var_dump($response);
-
-        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
-        $data['session'] = $session;
 
         /**
          * Test for FAILURE
