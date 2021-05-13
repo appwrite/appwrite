@@ -272,7 +272,7 @@ App::get('/v1/health/anti-virus')
 App::get('/v1/health/stats') // Currently only used internally
     ->desc('Get System Stats')
     ->groups(['api', 'health'])
-    ->label('scope', 'god')
+    ->label('scope', 'root')
     // ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     // ->label('sdk.namespace', 'health')
     // ->label('sdk.method', 'getStats')

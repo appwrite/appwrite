@@ -285,7 +285,7 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
         $memberships = $projectDB->getCollection([
-            'limit' => 50,
+            'limit' => 2000,
             'offset' => 0,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
@@ -332,7 +332,12 @@ App::post('/v1/teams/:teamId/memberships')
                     'emailVerification' => false,
                     'status' => Auth::USER_STATUS_UNACTIVATED,
                     'password' => Auth::passwordHash(Auth::passwordGenerator()),
-                    'passwordUpdate' => \time(),
+                    /** 
+                     * Set the password update time to 0 for users created using 
+                     * team invite and OAuth to allow password updates without an 
+                     * old password 
+                     */
+                    'passwordUpdate' => 0,
                     'registration' => \time(),
                     'reset' => false,
                     'name' => $name,
@@ -437,7 +442,7 @@ App::post('/v1/teams/:teamId/memberships')
 
         if (!$isPrivilegedUser && !$isAppUser) { // No need in comfirmation when in admin or app mode
             $mails
-                ->setParam('event', 'teams.membership.create')
+                ->setParam('event', 'teams.memberships.create')
                 ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name')))
                 ->setParam('recipient', $email)
                 ->setParam('name', $name)
@@ -449,7 +454,7 @@ App::post('/v1/teams/:teamId/memberships')
 
         $audits
             ->setParam('userId', $invitee->getId())
-            ->setParam('event', 'teams.membership.create')
+            ->setParam('event', 'teams.memberships.create')
             ->setParam('resource', 'teams/'.$teamId)
         ;
 
@@ -571,7 +576,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         if ($userId != $membership->getAttribute('userId')) {
-            throw new Exception('Invite not belong to current user ('.$user->getAttribute('email').')', 401);
+            throw new Exception('Invite does not belong to current user ('.$user->getAttribute('email').')', 401);
         }
 
         if (empty($user->getId())) {
@@ -585,7 +590,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         if ($membership->getAttribute('userId') !== $user->getId()) {
-            throw new Exception('Invite not belong to current user ('.$user->getAttribute('email').')', 401);
+            throw new Exception('Invite does not belong to current user ('.$user->getAttribute('email').')', 401);
         }
 
         $membership // Attach user to team
@@ -641,7 +646,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $audits
             ->setParam('userId', $user->getId())
-            ->setParam('event', 'teams.membership.update')
+            ->setParam('event', 'teams.memberships.update.status')
             ->setParam('resource', 'teams/'.$teamId)
         ;
 
@@ -717,7 +722,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
 
         $audits
             ->setParam('userId', $membership->getAttribute('userId'))
-            ->setParam('event', 'teams.membership.delete')
+            ->setParam('event', 'teams.memberships.delete')
             ->setParam('resource', 'teams/'.$teamId)
         ;
 
