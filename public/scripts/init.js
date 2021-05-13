@@ -26,17 +26,12 @@ document.addEventListener("account.create", function () {
   let promise = sdk.account.createSession(form.email, form.password);
 
   container.set("serviceForm", {}, true, true); // Remove sensetive data when not needed
-
-  let subscribe = function (c) {
-
-    if (subscribe) {
-      return
-    }
-  };
-
+  
   promise.then(function () {
     var subscribe = document.getElementById('newsletter').checked;
     if (subscribe) {
+      let alerts = container.get('alerts');
+      let loaderId = alerts.add({ text: 'Loading...', class: "" }, 0);
       fetch('https://appwrite.io/v1/newsletter/subscribe', {
         method: 'POST',
         headers: {
@@ -47,6 +42,7 @@ document.addEventListener("account.create", function () {
           email: form.email,
         }),
       }).finally(function () {
+        alerts.remove(loaderId);
         window.location = '/console';
       });
     } else {
