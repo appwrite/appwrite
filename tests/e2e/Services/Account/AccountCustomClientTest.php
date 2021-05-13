@@ -272,11 +272,10 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
-            'password' => 'new-password',
             'oldPassword' => '',
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         return $session;
     }

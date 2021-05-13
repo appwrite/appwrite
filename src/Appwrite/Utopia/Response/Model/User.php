@@ -34,6 +34,12 @@ class User extends Model
                 'default' => 0,
                 'example' => 0,
             ])
+            ->addRule('passwordUpdate', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Unix timestamp of the most recent password update',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
             ->addRule('email', [
                 'type' => self::TYPE_STRING,
                 'description' => 'User email address.',

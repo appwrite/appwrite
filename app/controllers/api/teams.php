@@ -341,7 +341,12 @@ App::post('/v1/teams/:teamId/memberships')
                     'emailVerification' => false,
                     'status' => Auth::USER_STATUS_UNACTIVATED,
                     'password' => Auth::passwordHash(Auth::passwordGenerator()),
-                    'passwordUpdate' => \time(),
+                    /** 
+                     * Set the password update time to 0 for users created using 
+                     * team invite and OAuth to allow password updates without an 
+                     * old password 
+                     */
+                    'passwordUpdate' => 0,
                     'registration' => \time(),
                     'reset' => false,
                     'name' => $name,
@@ -580,7 +585,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         if ($userId != $membership->getAttribute('userId')) {
-            throw new Exception('Invite not belong to current user ('.$user->getAttribute('email').')', 401);
+            throw new Exception('Invite does not belong to current user ('.$user->getAttribute('email').')', 401);
         }
 
         if (empty($user->getId())) {
@@ -594,7 +599,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         if ($membership->getAttribute('userId') !== $user->getId()) {
-            throw new Exception('Invite not belong to current user ('.$user->getAttribute('email').')', 401);
+            throw new Exception('Invite does not belong to current user ('.$user->getAttribute('email').')', 401);
         }
 
         $membership // Attach user to team
