@@ -152,6 +152,8 @@ trait TeamsBaseClient
         $this->assertIsInt($response['body']['joined']);
         $this->assertEquals(true, $response['body']['confirm']);
 
+        var_dump($response);
+
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
         $data['session'] = $session;
 
