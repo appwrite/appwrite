@@ -1,1 +1,1 @@
-Update currently logged in user password. For validation, user is required to pass the password twice.
+Update currently logged in user password. For validation, user is required to pass the password twice. For users created with OAuth and Team Invites, oldPassword is optional.
