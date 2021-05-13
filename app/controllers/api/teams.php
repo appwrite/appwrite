@@ -508,24 +508,10 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception('Membership not found', 404);
         }
 
-        $memberships = $projectDB->getCollection([
-            'limit' => 2000,
-            'offset' => 0,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
-                'teamId='.$team->getId(),
-            ],
-        ]);
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
-        $isOwner = false;
-
-        foreach ($memberships as $member) {
-            if ($member->getAttribute('userId') == $user->getId() && \in_array('owner', $member->getAttribute('roles', []))) {
-                $isOwner = true;
-            }
-        }
+        $isOwner = Authorization::isRole('team:'.$team->getId().'/owner');;
         
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
             throw new Exception('User is not allowed to modify roles', 401);
