@@ -101,6 +101,8 @@ class DeletesV1
     }
 
     protected function deleteMemberships(Document $document, $projectId) {
+        var_dump("In deleteMembership");
+        var_dump($document);
         // Delete Memberships
         $this->deleteByGroup([
             '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
@@ -214,7 +216,7 @@ class DeletesV1
                 Console::success('Delete code tag: '.$document->getAttribute('path', ''));
             }
             else {
-                Console::error('Dailed to delete code tag: '.$document->getAttribute('path', ''));
+                Console::error('Failed to delete code tag: '.$document->getAttribute('path', ''));
             }
         });
 
@@ -229,6 +231,8 @@ class DeletesV1
     {
         Authorization::disable();
 
+        Console::success($document->getAttribute('name', 'noname'));
+        var_dump($document);
         if($database->deleteDocument($document->getId())) {
             Console::success('Deleted document "'.$document->getId().'" successfully');
 
@@ -313,6 +317,12 @@ class DeletesV1
             ]);
 
             Authorization::reset();
+
+            var_dump("chunk=".$chunk);
+            var_dump("sum=".$sum);
+            var_dump("limit=".$limit);
+            var_dump("offset=".$count);
+            var_dump("count(results)=".count($results));
 
             $sum = count($results);
 
