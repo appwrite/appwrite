@@ -159,6 +159,8 @@ trait TeamsBaseClient
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
         $data['session'] = $session;
 
+
+        /** [START] TESTS TO CHECK PASSWORD UPDATE OF NEW USER CREATED USING TEAM INVITE */
         /**
          * New User tries to update password without old password -> SHOULD PASS
          */
@@ -212,6 +214,8 @@ trait TeamsBaseClient
         $this->assertIsNumeric($response['body']['registration']);
         $this->assertEquals($response['body']['email'], $email);
         $this->assertEquals($response['body']['name'], $name);
+
+        /** [END] TESTS TO CHECK PASSWORD UPDATE OF NEW USER CREATED USING TEAM INVITE */
 
         /**
          * Test for FAILURE
