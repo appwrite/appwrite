@@ -415,7 +415,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                     data-failure-param-alert-classname="error">
 
                                     <input name="teamId" data-ls-attrs="id=leave-teamId-{{member.$id}}" type="hidden" data-ls-bind="{{console-project.teamId}}">
-                                    <input name="inviteId" data-ls-attrs="id=leave-inviteId-{{member.$id}}" type="hidden" data-ls-bind="{{member.$id}}">
+                                    <input name="membershipId" data-ls-attrs="id=leave-membershipId-{{member.$id}}" type="hidden" data-ls-bind="{{member.$id}}">
 
                                     <button class="danger">Leave</button>
                                 </form>
@@ -437,7 +437,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                         data-failure-param-alert-classname="error">
 
                                         <input name="teamId" data-ls-attrs="id=resend-teamId-{{member.$id}}" type="hidden" data-ls-bind="{{console-project.teamId}}">
-                                        <input name="inviteId" data-ls-attrs="id=resend-inviteId-{{member.$id}}" type="hidden" data-ls-bind="{{member.$id}}">
+                                        <input name="membershipId" data-ls-attrs="id=resend-membershipId-{{member.$id}}" type="hidden" data-ls-bind="{{member.$id}}">
 
                                         <button class="reverse">Resend</button>
                                     </form>

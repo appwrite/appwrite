@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Database\Database;
 use Appwrite\Specification\Format\OpenAPI3;
 use Appwrite\Specification\Format\Swagger2;
 use Appwrite\Specification\Specification;
@@ -42,10 +43,38 @@ App::get('/')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('response')
-    ->action(function ($response) {
+    ->inject('consoleDB')
+    ->inject('project')
+    ->action(function ($response, $consoleDB, $project) {
         /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Appwrite\Database\Document $project */
 
-        $response->redirect('/auth/signin');
+        $response
+            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->addHeader('Expires', 0)
+            ->addHeader('Pragma', 'no-cache')
+        ;
+
+        if ('console' === $project->getId() || $project->isEmpty()) {
+            $whitlistRoot = App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled');
+
+            if($whitlistRoot !== 'disabled') {
+                $consoleDB->getCollection([ // Count users
+                    'filters' => [
+                        '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                    ],
+                ]);
+                    
+                $sum = $consoleDB->getSum();
+
+                if($sum !== 0) {
+                    return $response->redirect('/auth/signin');
+                }
+            }
+        }
+
+        $response->redirect('/auth/signup');
     });
 
 App::get('/auth/signin')
@@ -57,6 +86,10 @@ App::get('/auth/signin')
         /** @var Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/home/auth/signin.phtml');
+
+        $page
+            ->setParam('root', App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled'))
+        ;
 
         $layout
             ->setParam('title', 'Sign In - '.APP_NAME)
@@ -72,6 +105,10 @@ App::get('/auth/signup')
         /** @var Utopia\View $layout */
         $page = new View(__DIR__.'/../../views/home/auth/signup.phtml');
 
+        $page
+            ->setParam('root', App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled'))
+        ;
+
         $layout
             ->setParam('title', 'Sign Up - '.APP_NAME)
             ->setParam('body', $page);
@@ -86,6 +123,10 @@ App::get('/auth/recovery')
         /** @var Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/home/auth/recovery.phtml');
+
+        $page
+            ->setParam('smtpEnabled', (!empty(App::getEnv('_APP_SMTP_HOST'))))
+        ;
 
         $layout
             ->setParam('title', 'Password Recovery - '.APP_NAME)

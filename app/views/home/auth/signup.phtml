@@ -1,3 +1,6 @@
+<?php
+$root = ($this->getParam('root') !== 'disabled');
+?>
 <div class="zone medium signup">
     <h1 class="zone xl margin-bottom-large margin-top">
         Sign Up
@@ -23,6 +26,10 @@
         data-failure-param-alert-text="Registration Failed. Please try again later"
         data-failure-param-alert-classname="error">
 
+        <?php if($root): ?>
+            <p>Please create your root account</p>
+        <?php endif; ?>
+
         <label>Name</label>
         <input name="name" type="text" autocomplete="name" placeholder="" required maxlength="128">
 
@@ -44,6 +51,8 @@
 
 </div>
 
+<?php if(!$root): ?>
 <div class="zone medium text-align-center">
     <a href="/auth/signin">Already have an account?</a>
 </div>
+<?PHP endif; ?>

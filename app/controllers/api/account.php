@@ -61,7 +61,6 @@ App::post('/v1/account')
         if ('console' === $project->getId()) {
             $whitlistEmails = $project->getAttribute('authWhitelistEmails');
             $whitlistIPs = $project->getAttribute('authWhitelistIPs');
-            $whitlistDomains = $project->getAttribute('authWhitelistDomains');
 
             if (!empty($whitlistEmails) && !\in_array($email, $whitlistEmails)) {
                 throw new Exception('Console registration is restricted to specific emails. Contact your administrator for more information.', 401);
@@ -69,10 +68,6 @@ App::post('/v1/account')
 
             if (!empty($whitlistIPs) && !\in_array($request->getIP(), $whitlistIPs)) {
                 throw new Exception('Console registration is restricted to specific IPs. Contact your administrator for more information.', 401);
-            }
-
-            if (!empty($whitlistDomains) && !\in_array(\substr(\strrchr($email, '@'), 1), $whitlistDomains)) {
-                throw new Exception('Console registration is restricted to specific domains. Contact your administrator for more information.', 401);
             }
         }
 

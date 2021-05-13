@@ -36,18 +36,6 @@ class Host extends Validator
     }
 
     /**
-     * Get Type
-     *
-     * Returns validator type.
-     *
-     * @return string
-     */
-    public function getType()
-    {
-        return 'string';
-    }
-
-    /**
      * Is valid
      *
      * Validation will pass when $value starts with one of the given hosts
@@ -68,5 +56,29 @@ class Host extends Validator
         }
 
         return false;
+    }
+
+    /**
+     * Is array
+     *
+     * Function will return true if object is array.
+     *
+     * @return bool
+     */
+    public function isArray(): bool
+    {
+        return false;
+    }
+
+    /**
+     * Get Type
+     *
+     * Returns validator type.
+     *
+     * @return string
+     */
+    public function getType(): string
+    {
+        return self::TYPE_STRING;
     }
 }
