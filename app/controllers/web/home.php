@@ -43,11 +43,11 @@ App::get('/')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('response')
+    ->inject('consoleDB')
     ->inject('project')
-    ->inject('projectDB')
-    ->action(function ($response, $projectDB, $project) {
+    ->action(function ($response, $consoleDB, $project) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Database\Database $consoleDB */
         /** @var Appwrite\Database\Document $project */
 
         $response
@@ -56,18 +56,18 @@ App::get('/')
             ->addHeader('Pragma', 'no-cache')
         ;
 
-        if ('console' === $project->getId()) {
+        if ('console' === $project->getId() || $project->isEmpty()) {
             $whitlistRoot = App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled');
 
             if($whitlistRoot !== 'disabled') {
-                $projectDB->getCollection([ // Count users
+                $consoleDB->getCollection([ // Count users
                     'filters' => [
                         '$collection='.Database::SYSTEM_COLLECTION_USERS,
                     ],
                 ]);
                     
-                $sum = $projectDB->getSum();
-                
+                $sum = $consoleDB->getSum();
+
                 if($sum !== 0) {
                     return $response->redirect('/auth/signin');
                 }
