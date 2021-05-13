@@ -1,24 +1,24 @@
 # Version 0.8.0 (Not Released Yet)
 
 ## Features
-
+- Refactoring SSL generation to work on every request so no domain environment variable is required for SSL generation (#1133)
 - Added Anonymous Login ([RFC-010](https://github.com/appwrite/rfc/blob/main/010-anonymous-login.md), #914)
 - Added events for functions and executions (#971)
 - Added JWT support (#784)
 - Added ARM support (#726)
-- Splitted token & session models to become 2 different internal entities (#922)
+- Split token & session models to become 2 different internal entities (#922)
 - Added Dart 2.12 as a new Cloud Functions runtime (#989)
 - Added option to disable email/password (#947)
 - Added option to disable anonymous login (need to merge and apply changed) (#947)
 - Added option to disable JWT auth (#947)
 - Added option to disable team invites (#947)
-- Option to limit number of users (good for app launches + god account PR) (#947)
+- Option to limit number of users (good for app launches + root account PR) (#947)
 - Added 2 new endpoints to the projects API to allow new settings 
 - Enabled 501 errors (Not Implemented) from the error handler
 - Added Python 3.9 as a new Cloud Functions runtime (#1044)
 - Added Deno 1.8 as a new Cloud Functions runtime (#989)
 - Upgraded to PHP 8.0 (#713)
-- ClamAV is now disabled by default to allow lower min requirments for Appwrite (#1064)
+- ClamAV is now disabled by default to allow lower min requirements for Appwrite (#1064)
 - Added a new env var named `_APP_LOCALE` that allow to change the default `en` locale value (#1056)
 - Updated all the console bottom control to be consistent. Dropped the `+` icon (#1062)
 - Added Response Models for Documents and Preferences (#1075, #1102)
@@ -29,6 +29,9 @@
 - Fixed default value for HTTPS force option
 - Fixed form array casting in dashboard (#1070)
 - Fixed collection document rule form in dashboard (#1069)
+- Bugs in the Teams API:
+  - Fixed incorrect audit worker event names (#1143)
+  - Increased limit of memberships fetched in `createTeamMembership` to 2000 (#1143)
 
 ## Breaking Changes (Read before upgrading!)
 
