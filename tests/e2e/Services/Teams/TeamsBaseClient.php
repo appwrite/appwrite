@@ -157,7 +157,10 @@ trait TeamsBaseClient
         $this->assertIsInt($response['body']['joined']);
         $this->assertEquals(true, $response['body']['confirm']);
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+        $data['session'] = $session;
 
+
+        /** [START] TESTS TO CHECK PASSWORD UPDATE OF NEW USER CREATED USING TEAM INVITE */
         /**
          * New User tries to update password without old password -> SHOULD PASS
          */
@@ -212,6 +215,8 @@ trait TeamsBaseClient
         $this->assertEquals($response['body']['email'], $email);
         $this->assertEquals($response['body']['name'], $name);
 
+        /** [END] TESTS TO CHECK PASSWORD UPDATE OF NEW USER CREATED USING TEAM INVITE */
+
         /**
          * Test for FAILURE
          */
@@ -265,6 +270,81 @@ trait TeamsBaseClient
     /**
      * @depends testUpdateTeamMembership
      */
+    public function testUpdateTeamMembershipRoles($data):array
+    {
+        $teamUid = $data['teamUid'] ?? '';
+        $membershipUid = $data['membershipUid'] ?? '';
+        $session = $data['session'] ?? '';
+
+        /**
+         * Test for SUCCESS
+         */
+        $roles = ['admin', 'editor', 'uncle'];
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/'.$teamUid.'/memberships/'.$membershipUid, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'roles' => $roles
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['userId']);
+        $this->assertNotEmpty($response['body']['teamId']);
+        $this->assertCount(count($roles), $response['body']['roles']);
+        $this->assertEquals($roles[0], $response['body']['roles'][0]);
+        $this->assertEquals($roles[1], $response['body']['roles'][1]);
+        $this->assertEquals($roles[2], $response['body']['roles'][2]);
+
+        /**
+         * Test for unknown team
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/'.'abc'.'/memberships/'.$membershipUid, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'roles' => $roles
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        /**
+         * Test for unknown membership ID
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/'.$teamUid.'/memberships/'.'abc', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'roles' => $roles
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        
+        /**
+         * Test for when a user other than the owner tries to update membership
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/'.$teamUid.'/memberships/'.$membershipUid, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ], [
+            'roles' => $roles
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('User is not allowed to modify roles', $response['body']['message']);
+        
+        return $data;
+    }
+
+     /**
+     * @depends testUpdateTeamMembershipRoles
+     */
     public function testDeleteTeamMembership($data):array
     {
         $teamUid = $data['teamUid'] ?? '';
@@ -296,4 +376,5 @@ trait TeamsBaseClient
 
         return [];
     }
+
 }

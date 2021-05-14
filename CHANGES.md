@@ -22,6 +22,7 @@
 - Added a new env var named `_APP_LOCALE` that allow to change the default `en` locale value (#1056)
 - Updated all the console bottom control to be consistent. Dropped the `+` icon (#1062)
 - Added Response Models for Documents and Preferences (#1075, #1102)
+- Added new endpoint to update team membership roles (#1142)
 
 ## Bugs
 
