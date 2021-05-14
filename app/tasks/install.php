@@ -15,7 +15,7 @@ $cli
     ->desc('Install Appwrite')
     ->param('httpPort', '', new Text(4), 'Server HTTP port', true)
     ->param('httpsPort', '', new Text(4), 'Server HTTPS port', true)
-    ->param('interactive','Y', new Text(1), 'Run a interactive session', true)
+    ->param('interactive','Y', new Text(1), 'Run an interactive session', true)
     ->action(function ($httpPort, $httpsPort, $interactive) {
         /**
          * 1. Start - DONE
