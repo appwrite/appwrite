@@ -8,11 +8,15 @@ use Utopia\Analytics\GoogleAnalytics;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\View;
+use Utopia\Validator\Text;
 
 $cli
     ->task('install')
     ->desc('Install Appwrite')
-    ->action(function () {
+    ->param('httpPort', '', new Text(4), 'Server HTTP port', true)
+    ->param('httpsPort', '', new Text(4), 'Server HTTPS port', true)
+    ->param('interactive','Y', new Text(1), 'Run an interactive session', true)
+    ->action(function ($httpPort, $httpsPort, $interactive) {
         /**
          * 1. Start - DONE
          * 2. Check for older setup and get older version - DONE
@@ -108,16 +112,20 @@ $cli
             }
         }
 
-        $httpPort = Console::confirm('Choose your server HTTP port: (default: '.$defaultHTTPPort.')');
-        $httpPort = ($httpPort) ? $httpPort : $defaultHTTPPort;
+        if(empty($httpPort)) {
+            $httpPort = Console::confirm('Choose your server HTTP port: (default: '.$defaultHTTPPort.')');
+            $httpPort = ($httpPort) ? $httpPort : $defaultHTTPPort;
+        }
 
-        $httpsPort = Console::confirm('Choose your server HTTPS port: (default: '.$defaultHTTPSPort.')');
-        $httpsPort = ($httpsPort) ? $httpsPort : $defaultHTTPSPort;
+        if(empty($httpsPort)) {
+            $httpsPort = Console::confirm('Choose your server HTTPS port: (default: '.$defaultHTTPSPort.')');
+            $httpsPort = ($httpsPort) ? $httpsPort : $defaultHTTPSPort;
+        }
     
         $input = [];
 
         foreach($vars as $key => $var) {
-            if(!$var['required']) {
+            if(!$var['required'] || !Console::isInteractive() || $interactive !== 'Y') {
                 $input[$var['name']] = $var['default'];
                 continue;
             }
