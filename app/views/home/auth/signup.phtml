@@ -1,7 +1,14 @@
 <?php
 $root = ($this->getParam('root') !== 'disabled');
 ?>
-<div class="zone medium signup">
+<div class="zone medium signup" class="zone medium"
+    data-service="account.get"
+    data-name="account"
+    data-scope="console"
+    data-event="load"
+    data-success="redirect"
+    data-success-param-redirect-url="/console"
+    data-success-param-trigger-events="account.get">
     <h1 class="zone xl margin-bottom-large margin-top">
         Sign Up
     </h1>
