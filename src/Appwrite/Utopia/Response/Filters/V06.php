@@ -21,7 +21,7 @@ class V06 extends Filter {
         
         $parsedResponse = [];
 
-        switch($model) {            
+        switch($model) {
 
             case Response::MODEL_DOCUMENT_LIST:
                 $parsedResponse = $content; 
@@ -114,7 +114,7 @@ class V06 extends Filter {
                 break;
 
             default:
-                throw new Exception('Recevied invalid model : '.$model);
+                throw new Exception('Received invalid model : '.$model);
         }
 
         return $parsedResponse;
