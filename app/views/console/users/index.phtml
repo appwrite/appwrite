@@ -414,6 +414,7 @@ $auth = $this->getParam('auth', []);
                                 <h1><?php echo $this->escape($name); ?> <?php if($sandbox): ?>Sandbox<?php endif; ?> OAuth2 Settings</h1>
 
                                 <form
+                                    autocomplete="off"
                                     data-analytics
                                     data-analytics-activity
                                     data-analytics-event="submit"
@@ -429,6 +430,10 @@ $auth = $this->getParam('auth', []);
                                     data-failure="alert"
                                     data-failure-param-alert-text="Failed to update project OAuth2 settings"
                                     data-failure-param-alert-classname="error">
+                                    
+                                    <input style="display: none" type="text" />
+                                    <input style="display: none" type="password" />
+                                    
                                     <input name="provider" id="provider<?php echo $this->escape(ucfirst($provider)); ?>" type="hidden" autocomplete="off" value="<?php echo $this->escape($provider); ?>">
 
                                     <?php if(!$form): ?>
