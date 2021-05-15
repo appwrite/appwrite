@@ -15,6 +15,7 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Response\Filters\V06;
+use Appwrite\Utopia\Response\Filters\V07;
 use Utopia\CLI\Console;
 use Utopia\Database\Validator\Authorization as Authorization2;
 
@@ -135,6 +136,9 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
         switch($responseFormat) {
             case version_compare ($responseFormat , '0.6.2', '<=') :
                 Response::setFilter(new V06());
+                break;
+            case version_compare ($responseFormat , '0.7.2', '<=') :
+                Response::setFilter(new V07());
                 break;
             default:
                 Response::setFilter(null);
