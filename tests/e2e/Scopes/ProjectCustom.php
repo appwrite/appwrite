@@ -154,4 +154,25 @@ trait ProjectCustom
 
         return self::$project;
     }
+
+    public function getNewKey(array $scopes) {
+
+        $projectId = self::$project['$id'];
+
+        $key = $this->client->call(Client::METHOD_POST, '/projects/' . $projectId . '/keys', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'name' => 'Demo Project Key',
+            'scopes' => $scopes,
+        ]);
+
+        $this->assertEquals(201, $key['headers']['status-code']);
+        $this->assertNotEmpty($key['body']);
+        $this->assertNotEmpty($key['body']['secret']);
+
+        return $key['body']['secret'];
+    }
 }

@@ -43,6 +43,7 @@ trait TeamsBaseClient
         $teamUid = $data['teamUid'] ?? '';
         $teamName = $data['teamName'] ?? '';
         $email = uniqid().'friend@localhost.test';
+        $name = 'Friend User';
 
         /**
          * Test for SUCCESS
@@ -52,7 +53,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'email' => $email,
-            'name' => 'Friend User',
+            'name' => $name,
             'roles' => ['admin', 'editor'],
             'url' => 'http://localhost:5000/join-us#title'
         ]);
@@ -68,7 +69,7 @@ trait TeamsBaseClient
         $lastEmail = $this->getLastEmail();
 
         $this->assertEquals($email, $lastEmail['to'][0]['address']);
-        $this->assertEquals('Friend User', $lastEmail['to'][0]['name']);
+        $this->assertEquals($name, $lastEmail['to'][0]['name']);
         $this->assertEquals('Invitation to '.$teamName.' Team at '.$this->getProject()['name'], $lastEmail['subject']);
 
         $secret = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
@@ -96,7 +97,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'email' => 'dasdkaskdjaskdjasjkd',
-            'name' => 'Friend User',
+            'name' => $name,
             'roles' => ['admin', 'editor'],
             'url' => 'http://localhost:5000/join-us#title'
         ]);
@@ -108,7 +109,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'email' => $email,
-            'name' => 'Friend User',
+            'name' => $name,
             'roles' => 'bad string',
             'url' => 'http://localhost:5000/join-us#title'
         ]);
@@ -120,7 +121,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'email' => $email,
-            'name' => 'Friend User',
+            'name' => $name,
             'roles' => ['admin', 'editor'],
             'url' => 'http://example.com/join-us#title' // bad url
         ]);
@@ -132,6 +133,8 @@ trait TeamsBaseClient
             'secret' => $secret,
             'membershipUid' => $membershipUid,
             'userUid' => $userUid,
+            'email' => $email,
+            'name' => $name
         ];
     }
 
@@ -144,6 +147,8 @@ trait TeamsBaseClient
         $secret = $data['secret'] ?? '';
         $membershipUid = $data['membershipUid'] ?? '';
         $userUid = $data['userUid'] ?? '';
+        $email = $data['email'] ?? '';
+        $name = $data['name'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -164,6 +169,66 @@ trait TeamsBaseClient
         $this->assertCount(2, $response['body']['roles']);
         $this->assertIsInt($response['body']['joined']);
         $this->assertEquals(true, $response['body']['confirm']);
+        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+        $data['session'] = $session;
+
+
+        /** [START] TESTS TO CHECK PASSWORD UPDATE OF NEW USER CREATED USING TEAM INVITE */
+        /**
+         * New User tries to update password without old password -> SHOULD PASS
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]), [
+            'password' => 'new-password'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertIsArray($response['body']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertEquals($response['body']['email'], $email);
+        $this->assertEquals($response['body']['name'], $name);
+
+        /**
+         * New User again tries to update password with ONLY new password -> SHOULD FAIL
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]), [
+            'password' => 'new-password',
+        ]);
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        /**
+         * New User tries to update password by passing both old and new password -> SHOULD PASS
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]), [
+            'password' => 'newer-password',
+            'oldPassword' => 'new-password'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertIsArray($response['body']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertEquals($response['body']['email'], $email);
+        $this->assertEquals($response['body']['name'], $name);
+
+        /** [END] TESTS TO CHECK PASSWORD UPDATE OF NEW USER CREATED USING TEAM INVITE */
 
         /**
          * Test for FAILURE
@@ -218,6 +283,81 @@ trait TeamsBaseClient
     /**
      * @depends testUpdateTeamMembership
      */
+    public function testUpdateTeamMembershipRoles($data):array
+    {
+        $teamUid = $data['teamUid'] ?? '';
+        $membershipUid = $data['membershipUid'] ?? '';
+        $session = $data['session'] ?? '';
+
+        /**
+         * Test for SUCCESS
+         */
+        $roles = ['admin', 'editor', 'uncle'];
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/'.$teamUid.'/memberships/'.$membershipUid, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'roles' => $roles
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['userId']);
+        $this->assertNotEmpty($response['body']['teamId']);
+        $this->assertCount(count($roles), $response['body']['roles']);
+        $this->assertEquals($roles[0], $response['body']['roles'][0]);
+        $this->assertEquals($roles[1], $response['body']['roles'][1]);
+        $this->assertEquals($roles[2], $response['body']['roles'][2]);
+
+        /**
+         * Test for unknown team
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/'.'abc'.'/memberships/'.$membershipUid, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'roles' => $roles
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        /**
+         * Test for unknown membership ID
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/'.$teamUid.'/memberships/'.'abc', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'roles' => $roles
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        
+        /**
+         * Test for when a user other than the owner tries to update membership
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/'.$teamUid.'/memberships/'.$membershipUid, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ], [
+            'roles' => $roles
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('User is not allowed to modify roles', $response['body']['message']);
+        
+        return $data;
+    }
+
+     /**
+     * @depends testUpdateTeamMembershipRoles
+     */
     public function testDeleteTeamMembership($data):array
     {
         $teamUid = $data['teamUid'] ?? '';
@@ -249,4 +389,5 @@ trait TeamsBaseClient
 
         return [];
     }
+
 }

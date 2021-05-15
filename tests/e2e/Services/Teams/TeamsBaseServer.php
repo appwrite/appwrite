@@ -64,6 +64,7 @@ trait TeamsBaseServer
         $this->assertEquals(true, $response['body']['confirm']);
 
         $userUid = $response['body']['userId'];
+        $membershipUid = $response['body']['$id'];
 
         // $response = $this->client->call(Client::METHOD_GET, '/users/'.$userUid, array_merge([
         //     'content-type' => 'application/json',
@@ -130,6 +131,55 @@ trait TeamsBaseServer
         return [
             'teamUid' => $teamUid,
             'userUid' => $userUid,
+            'membershipUid' => $membershipUid
         ];
+    }
+
+    /**
+     * @depends testCreateTeamMembership
+     */
+    public function testUpdateMembershipRoles($data)
+    {
+        $teamUid = $data['teamUid'] ?? '';
+        $membershipUid = $data['membershipUid'] ?? '';
+
+        /**
+         * Test for SUCCESS
+         */
+        $roles = ['admin', 'editor', 'uncle'];
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/'.$teamUid.'/memberships/'.$membershipUid, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'roles' => $roles
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['userId']);
+        $this->assertNotEmpty($response['body']['teamId']);
+        $this->assertCount(count($roles), $response['body']['roles']);
+        $this->assertEquals($roles[0], $response['body']['roles'][0]);
+        $this->assertEquals($roles[1], $response['body']['roles'][1]);
+        $this->assertEquals($roles[2], $response['body']['roles'][2]);
+
+
+        /**
+         * Test for FAILURE
+         */
+        $apiKey = $this->getNewKey(['teams.read']);
+        $roles = ['admin', 'editor', 'uncle'];
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/'.$teamUid.'/memberships/'.$membershipUid, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $apiKey
+        ], [
+            'roles' => $roles
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
     }
 }

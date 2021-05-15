@@ -289,7 +289,12 @@ App::post('/v1/teams/:teamId/memberships')
                     'emailVerification' => false,
                     'status' => Auth::USER_STATUS_UNACTIVATED,
                     'password' => Auth::passwordHash(Auth::passwordGenerator()),
-                    'passwordUpdate' => \time(),
+                    /** 
+                     * Set the password update time to 0 for users created using 
+                     * team invite and OAuth to allow password updates without an 
+                     * old password 
+                     */
+                    'passwordUpdate' => 0,
                     'registration' => \time(),
                     'reset' => false,
                     'name' => $name,
@@ -376,9 +381,9 @@ App::post('/v1/teams/:teamId/memberships')
             ->setParam('{{text-cta}}', '#ffffff')
         ;
 
-        if (!$isPrivilegedUser && !$isAppUser) { // No need in comfirmation when in admin or app mode
+        if (!$isPrivilegedUser && !$isAppUser) { // No need of confirmation when in admin or app mode
             $mails
-                ->setParam('event', 'teams.membership.create')
+                ->setParam('event', 'teams.memberships.create')
                 ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name')))
                 ->setParam('recipient', $email)
                 ->setParam('name', $name)
@@ -390,7 +395,7 @@ App::post('/v1/teams/:teamId/memberships')
 
         $audits
             ->setParam('userId', $invitee->getId())
-            ->setParam('event', 'teams.membership.create')
+            ->setParam('event', 'teams.memberships.create')
             ->setParam('resource', 'teams/'.$teamId)
         ;
 
@@ -447,6 +452,72 @@ App::get('/v1/teams/:teamId/memberships')
             'sum' => $sum,
             'memberships' => $users
         ]), Response::MODEL_MEMBERSHIP_LIST);
+    });
+
+
+App::patch('/v1/teams/:teamId/memberships/:membershipId')
+    ->desc('Update Membership Roles')
+    ->groups(['api', 'teams'])
+    ->label('event', 'teams.memberships.update')
+    ->label('scope', 'teams.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'teams')
+    ->label('sdk.method', 'updateMembershipRoles')
+    ->label('sdk.description', '/docs/references/teams/update-team-membership-roles.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
+    ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->param('membershipId', '', new UID(), 'Membership ID.')
+    ->param('roles', [], new ArrayList(new Key()), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForInternal')
+    ->inject('audits')
+    ->action(function ($teamId, $membershipId, $roles, $request, $response, $user, $dbForInternal, $audits) {
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Appwrite\Event\Event $audits */
+
+        $team = $dbForInternal->getDocument('teams', $teamId);
+        if ($team->isEmpty()) {
+            throw new Exception('Team not found', 404);
+        }
+
+        $membership = $dbForInternal->getDocument('memberships', $membershipId);
+        if ($membership->isEmpty()) {
+            throw new Exception('Membership not found', 404);
+        }
+
+        $profile = $dbForInternal->getDocument('users', $membership->getAttribute('userId'));
+        if ($profile->isEmpty()) {
+            throw new Exception('User not found', 404);
+        }
+
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
+        $isAppUser = Auth::isAppUser(Authorization::$roles);
+        $isOwner = Authorization::isRole('team:'.$team->getId().'/owner');;
+        
+        if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
+            throw new Exception('User is not allowed to modify roles', 401);
+        }
+
+        // Update the roles
+        $membership->setAttribute('roles', $roles);
+        $membership = $dbForInternal->updateDocument('memberships', $membership->getId(), $membership);
+
+        //TODO sync updated membership in the user $profile object using TYPE_REPLACE
+
+        $audits
+            ->setParam('userId', $user->getId())
+            ->setParam('event', 'teams.memberships.update')
+            ->setParam('resource', 'teams/'.$teamId)
+        ;
+
+        $response->dynamic2($membership, Response::MODEL_MEMBERSHIP);
     });
 
 App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
@@ -506,7 +577,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         if ($userId != $membership->getAttribute('userId')) {
-            throw new Exception('Invite not belong to current user ('.$user->getAttribute('email').')', 401);
+            throw new Exception('Invite does not belong to current user ('.$user->getAttribute('email').')', 401);
         }
 
         if (empty($user->getId())) {
@@ -514,7 +585,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         if ($membership->getAttribute('userId') !== $user->getId()) {
-            throw new Exception('Invite not belong to current user ('.$user->getAttribute('email').')', 401);
+            throw new Exception('Invite does not belong to current user ('.$user->getAttribute('email').')', 401);
         }
 
         $membership // Attach user to team
@@ -560,7 +631,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $audits
             ->setParam('userId', $user->getId())
-            ->setParam('event', 'teams.membership.update')
+            ->setParam('event', 'teams.memberships.update.status')
             ->setParam('resource', 'teams/'.$teamId)
         ;
 
@@ -653,7 +724,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
 
         $audits
             ->setParam('userId', $membership->getAttribute('userId'))
-            ->setParam('event', 'teams.membership.delete')
+            ->setParam('event', 'teams.memberships.delete')
             ->setParam('resource', 'teams/'.$teamId)
         ;
 

@@ -109,18 +109,6 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
     });
 });
 
-$domain = App::getEnv('_APP_DOMAIN', '');
-
-Console::info('Issuing a TLS certificate for the master domain ('.$domain.') in 30 seconds.
-    Make sure your domain points to your server IP or restart your Appwrite server to try again.'); // TODO move this to installation script
-
-ResqueScheduler::enqueueAt(\time() + 30, 'v1-certificates', 'CertificatesV1', [
-    'document' => [],
-    'domain' => $domain,
-    'validateTarget' => false,
-    'validateCNAME' => false,
-]);
-
 $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) {
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
