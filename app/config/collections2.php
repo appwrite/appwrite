@@ -7,6 +7,186 @@ $providers = Config::getParam('providers', []);
 $auth = Config::getParam('auth', []);
 
 $collections = [
+    'projects' => [
+        '$collection' => Database::COLLECTIONS,
+        '$id' => 'projects',
+        'name' => 'Projects',
+        'attributes' => [
+            [
+                '$id' => 'name',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 128,
+                'signed' => true,
+                'required' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'description',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 256,
+                'signed' => true,
+                'required' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'teamId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'logo',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'url',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'usersAuthLimit',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'legalName',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 256,
+                'signed' => true,
+                'required' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'legalCountry',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 256,
+                'signed' => true,
+                'required' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'legalState',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 256,
+                'signed' => true,
+                'required' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'legalCity',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 256,
+                'signed' => true,
+                'required' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'legalAddress',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 256,
+                'signed' => true,
+                'required' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'legalTaxId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 256,
+                'signed' => true,
+                'required' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'platforms',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'array' => true,
+                'filters' => ['json'],
+            ],
+            [
+                '$id' => 'webhooks',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'array' => true,
+                'filters' => ['json'],
+            ],
+            [
+                '$id' => 'keys',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'array' => true,
+                'filters' => ['json'],
+            ],
+            [
+                '$id' => 'tasks',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'array' => true,
+                'filters' => ['json'],
+            ],
+            [
+                '$id' => 'domains',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'array' => true,
+                'filters' => ['json'],
+            ],
+        ],
+        'indexes' => [
+        ],
+    ],
+
     'users' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'users',
@@ -759,5 +939,49 @@ $collections = [
         ],
     ],
 ];
+
+/*
+ * Add enabled OAuth2 providers to default data rules
+ */
+foreach ($providers as $index => $provider) {
+    if (!$provider['enabled']) {
+        continue;
+    }
+
+    $collections['projects']['attributes'][] = [
+        '$id' => 'usersOauth2'.\ucfirst($index).'Appid',
+        'type' => Database::VAR_STRING,
+        'format' => '',
+        'size' => 16384,
+        'signed' => true,
+        'required' => false,
+        'array' => false,
+        'filters' => [],
+    ];
+
+    $collections['projects']['attributes'][] = [
+        '$id' => 'usersOauth2'.\ucfirst($index).'Secret',
+        'type' => Database::VAR_STRING,
+        'format' => '',
+        'size' => 16384,
+        'signed' => true,
+        'required' => false,
+        'array' => false,
+        'filters' => [],
+    ];
+}
+
+foreach ($auth as $index => $method) {
+    $collections['projects']['attributes'][] = [
+        '$id' => $method['key'] ?? '',
+        'type' => Database::VAR_BOOLEAN,
+        'format' => '',
+        'size' => 0,
+        'signed' => true,
+        'required' => false,
+        'array' => false,
+        'filters' => [],
+    ];
+}
 
 return $collections;

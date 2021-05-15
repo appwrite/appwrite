@@ -17,6 +17,7 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Response\Filters\V06;
 use Appwrite\Utopia\Response\Filters\V07;
 use Utopia\CLI\Console;
+use Utopia\Database\Document as Document2;
 use Utopia\Database\Validator\Authorization as Authorization2;
 
 Config::setParam('domainVerification', false);
@@ -28,11 +29,11 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
     /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Database\Database $consoleDB */
     /** @var Appwrite\Database\Document $console */
-    /** @var Appwrite\Database\Document $project */
-    /** @var Appwrite\Database\Document $user */
+    /** @var Utopia\Database\Document $project */
+    /** @var Utopia\Database\Document $user */
     /** @var Utopia\Locale\Locale $locale */
     /** @var array $clients */
-    
+
     $domain = $request->getHostname();
     $domains = Config::getParam('domains', []);
     if (!array_key_exists($domain, $domains)) {
@@ -129,8 +130,8 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
     );
 
     /* 
-    * Response format
-    */
+     * Response format
+     */
     $responseFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
     if ($responseFormat) {
         switch($responseFormat) {
@@ -192,7 +193,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
     $role = ($user->isEmpty()) ? Auth::USER_ROLE_GUEST : Auth::USER_ROLE_MEMBER;
 
     // Add user roles
-    $membership = $user->search('teamId', $project->getAttribute('teamId', null), $user->getAttribute('memberships', []));
+    $membership = $user->find('teamId', $project->getAttribute('teamId', null), 'memberships');
 
     if ($membership) {
         foreach ($membership->getAttribute('roles', []) as $memberRole) {
@@ -218,14 +219,14 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
 
     if (!empty($authKey)) { // API Key authentication
         // Check if given key match project API keys
-        $key = $project->search('secret', $authKey, $project->getAttribute('keys', []));
+        $key = $project->find('secret', $authKey, 'keys');
             
         /*
          * Try app auth when we have project key and no user
          *  Mock user to app and grant API key scopes in addition to default app scopes
          */
         if ($key && $user->isEmpty()) {
-            $user = new Document([
+            $user = new Document2([
                 '$id' => '',
                 'status' => Auth::USER_STATUS_ACTIVATED,
                 'email' => 'app.'.$project->getId().'@service.'.$request->getHostname(),

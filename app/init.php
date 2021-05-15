@@ -33,6 +33,7 @@ use PDO as PDONative;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Document as Document2;
 use Utopia\Database\Database as Database2;
 use Utopia\Database\Validator\Authorization as Authorization2;
 
@@ -455,18 +456,17 @@ App::setResource('user', function($mode, $project, $console, $request, $response
         ;
     }
 
-    if (empty($user->getId()) // Check a document has been found in the DB
-        || Database::SYSTEM_COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
+    if ($user->isEmpty() // Check a document has been found in the DB
         || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)) { // Validate user has valid login token
-        $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+        $user = new Document2(['$id' => '', '$collection' => 'users']);
     }
 
     if (APP_MODE_ADMIN === $mode) {
-        if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
+        if (!$user->find('teamId', $project->getAttribute('teamId'), 'memberships')) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
             Authorization2::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         } else {
-            $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+            $user = new Document2(['$id' => '', '$collection' => 'users']);
         }
     }
 
@@ -488,8 +488,8 @@ App::setResource('user', function($mode, $project, $console, $request, $response
             $user = $dbForInternal->getDocument('users', $jwtUserId);
         }
 
-        if (empty($user->search('$id', $jwtSessionId, $user->getAttribute('sessions')))) { // Match JWT to active token
-            $user = new Document(['$id' => '', '$collection' => 'users']);
+        if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
+            $user = new Document2(['$id' => '', '$collection' => 'users']);
         }
     }
 
