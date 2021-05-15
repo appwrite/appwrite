@@ -431,8 +431,8 @@ $auth = $this->getParam('auth', []);
                                     data-failure-param-alert-text="Failed to update project OAuth2 settings"
                                     data-failure-param-alert-classname="error">
                                     
-                                    <input style="display: none" type="text" />
-                                    <input style="display: none" type="password" />
+                                    <input style="display: none" type="text" /> <?php /** Disabling Chrone Autofill @see https://stackoverflow.com/a/15917221/2299554 */ ?>
+                                    <input style="display: none" type="password" /> <?php /** Disabling Chrone Autofill @see https://stackoverflow.com/a/15917221/2299554 */ ?>
                                     
                                     <input name="provider" id="provider<?php echo $this->escape(ucfirst($provider)); ?>" type="hidden" autocomplete="off" value="<?php echo $this->escape($provider); ?>">
 
