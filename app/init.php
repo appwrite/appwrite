@@ -445,15 +445,11 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     Auth::$unique = $session['id'] ?? '';
     Auth::$secret = $session['secret'] ?? '';
 
-    if (APP_MODE_ADMIN !== $mode) {
+    if (APP_MODE_ADMIN !== $mode && $project->getId() !== 'console') {
         $user = $dbForInternal->getDocument('users', Auth::$unique);
     }
     else {
         $user = $dbForConsole->getDocument('users', Auth::$unique);
-
-        $user
-            ->setAttribute('$id', 'admin-'.$user->getAttribute('$id'))
-        ;
     }
 
     if ($user->isEmpty() // Check a document has been found in the DB
@@ -496,25 +492,70 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     return $user;
 }, ['mode', 'project', 'console', 'request', 'response', 'dbForInternal', 'dbForConsole']);
 
-App::setResource('project', function($consoleDB, $request) {
+App::setResource('project', function($dbForConsole, $request, $console) {
     /** @var Utopia\Swoole\Request $request */
-    /** @var Appwrite\Database\Database $consoleDB */
+    /** @var Appwrite\Database\Database $dbForConsole */
+    /** @var Appwrite\Database\Document $console */
+
+    $projectId = $request->getParam('project',
+        $request->getHeader('x-appwrite-project', ''));
+    
+    if(empty($projectId) || $projectId === 'console') {
+        return $console;
+    }
 
     Authorization::disable();
     Authorization2::disable();
 
-    $project = $consoleDB->getDocument($request->getParam('project',
-        $request->getHeader('x-appwrite-project', 'console')));
+    $project = $dbForConsole->getDocument('projects', $projectId);
 
     Authorization::reset();
     Authorization2::reset();
 
     return $project;
-}, ['consoleDB', 'request']);
+}, ['dbForConsole', 'request', 'console']);
 
-App::setResource('console', function($consoleDB) {
-    return $consoleDB->getDocument('console');
-}, ['consoleDB']);
+App::setResource('console', function() {
+    return new Document2([
+        '$id' => 'console',
+        '$collection' => 'projects',
+        'name' => 'Appwrite',
+        'description' => 'Appwrite core engine',
+        'logo' => '',
+        'teamId' => -1,
+        'webhooks' => [],
+        'keys' => [],
+        'platforms' => [
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+                'name' => 'Production',
+                'type' => 'web',
+                'hostname' => 'appwrite.io',
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+                'name' => 'Development',
+                'type' => 'web',
+                'hostname' => 'appwrite.test',
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+                'name' => 'Localhost',
+                'type' => 'web',
+                'hostname' => 'localhost',
+            ], // Current host is added on app init
+        ],
+        'legalName' => '',
+        'legalCountry' => '',
+        'legalState' => '',
+        'legalCity' => '',
+        'legalAddress' => '',
+        'legalTaxId' => '',
+        'authWhitelistEmails' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
+        'authWhitelistIPs' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
+        'usersAuthLimit' => (App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
+    ]);
+}, []);
 
 App::setResource('consoleDB', function($register) {
     $consoleDB = new Database();

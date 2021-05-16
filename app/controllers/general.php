@@ -10,14 +10,12 @@ use Utopia\Exception;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Database;
-use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Response\Filters\V06;
 use Appwrite\Utopia\Response\Filters\V07;
 use Utopia\CLI\Console;
-use Utopia\Database\Document as Document2;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization as Authorization2;
 
 Config::setParam('domainVerification', false);
@@ -28,7 +26,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Database\Database $consoleDB */
-    /** @var Appwrite\Database\Document $console */
+    /** @var Utopia\Database\Document $console */
     /** @var Utopia\Database\Document $project */
     /** @var Utopia\Database\Document $user */
     /** @var Utopia\Locale\Locale $locale */
@@ -226,7 +224,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
          *  Mock user to app and grant API key scopes in addition to default app scopes
          */
         if ($key && $user->isEmpty()) {
-            $user = new Document2([
+            $user = new Document([
                 '$id' => '',
                 'status' => Auth::USER_STATUS_ACTIVATED,
                 'email' => 'app.'.$project->getId().'@service.'.$request->getHostname(),
@@ -265,7 +263,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
     // TDOO Check if user is root
 
     if (!\in_array($scope, $scopes)) {
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) { // Check if permission is denied because project is missing
+        if ($project->isEmpty()) { // Check if permission is denied because project is missing
             throw new Exception('Project not found', 404);
         }
         
@@ -386,7 +384,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
         $response->html($layout->render());
     }
 
-    $response->dynamic(new Document($output),
+    $response->dynamic2(new Document($output),
         $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR);
 }, ['error', 'utopia', 'request', 'response', 'layout', 'project']);
 

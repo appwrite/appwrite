@@ -77,6 +77,11 @@ App::post('/v1/projects')
             'keys' => [],
             'tasks' => [],
             'domains' => [],
+            'usersAuthEmailPassword' => true,
+            'usersAuthAnonymous' => true,
+            'usersAuthInvites' => true,
+            'usersAuthJWT' => true,
+            'usersAuthPhone' => true,
         ]));
 
         if (false === $project) {

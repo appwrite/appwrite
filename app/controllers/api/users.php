@@ -449,9 +449,7 @@ App::delete('/v1/users/:userId/sessions')
             throw new Exception('User not found', 404);
         }
 
-        $sessions = $user->getAttribute('sessions', []);
-        
-        $dbForInternal->updateDocument('users', $user->getId(), $user);
+        $dbForInternal->updateDocument('users', $user->getId(), $user->getAttribute('sessions', []));
 
         $events
             ->setParam('eventData', $response->output2($user, Response::MODEL_USER))
