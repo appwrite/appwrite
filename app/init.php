@@ -445,7 +445,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     Auth::$unique = $session['id'] ?? '';
     Auth::$secret = $session['secret'] ?? '';
 
-    if (APP_MODE_ADMIN !== $mode && $project->getId() !== 'console') {
+    if (APP_MODE_ADMIN !== $mode) {
         $user = $dbForInternal->getDocument('users', Auth::$unique);
     }
     else {
@@ -458,7 +458,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     }
 
     if (APP_MODE_ADMIN === $mode) {
-        if (!$user->find('teamId', $project->getAttribute('teamId'), 'memberships')) {
+        if ($user->find('teamId', $project->getAttribute('teamId'), 'memberships')) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
             Authorization2::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         } else {
@@ -498,9 +498,9 @@ App::setResource('project', function($dbForConsole, $request, $console) {
     /** @var Appwrite\Database\Document $console */
 
     $projectId = $request->getParam('project',
-        $request->getHeader('x-appwrite-project', ''));
+        $request->getHeader('x-appwrite-project', 'console'));
     
-    if(empty($projectId) || $projectId === 'console') {
+    if($projectId === 'console') {
         return $console;
     }
 

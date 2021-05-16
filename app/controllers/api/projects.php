@@ -84,10 +84,6 @@ App::post('/v1/projects')
             'usersAuthPhone' => true,
         ]));
 
-        if (false === $project) {
-            throw new Exception('Failed saving project to DB', 500);
-        }
-
         $collections = Config::getParam('collections2', []); /** @var array $collections */
 
         $dbForInternal->setNamespace('project_'.$project->getId().'_internal');

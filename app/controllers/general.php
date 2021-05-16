@@ -191,10 +191,10 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
     $role = ($user->isEmpty()) ? Auth::USER_ROLE_GUEST : Auth::USER_ROLE_MEMBER;
 
     // Add user roles
-    $membership = $user->find('teamId', $project->getAttribute('teamId', null), 'memberships');
+    $memberships = $user->find('teamId', $project->getAttribute('teamId', null), 'memberships');
 
-    if ($membership) {
-        foreach ($membership->getAttribute('roles', []) as $memberRole) {
+    if ($memberships) {
+        foreach ($memberships->getAttribute('roles', []) as $memberRole) {
             switch ($memberRole) {
                 case 'owner':
                     $role = Auth::USER_ROLE_OWNER;
