@@ -76,6 +76,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
      */
     $events
         ->setParam('projectId', $project->getId())
+        ->setParam('webhooks', $project->getAttribute('webhooks', []))
         ->setParam('userId', $user->getId())
         ->setParam('event', $route->getLabel('event', ''))
         ->setParam('eventData', [])
@@ -188,7 +189,6 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
         $webhooks
             ->setQueue('v1-webhooks')
             ->setClass('WebhooksV1')
-            ->setParam('webhooks', $project->getAttribute('webhooks', []))
             ->trigger();
 
         $functions

@@ -321,6 +321,7 @@ App::put('/v1/functions/:functionId')
         if ($next && $schedule !== $original) {
             ResqueScheduler::enqueueAt($next, 'v1-functions', 'FunctionsV1', [
                 'projectId' => $project->getId(),
+                'webhooks' => $project->getAttribute('webhooks', []),
                 'functionId' => $function->getId(),
                 'executionId' => null,
                 'trigger' => 'schedule',
@@ -375,6 +376,7 @@ App::patch('/v1/functions/:functionId/tag')
         if ($next) { // Init first schedule
             ResqueScheduler::enqueueAt($next, 'v1-functions', 'FunctionsV1', [
                 'projectId' => $project->getId(),
+                'webhooks' => $project->getAttribute('webhooks', []),
                 'functionId' => $function->getId(),
                 'executionId' => null,
                 'trigger' => 'schedule',

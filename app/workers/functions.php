@@ -141,6 +141,7 @@ class FunctionsV1
 
         $projectId = $this->args['projectId'] ?? '';
         $functionId = $this->args['functionId'] ?? '';
+        $webhooks = $this->args['webhooks'] ?? [];
         $executionId = $this->args['executionId'] ?? '';
         $trigger = $this->args['trigger'] ?? '';
         $event = $this->args['event'] ?? '';
@@ -196,7 +197,7 @@ class FunctionsV1
 
                         Console::success('Triggered function: '.$event);
 
-                        $this->execute('event', $projectId, '', $database, $function, $event, $eventData, $data, $userId, $jwt);
+                        $this->execute('event', $projectId, '', $database, $function, $event, $eventData, $data, $webhooks, $userId, $jwt);
                     }
                 }
                 break;
@@ -252,7 +253,7 @@ class FunctionsV1
                     'scheduleOriginal' => $function->getAttribute('schedule', ''),
                 ]);  // Async task rescheduale
 
-                $this->execute($trigger, $projectId, $executionId, $database, $function, /*$event*/'', /*$eventData*/'', $data, $userId, $jwt);
+                $this->execute($trigger, $projectId, $executionId, $database, $function, /*$event*/'', /*$eventData*/'', $data, $webhooks, $userId, $jwt);
                 break;
 
             case 'http':
@@ -264,7 +265,7 @@ class FunctionsV1
                     throw new Exception('Function not found ('.$functionId.')');
                 }
 
-                $this->execute($trigger, $projectId, $executionId, $database, $function, /*$event*/'', /*$eventData*/'', $data, $userId, $jwt);
+                $this->execute($trigger, $projectId, $executionId, $database, $function, /*$event*/'', /*$eventData*/'', $data, $webhooks, $userId, $jwt);
                 break;
             
             default:
@@ -287,7 +288,7 @@ class FunctionsV1
      * 
      * @return void
      */
-    public function execute(string $trigger, string $projectId, string $executionId, Database $database, Document $function, string $event = '', string $eventData = '', string $data = '', string $userId = '', string $jwt = ''): void
+    public function execute(string $trigger, string $projectId, string $executionId, Database $database, Document $function, string $event = '', string $eventData = '', string $data = '', array $webhooks = [], string $userId = '', string $jwt = ''): void
     {
         global $list;
 
@@ -479,6 +480,7 @@ class FunctionsV1
         $executionUpdate
             ->setParam('projectId', $projectId)
             ->setParam('userId', $userId)
+            ->setParam('webhooks', $webhooks)
             ->setParam('event', 'functions.executions.update')
             ->setParam('eventData', [
                 '$id' => $execution['$id'],
