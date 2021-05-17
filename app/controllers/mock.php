@@ -316,7 +316,7 @@ App::get('/v1/mock/tests/general/empty')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'general')
     ->label('sdk.method', 'empty')
-    ->label('sdk.description', 'Mock a an empty response.')
+    ->label('sdk.description', 'Mock an empty response.')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->label('sdk.mock', true)
@@ -334,7 +334,7 @@ App::get('/v1/mock/tests/general/400-error')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'general')
     ->label('sdk.method', 'error400')
-    ->label('sdk.description', 'Mock a an 400 failed request.')
+    ->label('sdk.description', 'Mock a 400 failed request.')
     ->label('sdk.response.code', Response::STATUS_CODE_BAD_REQUEST)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ERROR)
@@ -350,13 +350,34 @@ App::get('/v1/mock/tests/general/500-error')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'general')
     ->label('sdk.method', 'error500')
-    ->label('sdk.description', 'Mock a an 500 failed request.')
+    ->label('sdk.description', 'Mock a 500 failed request.')
     ->label('sdk.response.code', Response::STATUS_CODE_INTERNAL_SERVER_ERROR)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ERROR)
     ->label('sdk.mock', true)
     ->action(function () {
         throw new Exception('Mock 500 error', 500);
+    });
+
+App::get('/v1/mock/tests/general/502-error')
+    ->desc('502 Error')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'general')
+    ->label('sdk.method', 'error502')
+    ->label('sdk.description', 'Mock a 502 bad gateway.')
+    ->label('sdk.response.code', Response::STATUS_CODE_BAD_GATEWAY)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_TEXT)
+    ->label('sdk.mock', true)
+    ->inject('response')
+    ->action(function ($response) {
+        /** @var Appwrite\Utopia\Response $response */
+
+        $response
+            ->setStatusCode(502)
+            ->text('This is a text error')
+        ;
     });
 
 App::get('/v1/mock/tests/general/oauth2')

@@ -57,7 +57,7 @@
         "matomo/device-detector": "4.1.0",
         "dragonmantank/cron-expression": "3.1.0",
         "influxdb/influxdb-php": "1.15.2",
-        "phpmailer/phpmailer": "6.3.0",
+        "phpmailer/phpmailer": "6.4.1",
         "chillerlan/php-qrcode": "4.3.0",
         "adhocore/jwt": "1.1.2",
         "slickdeals/statsd": "~3.0"
