@@ -45,7 +45,7 @@ use Appwrite\Utopia\Response\Model\Mock; // Keep last
 use stdClass;
 
 /**
- * @method public function setStatusCode(int $code = 200): Response
+ * @method Response public function setStatusCode(int $code = 200)
  */
 class Response extends SwooleResponse
 {
