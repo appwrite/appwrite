@@ -188,6 +188,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
         $webhooks
             ->setQueue('v1-webhooks')
             ->setClass('WebhooksV1')
+            ->setParam('webhooks', $project->getAttribute('webhooks', []))
             ->trigger();
 
         $functions
