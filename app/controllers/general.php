@@ -85,7 +85,11 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
 
     $route = $utopia->match($request);
 
-    if (!empty($route->getLabel('sdk.auth', [])) && empty($project->getId()) && ($route->getLabel('scope', '') !== 'public')) {
+    if ($project->isEmpty()) {
+        throw new Exception('Project not found', 404);
+    }
+
+    if (!empty($route->getLabel('sdk.auth', [])) && $project->isEmpty() && ($route->getLabel('scope', '') !== 'public')) {
         throw new Exception('Missing or unknown project ID', 400);
     }
 
