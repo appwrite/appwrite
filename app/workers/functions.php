@@ -247,6 +247,7 @@ class FunctionsV1
 
                 ResqueScheduler::enqueueAt($next, 'v1-functions', 'FunctionsV1', [
                     'projectId' => $projectId,
+                    'webhooks' => $webhooks,
                     'functionId' => $function->getId(),
                     'executionId' => null,
                     'trigger' => 'schedule',
@@ -285,6 +286,9 @@ class FunctionsV1
      * @param string $event
      * @param string $eventData
      * @param string $data
+     * @param array $webhooks
+     * @param string $userId
+     * @param string $jwt
      * 
      * @return void
      */

@@ -768,6 +768,7 @@ App::post('/v1/functions/:functionId/executions')
 
         Resque::enqueue('v1-functions', 'FunctionsV1', [
             'projectId' => $project->getId(),
+            'webhooks' => $project->getAttribute('webhooks', []),
             'functionId' => $function->getId(),
             'executionId' => $execution->getId(),
             'trigger' => 'http',
