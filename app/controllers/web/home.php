@@ -43,12 +43,12 @@ App::get('/')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('response')
-    ->inject('consoleDB')
+    ->inject('dbForConsole')
     ->inject('project')
-    ->action(function ($response, $consoleDB, $project) {
+    ->action(function ($response, $dbForConsole, $project) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $consoleDB */
-        /** @var Appwrite\Database\Document $project */
+        /** @var Utopia\Database\Database $dbForConsole */
+        /** @var Utopia\Database\Document $project */
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -60,13 +60,7 @@ App::get('/')
             $whitlistRoot = App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled');
 
             if($whitlistRoot !== 'disabled') {
-                $consoleDB->getCollection([ // Count users
-                    'filters' => [
-                        '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                    ],
-                ]);
-                    
-                $sum = $consoleDB->getSum();
+                $sum = $dbForConsole->count('users', [], APP_LIMIT_USERS);
 
                 if($sum !== 0) {
                     return $response->redirect('/auth/signin');
