@@ -446,7 +446,12 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     Auth::$secret = $session['secret'] ?? '';
 
     if (APP_MODE_ADMIN !== $mode) {
-        $user = $dbForInternal->getDocument('users', Auth::$unique);
+        if ($project->isEmpty()) {
+            $user = new Document2(['$id' => '', '$collection' => 'users']);
+        }
+        else {
+            $user = $dbForInternal->getDocument('users', Auth::$unique);
+        }
     }
     else {
         $user = $dbForConsole->getDocument('users', Auth::$unique);
@@ -468,7 +473,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
 
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
 
-    if (!empty($authJWT)) { // JWT authentication
+    if (!empty($authJWT) && !$project->isEmpty()) { // JWT authentication
         $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
 
         try {
@@ -494,8 +499,8 @@ App::setResource('user', function($mode, $project, $console, $request, $response
 
 App::setResource('project', function($dbForConsole, $request, $console) {
     /** @var Utopia\Swoole\Request $request */
-    /** @var Appwrite\Database\Database $dbForConsole */
-    /** @var Appwrite\Database\Document $console */
+    /** @var Utopia\Database\Database $dbForConsole */
+    /** @var Utopia\Database\Document $console */
 
     $projectId = $request->getParam('project',
         $request->getHeader('x-appwrite-project', 'console'));
