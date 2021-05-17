@@ -1287,7 +1287,7 @@ $collections = [
                 'key' => 'certificateId',
                 'type' => Database::SYSTEM_VAR_TYPE_KEY,
                 'default' => '',
-                'required' => true,
+                'required' => false,
                 'array' => false,
             ],
         ],
