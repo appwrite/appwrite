@@ -32,7 +32,7 @@ services:
       - appwrite
   
   appwrite:
-    image: appwrite/appwrite:<?php echo $version."\n"; ?>
+    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     container_name: appwrite
     restart: unless-stopped
     networks:
@@ -98,7 +98,7 @@ services:
       - _APP_FUNCTIONS_RUNTIMES
 
   appwrite-worker-usage:
-    image: appwrite/appwrite:<?php echo $version."\n"; ?>
+    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-usage
     container_name: appwrite-worker-usage
     restart: unless-stopped
@@ -117,7 +117,7 @@ services:
       - _APP_STATSD_PORT
 
   appwrite-worker-audits:
-    image: appwrite/appwrite:<?php echo $version."\n"; ?>
+    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-audits
     container_name: appwrite-worker-audits
     restart: unless-stopped
@@ -139,7 +139,7 @@ services:
       - _APP_DB_PASS
 
   appwrite-worker-webhooks:
-    image: appwrite/appwrite:<?php echo $version."\n"; ?>
+    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-webhooks
     container_name: appwrite-worker-webhooks
     restart: unless-stopped
@@ -162,7 +162,7 @@ services:
       - _APP_DB_PASS
 
   appwrite-worker-tasks:
-    image: appwrite/appwrite:<?php echo $version."\n"; ?>
+    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-tasks
     container_name: appwrite-worker-tasks
     restart: unless-stopped
@@ -185,7 +185,7 @@ services:
       - _APP_DB_PASS
 
   appwrite-worker-deletes:
-    image: appwrite/appwrite:<?php echo $version."\n"; ?>
+    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-deletes
     container_name: appwrite-worker-deletes
     restart: unless-stopped
@@ -211,7 +211,7 @@ services:
       - _APP_DB_PASS
 
   appwrite-worker-certificates:
-    image: appwrite/appwrite:<?php echo $version."\n"; ?>
+    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-certificates
     container_name: appwrite-worker-certificates
     restart: unless-stopped
@@ -238,7 +238,7 @@ services:
       - _APP_DB_PASS
 
   appwrite-worker-functions:
-    image: appwrite/appwrite:<?php echo $version."\n"; ?>
+    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-functions
     container_name: appwrite-worker-functions
     restart: unless-stopped
@@ -271,7 +271,7 @@ services:
       - _APP_USAGE_STATS
 
   appwrite-worker-mails:
-    image: appwrite/appwrite:<?php echo $version."\n"; ?>
+    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-mails
     container_name: appwrite-worker-mails
     restart: unless-stopped
@@ -294,7 +294,7 @@ services:
       - _APP_SMTP_PASSWORD
       
   appwrite-maintenance:
-    image: appwrite/appwrite:<?php echo $version."\n"; ?>
+    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: maintenance
     container_name: appwrite-maintenance
     restart: unless-stopped
@@ -315,7 +315,7 @@ services:
 
 
   appwrite-schedule:
-    image: appwrite/appwrite:<?php echo $version."\n"; ?>
+    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: schedule
     container_name: appwrite-schedule
     restart: unless-stopped
@@ -331,7 +331,7 @@ services:
       - _APP_REDIS_PASS
 
   mariadb:
-    image: appwrite/mariadb:1.2.0 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: <?php echo $organization; ?>/mariadb:1.2.0 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     restart: unless-stopped
     networks:
@@ -355,7 +355,7 @@ services:
       - appwrite-redis:/data:rw
 
 #  clamav:
-#    image: appwrite/clamav:1.2.0
+#    image: <?php echo $organization; ?>/clamav:1.2.0
 #    container_name: appwrite-clamav
 #    restart: unless-stopped
 #    networks:
@@ -373,7 +373,7 @@ services:
       - appwrite-influxdb:/var/lib/influxdb:rw
 
   telegraf:
-    image: appwrite/telegraf:1.0.0
+    image: <?php echo $organization; ?>/telegraf:1.0.0
     container_name: appwrite-telegraf
     restart: unless-stopped
     networks:

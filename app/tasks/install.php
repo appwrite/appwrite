@@ -16,8 +16,10 @@ $cli
     ->desc('Install Appwrite')
     ->param('httpPort', '', new Text(4), 'Server HTTP port', true)
     ->param('httpsPort', '', new Text(4), 'Server HTTPS port', true)
+    ->param('organization', 'appwrite', new Text(0), 'Docker Registry organization', true)
+    ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
     ->param('interactive','Y', new Text(1), 'Run an interactive session', true)
-    ->action(function ($httpPort, $httpsPort, $interactive) {
+    ->action(function ($httpPort, $httpsPort, $organization, $image, $interactive) {
         /**
          * 1. Start - DONE
          * 2. Check for older setup and get older version - DONE
@@ -165,6 +167,8 @@ $cli
             ->setParam('httpPort', $httpPort)
             ->setParam('httpsPort', $httpsPort)
             ->setParam('version', APP_VERSION_STABLE)
+            ->setParam('organization',$organization)
+            ->setParam('image',$image)
         ;
         
         $templateForEnv
