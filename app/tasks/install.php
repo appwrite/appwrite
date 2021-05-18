@@ -2,6 +2,7 @@
 
 global $cli;
 
+use Appwrite\Auth\Auth;
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
 use Utopia\Analytics\GoogleAnalytics;
@@ -125,6 +126,14 @@ $cli
         $input = [];
 
         foreach($vars as $key => $var) {
+            if(!empty($var['filter']) && ($interactive !== 'Y' || !Console::isInteractive())) {
+                $input[$var['name']] = ($data && $var['default'] !== null) 
+                    ? $var['default']
+                    :( $var['filter'] === 'token'
+                        ? Auth::tokenGenerator()
+                        : Auth::passwordGenerator());
+                continue;
+            }
             if(!$var['required'] || !Console::isInteractive() || $interactive !== 'Y') {
                 $input[$var['name']] = $var['default'];
                 continue;
