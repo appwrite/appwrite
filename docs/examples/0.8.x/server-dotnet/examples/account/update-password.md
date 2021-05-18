@@ -10,4 +10,4 @@ client
 
 Account account = new Account(client);
 
-HttpResponseMessage result = await account.UpdatePassword("password", "password");
+HttpResponseMessage result = await account.UpdatePassword("password");

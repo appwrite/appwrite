@@ -10,4 +10,4 @@ client
 
 Teams teams = new Teams(client);
 
-HttpResponseMessage result = await teams.DeleteMembership("[TEAM_ID]", "[INVITE_ID]");
+HttpResponseMessage result = await teams.DeleteMembership("[TEAM_ID]", "[MEMBERSHIP_ID]");

@@ -12,7 +12,7 @@ client
 ;
 
 
-let promise = account.createRecovery('', '');
+let promise = account.createRecovery('email@example.com', 'https://example.com');
 
 promise.then(function (response) {
     console.log(response);

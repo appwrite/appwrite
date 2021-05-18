@@ -11,8 +11,8 @@ void main() { // Init SDK
   ;
 
   Future result = account.createRecovery(
-    email: '',
-    url: '',
+    email: 'email@example.com',
+    url: 'https://example.com',
   );
 
   result

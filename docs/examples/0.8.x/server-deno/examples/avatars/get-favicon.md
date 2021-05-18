@@ -12,7 +12,7 @@ client
 ;
 
 
-let promise = avatars.getFavicon('');
+let promise = avatars.getFavicon('https://example.com');
 
 promise.then(function (response) {
     console.log(response);

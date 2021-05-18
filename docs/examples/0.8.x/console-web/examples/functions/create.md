@@ -6,7 +6,7 @@ sdk
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-let promise = sdk.functions.create('[NAME]', [], 'node-14.5');
+let promise = sdk.functions.create('[NAME]', [], 'dotnet-3.1');
 
 promise.then(function (response) {
     console.log(response); // Success

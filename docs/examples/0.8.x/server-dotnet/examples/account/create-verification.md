@@ -10,4 +10,4 @@ client
 
 Account account = new Account(client);
 
-HttpResponseMessage result = await account.CreateVerification("");
+HttpResponseMessage result = await account.CreateVerification("https://example.com");

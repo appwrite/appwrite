@@ -11,4 +11,4 @@ client = Client()
 
 teams = Teams(client)
 
-result = teams.delete_membership('[TEAM_ID]', '[INVITE_ID]')
+result = teams.delete_membership('[TEAM_ID]', '[MEMBERSHIP_ID]')

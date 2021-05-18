@@ -10,4 +10,4 @@ client
 
 Account account = new Account(client);
 
-HttpResponseMessage result = await account.UpdateEmail("", "password");
+HttpResponseMessage result = await account.UpdateEmail("email@example.com", "password");

@@ -11,4 +11,4 @@ client = Client()
 
 teams = Teams(client)
 
-result = teams.update_membership_status('[TEAM_ID]', '[INVITE_ID]', '[USER_ID]', '[SECRET]')
+result = teams.update_membership_status('[TEAM_ID]', '[MEMBERSHIP_ID]', '[USER_ID]', '[SECRET]')

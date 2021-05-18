@@ -10,4 +10,4 @@ client
 
 Account account = new Account(client);
 
-HttpResponseMessage result = await account.CreateRecovery("", "");
+HttpResponseMessage result = await account.CreateRecovery("email@example.com", "https://example.com");

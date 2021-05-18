@@ -11,7 +11,7 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-let promise = teams.deleteMembership('[TEAM_ID]', '[INVITE_ID]');
+let promise = teams.deleteMembership('[TEAM_ID]', '[MEMBERSHIP_ID]');
 
 promise.then(function (response) {
     console.log(response);

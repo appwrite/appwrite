@@ -11,7 +11,7 @@ void main() { // Init SDK
   ;
 
   Future result = avatars.getImage(
-    url: '',
+    url: 'https://example.com',
   );
 
   result

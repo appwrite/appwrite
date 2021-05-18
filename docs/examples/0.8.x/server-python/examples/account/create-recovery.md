@@ -11,4 +11,4 @@ client = Client()
 
 account = Account(client)
 
-result = account.create_recovery('', '')
+result = account.create_recovery('email@example.com', 'https://example.com')

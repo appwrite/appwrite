@@ -10,8 +10,8 @@ void main() { // Init SDK
     .setJWT('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...') // Your secret JSON Web Token
   ;
   Future result = account.createRecovery(
-    email: '',
-    url: '',
+    email: 'email@example.com',
+    url: 'https://example.com',
   );
 
   result

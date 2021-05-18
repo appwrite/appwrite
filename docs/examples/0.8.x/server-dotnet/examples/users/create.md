@@ -10,4 +10,4 @@ client
 
 Users users = new Users(client);
 
-HttpResponseMessage result = await users.Create("", "password");
+HttpResponseMessage result = await users.Create("email@example.com", "password");

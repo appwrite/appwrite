@@ -12,7 +12,7 @@ void main() { // Init SDK
 
   Future result = users.updateStatus(
     userId: '[USER_ID]',
-    status: '1',
+    status: 1,
   );
 
   result

@@ -13,4 +13,4 @@ $client
 
 $teams = new Teams($client);
 
-$result = $teams->updateMembershipStatus('[TEAM_ID]', '[INVITE_ID]', '[USER_ID]', '[SECRET]');
+$result = $teams->updateMembershipStatus('[TEAM_ID]', '[MEMBERSHIP_ID]', '[USER_ID]', '[SECRET]');

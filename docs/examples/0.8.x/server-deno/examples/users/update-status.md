@@ -12,7 +12,7 @@ client
 ;
 
 
-let promise = users.updateStatus('[USER_ID]', '1');
+let promise = users.updateStatus('[USER_ID]', 1);
 
 promise.then(function (response) {
     console.log(response);

@@ -6,7 +6,7 @@ sdk
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-let promise = sdk.users.updateStatus('[USER_ID]', '1');
+let promise = sdk.users.updateStatus('[USER_ID]', 1);
 
 promise.then(function (response) {
     console.log(response); // Success

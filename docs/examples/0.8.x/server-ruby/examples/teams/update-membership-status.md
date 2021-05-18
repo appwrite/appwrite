@@ -10,6 +10,6 @@ client
 
 teams = Appwrite::Teams.new(client);
 
-response = teams.update_membership_status(team_id: '[TEAM_ID]', invite_id: '[INVITE_ID]', user_id: '[USER_ID]', secret: '[SECRET]');
+response = teams.update_membership_status(team_id: '[TEAM_ID]', membership_id: '[MEMBERSHIP_ID]', user_id: '[USER_ID]', secret: '[SECRET]');
 
 puts response

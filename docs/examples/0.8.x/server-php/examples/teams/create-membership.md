@@ -13,4 +13,4 @@ $client
 
 $teams = new Teams($client);
 
-$result = $teams->createMembership('[TEAM_ID]', '', [], '');
+$result = $teams->createMembership('[TEAM_ID]', 'email@example.com', [], 'https://example.com');

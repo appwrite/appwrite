@@ -10,4 +10,4 @@ client
 
 Teams teams = new Teams(client);
 
-HttpResponseMessage result = await teams.CreateMembership("[TEAM_ID]", "", [List<object>], "");
+HttpResponseMessage result = await teams.CreateMembership("[TEAM_ID]", "email@example.com", [List<object>], "https://example.com");

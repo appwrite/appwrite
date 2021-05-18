@@ -10,6 +10,6 @@ client
 
 account = Appwrite::Account.new(client);
 
-response = account.update_email(email: '', password: 'password');
+response = account.update_email(email: 'email@example.com', password: 'password');
 
 puts response

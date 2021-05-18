@@ -10,4 +10,4 @@ client
 
 Avatars avatars = new Avatars(client);
 
-string result = await avatars.GetImage("");
+string result = await avatars.GetImage("https://example.com");

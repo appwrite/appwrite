@@ -13,7 +13,7 @@ void main() { // Init SDK
   Future result = functions.create(
     name: '[NAME]',
     execute: [],
-    env: 'node-14.5',
+    env: 'dotnet-3.1',
   );
 
   result

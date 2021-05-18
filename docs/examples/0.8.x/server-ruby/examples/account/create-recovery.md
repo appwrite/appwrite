@@ -10,6 +10,6 @@ client
 
 account = Appwrite::Account.new(client);
 
-response = account.create_recovery(email: '', url: '');
+response = account.create_recovery(email: 'email@example.com', url: 'https://example.com');
 
 puts response

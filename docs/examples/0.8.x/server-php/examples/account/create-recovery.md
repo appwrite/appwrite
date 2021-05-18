@@ -13,4 +13,4 @@ $client
 
 $account = new Account($client);
 
-$result = $account->createRecovery('', '');
+$result = $account->createRecovery('email@example.com', 'https://example.com');

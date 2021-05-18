@@ -10,4 +10,4 @@ client
 
 Avatars avatars = new Avatars(client);
 
-string result = await avatars.GetFavicon("");
+string result = await avatars.GetFavicon("https://example.com");

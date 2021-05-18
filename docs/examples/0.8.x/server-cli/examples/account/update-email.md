@@ -1,1 +1,1 @@
-appwrite account updateEmail --email="" --password="password" 
+appwrite account updateEmail --email="email@example.com" --password="password" 

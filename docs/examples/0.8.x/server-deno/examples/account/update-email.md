@@ -12,7 +12,7 @@ client
 ;
 
 
-let promise = account.updateEmail('', 'password');
+let promise = account.updateEmail('email@example.com', 'password');
 
 promise.then(function (response) {
     console.log(response);

@@ -10,6 +10,6 @@ client
 
 functions = Appwrite::Functions.new(client);
 
-response = functions.create(name: '[NAME]', execute: [], env: 'node-14.5');
+response = functions.create(name: '[NAME]', execute: [], env: 'dotnet-3.1');
 
 puts response

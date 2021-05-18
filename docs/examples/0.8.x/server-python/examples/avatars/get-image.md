@@ -11,4 +11,4 @@ client = Client()
 
 avatars = Avatars(client)
 
-result = avatars.get_image('')
+result = avatars.get_image('https://example.com')

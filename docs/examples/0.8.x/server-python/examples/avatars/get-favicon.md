@@ -11,4 +11,4 @@ client = Client()
 
 avatars = Avatars(client)
 
-result = avatars.get_favicon('')
+result = avatars.get_favicon('https://example.com')

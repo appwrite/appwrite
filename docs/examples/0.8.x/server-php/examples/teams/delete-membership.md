@@ -13,4 +13,4 @@ $client
 
 $teams = new Teams($client);
 
-$result = $teams->deleteMembership('[TEAM_ID]', '[INVITE_ID]');
+$result = $teams->deleteMembership('[TEAM_ID]', '[MEMBERSHIP_ID]');

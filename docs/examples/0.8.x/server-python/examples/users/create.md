@@ -11,4 +11,4 @@ client = Client()
 
 users = Users(client)
 
-result = users.create('', 'password')
+result = users.create('email@example.com', 'password')

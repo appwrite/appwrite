@@ -14,7 +14,7 @@ void main() { // Init SDK
 //displaying image
 FutureBuilder(
   future: avatars.getFavicon(
-    url: '',
+    url: 'https://example.com',
   ), //works for both public file and private file, for private files you need to be logged in
   builder: (context, snapshot) {
     return snapshot.hasData && snapshot.data != null

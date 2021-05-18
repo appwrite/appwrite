@@ -12,7 +12,7 @@ client
 ;
 
 
-let promise = users.create('', 'password');
+let promise = users.create('email@example.com', 'password');
 
 promise.then(function (response) {
     console.log(response);

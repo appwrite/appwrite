@@ -5,7 +5,7 @@ sdk
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-let promise = sdk.projects.updateWebhook('[PROJECT_ID]', '[WEBHOOK_ID]', '[NAME]', [], '', false);
+let promise = sdk.projects.updateWebhook('[PROJECT_ID]', '[WEBHOOK_ID]', '[NAME]', [], 'https://example.com', false);
 
 promise.then(function (response) {
     console.log(response); // Success

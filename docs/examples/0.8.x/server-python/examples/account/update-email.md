@@ -11,4 +11,4 @@ client = Client()
 
 account = Account(client)
 
-result = account.update_email('', 'password')
+result = account.update_email('email@example.com', 'password')

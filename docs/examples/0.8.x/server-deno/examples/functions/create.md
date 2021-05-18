@@ -12,7 +12,7 @@ client
 ;
 
 
-let promise = functions.create('[NAME]', [], 'node-14.5');
+let promise = functions.create('[NAME]', [], 'dotnet-3.1');
 
 promise.then(function (response) {
     console.log(response);

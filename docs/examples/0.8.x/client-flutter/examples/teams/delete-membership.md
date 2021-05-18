@@ -11,7 +11,7 @@ void main() { // Init SDK
   ;
   Future result = teams.deleteMembership(
     teamId: '[TEAM_ID]',
-    inviteId: '[INVITE_ID]',
+    membershipId: '[MEMBERSHIP_ID]',
   );
 
   result

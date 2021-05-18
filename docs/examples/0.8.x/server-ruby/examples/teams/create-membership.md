@@ -10,6 +10,6 @@ client
 
 teams = Appwrite::Teams.new(client);
 
-response = teams.create_membership(team_id: '[TEAM_ID]', email: '', roles: [], url: '');
+response = teams.create_membership(team_id: '[TEAM_ID]', email: 'email@example.com', roles: [], url: 'https://example.com');
 
 puts response

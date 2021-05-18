@@ -10,4 +10,4 @@ client
 
 Users users = new Users(client);
 
-HttpResponseMessage result = await users.UpdateStatus("[USER_ID]", "1");
+HttpResponseMessage result = await users.UpdateStatus("[USER_ID]", 1);

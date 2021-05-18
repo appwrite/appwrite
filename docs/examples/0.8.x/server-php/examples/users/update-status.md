@@ -13,4 +13,4 @@ $client
 
 $users = new Users($client);
 
-$result = $users->updateStatus('[USER_ID]', '1');
+$result = $users->updateStatus('[USER_ID]', 1);

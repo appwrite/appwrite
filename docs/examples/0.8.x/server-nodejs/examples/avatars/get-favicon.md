@@ -11,7 +11,7 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-let promise = avatars.getFavicon('');
+let promise = avatars.getFavicon('https://example.com');
 
 promise.then(function (response) {
     console.log(response);

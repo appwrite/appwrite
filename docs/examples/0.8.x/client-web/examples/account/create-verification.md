@@ -6,7 +6,7 @@ sdk
     .setJWT('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...') // Your secret JSON Web Token
 ;
 
-let promise = sdk.account.createVerification('');
+let promise = sdk.account.createVerification('https://example.com');
 
 promise.then(function (response) {
     console.log(response); // Success

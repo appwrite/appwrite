@@ -10,6 +10,6 @@ client
 
 account = Appwrite::Account.new(client);
 
-response = account.create_verification(url: '');
+response = account.create_verification(url: 'https://example.com');
 
 puts response

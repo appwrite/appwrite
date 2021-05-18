@@ -10,6 +10,6 @@ client
 
 account = Appwrite::Account.new(client);
 
-response = account.update_password(password: 'password', old_password: 'password');
+response = account.update_password(password: 'password');
 
 puts response

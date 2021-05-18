@@ -11,4 +11,4 @@ client = Client()
 
 account = Account(client)
 
-result = account.update_password('password', 'password')
+result = account.update_password('password')

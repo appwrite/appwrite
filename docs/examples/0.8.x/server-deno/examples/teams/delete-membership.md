@@ -12,7 +12,7 @@ client
 ;
 
 
-let promise = teams.deleteMembership('[TEAM_ID]', '[INVITE_ID]');
+let promise = teams.deleteMembership('[TEAM_ID]', '[MEMBERSHIP_ID]');
 
 promise.then(function (response) {
     console.log(response);

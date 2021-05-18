@@ -10,4 +10,4 @@ client
 
 Teams teams = new Teams(client);
 
-HttpResponseMessage result = await teams.UpdateMembershipStatus("[TEAM_ID]", "[INVITE_ID]", "[USER_ID]", "[SECRET]");
+HttpResponseMessage result = await teams.UpdateMembershipStatus("[TEAM_ID]", "[MEMBERSHIP_ID]", "[USER_ID]", "[SECRET]");

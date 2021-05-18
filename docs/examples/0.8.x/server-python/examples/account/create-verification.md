@@ -11,4 +11,4 @@ client = Client()
 
 account = Account(client)
 
-result = account.create_verification('')
+result = account.create_verification('https://example.com')

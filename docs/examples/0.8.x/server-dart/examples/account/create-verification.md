@@ -11,7 +11,7 @@ void main() { // Init SDK
   ;
 
   Future result = account.createVerification(
-    url: '',
+    url: 'https://example.com',
   );
 
   result

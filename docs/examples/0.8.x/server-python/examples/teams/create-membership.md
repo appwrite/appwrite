@@ -11,4 +11,4 @@ client = Client()
 
 teams = Teams(client)
 
-result = teams.create_membership('[TEAM_ID]', '', [], '')
+result = teams.create_membership('[TEAM_ID]', 'email@example.com', [], 'https://example.com')

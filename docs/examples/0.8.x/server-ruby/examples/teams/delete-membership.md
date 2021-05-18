@@ -10,6 +10,6 @@ client
 
 teams = Appwrite::Teams.new(client);
 
-response = teams.delete_membership(team_id: '[TEAM_ID]', invite_id: '[INVITE_ID]');
+response = teams.delete_membership(team_id: '[TEAM_ID]', membership_id: '[MEMBERSHIP_ID]');
 
 puts response

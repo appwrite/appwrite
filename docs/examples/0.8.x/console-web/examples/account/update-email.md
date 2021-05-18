@@ -6,7 +6,7 @@ sdk
     .setJWT('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...') // Your secret JSON Web Token
 ;
 
-let promise = sdk.account.updateEmail('', 'password');
+let promise = sdk.account.updateEmail('email@example.com', 'password');
 
 promise.then(function (response) {
     console.log(response); // Success

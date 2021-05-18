@@ -6,6 +6,6 @@ sdk
     .setJWT('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...') // Your secret JSON Web Token
 ;
 
-let result = sdk.avatars.getImage('');
+let result = sdk.avatars.getImage('https://example.com');
 
 console.log(result); // Resource URL

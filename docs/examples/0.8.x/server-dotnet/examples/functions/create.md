@@ -10,4 +10,4 @@ client
 
 Functions functions = new Functions(client);
 
-HttpResponseMessage result = await functions.Create("[NAME]", [List<object>], "node-14.5");
+HttpResponseMessage result = await functions.Create("[NAME]", [List<object>], "dotnet-3.1");
