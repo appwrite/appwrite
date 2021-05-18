@@ -68,7 +68,7 @@ $cli
 
         if($data !== false) {
             $time = \time();
-            Console::info('found old docker-compose.yml file, creating backup docker-compose.yml.'.$time.'.backup');
+            Console::info('Compose file found, creating backup: docker-compose.yml.'.$time.'.backup');
             file_put_contents($path.'/docker-compose.yml.'.$time.'.backup',$data);
             $compose = new Compose($data);
             $appwrite = $compose->getService('appwrite');
