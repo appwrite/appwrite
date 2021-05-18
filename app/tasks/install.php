@@ -67,8 +67,9 @@ $cli
         $data = @file_get_contents($path.'/docker-compose.yml');
 
         if($data !== false) {
-            Console::info("found old docker-compose.yml file, creating backup docker-compose.yml.backup");
-            file_put_contents($path.'/docker-compose.yml.backup',$data);
+            $time = \time();
+            Console::info('found old docker-compose.yml file, creating backup docker-compose.yml.'.$time.'.backup');
+            file_put_contents($path.'/docker-compose.yml.'.$time.'.backup',$data);
             $compose = new Compose($data);
             $appwrite = $compose->getService('appwrite');
             $oldVersion = ($appwrite) ? $appwrite->getImageVersion() : null;
@@ -94,8 +95,8 @@ $cli
                 $data = @file_get_contents($path.'/.env');
 
                 if($data !== false) { // Fetch all env vars from previous .env file
-                    Console::info("found old .env file, creating .env.backup");
-                    file_put_contents($path.'/.env.backup',$data);
+                    Console::info('found old .env file, creating backup .env.'.$time.'.backup');
+                    file_put_contents($path.'/.env.'.$time.'.backup',$data);
                     $env = new Env($data);
 
                     foreach ($env->list() as $key => $value) {
