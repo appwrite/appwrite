@@ -168,8 +168,8 @@ $cli
             ->setParam('httpPort', $httpPort)
             ->setParam('httpsPort', $httpsPort)
             ->setParam('version', APP_VERSION_STABLE)
-            ->setParam('organization',$organization)
-            ->setParam('image',$image)
+            ->setParam('organization', $organization)
+            ->setParam('image', $image)
         ;
         
         $templateForEnv
