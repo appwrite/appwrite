@@ -1,0 +1,1 @@
+appwrite avatars getImage --url="" --width="0" --height="0" 

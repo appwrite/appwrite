@@ -1,0 +1,1 @@
+appwrite avatars getFavicon --url="" 

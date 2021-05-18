@@ -1,0 +1,1 @@
+appwrite teams createMembership --teamId="[TEAM_ID]" --email="" --roles="" --url="" --name="[NAME]" 

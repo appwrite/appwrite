@@ -1,0 +1,1 @@
+appwrite users create --email="" --password="password" --name="[NAME]" 

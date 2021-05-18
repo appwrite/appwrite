@@ -1,0 +1,1 @@
+appwrite storage getFilePreview --fileId="[FILE_ID]" --width="0" --height="0" --quality="0" --borderWidth="0" --borderColor="" --borderRadius="0" --opacity="0" --rotation="0" --background="" --output="jpg" 
