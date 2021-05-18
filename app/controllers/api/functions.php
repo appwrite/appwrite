@@ -397,10 +397,12 @@ App::delete('/v1/functions/:functionId')
     ->inject('response')
     ->inject('projectDB')
     ->inject('deletes')
-    ->action(function ($functionId, $response, $projectDB, $deletes) {
+    ->inject('project')
+    ->action(function ($functionId, $response, $projectDB, $deletes, $project) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $deletes */
+        /** @var Appwrite\Database\Document $project */
 
         $function = $projectDB->getDocument($functionId);
 
@@ -408,14 +410,21 @@ App::delete('/v1/functions/:functionId')
             throw new Exception('Function not found', 404);
         }
 
-        if (!$projectDB->deleteDocument($function->getId())) {
-            throw new Exception('Failed to remove function from DB', 500);
-        }
+        // if (!$projectDB->deleteDocument($function->getId())) {
+            // throw new Exception('Failed to remove function from DB', 500);
+        // }
 
-        $deletes
-            ->setParam('type', DELETE_TYPE_DOCUMENT)
-            ->setParam('document', $function->getArrayCopy())
-        ;
+        // $deletes
+            // ->setParam('type', DELETE_TYPE_DOCUMENT)
+            // ->setParam('document', $function->getArrayCopy())
+        // ;
+
+        // db deletion and delete event handled in functions worker
+        Resque::enqueue('v1-functions', 'FunctionsV1', [
+            'projectId' => $project->getId(),
+            'functionId' => $function->getId(),
+            'trigger' => 'delete',
+        ]);
 
         $response->noContent();
     });
@@ -612,10 +621,12 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
     ->inject('response')
     ->inject('projectDB')
     ->inject('usage')
-    ->action(function ($functionId, $tagId, $response, $projectDB, $usage) {
+    ->inject('project')
+    ->action(function ($functionId, $tagId, $response, $projectDB, $usage, $project) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $usage */
+        /** @var Appwrite\Database\Document $project */
 
         $function = $projectDB->getDocument($functionId);
 
@@ -650,6 +661,13 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
                 throw new Exception('Failed saving function to DB', 500);
             }
         }
+
+        Resque::enqueue('v1-functions', 'FunctionsV1', [
+            'projectId' => $project->getId(),
+            'functionId' => $function->getId(),
+            'tagId' => $tag->getId(),
+            'trigger' => 'delete',
+        ]);
 
         $usage
             ->setParam('storage', $tag->getAttribute('size', 0) * -1)
