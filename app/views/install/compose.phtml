@@ -3,6 +3,8 @@
 $httpPort = $this->getParam('httpPort', '');
 $httpsPort = $this->getParam('httpsPort', '');
 $version = $this->getParam('version', '');
+$organization = $this->getParam('organization', '');
+$image = $this->getParam('image', '');
 ?>version: '3'
 
 services:
@@ -162,7 +164,7 @@ services:
       - _APP_DB_PASS
 
   appwrite-worker-tasks:
-    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>:<?php echo $version."\n"; ?>
+    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-tasks
     container_name: appwrite-worker-tasks
     restart: unless-stopped
@@ -331,7 +333,7 @@ services:
       - _APP_REDIS_PASS
 
   mariadb:
-    image: <?php echo $organization; ?>/mariadb:1.2.0 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: appwrite/mariadb:1.2.0 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     restart: unless-stopped
     networks:
@@ -355,7 +357,7 @@ services:
       - appwrite-redis:/data:rw
 
 #  clamav:
-#    image: <?php echo $organization; ?>/clamav:1.2.0
+#    image: appwrite/clamav:1.2.0
 #    container_name: appwrite-clamav
 #    restart: unless-stopped
 #    networks:
@@ -373,7 +375,7 @@ services:
       - appwrite-influxdb:/var/lib/influxdb:rw
 
   telegraf:
-    image: <?php echo $organization; ?>/telegraf:1.0.0
+    image: appwrite/telegraf:1.0.0
     container_name: appwrite-telegraf
     restart: unless-stopped
     networks:
