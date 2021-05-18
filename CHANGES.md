@@ -23,6 +23,7 @@
 - Updated all the console bottom control to be consistent. Dropped the `+` icon (#1062)
 - Added Response Models for Documents and Preferences (#1075, #1102)
 - Added new endpoint to update team membership roles (#1142)
+- Removed DB connection from webhooks worker for improved performance (#1150)
 
 ## Bugs
 
