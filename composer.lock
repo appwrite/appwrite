@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "407185a7ffb14acda25f4a449cdb5ffb",
+    "content-hash": "12f7991bdbf788150ccfe56732955bd9",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2340,11 +2340,17 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "dev-feat-preps-for-0.8",
+            "version": "0.10.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "a8d90fd59db39ec04914692bd6ab06e013977b77"
+                "url": "https://github.com/appwrite/sdk-generator.git",
+                "reference": "fa94c9fec1dda8707d3b77c65f1a8c6115e2e6a1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/fa94c9fec1dda8707d3b77c65f1a8c6115e2e6a1",
+                "reference": "fa94c9fec1dda8707d3b77c65f1a8c6115e2e6a1",
+                "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
@@ -2364,6 +2370,7 @@
                     "Appwrite\\Spec\\": "src/Spec"
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -2374,7 +2381,11 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2021-05-05T12:50:58+00:00"
+            "support": {
+                "issues": "https://github.com/appwrite/sdk-generator/issues",
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.10.0"
+            },
+            "time": "2021-05-18T18:51:13+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",
@@ -5924,9 +5935,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "appwrite/sdk-generator": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

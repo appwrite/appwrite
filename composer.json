@@ -62,17 +62,11 @@
         "slickdeals/statsd": "3.0.2"
     },
     "require-dev": {
-        "appwrite/sdk-generator": "dev-feat-preps-for-0.8",
+        "appwrite/sdk-generator": "0.10.0",
         "swoole/ide-helper": "4.6.6",
         "phpunit/phpunit": "9.5.4",
         "vimeo/psalm": "4.7.2"
     },
-    "repositories": [
-        {
-            "type": "git",
-            "url": "https://github.com/appwrite/sdk-generator"
-        }
-    ],
     "provide": {
         "ext-phpiredis": "*"
     },

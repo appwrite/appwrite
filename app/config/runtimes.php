@@ -10,6 +10,6 @@ $runtimes = new Runtimes();
 
 $allowList = empty(App::getEnv('_APP_FUNCTIONS_RUNTIMES')) ? [] : \explode(',', App::getEnv('_APP_FUNCTIONS_RUNTIMES'));
 
-$runtimes = $runtimes->getAll(filter: $allowList);
+$runtimes = $runtimes->getAll(true, $allowList);
 
 return $runtimes;
