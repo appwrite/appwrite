@@ -95,7 +95,7 @@ $cli
                 $data = @file_get_contents($path.'/.env');
 
                 if($data !== false) { // Fetch all env vars from previous .env file
-                    Console::info('found old .env file, creating backup .env.'.$time.'.backup');
+                    Console::info('Env file found, creating backup: .env.'.$time.'.backup');
                     file_put_contents($path.'/.env.'.$time.'.backup',$data);
                     $env = new Env($data);
 
