@@ -1,4 +1,4 @@
-# Version 0.8.0 (Not Released Yet)
+# Version 0.8.0
 
 ## Features
 - Refactoring SSL generation to work on every request so no domain environment variable is required for SSL generation (#1133)
