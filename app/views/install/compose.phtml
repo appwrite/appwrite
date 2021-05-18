@@ -339,7 +339,7 @@ services:
     volumes:
       - appwrite-mariadb:/var/lib/mysql:rw
     environment:
-      - MYSQL_ROOT_PASSWORD=rootsecretpassword
+      - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}

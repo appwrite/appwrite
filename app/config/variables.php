@@ -243,6 +243,15 @@ return [
                 'question' => '',
                 'filter' => 'password'
             ],
+            [
+                'name' => '_APP_DB_ROOT_PASS',
+                'description' => 'MariaDB server root password. Default value is: \'rootsecretpassword\'.',
+                'introduction' => '',
+                'default' => 'rootsecretpassword',
+                'required' => false,
+                'question' => '',
+                'filter' => 'password'
+            ],
         ],
     ],
     [

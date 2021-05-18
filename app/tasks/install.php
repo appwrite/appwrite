@@ -127,12 +127,20 @@ $cli
 
         foreach($vars as $key => $var) {
             if(!empty($var['filter']) && ($interactive !== 'Y' || !Console::isInteractive())) {
-                $input[$var['name']] = ($data && $var['default'] !== null) 
-                    ? $var['default']
-                    :( $var['filter'] === 'token'
-                        ? Auth::tokenGenerator()
-                        : Auth::passwordGenerator());
-                continue;
+                if($data && $var['default'] !== null) {
+                    $input[$var['name']] = $var['default'];
+                    continue;
+                }
+
+                if($var['filter'] === 'token') {
+                    $input[$var['name']] = Auth::tokenGenerator();
+                    continue;
+                }
+
+                if($var['filter'] === 'password') {
+                    $input[$var['name']] = Auth::passwordGenerator();
+                    continue;
+                }
             }
             if(!$var['required'] || !Console::isInteractive() || $interactive !== 'Y') {
                 $input[$var['name']] = $var['default'];
