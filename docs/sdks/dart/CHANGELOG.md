@@ -1,3 +1,12 @@
+## 0.6.0
+
+- Upgraded to Null-safety, minimum Dart SDK required 2.12.0
+- Upgraded all underlying dependencies to null safe version
+- BREAKING Renamed users.deleteUser to users.delete
+- BREAKING Renamed parameter inviteId to membershipId on teams.updateMembershipStatus, teams.deleteMembership
+- JWT Support client.setJWT('JWT_GENERATED_IN_CLIENT')
+- [Update membership roles](https://appwrite.io/docs/client/teams?sdk=flutter#teamsUpdateMembershipRoles)
+
 ## 0.5.0-dev.1
 
 - Upgraded to Null-safety, minimum Dart SDK required 2.12.0
