@@ -8,6 +8,7 @@
 - Fallback Cookies for Flutter Web if 3rd party cookies are blocked
 - Custom User Agent Support
 - [Update membership roles](https://appwrite.io/docs/client/teams?sdk=flutter#teamsUpdateMembershipRoles)
+- New awesome image preview features, supports borderRadius, borderColor, borderWidth 
 
 ## 0.5.0-dev.1
 

@@ -6,6 +6,7 @@
 - Added events for functions and executions (#971)
 - Added JWT support (#784)
 - Added ARM support (#726)
+- New awesome image preview features, supports borderRadius, borderColor, borderWidth 
 - Split token & session models to become 2 different internal entities (#922)
 - Added Dart 2.12 as a new Cloud Functions runtime (#989)
 - Added option to disable email/password (#947)
