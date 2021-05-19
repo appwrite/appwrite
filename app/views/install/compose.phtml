@@ -170,6 +170,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -250,7 +251,7 @@ services:
       - /tmp:/tmp:rw
     environment:
       - _APP_ENV
-      - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
