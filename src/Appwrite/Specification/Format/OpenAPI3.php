@@ -122,6 +122,10 @@ class OpenAPI3 extends Format
                         break;
                 }
             }
+
+            if(empty($routeSecurity)) {
+                $sdkPlatofrms[] = APP_PLATFORM_CLIENT;
+            }
             
             $temp = [
                 'summary' => $route->getDesc(),
