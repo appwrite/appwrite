@@ -31,9 +31,9 @@
 - Fixed form array casting in dashboard (#1070)
 - Fixed collection document rule form in dashboard (#1069)
 - Bugs in the Teams API:
-- Fixed incorrect audit worker event names (#1143)
-- Increased limit of memberships fetched in `createTeamMembership` to 2000 (#1143)
-- Fixed exception thrown when SSL certificate is already stored in the database (#1151)
+  - Fixed incorrect audit worker event names (#1143)
+  - Increased limit of memberships fetched in `createTeamMembership` to 2000 (#1143)
+  - Fixed exception thrown when SSL certificate is already stored in the database (#1151)
 
 ## Breaking Changes (Read before upgrading!)
 
