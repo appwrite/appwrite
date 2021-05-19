@@ -71,10 +71,14 @@ services:
     depends_on:
       - mariadb
       - redis
-      - clamav
+      # - clamav
       - influxdb
     environment:
       - _APP_ENV
+      - _APP_LOCALE
+      - _APP_CONSOLE_WHITELIST_ROOT
+      - _APP_CONSOLE_WHITELIST_EMAILS
+      - _APP_CONSOLE_WHITELIST_IPS
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
@@ -110,7 +114,7 @@ services:
       - _APP_FUNCTIONS_CPUS
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
-      - _APP_FUNCTIONS_ENVS
+      - _APP_FUNCTIONS_RUNTIMES
 
   appwrite-worker-usage:
     entrypoint: worker-usage
@@ -180,11 +184,6 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
 
   appwrite-worker-tasks:
     entrypoint: worker-tasks
@@ -201,6 +200,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -282,12 +282,12 @@ services:
       - /tmp:/tmp:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./docker:/usr/src/code/docker
     depends_on:
       - redis
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -299,6 +299,7 @@ services:
       - _APP_DB_PASS
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_FUNCTIONS_CONTAINERS
+      - _APP_FUNCTIONS_RUNTIMES
       - _APP_FUNCTIONS_CPUS
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
@@ -413,16 +414,16 @@ services:
     volumes:
       - appwrite-redis:/data:rw
 
-  clamav:
-    image: appwrite/clamav:1.2.0
-    container_name: appwrite-clamav
-    networks:
-      - appwrite
-    volumes:
-      - appwrite-uploads:/storage/uploads
+  # clamav:
+  #   image: appwrite/clamav:1.2.0
+  #   container_name: appwrite-clamav
+  #   networks:
+  #     - appwrite
+  #   volumes:
+  #     - appwrite-uploads:/storage/uploads
       
   influxdb:
-    image: influxdb:1.8-alpine
+    image: appwrite/influxdb:1.0.0
     container_name: appwrite-influxdb
     networks:
       - appwrite
@@ -430,7 +431,7 @@ services:
       - appwrite-influxdb:/var/lib/influxdb:rw
 
   telegraf:
-    image: appwrite/telegraf:1.0.0
+    image: appwrite/telegraf:1.1.0
     container_name: appwrite-telegraf
     networks:
       - appwrite
@@ -449,16 +450,16 @@ services:
   # Webgrind - A nice UI for exploring and debugging code-level stuff
 
   maildev: # used mainly for dev tests
-    image: djfarrelly/maildev
-    container_name: appwrite-maildev
+    image: appwrite/mailcatcher:1.0.0
+    container_name: appwrite-mailcatcher
     ports:
-      - '9503:80'
+      - '9503:1080'
     networks:
       - appwrite
 
   request-catcher: # used mainly for dev tests
-    image: smarterdm/http-request-catcher
-    container_name: appwrite-request-catcher
+    image: appwrite/requestcatcher:1.0.0
+    container_name: appwrite-requestcatcher
     ports:
       - '9504:5000'
     networks:
@@ -466,6 +467,7 @@ services:
 
   adminer:
     image: adminer
+    container_name: appwrite-adminer
     restart: always
     ports:
       - 9505:8080

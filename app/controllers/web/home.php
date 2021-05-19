@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Database\Database;
 use Appwrite\Specification\Format\OpenAPI3;
 use Appwrite\Specification\Format\Swagger2;
 use Appwrite\Specification\Specification;
@@ -42,10 +43,38 @@ App::get('/')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('response')
-    ->action(function ($response) {
+    ->inject('consoleDB')
+    ->inject('project')
+    ->action(function ($response, $consoleDB, $project) {
         /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Appwrite\Database\Document $project */
 
-        $response->redirect('/auth/signin');
+        $response
+            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->addHeader('Expires', 0)
+            ->addHeader('Pragma', 'no-cache')
+        ;
+
+        if ('console' === $project->getId() || $project->isEmpty()) {
+            $whitlistRoot = App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled');
+
+            if($whitlistRoot !== 'disabled') {
+                $consoleDB->getCollection([ // Count users
+                    'filters' => [
+                        '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                    ],
+                ]);
+                    
+                $sum = $consoleDB->getSum();
+
+                if($sum !== 0) {
+                    return $response->redirect('/auth/signin');
+                }
+            }
+        }
+
+        $response->redirect('/auth/signup');
     });
 
 App::get('/auth/signin')
@@ -57,6 +86,10 @@ App::get('/auth/signin')
         /** @var Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/home/auth/signin.phtml');
+
+        $page
+            ->setParam('root', App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled'))
+        ;
 
         $layout
             ->setParam('title', 'Sign In - '.APP_NAME)
@@ -72,6 +105,10 @@ App::get('/auth/signup')
         /** @var Utopia\View $layout */
         $page = new View(__DIR__.'/../../views/home/auth/signup.phtml');
 
+        $page
+            ->setParam('root', App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled'))
+        ;
+
         $layout
             ->setParam('title', 'Sign Up - '.APP_NAME)
             ->setParam('body', $page);
@@ -86,6 +123,10 @@ App::get('/auth/recovery')
         /** @var Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/home/auth/recovery.phtml');
+
+        $page
+            ->setParam('smtpEnabled', (!empty(App::getEnv('_APP_SMTP_HOST'))))
+        ;
 
         $layout
             ->setParam('title', 'Password Recovery - '.APP_NAME)
@@ -214,6 +255,12 @@ App::get('/specs/:format')
             'console' => APP_PLATFORM_CONSOLE,
         ];
 
+        $authCounts = [
+            'client' => 1,
+            'server' => 2,
+            'console' => 1,
+        ];
+
         $routes = [];
         $models = [];
         $services = [];
@@ -224,6 +271,12 @@ App::get('/specs/:format')
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Project',
                     'description' => 'Your project ID',
+                    'in' => 'header',
+                ],
+                'JWT' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-JWT',
+                    'description' => 'Your secret JSON Web Token',
                     'in' => 'header',
                 ],
                 'Locale' => [
@@ -246,6 +299,12 @@ App::get('/specs/:format')
                     'description' => 'Your secret API key',
                     'in' => 'header',
                 ],
+                'JWT' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-JWT',
+                    'description' => 'Your secret JSON Web Token',
+                    'in' => 'header',
+                ],
                 'Locale' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Locale',
@@ -266,6 +325,12 @@ App::get('/specs/:format')
                     'description' => 'Your secret API key',
                     'in' => 'header',
                 ],
+                'JWT' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-JWT',
+                    'description' => 'Your secret JSON Web Token',
+                    'in' => 'header',
+                ],
                 'Locale' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Locale',
@@ -281,14 +346,32 @@ App::get('/specs/:format')
             ],
         ];
 
-        $security = [
-            APP_PLATFORM_CLIENT => ['Project' => []],
-            APP_PLATFORM_SERVER => ['Project' => [], 'Key' => []],
-            APP_PLATFORM_CONSOLE => ['Project' => [], 'Key' => []],
-        ];
-
         foreach ($utopia->getRoutes() as $key => $method) {
             foreach ($method as $route) { /** @var \Utopia\Route $route */
+                $routeSecurity = $route->getLabel('sdk.auth', []);
+                $sdkPlatofrms = [];
+
+                foreach ($routeSecurity as $value) {
+                    switch ($value) {
+                        case APP_AUTH_TYPE_SESSION:
+                            $sdkPlatofrms[] = APP_PLATFORM_CLIENT;
+                            break;
+                        case APP_AUTH_TYPE_KEY:
+                            $sdkPlatofrms[] = APP_PLATFORM_SERVER;
+                            break;
+                        case APP_AUTH_TYPE_JWT:
+                            $sdkPlatofrms[] = APP_PLATFORM_SERVER;
+                            break;
+                        case APP_AUTH_TYPE_ADMIN:
+                            $sdkPlatofrms[] = APP_PLATFORM_CONSOLE;
+                            break;
+                    }
+                }
+
+                if(empty($routeSecurity)) {
+                    $sdkPlatofrms[] = APP_PLATFORM_CLIENT;
+                }
+
                 if (!$route->getLabel('docs', true)) {
                     continue;
                 }
@@ -305,7 +388,7 @@ App::get('/specs/:format')
                     continue;
                 }
 
-                if ($platform !== APP_PLATFORM_CONSOLE && !\in_array($platforms[$platform], $route->getLabel('sdk.platform', []))) {
+                if ($platform !== APP_PLATFORM_CONSOLE && !\in_array($platforms[$platform], $sdkPlatofrms)) {
                     continue;
                 }
 
@@ -342,11 +425,11 @@ App::get('/specs/:format')
 
         switch ($format) {
             case 'swagger2':
-                $format = new Swagger2($utopia, $services, $routes, $models, $keys[$platform], $security[$platform]);
+                $format = new Swagger2($utopia, $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0);
                 break;
 
             case 'open-api3':
-                $format = new OpenAPI3($utopia, $services, $routes, $models, $keys[$platform], $security[$platform]);
+                $format = new OpenAPI3($utopia, $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0);
                 break;
             
             default:

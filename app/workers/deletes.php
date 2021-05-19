@@ -112,10 +112,18 @@ class DeletesV1
     protected function deleteUser(Document $document, $projectId)
     {
         $tokens = $document->getAttribute('tokens', []);
-
+        
         foreach ($tokens as $token) {
             if (!$this->getProjectDB($projectId)->deleteDocument($token->getId())) {
                 throw new Exception('Failed to remove token from DB');
+            }
+        }
+
+        $sessions = $document->getAttribute('sessions', []);
+
+        foreach ($sessions as $session) {
+            if (!$this->getProjectDB($projectId)->deleteDocument($session->getId())) {
+                throw new Exception('Failed to remove session from DB');
             }
         }
 

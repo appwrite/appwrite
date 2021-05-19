@@ -1,5 +1,6 @@
 <?php
 $providers = $this->getParam('providers', []);
+$auth = $this->getParam('auth', []);
 ?>
 
 <div class="cover">
@@ -16,41 +17,6 @@ $providers = $this->getParam('providers', []);
         <li data-state="/console/users?project={{router.params.project}}">
 
             <h2>Users</h2>
-
-            <div data-ui-modal class="box modal close" data-button-text="" data-button-class="fly round" data-button-icon="icon-plus">
-                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
-
-                <h1>Create User</h1>
-
-                <form
-                    data-analytics
-                    data-analytics-activity
-                    data-analytics-event="submit"
-                    data-analytics-category="console"
-                    data-analytics-label="Create User"
-                    data-service="users.create"
-                    data-event="submit"
-                    data-success="alert,trigger,reset"
-                    data-success-param-alert-text="Created user successfully"
-                    data-success-param-trigger-events="users.create"
-                    data-failure="alert"
-                    data-failure-param-alert-text="Failed to create user"
-                    data-failure-param-alert-classname="error">
-
-                    <label for="user-name">Name</label>
-                    <input type="text" class="full-width" id="user-name" name="name" required autocomplete="off" maxlength="128" />
-
-                    <label for="user-email">Email</label>
-                    <input type="email" class="full-width" id="user-email" name="email" required autocomplete="off" />
-
-                    <label for="user-password">Password</label>
-                    <input type="password" class="full-width" id="user-password" name="password" required pattern=".{6,}" title="Six or more characters" autocomplete="off" />
-
-                    <hr />
-
-                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                </form>
-            </div>
 
             <form class="box padding-small margin-bottom search"
                 data-service="users.list"
@@ -111,7 +77,7 @@ $providers = $this->getParam('providers', []);
                                     <td data-title="Name: ">
                                         <a data-ls-attrs="href=/console/users/user?id={{user.$id}}&project={{router.params.project}}">
                                             <span data-ls-bind="{{user.name}}"></span>
-                                            <span data-ls-if="{{user.name}} === ''">-----</span>
+                                            <span data-ls-if="{{user.name|escape}} === ''">-----</span>
                                         </a>
                                     </td>
                                     <td data-title="Email: ">
@@ -137,7 +103,7 @@ $providers = $this->getParam('providers', []);
                     </div>
                 </div>
 
-                <div class="clear text-align-center paging">
+                <div class="pull-end text-align-center paging">
                     <form
                         data-service="users.list"
                         data-event="submit"
@@ -166,40 +132,46 @@ $providers = $this->getParam('providers', []);
                         <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-users.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                     </form>
                 </div>
+
+                <div data-ui-modal class="box modal close" data-button-text="Add User">
+                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                    <h1>Create User</h1>
+
+                    <form
+                        data-analytics
+                        data-analytics-activity
+                        data-analytics-event="submit"
+                        data-analytics-category="console"
+                        data-analytics-label="Create User"
+                        data-service="users.create"
+                        data-event="submit"
+                        data-success="alert,trigger,reset"
+                        data-success-param-alert-text="Created user successfully"
+                        data-success-param-trigger-events="users.create"
+                        data-failure="alert"
+                        data-failure-param-alert-text="Failed to create user"
+                        data-failure-param-alert-classname="error">
+
+                        <label for="user-name">Name</label>
+                        <input type="text" class="full-width" id="user-name" name="name" required autocomplete="off" maxlength="128" />
+
+                        <label for="user-email">Email</label>
+                        <input type="email" class="full-width" id="user-email" name="email" required autocomplete="off" />
+
+                        <label for="user-password">Password</label>
+                        <input type="password" class="full-width" id="user-password" name="password" required pattern=".{6,}" title="Six or more characters" autocomplete="off" />
+
+                        <hr />
+
+                        <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                    </form>
+                </div>
             </div>
         </li>
 
         <li data-state="/console/users/teams?project={{router.params.project}}">
             <h2>Teams</h2>
-
-            <div data-ui-modal class="box modal close" data-button-text="" data-button-class="fly round" data-button-icon="icon-plus">
-                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
-
-                <h1>Create Team</h1>
-
-                <form
-                    data-analytics
-                    data-analytics-activity
-                    data-analytics-event="submit"
-                    data-analytics-category="console"
-                    data-analytics-label="Create Team"
-                    data-service="teams.create"
-                    data-event="submit"
-                    data-success="alert,trigger,reset"
-                    data-success-param-alert-text="Created team successfully"
-                    data-success-param-trigger-events="filter-teams-changed,teams.create"
-                    data-failure="alert"
-                    data-failure-param-alert-text="Failed to create team"
-                    data-failure-param-alert-classname="error">
-
-                    <label for="team-name">Name</label>
-                    <input type="text" class="full-width" id="team-name" name="name" required autocomplete="off" maxlength="128" />
-                    
-                    <hr />
-
-                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                </form>
-            </div>
 
             <form class="box padding-small margin-bottom search"
                 data-service="teams.list"
@@ -239,7 +211,7 @@ $providers = $this->getParam('providers', []);
                 </div>
 
                 <div data-ls-if="0 != {{project-teams.sum}}">
-                <div class="margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-teams.sum}}"></span> results found</div>
+                    <div class="margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-teams.sum}}"></span> results found</div>
 
                     <div class="box margin-bottom">
                         <table class="vertical">
@@ -267,7 +239,7 @@ $providers = $this->getParam('providers', []);
                     </div>
                 </div>
 
-                <div class="clear text-align-center paging">
+                <div class="pull-end text-align-center paging">
                     <form
                         data-service="teams.list"
                         data-event="submit"
@@ -296,13 +268,131 @@ $providers = $this->getParam('providers', []);
                         <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-teams.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                     </form>
                 </div>
+
+                <div data-ui-modal class="box modal close" data-button-text="Add Team">
+                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                    <h1>Create Team</h1>
+
+                    <form
+                        data-analytics
+                        data-analytics-activity
+                        data-analytics-event="submit"
+                        data-analytics-category="console"
+                        data-analytics-label="Create Team"
+                        data-service="teams.create"
+                        data-event="submit"
+                        data-success="alert,trigger,reset"
+                        data-success-param-alert-text="Created team successfully"
+                        data-success-param-trigger-events="filter-teams-changed,teams.create"
+                        data-failure="alert"
+                        data-failure-param-alert-text="Failed to create team"
+                        data-failure-param-alert-classname="error">
+
+                        <label for="team-name">Name</label>
+                        <input type="text" class="full-width" id="team-name" name="name" required autocomplete="off" maxlength="128" />
+                        
+                        <hr />
+
+                        <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                    </form>
+                </div>
             </div>
         </li>
         
         <li data-state="/console/users/providers?project={{router.params.project}}">
-            <h2>OAuth2 Providers</h2>
+            <p data-ls-if="{{console-project.usersAuthLimit}} == 0" class="text-fade text-size-small margin-bottom pull-end">Unlimited Users <span class="link" data-ls-ui-trigger="project-update-auth-users-limit">Set Limit</a></p>
+            <p data-ls-if="{{console-project.usersAuthLimit}} != 0" class="text-fade text-size-small margin-bottom pull-end"><span data-ls-bind="{{console-project.usersAuthLimit|statsTotal}}"></span> Users allowed <span class="link" data-ls-ui-trigger="project-update-auth-users-limit">Change Limit</a></p>
+            
+            <h2>Settings</h2>
 
-            <div class="margin-bottom margin-top-large"
+            <div data-ui-modal class="modal close" data-button-alias="none" data-open-event="project-update-auth-users-limit">
+                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                <h1>Max Allowed Users</h1>
+
+                <form data-debug="1"
+                    data-analytics
+                    data-analytics-activity
+                    data-analytics-event="submit"
+                    data-analytics-category="console"
+                    data-analytics-label="Update Project Users Limit"
+                    data-service="projects.updateAuthLimit"
+                    data-scope="console"
+                    data-event="submit"
+                    data-param-project-id="{{router.params.project}}"
+                    data-success="alert,trigger"
+                    data-success-param-alert-text="Updated project users limit successfully"
+                    data-success-param-trigger-events="projects.update"
+                    data-failure="alert"
+                    data-failure-param-alert-text="Failed to update project users limit"
+                    data-failure-param-alert-classname="error">
+
+                    <input name="limit" id="users-limit" type="number" data-ls-bind="{{console-project.usersAuthLimit}}" data-cast-to="numeric" min="0" />
+
+                    <div class="info row thin margin-bottom margin-top">
+                        <div class="col span-1">
+                            <i class="icon-info-circled text-sign"></i>
+                        </div>
+                        <div class="col span-11">This limit will prevent new users from signing up for your project, no matter what auth method has been used. You will still be able to create users and team memberships from your Appwrite console. For an unlimited amount of users, set the limit to 0.</div>
+                    </div>
+
+                    <button>Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                </form>
+            </div>
+
+            <p class="text-fade margin-bottom">Choose auth methods you wish to use.</p>
+
+            <ul class="tiles cell-3 margin-bottom-small">
+                <?php foreach($auth as $index => $method):
+                    $key = $method['key'] ?? '';
+                    $name = $method['name'] ?? '';
+                    $icon = $method['icon'] ?? '';
+                    $docs = $method['docs'] ?? '';
+                    $enabled = $method['enabled'] ?? false;
+                    ?>
+                <li class="">
+                    <div class="box padding-small margin-bottom clear">
+                        <?php if($enabled): ?>
+                            <form
+                                data-analytics
+                                data-analytics-activity
+                                data-analytics-event="submit"
+                                data-analytics-category="console"
+                                data-analytics-label="Update Project Auth Status (<?php echo $this->escape($name); ?>)"
+                                data-service="projects.updateAuthStatus"
+                                data-scope="console"
+                                data-event="change"
+                                data-param-project-id="{{router.params.project}}"
+                                data-success="alert,trigger"
+                                data-success-param-alert-text="Updated project auth status successfully"
+                                data-success-param-trigger-events="projects.update"
+                                data-failure="alert"
+                                data-failure-param-alert-text="Failed to update project auth status settings"
+                                data-failure-param-alert-classname="error">
+                                <input name="method" id="<?php echo $this->escape($key); ?>" type="hidden" autocomplete="off" value="<?php echo $this->escape($index); ?>">
+
+                                <input name="status" type="hidden" data-forms-switch data-ls-bind="{{console-project.<?php echo $this->escape($key); ?>}}" data-cast-to="boolean" class="pull-end" />
+                            </form>
+                        <?php endif; ?>
+
+                        <img src="<?php echo $this->escape($icon); ?>?buster=<?php echo APP_CACHE_BUSTER; ?>" alt="Email/Password Logo" class="pull-start provider margin-end" />
+                                
+                        <span class="text-size-small"><?php echo $this->escape($name); ?><?php if(!$enabled): ?> <spann class="text-fade text-size-xs">soon</span><?php endif; ?></span>
+
+                        <?php if($docs): ?>
+                        <p class="margin-bottom-no text-one-liner text-size-small">
+                            <a href="<?php echo $this->escape($docs); ?>" target="_blank" rel="noopener">Docs<i class="icon-link-ext"></i></a>
+                        </p>
+                        <?php endif; ?>
+                    </div>
+                </li>
+                <?php endforeach; ?>
+            </ul>
+
+            <h3>OAuth2 Providers</h3>
+
+            <div class="margin-bottom margin-top"
                 data-service="projects.get"
                 data-event="load,projects.create,projects.update,projects.deleteProject"
                 data-name="console-project"
@@ -312,6 +402,7 @@ $providers = $this->getParam('providers', []);
                     <?php foreach ($providers as $provider => $data):
                         if (isset($data['enabled']) && !$data['enabled']) { continue; }
                         if (isset($data['mock']) && $data['mock']) { continue; }
+                        $sandbox = $data['sandbox'] ?? false;
                         $form = $data['form'] ?? false;
                         $name = $data['name'] ?? 'Unknown';
                         $beta = $data['beta'] ?? false;
@@ -320,9 +411,10 @@ $providers = $this->getParam('providers', []);
                             <div data-ui-modal class="modal close" data-button-alias="none" data-open-event="provider-update-<?php echo $provider; ?>">
                                 <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                                <h1><?php echo $this->escape($name); ?> OAuth2 Settings</h1>
+                                <h1><?php echo $this->escape($name); ?> <?php if($sandbox): ?>Sandbox<?php endif; ?> OAuth2 Settings</h1>
 
                                 <form
+                                    autocomplete="off"
                                     data-analytics
                                     data-analytics-activity
                                     data-analytics-event="submit"
@@ -338,6 +430,10 @@ $providers = $this->getParam('providers', []);
                                     data-failure="alert"
                                     data-failure-param-alert-text="Failed to update project OAuth2 settings"
                                     data-failure-param-alert-classname="error">
+                                    
+                                    <input style="display: none" type="text" /> <?php /** Disabling Chrone Autofill @see https://stackoverflow.com/a/15917221/2299554 */ ?>
+                                    <input style="display: none" type="password" /> <?php /** Disabling Chrone Autofill @see https://stackoverflow.com/a/15917221/2299554 */ ?>
+                                    
                                     <input name="provider" id="provider<?php echo $this->escape(ucfirst($provider)); ?>" type="hidden" autocomplete="off" value="<?php echo $this->escape($provider); ?>">
 
                                     <?php if(!$form): ?>
@@ -383,10 +479,10 @@ $providers = $this->getParam('providers', []);
                                     <button class="switch pull-end" data-ls-ui-trigger="provider-update-<?php echo $this->escape($provider); ?>"></button>
                                 </span>
 
-                                <img src="/images/oauth2/<?php echo $this->escape(strtolower($provider)); ?>.png?buster=<?php echo APP_CACHE_BUSTER; ?>" alt="<?php echo $this->escape(ucfirst($provider)); ?> Logo" class="pull-start provider margin-end" />
+                                <img src="/images/users/oauth2/<?php echo $this->escape(strtolower($provider)); ?>.png?buster=<?php echo APP_CACHE_BUSTER; ?>" alt="<?php echo $this->escape(ucfirst($provider)); ?> Logo" class="pull-start provider margin-end" />
                                 
                                 <span class="text-size-small">
-                                    <?php echo $this->escape($name); ?> <?php if($beta): ?>(beta)<?php endif; ?>
+                                    <?php echo $this->escape($name); ?> <?php if($sandbox): ?><span class="text-size-xs text-fade">sandbox</span><?php endif; ?> <?php if($beta): ?><span class="text-size-xs text-fade">beta</span><?php endif; ?>
                                 </span>
 
                                 <p class="margin-bottom-no text-one-liner text-size-small">

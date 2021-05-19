@@ -61,12 +61,12 @@ $cli
             Console::log('🟢 Abuse protection is enabled');
         }
 
+        $authWhitelistRoot = App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', null);
         $authWhitelistEmails = App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null);
         $authWhitelistIPs = App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null);
-        $authWhitelistDomains = App::getEnv('_APP_CONSOLE_WHITELIST_DOMAINS', null);
 
-        if(empty($authWhitelistEmails)
-            && empty($authWhitelistDomains)
+        if(empty($authWhitelistRoot)
+            && empty($authWhitelistEmails)
             && empty($authWhitelistIPs)
         ) {
             Console::log('🔴 Console access limits are disabled');

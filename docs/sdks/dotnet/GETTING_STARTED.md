@@ -14,6 +14,7 @@ static async Task Main(string[] args)
     .setEndpoint('http://[HOSTNAME_OR_IP]/v1') // Make sure your endpoint is accessible
     .setProject('5ff3379a01d25') // Your project ID
     .setKey('cd868c7af8bdc893b4...93b7535db89')
+    .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
   ;
 
   var users = Users(client);
@@ -25,6 +26,21 @@ static async Task Main(string[] args)
   } catch (AppwriteException e) {
     Console.WriteLine(e.Message);
   }
+}
+```
+
+### Error Handling
+The Appwrite .NET SDK raises `AppwriteException` object with `message`, `code` and `response` properties. You can handle any errors by catching `AppwriteException` and present the `message` to the user or handle it yourself based on the provided error information. Below is an example.
+
+```csharp
+var users = Users(client);
+
+try {
+  var request = await users.create('email@example.com', 'password', 'name');
+  var response = await request.Content.ReadAsStringAsync();
+  Console.WriteLine(response);
+} catch (AppwriteException e) {
+  Console.WriteLine(e.Message);
 }
 ```
 
