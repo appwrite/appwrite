@@ -223,7 +223,7 @@ class Response extends SwooleResponse
      * 
      * @return self
      */
-    public function setModel(Model $instance): self
+    public function setModel(Model $instance)
     {
         $this->models[$instance->getType()] = $instance;
 

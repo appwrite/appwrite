@@ -198,7 +198,7 @@ class OpenAPI3 extends Format
                     }
                 }
 
-                $temp['x-appwrite']['auth'] = array_slice($securities, 0, 2);
+                $temp['x-appwrite']['auth'] = array_slice($securities, 0, $this->authCount);
                 $temp['security'][] = $securities;
             }
 
