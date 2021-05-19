@@ -103,6 +103,25 @@ class OpenAPI3 extends Format
             $desc = (!empty($route->getLabel('sdk.description', ''))) ? \realpath(__DIR__.'/../../../../'.$route->getLabel('sdk.description', '')) : null;
             $produces = $route->getLabel('sdk.response.type', null);
             $model = $route->getLabel('sdk.response.model', 'none'); 
+            $routeSecurity = $route->getLabel('sdk.auth', []);
+            $sdkPlatofrms = [];
+
+            foreach ($routeSecurity as $value) {
+                switch ($value) {
+                    case APP_AUTH_TYPE_SESSION:
+                        $sdkPlatofrms[] = APP_PLATFORM_CLIENT;
+                        break;
+                    case APP_AUTH_TYPE_KEY:
+                        $sdkPlatofrms[] = APP_PLATFORM_SERVER;
+                        break;
+                    case APP_AUTH_TYPE_JWT:
+                        $sdkPlatofrms[] = APP_PLATFORM_SERVER;
+                        break;
+                    case APP_AUTH_TYPE_ADMIN:
+                        $sdkPlatofrms[] = APP_PLATFORM_CONSOLE;
+                        break;
+                }
+            }
             
             $temp = [
                 'summary' => $route->getDesc(),
@@ -123,7 +142,7 @@ class OpenAPI3 extends Format
                     'rate-time' => $route->getLabel('abuse-time', 3600),
                     'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
                     'scope' => $route->getLabel('scope', ''),
-                    'platforms' => $route->getLabel('sdk.platform', []),
+                    'platforms' => $sdkPlatofrms,
                     'packaging' => $route->getLabel('sdk.packaging', false),
                 ],
             ];
