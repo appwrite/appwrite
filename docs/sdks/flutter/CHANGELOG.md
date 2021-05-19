@@ -1,3 +1,14 @@
+## 0.6.0
+- Upgraded to Null-safety, minimum Dart SDK required 2.12.0 and minimum Flutter SDK version required 2.0.0
+- Upgraded all underlying dependencies to null safe version
+- **BREAKING** All of Avatars service now return Future<Response></Response> instead of String like the Storage getFilePreview, getFileView and getFileDownload
+- **BREAKING** Renamed parameter **inviteId** to **membershipId** on `teams.updateMembershipStatus`, `teams.deleteMembership`
+- [Anonymous login](https://appwrite.io/docs/client/account?sdk=flutter#accountCreateAnonymousSession)
+- [JWT Support](https://appwrite.io/docs/client/account?sdk=flutter#accountCreateJWT)
+- Fallback Cookies for Flutter Web if 3rd party cookies are blocked
+- Custom User Agent Support
+- [Update membership roles](https://appwrite.io/docs/client/teams?sdk=flutter#teamsUpdateMembershipRoles)
+
 ## 0.5.0-dev.1
 
 - Upgraded to Null-safety, minimum Dart SDK required 2.12.0 and minimum Flutter SDK version required 2.0.0
