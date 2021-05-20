@@ -12,6 +12,8 @@ use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
+use Utopia\Domains\Domain;
 
 // xdebug_start_trace('/tmp/trace');
 
@@ -70,6 +72,10 @@ $http->on('start', function (Server $http) use ($payloadSize) {
         $http->shutdown();
     });
 });
+
+Files::load(__DIR__ . '/../public');
+
+include __DIR__ . '/controllers/general.php';
 
 $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register) {
     $request = new Request($swooleRequest);

@@ -61,7 +61,6 @@ App::post('/v1/account')
         if ('console' === $project->getId()) {
             $whitlistEmails = $project->getAttribute('authWhitelistEmails');
             $whitlistIPs = $project->getAttribute('authWhitelistIPs');
-            $whitlistDomains = $project->getAttribute('authWhitelistDomains');
 
             if (!empty($whitlistEmails) && !\in_array($email, $whitlistEmails)) {
                 throw new Exception('Console registration is restricted to specific emails. Contact your administrator for more information.', 401);
@@ -69,10 +68,6 @@ App::post('/v1/account')
 
             if (!empty($whitlistIPs) && !\in_array($request->getIP(), $whitlistIPs)) {
                 throw new Exception('Console registration is restricted to specific IPs. Contact your administrator for more information.', 401);
-            }
-
-            if (!empty($whitlistDomains) && !\in_array(\substr(\strrchr($email, '@'), 1), $whitlistDomains)) {
-                throw new Exception('Console registration is restricted to specific domains. Contact your administrator for more information.', 401);
             }
         }
 
@@ -514,7 +509,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'emailVerification' => true,
                         'status' => Auth::USER_STATUS_ACTIVATED, // Email should already be authenticated by OAuth2 provider
                         'password' => Auth::passwordHash(Auth::passwordGenerator()),
-                        'passwordUpdate' => \time(),
+                        'passwordUpdate' => 0,
                         'registration' => \time(),
                         'reset' => false,
                         'name' => $name,
@@ -1012,7 +1007,7 @@ App::patch('/v1/account/password')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('password', '', new Password(), 'New user password. Must be between 6 to 32 chars.')
-    ->param('oldPassword', '', new Password(), 'Old user password. Must be between 6 to 32 chars.')
+    ->param('oldPassword', '', new Password(), 'Old user password. Must be between 6 to 32 chars.', true)
     ->inject('response')
     ->inject('user')
     ->inject('projectDB')
@@ -1023,12 +1018,14 @@ App::patch('/v1/account/password')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
 
-        if (!Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
+        // Check old password only if its an existing user.
+        if ($user->getAttribute('passwordUpdate') !== 0 && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
             throw new Exception('Invalid credentials', 401);
         }
 
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
             'password' => Auth::passwordHash($password),
+            'passwordUpdate' => \time(),
         ]));
 
         if (false === $user) {

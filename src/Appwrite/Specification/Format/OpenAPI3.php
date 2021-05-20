@@ -103,6 +103,29 @@ class OpenAPI3 extends Format
             $desc = (!empty($route->getLabel('sdk.description', ''))) ? \realpath(__DIR__.'/../../../../'.$route->getLabel('sdk.description', '')) : null;
             $produces = $route->getLabel('sdk.response.type', null);
             $model = $route->getLabel('sdk.response.model', 'none'); 
+            $routeSecurity = $route->getLabel('sdk.auth', []);
+            $sdkPlatofrms = [];
+
+            foreach ($routeSecurity as $value) {
+                switch ($value) {
+                    case APP_AUTH_TYPE_SESSION:
+                        $sdkPlatofrms[] = APP_PLATFORM_CLIENT;
+                        break;
+                    case APP_AUTH_TYPE_KEY:
+                        $sdkPlatofrms[] = APP_PLATFORM_SERVER;
+                        break;
+                    case APP_AUTH_TYPE_JWT:
+                        $sdkPlatofrms[] = APP_PLATFORM_SERVER;
+                        break;
+                    case APP_AUTH_TYPE_ADMIN:
+                        $sdkPlatofrms[] = APP_PLATFORM_CONSOLE;
+                        break;
+                }
+            }
+
+            if(empty($routeSecurity)) {
+                $sdkPlatofrms[] = APP_PLATFORM_CLIENT;
+            }
             
             $temp = [
                 'summary' => $route->getDesc(),
@@ -123,7 +146,7 @@ class OpenAPI3 extends Format
                     'rate-time' => $route->getLabel('abuse-time', 3600),
                     'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
                     'scope' => $route->getLabel('scope', ''),
-                    'platforms' => $route->getLabel('sdk.platform', []),
+                    'platforms' => $sdkPlatofrms,
                     'packaging' => $route->getLabel('sdk.packaging', false),
                 ],
             ];
@@ -179,7 +202,7 @@ class OpenAPI3 extends Format
                     }
                 }
 
-                $temp['x-appwrite']['auth'] = array_slice($securities, 0, 2);
+                $temp['x-appwrite']['auth'] = array_slice($securities, 0, $this->authCount);
                 $temp['security'][] = $securities;
             }
 
@@ -218,12 +241,12 @@ class OpenAPI3 extends Format
                         $node['schema']['type'] = 'string';
                         $node['schema']['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                         break;
-                    case 'Utopia\Validator\Email':
+                    case 'Appwrite\Network\Validator\Email':
                         $node['schema']['type'] = 'string';
                         $node['schema']['format'] = 'email';
                         $node['schema']['x-example'] = 'email@example.com';
                         break;
-                    case 'Utopia\Validator\URL':
+                    case 'Appwrite\Network\Validator\URL':
                         $node['schema']['type'] = 'string';
                         $node['schema']['format'] = 'url';
                         $node['schema']['x-example'] = 'https://example.com';
@@ -264,14 +287,18 @@ class OpenAPI3 extends Format
                     case 'Utopia\Validator\Length':
                         $node['schema']['type'] = 'string';
                         break;
-                    case 'Utopia\Validator\Host':
+                    case 'Appwrite\Network\Validator\Host':
                         $node['schema']['type'] = 'string';
                         $node['schema']['format'] = 'url';
                         $node['schema']['x-example'] = 'https://example.com';
                         break;
                     case 'Utopia\Validator\WhiteList': /** @var \Utopia\Validator\WhiteList $validator */
-                        $node['schema']['type'] = 'string';
+                        $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = $validator->getList()[0];
+
+                        if ($validator->getType() === 'integer') {
+                            $node['format'] = 'int32';
+                        }
                         break;
                     default:
                         $node['schema']['type'] = 'string';

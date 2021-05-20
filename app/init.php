@@ -46,7 +46,7 @@ const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
 const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
-const APP_CACHE_BUSTER = 145;
+const APP_CACHE_BUSTER = 146;
 const APP_VERSION_STABLE = '0.8.0';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
@@ -60,6 +60,7 @@ const APP_SOCIAL_LINKEDIN = 'https://www.linkedin.com/company/appwrite';
 const APP_SOCIAL_INSTAGRAM = 'https://www.instagram.com/appwrite.io';
 const APP_SOCIAL_GITHUB = 'https://github.com/appwrite';
 const APP_SOCIAL_DISCORD = 'https://appwrite.io/discord';
+const APP_SOCIAL_DISCORD_CHANNEL = '564160730845151244';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite'; 
 // Deletion Types
@@ -183,8 +184,8 @@ $register->set('influxdb', function () { // Register DB connection
     if (empty($host) || empty($port)) {
         return;
     }
-    $driver = new InfluxDB\Driver\Curl(dsn: "http://{$host}:{$port}");
-    $client = new InfluxDB\Client(host: $host, port: $port, timeout: 5);
+    $driver = new InfluxDB\Driver\Curl("http://{$host}:{$port}");
+    $client = new InfluxDB\Client($host, $port, '', '', false, false, 5);
     $client->setDriver($driver);
 
     return $client;

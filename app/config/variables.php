@@ -14,6 +14,7 @@ return [
                 'default' => 'production',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_LOCALE',
@@ -22,6 +23,7 @@ return [
                 'default' => 'en',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_OPTIONS_ABUSE',
@@ -30,6 +32,7 @@ return [
                 'default' => 'enabled',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_OPTIONS_FORCE_HTTPS',
@@ -38,6 +41,7 @@ return [
                 'default' => 'disabled',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_OPENSSL_KEY_V1',
@@ -46,6 +50,7 @@ return [
                 'default' => 'your-secret-key',
                 'required' => true,
                 'question' => 'Choose a secret API key, make sure to make a backup of your key in a secure location',
+                'filter' => 'token'
             ],
             [
                 'name' => '_APP_DOMAIN',
@@ -54,6 +59,7 @@ return [
                 'default' => 'localhost',
                 'required' => true,
                 'question' => 'Enter your Appwrite hostname',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_DOMAIN_TARGET',
@@ -62,14 +68,25 @@ return [
                 'default' => 'localhost',
                 'required' => true,
                 'question' => 'Enter a DNS A record hostname to serve as a CNAME for your custom domains.\nYou can use the same value as used for the Appwrite hostname.',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_WHITELIST_ROOT',
+                'description' => 'This option allows you to disable the creation of new users on the Appwrite console. When enabled only 1 user will be able to use the registration form. New users can be added by invting them to your project. By default this option is enabled.',
+                'introduction' => '0.8.0',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_EMAILS',
-                'description' => 'This option allows you to limit creation of users to Appwrite console. This option is very useful for small teams or sole developers. To enable it, pass a list of allowed email addresses separated by a comma.',
+                'description' => 'This option allows you to limit creation of new users on the Appwrite console. This option is very useful for small teams or sole developers. To enable it, pass a list of allowed email addresses separated by a comma.',
                 'introduction' => '',
                 'default' => '',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             // [
             //     'name' => '_APP_CONSOLE_WHITELIST_DOMAINS',
@@ -86,6 +103,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_SYSTEM_EMAIL_NAME',
@@ -94,6 +112,7 @@ return [
                 'default' => 'Appwrite',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_SYSTEM_EMAIL_ADDRESS',
@@ -102,6 +121,7 @@ return [
                 'default' => 'team@appwrite.io',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_SYSTEM_RESPONSE_FORMAT',
@@ -110,6 +130,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_SYSTEM_SECURITY_EMAIL_ADDRESS',
@@ -118,6 +139,7 @@ return [
                 'default' => 'certs@appwrite.io',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_USAGE_STATS',
@@ -126,6 +148,7 @@ return [
                 'default' => 'enabled',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ]
         ],
     ],
@@ -140,6 +163,7 @@ return [
                 'default' => 'redis',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_REDIS_PORT',
@@ -148,6 +172,7 @@ return [
                 'default' => '6379',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_REDIS_USER',
@@ -156,6 +181,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_REDIS_PASS',
@@ -164,6 +190,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
         ],
     ],
@@ -178,6 +205,7 @@ return [
                 'default' => 'mariadb',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_DB_PORT',
@@ -186,6 +214,7 @@ return [
                 'default' => '3306',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_DB_SCHEMA',
@@ -194,6 +223,7 @@ return [
                 'default' => 'appwrite',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_DB_USER',
@@ -202,6 +232,7 @@ return [
                 'default' => 'user',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_DB_PASS',
@@ -210,6 +241,16 @@ return [
                 'default' => 'password',
                 'required' => false,
                 'question' => '',
+                'filter' => 'password'
+            ],
+            [
+                'name' => '_APP_DB_ROOT_PASS',
+                'description' => 'MariaDB server root password. Default value is: \'rootsecretpassword\'.',
+                'introduction' => '',
+                'default' => 'rootsecretpassword',
+                'required' => false,
+                'question' => '',
+                'filter' => 'password'
             ],
         ],
     ],
@@ -224,6 +265,7 @@ return [
                 'default' => 'influxdb',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_INFLUXDB_PORT',
@@ -232,6 +274,7 @@ return [
                 'default' => '8086',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
         ],
     ],
@@ -246,6 +289,7 @@ return [
                 'default' => 'telegraf',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_STATSD_PORT',
@@ -254,6 +298,7 @@ return [
                 'default' => '8125',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
         ],
     ],
@@ -268,6 +313,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_SMTP_PORT',
@@ -276,6 +322,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_SMTP_SECURE',
@@ -284,6 +331,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_SMTP_USERNAME',
@@ -292,6 +340,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_SMTP_PASSWORD',
@@ -300,6 +349,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
         ],
     ],
@@ -314,6 +364,7 @@ return [
                 'default' => '10000000',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_STORAGE_ANTIVIRUS',
@@ -322,6 +373,7 @@ return [
                 'default' => 'disabled',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_STORAGE_ANTIVIRUS_HOST',
@@ -330,6 +382,7 @@ return [
                 'default' => 'clamav',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_STORAGE_ANTIVIRUS_PORT',
@@ -338,6 +391,7 @@ return [
                 'default' => '3310',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
         ],
     ],
@@ -352,6 +406,7 @@ return [
                 'default' => '900',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_FUNCTIONS_CONTAINERS',
@@ -360,6 +415,7 @@ return [
                 'default' => '10',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_FUNCTIONS_CPUS',
@@ -368,6 +424,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_FUNCTIONS_MEMORY',
@@ -376,6 +433,7 @@ return [
                 'default' => '256',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_FUNCTIONS_MEMORY_SWAP',
@@ -384,14 +442,16 @@ return [
                 'default' => '256',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_FUNCTIONS_RUNTIMES',
-                'description' => 'This option allows you to limit the available environments for cloud functions. This option is very useful for low-cost servers to safe disk space.\n\nTo enable/activate this option, pass a list of allowed environments separated by a comma.\n\nCurrently, supported environments are: ' . \implode(', ', \array_keys(Config::getParam('providers'))),
+                'description' => "This option allows you to limit the available environments for cloud functions. This option is very useful for low-cost servers to safe disk space.\n\nTo enable/activate this option, pass a list of allowed environments separated by a comma.\n\nCurrently, supported environments are: " . \implode(', ', \array_keys(Config::getParam('runtimes'))),
                 'introduction' => '0.8.0',
                 'default' => 'node-15.5,deno-1.8,php-8.0,python-3.9,ruby-3.0,dotnet-5.0',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_FUNCTIONS_ENVS',
@@ -400,6 +460,7 @@ return [
                 'default' => 'node-14.5,deno-1.8,php-7.4,python-3.9,ruby-3.0,dotnet-5.0',
                 'required' => false,
                 'question' => '',
+                'filter' => ''
             ],
         ],
         [
@@ -413,6 +474,7 @@ return [
                     'default' => '86400',
                     'required' => false,
                     'question' => '',
+                    'filter' => ''
                 ],
                 [
                     'name' => '_APP_MAINTENANCE_RETENTION_EXECUTION',
@@ -421,6 +483,7 @@ return [
                     'default' => '1209600',
                     'required' => false,
                     'question' => '',
+                    'filter' => ''
                 ],
                 [
                     'name' => '_APP_MAINTENANCE_RETENTION_AUDIT',
@@ -429,6 +492,7 @@ return [
                     'default' => '1209600',
                     'required' => false,
                     'question' => '',
+                    'filter' => ''
                 ],
                 [
                     'name' => '_APP_MAINTENANCE_RETENTION_ABUSE',
@@ -437,6 +501,7 @@ return [
                     'default' => '86400',
                     'required' => false,
                     'question' => '',
+                    'filter' => ''
                 ]
             ],
         ],

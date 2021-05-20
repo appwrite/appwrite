@@ -2,18 +2,13 @@
 
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Config\Config;
-use Appwrite\Database\Database;
-use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
-use Appwrite\Database\Adapter\Redis as RedisAdapter;
-use Appwrite\Database\Validator\Authorization;
-use Appwrite\Resque\Worker;
 
 require_once __DIR__.'/../workers.php';
 
 Console::title('Webhooks V1 Worker');
 
 Console::success(APP_NAME.' webhooks worker v1 has started');
+use Appwrite\Resque\Worker;
 
 class WebhooksV1 extends Worker
 {
@@ -25,34 +20,16 @@ class WebhooksV1 extends Worker
 
     public function run(): void
     {
-        global $register;
-
-        $consoleDB = new Database();
-        $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
-        $consoleDB->setNamespace('app_console'); // Main DB
-        $consoleDB->setMocks(Config::getParam('collections', []));
-    
         $errors = [];
 
         // Event
         $projectId = $this->args['projectId'] ?? '';
+        $webhooks = $this->args['webhooks'] ?? [];
         $userId = $this->args['userId'] ?? '';
         $event = $this->args['event'] ?? '';
         $eventData = \json_encode($this->args['eventData']);
 
-        // Webhook
-
-        Authorization::disable();
-
-        $project = $consoleDB->getDocument($projectId);
-
-        Authorization::reset();
-
-        if (\is_null($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) {
-            throw new Exception('Project Not Found');
-        }
-
-        foreach ($project->getAttribute('webhooks', []) as $webhook) {
+        foreach ($webhooks as $webhook) {
             if (!(isset($webhook['events']) && \is_array($webhook['events']) && \in_array($event, $webhook['events']))) {
                 continue;
             }

@@ -30,7 +30,6 @@ class MailsV1 extends Worker
             return;
         }
 
-        $event = $this->args['event'];
         $from = $this->args['from'];
         $recipient = $this->args['recipient'];
         $name = $this->args['name'];
