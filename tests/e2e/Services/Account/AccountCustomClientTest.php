@@ -240,6 +240,10 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertIsArray($response['body']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['userId']);
 
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
