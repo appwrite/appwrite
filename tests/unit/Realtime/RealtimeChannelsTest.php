@@ -57,14 +57,16 @@ class RealtimeChannelsTest extends TestCase
                         ]
                     ]
                 ]));
+                $roles = Realtime::getRoles();
+                $parsedChannels = Realtime::parseChannels([0 => $channel]);
 
                 Realtime::subscribe(
                     '1',
                     $this->connectionsCount,
-                    Realtime::getRoles(),
+                    $roles,
                     $this->subscriptions,
                     $this->connections,
-                    Realtime::parseChannels([0 => $channel])
+                    $parsedChannels
                 );
 
                 $this->connectionsCount++;
@@ -80,13 +82,16 @@ class RealtimeChannelsTest extends TestCase
                     '$id' => ''
                 ]));
 
+                $roles = Realtime::getRoles();
+                $parsedChannels = Realtime::parseChannels([0 => $channel]);
+
                 Realtime::subscribe(
                     '1',
                     $this->connectionsCount,
-                    Realtime::getRoles(),
+                    $roles,
                     $this->subscriptions,
                     $this->connections,
-                    Realtime::parseChannels([0 => $channel])
+                    $parsedChannels
                 );
 
                 $this->connectionsCount++;
