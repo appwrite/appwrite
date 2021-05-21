@@ -388,10 +388,10 @@ App::get('/v1/mock/tests/general/oauth2')
     ->label('sdk.mock', true)
     ->param('client_id', '', new Text(100), 'OAuth2 Client ID.')
     ->param('redirect_uri', '', new Host(['localhost']), 'OAuth2 Redirect URI.') // Important to deny an open redirect attack
-    ->param('scope', '', new Text(100), 'OAuth2 scope list.')
+    ->param('scopes', [], new ArrayList(new Text(128)), 'A list of custom OAuth2 scopes.', true)
     ->param('state', '', new Text(1024), 'OAuth2 state.')
     ->inject('response')
-    ->action(function ($client_id, $redirectURI, $scope, $state, $response) {
+    ->action(function ($client_id, $redirectURI, $scopes, $state, $response) {
         /** @var Appwrite\Utopia\Response $response */
 
         $response->redirect($redirectURI.'?'.\http_build_query(['code' => 'abcdef', 'state' => $state]));
