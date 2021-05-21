@@ -270,7 +270,7 @@ class Swagger2 extends Format
                         break;
                     case 'Appwrite\Auth\Validator\Password':
                         $node['type'] = $validator->getType();
-                        $node['format'] = 'format';
+                        $node['format'] = 'password';
                         $node['x-example'] = 'password';
                         break;
                     case 'Utopia\Validator\Range': /** @var \Utopia\Validator\Range $validator */
