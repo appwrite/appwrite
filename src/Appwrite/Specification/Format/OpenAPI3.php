@@ -277,7 +277,7 @@ class OpenAPI3 extends Format
                         $node['schema']['x-example'] = 'password';
                         break;
                     case 'Utopia\Validator\Range': /** @var \Utopia\Validator\Range $validator */
-                        $node['schema']['type'] = $validator->getType();
+                        $node['type'] = $validator->getType() == Validator::TYPE_FLOAT ? 'number': $validator->getType();
                         $node['schema']['format'] = $validator->getType() == Validator::TYPE_INTEGER ? 'int32' : 'float';
                         $node['schema']['x-example'] = $validator->getMin();
                         break;
