@@ -259,7 +259,7 @@ class Swagger2 extends Format
                         break;
                     case 'Utopia\Storage\Validator\File':
                         $consumes = ['multipart/form-data'];
-                        $node['type'] = $validator->getType();
+                        $node['type'] = 'file';
                         break;
                     case 'Utopia\Validator\ArrayList':
                         $node['type'] = 'array';
