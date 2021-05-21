@@ -252,7 +252,7 @@ class Swagger2 extends Format
                     case 'Utopia\Validator\JSON':
                     case 'Utopia\Validator\Mock':
                     case 'Utopia\Validator\Assoc':
-                        $node['type'] = $validator->getType();
+                        $node['type'] = 'object';
                         $param['default'] = (empty($param['default'])) ? new stdClass() : $param['default'];
                         $node['x-example'] = '{}';
                         //$node['format'] = 'json';
@@ -262,7 +262,7 @@ class Swagger2 extends Format
                         $node['type'] = $validator->getType();
                         break;
                     case 'Utopia\Validator\ArrayList':
-                        $node['type'] = $validator->getType();
+                        $node['type'] = 'array';
                         $node['collectionFormat'] = 'multi';
                         $node['items'] = [
                             'type' => 'string',
@@ -274,7 +274,7 @@ class Swagger2 extends Format
                         $node['x-example'] = 'password';
                         break;
                     case 'Utopia\Validator\Range': /** @var \Utopia\Validator\Range $validator */
-                        $node['type'] = $validator->getType() == Validator::TYPE_FLOAT ? 'number': $validator->getType();
+                        $node['type'] = $validator->getType() === Validator::TYPE_FLOAT ? 'number': $validator->getType();
                         $node['format'] = $validator->getType() == Validator::TYPE_INTEGER ? 'int32' : 'float';
                         $node['x-example'] = $validator->getMin();
                         break;

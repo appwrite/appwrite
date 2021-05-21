@@ -256,7 +256,7 @@ class OpenAPI3 extends Format
                     case 'Utopia\Validator\Mock':
                     case 'Utopia\Validator\Assoc':
                         $param['default'] = (empty($param['default'])) ? new stdClass() : $param['default'];
-                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['type'] = 'object';
                         $node['schema']['x-example'] = '{}';
                         //$node['schema']['format'] = 'json';
                         break;
@@ -266,18 +266,18 @@ class OpenAPI3 extends Format
                         $node['schema']['format'] = 'binary';
                         break;
                     case 'Utopia\Validator\ArrayList':
-                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['type'] = 'array';
                         $node['schema']['items'] = [
                             'type' => 'string',
                         ];
                         break;
                     case 'Appwrite\Auth\Validator\Password':
                         $node['schema']['type'] = $validator->getType();
-                        $node['schema']['format'] = 'format';
+                        $node['schema']['format'] = 'password';
                         $node['schema']['x-example'] = 'password';
                         break;
                     case 'Utopia\Validator\Range': /** @var \Utopia\Validator\Range $validator */
-                        $node['type'] = $validator->getType() == Validator::TYPE_FLOAT ? 'number': $validator->getType();
+                        $node['type'] = $validator->getType() === Validator::TYPE_FLOAT ? 'number': $validator->getType();
                         $node['schema']['format'] = $validator->getType() == Validator::TYPE_INTEGER ? 'int32' : 'float';
                         $node['schema']['x-example'] = $validator->getMin();
                         break;
