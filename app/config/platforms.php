@@ -178,7 +178,7 @@ return [
             [
                 'key' => 'nodejs',
                 'name' => 'Node.js',
-                'version' => '2.2.0',
+                'version' => '2.2.1',
                 'url' => 'https://github.com/appwrite/sdk-for-node',
                 'package' => 'https://www.npmjs.com/package/node-appwrite',
                 'enabled' => true,
