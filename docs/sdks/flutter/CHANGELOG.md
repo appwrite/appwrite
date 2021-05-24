@@ -1,3 +1,7 @@
+## 0.6.2
+
+- Fixed deployment bug
+
 ## 0.6.1
 
 - Fix for image preview param types
