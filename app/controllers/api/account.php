@@ -714,9 +714,15 @@ App::post('/v1/account/sessions/anonymous')
             $detector->getDevice()
         ));
 
-        $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
-
         Authorization::setRole('user:'.$user->getId());
+
+        $session = $projectDB->createDocument($session->getArrayCopy());
+
+        if (false === $session) {
+            throw new Exception('Failed saving session to DB', 500);
+        }
+
+        $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
 
         $user = $projectDB->updateDocument($user->getArrayCopy());
 
