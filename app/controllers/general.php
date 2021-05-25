@@ -157,8 +157,9 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
         if ($request->getProtocol() !== 'https') {
             return $response->redirect('https://'.$request->getHostname().$request->getURI());
         }
-
-        $response->addHeader('Strict-Transport-Security', 'max-age='.(60 * 60 * 24 * 126)); // 126 days
+        if(array_key_exists($domain, $domains)) {
+            $response->addHeader('Strict-Transport-Security', 'max-age='.(60 * 60 * 24 * 126)); // 126 days
+        }
     }
 
     $response
