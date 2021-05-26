@@ -714,9 +714,15 @@ App::post('/v1/account/sessions/anonymous')
             $detector->getDevice()
         ));
 
-        $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
-
         Authorization::setRole('user:'.$user->getId());
+
+        $session = $projectDB->createDocument($session->getArrayCopy());
+
+        if (false === $session) {
+            throw new Exception('Failed saving session to DB', 500);
+        }
+
+        $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
 
         $user = $projectDB->updateDocument($user->getArrayCopy());
 
@@ -759,6 +765,9 @@ App::post('/v1/account/jwt')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createJWT')
     ->label('sdk.description', '/docs/references/account/create-jwt.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_JWT)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
     ->inject('response')

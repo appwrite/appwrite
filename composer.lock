@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d722be0ec2f73f6436fc99b64bd69f0a",
+    "content-hash": "e433ce62dd355a107816e8967d5c769d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1693,16 +1693,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.14.0",
+            "version": "0.14.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "92d4a36f3b0e22393a31877c5317c96e01760339"
+                "reference": "632113288bebe41cbef79f0d355bd91609767b8c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/92d4a36f3b0e22393a31877c5317c96e01760339",
-                "reference": "92d4a36f3b0e22393a31877c5317c96e01760339",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/632113288bebe41cbef79f0d355bd91609767b8c",
+                "reference": "632113288bebe41cbef79f0d355bd91609767b8c",
                 "shasum": ""
             },
             "require": {
@@ -1736,9 +1736,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.14.0"
+                "source": "https://github.com/utopia-php/framework/tree/0.14.1"
             },
-            "time": "2021-04-15T21:01:44+00:00"
+            "time": "2021-05-21T06:41:45+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2340,16 +2340,16 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.10.2",
+            "version": "0.10.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "0e963a0691ec43f39664bcce7860a11e0a152300"
+                "reference": "ab4adb0b9126c617e11c8fdf4352c8aa9a715ecc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/0e963a0691ec43f39664bcce7860a11e0a152300",
-                "reference": "0e963a0691ec43f39664bcce7860a11e0a152300",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/ab4adb0b9126c617e11c8fdf4352c8aa9a715ecc",
+                "reference": "ab4adb0b9126c617e11c8fdf4352c8aa9a715ecc",
                 "shasum": ""
             },
             "require": {
@@ -2383,22 +2383,22 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.10.2"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.10.6"
             },
-            "time": "2021-05-19T19:25:14+00:00"
+            "time": "2021-05-24T14:32:40+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",
-            "version": "1.11.99.1",
+            "version": "1.11.99.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/composer/package-versions-deprecated.git",
-                "reference": "7413f0b55a051e89485c5cb9f765fe24bb02a7b6"
+                "reference": "c6522afe5540d5fc46675043d3ed5a45a740b27c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/composer/package-versions-deprecated/zipball/7413f0b55a051e89485c5cb9f765fe24bb02a7b6",
-                "reference": "7413f0b55a051e89485c5cb9f765fe24bb02a7b6",
+                "url": "https://api.github.com/repos/composer/package-versions-deprecated/zipball/c6522afe5540d5fc46675043d3ed5a45a740b27c",
+                "reference": "c6522afe5540d5fc46675043d3ed5a45a740b27c",
                 "shasum": ""
             },
             "require": {
@@ -2442,7 +2442,7 @@
             "description": "Composer plugin that provides efficient querying for installed package versions (no runtime IO)",
             "support": {
                 "issues": "https://github.com/composer/package-versions-deprecated/issues",
-                "source": "https://github.com/composer/package-versions-deprecated/tree/1.11.99.1"
+                "source": "https://github.com/composer/package-versions-deprecated/tree/1.11.99.2"
             },
             "funding": [
                 {
@@ -2458,20 +2458,20 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2020-11-11T10:22:58+00:00"
+            "time": "2021-05-24T07:46:03+00:00"
         },
         {
             "name": "composer/semver",
-            "version": "3.2.4",
+            "version": "3.2.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/composer/semver.git",
-                "reference": "a02fdf930a3c1c3ed3a49b5f63859c0c20e10464"
+                "reference": "31f3ea725711245195f62e54ffa402d8ef2fdba9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/composer/semver/zipball/a02fdf930a3c1c3ed3a49b5f63859c0c20e10464",
-                "reference": "a02fdf930a3c1c3ed3a49b5f63859c0c20e10464",
+                "url": "https://api.github.com/repos/composer/semver/zipball/31f3ea725711245195f62e54ffa402d8ef2fdba9",
+                "reference": "31f3ea725711245195f62e54ffa402d8ef2fdba9",
                 "shasum": ""
             },
             "require": {
@@ -2523,7 +2523,7 @@
             "support": {
                 "irc": "irc://irc.freenode.org/composer",
                 "issues": "https://github.com/composer/semver/issues",
-                "source": "https://github.com/composer/semver/tree/3.2.4"
+                "source": "https://github.com/composer/semver/tree/3.2.5"
             },
             "funding": [
                 {
@@ -2539,7 +2539,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2020-11-13T08:59:24+00:00"
+            "time": "2021-05-24T12:41:47+00:00"
         },
         {
             "name": "composer/xdebug-handler",
