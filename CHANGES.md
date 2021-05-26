@@ -1,3 +1,11 @@
+# NOT PUBLISHED YET
+
+## Features
+- Refactored Devices page in Console:
+  - Renamed *Devices* to *Sessions*
+  - Add Provider Icon to each Session
+  - Add Anonymous Account Placeholder
+
 # Version 0.8.0
 
 ## Features
