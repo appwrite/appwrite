@@ -94,13 +94,13 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($accountSession['headers']['status-code'], 201);
 
         $sessionId = $accountSession['body']['$id'];
-        $session = $this->client->parseCookie((string)$accountSession['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+        $session = $this->client->parseCookie((string)$accountSession['headers']['set-cookie'])['aw'.$this->getProject()['$id']];
 
         $account = $this->client->call(Client::METHOD_DELETE, '/account', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+            'cookie' => 'aw'.$this->getProject()['$id'].'=' . $session,
         ]));
 
         $this->assertEquals($account['headers']['status-code'], 204);
@@ -150,7 +150,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($accountSession['headers']['status-code'], 201);
 
         $sessionId = $accountSession['body']['$id'];
-        $session = $this->client->parseCookie((string)$accountSession['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+        $session = $this->client->parseCookie((string)$accountSession['headers']['set-cookie'])['aw'.$this->getProject()['$id']];
 
         $webhook = $this->getLastRequest();
 
@@ -214,7 +214,7 @@ class WebhooksCustomClientTest extends Scope
         ]);
 
         $sessionId = $accountSession['body']['$id'];
-        $session = $this->client->parseCookie((string)$accountSession['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+        $session = $this->client->parseCookie((string)$accountSession['headers']['set-cookie'])['aw'.$this->getProject()['$id']];
 
         $this->assertEquals($accountSession['headers']['status-code'], 201);
 
@@ -222,7 +222,7 @@ class WebhooksCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+            'cookie' => 'aw'.$this->getProject()['$id'].'=' . $session,
         ]));
 
         $this->assertEquals($accountSession['headers']['status-code'], 204);
@@ -285,7 +285,7 @@ class WebhooksCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $session = $this->client->parseCookie((string)$accountSession['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+        $session = $this->client->parseCookie((string)$accountSession['headers']['set-cookie'])['aw'.$this->getProject()['$id']];
 
         $this->assertEquals($accountSession['headers']['status-code'], 201);
 
@@ -293,7 +293,7 @@ class WebhooksCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+            'cookie' => 'aw'.$this->getProject()['$id'].'=' . $session,
         ]));
 
         $this->assertEquals($accountSession['headers']['status-code'], 204);
@@ -346,7 +346,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($accountSession['headers']['status-code'], 201);
 
         $sessionId = $accountSession['body']['$id'];
-        $session = $this->client->parseCookie((string)$accountSession['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+        $session = $this->client->parseCookie((string)$accountSession['headers']['set-cookie'])['aw'.$this->getProject()['$id']];
 
         return array_merge($data, [
             'sessionId' => $sessionId,
@@ -368,7 +368,7 @@ class WebhooksCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+            'cookie' => 'aw'.$this->getProject()['$id'].'=' . $session,
         ]), [
             'name' => $newName
         ]);
@@ -411,7 +411,7 @@ class WebhooksCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+            'cookie' => 'aw'.$this->getProject()['$id'].'=' . $session,
         ]), [
             'password' => 'new-password',
             'oldPassword' => $password,
@@ -457,7 +457,7 @@ class WebhooksCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+            'cookie' => 'aw'.$this->getProject()['$id'].'=' . $session,
         ]), [
             'email' => $newEmail,
             'password' => 'new-password',
@@ -502,7 +502,7 @@ class WebhooksCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+            'cookie' => 'aw'.$this->getProject()['$id'].'=' . $session,
         ]), [
             'prefs' => [
                 'prefKey1' => 'prefValue1',
@@ -636,7 +636,7 @@ class WebhooksCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+            'cookie' => 'aw'.$this->getProject()['$id'].'=' . $session,
         ]), [
             'url' => 'http://localhost/verification',
         ]);
@@ -678,7 +678,7 @@ class WebhooksCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+            'cookie' => 'aw'.$this->getProject()['$id'].'=' . $session,
         ]), [
             'userId' => $id,
             'secret' => $secret,

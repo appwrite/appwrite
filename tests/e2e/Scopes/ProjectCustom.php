@@ -23,7 +23,7 @@ trait ProjectCustom
         $team = $this->client->call(Client::METHOD_POST, '/teams', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'cookie' => 'awconsole=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
             'name' => 'Demo Project Team',
@@ -36,7 +36,7 @@ trait ProjectCustom
         $project = $this->client->call(Client::METHOD_POST, '/projects', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'cookie' => 'awconsole=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
             'name' => 'Demo Project',
@@ -58,7 +58,7 @@ trait ProjectCustom
         $key = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$id'] . '/keys', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'cookie' => 'awconsole=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
             'name' => 'Demo Project Key',
@@ -90,7 +90,7 @@ trait ProjectCustom
         $webhook = $this->client->call(Client::METHOD_POST, '/projects/'.$project['body']['$id'].'/webhooks', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'cookie' => 'awconsole=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
             'name' => 'Webhook Test',
