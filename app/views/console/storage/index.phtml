@@ -134,7 +134,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                                         <input type="hidden" name="fileId" data-ls-bind="{{file.$id}}" />
                                                     </form>
                                                 </div>
-                                                <div class="col span-4">
+                                                <div class="col span-4 text-size-small">
                                                     <div class="margin-bottom-small">File Preview</div>
                                                     
                                                     <div class="margin-bottom-small">
@@ -145,8 +145,19 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                                         <a href="" data-ls-attrs="href={{env.ENDPOINT}}/v1/storage/files/{{file.$id}}/view?project={{router.params.project}}&mode=admin" target="_blank" rel="noopener"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> New Window <i class="icon-link-ext"></i></a>
                                                     </div>
 
-                                                    <div class="margin-bottom">
+                                                    <div class="margin-bottom-small">
                                                         <a href="" data-ls-attrs="href={{env.ENDPOINT}}/v1/storage/files/{{file.$id}}/download?project={{router.params.project}}&mode=admin" target="_blank" rel="noopener"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Download <i class="icon-link-ext"></i></a>
+                                                    </div>
+
+                                                    <div class="margin-bottom-tiny">
+                                                        <i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Type: <span data-ls-bind="{{file.mimeType}}"></span>
+                                                    </div>
+                                                    <div class="margin-bottom-tiny">
+                                                        <i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Size: <span data-ls-bind="{{file.sizeOriginal|humanFileSize}}"></span>
+                                                        <span data-ls-bind="{{file.sizeOriginal|humanFileUnit}}"></span>
+                                                    </div>
+                                                    <div class="margin-bottom">
+                                                        <i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Created at: <span data-ls-bind="{{file.dateCreated|dateText}}"></span>
                                                     </div>
                                                 </div>
                                             </div>

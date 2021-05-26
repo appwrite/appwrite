@@ -47,7 +47,7 @@ const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
 const APP_LIMIT_COUNT = 5000;
 const APP_LIMIT_USERS = 10000;
-const APP_CACHE_BUSTER = 145;
+const APP_CACHE_BUSTER = 146;
 const APP_VERSION_STABLE = '0.8.0';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
@@ -200,8 +200,8 @@ $register->set('influxdb', function () { // Register DB connection
     if (empty($host) || empty($port)) {
         return;
     }
-    $driver = new InfluxDB\Driver\Curl(dsn: "http://{$host}:{$port}");
-    $client = new InfluxDB\Client(host: $host, port: $port, timeout: 5);
+    $driver = new InfluxDB\Driver\Curl("http://{$host}:{$port}");
+    $client = new InfluxDB\Client($host, $port, '', '', false, false, 5);
     $client->setDriver($driver);
 
     return $client;

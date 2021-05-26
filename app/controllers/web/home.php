@@ -249,6 +249,12 @@ App::get('/specs/:format')
             'console' => APP_PLATFORM_CONSOLE,
         ];
 
+        $authCounts = [
+            'client' => 1,
+            'server' => 2,
+            'console' => 1,
+        ];
+
         $routes = [];
         $models = [];
         $services = [];
@@ -413,11 +419,11 @@ App::get('/specs/:format')
 
         switch ($format) {
             case 'swagger2':
-                $format = new Swagger2($utopia, $services, $routes, $models, $keys[$platform]);
+                $format = new Swagger2($utopia, $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0);
                 break;
 
             case 'open-api3':
-                $format = new OpenAPI3($utopia, $services, $routes, $models, $keys[$platform]);
+                $format = new OpenAPI3($utopia, $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0);
                 break;
             
             default:
