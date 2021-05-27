@@ -77,7 +77,6 @@ class PDO extends PDONative
             $result = $this->pdo->rollBack();
         } catch (\Throwable $th) {
             $this->pdo = $this->reconnect();
-            $result = $this->pdo->rollBack();
         }
 
         return $result;
