@@ -377,6 +377,9 @@ services:
     restart: unless-stopped
     networks:
       - appwrite
+    environment: 
+      - _APP_INFLUXDB_HOST
+      - _APP_INFLUXDB_PORT
 
 networks:
   gateway:
