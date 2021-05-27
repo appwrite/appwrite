@@ -91,8 +91,8 @@ App::get('/v1/users')
         $sum = $dbForInternal->count('users', [], APP_LIMIT_COUNT);
 
         $response->dynamic2(new Document([
+            'users' => $results,
             'sum' => $sum,
-            'users' => $results
         ]), Response::MODEL_USER_LIST);
     });
 
@@ -193,8 +193,8 @@ App::get('/v1/users/:userId/sessions')
         }
 
         $response->dynamic2(new Document([
+            'sessions' => $sessions,
             'sum' => count($sessions),
-            'sessions' => $sessions
         ]), Response::MODEL_SESSION_LIST);
     }, ['response', 'dbForInternal', 'locale']);
 

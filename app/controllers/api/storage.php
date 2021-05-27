@@ -21,6 +21,7 @@ use Utopia\Image\Image;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
+use Utopia\Database\Query;
 use Utopia\Validator\Numeric;
 
 App::post('/v1/storage/files')
@@ -149,9 +150,8 @@ App::post('/v1/storage/files')
             ->setParam('storage', $sizeActual)
         ;
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic2($file, Response::MODEL_FILE)
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($file, Response::MODEL_FILE);
         ;
     });
 
@@ -176,9 +176,11 @@ App::get('/v1/storage/files')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
+        $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, $search)] : [];
+
         $response->dynamic2(new Document([
-            'sum' => $dbForInternal->count('files', [], APP_LIMIT_COUNT),
-            'files' => $dbForInternal->find('files', [], $limit, $offset)
+            'files' => $dbForInternal->find('files', $queries, $limit, $offset, ['_id'], [$orderType]),
+            'sum' => $dbForInternal->count('files', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_FILE_LIST);
     });
 

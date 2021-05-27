@@ -810,8 +810,8 @@ App::get('/v1/account/sessions')
         }
 
         $response->dynamic2(new Document([
+            'sessions' => $sessions,
             'sum' => count($sessions),
-            'sessions' => $sessions
         ]), Response::MODEL_SESSION_LIST);
     });
 
@@ -1250,8 +1250,8 @@ App::delete('/v1/account/sessions')
                     
         $events
             ->setParam('eventData', $response->output2(new Document([
+                'sessions' => $sessions,
                 'sum' => count($sessions),
-                'sessions' => $sessions
             ]), Response::MODEL_SESSION_LIST))
         ;
 

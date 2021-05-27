@@ -184,6 +184,13 @@ $collections = [
             ],
         ],
         'indexes' => [
+            [
+                '$id' => '_fulltext_name',
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => ['name'],
+                'lengths' => [1024],
+                'orders' => [Database::ORDER_ASC],
+            ]
         ],
     ],
 
@@ -360,7 +367,15 @@ $collections = [
                 'filters' => [],
             ],
         ],
-        'indexes' => [],
+        'indexes' => [
+            [
+                '$id' => '_fulltext_name',
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => ['name'],
+                'lengths' => [1024],
+                'orders' => [Database::ORDER_ASC],
+            ]
+        ],
     ],
 
     'memberships' => [
@@ -618,6 +633,13 @@ $collections = [
                 'attributes' => ['bucketId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => '_fulltext_name',
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => ['name'],
+                'lengths' => [1024],
+                'orders' => [Database::ORDER_ASC],
             ]
         ],
     ],
@@ -760,6 +782,13 @@ $collections = [
             ],
         ],
         'indexes' => [
+            [
+                '$id' => '_fulltext_name',
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => ['name'],
+                'lengths' => [1024],
+                'orders' => [Database::ORDER_ASC],
+            ]
         ],
     ],
     

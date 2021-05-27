@@ -18,6 +18,7 @@ use Appwrite\Network\Validator\Domain as DomainValidator;
 use Appwrite\Utopia\Response;
 use Cron\CronExpression;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 
 App::post('/v1/projects')
@@ -143,12 +144,14 @@ App::get('/v1/projects')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
 
-        $results = $dbForConsole->find('projects', [], $limit, $offset);
-        $sum = $dbForConsole->count('projects', [], APP_LIMIT_COUNT);
+        $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
+
+        $results = $dbForConsole->find('projects', $queries, $limit, $offset);
+        $sum = $dbForConsole->count('projects', $queries, APP_LIMIT_COUNT);
 
         $response->dynamic2(new Document([
+            'projects' => $results,
             'sum' => $sum,
-            'projects' => $results
         ]), Response::MODEL_PROJECT_LIST);
     });
 
@@ -622,10 +625,8 @@ App::post('/v1/projects/:projectId/webhooks')
             ->setAttribute('webhooks', $webhook, Document::SET_TYPE_APPEND)
         );
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic2($webhook, Response::MODEL_WEBHOOK)
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($webhook, Response::MODEL_WEBHOOK);
     });
 
 App::get('/v1/projects/:projectId/webhooks')
@@ -654,8 +655,8 @@ App::get('/v1/projects/:projectId/webhooks')
         $webhooks = $project->getAttribute('webhooks', []);
 
         $response->dynamic2(new Document([
+            'webhooks' => $webhooks,
             'sum' => count($webhooks),
-            'webhooks' => $webhooks
         ]), Response::MODEL_WEBHOOK_LIST);
     });
 
@@ -814,10 +815,8 @@ App::post('/v1/projects/:projectId/keys')
             ->setAttribute('keys', $key, Document::SET_TYPE_APPEND)
         );
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic2($key, Response::MODEL_KEY)
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($key, Response::MODEL_KEY);
     });
 
 App::get('/v1/projects/:projectId/keys')
@@ -846,8 +845,8 @@ App::get('/v1/projects/:projectId/keys')
         $keys = $project->getAttribute('keys', []);
 
         $response->dynamic2(new Document([
+            'keys' => $keys,
             'sum' => count($keys),
-            'keys' => $keys
         ]), Response::MODEL_KEY_LIST);
     });
 
@@ -1019,10 +1018,8 @@ App::post('/v1/projects/:projectId/tasks')
             ResqueScheduler::enqueueAt($next, 'v1-tasks', 'TasksV1', $task->getArrayCopy());
         }
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic2($task, Response::MODEL_TASK)
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($task, Response::MODEL_TASK);
     });
 
 App::get('/v1/projects/:projectId/tasks')
@@ -1051,8 +1048,8 @@ App::get('/v1/projects/:projectId/tasks')
         $tasks = $project->getAttribute('tasks', []);
 
         $response->dynamic2(new Document([
+            'tasks' => $tasks,
             'sum' => count($tasks),
-            'tasks' => $tasks
         ]), Response::MODEL_TASK_LIST);
 
     });
@@ -1233,10 +1230,8 @@ App::post('/v1/projects/:projectId/platforms')
             ->setAttribute('platforms', $platform, Document::SET_TYPE_APPEND)
         );
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic2($platform, Response::MODEL_PLATFORM)
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($platform, Response::MODEL_PLATFORM);
     });
     
 App::get('/v1/projects/:projectId/platforms')
@@ -1265,8 +1260,8 @@ App::get('/v1/projects/:projectId/platforms')
         $platforms = $project->getAttribute('platforms', []);
 
         $response->dynamic2(new Document([
+            'platforms' => $platforms,
             'sum' => count($platforms),
-            'platforms' => $platforms
         ]), Response::MODEL_PLATFORM_LIST);
     });
 
@@ -1444,10 +1439,8 @@ App::post('/v1/projects/:projectId/domains')
             ->setAttribute('domains', $domain, Document::SET_TYPE_APPEND)
         );
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic2($domain, Response::MODEL_DOMAIN)
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($domain, Response::MODEL_DOMAIN);
     });
 
 App::get('/v1/projects/:projectId/domains')
@@ -1476,8 +1469,8 @@ App::get('/v1/projects/:projectId/domains')
         $domains = $project->getAttribute('domains', []);
         
         $response->dynamic2(new Document([
+            'domains' => $domains,
             'sum' => count($domains),
-            'domains' => $domains
         ]), Response::MODEL_DOMAIN_LIST);
     });
 

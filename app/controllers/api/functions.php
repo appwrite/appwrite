@@ -66,10 +66,8 @@ App::post('/v1/functions')
             'timeout' => $timeout,
         ]));
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic2($function, Response::MODEL_FUNCTION)
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($function, Response::MODEL_FUNCTION);
     });
 
 App::get('/v1/functions')
@@ -93,9 +91,11 @@ App::get('/v1/functions')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
+        $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
+
         $response->dynamic2(new Document([
-            'sum' => $dbForInternal->count('functions', [], APP_LIMIT_COUNT),
-            'functions' => $dbForInternal->find('functions', [], $limit, $offset)
+            'functions' => $dbForInternal->find('functions', $queries, $limit, $offset, ['_id'], [$orderType]),
+            'sum' => $dbForInternal->count('functions', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_FUNCTION_LIST);
     });
 
@@ -483,10 +483,8 @@ App::post('/v1/functions/:functionId/tags')
             ->setParam('storage', $tag->getAttribute('size', 0))
         ;
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic2($tag, Response::MODEL_TAG)
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($tag, Response::MODEL_TAG);
     });
 
 App::get('/v1/functions/:functionId/tags')
@@ -501,13 +499,13 @@ App::get('/v1/functions/:functionId/tags')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TAG_LIST)
     ->param('functionId', '', new UID(), 'Function unique ID.')
-    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    // ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    // ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($functionId, $search, $limit, $offset, $orderType, $response, $dbForInternal) {
+    ->action(function ($functionId, $limit, $offset, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
@@ -516,18 +514,15 @@ App::get('/v1/functions/:functionId/tags')
         if (empty($function->getId())) {
             throw new Exception('Function not found', 404);
         }
+
+        $queries[] = new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]);
         
-        $results = $dbForInternal->find('tags', [
-            new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]),
-        ], $limit, $offset);
-        
-        $sum = $dbForInternal->count('tags', [
-            new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]),
-        ], APP_LIMIT_COUNT);
+        $results = $dbForInternal->find('tags', $queries, $limit, $offset);
+        $sum = $dbForInternal->count('tags', $queries, APP_LIMIT_COUNT);
 
         $response->dynamic2(new Document([
+            'tags' => $results,
             'sum' => $sum,
-            'tags' => $results
         ]), Response::MODEL_TAG_LIST);
     });
 
@@ -730,10 +725,8 @@ App::post('/v1/functions/:functionId/executions')
             'jwt' => $jwt,
         ]);
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic2($execution, Response::MODEL_EXECUTION)
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($execution, Response::MODEL_EXECUTION);
     });
 
 App::get('/v1/functions/:functionId/executions')
@@ -748,13 +741,11 @@ App::get('/v1/functions/:functionId/executions')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_EXECUTION_LIST)
     ->param('functionId', '', new UID(), 'Function unique ID.')
-    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($functionId, $search, $limit, $offset, $orderType, $response, $dbForInternal) {
+    ->action(function ($functionId, $limit, $offset, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         
@@ -765,7 +756,7 @@ App::get('/v1/functions/:functionId/executions')
         if (empty($function->getId())) {
             throw new Exception('Function not found', 404);
         }
-        
+
         $results = $dbForInternal->find('executions', [
             new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]),
         ], $limit, $offset);
@@ -775,8 +766,8 @@ App::get('/v1/functions/:functionId/executions')
         ], APP_LIMIT_COUNT);
 
         $response->dynamic2(new Document([
+            'executions' => $results,
             'sum' => $sum,
-            'executions' => $results
         ]), Response::MODEL_EXECUTION_LIST);
     });
 

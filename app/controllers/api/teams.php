@@ -104,12 +104,14 @@ App::get('/v1/teams')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $results = $dbForInternal->find('teams', [], $limit, $offset);
-        $sum = $dbForInternal->count('teams', [], APP_LIMIT_COUNT);
+        $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
+
+        $results = $dbForInternal->find('teams', $queries, $limit, $offset, ['_id'], [$orderType]);
+        $sum = $dbForInternal->count('teams', $queries, APP_LIMIT_COUNT);
 
         $response->dynamic2(new Document([
+            'teams' => $results,
             'sum' => $sum,
-            'teams' => $results
         ]), Response::MODEL_TEAM_LIST);
     });
 
@@ -449,8 +451,8 @@ App::get('/v1/teams/:teamId/memberships')
         }
 
         $response->dynamic2(new Document([
+            'memberships' => $users,
             'sum' => $sum,
-            'memberships' => $users
         ]), Response::MODEL_MEMBERSHIP_LIST);
     });
 
