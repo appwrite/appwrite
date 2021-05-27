@@ -108,13 +108,10 @@ services:
       - _APP_FUNCTIONS_RUNTIMES
 
   appwrite-realtime:
+    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: realtime
     container_name: appwrite-realtime
-    build:
-      context: .
     restart: unless-stopped
-    ports: 
-      - 9505:80
     labels:
       - "traefik.enable=true"
       - "traefik.constraint-label-stack=appwrite"
