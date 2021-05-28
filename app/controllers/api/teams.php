@@ -768,8 +768,6 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
 
         $membership = $projectDB->getDocument($membershipId);
 
-        var_dump($membership);
-
         if (empty($membership->getId()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $membership->getCollection()) {
             throw new Exception('Invite not found', 404);
         }
