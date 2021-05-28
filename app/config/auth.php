@@ -6,7 +6,7 @@ return [
     'email-password' => [
         'name' => 'Email/Password',
         'key' => 'usersAuthEmailPassword',
-        'icon' => '/images/users/email-password.png',
+        'icon' => '/images/users/email.png',
         'docs' => 'https://appwrite.io/docs/client/account?sdk=web#accountCreateSession',
         'enabled' => true,
     ],
