@@ -128,24 +128,21 @@ class DeletesV1
             }
         }
 
-        var_dump("Hi there! Gonna delete memberships");
-        // Delete Memberships and update the team membership counts
+        // Delete Memberships and decrement team membership counts
         $this->deleteByGroup([
             '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
             'userId='.$document->getId(),
-        ], $this->getProjectDB($projectId), function(Document $document) use ($projectId,){
-            var_dump("In call back ");
-            print_r($document);
+        ], $this->getProjectDB($projectId), function(Document $document) use ($projectId) {
 
             if ($document->getAttribute('confirm')) { // Count only confirmed members
                 $teamId = $document->getAttribute('teamId');
                 $team = $this->getProjectDB($projectId)->getDocument($teamId);
-                print_r($team);
-                // $team = $this->getProjectDB($projectId)->updateDocument(\array_merge($team->getArrayCopy(), [
-                //     'sum' => $team->getAttribute('sum', 0) - 1,
-                // ]));
+                if(!$team->isEmpty()) {
+                    $team = $this->getProjectDB($projectId)->updateDocument(\array_merge($team->getArrayCopy(), [
+                        'sum' => \max($team->getAttribute('sum', 0) - 1, 0),
+                    ]));
+                }
             }
-
         });
     }
 
