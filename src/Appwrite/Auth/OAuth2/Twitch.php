@@ -145,7 +145,7 @@ class Twitch extends OAuth2
                 ]
             ), true);
 
-            $this->user = $response['data']['0'];
+            $this->user = $response['data']['0'] ?? [];
         }
 
         return $this->user;
