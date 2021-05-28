@@ -24,7 +24,7 @@ class Twitch extends OAuth2
      * @var array
      */
     protected $scopes = [
-            'user:read:email',
+        'user:read:email',
     ];
 
     /**
@@ -65,9 +65,7 @@ class Twitch extends OAuth2
     {
         $result = \json_decode($this->request(
             'POST',
-            $this->endpoint . 'token',
-            [],
-            \http_build_query([
+            $this->endpoint . 'token?'. \http_build_query([
                 "client_id" => $this->appID,
                 "client_secret" => $this->appSecret,
                 "code" => $code,
@@ -139,11 +137,15 @@ class Twitch extends OAuth2
     protected function getUser(string $accessToken)
     {
         if (empty($this->user)) {
-            $this->user = \json_decode($this->request(
+            $response = \json_decode($this->request(
                 'GET',
-                $this->resourceEndpoint,
-                ['Authorization: Bearer '.\urlencode($accessToken)]
-            ), true)['data']['0'];
+                $this->resourceEndpoint , [
+                    'Authorization: Bearer '.\urlencode($accessToken),
+                    'Client-Id: '. \urlencode($this->appID)
+                ]
+            ), true);
+
+            $this->user = $response['data']['0'];
         }
 
         return $this->user;
