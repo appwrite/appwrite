@@ -5,6 +5,7 @@ use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
+use phpDocumentor\Reflection\DocBlock\Tags\Var_;
 use Utopia\Storage\Device\Local;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
@@ -31,8 +32,8 @@ class DeletesV1
     }
 
     public function perform()
-    {
-        $projectId = $this->args['projectId'];   
+    { 
+        $projectId = isset($this->args['projectId']) ? $this->args['projectId'] : '';
         $type = $this->args['type'];
         
         switch (strval($type)) {
@@ -127,11 +128,25 @@ class DeletesV1
             }
         }
 
-        // Delete Memberships
+        var_dump("Hi there! Gonna delete memberships");
+        // Delete Memberships and update the team membership counts
         $this->deleteByGroup([
             '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
             'userId='.$document->getId(),
-        ], $this->getProjectDB($projectId));
+        ], $this->getProjectDB($projectId), function(Document $document) use ($projectId,){
+            var_dump("In call back ");
+            print_r($document);
+
+            if ($document->getAttribute('confirm')) { // Count only confirmed members
+                $teamId = $document->getAttribute('teamId');
+                $team = $this->getProjectDB($projectId)->getDocument($teamId);
+                print_r($team);
+                // $team = $this->getProjectDB($projectId)->updateDocument(\array_merge($team->getArrayCopy(), [
+                //     'sum' => $team->getAttribute('sum', 0) - 1,
+                // ]));
+            }
+
+        });
     }
 
     protected function deleteExecutionLogs($timestamp) 

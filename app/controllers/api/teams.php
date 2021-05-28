@@ -310,6 +310,8 @@ App::post('/v1/teams/:teamId/memberships')
             ],
         ]);
 
+        var_dump($invitee);
+
         if (empty($invitee)) { // Create new user if no user with same email found
 
             $limit = $project->getAttribute('usersAuthLimit', 0);
@@ -418,6 +420,8 @@ App::post('/v1/teams/:teamId/memberships')
         } else {
             $membership = $projectDB->createDocument($membership->getArrayCopy());
         }
+
+        var_dump($membership);
 
         if (false === $membership) {
             throw new Exception('Failed saving membership to DB', 500);
@@ -763,6 +767,8 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         /** @var Appwrite\Event\Event $events */
 
         $membership = $projectDB->getDocument($membershipId);
+
+        var_dump($membership);
 
         if (empty($membership->getId()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $membership->getCollection()) {
             throw new Exception('Invite not found', 404);
