@@ -829,6 +829,15 @@ $collections = [
                 'array' => true,
                 'list' => [Database::SYSTEM_COLLECTION_DOMAINS],
             ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Services',
+                'key' => 'services',
+                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
+                'default' => '',
+                'required' => false,
+                'array' => false,
+            ],
         ],
     ],
     Database::SYSTEM_COLLECTION_WEBHOOKS => [
