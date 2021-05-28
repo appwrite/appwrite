@@ -1272,16 +1272,16 @@ App::delete('/v1/account/sessions/:sessionId')
                     ->setParam('resource', '/user/'.$user->getId())
                 ;
 
-                if (!Config::getParam('domainVerification')) {
-                    $response
-                        ->addHeader('X-Fallback-Cookies', \json_encode([]))
-                    ;
-                }
-                
                 $session->setAttribute('current', false);
-
+                
                 if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
                     $session->setAttribute('current', true);
+                    
+                    if (!Config::getParam('domainVerification')) {
+                        $response
+                            ->addHeader('X-Fallback-Cookies', \json_encode([]))
+                        ;
+                    }
 
                     $response
                         ->addCookie(Auth::$cookieName.'_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
