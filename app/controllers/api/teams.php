@@ -310,8 +310,6 @@ App::post('/v1/teams/:teamId/memberships')
             ],
         ]);
 
-        var_dump($invitee);
-
         if (empty($invitee)) { // Create new user if no user with same email found
 
             $limit = $project->getAttribute('usersAuthLimit', 0);
@@ -420,8 +418,6 @@ App::post('/v1/teams/:teamId/memberships')
         } else {
             $membership = $projectDB->createDocument($membership->getArrayCopy());
         }
-
-        var_dump($membership);
 
         if (false === $membership) {
             throw new Exception('Failed saving membership to DB', 500);
