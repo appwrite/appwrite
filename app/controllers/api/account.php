@@ -386,7 +386,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('projectDB')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $projectDB, $geodb, $audits) use ($oauthDefaultSuccess) {
+    ->inject('events')
+    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $projectDB, $geodb, $audits, $events) use ($oauthDefaultSuccess) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
@@ -578,6 +579,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             ->setParam('resource', 'users/'.$user->getId())
             ->setParam('data', ['provider' => $provider])
         ;
+
+        $events->setParam('eventData', $response->output($session, Response::MODEL_SESSION));
 
         if (!Config::getParam('domainVerification')) {
             $response
