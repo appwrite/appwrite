@@ -90,6 +90,13 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
         throw new Exception('Missing or unknown project ID', 400);
     }
 
+    $service = $route->getLabel('sdk.namespace','');
+    if(!empty($service)) {
+        if(array_key_exists($service,$project->getAttribute('services',[])) && !$project->getAttribute('services',[])[$service]) {
+            throw new Exception('Service Disabled', 503);
+        }
+    }
+
     $referrer = $request->getReferer();
     $origin = \parse_url($request->getOrigin($referrer), PHP_URL_HOST);
     $protocol = \parse_url($request->getOrigin($referrer), PHP_URL_SCHEME);

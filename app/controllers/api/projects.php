@@ -439,7 +439,7 @@ App::patch('/v1/projects/:projectId')
 
         $services = $project->getAttribute('services');
         $services = array_merge($services, [
-            $service => strtolower($status) === 'true',
+            $service => $status,
         ]);
         
         $project = $consoleDB->updateDocument(\array_merge($project->getArrayCopy(), [
