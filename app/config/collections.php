@@ -837,6 +837,7 @@ $collections = [
                 'default' => '',
                 'required' => false,
                 'array' => false,
+                'filter' => ['json']
             ],
         ],
     ],

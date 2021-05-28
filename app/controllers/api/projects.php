@@ -20,6 +20,7 @@ use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain as DomainValidator;
 use Appwrite\Utopia\Response;
 use Cron\CronExpression;
+use Utopia\CLI\Console;
 
 App::post('/v1/projects')
     ->desc('Create Project')
@@ -401,6 +402,48 @@ App::patch('/v1/projects/:projectId')
             'legalCity' => $legalCity,
             'legalAddress' => $legalAddress,
             'legalTaxId' => $legalTaxId,
+        ]));
+
+        if (false === $project) {
+            throw new Exception('Failed saving project to DB', 500);
+        }
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+//service flags
+App::patch('/v1/projects/:projectId')
+    ->desc('Update service flags')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'serviceStatus')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('service', '', new WhiteList(["functions","webhooks","avatars","health","locale","storage","teams"],true), 'Service to change status of.')
+    ->param('status', '', new Boolean(), 'Status of the service', true)
+    ->inject('response')
+    ->inject('consoleDB')
+    ->action(function ($projectId, $service, $status, $response, $consoleDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $consoleDB */
+
+        $project = $consoleDB->getDocument($projectId);
+
+        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            throw new Exception('Project not found', 404);
+        }
+
+        $services = $project->getAttribute('services');
+        $services = array_merge($services, [
+            $service => strtolower($status) === 'true',
+        ]);
+        
+        $project = $consoleDB->updateDocument(\array_merge($project->getArrayCopy(), [
+            'services' => $services,
         ]));
 
         if (false === $project) {

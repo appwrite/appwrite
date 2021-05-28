@@ -130,6 +130,12 @@ class Project extends Model
                 'example' => new stdClass,
                 'array' => true,
             ])
+            ->addRule('services', [
+                'type' => self::TYPE_JSON,
+                'description' => 'List of Services enability.',
+                'default' => new \stdClass,
+                'example' => new stdClass,
+            ])
         ;
 
         $providers = Config::getParam('providers', []);
