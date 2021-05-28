@@ -580,9 +580,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             ->setParam('data', ['provider' => $provider])
         ;
 
-        $events
-            ->setParam('eventData', $response->output($session, Response::MODEL_SESSION))
-        ;
+        $events->setParam('eventData', $response->output($session, Response::MODEL_SESSION));
 
         if (!Config::getParam('domainVerification')) {
             $response
