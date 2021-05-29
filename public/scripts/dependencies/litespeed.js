@@ -734,10 +734,7 @@ window.ls.container.set(
   true,
   false
 );
-console.log('***');
 window.ls.container.get("filter").add("escape", ($value) => {
-
-    console.log($value);
   if (typeof $value !== "string") {
     return $value;
   }
