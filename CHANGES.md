@@ -56,6 +56,7 @@
   - Fixed incorrect audit worker event names (#1143)
   - Increased limit of memberships fetched in `createTeamMembership` to 2000 (#1143)
   - Fixed exception thrown when SSL certificate is already stored in the database (#1151)
+- Fixed user delete button in the Appwrite console (#1216)
 
 ## Breaking Changes (Read before upgrading!)
 

@@ -76,8 +76,8 @@ $auth = $this->getParam('auth', []);
                                     </td>
                                     <td data-title="Name: ">
                                         <a data-ls-attrs="href=/console/users/user?id={{user.$id}}&project={{router.params.project}}">
-                                            <span data-ls-bind="{{user.name}}"></span>
-                                            <span data-ls-if="{{user.name|escape}} === ''">-----</span>
+                                            <span data-ls-bind="{{user.name|escape}}"></span>
+                                            <span data-ls-if="!({{user.name|escape}})">-----</span>
                                             <span data-ls-if="{{user.email}} === ''">Anonymous User</span>
                                         </a>
                                     </td>
