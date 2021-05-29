@@ -138,7 +138,7 @@ class DeletesV1
                 $team = $this->getProjectDB($projectId)->getDocument($teamId);
                 if(!$team->isEmpty()) {
                     $team = $this->getProjectDB($projectId)->updateDocument(\array_merge($team->getArrayCopy(), [
-                        'sum' => \max($team->getAttribute('sum', 0) - 1, 0),
+                        'sum' => \max($team->getAttribute('sum', 0) - 1, 0), // Ensure that sum is always >= 0
                     ]));
                 }
             }
