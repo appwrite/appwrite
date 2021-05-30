@@ -34,6 +34,11 @@ abstract class Format
     protected $keys;
     
     /**
+     * @var int
+     */
+    protected $authCount;
+    
+    /**
      * @var array
      */
     protected $params = [
@@ -58,13 +63,14 @@ abstract class Format
      * @param Model[] $models
      * @param array $keys
      */
-    public function __construct(App $app, array $services, array $routes, array $models, array $keys)
+    public function __construct(App $app, array $services, array $routes, array $models, array $keys, int $authCount)
     {
         $this->app = $app;
         $this->services = $services;
         $this->routes = $routes;
         $this->models = $models;
         $this->keys = $keys;
+        $this->authCount = $authCount;
     }
 
     /**

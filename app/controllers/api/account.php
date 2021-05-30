@@ -61,7 +61,6 @@ App::post('/v1/account')
         if ('console' === $project->getId()) {
             $whitlistEmails = $project->getAttribute('authWhitelistEmails');
             $whitlistIPs = $project->getAttribute('authWhitelistIPs');
-            $whitlistDomains = $project->getAttribute('authWhitelistDomains');
 
             if (!empty($whitlistEmails) && !\in_array($email, $whitlistEmails)) {
                 throw new Exception('Console registration is restricted to specific emails. Contact your administrator for more information.', 401);
@@ -69,10 +68,6 @@ App::post('/v1/account')
 
             if (!empty($whitlistIPs) && !\in_array($request->getIP(), $whitlistIPs)) {
                 throw new Exception('Console registration is restricted to specific IPs. Contact your administrator for more information.', 401);
-            }
-
-            if (!empty($whitlistDomains) && !\in_array(\substr(\strrchr($email, '@'), 1), $whitlistDomains)) {
-                throw new Exception('Console registration is restricted to specific domains. Contact your administrator for more information.', 401);
             }
         }
 
@@ -391,7 +386,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('projectDB')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $projectDB, $geodb, $audits) use ($oauthDefaultSuccess) {
+    ->inject('events')
+    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $projectDB, $geodb, $audits, $events) use ($oauthDefaultSuccess) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
@@ -514,7 +510,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'emailVerification' => true,
                         'status' => Auth::USER_STATUS_ACTIVATED, // Email should already be authenticated by OAuth2 provider
                         'password' => Auth::passwordHash(Auth::passwordGenerator()),
-                        'passwordUpdate' => \time(),
+                        'passwordUpdate' => 0,
                         'registration' => \time(),
                         'reset' => false,
                         'name' => $name,
@@ -583,6 +579,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             ->setParam('resource', 'users/'.$user->getId())
             ->setParam('data', ['provider' => $provider])
         ;
+
+        $events->setParam('eventData', $response->output($session, Response::MODEL_SESSION));
 
         if (!Config::getParam('domainVerification')) {
             $response
@@ -719,9 +717,15 @@ App::post('/v1/account/sessions/anonymous')
             $detector->getDevice()
         ));
 
-        $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
-
         Authorization::setRole('user:'.$user->getId());
+
+        $session = $projectDB->createDocument($session->getArrayCopy());
+
+        if (false === $session) {
+            throw new Exception('Failed saving session to DB', 500);
+        }
+
+        $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
 
         $user = $projectDB->updateDocument($user->getArrayCopy());
 
@@ -764,6 +768,9 @@ App::post('/v1/account/jwt')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createJWT')
     ->label('sdk.description', '/docs/references/account/create-jwt.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_JWT)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
     ->inject('response')
@@ -1012,7 +1019,7 @@ App::patch('/v1/account/password')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('password', '', new Password(), 'New user password. Must be between 6 to 32 chars.')
-    ->param('oldPassword', '', new Password(), 'Old user password. Must be between 6 to 32 chars.')
+    ->param('oldPassword', '', new Password(), 'Old user password. Must be between 6 to 32 chars.', true)
     ->inject('response')
     ->inject('user')
     ->inject('projectDB')
@@ -1023,12 +1030,14 @@ App::patch('/v1/account/password')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
 
-        if (!Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
+        // Check old password only if its an existing user.
+        if ($user->getAttribute('passwordUpdate') !== 0 && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
             throw new Exception('Invalid credentials', 401);
         }
 
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
             'password' => Auth::passwordHash($password),
+            'passwordUpdate' => \time(),
         ]));
 
         if (false === $user) {
@@ -1266,16 +1275,16 @@ App::delete('/v1/account/sessions/:sessionId')
                     ->setParam('resource', '/user/'.$user->getId())
                 ;
 
-                if (!Config::getParam('domainVerification')) {
-                    $response
-                        ->addHeader('X-Fallback-Cookies', \json_encode([]))
-                    ;
-                }
-                
                 $session->setAttribute('current', false);
-
+                
                 if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
                     $session->setAttribute('current', true);
+                    
+                    if (!Config::getParam('domainVerification')) {
+                        $response
+                            ->addHeader('X-Fallback-Cookies', \json_encode([]))
+                        ;
+                    }
 
                     $response
                         ->addCookie(Auth::$cookieName.'_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)

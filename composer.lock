@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "32ceddda707fb8f625f84eec08dc3871",
+    "content-hash": "e433ce62dd355a107816e8967d5c769d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -834,16 +834,16 @@
         },
         {
             "name": "phpmailer/phpmailer",
-            "version": "v6.4.0",
+            "version": "v6.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPMailer/PHPMailer.git",
-                "reference": "050d430203105c27c30efd1dce7aa421ad882d01"
+                "reference": "9256f12d8fb0cd0500f93b19e18c356906cbed3d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/050d430203105c27c30efd1dce7aa421ad882d01",
-                "reference": "050d430203105c27c30efd1dce7aa421ad882d01",
+                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/9256f12d8fb0cd0500f93b19e18c356906cbed3d",
+                "reference": "9256f12d8fb0cd0500f93b19e18c356906cbed3d",
                 "shasum": ""
             },
             "require": {
@@ -898,7 +898,7 @@
             "description": "PHPMailer is a full-featured email creation and transfer class for PHP",
             "support": {
                 "issues": "https://github.com/PHPMailer/PHPMailer/issues",
-                "source": "https://github.com/PHPMailer/PHPMailer/tree/v6.4.0"
+                "source": "https://github.com/PHPMailer/PHPMailer/tree/v6.4.1"
             },
             "funding": [
                 {
@@ -906,7 +906,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-03-31T20:06:42+00:00"
+            "time": "2021-04-29T12:25:04+00:00"
         },
         {
             "name": "psr/http-client",
@@ -1535,16 +1535,16 @@
         },
         {
             "name": "utopia-php/cli",
-            "version": "0.10.0",
+            "version": "0.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "69ae40187fb4b68ef14f0224a68d9cc016b83634"
+                "reference": "c7a6908a8dbe9234b8b2c954e5487d34cb079af6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/69ae40187fb4b68ef14f0224a68d9cc016b83634",
-                "reference": "69ae40187fb4b68ef14f0224a68d9cc016b83634",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/c7a6908a8dbe9234b8b2c954e5487d34cb079af6",
+                "reference": "c7a6908a8dbe9234b8b2c954e5487d34cb079af6",
                 "shasum": ""
             },
             "require": {
@@ -1582,9 +1582,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cli/issues",
-                "source": "https://github.com/utopia-php/cli/tree/0.10.0"
+                "source": "https://github.com/utopia-php/cli/tree/0.11.0"
             },
-            "time": "2021-01-26T16:35:15+00:00"
+            "time": "2021-04-16T15:16:08+00:00"
         },
         {
             "name": "utopia-php/config",
@@ -1693,16 +1693,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.12.3",
+            "version": "0.14.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "78be43a0eb711f3677769dfb445e5111bfafaa88"
+                "reference": "632113288bebe41cbef79f0d355bd91609767b8c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/78be43a0eb711f3677769dfb445e5111bfafaa88",
-                "reference": "78be43a0eb711f3677769dfb445e5111bfafaa88",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/632113288bebe41cbef79f0d355bd91609767b8c",
+                "reference": "632113288bebe41cbef79f0d355bd91609767b8c",
                 "shasum": ""
             },
             "require": {
@@ -1736,9 +1736,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.12.3"
+                "source": "https://github.com/utopia-php/framework/tree/0.14.1"
             },
-            "time": "2021-03-22T22:02:23+00:00"
+            "time": "2021-05-21T06:41:45+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -1951,16 +1951,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.4.3",
+            "version": "0.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "9db3ab713a6d392c3c2c799aeea751f6c8dc2ff7"
+                "reference": "92ae20c7a2ac329f573a58a82dc245134cc63408"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/9db3ab713a6d392c3c2c799aeea751f6c8dc2ff7",
-                "reference": "9db3ab713a6d392c3c2c799aeea751f6c8dc2ff7",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/92ae20c7a2ac329f573a58a82dc245134cc63408",
+                "reference": "92ae20c7a2ac329f573a58a82dc245134cc63408",
                 "shasum": ""
             },
             "require": {
@@ -1997,9 +1997,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.4.3"
+                "source": "https://github.com/utopia-php/storage/tree/0.5.0"
             },
-            "time": "2021-03-02T20:25:02+00:00"
+            "time": "2021-04-15T16:43:12+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -2340,11 +2340,17 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "dev-feat-preps-for-0.8",
+            "version": "0.10.6",
             "source": {
                 "type": "git",
-                "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "5bb8ceaf0ff9da85fcca840285d6896a7594f435"
+                "url": "https://github.com/appwrite/sdk-generator.git",
+                "reference": "ab4adb0b9126c617e11c8fdf4352c8aa9a715ecc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/ab4adb0b9126c617e11c8fdf4352c8aa9a715ecc",
+                "reference": "ab4adb0b9126c617e11c8fdf4352c8aa9a715ecc",
+                "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
@@ -2352,7 +2358,7 @@
                 "ext-mbstring": "*",
                 "matthiasmullie/minify": "^1.3",
                 "php": ">=7.0.0",
-                "twig/twig": "^2.12"
+                "twig/twig": "^2.14"
             },
             "require-dev": {
                 "phpunit/phpunit": "^7.0"
@@ -2364,6 +2370,7 @@
                     "Appwrite\\Spec\\": "src/Spec"
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -2374,20 +2381,24 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2021-03-28T22:18:36+00:00"
+            "support": {
+                "issues": "https://github.com/appwrite/sdk-generator/issues",
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.10.6"
+            },
+            "time": "2021-05-24T14:32:40+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",
-            "version": "1.11.99.1",
+            "version": "1.11.99.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/composer/package-versions-deprecated.git",
-                "reference": "7413f0b55a051e89485c5cb9f765fe24bb02a7b6"
+                "reference": "c6522afe5540d5fc46675043d3ed5a45a740b27c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/composer/package-versions-deprecated/zipball/7413f0b55a051e89485c5cb9f765fe24bb02a7b6",
-                "reference": "7413f0b55a051e89485c5cb9f765fe24bb02a7b6",
+                "url": "https://api.github.com/repos/composer/package-versions-deprecated/zipball/c6522afe5540d5fc46675043d3ed5a45a740b27c",
+                "reference": "c6522afe5540d5fc46675043d3ed5a45a740b27c",
                 "shasum": ""
             },
             "require": {
@@ -2431,7 +2442,7 @@
             "description": "Composer plugin that provides efficient querying for installed package versions (no runtime IO)",
             "support": {
                 "issues": "https://github.com/composer/package-versions-deprecated/issues",
-                "source": "https://github.com/composer/package-versions-deprecated/tree/1.11.99.1"
+                "source": "https://github.com/composer/package-versions-deprecated/tree/1.11.99.2"
             },
             "funding": [
                 {
@@ -2447,20 +2458,20 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2020-11-11T10:22:58+00:00"
+            "time": "2021-05-24T07:46:03+00:00"
         },
         {
             "name": "composer/semver",
-            "version": "3.2.4",
+            "version": "3.2.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/composer/semver.git",
-                "reference": "a02fdf930a3c1c3ed3a49b5f63859c0c20e10464"
+                "reference": "31f3ea725711245195f62e54ffa402d8ef2fdba9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/composer/semver/zipball/a02fdf930a3c1c3ed3a49b5f63859c0c20e10464",
-                "reference": "a02fdf930a3c1c3ed3a49b5f63859c0c20e10464",
+                "url": "https://api.github.com/repos/composer/semver/zipball/31f3ea725711245195f62e54ffa402d8ef2fdba9",
+                "reference": "31f3ea725711245195f62e54ffa402d8ef2fdba9",
                 "shasum": ""
             },
             "require": {
@@ -2512,7 +2523,7 @@
             "support": {
                 "irc": "irc://irc.freenode.org/composer",
                 "issues": "https://github.com/composer/semver/issues",
-                "source": "https://github.com/composer/semver/tree/3.2.4"
+                "source": "https://github.com/composer/semver/tree/3.2.5"
             },
             "funding": [
                 {
@@ -2528,20 +2539,20 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2020-11-13T08:59:24+00:00"
+            "time": "2021-05-24T12:41:47+00:00"
         },
         {
             "name": "composer/xdebug-handler",
-            "version": "2.0.0",
+            "version": "2.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/composer/xdebug-handler.git",
-                "reference": "31d57697eb1971712a08031cfaff5a846d10bdf5"
+                "reference": "964adcdd3a28bf9ed5d9ac6450064e0d71ed7496"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/composer/xdebug-handler/zipball/31d57697eb1971712a08031cfaff5a846d10bdf5",
-                "reference": "31d57697eb1971712a08031cfaff5a846d10bdf5",
+                "url": "https://api.github.com/repos/composer/xdebug-handler/zipball/964adcdd3a28bf9ed5d9ac6450064e0d71ed7496",
+                "reference": "964adcdd3a28bf9ed5d9ac6450064e0d71ed7496",
                 "shasum": ""
             },
             "require": {
@@ -2576,7 +2587,7 @@
             "support": {
                 "irc": "irc://irc.freenode.org/composer",
                 "issues": "https://github.com/composer/xdebug-handler/issues",
-                "source": "https://github.com/composer/xdebug-handler/tree/2.0.0"
+                "source": "https://github.com/composer/xdebug-handler/tree/2.0.1"
             },
             "funding": [
                 {
@@ -2592,7 +2603,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-04-09T19:40:06+00:00"
+            "time": "2021-05-05T19:37:51+00:00"
         },
         {
             "name": "dnoegel/php-xdg-base-dir",
@@ -4973,16 +4984,16 @@
         },
         {
             "name": "symfony/console",
-            "version": "v5.2.7",
+            "version": "v5.2.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "90374b8ed059325b49a29b55b3f8bb4062c87629"
+                "reference": "864568fdc0208b3eba3638b6000b69d2386e6768"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/90374b8ed059325b49a29b55b3f8bb4062c87629",
-                "reference": "90374b8ed059325b49a29b55b3f8bb4062c87629",
+                "url": "https://api.github.com/repos/symfony/console/zipball/864568fdc0208b3eba3638b6000b69d2386e6768",
+                "reference": "864568fdc0208b3eba3638b6000b69d2386e6768",
                 "shasum": ""
             },
             "require": {
@@ -5050,7 +5061,7 @@
                 "terminal"
             ],
             "support": {
-                "source": "https://github.com/symfony/console/tree/v5.2.7"
+                "source": "https://github.com/symfony/console/tree/v5.2.8"
             },
             "funding": [
                 {
@@ -5066,7 +5077,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-04-19T14:07:32+00:00"
+            "time": "2021-05-11T15:45:21+00:00"
         },
         {
             "name": "symfony/polyfill-intl-grapheme",
@@ -5556,16 +5567,16 @@
         },
         {
             "name": "symfony/string",
-            "version": "v5.2.6",
+            "version": "v5.2.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/string.git",
-                "reference": "ad0bd91bce2054103f5eaa18ebeba8d3bc2a0572"
+                "reference": "01b35eb64cac8467c3f94cd0ce2d0d376bb7d1db"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/string/zipball/ad0bd91bce2054103f5eaa18ebeba8d3bc2a0572",
-                "reference": "ad0bd91bce2054103f5eaa18ebeba8d3bc2a0572",
+                "url": "https://api.github.com/repos/symfony/string/zipball/01b35eb64cac8467c3f94cd0ce2d0d376bb7d1db",
+                "reference": "01b35eb64cac8467c3f94cd0ce2d0d376bb7d1db",
                 "shasum": ""
             },
             "require": {
@@ -5619,7 +5630,7 @@
                 "utf8"
             ],
             "support": {
-                "source": "https://github.com/symfony/string/tree/v5.2.6"
+                "source": "https://github.com/symfony/string/tree/v5.2.8"
             },
             "funding": [
                 {
@@ -5635,7 +5646,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-03-17T17:12:15+00:00"
+            "time": "2021-05-10T14:56:10+00:00"
         },
         {
             "name": "theseer/tokenizer",
@@ -5689,16 +5700,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v2.14.4",
+            "version": "v2.14.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "0b4ba691fb99ec7952d25deb36c0a83061b93bbf"
+                "reference": "27e5cf2b05e3744accf39d4c68a3235d9966d260"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/0b4ba691fb99ec7952d25deb36c0a83061b93bbf",
-                "reference": "0b4ba691fb99ec7952d25deb36c0a83061b93bbf",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/27e5cf2b05e3744accf39d4c68a3235d9966d260",
+                "reference": "27e5cf2b05e3744accf39d4c68a3235d9966d260",
                 "shasum": ""
             },
             "require": {
@@ -5752,7 +5763,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
-                "source": "https://github.com/twigphp/Twig/tree/v2.14.4"
+                "source": "https://github.com/twigphp/Twig/tree/v2.14.6"
             },
             "funding": [
                 {
@@ -5764,20 +5775,20 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-03-10T10:05:55+00:00"
+            "time": "2021-05-16T12:12:47+00:00"
         },
         {
             "name": "vimeo/psalm",
-            "version": "4.7.1",
+            "version": "4.7.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/vimeo/psalm.git",
-                "reference": "cd53e047a58f71f646dd6bf45476076ab07b5d44"
+                "reference": "83a0325c0a95c0ab531d6b90c877068b464377b5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/vimeo/psalm/zipball/cd53e047a58f71f646dd6bf45476076ab07b5d44",
-                "reference": "cd53e047a58f71f646dd6bf45476076ab07b5d44",
+                "url": "https://api.github.com/repos/vimeo/psalm/zipball/83a0325c0a95c0ab531d6b90c877068b464377b5",
+                "reference": "83a0325c0a95c0ab531d6b90c877068b464377b5",
                 "shasum": ""
             },
             "require": {
@@ -5867,9 +5878,9 @@
             ],
             "support": {
                 "issues": "https://github.com/vimeo/psalm/issues",
-                "source": "https://github.com/vimeo/psalm/tree/4.7.1"
+                "source": "https://github.com/vimeo/psalm/tree/4.7.2"
             },
-            "time": "2021-04-25T21:26:25+00:00"
+            "time": "2021-05-01T20:56:25+00:00"
         },
         {
             "name": "webmozart/path-util",
@@ -5924,9 +5935,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "appwrite/sdk-generator": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

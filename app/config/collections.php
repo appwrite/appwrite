@@ -46,7 +46,7 @@ $collections = [
         'legalTaxId' => '',
         'authWhitelistEmails' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
         'authWhitelistIPs' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
-        'authWhitelistDomains' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_DOMAINS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_DOMAINS', null)) : [],
+        'usersAuthLimit' => (App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
     ],
     Database::SYSTEM_COLLECTION_COLLECTIONS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
@@ -1268,6 +1268,24 @@ $collections = [
                 'label' => 'Log',
                 'key' => 'log',
                 'type' => Database::SYSTEM_VAR_TYPE_TEXT,
+                'default' => '',
+                'required' => false,
+                'array' => false,
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Updated Date',
+                'key' => 'updated',
+                'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,
+                'default' => 0,
+                'required' => false,
+                'array' => false,
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Certificate ID',
+                'key' => 'certificateId',
+                'type' => Database::SYSTEM_VAR_TYPE_KEY,
                 'default' => '',
                 'required' => false,
                 'array' => false,

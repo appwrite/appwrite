@@ -240,6 +240,10 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertIsArray($response['body']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['userId']);
 
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
@@ -272,11 +276,10 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
-            'password' => 'new-password',
             'oldPassword' => '',
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         return $session;
     }

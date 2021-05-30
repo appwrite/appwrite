@@ -6,6 +6,7 @@ use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Appwrite\ClamAV\Network;
 use Appwrite\Event\Event;
+use RuntimeException;
 
 App::get('/v1/health')
     ->desc('Get HTTP')
@@ -262,17 +263,23 @@ App::get('/v1/health/anti-virus')
 
         $antiVirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
             (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
-
-        $response->json([
-            'status' => (@$antiVirus->ping()) ? 'online' : 'offline',
-            'version' => @$antiVirus->version(),
-        ]);
+        try {
+            $response->json([
+                'status' => (@$antiVirus->ping()) ? 'online' : 'offline',
+                'version' => @$antiVirus->version(),
+            ]);
+        } catch( RuntimeException $e) {
+            $response->json([
+                'status' => 'offline',
+                'version' => '',
+            ]);
+        }
     });
 
 App::get('/v1/health/stats') // Currently only used internally
     ->desc('Get System Stats')
     ->groups(['api', 'health'])
-    ->label('scope', 'god')
+    ->label('scope', 'root')
     // ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     // ->label('sdk.namespace', 'health')
     // ->label('sdk.method', 'getStats')
