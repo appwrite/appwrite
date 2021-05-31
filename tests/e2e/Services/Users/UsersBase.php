@@ -125,6 +125,35 @@ trait UsersBase
     /**
      * @depends testGetUser
      */
+    public function testUpdateEmailVerification(array $data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/verification', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'emailVerification' => true,
+        ]);
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body']['emailVerification'], true);
+
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body']['emailVerification'], true);
+
+        return $data;
+    }
+
+    /**
+     * @depends testGetUser
+     */
     public function testUpdateAndGetUserPrefs(array $data):array
     {
         /**
