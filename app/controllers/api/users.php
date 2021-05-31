@@ -382,10 +382,10 @@ App::patch('/v1/users/:userId/verification')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User unique ID.')
-    ->param('status', false, new Boolean(), 'User Email Verification Status.')
+    ->param('emailVerification', false, new Boolean(), 'User Email Verification Status.')
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($userId, $status, $response, $projectDB) {
+    ->action(function ($userId, $emailVerification, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
@@ -396,7 +396,7 @@ App::patch('/v1/users/:userId/verification')
         }
 
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
-            'emailVerification' => $status,
+            'emailVerification' => $emailVerification,
         ]));
 
         if (false === $user) {
