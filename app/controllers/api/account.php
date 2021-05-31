@@ -1462,17 +1462,16 @@ App::post('/v1/account/recovery')
         $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
 
         $body
-            ->setParam('{{content}}', $content->render())
+            ->setParam('{{content}}', $content->render(false))
             ->setParam('{{cta}}', $cta->render())
             ->setParam('{{title}}', $locale->getText('account.emails.recovery.title'))
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
             ->setParam('{{name}}', $profile->getAttribute('name'))
             ->setParam('{{redirect}}', $url)
-            ->setParam('{{bg-body}}', '#f6f6f6')
+            ->setParam('{{bg-body}}', '#f7f7f7')
             ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{bg-cta}}', '#3498db')
-            ->setParam('{{bg-cta-hover}}', '#34495e')
+            ->setParam('{{bg-cta}}', '#073b4c')
             ->setParam('{{text-content}}', '#000000')
             ->setParam('{{text-cta}}', '#ffffff')
         ;
@@ -1665,17 +1664,16 @@ App::post('/v1/account/verification')
         $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
 
         $body
-            ->setParam('{{content}}', $content->render())
+            ->setParam('{{content}}', $content->render(false))
             ->setParam('{{cta}}', $cta->render())
             ->setParam('{{title}}', $locale->getText('account.emails.verification.title'))
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
             ->setParam('{{name}}', $user->getAttribute('name'))
             ->setParam('{{redirect}}', $url)
-            ->setParam('{{bg-body}}', '#f6f6f6')
+            ->setParam('{{bg-body}}', '#f7f7f7')
             ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{bg-cta}}', '#3498db')
-            ->setParam('{{bg-cta-hover}}', '#34495e')
+            ->setParam('{{bg-cta}}', '#073b4c')
             ->setParam('{{text-content}}', '#000000')
             ->setParam('{{text-cta}}', '#ffffff')
         ;
