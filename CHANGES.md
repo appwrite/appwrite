@@ -8,6 +8,7 @@
   - Renamed *Devices* to *Sessions*
   - Add Provider Icon to each Session
   - Add Anonymous Account Placeholder
+- Upgraded telegraf docker image version to v1.1.0
 
 ## Bugs
 
