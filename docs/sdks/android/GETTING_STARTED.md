@@ -1,5 +1,30 @@
 ## Getting Started
 
+### Add your Android Platform
+To init your SDK and start interacting with Appwrite services, you need to add a new Flutter platform to your project. To add a new platform, go to your Appwrite console, choose the project you created in the step before, and click the 'Add Platform' button.
+
+From the options, choose to add a new **Flutter** platform and add your app credentials, ignoring iOS.
+
+Add your app <u>name</u> and <u>package name</u>, Your package name is generally the applicationId in your app-level build.gradle file. By registering your new app platform, you are allowing your app to communicate with the Appwrite API.
+
+### OAuth
+In order to capture the Appwrite OAuth callback url, the following activity needs to be added to your [AndroidManifest.xml](https://github.com/appwrite/playground-for-flutter/blob/master/android/app/src/main/AndroidManifest.xml). Be sure to relpace the **[PROJECT_ID]** string with your actual Appwrite project ID. You can find your Appwrite project ID in you project settings screen in your Appwrite console.
+
+```xml
+<manifest>
+    <application>
+        <activity android:name="io.appwrite.views.CallbackActivity" >
+            <intent-filter android:label="android_web_auth">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="appwrite-callback-[PROJECT_ID]" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
+```
+
 ### Init your SDK
 
 <p>Initialize your SDK code with your project ID, which can be found in your project settings page.
