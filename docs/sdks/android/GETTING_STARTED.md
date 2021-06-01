@@ -25,7 +25,7 @@ When trying to connect to Appwrite from an emulator or a mobile device, localhos
 ```kotlin
 // Register User
 val account = Account(client)
-val user = account.create(
+val response = account.create(
     "email@example.com", 
     "password"
 )
@@ -43,7 +43,7 @@ val client = Client(context)
   .setSelfSigned(true) // Remove in production
 
 val account = Account(client)
-val user = account.create(
+val response = account.create(
     "email@example.com", 
     "password"
 )
