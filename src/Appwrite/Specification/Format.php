@@ -27,6 +27,11 @@ abstract class Format
      * @var Model[]
      */
     protected $models;
+
+    /**
+     * @var bool
+     */
+    protected $includeUnusedModels;
     
     /**
      * @var array
@@ -62,8 +67,10 @@ abstract class Format
      * @param Route[] $routes
      * @param Model[] $models
      * @param array $keys
+     * @param int $authCount
+     * @param bool $includeUnusedModels
      */
-    public function __construct(App $app, array $services, array $routes, array $models, array $keys, int $authCount)
+    public function __construct(App $app, array $services, array $routes, array $models, array $keys, int $authCount, bool $includeUnusedModels = false)
     {
         $this->app = $app;
         $this->services = $services;
@@ -71,6 +78,7 @@ abstract class Format
         $this->models = $models;
         $this->keys = $keys;
         $this->authCount = $authCount;
+        $this->includeUnusedModels = $includeUnusedModels;
     }
 
     /**

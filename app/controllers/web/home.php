@@ -8,6 +8,7 @@ use Utopia\App;
 use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Exception;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 
@@ -241,10 +242,11 @@ App::get('/specs/:format')
     ->param('format', 'swagger2', new WhiteList(['swagger2', 'open-api3'], true), 'Spec format.', true)
     ->param('platform', APP_PLATFORM_CLIENT, new WhiteList([APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER, APP_PLATFORM_CONSOLE], true), 'Choose target platform.', true)
     ->param('tests', 0, function () {return new Range(0, 1);}, 'Include only test services.', true)
+    ->param('allModels', false, new Boolean(true), 'Also include unused models.', true)
     ->inject('utopia')
     ->inject('request')
     ->inject('response')
-    ->action(function ($format, $platform, $tests, $utopia, $request, $response) {
+    ->action(function ($format, $platform, $tests, $allModels, $utopia, $request, $response) {
         /** @var Utopia\App $utopia */
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
@@ -425,11 +427,11 @@ App::get('/specs/:format')
 
         switch ($format) {
             case 'swagger2':
-                $format = new Swagger2($utopia, $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0);
+                $format = new Swagger2($utopia, $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0, $allModels);
                 break;
 
             case 'open-api3':
-                $format = new OpenAPI3($utopia, $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0);
+                $format = new OpenAPI3($utopia, $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0, $allModels);
                 break;
             
             default:
