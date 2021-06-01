@@ -5,10 +5,10 @@
 <p>Initialize your SDK code with your project ID, which can be found in your project settings page.
 
 ```kotlin
-import io.appwrite.AppwriteClient
-import io.appwrite.services.AccountService
+import io.appwrite.Client
+import io.appwrite.services.Account
 
-val client = AppwriteClient(context)
+val client = Client(context)
   .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
   .setProject("5df5acd0d48c2") // Your project ID
   .setSelfSigned(true) // Remove in production
@@ -24,8 +24,8 @@ When trying to connect to Appwrite from an emulator or a mobile device, localhos
 
 ```kotlin
 // Register User
-val accountService = AccountService(client)
-val user = accountService.create(
+val account = Account(client)
+val user = account.create(
     "email@example.com", 
     "password"
 )
@@ -34,22 +34,36 @@ val user = accountService.create(
 ### Full Example
 
 ```kotlin
-import io.appwrite.AppwriteClient
-import io.appwrite.services.AccountService
+import io.appwrite.Client
+import io.appwrite.services.Account
 
-val client = AppwriteClient(context)
+val client = Client(context)
   .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
   .setProject("5df5acd0d48c2") // Your project ID
   .setSelfSigned(true) // Remove in production
 
-val accountService = AccountService(client)
-val user = accountService.create(
+val account = Account(client)
+val user = account.create(
     "email@example.com", 
     "password"
 )
 ```
 
+### Error Handling
+The Apopwrite Android SDK raises `AppwriteException` object with `message`, `code` and `response` properties. You can handle any errors by catching `AppwriteException` and present the `message` to the user or handle it yourself based on provided error information. Below is an example.
+
+```kotlin
+try {
+    var response = account.create("email@example.com", "password")
+    Log.d("Appwrite response", response.body?.string())
+} catch(e : AppwriteException) {
+    Log.e("AppwriteException",e.message.toString())
+}
+```
+
 ### Learn more
 You can use followng resources to learn more and get help
+- 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-android)
 - 📜 [Appwrite Docs](https://appwrite.io/docs)
 - 💬 [Discord Community](https://appwrite.io/discord)
+- - 🚂 [Appwrite Android Playground](https://github.com/appwrite/playground-for-android)
