@@ -5,6 +5,7 @@ namespace Appwrite\Specification\Format;
 use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
 use stdClass;
+use Utopia\Validator;
 
 class Swagger2 extends Format
 {
@@ -226,24 +227,24 @@ class Swagger2 extends Format
 
                 switch ((!empty($validator)) ? \get_class($validator) : '') {
                     case 'Utopia\Validator\Text':
-                        $node['type'] = 'string';
+                        $node['type'] = $validator->getType();
                         $node['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                         break;
                     case 'Utopia\Validator\Boolean':
-                        $node['type'] = 'boolean';
+                        $node['type'] = $validator->getType();
                         $node['x-example'] = false;
                         break;
                     case 'Appwrite\Database\Validator\UID':
-                        $node['type'] = 'string';
+                        $node['type'] = $validator->getType();
                         $node['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                         break;
                     case 'Appwrite\Network\Validator\Email':
-                        $node['type'] = 'string';
+                        $node['type'] = $validator->getType();
                         $node['format'] = 'email';
                         $node['x-example'] = 'email@example.com';
                         break;
                     case 'Appwrite\Network\Validator\URL':
-                        $node['type'] = 'string';
+                        $node['type'] = $validator->getType();
                         $node['format'] = 'url';
                         $node['x-example'] = 'https://example.com';
                         break;
@@ -267,25 +268,25 @@ class Swagger2 extends Format
                         ];
                         break;
                     case 'Appwrite\Auth\Validator\Password':
-                        $node['type'] = 'string';
-                        $node['format'] = 'format';
+                        $node['type'] = $validator->getType();
+                        $node['format'] = 'password';
                         $node['x-example'] = 'password';
                         break;
                     case 'Utopia\Validator\Range': /** @var \Utopia\Validator\Range $validator */
-                        $node['type'] = 'integer';
-                        $node['format'] = 'int32';
+                        $node['type'] = $validator->getType() === Validator::TYPE_FLOAT ? 'number': $validator->getType();
+                        $node['format'] = $validator->getType() == Validator::TYPE_INTEGER ? 'int32' : 'float';
                         $node['x-example'] = $validator->getMin();
                         break;
                     case 'Utopia\Validator\Numeric':
                     case 'Utopia\Validator\Integer':
-                        $node['type'] = 'integer';
+                        $node['type'] = $validator->getType();
                         $node['format'] = 'int32';
                         break;
                     case 'Utopia\Validator\Length':
-                        $node['type'] = 'string';
+                        $node['type'] = $validator->getType();
                         break;
                     case 'Appwrite\Network\Validator\Host':
-                        $node['type'] = 'string';
+                        $node['type'] = $validator->getType();
                         $node['format'] = 'url';
                         $node['x-example'] = 'https://example.com';
                         break;

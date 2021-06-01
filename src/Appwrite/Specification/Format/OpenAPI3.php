@@ -5,6 +5,7 @@ namespace Appwrite\Specification\Format;
 use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
 use stdClass;
+use Utopia\Validator;
 
 class OpenAPI3 extends Format
 {
@@ -230,24 +231,24 @@ class OpenAPI3 extends Format
 
                 switch ((!empty($validator)) ? \get_class($validator) : '') {
                     case 'Utopia\Validator\Text':
-                        $node['schema']['type'] = 'string';
+                        $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                         break;
                     case 'Utopia\Validator\Boolean':
-                        $node['schema']['type'] = 'boolean';
+                        $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = false;
                         break;
                     case 'Appwrite\Database\Validator\UID':
-                        $node['schema']['type'] = 'string';
+                        $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                         break;
                     case 'Appwrite\Network\Validator\Email':
-                        $node['schema']['type'] = 'string';
+                        $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'email';
                         $node['schema']['x-example'] = 'email@example.com';
                         break;
                     case 'Appwrite\Network\Validator\URL':
-                        $node['schema']['type'] = 'string';
+                        $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'url';
                         $node['schema']['x-example'] = 'https://example.com';
                         break;
@@ -261,7 +262,7 @@ class OpenAPI3 extends Format
                         break;
                     case 'Utopia\Storage\Validator\File':
                         $consumes = ['multipart/form-data'];
-                        $node['schema']['type'] = 'string';
+                        $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'binary';
                         break;
                     case 'Utopia\Validator\ArrayList':
@@ -271,24 +272,24 @@ class OpenAPI3 extends Format
                         ];
                         break;
                     case 'Appwrite\Auth\Validator\Password':
-                        $node['schema']['type'] = 'string';
-                        $node['schema']['format'] = 'format';
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['format'] = 'password';
                         $node['schema']['x-example'] = 'password';
                         break;
                     case 'Utopia\Validator\Range': /** @var \Utopia\Validator\Range $validator */
-                        $node['schema']['type'] = 'integer';
-                        $node['schema']['format'] = 'int32';
+                        $node['schema']['type'] = $validator->getType() === Validator::TYPE_FLOAT ? 'number': $validator->getType();
+                        $node['schema']['format'] = $validator->getType() == Validator::TYPE_INTEGER ? 'int32' : 'float';
                         $node['schema']['x-example'] = $validator->getMin();
                         break;
                     case 'Utopia\Validator\Numeric':
-                        $node['schema']['type'] = 'integer';
+                        $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'int32';
                         break;
                     case 'Utopia\Validator\Length':
-                        $node['schema']['type'] = 'string';
+                        $node['schema']['type'] = $validator->getType();
                         break;
                     case 'Appwrite\Network\Validator\Host':
-                        $node['schema']['type'] = 'string';
+                        $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'url';
                         $node['schema']['x-example'] = 'https://example.com';
                         break;
