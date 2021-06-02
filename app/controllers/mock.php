@@ -191,6 +191,31 @@ App::delete('/v1/mock/tests/bar')
     ->action(function ($x, $y, $z) {
     });
 
+App::get('/v1/mock/tests/general/download')
+    ->desc('Download File')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'general')
+    ->label('sdk.method', 'download')
+    ->label('sdk.methodType', 'location')
+    ->label('sdk.description', 'Mock a file download request.')
+    ->label('sdk.response.type', '*/*')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.mock', true)
+    ->inject('response')
+    ->action(function ($response) {
+        /** @var Utopia\Swoole\Request $request */
+        
+        $response
+            ->setContentType('text/plain')
+            ->addHeader('Content-Disposition', 'attachment; filename="test.txt"')
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
+            ->addHeader('X-Peak', \memory_get_peak_usage())
+            ->send("Download test passed.")
+        ;
+    });
+
 App::post('/v1/mock/tests/general/upload')
     ->desc('Upload File')
     ->groups(['mock'])
