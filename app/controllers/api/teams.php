@@ -25,7 +25,7 @@ App::post('/v1/teams')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.create')
     ->label('scope', 'teams.write')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'create')
     ->label('sdk.description', '/docs/references/teams/create-team.md')
@@ -44,7 +44,7 @@ App::post('/v1/teams')
 
         Authorization::disable();
 
-        $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $team = $projectDB->createDocument([
@@ -54,7 +54,7 @@ App::post('/v1/teams')
                 'write' => ['team:{self}/owner'],
             ],
             'name' => $name,
-            'sum' => ($isPreviliggedUser || $isAppUser) ? 0 : 1,
+            'sum' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
             'dateCreated' => \time(),
         ]);
 
@@ -64,7 +64,7 @@ App::post('/v1/teams')
             throw new Exception('Failed saving team to DB', 500);
         }
 
-        if (!$isPreviliggedUser && !$isAppUser) { // Don't add user on server mode
+        if (!$isPrivilegedUser && !$isAppUser) { // Don't add user on server mode
             $membership = new Document([
                 '$collection' => Database::SYSTEM_COLLECTION_MEMBERSHIPS,
                 '$permissions' => [
@@ -100,7 +100,7 @@ App::get('/v1/teams')
     ->desc('List Teams')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'list')
     ->label('sdk.description', '/docs/references/teams/list-teams.md')
@@ -137,7 +137,7 @@ App::get('/v1/teams/:teamId')
     ->desc('Get Team')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/teams/get-team.md')
@@ -165,7 +165,7 @@ App::put('/v1/teams/:teamId')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.update')
     ->label('scope', 'teams.write')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'update')
     ->label('sdk.description', '/docs/references/teams/update-team.md')
@@ -202,7 +202,7 @@ App::delete('/v1/teams/:teamId')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.delete')
     ->label('scope', 'teams.write')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', '/docs/references/teams/delete-team.md')
@@ -243,7 +243,7 @@ App::delete('/v1/teams/:teamId')
         }
 
         $events
-            ->setParam('payload', $response->output($team, Response::MODEL_TEAM))
+            ->setParam('eventData', $response->output($team, Response::MODEL_TEAM))
         ;
 
         $response->noContent();
@@ -251,10 +251,11 @@ App::delete('/v1/teams/:teamId')
 
 App::post('/v1/teams/:teamId/memberships')
     ->desc('Create Team Membership')
-    ->groups(['api', 'teams'])
+    ->groups(['api', 'teams', 'auth'])
     ->label('event', 'teams.memberships.create')
     ->label('scope', 'teams.write')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('auth.type', 'invites')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'createMembership')
     ->label('sdk.description', '/docs/references/teams/create-team-membership.md')
@@ -282,7 +283,7 @@ App::post('/v1/teams/:teamId/memberships')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $mails */
 
-        $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $name = (empty($name)) ? $email : $name;
@@ -293,7 +294,7 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
         $memberships = $projectDB->getCollection([
-            'limit' => 50,
+            'limit' => 2000,
             'offset' => 0,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
@@ -311,6 +312,22 @@ App::post('/v1/teams/:teamId/memberships')
 
         if (empty($invitee)) { // Create new user if no user with same email found
 
+            $limit = $project->getAttribute('usersAuthLimit', 0);
+        
+            if ($limit !== 0 && $project->getId() !== 'console') { // check users limit, console invites are allways allowed.
+                $projectDB->getCollection([ // Count users
+                    'filters' => [
+                        '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                    ],
+                ]);
+    
+                $sum = $projectDB->getSum();
+    
+                if($sum >= $limit) {
+                    throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
+                }
+            }
+
             Authorization::disable();
 
             try {
@@ -324,10 +341,16 @@ App::post('/v1/teams/:teamId/memberships')
                     'emailVerification' => false,
                     'status' => Auth::USER_STATUS_UNACTIVATED,
                     'password' => Auth::passwordHash(Auth::passwordGenerator()),
-                    'passwordUpdate' => \time(),
+                    /** 
+                     * Set the password update time to 0 for users created using 
+                     * team invite and OAuth to allow password updates without an 
+                     * old password 
+                     */
+                    'passwordUpdate' => 0,
                     'registration' => \time(),
                     'reset' => false,
                     'name' => $name,
+                    'sessions' => [],
                     'tokens' => [],
                 ], ['email' => $email]);
             } catch (Duplicate $th) {
@@ -353,7 +376,7 @@ App::post('/v1/teams/:teamId/memberships')
             }
         }
 
-        if (!$isOwner && !$isPreviliggedUser && !$isAppUser) { // Not owner, not admin, not app (server)
+        if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
             throw new Exception('User is not allowed to send invitations for this team', 401);
         }
 
@@ -369,12 +392,12 @@ App::post('/v1/teams/:teamId/memberships')
             'teamId' => $team->getId(),
             'roles' => $roles,
             'invited' => \time(),
-            'joined' => ($isPreviliggedUser || $isAppUser) ? \time() : 0,
-            'confirm' => ($isPreviliggedUser || $isAppUser),
+            'joined' => ($isPrivilegedUser || $isAppUser) ? \time() : 0,
+            'confirm' => ($isPrivilegedUser || $isAppUser),
             'secret' => Auth::hash($secret),
         ]);
 
-        if ($isPreviliggedUser || $isAppUser) { // Allow admin to create membership
+        if ($isPrivilegedUser || $isAppUser) { // Allow admin to create membership
             Authorization::disable();
             $membership = $projectDB->createDocument($membership->getArrayCopy());
 
@@ -401,7 +424,7 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
         $url = Template::parseURL($url);
-        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['inviteId' => $membership->getId(), 'teamId' => $team->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
+        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'teamId' => $team->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
         $url = Template::unParseURL($url);
 
         $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
@@ -410,7 +433,7 @@ App::post('/v1/teams/:teamId/memberships')
         $title = \sprintf($locale->getText('account.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]']));
         
         $body
-            ->setParam('{{content}}', $content->render())
+            ->setParam('{{content}}', $content->render(false))
             ->setParam('{{cta}}', $cta->render())
             ->setParam('{{title}}', $title)
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
@@ -418,17 +441,16 @@ App::post('/v1/teams/:teamId/memberships')
             ->setParam('{{team}}', $team->getAttribute('name', '[TEAM-NAME]'))
             ->setParam('{{owner}}', $user->getAttribute('name', ''))
             ->setParam('{{redirect}}', $url)
-            ->setParam('{{bg-body}}', '#f6f6f6')
+            ->setParam('{{bg-body}}', '#f7f7f7')
             ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{bg-cta}}', '#3498db')
-            ->setParam('{{bg-cta-hover}}', '#34495e')
+            ->setParam('{{bg-cta}}', '#073b4c')
             ->setParam('{{text-content}}', '#000000')
             ->setParam('{{text-cta}}', '#ffffff')
         ;
 
-        if (!$isPreviliggedUser && !$isAppUser) { // No need in comfirmation when in admin or app mode
+        if (!$isPrivilegedUser && !$isAppUser) { // No need of confirmation when in admin or app mode
             $mails
-                ->setParam('event', 'teams.membership.create')
+                ->setParam('event', 'teams.memberships.create')
                 ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name')))
                 ->setParam('recipient', $email)
                 ->setParam('name', $name)
@@ -440,7 +462,7 @@ App::post('/v1/teams/:teamId/memberships')
 
         $audits
             ->setParam('userId', $invitee->getId())
-            ->setParam('event', 'teams.membership.create')
+            ->setParam('event', 'teams.memberships.create')
             ->setParam('resource', 'teams/'.$teamId)
         ;
 
@@ -453,11 +475,74 @@ App::post('/v1/teams/:teamId/memberships')
         ;
     });
 
+App::patch('/v1/teams/:teamId/memberships/:membershipId')
+    ->desc('Update Membership Roles')
+    ->groups(['api', 'teams'])
+    ->label('event', 'teams.memberships.update')
+    ->label('scope', 'teams.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'teams')
+    ->label('sdk.method', 'updateMembershipRoles')
+    ->label('sdk.description', '/docs/references/teams/update-team-membership-roles.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
+    ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->param('membershipId', '', new UID(), 'Membership ID.')
+    ->param('roles', [], new ArrayList(new Key()), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('user')
+    ->inject('projectDB')
+    ->inject('audits')
+    ->action(function ($teamId, $membershipId, $roles, $request, $response, $user, $projectDB,$audits) {
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Document $user */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $audits */
+
+        $team = $projectDB->getDocument($teamId);
+        if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+            throw new Exception('Team not found', 404);
+        }
+
+        $membership = $projectDB->getDocument($membershipId);
+        if (empty($membership->getId()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $membership->getCollection()) {
+            throw new Exception('Membership not found', 404);
+        }
+
+
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
+        $isAppUser = Auth::isAppUser(Authorization::$roles);
+        $isOwner = Authorization::isRole('team:'.$team->getId().'/owner');;
+        
+        if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
+            throw new Exception('User is not allowed to modify roles', 401);
+        }
+
+        // Update the roles
+        $membership->setAttribute('roles', $roles);
+        $membership = $projectDB->updateDocument($membership->getArrayCopy());
+
+        if (false === $membership) {
+            throw new Exception('Failed updating membership', 500);
+        }
+
+        $audits
+            ->setParam('userId', $user->getId())
+            ->setParam('event', 'teams.memberships.update')
+            ->setParam('resource', 'teams/'.$teamId)
+        ;
+
+        $response->dynamic(new Document($membership->getArrayCopy()), Response::MODEL_MEMBERSHIP);
+    });
+
 App::get('/v1/teams/:teamId/memberships')
     ->desc('Get Team Memberships')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'getMemberships')
     ->label('sdk.description', '/docs/references/teams/get-team-members.md')
@@ -506,12 +591,12 @@ App::get('/v1/teams/:teamId/memberships')
         $response->dynamic(new Document(['sum' => $projectDB->getSum(), 'memberships' => $users]), Response::MODEL_MEMBERSHIP_LIST);
     });
 
-App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
+App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->desc('Update Team Membership Status')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.memberships.update.status')
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'updateMembershipStatus')
     ->label('sdk.description', '/docs/references/teams/update-team-membership-status.md')
@@ -519,7 +604,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
     ->param('teamId', '', new UID(), 'Team unique ID.')
-    ->param('inviteId', '', new UID(), 'Invite unique ID.')
+    ->param('membershipId', '', new UID(), 'Membership ID.')
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('secret', '', new Text(256), 'Secret key.')
     ->inject('request')
@@ -528,7 +613,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
     ->inject('projectDB')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($teamId, $inviteId, $userId, $secret, $request, $response, $user, $projectDB, $geodb, $audits) {
+    ->action(function ($teamId, $membershipId, $userId, $secret, $request, $response, $user, $projectDB, $geodb, $audits) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
@@ -537,7 +622,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
         /** @var Appwrite\Event\Event $audits */
 
         $protocol = $request->getProtocol();
-        $membership = $projectDB->getDocument($inviteId);
+        $membership = $projectDB->getDocument($membershipId);
 
         if (empty($membership->getId()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $membership->getCollection()) {
             throw new Exception('Invite not found', 404);
@@ -562,7 +647,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
         }
 
         if ($userId != $membership->getAttribute('userId')) {
-            throw new Exception('Invite not belong to current user ('.$user->getAttribute('email').')', 401);
+            throw new Exception('Invite does not belong to current user ('.$user->getAttribute('email').')', 401);
         }
 
         if (empty($user->getId())) {
@@ -576,7 +661,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
         }
 
         if ($membership->getAttribute('userId') !== $user->getId()) {
-            throw new Exception('Invite not belong to current user ('.$user->getAttribute('email').')', 401);
+            throw new Exception('Invite does not belong to current user ('.$user->getAttribute('email').')', 401);
         }
 
         $membership // Attach user to team
@@ -596,10 +681,11 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge([
-            '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
+            '$collection' => Database::SYSTEM_COLLECTION_SESSIONS,
             '$permissions' => ['read' => ['user:'.$user->getId()], 'write' => ['user:'.$user->getId()]],
             'userId' => $user->getId(),
-            'type' => Auth::TOKEN_TYPE_LOGIN,
+            'provider' => Auth::SESSION_PROVIDER_EMAIL,
+            'providerUid' => $user->getAttribute('email'),
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -607,7 +693,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
         ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
-        $user->setAttribute('tokens', $session, Document::SET_TYPE_APPEND);
+        $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
 
         Authorization::setRole('user:'.$userId);
 
@@ -631,7 +717,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
 
         $audits
             ->setParam('userId', $user->getId())
-            ->setParam('event', 'teams.membership.update')
+            ->setParam('event', 'teams.memberships.update.status')
             ->setParam('resource', 'teams/'.$teamId)
         ;
 
@@ -652,30 +738,30 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
         ])), Response::MODEL_MEMBERSHIP);
     });
 
-App::delete('/v1/teams/:teamId/memberships/:inviteId')
+App::delete('/v1/teams/:teamId/memberships/:membershipId')
     ->desc('Delete Team Membership')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.memberships.delete')
     ->label('scope', 'teams.write')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'deleteMembership')
     ->label('sdk.description', '/docs/references/teams/delete-team-membership.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('teamId', '', new UID(), 'Team unique ID.')
-    ->param('inviteId', '', new UID(), 'Invite unique ID.')
+    ->param('membershipId', '', new UID(), 'Membership ID.')
     ->inject('response')
     ->inject('projectDB')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($teamId, $inviteId, $response, $projectDB, $audits, $events) {
+    ->action(function ($teamId, $membershipId, $response, $projectDB, $audits, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
 
-        $membership = $projectDB->getDocument($inviteId);
+        $membership = $projectDB->getDocument($membershipId);
 
         if (empty($membership->getId()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $membership->getCollection()) {
             throw new Exception('Invite not found', 404);
@@ -697,7 +783,7 @@ App::delete('/v1/teams/:teamId/memberships/:inviteId')
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
             $team = $projectDB->updateDocument(\array_merge($team->getArrayCopy(), [
-                'sum' => $team->getAttribute('sum', 0) - 1,
+                'sum' => \max($team->getAttribute('sum', 0) - 1, 0), // Ensure that sum >= 0
             ]));
         }
 
@@ -707,12 +793,12 @@ App::delete('/v1/teams/:teamId/memberships/:inviteId')
 
         $audits
             ->setParam('userId', $membership->getAttribute('userId'))
-            ->setParam('event', 'teams.membership.delete')
+            ->setParam('event', 'teams.memberships.delete')
             ->setParam('resource', 'teams/'.$teamId)
         ;
 
         $events
-            ->setParam('payload', $response->output($membership, Response::MODEL_MEMBERSHIP))
+            ->setParam('eventData', $response->output($membership, Response::MODEL_MEMBERSHIP))
         ;
 
         $response->noContent();

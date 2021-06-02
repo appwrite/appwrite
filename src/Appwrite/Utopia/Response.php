@@ -40,11 +40,12 @@ use Appwrite\Utopia\Response\Model\Tag;
 use Appwrite\Utopia\Response\Model\Task;
 use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
+use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\Mock; // Keep last
 use stdClass;
 
 /**
- * @method public function setStatusCode(int $code = 200): Response
+ * @method Response public function setStatusCode(int $code = 200)
  */
 class Response extends SwooleResponse
 {
@@ -72,6 +73,7 @@ class Response extends SwooleResponse
     const MODEL_SESSION_LIST = 'sessionList';
     const MODEL_TOKEN = 'token';
     const MODEL_JWT = 'jwt';
+    const MODEL_PREFERENCES = 'preferences';
     
     // Storage
     const MODEL_FILE = 'file';
@@ -175,6 +177,7 @@ class Response extends SwooleResponse
             ->setModel(new Rule())
             ->setModel(new Log())
             ->setModel(new User())
+            ->setModel(new Preferences())
             ->setModel(new Session())
             ->setModel(new Token())
             ->setModel(new JWT())
@@ -220,7 +223,7 @@ class Response extends SwooleResponse
      * 
      * @return self
      */
-    public function setModel(Model $instance): self
+    public function setModel(Model $instance)
     {
         $this->models[$instance->getType()] = $instance;
 

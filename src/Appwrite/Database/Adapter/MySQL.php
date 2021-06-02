@@ -283,6 +283,9 @@ class MySQL extends Adapter
             if (\is_array($prop['value'])) {
                 throw new Exception('Value can\'t be an array: '.\json_encode($prop['value']));
             }
+            if (\is_bool($prop['value'])) {
+                $prop['value'] = (int) $prop['value'];
+            }
             $st2->bindValue(':documentUid', $data['$id'], PDO::PARAM_STR);
             $st2->bindValue(':documentRevision', $revision, PDO::PARAM_STR);
 

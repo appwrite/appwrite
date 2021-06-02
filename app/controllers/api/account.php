@@ -31,10 +31,11 @@ $oauthDefaultFailure = App::getEnv('_APP_HOME').'/auth/oauth2/failure';
 
 App::post('/v1/account')
     ->desc('Create Account')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'auth'])
     ->label('event', 'account.create')
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('auth.type', 'emailPassword')
+    ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'create')
     ->label('sdk.description', '/docs/references/account/create.md')
@@ -60,7 +61,6 @@ App::post('/v1/account')
         if ('console' === $project->getId()) {
             $whitlistEmails = $project->getAttribute('authWhitelistEmails');
             $whitlistIPs = $project->getAttribute('authWhitelistIPs');
-            $whitlistDomains = $project->getAttribute('authWhitelistDomains');
 
             if (!empty($whitlistEmails) && !\in_array($email, $whitlistEmails)) {
                 throw new Exception('Console registration is restricted to specific emails. Contact your administrator for more information.', 401);
@@ -69,9 +69,21 @@ App::post('/v1/account')
             if (!empty($whitlistIPs) && !\in_array($request->getIP(), $whitlistIPs)) {
                 throw new Exception('Console registration is restricted to specific IPs. Contact your administrator for more information.', 401);
             }
+        }
 
-            if (!empty($whitlistDomains) && !\in_array(\substr(\strrchr($email, '@'), 1), $whitlistDomains)) {
-                throw new Exception('Console registration is restricted to specific domains. Contact your administrator for more information.', 401);
+        $limit = $project->getAttribute('usersAuthLimit', 0);
+
+        if ($limit !== 0) {
+            $projectDB->getCollection([ // Count users
+                'filters' => [
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                ],
+            ]);
+
+            $sum = $projectDB->getSum();
+
+            if($sum >= $limit) {
+                throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
             }
         }
 
@@ -109,7 +121,7 @@ App::post('/v1/account')
             throw new Exception('Account already exists', 409);
         }
 
-        Authorization::enable();
+        Authorization::reset();
 
         Authorization::unsetRole('role:'.Auth::USER_ROLE_GUEST);
         Authorization::setRole('user:'.$user->getId());
@@ -133,10 +145,11 @@ App::post('/v1/account')
 
 App::post('/v1/account/sessions')
     ->desc('Create Account Session')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'auth'])
     ->label('event', 'account.sessions.create')
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('auth.type', 'emailPassword')
+    ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createSession')
     ->label('sdk.description', '/docs/references/account/create-session.md')
@@ -190,10 +203,11 @@ App::post('/v1/account/sessions')
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge(
             [
-                '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
+                '$collection' => Database::SYSTEM_COLLECTION_SESSIONS,
                 '$permissions' => ['read' => ['user:'.$profile->getId()], 'write' => ['user:'.$profile->getId()]],
                 'userId' => $profile->getId(),
-                'type' => Auth::TOKEN_TYPE_LOGIN,
+                'provider' => Auth::SESSION_PROVIDER_EMAIL,
+                'providerUid' => $email,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'expire' => $expiry,
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -210,7 +224,7 @@ App::post('/v1/account/sessions')
             throw new Exception('Failed saving session to DB', 500);
         }
 
-        $profile->setAttribute('tokens', $session, Document::SET_TYPE_APPEND);
+        $profile->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
 
         $profile = $projectDB->updateDocument($profile->getArrayCopy());
 
@@ -251,7 +265,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->groups(['api', 'account'])
     ->label('error', __DIR__.'/../../views/general/error.phtml')
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createOAuth2Session')
     ->label('sdk.description', '/docs/references/account/create-session-oauth2.md')
@@ -372,7 +386,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('projectDB')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $projectDB, $geodb, $audits) use ($oauthDefaultSuccess) {
+    ->inject('events')
+    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $projectDB, $geodb, $audits, $events) use ($oauthDefaultSuccess) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
@@ -441,7 +456,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             throw new Exception('Missing ID from OAuth2 provider', 400);
         }
 
-        $current = Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
+        $current = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret);
 
         if ($current) {
             $projectDB->deleteDocument($current); //throw new Exception('User already logged in', 401);
@@ -451,7 +466,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             'limit' => 1,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                'oauth2'.\ucfirst($provider).'='.$oauth2ID,
+                'sessions.provider='.$provider,
+                'sessions.providerUid='.$oauth2ID
             ],
         ]) : $user;
 
@@ -467,7 +483,23 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 ],
             ]);
 
-            if (!$user || empty($user->getId())) { // Last option -> create user alone, generate random password
+            if (!$user || empty($user->getId())) { // Last option -> create the user, generate random password
+                $limit = $project->getAttribute('usersAuthLimit', 0);
+        
+                if ($limit !== 0) {
+                    $projectDB->getCollection([ // Count users
+                        'filters' => [
+                            '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                        ],
+                    ]);
+        
+                    $sum = $projectDB->getSum();
+        
+                    if($sum >= $limit) {
+                        throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
+                    }
+                }
+                
                 Authorization::disable();
 
                 try {
@@ -478,7 +510,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'emailVerification' => true,
                         'status' => Auth::USER_STATUS_ACTIVATED, // Email should already be authenticated by OAuth2 provider
                         'password' => Auth::passwordHash(Auth::passwordGenerator()),
-                        'passwordUpdate' => \time(),
+                        'passwordUpdate' => 0,
                         'registration' => \time(),
                         'reset' => false,
                         'name' => $name,
@@ -487,7 +519,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     throw new Exception('Account already exists', 409);
                 }
 
-                Authorization::enable();
+                Authorization::reset();
 
                 if (false === $user) {
                     throw new Exception('Failed saving user to DB', 500);
@@ -506,10 +538,12 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $secret = Auth::tokenGenerator();
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $session = new Document(array_merge([
-            '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
+            '$collection' => Database::SYSTEM_COLLECTION_SESSIONS,
             '$permissions' => ['read' => ['user:'.$user['$id']], 'write' => ['user:'.$user['$id']]],
             'userId' => $user->getId(),
-            'type' => Auth::TOKEN_TYPE_LOGIN,
+            'provider' => $provider,
+            'providerUid' => $oauth2ID,
+            'providerToken' => $accessToken,
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -517,11 +551,18 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
         ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
+        $isAnonymousUser = is_null($user->getAttribute('email')) && is_null($user->getAttribute('password'));
+
+        if ($isAnonymousUser) {
+            $user
+                ->setAttribute('name', $oauth2->getUserName($accessToken))
+                ->setAttribute('email', $oauth2->getUserEmail($accessToken))
+            ;
+        }
+
         $user
-            ->setAttribute('oauth2'.\ucfirst($provider), $oauth2ID)
-            ->setAttribute('oauth2'.\ucfirst($provider).'AccessToken', $accessToken)
             ->setAttribute('status', Auth::USER_STATUS_ACTIVATED)
-            ->setAttribute('tokens', $session, Document::SET_TYPE_APPEND)
+            ->setAttribute('sessions', $session, Document::SET_TYPE_APPEND)
         ;
 
         Authorization::setRole('user:'.$user->getId());
@@ -538,6 +579,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             ->setParam('resource', 'users/'.$user->getId())
             ->setParam('data', ['provider' => $provider])
         ;
+
+        $events->setParam('eventData', $response->output($session, Response::MODEL_SESSION));
 
         if (!Config::getParam('domainVerification')) {
             $response
@@ -566,15 +609,168 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         ;
     });
 
+App::post('/v1/account/sessions/anonymous')
+    ->desc('Create Anonymous Session')
+    ->groups(['api', 'account', 'auth'])
+    ->label('event', 'account.sessions.create')
+    ->label('scope', 'public')
+    ->label('auth.type', 'anonymous')
+    ->label('sdk.auth', [])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'createAnonymousSession')
+    ->label('sdk.description', '/docs/references/account/create-session-anonymous.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SESSION)
+    ->label('abuse-limit', 50)
+    ->label('abuse-key', 'ip:{ip}')
+    ->inject('request')
+    ->inject('response')
+    ->inject('locale')
+    ->inject('user')
+    ->inject('project')
+    ->inject('projectDB')
+    ->inject('geodb')
+    ->inject('audits')
+    ->action(function ($request, $response, $locale, $user, $project, $projectDB, $geodb, $audits) {
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Locale\Locale $locale */
+        /** @var Appwrite\Database\Document $user */
+        /** @var Appwrite\Database\Document $project */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var MaxMind\Db\Reader $geodb */
+        /** @var Appwrite\Event\Event $audits */
+
+        $protocol = $request->getProtocol();
+
+        if ('console' === $project->getId()) {
+            throw new Exception('Failed to create anonymous user.', 401);
+        }
+
+        if ($user->getId()) {
+            throw new Exception('Cannot create an anonymous user when logged in.', 401);
+        }
+
+        $limit = $project->getAttribute('usersAuthLimit', 0);
+
+        if ($limit !== 0) {
+            $projectDB->getCollection([ // Count users
+                'filters' => [
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                ],
+            ]);
+
+            $sum = $projectDB->getSum();
+
+            if($sum >= $limit) {
+                throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
+            }
+        }
+
+        Authorization::disable();
+        try {
+            $user = $projectDB->createDocument([
+                '$collection' => Database::SYSTEM_COLLECTION_USERS,
+                '$permissions' => [
+                    'read' => ['*'], 
+                    'write' => ['user:{self}']
+                ],
+                'email' => null,
+                'emailVerification' => false,
+                'status' => Auth::USER_STATUS_UNACTIVATED,
+                'password' => null,
+                'passwordUpdate' => \time(),
+                'registration' => \time(),
+                'reset' => false,
+                'name' => null
+            ]);
+        } catch (Exception $th) {
+            throw new Exception('Failed saving user to DB', 500);
+        }
+        Authorization::reset();
+
+        if (false === $user) {
+            throw new Exception('Failed saving user to DB', 500);
+        }
+
+        // Create session token
+
+        $detector = new Detector($request->getUserAgent('UNKNOWN'));
+        $record = $geodb->get($request->getIP());
+        $secret = Auth::tokenGenerator();
+        $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $session = new Document(array_merge(
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_SESSIONS,
+                '$permissions' => ['read' => ['user:' . $user['$id']], 'write' => ['user:' . $user['$id']]],
+                'userId' => $user->getId(),
+                'provider' => Auth::SESSION_PROVIDER_ANONYMOUS,
+                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'expire' => $expiry,
+                'userAgent' => $request->getUserAgent('UNKNOWN'),
+                'ip' => $request->getIP(),
+                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+            ],
+            $detector->getOS(),
+            $detector->getClient(),
+            $detector->getDevice()
+        ));
+
+        Authorization::setRole('user:'.$user->getId());
+
+        $session = $projectDB->createDocument($session->getArrayCopy());
+
+        if (false === $session) {
+            throw new Exception('Failed saving session to DB', 500);
+        }
+
+        $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
+
+        $user = $projectDB->updateDocument($user->getArrayCopy());
+
+        if (false === $user) {
+            throw new Exception('Failed saving user to DB', 500);
+        }
+
+        $audits
+            ->setParam('userId', $user->getId())
+            ->setParam('event', 'account.sessions.create')
+            ->setParam('resource', 'users/'.$user->getId())
+        ;
+
+        if (!Config::getParam('domainVerification')) {
+            $response
+                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
+            ;
+        }
+
+        $response
+            ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+        ;
+
+        $session
+            ->setAttribute('current', true)
+            ->setAttribute('countryName', (isset($countries[$session->getAttribute('countryCode')])) ? $countries[$session->getAttribute('countryCode')] : $locale->getText('locale.country.unknown'))
+        ;
+
+        $response->dynamic($session, Response::MODEL_SESSION);
+    });
+
 App::post('/v1/account/jwt')
     ->desc('Create Account JWT')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'auth'])
     ->label('scope', 'account')
-    ->label('docs', false) // Hidden for now - private beta
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('auth.type', 'jwt')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createJWT')
     ->label('sdk.description', '/docs/references/account/create-jwt.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_JWT)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
     ->inject('response')
@@ -583,16 +779,18 @@ App::post('/v1/account/jwt')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
             
-        $tokens = $user->getAttribute('tokens', []);
-        $session = new Document();
+        $sessions = $user->getAttribute('sessions', []);
+        $current = new Document();
 
-        foreach ($tokens as $token) { /** @var Appwrite\Database\Document $token */
-            if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
-                $session = $token;
+        foreach ($sessions as $session) { 
+            /** @var Appwrite\Database\Document $session */
+
+            if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                $current = $session;
             }
         }
 
-        if($session->isEmpty()) {
+        if($current->isEmpty()) {
             throw new Exception('No valid session found', 401);
         }
         
@@ -606,7 +804,7 @@ App::post('/v1/account/jwt')
                 // 'scopes' => ['user'],
                 // 'iss'    => 'http://api.mysite.com',
                 'userId' => $user->getId(),
-                'sessionId' => $session->getId(),
+                'sessionId' => $current->getId(),
             ])]), Response::MODEL_JWT);
     });
 
@@ -614,7 +812,7 @@ App::get('/v1/account')
     ->desc('Get Account')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/account/get.md')
@@ -634,13 +832,13 @@ App::get('/v1/account/prefs')
     ->desc('Get Account Preferences')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getPrefs')
     ->label('sdk.description', '/docs/references/account/get-prefs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('sdk.response.model', Response::MODEL_PREFERENCES)
     ->inject('response')
     ->inject('user')
     ->action(function ($response, $user) {
@@ -649,14 +847,14 @@ App::get('/v1/account/prefs')
 
         $prefs = $user->getAttribute('prefs', new \stdClass());
 
-        $response->dynamic(new Document($prefs), Response::MODEL_ANY);
+        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
 App::get('/v1/account/sessions')
     ->desc('Get Account Sessions')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getSessions')
     ->label('sdk.description', '/docs/references/account/get-sessions.md')
@@ -671,22 +869,19 @@ App::get('/v1/account/sessions')
         /** @var Appwrite\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
 
-        $tokens = $user->getAttribute('tokens', []);
-        $sessions = [];
+        $sessions = $user->getAttribute('sessions', []);
         $countries = $locale->getText('countries');
-        $current = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
+        $current = Auth::sessionVerify($sessions, Auth::$secret);
 
-        foreach ($tokens as $token) { /* @var $token Document */
-            if (Auth::TOKEN_TYPE_LOGIN != $token->getAttribute('type')) {
-                continue;
-            }
+        foreach ($sessions as $key => $session) { 
+            /** @var Document $session */
 
-            $token->setAttribute('countryName', (isset($countries[strtoupper($token->getAttribute('countryCode'))]))
-                ? $countries[strtoupper($token->getAttribute('countryCode'))]
+            $session->setAttribute('countryName', (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
+                ? $countries[strtoupper($session->getAttribute('countryCode'))]
                 : $locale->getText('locale.country.unknown'));
-            $token->setAttribute('current', ($current == $token->getId()) ? true : false);
+            $session->setAttribute('current', ($current == $session->getId()) ? true : false);
 
-            $sessions[] = $token;
+            $sessions[$key] = $session;
         }
 
         $response->dynamic(new Document([
@@ -699,7 +894,7 @@ App::get('/v1/account/logs')
     ->desc('Get Account Logs')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getLogs')
     ->label('sdk.description', '/docs/references/account/get-logs.md')
@@ -776,7 +971,7 @@ App::patch('/v1/account/name')
     ->groups(['api', 'account'])
     ->label('event', 'account.update.name')
     ->label('scope', 'account')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateName')
     ->label('sdk.description', '/docs/references/account/update-name.md')
@@ -816,7 +1011,7 @@ App::patch('/v1/account/password')
     ->groups(['api', 'account'])
     ->label('event', 'account.update.password')
     ->label('scope', 'account')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePassword')
     ->label('sdk.description', '/docs/references/account/update-password.md')
@@ -824,7 +1019,7 @@ App::patch('/v1/account/password')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('password', '', new Password(), 'New user password. Must be between 6 to 32 chars.')
-    ->param('oldPassword', '', new Password(), 'Old user password. Must be between 6 to 32 chars.')
+    ->param('oldPassword', '', new Password(), 'Old user password. Must be between 6 to 32 chars.', true)
     ->inject('response')
     ->inject('user')
     ->inject('projectDB')
@@ -835,12 +1030,14 @@ App::patch('/v1/account/password')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
 
-        if (!Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
+        // Check old password only if its an existing user.
+        if ($user->getAttribute('passwordUpdate') !== 0 && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
             throw new Exception('Invalid credentials', 401);
         }
 
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
             'password' => Auth::passwordHash($password),
+            'passwordUpdate' => \time(),
         ]));
 
         if (false === $user) {
@@ -861,7 +1058,7 @@ App::patch('/v1/account/email')
     ->groups(['api', 'account'])
     ->label('event', 'account.update.email')
     ->label('scope', 'account')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateEmail')
     ->label('sdk.description', '/docs/references/account/update-email.md')
@@ -880,7 +1077,12 @@ App::patch('/v1/account/email')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
 
-        if (!Auth::passwordVerify($password, $user->getAttribute('password'))) { // Double check user password
+        $isAnonymousUser = is_null($user->getAttribute('email')) && is_null($user->getAttribute('password')); // Check if request is from an anonymous account for converting
+
+        if (
+            !$isAnonymousUser &&
+            !Auth::passwordVerify($password, $user->getAttribute('password'))
+        ) { // Double check user password
             throw new Exception('Invalid credentials', 401);
         }
 
@@ -898,10 +1100,14 @@ App::patch('/v1/account/email')
 
         // TODO after this user needs to confirm mail again
 
-        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
-            'email' => $email,
-            'emailVerification' => false,
-        ]));
+        $user = $projectDB->updateDocument(\array_merge(
+            $user->getArrayCopy(),
+            ($isAnonymousUser ? [ 'password' => Auth::passwordHash($password) ] : []),
+            [
+                'email' => $email,
+                'emailVerification' => false,
+            ]
+        ));
 
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500);
@@ -921,13 +1127,13 @@ App::patch('/v1/account/prefs')
     ->groups(['api', 'account'])
     ->label('event', 'account.update.prefs')
     ->label('scope', 'account')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePrefs')
     ->label('sdk.description', '/docs/references/account/update-prefs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('sdk.response.model', Response::MODEL_USER)
     ->param('prefs', [], new Assoc(), 'Prefs key-value JSON object.')
     ->inject('response')
     ->inject('user')
@@ -960,7 +1166,7 @@ App::delete('/v1/account')
     ->groups(['api', 'account'])
     ->label('event', 'account.delete')
     ->label('scope', 'account')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', '/docs/references/account/delete.md')
@@ -1005,7 +1211,7 @@ App::delete('/v1/account')
         ;
 
         $events
-            ->setParam('payload', $response->output($user, Response::MODEL_USER))
+            ->setParam('eventData', $response->output($user, Response::MODEL_USER))
         ;
 
         if (!Config::getParam('domainVerification')) {
@@ -1026,7 +1232,7 @@ App::delete('/v1/account/sessions/:sessionId')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'account.sessions.delete')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'deleteSession')
     ->label('sdk.description', '/docs/references/account/delete-session.md')
@@ -1050,14 +1256,16 @@ App::delete('/v1/account/sessions/:sessionId')
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
-            ? Auth::tokenVerify($user->getAttribute('tokens'), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)
+            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
             : $sessionId;
                 
-        $tokens = $user->getAttribute('tokens', []);
+        $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($tokens as $token) { /* @var $token Document */
-            if (($sessionId == $token->getId()) && Auth::TOKEN_TYPE_LOGIN == $token->getAttribute('type')) {
-                if (!$projectDB->deleteDocument($token->getId())) {
+        foreach ($sessions as $session) { 
+            /** @var Document $session */
+
+            if (($sessionId == $session->getId())) {
+                if (!$projectDB->deleteDocument($session->getId())) {
                     throw new Exception('Failed to remove token from DB', 500);
                 }
 
@@ -1067,16 +1275,16 @@ App::delete('/v1/account/sessions/:sessionId')
                     ->setParam('resource', '/user/'.$user->getId())
                 ;
 
-                if (!Config::getParam('domainVerification')) {
-                    $response
-                        ->addHeader('X-Fallback-Cookies', \json_encode([]))
-                    ;
-                }
+                $session->setAttribute('current', false);
                 
-                $token->setAttribute('current', false);
-
-                if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
-                    $token->setAttribute('current', true);
+                if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                    $session->setAttribute('current', true);
+                    
+                    if (!Config::getParam('domainVerification')) {
+                        $response
+                            ->addHeader('X-Fallback-Cookies', \json_encode([]))
+                        ;
+                    }
 
                     $response
                         ->addCookie(Auth::$cookieName.'_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
@@ -1085,7 +1293,7 @@ App::delete('/v1/account/sessions/:sessionId')
                 }
 
                 $events
-                    ->setParam('payload', $response->output($token, Response::MODEL_SESSION))
+                    ->setParam('eventData', $response->output($session, Response::MODEL_SESSION))
                 ;
 
                 return $response->noContent();
@@ -1100,7 +1308,7 @@ App::delete('/v1/account/sessions')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'account.sessions.delete')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'deleteSessions')
     ->label('sdk.description', '/docs/references/account/delete-sessions.md')
@@ -1122,10 +1330,12 @@ App::delete('/v1/account/sessions')
         /** @var Appwrite\Event\Event $events */
 
         $protocol = $request->getProtocol();
-        $tokens = $user->getAttribute('tokens', []);
+        $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($tokens as $token) { /* @var $token Document */
-            if (!$projectDB->deleteDocument($token->getId())) {
+        foreach ($sessions as $session) { 
+            /** @var Document $session */
+
+            if (!$projectDB->deleteDocument($session->getId())) {
                 throw new Exception('Failed to remove token from DB', 500);
             }
 
@@ -1141,10 +1351,10 @@ App::delete('/v1/account/sessions')
                 ;
             }
 
-            $token->setAttribute('current', false);
+            $session->setAttribute('current', false);
 
-            if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
-                $token->setAttribute('current', true);
+            if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                $session->setAttribute('current', true);
                 $response
                     ->addCookie(Auth::$cookieName.'_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
                     ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
@@ -1153,9 +1363,9 @@ App::delete('/v1/account/sessions')
         }
                     
         $events
-            ->setParam('payload', $response->output(new Document([
-                'sum' => count($tokens),
-                'sessions' => $tokens
+            ->setParam('eventData', $response->output(new Document([
+                'sum' => count($sessions),
+                'sessions' => $sessions
             ]), Response::MODEL_SESSION_LIST))
         ;
 
@@ -1167,7 +1377,7 @@ App::post('/v1/account/recovery')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'account.recovery.create')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createRecovery')
     ->label('sdk.description', '/docs/references/account/create-recovery.md')
@@ -1196,7 +1406,7 @@ App::post('/v1/account/recovery')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
 
-        $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
@@ -1252,17 +1462,16 @@ App::post('/v1/account/recovery')
         $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
 
         $body
-            ->setParam('{{content}}', $content->render())
+            ->setParam('{{content}}', $content->render(false))
             ->setParam('{{cta}}', $cta->render())
             ->setParam('{{title}}', $locale->getText('account.emails.recovery.title'))
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
             ->setParam('{{name}}', $profile->getAttribute('name'))
             ->setParam('{{redirect}}', $url)
-            ->setParam('{{bg-body}}', '#f6f6f6')
+            ->setParam('{{bg-body}}', '#f7f7f7')
             ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{bg-cta}}', '#3498db')
-            ->setParam('{{bg-cta-hover}}', '#34495e')
+            ->setParam('{{bg-cta}}', '#073b4c')
             ->setParam('{{text-content}}', '#000000')
             ->setParam('{{text-cta}}', '#ffffff')
         ;
@@ -1278,7 +1487,7 @@ App::post('/v1/account/recovery')
         ;
 
         $events
-            ->setParam('payload',
+            ->setParam('eventData',
                 $response->output($recovery->setAttribute('secret', $secret),
                 Response::MODEL_TOKEN
             ))
@@ -1286,7 +1495,7 @@ App::post('/v1/account/recovery')
 
         $recovery  // Hide secret for clients, sp
             ->setAttribute('secret',
-                ($isPreviliggedUser || $isAppUser) ? $secret : '');
+                ($isPrivilegedUser || $isAppUser) ? $secret : '');
 
         $audits
             ->setParam('userId', $profile->getId())
@@ -1305,7 +1514,7 @@ App::put('/v1/account/recovery')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'account.recovery.update')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateRecovery')
     ->label('sdk.description', '/docs/references/account/update-recovery.md')
@@ -1384,7 +1593,7 @@ App::post('/v1/account/verification')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'account.verification.create')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createVerification')
     ->label('sdk.description', '/docs/references/account/create-verification.md')
@@ -1414,7 +1623,7 @@ App::post('/v1/account/verification')
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $mails */
 
-        $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $verificationSecret = Auth::tokenGenerator();
@@ -1455,17 +1664,16 @@ App::post('/v1/account/verification')
         $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
 
         $body
-            ->setParam('{{content}}', $content->render())
+            ->setParam('{{content}}', $content->render(false))
             ->setParam('{{cta}}', $cta->render())
             ->setParam('{{title}}', $locale->getText('account.emails.verification.title'))
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
             ->setParam('{{name}}', $user->getAttribute('name'))
             ->setParam('{{redirect}}', $url)
-            ->setParam('{{bg-body}}', '#f6f6f6')
+            ->setParam('{{bg-body}}', '#f7f7f7')
             ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{bg-cta}}', '#3498db')
-            ->setParam('{{bg-cta-hover}}', '#34495e')
+            ->setParam('{{bg-cta}}', '#073b4c')
             ->setParam('{{text-content}}', '#000000')
             ->setParam('{{text-cta}}', '#ffffff')
         ;
@@ -1481,7 +1689,7 @@ App::post('/v1/account/verification')
         ;
 
         $events
-            ->setParam('payload',
+            ->setParam('eventData',
                 $response->output($verification->setAttribute('secret', $verificationSecret),
                 Response::MODEL_TOKEN
             ))
@@ -1489,7 +1697,7 @@ App::post('/v1/account/verification')
 
         $verification  // Hide secret for clients, sp
             ->setAttribute('secret',
-                ($isPreviliggedUser || $isAppUser) ? $verificationSecret : '');
+                ($isPrivilegedUser || $isAppUser) ? $verificationSecret : '');
 
         $audits
             ->setParam('userId', $user->getId())
@@ -1508,7 +1716,7 @@ App::put('/v1/account/verification')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'account.verification.update')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateVerification')
     ->label('sdk.description', '/docs/references/account/update-verification.md')

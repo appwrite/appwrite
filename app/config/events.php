@@ -97,6 +97,46 @@ return [
         'model' => Response::MODEL_DOCUMENT,
         'note' => '',
     ],
+    'functions.create' => [
+        'description' => 'This event triggers when a function is created.',
+        'model' => Response::MODEL_FUNCTION,
+        'note' => 'version >= 0.7',
+    ],
+    'functions.update' => [
+        'description' => 'This event triggers when a function is updated.',
+        'model' => Response::MODEL_FUNCTION,
+        'note' => 'version >= 0.7',
+    ],
+    'functions.delete' => [
+        'description' => 'This event triggers when a function is deleted.',
+        'model' => Response::MODEL_ANY,
+        'note' => 'version >= 0.7',
+    ],
+    'functions.tags.create' => [
+        'description' => 'This event triggers when a function tag is created.',
+        'model' => Response::MODEL_TAG,
+        'note' => 'version >= 0.7',
+    ],
+    'functions.tags.update' => [
+        'description' => 'This event triggers when a function tag is updated.',
+        'model' => Response::MODEL_FUNCTION,
+        'note' => 'version >= 0.7',
+    ],
+    'functions.tags.delete' => [
+        'description' => 'This event triggers when a function tag is deleted.',
+        'model' => Response::MODEL_ANY,
+        'note' => 'version >= 0.7',
+    ],
+    'functions.executions.create' => [
+        'description' => 'This event triggers when a function execution is created.',
+        'model' => Response::MODEL_EXECUTION,
+        'note' => 'version >= 0.7',
+    ],
+    'functions.executions.update' => [
+        'description' => 'This event triggers when a function execution is updated.',
+        'model' => Response::MODEL_EXECUTION,
+        'note' => 'version >= 0.7',
+    ],
     'storage.files.create' => [
         'description' => 'This event triggers when a storage file is created.',
         'model' => Response::MODEL_FILE,
@@ -156,6 +196,11 @@ return [
         'description' => 'This event triggers when a team memberships is created.',
         'model' => Response::MODEL_MEMBERSHIP,
         'note' => 'version >= 0.7',
+    ],
+    'teams.memberships.update' => [
+        'description' => 'This event triggers when a team membership is updated.',
+        'model' => Response::MODEL_MEMBERSHIP,
+        'note' => 'version >= 0.8',
     ],
     'teams.memberships.update.status' => [
         'description' => 'This event triggers when a team memberships status is updated.',

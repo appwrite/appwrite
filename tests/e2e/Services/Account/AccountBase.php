@@ -49,6 +49,39 @@ trait AccountBase
 
         $this->assertEquals($response['headers']['status-code'], 409);
 
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => '',
+            'password' => '',
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => '',
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => '',
+            'password' => $password,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
         return [
             'id' => $id,
             'email' => $email,
@@ -372,7 +405,6 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
-        $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertIsNumeric($response['body']['registration']);
         $this->assertEquals($response['body']['email'], $email);
@@ -440,7 +472,6 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
-        $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertIsNumeric($response['body']['registration']);
         $this->assertEquals($response['body']['email'], $email);
@@ -478,6 +509,33 @@ trait AccountBase
         
         $this->assertEquals($response['headers']['status-code'], 400);
 
+        /**
+         * Existing user tries to update password by passing wrong old password -> SHOULD FAIL
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]), [
+            'password' => 'new-password',
+            'oldPassword' => $password,
+        ]);
+        $this->assertEquals($response['headers']['status-code'], 401);
+
+        /**
+         * Existing user tries to update password without passing old password -> SHOULD FAIL 
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]), [
+            'password' => 'new-password'
+        ]);
+        $this->assertEquals($response['headers']['status-code'], 401);
+
         $data['password'] = 'new-password';
 
         return $data;
@@ -506,7 +564,6 @@ trait AccountBase
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
-        $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertIsNumeric($response['body']['registration']);
@@ -564,7 +621,6 @@ trait AccountBase
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
-        $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertEquals('prefValue1', $response['body']['prefs']['prefKey1']);
         $this->assertEquals('prefValue2', $response['body']['prefs']['prefKey2']);
