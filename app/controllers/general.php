@@ -336,6 +336,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
         case 412: // Error allowed publicly
         case 429: // Error allowed publicly
         case 501: // Error allowed publicly
+        case 503: // Error allowed publicly
             $code = $error->getCode();
             $message = $error->getMessage();
             break;
