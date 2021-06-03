@@ -364,7 +364,7 @@ class Swagger2 extends Format
             }
         }
         foreach ($this->models as $model) {
-            if (!$this->includeUnusedModels && !in_array($model->getType(), $usedModels)) {
+            if (!in_array($model->getType(), $usedModels)) {
                 continue;
             }
 
