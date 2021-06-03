@@ -721,7 +721,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         Authorization::reset();
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
-            $team = $dbForInternal->updateDocument('teams', $team->getId(), $team->setAttribute('sum', $team->getAttribute('sum', 0) - 1));
+            $team = $dbForInternal->updateDocument('teams', $team->getId(), $team->setAttribute('sum', \max($team->getAttribute('sum', 0) - 1, 0)));
         }
 
         $audits

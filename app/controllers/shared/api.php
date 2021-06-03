@@ -48,7 +48,9 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     // //TODO make sure we get array here
 
     // foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
-    //     $timeLimit->setParam('{param-'.$key.'}', (\is_array($value)) ? \json_encode($value) : $value);
+    //     if(!empty($value)) {
+    //         $timeLimit->setParam('{param-'.$key.'}', (\is_array($value)) ? \json_encode($value) : $value);
+    //     }
     // }
 
     // $abuse = new Abuse($timeLimit);

@@ -181,5 +181,55 @@ trait TeamsBaseServer
 
         $this->assertEquals(401, $response['headers']['status-code']);
 
+        return $data;
+    }
+
+    /**
+     * @depends testUpdateMembershipRoles
+     */
+    public function testDeleteUserUpdatesTeamMembershipCount($data) {
+        $teamUid = $data['teamUid'] ?? '';
+        $userUid = $data['userUid'] ?? '';
+
+        /** Get Team Count */
+        $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamUid, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals('Arsenal', $response['body']['name']);
+        $this->assertEquals(1, $response['body']['sum']);
+        $this->assertIsInt($response['body']['sum']);
+        $this->assertIsInt($response['body']['dateCreated']);
+
+        
+        /** Delete User */
+        $user = $this->client->call(Client::METHOD_DELETE, '/users/' . $userUid, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($user['headers']['status-code'], 204);
+
+        /** Wait for deletes worker to delete membership and update team membership count */
+        sleep(5);
+
+        /** Get Team Count */
+        $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamUid, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals('Arsenal', $response['body']['name']);
+        $this->assertEquals(0, $response['body']['sum']);
+        $this->assertIsInt($response['body']['sum']);
+        $this->assertIsInt($response['body']['dateCreated']);        
+
     }
 }

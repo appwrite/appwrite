@@ -1,3 +1,25 @@
+# NOT PUBLISHED YET
+
+## Features
+
+- Added file created date to file info on the console
+- Added file size to file info on the console
+- Refactored Devices page in Console:
+  - Renamed *Devices* to *Sessions*
+  - Add Provider Icon to each Session
+  - Add Anonymous Account Placeholder
+- Upgraded telegraf docker image version to v1.1.0
+
+## Bugs
+
+- Fixed bug when removing a project member on the Appwrite console (#1214)
+- Fixed Swoole buffer output size to allow downloading files bigger than allowed size (#1189)
+- Fixed ClamAV status when anti virus is not running (#1188)
+- Fixed deleteSession which was removing cookieFallback from the localstorage on any logout instead of current session (#1206)
+- Fixed Nepal flag (#1173)
+- Fixed a bug in the Twitch OAuth adapter (#1209)
+- Fixed missing session object when OAuth session creation event is triggered (#1208)
+
 # Version 0.8.0
 
 ## Features
@@ -35,6 +57,8 @@
   - Fixed incorrect audit worker event names (#1143)
   - Increased limit of memberships fetched in `createTeamMembership` to 2000 (#1143)
   - Fixed exception thrown when SSL certificate is already stored in the database (#1151)
+- Fixed user delete button in the Appwrite console (#1216)
+- Fixed missing placeholder for user name when empty (#1220)
 
 ## Breaking Changes (Read before upgrading!)
 

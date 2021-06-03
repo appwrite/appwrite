@@ -348,7 +348,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('dbForInternal')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $dbForInternal, $geodb, $audits) use ($oauthDefaultSuccess) {
+    ->inject('events')
+    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $dbForInternal, $geodb, $audits, $events) use ($oauthDefaultSuccess) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
@@ -530,6 +531,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             ->setParam('resource', 'users/'.$user->getId())
             ->setParam('data', ['provider' => $provider])
         ;
+
+        $events->setParam('eventData', $response->output2($session, Response::MODEL_SESSION));
 
         if (!Config::getParam('domainVerification')) {
             $response
@@ -1161,16 +1164,16 @@ App::delete('/v1/account/sessions/:sessionId')
                     ->setParam('resource', '/user/'.$user->getId())
                 ;
 
-                if (!Config::getParam('domainVerification')) {
-                    $response
-                        ->addHeader('X-Fallback-Cookies', \json_encode([]))
-                    ;
-                }
-                
                 $session->setAttribute('current', false);
-
+                
                 if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
                     $session->setAttribute('current', true);
+                    
+                    if (!Config::getParam('domainVerification')) {
+                        $response
+                            ->addHeader('X-Fallback-Cookies', \json_encode([]))
+                        ;
+                    }
 
                     $response
                         ->addCookie(Auth::$cookieName.'_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
