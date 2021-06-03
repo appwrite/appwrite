@@ -63,8 +63,6 @@ App::post('/v1/account')
             $whitelistEmails = $project->getAttribute('authWhitelistEmails');
             $whitelistIPs = $project->getAttribute('authWhitelistIPs');
 
-            var_dump($whitelistEmails);
-
             if (!empty($whitelistEmails) && !\in_array($email, $whitelistEmails)) {
                 throw new Exception('Console registration is restricted to specific emails. Contact your administrator for more information.', 401);
             }
