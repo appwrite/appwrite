@@ -411,8 +411,7 @@ App::patch('/v1/projects/:projectId')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-//service flags
-App::patch('/v1/projects/:projectId')
+App::patch('/v1/projects/:projectId/status')
     ->desc('Update service status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
