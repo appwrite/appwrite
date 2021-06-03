@@ -177,6 +177,7 @@ App::post('/v1/account/sessions')
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
 
+        $email = \strtolower($email);
         $protocol = $request->getProtocol();
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
             'limit' => 1,
@@ -1089,6 +1090,7 @@ App::patch('/v1/account/email')
             throw new Exception('Invalid credentials', 401);
         }
 
+        $email = \strtolower($email);
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
             'limit' => 1,
             'filters' => [
@@ -1411,7 +1413,8 @@ App::post('/v1/account/recovery')
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
-
+        
+        $email = \strtolower($email);
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
             'limit' => 1,
             'filters' => [
