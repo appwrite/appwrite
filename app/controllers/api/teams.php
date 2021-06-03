@@ -367,7 +367,7 @@ App::post('/v1/teams/:teamId/memberships')
         $title = \sprintf($locale->getText('account.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]']));
         
         $body
-            ->setParam('{{content}}', $content->render())
+            ->setParam('{{content}}', $content->render(false))
             ->setParam('{{cta}}', $cta->render())
             ->setParam('{{title}}', $title)
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
@@ -375,10 +375,9 @@ App::post('/v1/teams/:teamId/memberships')
             ->setParam('{{team}}', $team->getAttribute('name', '[TEAM-NAME]'))
             ->setParam('{{owner}}', $user->getAttribute('name', ''))
             ->setParam('{{redirect}}', $url)
-            ->setParam('{{bg-body}}', '#f6f6f6')
+            ->setParam('{{bg-body}}', '#f7f7f7')
             ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{bg-cta}}', '#3498db')
-            ->setParam('{{bg-cta-hover}}', '#34495e')
+            ->setParam('{{bg-cta}}', '#073b4c')
             ->setParam('{{text-content}}', '#000000')
             ->setParam('{{text-cta}}', '#ffffff')
         ;

@@ -56,13 +56,13 @@
 
     .main {
       background: {{bg-content}};
-      border-radius: 3px;
+      border-radius: 10px;
       width: 100%;
     }
 
     .wrapper {
       box-sizing: border-box;
-      padding: 20px;
+      padding: 30px 30px 15px 30px;
     }
 
     .content-block {
@@ -97,16 +97,15 @@
 
     .btn table td {
       background-color: {{bg-content}};
-      border-radius: 5px;
+      border-radius: 20px;
       text-align: center;
     }
 
     .btn a {
       background-color: {{bg-content}};
-      border: solid 1px {{bg-cta}};
-      border-radius: 5px;
+      border-radius: 20px;
       box-sizing: border-box;
-      color: #3498db;
+      color: #577590;
       cursor: pointer;
       display: inline-block;
       font-size: 14px;
@@ -123,45 +122,17 @@
 
     .btn-primary a {
       background-color: {{bg-cta}};
-      border-color: {{bg-cta}};
       color: {{text-cta}};
     }
 
     @media only screen and (max-width: 620px) {
-      table[class=body] h1 {
-        font-size: 28px !important;
-        margin-bottom: 10px !important;
+      .container {
+        padding: 0;
+        width: 100%;
       }
 
-      table[class=body] p {
-        font-size: 16px !important;
-      }
-
-      table[class=body] .wrapper {
-        padding: 10px !important;
-      }
-
-      table[class=body] .content {
-        padding: 0 !important;
-      }
-
-      table[class=body] .container {
-        padding: 0 !important;
-        width: 100% !important;
-      }
-
-      table[class=body] .main {
-        border-left-width: 0 !important;
-        border-radius: 0 !important;
-        border-right-width: 0 !important;
-      }
-
-      table[class=body] .btn table {
-        width: 100% !important;
-      }
-
-      table[class=body] .btn a {
-        width: 100% !important;
+      .btn-primary a {
+        font-size: 13px;
       }
     }
 
@@ -198,12 +169,11 @@
       }
 
       .btn-primary table td:hover {
-        background-color: {{bg-cta-hover}} !important;
+        opacity: 0.7 !important;
       }
 
       .btn-primary a:hover {
-        background-color: {{bg-cta-hover}} !important;
-        border-color: {{bg-cta-hover}} !important;
+        opacity: 0.7 !important;
       }
     }
   </style>
@@ -220,15 +190,17 @@
               <td class="wrapper">
                 <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                   <tr>
-                    <td>
-                      {{content}}
-                    </td>
+                    <td>{{content}}</td>
                   </tr>
                 </table>
               </td>
             </tr>
           </table>
         </div>
+
+        <!-- <div style="text-align: center; line-height: 25px; margin: 15px 0; font-size: 12px; color: #40404c;">
+          <a href="https://appwrite.io" style="text-decoration: none; color: #40404c;">Powered by <img src="https://appwrite.io/images/appwrite-footer-light.svg" height="15" style="margin: -3px 0" /></a>
+        </div> -->
       </td>
       <td>&nbsp;</td>
     </tr>
