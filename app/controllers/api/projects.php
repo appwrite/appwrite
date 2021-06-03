@@ -423,7 +423,7 @@ App::patch('/v1/projects/:projectId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('service', '', new WhiteList(["functions","webhooks","avatars","health","locale","storage","teams"],true), 'Service name.')
+    ->param('service', '', new WhiteList(['functions','webhooks', 'avatars','health','locale','storage','teams'],true), 'Service name.')
     ->param('status', '', new Boolean(), 'Status of the service', true)
     ->inject('response')
     ->inject('consoleDB')
@@ -436,14 +436,9 @@ App::patch('/v1/projects/:projectId')
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
-
-        $services = $project->getAttribute('services');
-        $services = array_merge($services, [
-            $service => $status,
-        ]);
         
         $project = $consoleDB->updateDocument(\array_merge($project->getArrayCopy(), [
-            'services' => $services,
+            $service . 'Enabled' => $status,
         ]));
 
         if (false === $project) {

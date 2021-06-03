@@ -130,11 +130,53 @@ class Project extends Model
                 'example' => new stdClass,
                 'array' => true,
             ])
-            ->addRule('services', [
-                'type' => self::TYPE_JSON,
-                'description' => 'List of Services enability.',
-                'default' => new \stdClass,
-                'example' => new stdClass,
+            ->addRule('functionsEnabled', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Functions service enabled',
+                'default' => true,
+                'example' => true,
+            ])
+            ->addRule('webhooksEnabled', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Webhooks service enabled',
+                'default' => true,
+                'example' => true,
+            ])
+            ->addRule('tasksEnabled', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Tasks service enabled',
+                'default' => true,
+                'example' => true,
+            ])
+            ->addRule('avatarsEnabled', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Avatars service enabled',
+                'default' => true,
+                'example' => true,
+            ])
+            ->addRule('healthEnabled', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Health service enabled',
+                'default' => true,
+                'example' => true,
+            ])
+            ->addRule('localeEnabled', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Locale service enabled',
+                'default' => true,
+                'example' => true,
+            ])
+            ->addRule('storageEnabled', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Storage service enabled',
+                'default' => true,
+                'example' => true,
+            ])
+            ->addRule('teamsEnabled', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Teams service enabled',
+                'default' => true,
+                'example' => true,
             ])
         ;
 
