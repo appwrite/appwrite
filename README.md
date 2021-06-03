@@ -9,11 +9,11 @@
 </p>
 
 <!--[![Hacktoberfest](https://badgen.net/badge/hacktoberfest/friendly/pink)](CONTRIBUTING.md)-->
+[![Swag Store](https://img.shields.io/badge/swag%20store-f02e65?style=flat-square)](https://store.appwrite.io)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord&style=flat-square)](https://appwrite.io/discord)
 [![Docker Pulls](https://img.shields.io/docker/pulls/appwrite/appwrite?color=f02e65&style=flat-square)](https://hub.docker.com/r/appwrite/appwrite)
 [![Build Status](https://img.shields.io/travis/com/appwrite/appwrite?style=flat-square)](https://travis-ci.com/appwrite/appwrite)
 [![Twitter Account](https://img.shields.io/twitter/follow/appwrite_io?color=00acee&label=twitter&style=flat-square)](https://twitter.com/appwrite_io)
-[![Follow Appwrite on StackShare](https://img.shields.io/badge/follow%20on-stackshare-blue?style=flat-square)](https://stackshare.io/appwrite)
 
 [**Appwrite 0.8 has been released! Learn what's new!**](https://dev.to/appwrite/announcing-appwrite-0-8-an-open-source-self-hosted-baas-kda)
 
