@@ -77,7 +77,8 @@ $auth = $this->getParam('auth', []);
                                     <td data-title="Name: ">
                                         <a data-ls-attrs="href=/console/users/user?id={{user.$id}}&project={{router.params.project}}">
                                             <span data-ls-bind="{{user.name}}"></span>
-                                            <span data-ls-if="{{user.name|escape}} === ''">-----</span>
+                                            <span data-ls-if="{{user.name|escape}} === '' && {{user.email}} !== ''">Unknown</span>
+                                            <span data-ls-if="{{user.name|escape}} === '' && {{user.email}} === ''">Anonymous User</span>
                                         </a>
                                     </td>
                                     <td data-title="Email: ">
@@ -479,7 +480,7 @@ $auth = $this->getParam('auth', []);
                                     <button class="switch pull-end" data-ls-ui-trigger="provider-update-<?php echo $this->escape($provider); ?>"></button>
                                 </span>
 
-                                <img src="/images/users/oauth2/<?php echo $this->escape(strtolower($provider)); ?>.png?buster=<?php echo APP_CACHE_BUSTER; ?>" alt="<?php echo $this->escape(ucfirst($provider)); ?> Logo" class="pull-start provider margin-end" />
+                                <img src="/images/users/<?php echo $this->escape(strtolower($provider)); ?>.png?buster=<?php echo APP_CACHE_BUSTER; ?>" alt="<?php echo $this->escape(ucfirst($provider)); ?> Logo" class="pull-start provider margin-end" />
                                 
                                 <span class="text-size-small">
                                     <?php echo $this->escape($name); ?> <?php if($sandbox): ?><span class="text-size-xs text-fade">sandbox</span><?php endif; ?> <?php if($beta): ?><span class="text-size-xs text-fade">beta</span><?php endif; ?>

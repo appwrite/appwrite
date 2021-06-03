@@ -12,7 +12,7 @@
             <br />
 
             <span data-ls-bind="{{team.name}}">&nbsp;</span>
-            <span data-ls-if="{{team.name}} === ''">Unknown</span>
+            <span data-ls-if="{{team.name|escape}} === ''">Unknown</span>
         </h1>
     </div>
 
