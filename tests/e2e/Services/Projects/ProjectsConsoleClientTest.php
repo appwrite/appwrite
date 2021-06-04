@@ -500,7 +500,7 @@ class ProjectsConsoleClientTest extends Scope
 
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertNotEmpty($response['body']['$id']);
-            $this->assertEquals(false, $response['body'][$service . 'Enabled']);
+            $this->assertEquals(false, $response['body']['statusFor' . $service]);
         }
 
         /**
