@@ -20,7 +20,6 @@ use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain as DomainValidator;
 use Appwrite\Utopia\Response;
 use Cron\CronExpression;
-use Utopia\CLI\Console;
 
 App::post('/v1/projects')
     ->desc('Create Project')
@@ -437,7 +436,7 @@ App::patch('/v1/projects/:projectId/service')
         }
         
         $project = $consoleDB->updateDocument(\array_merge($project->getArrayCopy(), [
-            $service . 'Enabled' => $status,
+            'statusFor' . $service => $status,
         ]));
 
         if (false === $project) {

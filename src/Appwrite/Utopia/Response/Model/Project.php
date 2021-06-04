@@ -130,51 +130,51 @@ class Project extends Model
                 'example' => new stdClass,
                 'array' => true,
             ])
-            ->addRule('functionsEnabled', [
+            ->addRule('statusForfunctions', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Functions service enabled',
+                'description' => 'Functions service status',
                 'default' => true,
                 'example' => true,
             ])
-            ->addRule('webhooksEnabled', [
+            ->addRule('statusForwebhooks', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Webhooks service enabled',
+                'description' => 'Webhooks service status',
                 'default' => true,
                 'example' => true,
             ])
-            ->addRule('tasksEnabled', [
+            ->addRule('statusFortasks', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Tasks service enabled',
+                'description' => 'Tasks service status',
                 'default' => true,
                 'example' => true,
             ])
-            ->addRule('avatarsEnabled', [
+            ->addRule('statusForavatars', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Avatars service enabled',
+                'description' => 'Avatars service status',
                 'default' => true,
                 'example' => true,
             ])
-            ->addRule('healthEnabled', [
+            ->addRule('statusForhealth', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Health service enabled',
+                'description' => 'Health service status',
                 'default' => true,
                 'example' => true,
             ])
-            ->addRule('localeEnabled', [
+            ->addRule('statusForlocale', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Locale service enabled',
+                'description' => 'Locale service status',
                 'default' => true,
                 'example' => true,
             ])
-            ->addRule('storageEnabled', [
+            ->addRule('statusForstorage', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Storage service enabled',
+                'description' => 'Storage service status',
                 'default' => true,
                 'example' => true,
             ])
-            ->addRule('teamsEnabled', [
+            ->addRule('statusForteams', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Teams service enabled',
+                'description' => 'Teams service status',
                 'default' => true,
                 'example' => true,
             ])
