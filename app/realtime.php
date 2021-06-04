@@ -324,7 +324,9 @@ $server->on('message', function (Server $server, Frame $frame) {
 });
 
 $server->on('close', function (Server $server, int $connection) use (&$connections, &$subscriptions, &$stats) {
-    $stats->decr($connections[$connection]['projectId'], 'connectionsTotal');
+    if (array_key_exists($connection, $connections)) {
+        $stats->decr($connections[$connection]['projectId'], 'connectionsTotal');
+    }
     Realtime::unsubscribe($connection, $subscriptions, $connections);
     Console::info('Connection close: ' . $connection);
 });
