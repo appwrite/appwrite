@@ -4,4 +4,4 @@ Each file in the service is granted with read and write permissions to manage wh
 
 The preview endpoint allows you to generate preview images for your files. Using the preview endpoint, you can also manipulate the resulting image so that it will fit perfectly inside your app in terms of dimensions, file size, and style. The preview endpoint also allows you to change the resulting image file format for better compression or image quality for better delivery over the network.
 
-The maximum file size allowed for file upload is controlled by the `_APP_STORAGE_LIMIT` environment variable, which defaults to 10 MB. See [Environment Variables](https://appwrite.io/docs/environment-variables#storage) for more information.
+The maximum file size allowed for file upload is controlled by the `_APP_STORAGE_LIMIT` environment variable, which defaults to 10 MB. See [Environment Variables](/docs/environment-variables#storage) for more information.
