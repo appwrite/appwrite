@@ -784,7 +784,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
             $team = $projectDB->updateDocument(\array_merge($team->getArrayCopy(), [
-                'sum' => $team->getAttribute('sum', 0) - 1,
+                'sum' => \max($team->getAttribute('sum', 0) - 1, 0), // Ensure that sum >= 0
             ]));
         }
 
