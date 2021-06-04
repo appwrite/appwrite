@@ -147,14 +147,17 @@ $server->on('workerStart', function ($server, $workerId) use (&$subscriptions, &
                  *  - Session
                  *  - Team? (not implemented yet)
                  *  - Membership? (not implemented yet)
-                 *  - Function? (not available yet)
-                 *  - Execution? (not available yet)
+                 *  - Function
+                 *  - Execution
                  */
                 $event = json_decode($payload, true);
 
                 $receivers = Realtime::identifyReceivers($event, $subscriptions);
 
-                if (App::isDevelopment() && !empty($receivers)) {
+
+                // Temporarily print debug logs by default for Alpha testing.
+                // if (App::isDevelopment() && !empty($receivers)) {
+                if (!empty($receivers)) {
                     Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
                     Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode($receivers));
                     Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
@@ -298,11 +301,12 @@ $server->on('open', function (Server $server, Request $request) use (&$connectio
             'code' => $th->getCode(),
             'message' => $th->getMessage()
         ];
-        if (App::isDevelopment()) {
+        // Temporarily print debug logs by default for Alpha testing.
+        //if (App::isDevelopment()) {
             Console::error("[Error] Connection Error");
             Console::error("[Error] Code: " . $response['code']);
             Console::error("[Error] Message: " . $response['message']);
-        }
+        //}
         $server->push($connection, json_encode($response));
         $server->close($connection);
     }
