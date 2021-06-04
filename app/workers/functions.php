@@ -353,6 +353,16 @@ class FunctionsV1
             'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
         ]);
 
+        $apiVars = $vars; // Env vars must be in different formats for API calls and CLI commands
+
+        // Env vars for API calls
+        \array_walk($apiVars, function (&$value, $key) {
+            $key = $this->filterEnvKey($key);
+            $value = \escapeshellarg((empty($value)) ? 'null' : $value);
+            $value = "{$key}={$value}";
+        });
+
+        // Env vars for Docker CLI commands
         \array_walk($vars, function (&$value, $key) {
             $key = $this->filterEnvKey($key);
             $value = \escapeshellarg((empty($value)) ? 'null' : $value);
@@ -448,19 +458,145 @@ class FunctionsV1
             Console::info('Container is ready to run');
         }
         
+        /*
+         * Create execution via Docker API
+         */
+        $ch = \curl_init();
+        \curl_setopt($ch, CURLOPT_URL, "http://localhost/containers/{$container}/exec");
+        \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        \curl_setopt($ch, CURLOPT_POST, 1);
+
+        $body = array(
+            "Env" => \array_values($apiVars),
+            "Cmd" => \explode(' ', $command),
+            "AttachStdout" => true,
+            "AttachStderr" => true
+        );
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, \json_encode($body));
+
+        $headers = [
+            'Content-Type: application/json',
+            'Content-Length: ' . \strlen(\json_encode($body))
+        ];
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $result = \curl_exec($ch);
+        $resultParsed = \json_decode($result, true);
+        $execId = $resultParsed['Id'];
+
+        if (\curl_errno($ch)) {
+            throw new Exception('Failed to create execution: ' . \curl_error($ch), 500);
+        }
+
+        \curl_close($ch);
+
+        /*
+         * Start execution without detatching - receives stdout/stderr as stream
+         */
+
+        $executionStart = \microtime(true);
+        $ch = \curl_init();
+        $URL = "http://localhost/exec/{$execId}/start";
+        \curl_setopt($ch, CURLOPT_URL, $URL);
+        \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
+        \curl_setopt($ch, CURLOPT_POST, 1);
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, '{}'); // body is required
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
+
+        $headers = [
+            'Content-Type: application/json',
+            'Content-Length: 2',
+        ];
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        /*
+         * Exec logs come back with STDOUT+STDERR multiplexed into a single stream.
+         * Each frame of the stream has the following format: 
+         *   header := [8]byte{STREAM_TYPE, 0, 0, 0, SIZE1, SIZE2, SIZE3, SIZE4}
+         *     STREAM_TYPE is of the following: [0=>'stdin', 1=>'stdout', 2=>'stderr']
+         *     SIZE1, SIZE2, SIZE3, SIZE4 are the four bytes of the uint32 size encoded as big endian.
+         *     Following the header is the payload, which is the specified number of bytes of STREAM_TYPE.
+         *
+         * To assign the appropriate stream:
+         *   - unpack as an unsigned char ('C*')
+         *   - check the first byte of the header to assign stream
+         *   - pack up stream, omitting the 8 bytes of header
+         *   - concat to stream
+         */
+
         $stdout = '';
         $stderr = '';
 
-        $executionStart = \microtime(true);
-        
-        $exitCode = Console::execute("docker exec ".\implode(" ", $vars)." {$container} {$command}"
-            , '', $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
+        $callback = function ($ch, $str) use (&$stdout, &$stderr) {
+            $rawStream = unpack('C*', $str);
+            $stream = $rawStream[1]; // 1-based index, not 0-based
+            switch ($stream) { // only 1 or 2, as set while creating exec 
+                case 1:
+                    $packed = pack('C*', ...\array_slice($rawStream, 8));
+                    $stdout .= $packed;
+                    break;
+                case 2:
+                    $packed = pack('C*', ...\array_slice($rawStream, 8));
+                    $stderr .= $packed;
+                    break;
+            }
+            return strlen($str); // must return full frame from callback
+        };
+        \curl_setopt($ch, CURLOPT_WRITEFUNCTION, $callback);
+
+
+        $execData = \curl_exec($ch);
+
+        if (\curl_errno($ch)) {
+            throw new Exception('Failed to run execution: ' . \curl_error($ch), 500);
+        }
+
+        \curl_close($ch);
 
         $executionEnd = \microtime(true);
-        $executionTime = ($executionEnd - $executionStart);
-        $functionStatus = ($exitCode === 0) ? 'completed' : 'failed';
 
-        Console::info("Function executed in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
+        /*
+         * Get execution status code 
+         */
+        $ch = \curl_init();
+
+        $URL = "http://localhost/exec/{$execId}/json";
+        \curl_setopt($ch, CURLOPT_URL, $URL);
+        \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
+        $headers = array();
+        $headers[] = 'Content-Type: application/json';
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $result = \curl_exec($ch);
+        $resultParsed = \json_decode($result, true);
+        $exitCode = $resultParsed['ExitCode'];
+        $execRunning = $resultParsed['Running']; //bool
+        $execPid = $resultParsed['Pid'];
+
+        if (\curl_errno($ch)) {
+            throw new Exception('Failed to get execution: ' . \curl_error($ch), 500);
+        }
+
+        \curl_close($ch);
+
+        /*
+         * Kill stray exec process if still running at this point
+         */
+        $killStdout = '';
+        $killStderr = '';
+        if ($execRunning) {
+            $killProcess = Console::execute("docker exec {$container} kill {$execPid}",'', $killStdout, $killStderr, 900);
+            $exitCode = 124; // Arbitrary, but borrowed from linux timeout EXIT_TIMEDOUT
+        }
+
+        $functionStatus = ($exitCode === 0) ? 'completed' : 'failed';
+        $executionTime = $executionEnd - $executionStart;
+
+        Console::info("Function executed in " . ($executionTime) . " seconds with exit code {$exitCode}");
 
         Authorization::disable();
         
@@ -468,8 +604,8 @@ class FunctionsV1
             'tagId' => $tag->getId(),
             'status' => $functionStatus,
             'exitCode' => $exitCode,
-            'stdout' => \mb_substr($stdout, -4000), // log last 4000 chars output
-            'stderr' => \mb_substr($stderr, -4000), // log last 4000 chars output
+            'stdout' => \mb_substr($stdout, -4000) ?? '',
+            'stderr' => \mb_substr($stderr, -4000) ?? '',
             'time' => $executionTime,
         ]));
         
