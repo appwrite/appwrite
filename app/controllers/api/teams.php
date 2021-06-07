@@ -285,7 +285,8 @@ App::post('/v1/teams/:teamId/memberships')
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
-
+        
+        $email = \strtolower($email);
         $name = (empty($name)) ? $email : $name;
         $team = $projectDB->getDocument($teamId);
 
