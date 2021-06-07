@@ -242,6 +242,7 @@ App::get('/v1/storage/files/:fileId/preview')
     ->param('fileId', '', new UID(), 'File unique ID')
     ->param('width', 0, new Range(0, 4000), 'Resize preview image width, Pass an integer between 0 to 4000.', true)
     ->param('height', 0, new Range(0, 4000), 'Resize preview image height, Pass an integer between 0 to 4000.', true)
+    ->param('gravity', Image::GRAVITY_CENTER, new Range(0, 8), 'Image crop gravity', true)
     ->param('quality', 100, new Range(0, 100), 'Preview image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->param('borderWidth', 0, new Range(0, 100), 'Preview image border in pixels. Pass an integer between 0 to 100. Defaults to 0.', true)
     ->param('borderColor', '', new HexColor(), 'Preview image border color. Use a valid HEX color, no # is needed for prefix.', true)
@@ -254,7 +255,7 @@ App::get('/v1/storage/files/:fileId/preview')
     ->inject('response')
     ->inject('project')
     ->inject('projectDB')
-    ->action(function ($fileId, $width, $height, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $projectDB) {
+    ->action(function ($fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $projectDB) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
@@ -342,7 +343,7 @@ App::get('/v1/storage/files/:fileId/preview')
 
         $image = new Image($source);
 
-        $image->crop((int) $width, (int) $height);
+        $image->crop((int) $width, (int) $height, (int) $gravity);
         
         if (!empty($opacity) || $opacity==0) {
             $image->setOpacity($opacity);

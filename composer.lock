@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9a72955402438e63ec6101723c33f544",
+    "content-hash": "2d32e708dd70ab32d06b912e74b1194a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1324,16 +1324,16 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.4.0",
+            "version": "0.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "2b8cc40a67c045c137b44d1a11326f494acf50a4"
+                "reference": "8b7973aae4b02489bd22ffea45b985608f13b6d9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/2b8cc40a67c045c137b44d1a11326f494acf50a4",
-                "reference": "2b8cc40a67c045c137b44d1a11326f494acf50a4",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/8b7973aae4b02489bd22ffea45b985608f13b6d9",
+                "reference": "8b7973aae4b02489bd22ffea45b985608f13b6d9",
                 "shasum": ""
             },
             "require": {
@@ -1370,9 +1370,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.4.0"
+                "source": "https://github.com/utopia-php/abuse/tree/0.4.1"
             },
-            "time": "2021-03-17T20:21:24+00:00"
+            "time": "2021-06-05T14:31:33+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1742,16 +1742,16 @@
         },
         {
             "name": "utopia-php/image",
-            "version": "0.2.1",
+            "version": "0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/image.git",
-                "reference": "0754955a165483852184d1215cc3bf659432d23a"
+                "reference": "7761ff565e505bb3ddb9cfa05b7e1efddf3bebaa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/image/zipball/0754955a165483852184d1215cc3bf659432d23a",
-                "reference": "0754955a165483852184d1215cc3bf659432d23a",
+                "url": "https://api.github.com/repos/utopia-php/image/zipball/7761ff565e505bb3ddb9cfa05b7e1efddf3bebaa",
+                "reference": "7761ff565e505bb3ddb9cfa05b7e1efddf3bebaa",
                 "shasum": ""
             },
             "require": {
@@ -1789,9 +1789,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/image/issues",
-                "source": "https://github.com/utopia-php/image/tree/0.2.1"
+                "source": "https://github.com/utopia-php/image/tree/0.3.0"
             },
-            "time": "2021-04-13T07:47:24+00:00"
+            "time": "2021-06-02T07:08:04+00:00"
         },
         {
             "name": "utopia-php/locale",
@@ -4823,16 +4823,16 @@
         },
         {
             "name": "sebastian/type",
-            "version": "2.3.1",
+            "version": "2.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/type.git",
-                "reference": "81cd61ab7bbf2de744aba0ea61fae32f721df3d2"
+                "reference": "0d1c587401514d17e8f9258a27e23527cb1b06c1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/type/zipball/81cd61ab7bbf2de744aba0ea61fae32f721df3d2",
-                "reference": "81cd61ab7bbf2de744aba0ea61fae32f721df3d2",
+                "url": "https://api.github.com/repos/sebastianbergmann/type/zipball/0d1c587401514d17e8f9258a27e23527cb1b06c1",
+                "reference": "0d1c587401514d17e8f9258a27e23527cb1b06c1",
                 "shasum": ""
             },
             "require": {
@@ -4867,7 +4867,7 @@
             "homepage": "https://github.com/sebastianbergmann/type",
             "support": {
                 "issues": "https://github.com/sebastianbergmann/type/issues",
-                "source": "https://github.com/sebastianbergmann/type/tree/2.3.1"
+                "source": "https://github.com/sebastianbergmann/type/tree/2.3.2"
             },
             "funding": [
                 {
@@ -4875,7 +4875,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2020-10-26T13:18:59+00:00"
+            "time": "2021-06-04T13:02:07+00:00"
         },
         {
             "name": "sebastian/version",
