@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3eb7dc73e9524209a38bd6c33a540732",
+    "content-hash": "e3617b2fd699e599dc2c1d7ed74c9f44",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1606,14 +1606,8 @@
             "version": "dev-feat-utopia-db-integration",
             "source": {
                 "type": "git",
-                "url": "https://github.com/lohanidamodar/abuse.git",
+                "url": "https://github.com/lohanidamodar/abuse",
                 "reference": "525cdf6674e11a7229cba31941915ac50a3e575a"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/lohanidamodar/abuse/zipball/525cdf6674e11a7229cba31941915ac50a3e575a",
-                "reference": "525cdf6674e11a7229cba31941915ac50a3e575a",
-                "shasum": ""
             },
             "require": {
                 "ext-pdo": "*",
@@ -1647,9 +1641,6 @@
                 "upf",
                 "utopia"
             ],
-            "support": {
-                "source": "https://github.com/lohanidamodar/abuse/tree/feat-utopia-db-integration"
-            },
             "time": "2021-06-04T08:40:29+00:00"
         },
         {
@@ -1712,14 +1703,8 @@
             "version": "dev-feat-utopia-db-integration",
             "source": {
                 "type": "git",
-                "url": "https://github.com/lohanidamodar/audit.git",
+                "url": "https://github.com/lohanidamodar/audit",
                 "reference": "3421b6a54740fbb29570004848cdc0b818717e83"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/lohanidamodar/audit/zipball/3421b6a54740fbb29570004848cdc0b818717e83",
-                "reference": "3421b6a54740fbb29570004848cdc0b818717e83",
-                "shasum": ""
             },
             "require": {
                 "ext-pdo": "*",
@@ -1753,9 +1738,6 @@
                 "upf",
                 "utopia"
             ],
-            "support": {
-                "source": "https://github.com/lohanidamodar/audit/tree/feat-utopia-db-integration"
-            },
             "time": "2021-06-04T08:41:19+00:00"
         },
         {
@@ -5089,16 +5071,16 @@
         },
         {
             "name": "sebastian/type",
-            "version": "2.3.1",
+            "version": "2.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/type.git",
-                "reference": "81cd61ab7bbf2de744aba0ea61fae32f721df3d2"
+                "reference": "0d1c587401514d17e8f9258a27e23527cb1b06c1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/type/zipball/81cd61ab7bbf2de744aba0ea61fae32f721df3d2",
-                "reference": "81cd61ab7bbf2de744aba0ea61fae32f721df3d2",
+                "url": "https://api.github.com/repos/sebastianbergmann/type/zipball/0d1c587401514d17e8f9258a27e23527cb1b06c1",
+                "reference": "0d1c587401514d17e8f9258a27e23527cb1b06c1",
                 "shasum": ""
             },
             "require": {
@@ -5133,7 +5115,7 @@
             "homepage": "https://github.com/sebastianbergmann/type",
             "support": {
                 "issues": "https://github.com/sebastianbergmann/type/issues",
-                "source": "https://github.com/sebastianbergmann/type/tree/2.3.1"
+                "source": "https://github.com/sebastianbergmann/type/tree/2.3.2"
             },
             "funding": [
                 {
@@ -5141,7 +5123,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2020-10-26T13:18:59+00:00"
+            "time": "2021-06-04T13:02:07+00:00"
         },
         {
             "name": "sebastian/version",

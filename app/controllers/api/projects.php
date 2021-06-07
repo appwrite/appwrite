@@ -20,6 +20,8 @@ use Utopia\Validator\Integer;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
+use Utopia\Audit\Audit;
+use Utopia\Abuse\Adapters\TimeLimit;
 
 App::post('/v1/projects')
     ->desc('Create Project')
@@ -91,6 +93,12 @@ App::post('/v1/projects')
         $dbForInternal->create();
         $dbForExternal->setNamespace('project_' . $project->getId() . '_external');
         $dbForExternal->create();
+
+        $audit = new Audit($dbForInternal);
+        $audit->setup();
+
+        $adapter    = new TimeLimit("", 0, 1, $dbForInternal);
+        $adapter->setup();
 
         foreach ($collections as $key => $collection) {
             $dbForInternal->createCollection($key);
