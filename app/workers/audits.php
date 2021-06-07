@@ -2,7 +2,11 @@
 
 use Utopia\Audit\Audit;
 use Utopia\Audit\Adapters\MySQL as AuditAdapter;
+use Utopia\Cache\Adapter\Redis;
+use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Database;
 
 require_once __DIR__.'/../init.php';
 
@@ -31,10 +35,11 @@ class AuditsV1
         $data = $this->args['data'];
         $db = $register->get('db', true);
         
-        $adapter = new AuditAdapter($db);
-        $adapter->setNamespace('app_'.$projectId);
+        $cache = new Cache(new Redis($register->get('cache')));
+        $dbForInternal = new Database(new MariaDB($db), $cache);
+        $dbForInternal->setNamespace('project_'.$projectId.'_internal');
 
-        $audit = new Audit($adapter);
+        $audit = new Audit($dbForInternal);
 
         $audit->log($userId, $event, $resource, $userAgent, $ip, '', $data);
     }

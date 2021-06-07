@@ -13,7 +13,6 @@ use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Validator\Boolean;
 use Utopia\Audit\Audit;
-use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Validator\UID;
@@ -212,12 +211,10 @@ App::get('/v1/users/:userId/logs')
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->inject('response')
-    ->inject('register')
-    ->inject('project')
     ->inject('dbForInternal')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function ($userId, $response, $register, $project, $dbForInternal, $locale, $geodb) {
+    ->action(function ($userId, $response, $dbForInternal, $locale, $geodb) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Registry\Registry $register */
         /** @var Appwrite\Database\Document $project */
@@ -231,10 +228,7 @@ App::get('/v1/users/:userId/logs')
             throw new Exception('User not found', 404);
         }
 
-        $adapter = new AuditAdapter($register->get('db'));
-        $adapter->setNamespace('app_'.$project->getId());
-
-        $audit = new Audit($adapter);
+        $audit = new Audit($dbForInternal);
         
         $countries = $locale->getText('countries');
 

@@ -1,25 +1,25 @@
 <?php
 
-use Utopia\App;
-use Utopia\Exception;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\Boolean;
-use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
-use Appwrite\Network\Validator\URL;
-use Utopia\Validator\Range;
-use Utopia\Validator\Integer;
-use Utopia\Config\Config;
-use Utopia\Domains\Domain;
 use Appwrite\Auth\Auth;
-use Appwrite\Task\Validator\Cron;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain as DomainValidator;
+use Appwrite\Network\Validator\URL;
+use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Response;
 use Cron\CronExpression;
+use Utopia\App;
+use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
+use Utopia\Domains\Domain;
+use Utopia\Exception;
+use Utopia\Validator\ArrayList;
+use Utopia\Validator\Boolean;
+use Utopia\Validator\Integer;
+use Utopia\Validator\Range;
+use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 App::post('/v1/projects')
     ->desc('Create Project')
@@ -60,8 +60,8 @@ App::post('/v1/projects')
 
         $project = $dbForConsole->createDocument('projects', new Document([
             '$collection' => 'projects',
-            '$read' => ['team:'.$teamId],
-            '$write' => ['team:'.$teamId.'/owner', 'team:'.$teamId.'/developer'],
+            '$read' => ['team:' . $teamId],
+            '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
             'name' => $name,
             'description' => $description,
             'logo' => $logo,
@@ -87,9 +87,9 @@ App::post('/v1/projects')
 
         $collections = Config::getParam('collections2', []); /** @var array $collections */
 
-        $dbForInternal->setNamespace('project_'.$project->getId().'_internal');
+        $dbForInternal->setNamespace('project_' . $project->getId() . '_internal');
         $dbForInternal->create();
-        $dbForExternal->setNamespace('project_'.$project->getId().'_external');
+        $dbForExternal->setNamespace('project_' . $project->getId() . '_external');
         $dbForExternal->create();
 
         foreach ($collections as $key => $collection) {
@@ -206,7 +206,7 @@ App::get('/v1/projects/:projectId/usage')
             throw new Exception('Project not found', 404);
         }
 
-        if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
 
             $period = [
                 '24h' => [
@@ -230,44 +230,44 @@ App::get('/v1/projects/:projectId/usage')
                     'group' => '1d',
                 ],
             ];
-    
+
             $client = $register->get('influxdb');
-    
+
             $requests = [];
             $network = [];
             $functions = [];
-    
+
             if ($client) {
                 $start = $period[$range]['start']->format(DateTime::RFC3339);
                 $end = $period[$range]['end']->format(DateTime::RFC3339);
                 $database = $client->selectDB('telegraf');
-    
+
                 // Requests
-                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_requests_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_requests_all" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' AND "project"=\'' . $project->getId() . '\' GROUP BY time(' . $period[$range]['group'] . ') FILL(null)');
                 $points = $result->getPoints();
-    
+
                 foreach ($points as $point) {
                     $requests[] = [
                         'value' => (!empty($point['value'])) ? $point['value'] : 0,
                         'date' => \strtotime($point['time']),
                     ];
                 }
-    
+
                 // Network
-                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_network_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_network_all" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' AND "project"=\'' . $project->getId() . '\' GROUP BY time(' . $period[$range]['group'] . ') FILL(null)');
                 $points = $result->getPoints();
-    
+
                 foreach ($points as $point) {
                     $network[] = [
                         'value' => (!empty($point['value'])) ? $point['value'] : 0,
                         'date' => \strtotime($point['time']),
                     ];
                 }
-    
+
                 // Functions
-                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' AND "project"=\'' . $project->getId() . '\' GROUP BY time(' . $period[$range]['group'] . ') FILL(null)');
                 $points = $result->getPoints();
-    
+
                 foreach ($points as $point) {
                     $functions[] = [
                         'value' => (!empty($point['value'])) ? $point['value'] : 0,
@@ -281,14 +281,13 @@ App::get('/v1/projects/:projectId/usage')
             $functions = [];
         }
 
-
         // Users
 
         $projectDB->getCollection([
             'limit' => 0,
             'offset' => 0,
             'filters' => [
-                '$collection=users'
+                '$collection=users',
             ],
         ]);
 
@@ -313,7 +312,7 @@ App::get('/v1/projects/:projectId/usage')
                 'limit' => 0,
                 'offset' => 0,
                 'filters' => [
-                    '$collection='.$collection['$id'],
+                    '$collection=' . $collection['$id'],
                 ],
             ]);
 
@@ -369,7 +368,7 @@ App::get('/v1/projects/:projectId/usage')
                             '$collection=files',
                         ],
                     ]
-                ) + 
+                ) +
                 $projectDB->getCount(
                     [
                         'attribute' => 'size',
@@ -416,16 +415,16 @@ App::patch('/v1/projects/:projectId')
         }
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('name', $name)
-            ->setAttribute('description', $description)
-            ->setAttribute('logo', $logo)
-            ->setAttribute('url', $url)
-            ->setAttribute('legalName', $legalName)
-            ->setAttribute('legalCountry', $legalCountry)
-            ->setAttribute('legalState', $legalState)
-            ->setAttribute('legalCity', $legalCity)
-            ->setAttribute('legalAddress', $legalAddress)
-            ->setAttribute('legalTaxId', $legalTaxId)
+                ->setAttribute('name', $name)
+                ->setAttribute('description', $description)
+                ->setAttribute('logo', $logo)
+                ->setAttribute('url', $url)
+                ->setAttribute('legalName', $legalName)
+                ->setAttribute('legalCountry', $legalCountry)
+                ->setAttribute('legalState', $legalState)
+                ->setAttribute('legalCity', $legalCity)
+                ->setAttribute('legalAddress', $legalAddress)
+                ->setAttribute('legalTaxId', $legalTaxId)
         );
 
         $response->dynamic2($project, Response::MODEL_PROJECT);
@@ -458,8 +457,8 @@ App::patch('/v1/projects/:projectId/oauth2')
         }
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('usersOauth2'.\ucfirst($provider).'Appid', $appId)
-            ->setAttribute('usersOauth2'.\ucfirst($provider).'Secret', $secret)
+                ->setAttribute('usersOauth2' . \ucfirst($provider) . 'Appid', $appId)
+                ->setAttribute('usersOauth2' . \ucfirst($provider) . 'Secret', $secret)
         );
 
         $response->dynamic2($project, Response::MODEL_PROJECT);
@@ -490,7 +489,7 @@ App::patch('/v1/projects/:projectId/auth/limit')
         }
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('usersAuthLimit', $limit)
+                ->setAttribute('usersAuthLimit', $limit)
         );
 
         $response->dynamic2($project, Response::MODEL_PROJECT);
@@ -507,7 +506,7 @@ App::patch('/v1/projects/:projectId/auth/:method')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('method', '', new WhiteList(\array_keys(Config::getParam('auth')), true), 'Auth Method. Possible values: '.implode(',', \array_keys(Config::getParam('auth'))), false)
+    ->param('method', '', new WhiteList(\array_keys(Config::getParam('auth')), true), 'Auth Method. Possible values: ' . implode(',', \array_keys(Config::getParam('auth'))), false)
     ->param('status', false, new Boolean(true), 'Set the status of this auth method.')
     ->inject('response')
     ->inject('dbForConsole')
@@ -525,7 +524,7 @@ App::patch('/v1/projects/:projectId/auth/:method')
         }
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project
-            ->setAttribute($authKey, $status)
+                ->setAttribute($authKey, $status)
         );
 
         $response->dynamic2($project, Response::MODEL_PROJECT);
@@ -566,7 +565,7 @@ App::delete('/v1/projects/:projectId')
             ->setParam('type', DELETE_TYPE_DOCUMENT)
             ->setParam('document', $project)
         ;
-                
+
         if (!$dbForConsole->deleteDocument('teams', $project->getAttribute('teamId', null))) {
             throw new Exception('Failed to remove project team from DB', 500);
         }
@@ -622,7 +621,7 @@ App::post('/v1/projects/:projectId/webhooks')
         ]);
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('webhooks', $webhook, Document::SET_TYPE_APPEND)
+                ->setAttribute('webhooks', $webhook, Document::SET_TYPE_APPEND)
         );
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -732,16 +731,16 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
         }
 
         $project->findAndReplace('$id', $webhook->getId(), $webhook
-            ->setAttribute('name', $name)
-            ->setAttribute('events', $events)
-            ->setAttribute('url', $url)
-            ->setAttribute('security', $security)
-            ->setAttribute('httpUser', $httpUser)
-            ->setAttribute('httpPass', $httpPass)
-        , 'webhooks');
+                ->setAttribute('name', $name)
+                ->setAttribute('events', $events)
+                ->setAttribute('url', $url)
+                ->setAttribute('security', $security)
+                ->setAttribute('httpUser', $httpUser)
+                ->setAttribute('httpPass', $httpPass)
+            , 'webhooks');
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project);
-        
+
         $response->dynamic2($webhook, Response::MODEL_WEBHOOK);
     });
 
@@ -812,7 +811,7 @@ App::post('/v1/projects/:projectId/keys')
         ]);
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('keys', $key, Document::SET_TYPE_APPEND)
+                ->setAttribute('keys', $key, Document::SET_TYPE_APPEND)
         );
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -835,7 +834,7 @@ App::get('/v1/projects/:projectId/keys')
     ->action(function ($projectId, $response, $dbForConsole) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
-        
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -913,12 +912,12 @@ App::put('/v1/projects/:projectId/keys/:keyId')
         }
 
         $project->findAndReplace('$id', $key->getId(), $key
-            ->setAttribute('name', $name)
-            ->setAttribute('scopes', $scopes)
-        , 'keys');
+                ->setAttribute('name', $name)
+                ->setAttribute('scopes', $scopes)
+            , 'keys');
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project);
-        
+
         $response->dynamic2($key, Response::MODEL_KEY);
     });
 
@@ -1011,7 +1010,7 @@ App::post('/v1/projects/:projectId/tasks')
         ]);
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('tasks', $task, Document::SET_TYPE_APPEND)
+                ->setAttribute('tasks', $task, Document::SET_TYPE_APPEND)
         );
 
         if ($next) {
@@ -1131,18 +1130,18 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
 
         $project->findAndReplace('$id', $task->getId(), $task
-            ->setAttribute('name', $name)
-            ->setAttribute('status', $status)
-            ->setAttribute('schedule', $schedule)
-            ->setAttribute('updated', \time())
-            ->setAttribute('next', $next)
-            ->setAttribute('security', $security)
-            ->setAttribute('httpMethod', $httpMethod)
-            ->setAttribute('httpUrl', $httpUrl)
-            ->setAttribute('httpHeaders', $httpHeaders)
-            ->setAttribute('httpUser', $httpUser)
-            ->setAttribute('httpPass', $httpPass)
-        , 'tasks');
+                ->setAttribute('name', $name)
+                ->setAttribute('status', $status)
+                ->setAttribute('schedule', $schedule)
+                ->setAttribute('updated', \time())
+                ->setAttribute('next', $next)
+                ->setAttribute('security', $security)
+                ->setAttribute('httpMethod', $httpMethod)
+                ->setAttribute('httpUrl', $httpUrl)
+                ->setAttribute('httpHeaders', $httpHeaders)
+                ->setAttribute('httpUser', $httpUser)
+                ->setAttribute('httpPass', $httpPass)
+            , 'tasks');
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project);
 
@@ -1227,13 +1226,13 @@ App::post('/v1/projects/:projectId/platforms')
         ]);
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('platforms', $platform, Document::SET_TYPE_APPEND)
+                ->setAttribute('platforms', $platform, Document::SET_TYPE_APPEND)
         );
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic2($platform, Response::MODEL_PLATFORM);
     });
-    
+
 App::get('/v1/projects/:projectId/platforms')
     ->desc('List Platforms')
     ->groups(['api', 'projects'])
@@ -1341,12 +1340,12 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
         ;
 
         $project->findAndReplace('$id', $platform->getId(), $platform
-            ->setAttribute('name', $name)
-            ->setAttribute('dateUpdated', \time())
-            ->setAttribute('key', $key)
-            ->setAttribute('store', $store)
-            ->setAttribute('hostname', $hostname)
-        , 'platforms');
+                ->setAttribute('name', $name)
+                ->setAttribute('dateUpdated', \time())
+                ->setAttribute('key', $key)
+                ->setAttribute('store', $store)
+                ->setAttribute('hostname', $hostname)
+            , 'platforms');
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project);
 
@@ -1420,7 +1419,7 @@ App::post('/v1/projects/:projectId/domains')
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception('Unreachable CNAME target ('.$target->get().'), please use a domain with a public suffix.', 500);
+            throw new Exception('Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.', 500);
         }
 
         $domain = new Domain($domain);
@@ -1436,7 +1435,7 @@ App::post('/v1/projects/:projectId/domains')
         ]);
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('domains', $domain, Document::SET_TYPE_APPEND)
+                ->setAttribute('domains', $domain, Document::SET_TYPE_APPEND)
         );
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -1467,7 +1466,7 @@ App::get('/v1/projects/:projectId/domains')
         }
 
         $domains = $project->getAttribute('domains', []);
-        
+
         $response->dynamic2(new Document([
             'domains' => $domains,
             'sum' => count($domains),
@@ -1540,7 +1539,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception('Unreachable CNAME target ('.$target->get().'), please use a domain with a public suffix.', 500);
+            throw new Exception('Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.', 500);
         }
 
         if ($domain->getAttribute('verification') === true) {
@@ -1554,8 +1553,8 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         }
 
         $project->findAndReplace('$id', $domain->getId(), $domain
-            ->setAttribute('verification', true)
-        , 'domains');
+                ->setAttribute('verification', true)
+            , 'domains');
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project);
 

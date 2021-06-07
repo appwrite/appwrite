@@ -21,7 +21,6 @@ use Utopia\Audit\Audit;
 use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Ahc\Jwt\JWT;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
@@ -830,22 +829,19 @@ App::get('/v1/account/logs')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->inject('response')
-    ->inject('register')
-    ->inject('project')
     ->inject('user')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function ($response, $register, $project, $user, $locale, $geodb) {
+    ->inject('dbForInternal')
+    ->action(function ($response, $user, $locale, $geodb, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
+        /** @var Utopia\Database\Database $dbForInternal */
 
-        $adapter = new AuditAdapter($register->get('db'));
-        $adapter->setNamespace('app_'.$project->getId());
-
-        $audit = new Audit($adapter);
+        $audit = new Audit($dbForInternal);
         $countries = $locale->getText('countries');
 
         $logs = $audit->getLogsByUserAndActions($user->getId(), [
