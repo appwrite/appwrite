@@ -10,6 +10,6 @@ client
 
 avatars = Appwrite::Avatars.new(client);
 
-response = avatars.get_q_r(text: '[TEXT]');
+response = avatars.get_qr(text: '[TEXT]');
 
 puts response
