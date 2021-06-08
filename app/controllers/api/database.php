@@ -17,6 +17,10 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Exception\Authorization as AuthorizationException;
 use Appwrite\Database\Exception\Structure as StructureException;
 use Appwrite\Utopia\Response;
+use Utopia\Database\Database as Database2;
+use Utopia\Database\Document as Document2;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization as Authorization2;
 
 App::post('/v1/database/collections')
     ->desc('Create Collection')
@@ -297,28 +301,33 @@ App::post('/v1/database/collections/:collectionId/attributes')
     ->param('id', null, new Text(256), 'Attribute ID.')
     ->param('type', null, new Text(256), 'Attribute type.')
     ->param('size', null, new Integer(), 'Attribute size.')
+    ->param('required', null, new Boolean(), 'Is required flag.')
+    ->param('signed', true, new Boolean(), 'Is signed flag.')
     ->param('array', null, new Boolean(), 'Is array flag.')
+    ->param('filters', [], new ArrayList(), 'Array of filters.')
     ->inject('response')
-    ->action(function ($collectionId, $id, $type, $size, $array, $response, $projectDB, $audits) {
+    ->inject('dbForInternal')
+    ->inject('audits')
+    ->action(function ($collectionId, $id, $type, $size, $required, $signed, $array, $filters, $response, $dbForInternal, $audits) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal*/
         /** @var Appwrite\Event\Event $audits */
 
-        try {
-            $data = $projectDB->createAttribute($collectionId, $id, $type, $size, $array);
-        } catch (\Exception $exception) {
-            throw new Exception('Failed creating attribute', 500);
-        }
+        $collection = $dbForInternal->getCollection($collectionId);
+
+        // TODO@kodumbeats find better name for var
+        $success = $dbForInternal->createAttribute($collectionId, $id, $type, $size, $required, $signed, $array, $filters);
+
+        $attributes = $collection->getAttributes();
 
         $audits
             ->setParam('event', 'database.attributes.create')
-            ->setParam('resource', 'database/attributes/'.$data['$id'])
-            ->setParam('data', $data->getArrayCopy())
+            ->setParam('resource', 'database/attributes/'.$attributes[$id]->getId())
+            ->setParam('data', $attributes[$id])
         ;
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($data, Response::MODEL_ATTRIBUTE)
+        $response->setStatusCode(Response::STATUS_CODE_CREATED)
+        $response->dynamic2($attributes['$id'], Response::MODEL_ATTRIBUTE)
         ;
     });
 
@@ -335,18 +344,19 @@ App::get('v1/database/collections/:collectionId/attributes')
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_LIST)
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($collectionId, $response, $projectDB) {
+    ->inject('dbForInternal')
+    ->action(function ($collectionId, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
 
-        // $results = $projectDB->getAttributes([
-        // ]);
+        $collection = $dbForInternal->getCollection($collectionId);
 
-        // $response->dynamic(new Document([
-            // 'sum' => $projectDB->getSum(),
-            // 'collections' => $results
-        // ]), Response::MODEL_ATTRIBUTE_LIST);
+        $attributes = $collection->getAttributes();
+
+        $response->dynamic2(new Document([
+            'sum' => \count($attributes)
+            'attributes' => $attributes
+        ]), Response::MODEL_ATTRIBUTE_LIST);
     });
 
 App::get('v1/database/collections/:collectionId/attributes/:attributeId')
@@ -363,17 +373,17 @@ App::get('v1/database/collections/:collectionId/attributes/:attributeId')
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('attributeId', '', new UID(), 'Attribute unique ID.')
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($collectionId, $attributeId, $response, $projectDB) {
+    ->inject('dbForInternal')
+    ->action(function ($collectionId, $attributeId, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
 
-        // $results = $projectDB->getAttribute([
-        // ]);
+        $collection = $dbForInternal->getCollection($collectionId);
 
-        // $response->dynamic(new Document([
-            // 'collections' => $results
-        // ]), Response::MODEL_ATTRIBUTE);
+        $attributes = $collection->getAttributes();
+
+        $response->dynamic2($attributes[$attributeId]
+        ), Response::MODEL_ATTRIBUTE);
     });
 
 App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
@@ -390,30 +400,34 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('attributeId', '', new UID(), 'Attribute unique ID.')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('events')
     ->inject('audits')
     ->inject('deletes')
-    ->action(function ($collectionId, $attributeId, $response, $projectDB, $events, $audits, $deletes) {
+    ->action(function ($collectionId, $attributeId, $response, $dbForInternal, $events, $audits, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
 
-        $attribute = $projectDB->getDocument($attributeId, false);
+        $collection = $dbForInternal->getCollection($collectionId);
 
-        if (!$projectDB->deleteAttribute($collectionId, $attributeId)) {
-            throw new Exception('Failed to remove attribute from DB', 500);
-        }
+        $attributes = $collection->getAttributes();
 
-        $deletes
-            ->setParam('type', DELETE_TYPE_DOCUMENT)
-            ->setParam('document', $attribute)
-        ;
+        $attribute = $collection[$attributeId];
 
-        $events
-            ->setParam('payload', $response->output($attribute, Response::MODEL_ATTRIBUTE))
-        ;
+        $success = $collection->deleteAttribute($collectionId, $attributeId);
+
+        // TODO@kodumbeats use the deletes worker to handle this
+        // $deletes
+        //     ->setParam('type', DELETE_TYPE_DOCUMENT)
+        //     ->setParam('document', $attribute)
+        // ;
+
+        // TODO@kodumbeats
+        // $events
+        //     ->setParam('payload', $response->output($attribute, Response::MODEL_ATTRIBUTE))
+        // ;
 
         $audits
             ->setParam('event', 'database.attributes.delete')
