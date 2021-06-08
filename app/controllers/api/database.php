@@ -24,7 +24,7 @@ App::post('/v1/database/collections')
     ->label('event', 'database.collections.create')
     ->label('scope', 'collections.write')
     ->label('sdk.namespace', 'database')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createCollection')
     ->label('sdk.description', '/docs/references/database/create-collection.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
@@ -85,10 +85,8 @@ App::post('/v1/database/collections')
             ->setParam('data', $data->getArrayCopy())
         ;
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($data, Response::MODEL_COLLECTION)
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($data, Response::MODEL_COLLECTION);
     });
 
 App::get('/v1/database/collections')
@@ -96,7 +94,7 @@ App::get('/v1/database/collections')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('sdk.namespace', 'database')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'listCollections')
     ->label('sdk.description', '/docs/references/database/list-collections.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -123,8 +121,8 @@ App::get('/v1/database/collections')
         ]);
 
         $response->dynamic(new Document([
+            'collections' => $results,
             'sum' => $projectDB->getSum(),
-            'collections' => $results
         ]), Response::MODEL_COLLECTION_LIST);
     });
 
@@ -133,7 +131,7 @@ App::get('/v1/database/collections/:collectionId')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('sdk.namespace', 'database')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'getCollection')
     ->label('sdk.description', '/docs/references/database/get-collection.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -161,7 +159,7 @@ App::put('/v1/database/collections/:collectionId')
     ->label('scope', 'collections.write')
     ->label('event', 'database.collections.update')
     ->label('sdk.namespace', 'database')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'updateCollection')
     ->label('sdk.description', '/docs/references/database/update-collection.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -238,7 +236,7 @@ App::delete('/v1/database/collections/:collectionId')
     ->label('scope', 'collections.write')
     ->label('event', 'database.collections.delete')
     ->label('sdk.namespace', 'database')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'deleteCollection')
     ->label('sdk.description', '/docs/references/database/delete-collection.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
@@ -271,7 +269,7 @@ App::delete('/v1/database/collections/:collectionId')
         ;
 
         $events
-            ->setParam('payload', $response->output($collection, Response::MODEL_COLLECTION))
+            ->setParam('eventData', $response->output($collection, Response::MODEL_COLLECTION))
         ;
 
         $audits
@@ -573,12 +571,12 @@ App::post('/v1/database/collections/:collectionId/documents')
     ->label('event', 'database.documents.create')
     ->label('scope', 'documents.write')
     ->label('sdk.namespace', 'database')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.method', 'createDocument')
     ->label('sdk.description', '/docs/references/database/create-document.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('sdk.response.model', Response::MODEL_DOCUMENT)
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
     ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
@@ -683,10 +681,8 @@ App::post('/v1/database/collections/:collectionId/documents')
             ->setParam('data', $data->getArrayCopy())
         ;
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($data, Response::MODEL_ANY)
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($data, Response::MODEL_DOCUMENT);
     });
 
 App::get('/v1/database/collections/:collectionId/documents')
@@ -694,7 +690,7 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
     ->label('sdk.namespace', 'database')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.method', 'listDocuments')
     ->label('sdk.description', '/docs/references/database/list-documents.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -757,12 +753,12 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
     ->label('sdk.namespace', 'database')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.method', 'getDocument')
     ->label('sdk.description', '/docs/references/database/get-document.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('sdk.response.model', Response::MODEL_DOCUMENT)
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, new UID(), 'Document unique ID.')
     ->inject('response')
@@ -778,7 +774,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
             throw new Exception('No document found', 404);
         }
 
-        $response->dynamic($document, Response::MODEL_ANY);
+        $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
 App::patch('/v1/database/collections/:collectionId/documents/:documentId')
@@ -787,12 +783,12 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->label('event', 'database.documents.update')
     ->label('scope', 'documents.write')
     ->label('sdk.namespace', 'database')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.method', 'updateDocument')
     ->label('sdk.description', '/docs/references/database/update-document.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('sdk.response.model', Response::MODEL_DOCUMENT)
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, new UID(), 'Document unique ID.')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
@@ -850,7 +846,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
             ->setParam('data', $data->getArrayCopy())
         ;
 
-        $response->dynamic($data, Response::MODEL_ANY);
+        $response->dynamic($data, Response::MODEL_DOCUMENT);
     });
 
 App::delete('/v1/database/collections/:collectionId/documents/:documentId')
@@ -859,7 +855,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
     ->label('scope', 'documents.write')
     ->label('event', 'database.documents.delete')
     ->label('sdk.namespace', 'database')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.method', 'deleteDocument')
     ->label('sdk.description', '/docs/references/database/delete-document.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
@@ -898,9 +894,9 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         }
 
         $events
-            ->setParam('payload', $response->output($document, Response::MODEL_ANY))
+            ->setParam('eventData', $response->output($document, Response::MODEL_DOCUMENT))
         ;
-        
+
         $audits
             ->setParam('event', 'database.documents.delete')
             ->setParam('resource', 'database/document/'.$document->getId())

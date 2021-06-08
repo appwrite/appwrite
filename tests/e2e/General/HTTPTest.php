@@ -117,7 +117,7 @@ class HTTPTest extends Scope
         $response['body'] = json_decode($response['body'], true);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertFalse(isset($response['body']['messages']));
+        $this->assertTrue(empty($response['body']));
 
         unlink(realpath(__DIR__ . '/../../resources/swagger2.json'));
     }
@@ -145,7 +145,7 @@ class HTTPTest extends Scope
         $response['body'] = json_decode($response['body'], true);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertFalse(isset($response['body']['messages']));
+        $this->assertTrue(empty($response['body']));
 
         unlink(realpath(__DIR__ . '/../../resources/open-api3.json'));
     }

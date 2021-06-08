@@ -4,7 +4,9 @@ namespace Appwrite\Specification\Format;
 
 use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
+use Appwrite\Utopia\Response\Model;
 use stdClass;
+use Utopia\Validator;
 
 class Swagger2 extends Format
 {
@@ -73,6 +75,10 @@ class Swagger2 extends Format
             $output['securityDefinitions']['Key']['x-appwrite'] = ['demo' => '919c2d18fb5d4...a2ae413da83346ad2'];
         }
         
+        if (isset($output['securityDefinitions']['JWT'])) {
+            $output['securityDefinitions']['JWT']['x-appwrite'] = ['demo' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...'];
+        }
+        
         if (isset($output['securityDefinitions']['Locale'])) {
             $output['securityDefinitions']['Locale']['x-appwrite'] = ['demo' => 'en'];
         }
@@ -81,7 +87,9 @@ class Swagger2 extends Format
             $output['securityDefinitions']['Mode']['x-appwrite'] = ['demo' => ''];
         }
 
-        foreach ($this->routes as $route) { /* @var $route \Utopia\Route */
+        $usedModels = [];
+
+        foreach ($this->routes as $route) { /** @var \Utopia\Route $route */
             $url = \str_replace('/v1', '', $route->getURL());
             $scope = $route->getLabel('scope', '');
             $hide = $route->getLabel('sdk.hide', false);
@@ -94,7 +102,30 @@ class Swagger2 extends Format
             $id = $route->getLabel('sdk.method', \uniqid());
             $desc = (!empty($route->getLabel('sdk.description', ''))) ? \realpath(__DIR__.'/../../../../'.$route->getLabel('sdk.description', '')) : null;
             $produces = $route->getLabel('sdk.response.type', null);
-            $model = $route->getLabel('sdk.response.model', 'none'); 
+            $model = $route->getLabel('sdk.response.model', 'none');
+            $routeSecurity = $route->getLabel('sdk.auth', []);
+            $sdkPlatofrms = [];
+
+            foreach ($routeSecurity as $value) {
+                switch ($value) {
+                    case APP_AUTH_TYPE_SESSION:
+                        $sdkPlatofrms[] = APP_PLATFORM_CLIENT;
+                        break;
+                    case APP_AUTH_TYPE_KEY:
+                        $sdkPlatofrms[] = APP_PLATFORM_SERVER;
+                        break;
+                    case APP_AUTH_TYPE_JWT:
+                        $sdkPlatofrms[] = APP_PLATFORM_SERVER;
+                        break;
+                    case APP_AUTH_TYPE_ADMIN:
+                        $sdkPlatofrms[] = APP_PLATFORM_CONSOLE;
+                        break;
+                }
+            }
+
+            if(empty($routeSecurity)) {
+                $sdkPlatofrms[] = APP_PLATFORM_CLIENT;
+            }
             
             $temp = [
                 'summary' => $route->getDesc(),
@@ -115,7 +146,7 @@ class Swagger2 extends Format
                     'rate-time' => $route->getLabel('abuse-time', 3600),
                     'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
                     'scope' => $route->getLabel('scope', ''),
-                    'platforms' => $route->getLabel('sdk.platform', []),
+                    'platforms' => $sdkPlatofrms,
                     'packaging' => $route->getLabel('sdk.packaging', false),
                 ],
             ];
@@ -148,6 +179,7 @@ class Swagger2 extends Format
                     ],
                 ];
             } else {
+                $usedModels[] = $model->getType();
                 $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
                     'description' => $model->getName(),
                     'schema' => [
@@ -162,7 +194,16 @@ class Swagger2 extends Format
             }
 
             if ((!empty($scope))) { //  && 'public' != $scope
-                $temp['security'][] = $route->getLabel('sdk.security', $this->security);
+                $securities = ['Project' => []];
+                
+                foreach($route->getLabel('sdk.auth', []) as $security) {
+                    if(array_key_exists($security, $this->keys)) {
+                        $securities[$security] = [];
+                    }
+                }
+
+                $temp['x-appwrite']['auth'] = array_slice($securities, 0, $this->authCount);
+                $temp['security'][] = $securities;
             }
        
             $body = [
@@ -187,24 +228,24 @@ class Swagger2 extends Format
 
                 switch ((!empty($validator)) ? \get_class($validator) : '') {
                     case 'Utopia\Validator\Text':
-                        $node['type'] = 'string';
+                        $node['type'] = $validator->getType();
                         $node['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                         break;
                     case 'Utopia\Validator\Boolean':
-                        $node['type'] = 'boolean';
+                        $node['type'] = $validator->getType();
                         $node['x-example'] = false;
                         break;
                     case 'Appwrite\Database\Validator\UID':
-                        $node['type'] = 'string';
+                        $node['type'] = $validator->getType();
                         $node['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                         break;
-                    case 'Utopia\Validator\Email':
-                        $node['type'] = 'string';
+                    case 'Appwrite\Network\Validator\Email':
+                        $node['type'] = $validator->getType();
                         $node['format'] = 'email';
                         $node['x-example'] = 'email@example.com';
                         break;
-                    case 'Utopia\Validator\URL':
-                        $node['type'] = 'string';
+                    case 'Appwrite\Network\Validator\URL':
+                        $node['type'] = $validator->getType();
                         $node['format'] = 'url';
                         $node['x-example'] = 'https://example.com';
                         break;
@@ -228,30 +269,34 @@ class Swagger2 extends Format
                         ];
                         break;
                     case 'Appwrite\Auth\Validator\Password':
-                        $node['type'] = 'string';
-                        $node['format'] = 'format';
+                        $node['type'] = $validator->getType();
+                        $node['format'] = 'password';
                         $node['x-example'] = 'password';
                         break;
-                    case 'Utopia\Validator\Range': /* @var $validator \Utopia\Validator\Range */
-                        $node['type'] = 'integer';
-                        $node['format'] = 'int32';
+                    case 'Utopia\Validator\Range': /** @var \Utopia\Validator\Range $validator */
+                        $node['type'] = $validator->getType() === Validator::TYPE_FLOAT ? 'number': $validator->getType();
+                        $node['format'] = $validator->getType() == Validator::TYPE_INTEGER ? 'int32' : 'float';
                         $node['x-example'] = $validator->getMin();
                         break;
                     case 'Utopia\Validator\Numeric':
-                        $node['type'] = 'integer';
+                        $node['type'] = $validator->getType();
                         $node['format'] = 'int32';
                         break;
                     case 'Utopia\Validator\Length':
-                        $node['type'] = 'string';
+                        $node['type'] = $validator->getType();
                         break;
-                    case 'Utopia\Validator\Host':
-                        $node['type'] = 'string';
+                    case 'Appwrite\Network\Validator\Host':
+                        $node['type'] = $validator->getType();
                         $node['format'] = 'url';
                         $node['x-example'] = 'https://example.com';
                         break;
-                    case 'Utopia\Validator\WhiteList': /* @var $validator \Utopia\Validator\WhiteList */
-                        $node['type'] = 'string';
+                    case 'Utopia\Validator\WhiteList': /** @var \Utopia\Validator\WhiteList $validator */
+                        $node['type'] = $validator->getType();
                         $node['x-example'] = $validator->getList()[0];
+
+                        if ($validator->getType() === 'integer') {
+                            $node['format'] = 'int32';
+                        }
                         break;
                     default:
                         $node['type'] = 'string';
@@ -308,8 +353,18 @@ class Swagger2 extends Format
 
             $output['paths'][$url][\strtolower($route->getMethod())] = $temp;
         }
-
         foreach ($this->models as $model) {
+            foreach ($model->getRules() as $rule) {
+                if (!in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])) {
+                    $usedModels[] = $rule['type'];
+                }
+            }
+        }
+        foreach ($this->models as $model) {
+            if (!in_array($model->getType(), $usedModels) && $model->getType() !== 'error') {
+                continue;
+            }
+
             $required = $model->getRequired();
             $rules = $model->getRules();
 

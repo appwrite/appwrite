@@ -1,31 +1,31 @@
 <?php
 
-use Utopia\App;
-use Utopia\Exception;
-use Utopia\Config\Config;
-use Utopia\Validator\Email;
-use Utopia\Validator\Text;
-use Utopia\Validator\Host;
-use Utopia\Validator\Range;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\WhiteList;
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Database;
-use Appwrite\Database\Document;
 use Appwrite\Database\Validator\UID;
-use Appwrite\Database\Validator\Authorization;
-use Appwrite\Database\Exception\Duplicate;
-use Appwrite\Database\Validator\Key;
 use Appwrite\Detector\Detector;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response;
+use Appwrite\Network\Validator\Email;
+use Appwrite\Network\Validator\Host;
+use Utopia\App;
+use Utopia\Exception;
+use Utopia\Config\Config;
+use Utopia\Validator\Text;
+use Utopia\Validator\Range;
+use Utopia\Validator\ArrayList;
+use Utopia\Validator\WhiteList;
+use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Key;
 
 App::post('/v1/teams')
     ->desc('Create Team')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.create')
     ->label('scope', 'teams.write')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'create')
     ->label('sdk.description', '/docs/references/teams/create-team.md')
@@ -36,41 +36,33 @@ App::post('/v1/teams')
     ->param('roles', ['owner'], new ArrayList(new Key()), 'Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.', true)
     ->inject('response')
     ->inject('user')
-    ->inject('projectDB')
-    ->action(function ($name, $roles, $response, $user, $projectDB) {
+    ->inject('dbForInternal')
+    ->action(function ($name, $roles, $response, $user, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $user */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Document $user */
+        /** @var Utopia\Database\Database $dbForInternal */
 
         Authorization::disable();
 
-        $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
-        $team = $projectDB->createDocument([
-            '$collection' => Database::SYSTEM_COLLECTION_TEAMS,
-            '$permissions' => [
-                'read' => ['team:{self}'],
-                'write' => ['team:{self}/owner'],
-            ],
+        $teamId = $dbForInternal->getId();
+        $team = $dbForInternal->createDocument('teams', new Document([
+            '$id' => $teamId ,
+            '$read' => ['team:'.$teamId],
+            '$write' => ['team:'.$teamId .'/owner'],
             'name' => $name,
-            'sum' => ($isPreviliggedUser || $isAppUser) ? 0 : 1,
+            'sum' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
             'dateCreated' => \time(),
-        ]);
+        ]));
 
         Authorization::reset();
 
-        if (false === $team) {
-            throw new Exception('Failed saving team to DB', 500);
-        }
-
-        if (!$isPreviliggedUser && !$isAppUser) { // Don't add user on server mode
+        if (!$isPrivilegedUser && !$isAppUser) { // Don't add user on server mode
             $membership = new Document([
-                '$collection' => Database::SYSTEM_COLLECTION_MEMBERSHIPS,
-                '$permissions' => [
-                    'read' => ['user:'.$user->getId(), 'team:'.$team->getId()],
-                    'write' => ['user:'.$user->getId(), 'team:'.$team->getId().'/owner'],
-                ],
+                '$read' => ['user:'.$user->getId(), 'team:'.$team->getId()],
+                '$write' => ['user:'.$user->getId(), 'team:'.$team->getId().'/owner'],
                 'userId' => $user->getId(),
                 'teamId' => $team->getId(),
                 'roles' => $roles,
@@ -80,27 +72,22 @@ App::post('/v1/teams')
                 'secret' => '',
             ]);
 
+            $membership = $dbForInternal->createDocument('memberships', $membership);
+
             // Attach user to team
             $user->setAttribute('memberships', $membership, Document::SET_TYPE_APPEND);
-
-            $user = $projectDB->updateDocument($user->getArrayCopy());
-
-            if (false === $user) {
-                throw new Exception('Failed saving user to DB', 500);
-            }
+            $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
         }
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($team, Response::MODEL_TEAM)
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($team, Response::MODEL_TEAM);
     });
 
 App::get('/v1/teams')
     ->desc('List Teams')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'list')
     ->label('sdk.description', '/docs/references/teams/list-teams.md')
@@ -112,24 +99,19 @@ App::get('/v1/teams')
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
+    ->inject('dbForInternal')
+    ->action(function ($search, $limit, $offset, $orderType, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
 
-        $results = $projectDB->getCollection([
-            'limit' => $limit,
-            'offset' => $offset,
-            'orderType' => $orderType,
-            'search' => $search,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_TEAMS,
-            ],
-        ]);
+        $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
 
-        $response->dynamic(new Document([
-            'sum' => $projectDB->getSum(),
-            'teams' => $results
+        $results = $dbForInternal->find('teams', $queries, $limit, $offset, ['_id'], [$orderType]);
+        $sum = $dbForInternal->count('teams', $queries, APP_LIMIT_COUNT);
+
+        $response->dynamic2(new Document([
+            'teams' => $results,
+            'sum' => $sum,
         ]), Response::MODEL_TEAM_LIST);
     });
 
@@ -137,7 +119,7 @@ App::get('/v1/teams/:teamId')
     ->desc('Get Team')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/teams/get-team.md')
@@ -146,18 +128,18 @@ App::get('/v1/teams/:teamId')
     ->label('sdk.response.model', Response::MODEL_TEAM)
     ->param('teamId', '', new UID(), 'Team unique ID.')
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($teamId, $response, $projectDB) {
+    ->inject('dbForInternal')
+    ->action(function ($teamId, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
 
-        $team = $projectDB->getDocument($teamId);
+        $team = $dbForInternal->getDocument('teams', $teamId);
 
-        if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+        if (empty($team->getId())) {
             throw new Exception('Team not found', 404);
         }
 
-        $response->dynamic($team, Response::MODEL_TEAM);
+        $response->dynamic2($team, Response::MODEL_TEAM);
     });
 
 App::put('/v1/teams/:teamId')
@@ -165,7 +147,7 @@ App::put('/v1/teams/:teamId')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.update')
     ->label('scope', 'teams.write')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'update')
     ->label('sdk.description', '/docs/references/teams/update-team.md')
@@ -175,26 +157,20 @@ App::put('/v1/teams/:teamId')
     ->param('teamId', '', new UID(), 'Team unique ID.')
     ->param('name', null, new Text(128), 'Team name. Max length: 128 chars.')
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($teamId, $name, $response, $projectDB) {
+    ->inject('dbForInternal')
+    ->action(function ($teamId, $name, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
 
-        $team = $projectDB->getDocument($teamId);
+        $team = $dbForInternal->getDocument('teams', $teamId);
 
-        if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+        if (empty($team->getId())) {
             throw new Exception('Team not found', 404);
         }
 
-        $team = $projectDB->updateDocument(\array_merge($team->getArrayCopy(), [
-            'name' => $name,
-        ]));
+        $team = $dbForInternal->updateDocument('teams', $team->getId(), $team->setAttribute('name', $name));
 
-        if (false === $team) {
-            throw new Exception('Failed saving team to DB', 500);
-        }
-        
-        $response->dynamic($team, Response::MODEL_TEAM);
+        $response->dynamic2($team, Response::MODEL_TEAM);
     });
 
 App::delete('/v1/teams/:teamId')
@@ -202,7 +178,7 @@ App::delete('/v1/teams/:teamId')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.delete')
     ->label('scope', 'teams.write')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', '/docs/references/teams/delete-team.md')
@@ -210,40 +186,36 @@ App::delete('/v1/teams/:teamId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('teamId', '', new UID(), 'Team unique ID.')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('events')
-    ->action(function ($teamId, $response, $projectDB, $events) {
+    ->action(function ($teamId, $response, $dbForInternal, $events) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $events */
 
-        $team = $projectDB->getDocument($teamId);
+        $team = $dbForInternal->getDocument('teams', $teamId);
 
-        if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+        if (empty($team->getId())) {
             throw new Exception('Team not found', 404);
         }
 
-        $memberships = $projectDB->getCollection([
-            'limit' => 2000, // TODO add members limit
-            'offset' => 0,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
-                'teamId='.$teamId,
-            ],
-        ]);
+        $memberships = $dbForInternal->find('memberships', [
+            new Query('teamId', Query::TYPE_EQUAL, [$teamId]),
+        ], 2000, 0); // TODO fix members limit
 
-        foreach ($memberships as $member) {
-            if (!$projectDB->deleteDocument($member->getId())) {
+        // TODO delete all members individually from the user object
+        foreach ($memberships as $membership) {
+            if (!$dbForInternal->deleteDocument('memberships', $membership->getId())) {
                 throw new Exception('Failed to remove membership for team from DB', 500);
             }
         }
 
-        if (!$projectDB->deleteDocument($teamId)) {
+        if (!$dbForInternal->deleteDocument('teams', $teamId)) {
             throw new Exception('Failed to remove team from DB', 500);
         }
 
         $events
-            ->setParam('payload', $response->output($team, Response::MODEL_TEAM))
+            ->setParam('eventData', $response->output2($team, Response::MODEL_TEAM))
         ;
 
         $response->noContent();
@@ -251,16 +223,18 @@ App::delete('/v1/teams/:teamId')
 
 App::post('/v1/teams/:teamId/memberships')
     ->desc('Create Team Membership')
-    ->groups(['api', 'teams'])
+    ->groups(['api', 'teams', 'auth'])
     ->label('event', 'teams.memberships.create')
     ->label('scope', 'teams.write')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('auth.type', 'invites')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'createMembership')
     ->label('sdk.description', '/docs/references/teams/create-team-membership.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
+    ->label('abuse-limit', 10)
     ->param('teamId', '', new UID(), 'Team unique ID.')
     ->param('email', '', new Email(), 'New team member email.')
     ->param('name', '', new Text(128), 'New team member name. Max length: 128 chars.', true)
@@ -269,138 +243,122 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('response')
     ->inject('project')
     ->inject('user')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('locale')
     ->inject('audits')
     ->inject('mails')
-    ->action(function ($teamId, $email, $name, $roles, $url, $response, $project, $user, $projectDB, $locale, $audits, $mails) {
+    ->action(function ($teamId, $email, $name, $roles, $url, $response, $project, $user, $dbForInternal, $locale, $audits, $mails) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Document $user */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $mails */
 
-        $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $name = (empty($name)) ? $email : $name;
-        $team = $projectDB->getDocument($teamId);
+        $team = $dbForInternal->getDocument('teams', $teamId);
 
-        if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+        if (empty($team->getId())) {
             throw new Exception('Team not found', 404);
         }
 
-        $memberships = $projectDB->getCollection([
-            'limit' => 50,
-            'offset' => 0,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
-                'teamId='.$team->getId(),
-            ],
-        ]);
-
-        $invitee = $projectDB->getCollectionFirst([ // Get user by email address
-            'limit' => 1,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                'email='.$email,
-            ],
-        ]);
+        $invitee = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [$email])], 1); // Get user by email address
 
         if (empty($invitee)) { // Create new user if no user with same email found
+
+            $limit = $project->getAttribute('usersAuthLimit', 0);
+        
+            if ($limit !== 0 && $project->getId() !== 'console') { // check users limit, console invites are allways allowed.
+                $sum = $dbForInternal->count('users', [], APP_LIMIT_USERS);
+    
+                if($sum >= $limit) {
+                    throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
+                }
+            }
 
             Authorization::disable();
 
             try {
-                $invitee = $projectDB->createDocument([
-                    '$collection' => Database::SYSTEM_COLLECTION_USERS,
-                    '$permissions' => [
-                        'read' => ['user:{self}', '*'],
-                        'write' => ['user:{self}'],
-                    ],
+                $userId = $dbForInternal->getId();
+                $invitee = $dbForInternal->createDocument('users', new Document([
+                    '$id' => $userId,
+                    '$read' => ['user:'.$userId, '*'],
+                    '$write' => ['user:'.$userId],
                     'email' => $email,
                     'emailVerification' => false,
                     'status' => Auth::USER_STATUS_UNACTIVATED,
                     'password' => Auth::passwordHash(Auth::passwordGenerator()),
-                    'passwordUpdate' => \time(),
+                    /** 
+                     * Set the password update time to 0 for users created using 
+                     * team invite and OAuth to allow password updates without an 
+                     * old password 
+                     */
+                    'passwordUpdate' => 0,
                     'registration' => \time(),
                     'reset' => false,
                     'name' => $name,
+                    'prefs' => [],
+                    'sessions' => [],
                     'tokens' => [],
-                ], ['email' => $email]);
+                    'memberships' => [],
+                ]));
             } catch (Duplicate $th) {
                 throw new Exception('Account already exists', 409);
             }
 
             Authorization::reset();
-
-            if (false === $invitee) {
-                throw new Exception('Failed saving user to DB', 500);
-            }
         }
 
-        $isOwner = false;
+        $isOwner = Authorization::isRole('team:'.$team->getId().'/owner');;
 
-        foreach ($memberships as $member) {
-            if ($member->getAttribute('userId') ==  $invitee->getId()) {
-                throw new Exception('User has already been invited or is already a member of this team', 409);
-            }
-
-            if ($member->getAttribute('userId') == $user->getId() && \in_array('owner', $member->getAttribute('roles', []))) {
-                $isOwner = true;
-            }
-        }
-
-        if (!$isOwner && !$isPreviliggedUser && !$isAppUser) { // Not owner, not admin, not app (server)
+        if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
             throw new Exception('User is not allowed to send invitations for this team', 401);
         }
 
         $secret = Auth::tokenGenerator();
 
         $membership = new Document([
-            '$collection' => Database::SYSTEM_COLLECTION_MEMBERSHIPS,
-            '$permissions' => [
-                'read' => ['*'],
-                'write' => ['user:'.$invitee->getId(), 'team:'.$team->getId().'/owner'],
-            ],
+            '$id' => $dbForInternal->getId(),
+            '$read' => ['*'],
+            '$write' => ['user:'.$invitee->getId(), 'team:'.$team->getId().'/owner'],
             'userId' => $invitee->getId(),
             'teamId' => $team->getId(),
             'roles' => $roles,
             'invited' => \time(),
-            'joined' => ($isPreviliggedUser || $isAppUser) ? \time() : 0,
-            'confirm' => ($isPreviliggedUser || $isAppUser),
+            'joined' => ($isPrivilegedUser || $isAppUser) ? \time() : 0,
+            'confirm' => ($isPrivilegedUser || $isAppUser),
             'secret' => Auth::hash($secret),
         ]);
 
-        if ($isPreviliggedUser || $isAppUser) { // Allow admin to create membership
+        if ($isPrivilegedUser || $isAppUser) { // Allow admin to create membership
             Authorization::disable();
-            $membership = $projectDB->createDocument($membership->getArrayCopy());
+            try {
+                $membership = $dbForInternal->createDocument('memberships', $membership);
+            } catch (Duplicate $th) {
+                throw new Exception('User has already been invited or is already a member of this team', 409);
+            }
 
-            $team = $projectDB->updateDocument(\array_merge($team->getArrayCopy(), [
-                'sum' => $team->getAttribute('sum', 0) + 1,
-            ]));
+            $team = $dbForInternal->updateDocument('teams', $team->getId(), $team->setAttribute('sum', $team->getAttribute('sum', 0) + 1));
 
             // Attach user to team
             $invitee->setAttribute('memberships', $membership, Document::SET_TYPE_APPEND);
 
-            $invitee = $projectDB->updateDocument($invitee->getArrayCopy());
-
-            if (false === $invitee) {
-                throw new Exception('Failed saving user to DB', 500);
-            }
+            $invitee = $dbForInternal->updateDocument('users', $invitee->getId(), $invitee);
 
             Authorization::reset();
         } else {
-            $membership = $projectDB->createDocument($membership->getArrayCopy());
-        }
-
-        if (false === $membership) {
-            throw new Exception('Failed saving membership to DB', 500);
+            try {
+                $membership = $dbForInternal->createDocument('memberships', $membership);
+            } catch (Duplicate $th) {
+                throw new Exception('User has already been invited or is already a member of this team', 409);
+            }
         }
 
         $url = Template::parseURL($url);
-        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['inviteId' => $membership->getId(), 'teamId' => $team->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
+        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'teamId' => $team->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
         $url = Template::unParseURL($url);
 
         $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
@@ -409,7 +367,7 @@ App::post('/v1/teams/:teamId/memberships')
         $title = \sprintf($locale->getText('account.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]']));
         
         $body
-            ->setParam('{{content}}', $content->render())
+            ->setParam('{{content}}', $content->render(false))
             ->setParam('{{cta}}', $cta->render())
             ->setParam('{{title}}', $title)
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
@@ -417,17 +375,16 @@ App::post('/v1/teams/:teamId/memberships')
             ->setParam('{{team}}', $team->getAttribute('name', '[TEAM-NAME]'))
             ->setParam('{{owner}}', $user->getAttribute('name', ''))
             ->setParam('{{redirect}}', $url)
-            ->setParam('{{bg-body}}', '#f6f6f6')
+            ->setParam('{{bg-body}}', '#f7f7f7')
             ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{bg-cta}}', '#3498db')
-            ->setParam('{{bg-cta-hover}}', '#34495e')
+            ->setParam('{{bg-cta}}', '#073b4c')
             ->setParam('{{text-content}}', '#000000')
             ->setParam('{{text-cta}}', '#ffffff')
         ;
 
-        if (!$isPreviliggedUser && !$isAppUser) { // No need in comfirmation when in admin or app mode
+        if (!$isPrivilegedUser && !$isAppUser) { // No need of confirmation when in admin or app mode
             $mails
-                ->setParam('event', 'teams.membership.create')
+                ->setParam('event', 'teams.memberships.create')
                 ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name')))
                 ->setParam('recipient', $email)
                 ->setParam('name', $name)
@@ -439,24 +396,22 @@ App::post('/v1/teams/:teamId/memberships')
 
         $audits
             ->setParam('userId', $invitee->getId())
-            ->setParam('event', 'teams.membership.create')
+            ->setParam('event', 'teams.memberships.create')
             ->setParam('resource', 'teams/'.$teamId)
         ;
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic(new Document(\array_merge($membership->getArrayCopy(), [
-                'email' => $email,
-                'name' => $name,
-            ])), Response::MODEL_MEMBERSHIP)
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($membership
+            ->setAttribute('email', $email)
+            ->setAttribute('name', $name)
+        , Response::MODEL_MEMBERSHIP);
     });
 
 App::get('/v1/teams/:teamId/memberships')
     ->desc('Get Team Memberships')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'getMemberships')
     ->label('sdk.description', '/docs/references/teams/get-team-members.md')
@@ -469,27 +424,19 @@ App::get('/v1/teams/:teamId/memberships')
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($teamId, $search, $limit, $offset, $orderType, $response, $projectDB) {
+    ->inject('dbForInternal')
+    ->action(function ($teamId, $search, $limit, $offset, $orderType, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
 
-        $team = $projectDB->getDocument($teamId);
+        $team = $dbForInternal->getDocument('teams', $teamId);
 
-        if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+        if (empty($team->getId())) {
             throw new Exception('Team not found', 404);
         }
 
-        $memberships = $projectDB->getCollection([
-            'limit' => $limit,
-            'offset' => $offset,
-            'orderType' => $orderType,
-            'search' => $search,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
-                'teamId='.$teamId,
-            ],
-        ]);
+        $memberships = $dbForInternal->find('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], $limit, $offset);
+        $sum = $dbForInternal->count('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], APP_LIMIT_COUNT);
         $users = [];
 
         foreach ($memberships as $membership) {
@@ -497,20 +444,89 @@ App::get('/v1/teams/:teamId/memberships')
                 continue;
             }
 
-            $temp = $projectDB->getDocument($membership->getAttribute('userId', null))->getArrayCopy(['email', 'name']);
+            $temp = $dbForInternal->getDocument('users', $membership->getAttribute('userId', null))->getArrayCopy(['email', 'name']);
 
             $users[] = new Document(\array_merge($temp, $membership->getArrayCopy()));
         }
 
-        $response->dynamic(new Document(['sum' => $projectDB->getSum(), 'memberships' => $users]), Response::MODEL_MEMBERSHIP_LIST);
+        $response->dynamic2(new Document([
+            'memberships' => $users,
+            'sum' => $sum,
+        ]), Response::MODEL_MEMBERSHIP_LIST);
     });
 
-App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
+
+App::patch('/v1/teams/:teamId/memberships/:membershipId')
+    ->desc('Update Membership Roles')
+    ->groups(['api', 'teams'])
+    ->label('event', 'teams.memberships.update')
+    ->label('scope', 'teams.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'teams')
+    ->label('sdk.method', 'updateMembershipRoles')
+    ->label('sdk.description', '/docs/references/teams/update-team-membership-roles.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
+    ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->param('membershipId', '', new UID(), 'Membership ID.')
+    ->param('roles', [], new ArrayList(new Key()), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForInternal')
+    ->inject('audits')
+    ->action(function ($teamId, $membershipId, $roles, $request, $response, $user, $dbForInternal, $audits) {
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Appwrite\Event\Event $audits */
+
+        $team = $dbForInternal->getDocument('teams', $teamId);
+        if ($team->isEmpty()) {
+            throw new Exception('Team not found', 404);
+        }
+
+        $membership = $dbForInternal->getDocument('memberships', $membershipId);
+        if ($membership->isEmpty()) {
+            throw new Exception('Membership not found', 404);
+        }
+
+        $profile = $dbForInternal->getDocument('users', $membership->getAttribute('userId'));
+        if ($profile->isEmpty()) {
+            throw new Exception('User not found', 404);
+        }
+
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
+        $isAppUser = Auth::isAppUser(Authorization::$roles);
+        $isOwner = Authorization::isRole('team:'.$team->getId().'/owner');;
+        
+        if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
+            throw new Exception('User is not allowed to modify roles', 401);
+        }
+
+        // Update the roles
+        $membership->setAttribute('roles', $roles);
+        $membership = $dbForInternal->updateDocument('memberships', $membership->getId(), $membership);
+
+        //TODO sync updated membership in the user $profile object using TYPE_REPLACE
+
+        $audits
+            ->setParam('userId', $user->getId())
+            ->setParam('event', 'teams.memberships.update')
+            ->setParam('resource', 'teams/'.$teamId)
+        ;
+
+        $response->dynamic2($membership, Response::MODEL_MEMBERSHIP);
+    });
+
+App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->desc('Update Team Membership Status')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.memberships.update.status')
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'updateMembershipStatus')
     ->label('sdk.description', '/docs/references/teams/update-team-membership-status.md')
@@ -518,28 +534,29 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
     ->param('teamId', '', new UID(), 'Team unique ID.')
-    ->param('inviteId', '', new UID(), 'Invite unique ID.')
+    ->param('membershipId', '', new UID(), 'Membership ID.')
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('secret', '', new Text(256), 'Secret key.')
     ->inject('request')
     ->inject('response')
     ->inject('user')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($teamId, $inviteId, $userId, $secret, $request, $response, $user, $projectDB, $geodb, $audits) {
+    ->action(function ($teamId, $membershipId, $userId, $secret, $request, $response, $user, $dbForInternal, $geodb, $audits) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
 
         $protocol = $request->getProtocol();
-        $membership = $projectDB->getDocument($inviteId);
 
-        if (empty($membership->getId()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $membership->getCollection()) {
-            throw new Exception('Invite not found', 404);
+        $membership = $dbForInternal->getDocument('memberships', $membershipId);
+
+        if (empty($membership->getId())) {
+            throw new Exception('Membership not found', 404);
         }
 
         if ($membership->getAttribute('teamId') !== $teamId) {
@@ -548,11 +565,11 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
 
         Authorization::disable();
 
-        $team = $projectDB->getDocument($teamId);
+        $team = $dbForInternal->getDocument('teams', $teamId);
         
         Authorization::reset();
 
-        if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+        if (empty($team->getId())) {
             throw new Exception('Team not found', 404);
         }
 
@@ -561,21 +578,15 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
         }
 
         if ($userId != $membership->getAttribute('userId')) {
-            throw new Exception('Invite not belong to current user ('.$user->getAttribute('email').')', 401);
+            throw new Exception('Invite does not belong to current user ('.$user->getAttribute('email').')', 401);
         }
 
         if (empty($user->getId())) {
-            $user = $projectDB->getCollectionFirst([ // Get user
-                'limit' => 1,
-                'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                    '$id='.$userId,
-                ],
-            ]);
+            $user = $dbForInternal->getDocument('users', $userId); // Get user
         }
 
         if ($membership->getAttribute('userId') !== $user->getId()) {
-            throw new Exception('Invite not belong to current user ('.$user->getAttribute('email').')', 401);
+            throw new Exception('Invite does not belong to current user ('.$user->getAttribute('email').')', 401);
         }
 
         $membership // Attach user to team
@@ -595,10 +606,10 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge([
-            '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
-            '$permissions' => ['read' => ['user:'.$user->getId()], 'write' => ['user:'.$user->getId()]],
+            '$id' => $dbForInternal->getId(),
             'userId' => $user->getId(),
-            'type' => Auth::TOKEN_TYPE_LOGIN,
+            'provider' => Auth::SESSION_PROVIDER_EMAIL,
+            'providerUid' => $user->getAttribute('email'),
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -606,31 +617,22 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
         ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
-        $user->setAttribute('tokens', $session, Document::SET_TYPE_APPEND);
+        $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
 
         Authorization::setRole('user:'.$userId);
 
-        $user = $projectDB->updateDocument($user->getArrayCopy());
-
-        if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
-        }
+        $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
+        $membership = $dbForInternal->updateDocument('memberships', $membership->getId(), $membership);
 
         Authorization::disable();
 
-        $team = $projectDB->updateDocument(\array_merge($team->getArrayCopy(), [
-            'sum' => $team->getAttribute('sum', 0) + 1,
-        ]));
+        $team = $dbForInternal->updateDocument('teams', $team->getId(), $team->setAttribute('sum', $team->getAttribute('sum', 0) + 1));
 
         Authorization::reset();
 
-        if (false === $team) {
-            throw new Exception('Failed saving team to DB', 500);
-        }
-
         $audits
             ->setParam('userId', $user->getId())
-            ->setParam('event', 'teams.membership.update')
+            ->setParam('event', 'teams.memberships.update.status')
             ->setParam('resource', 'teams/'.$teamId)
         ;
 
@@ -645,38 +647,38 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
         ;
 
-        $response->dynamic(new Document(\array_merge($membership->getArrayCopy(), [
-            'email' => $user->getAttribute('email'),
-            'name' => $user->getAttribute('name'),
-        ])), Response::MODEL_MEMBERSHIP);
+        $response->dynamic2($membership
+            ->setAttribute('email', $user->getAttribute('email'))
+            ->setAttribute('name', $user->getAttribute('name'))
+        , Response::MODEL_MEMBERSHIP);
     });
 
-App::delete('/v1/teams/:teamId/memberships/:inviteId')
+App::delete('/v1/teams/:teamId/memberships/:membershipId')
     ->desc('Delete Team Membership')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.memberships.delete')
     ->label('scope', 'teams.write')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'deleteMembership')
     ->label('sdk.description', '/docs/references/teams/delete-team-membership.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('teamId', '', new UID(), 'Team unique ID.')
-    ->param('inviteId', '', new UID(), 'Invite unique ID.')
+    ->param('membershipId', '', new UID(), 'Membership ID.')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($teamId, $inviteId, $response, $projectDB, $audits, $events) {
+    ->action(function ($teamId, $membershipId, $response, $dbForInternal, $audits, $events) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
 
-        $membership = $projectDB->getDocument($inviteId);
+        $membership = $dbForInternal->getDocument('memberships', $membershipId);
 
-        if (empty($membership->getId()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $membership->getCollection()) {
+        if (empty($membership->getId())) {
             throw new Exception('Invite not found', 404);
         }
 
@@ -684,34 +686,51 @@ App::delete('/v1/teams/:teamId/memberships/:inviteId')
             throw new Exception('Team IDs don\'t match', 404);
         }
 
-        $team = $projectDB->getDocument($teamId);
+        $user = $dbForInternal->getDocument('users', $membership->getAttribute('userId'));
 
-        if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+        if ($user->isEmpty()) {
+            throw new Exception('User not found', 404);
+        }
+
+        $team = $dbForInternal->getDocument('teams', $teamId);
+
+        if (empty($team->getId())) {
             throw new Exception('Team not found', 404);
         }
 
-        if (!$projectDB->deleteDocument($membership->getId())) {
+        if (!$dbForInternal->deleteDocument('memberships', $membership->getId())) {
             throw new Exception('Failed to remove membership from DB', 500);
         }
 
-        if ($membership->getAttribute('confirm')) { // Count only confirmed members
-            $team = $projectDB->updateDocument(\array_merge($team->getArrayCopy(), [
-                'sum' => $team->getAttribute('sum', 0) - 1,
-            ]));
+        $memberships = $user->getAttribute('memberships', []);
+
+        foreach ($memberships as $key => $child) { 
+            /** @var Document $child */
+
+            if ($membershipId == $child->getId()) {
+                unset($memberships[$key]);
+                break;
+            }
         }
 
-        if (false === $team) {
-            throw new Exception('Failed saving team to DB', 500);
+        Authorization::disable();
+
+        $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('memberships', $memberships));
+
+        Authorization::reset();
+
+        if ($membership->getAttribute('confirm')) { // Count only confirmed members
+            $team = $dbForInternal->updateDocument('teams', $team->getId(), $team->setAttribute('sum', \max($team->getAttribute('sum', 0) - 1, 0)));
         }
 
         $audits
             ->setParam('userId', $membership->getAttribute('userId'))
-            ->setParam('event', 'teams.membership.delete')
+            ->setParam('event', 'teams.memberships.delete')
             ->setParam('resource', 'teams/'.$teamId)
         ;
 
         $events
-            ->setParam('payload', $response->output($membership, Response::MODEL_MEMBERSHIP))
+            ->setParam('eventData', $response->output2($membership, Response::MODEL_MEMBERSHIP))
         ;
 
         $response->noContent();

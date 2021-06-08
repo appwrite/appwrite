@@ -15,6 +15,7 @@ use Appwrite\Utopia\Response\Model\Collection;
 use Appwrite\Utopia\Response\Model\Continent;
 use Appwrite\Utopia\Response\Model\Country;
 use Appwrite\Utopia\Response\Model\Currency;
+use Appwrite\Utopia\Response\Model\Document as ModelDocument;
 use Appwrite\Utopia\Response\Model\Domain;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
@@ -39,11 +40,13 @@ use Appwrite\Utopia\Response\Model\Tag;
 use Appwrite\Utopia\Response\Model\Task;
 use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
+use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\Mock; // Keep last
 use stdClass;
+use Utopia\Database\Document as DatabaseDocument;
 
 /**
- * @method public function setStatusCode(int $code = 200): Response
+ * @method Response public function setStatusCode(int $code = 200)
  */
 class Response extends SwooleResponse
 {
@@ -61,6 +64,7 @@ class Response extends SwooleResponse
     const MODEL_COLLECTION = 'collection';
     const MODEL_COLLECTION_LIST = 'collectionList';
     const MODEL_RULE = 'rule';
+    const MODEL_DOCUMENT = 'document';
     const MODEL_DOCUMENT_LIST = 'documentList';
 
     // Users
@@ -70,6 +74,7 @@ class Response extends SwooleResponse
     const MODEL_SESSION_LIST = 'sessionList';
     const MODEL_TOKEN = 'token';
     const MODEL_JWT = 'jwt';
+    const MODEL_PREFERENCES = 'preferences';
     
     // Storage
     const MODEL_FILE = 'file';
@@ -145,7 +150,7 @@ class Response extends SwooleResponse
             ->setModel(new ErrorDev())
             // Lists
             ->setModel(new BaseList('Collections List', self::MODEL_COLLECTION_LIST, 'collections', self::MODEL_COLLECTION))
-            ->setModel(new BaseList('Documents List', self::MODEL_DOCUMENT_LIST, 'documents', self::MODEL_ANY))
+            ->setModel(new BaseList('Documents List', self::MODEL_DOCUMENT_LIST, 'documents', self::MODEL_DOCUMENT))
             ->setModel(new BaseList('Users List', self::MODEL_USER_LIST, 'users', self::MODEL_USER))
             ->setModel(new BaseList('Sessions List', self::MODEL_SESSION_LIST, 'sessions', self::MODEL_SESSION))
             ->setModel(new BaseList('Logs List', self::MODEL_LOG_LIST, 'logs', self::MODEL_LOG, false))
@@ -169,9 +174,11 @@ class Response extends SwooleResponse
             // Entities
             ->setModel(new Permissions())
             ->setModel(new Collection())
+            ->setModel(new ModelDocument())
             ->setModel(new Rule())
             ->setModel(new Log())
             ->setModel(new User())
+            ->setModel(new Preferences())
             ->setModel(new Session())
             ->setModel(new Token())
             ->setModel(new JWT())
@@ -217,7 +224,7 @@ class Response extends SwooleResponse
      * 
      * @return self
      */
-    public function setModel(Model $instance): self
+    public function setModel(Model $instance)
     {
         $this->models[$instance->getType()] = $instance;
 
@@ -270,6 +277,27 @@ class Response extends SwooleResponse
     }
 
     /**
+     * Validate response objects and outputs
+     *  the response according to given format type
+     * 
+     * @param DatabaseDocument $document
+     * @param string $model
+     * 
+     * return void
+     */
+    public function dynamic2(DatabaseDocument $document, string $model): void
+    {
+        $output = $this->output2($document, $model);
+
+        // If filter is set, parse the output
+        if(self::isFilter()){
+            $output = self::getFilter()->parse($output, $model);
+        }
+
+        $this->json(!empty($output) ? $output : new stdClass());
+    }
+
+    /**
      * Generate valid response object from document data
      * 
      * @param Document $document
@@ -278,6 +306,58 @@ class Response extends SwooleResponse
      * return array
      */
     public function output(Document $document, string $model): array
+    {
+        $data       = $document;
+        $model      = $this->getModel($model);
+        $output     = [];
+
+        if ($model->isAny()) {
+            $this->payload = $document->getArrayCopy();
+            return $this->payload;
+        }
+
+        foreach ($model->getRules() as $key => $rule) {
+            if (!$document->isSet($key)) {
+                if (!is_null($rule['default'])) {
+                    $document->setAttribute($key, $rule['default']);
+                } else {
+                    throw new Exception('Model '.$model->getName().' is missing response key: '.$key);
+                }
+            }
+
+            if ($rule['array']) {
+                if (!is_array($data[$key])) {
+                    throw new Exception($key.' must be an array of type '.$rule['type']);
+                }
+
+                foreach ($data[$key] as &$item) {
+                    if ($item instanceof Document) {
+                        if (!array_key_exists($rule['type'], $this->models)) {
+                            throw new Exception('Missing model for rule: '. $rule['type']);
+                        }
+
+                        $item = $this->output($item, $rule['type']);
+                    }
+                }
+            }
+            
+            $output[$key] = $data[$key];
+        }
+
+        $this->payload = $output;
+
+        return $this->payload;
+    }
+
+    /**
+     * Generate valid response object from document data
+     * 
+     * @param DatabaseDocument $document
+     * @param string $model
+     * 
+     * return array
+     */
+    public function output2(DatabaseDocument $document, string $model): array
     {
         $data       = $document;
         $model      = $this->getModel($model);

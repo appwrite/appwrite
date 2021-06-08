@@ -12,12 +12,14 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM php:7.4-cli-alpine as step1
+FROM php:8.0-cli-alpine as step1
 
-ENV PHP_REDIS_VERSION=5.3.3 \
-    PHP_SWOOLE_VERSION=v4.5.8 \
-    PHP_MAXMINDDB_VERSION=v1.10.0 \
-    PHP_XDEBUG_VERSION=sdebug_2_9-beta
+ENV PHP_REDIS_VERSION=5.3.4 \
+    PHP_MONGODB_VERSION=1.9.1 \
+    PHP_SWOOLE_VERSION=v4.6.6 \
+    PHP_IMAGICK_VERSION=master \
+    PHP_YAML_VERSION=2.2.1 \
+    PHP_MAXMINDDB_VERSION=v1.10.1
 
 RUN \
   apk add --no-cache --virtual .deps \
@@ -29,38 +31,60 @@ RUN \
   git \
   zlib-dev \
   brotli-dev \
+  yaml-dev \
+  imagemagick \
+  imagemagick-dev \
   libmaxminddb-dev
 
 RUN docker-php-ext-install sockets
 
 RUN \
   # Redis Extension
-  git clone https://github.com/phpredis/phpredis.git && \
+  git clone --depth 1 --branch $PHP_REDIS_VERSION https://github.com/phpredis/phpredis.git && \
   cd phpredis && \
-  git checkout $PHP_REDIS_VERSION && \
+  phpize && \
+  ./configure && \
+  make && make install && \
+  cd .. && \
+  # Mongodb Extension
+  git clone --depth 1 --branch $PHP_MONGODB_VERSION https://github.com/mongodb/mongo-php-driver.git && \
+  cd mongo-php-driver && \
+  git submodule update --init && \
   phpize && \
   ./configure && \
   make && make install && \
   cd .. && \
   ## Swoole Extension
-  git clone https://github.com/swoole/swoole-src.git && \
+  git clone --depth 1 --branch $PHP_SWOOLE_VERSION https://github.com/swoole/swoole-src.git && \
   cd swoole-src && \
-  git checkout $PHP_SWOOLE_VERSION && \
   phpize && \
-  ./configure --enable-sockets --enable-http2 && \
+  ./configure --enable-http2 && \
+  make && make install && \
+  cd .. && \
+  ## Imagick Extension
+  git clone --depth 1 --branch $PHP_IMAGICK_VERSION https://github.com/Imagick/imagick && \
+  cd imagick && \
+  phpize && \
+  ./configure && \
+  make && make install && \
+  cd .. && \
+  ## YAML Extension
+  git clone --depth 1 --branch $PHP_YAML_VERSION https://github.com/php/pecl-file_formats-yaml && \
+  cd pecl-file_formats-yaml && \
+  phpize && \
+  ./configure && \
   make && make install && \
   cd .. && \
   ## Maxminddb extension
-  git clone https://github.com/maxmind/MaxMind-DB-Reader-php.git && \
+  git clone --depth 1 --branch $PHP_MAXMINDDB_VERSION https://github.com/maxmind/MaxMind-DB-Reader-php.git && \
   cd MaxMind-DB-Reader-php && \
-  git checkout $PHP_MAXMINDDB_VERSION && \
   cd ext && \
   phpize && \
   ./configure && \
   make && make install && \
   cd ../..
 
-FROM php:7.4-cli-alpine as final
+FROM php:8.0-cli-alpine as final
 
 LABEL maintainer="team@appwrite.io"
 
@@ -68,10 +92,18 @@ ARG VERSION=dev
 
 ENV _APP_SERVER=swoole \
     _APP_ENV=production \
+    _APP_LOCALE=en \
     _APP_DOMAIN=localhost \
     _APP_DOMAIN_TARGET=localhost \
     _APP_HOME=https://appwrite.io \
     _APP_EDITION=community \
+    _APP_CONSOLE_WHITELIST_ROOT=enabled \
+    _APP_CONSOLE_WHITELIST_EMAILS= \
+    _APP_CONSOLE_WHITELIST_IPS= \
+    _APP_SYSTEM_EMAIL_NAME= \
+    _APP_SYSTEM_EMAIL_ADDRESS= \
+    _APP_SYSTEM_RESPONSE_FORMAT= \
+    _APP_SYSTEM_SECURITY_EMAIL_ADDRESS= \
     _APP_OPTIONS_ABUSE=enabled \
     _APP_OPTIONS_FORCE_HTTPS=disabled \
     _APP_OPENSSL_KEY_V1=your-secret-key \
@@ -123,16 +155,14 @@ RUN \
   curl-dev \
   && apk add --no-cache \
   libstdc++ \
+  certbot \
+  brotli-dev \
   yaml-dev \
   imagemagick \
-  imagemagick-dev \
+  libmaxminddb-dev \
   certbot \
   docker-cli \
   docker-compose \
-  libmaxminddb \
-  libmaxminddb-dev \
-  && pecl install imagick yaml \ 
-  && docker-php-ext-enable imagick yaml \
   && docker-php-ext-install sockets opcache pdo_mysql \
   && apk del .deps \
   && rm -rf /var/cache/apk/*
@@ -140,9 +170,12 @@ RUN \
 WORKDIR /usr/src/code
 
 COPY --from=step0 /usr/local/src/vendor /usr/src/code/vendor
-COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/
-COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/
-COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/maxminddb.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/ 
+COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/mongodb.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yaml.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/maxminddb.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/ 
 
 # Add Source Code
 COPY ./app /usr/src/code/app
@@ -190,11 +223,15 @@ RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 # Enable Extensions
 RUN echo extension=swoole.so >> /usr/local/etc/php/conf.d/swoole.ini
 RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
+RUN echo extension=imagick.so >> /usr/local/etc/php/conf.d/imagick.ini
+RUN echo extension=yaml.so >> /usr/local/etc/php/conf.d/yaml.ini
 RUN echo extension=maxminddb.so >> /usr/local/etc/php/conf.d/maxminddb.ini
 
 RUN echo "opcache.preload_user=www-data" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.preload=/usr/src/code/app/preload.php" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.enable_cli=1" >> /usr/local/etc/php/conf.d/appwrite.ini
+RUN echo "opcache.jit_buffer_size=100M" >> /usr/local/etc/php/conf.d/appwrite.ini
+RUN echo "opcache.jit=1235" >> /usr/local/etc/php/conf.d/appwrite.ini
 
 EXPOSE 80
 

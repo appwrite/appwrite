@@ -12,6 +12,8 @@ use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
+use Utopia\Database\Validator\Authorization as Authorization2;
 
 // xdebug_start_trace('/tmp/trace');
 
@@ -33,6 +35,7 @@ $http
         'http_compression' => true,
         'http_compression_level' => 6,
         'package_max_length' => $payloadSize,
+        'buffer_output_size' => $payloadSize,
     ])
 ;
 
@@ -48,7 +51,53 @@ $http->on('AfterReload', function($serv, $workerId) {
     Console::success('Reload completed...');
 });
 
-$http->on('start', function (Server $http) use ($payloadSize) {
+Files::load(__DIR__ . '/../public');
+
+include __DIR__ . '/controllers/general.php';
+
+$http->on('start', function (Server $http) use ($payloadSize, $register) {
+    $app = new App('UTC');
+    $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
+
+    if(!$dbForConsole->exists()) {
+        Console::success('[Setup] - Server database init started...');
+        
+        $collections = Config::getParam('collections2', []); /** @var array $collections */
+
+        $register->get('cache')->flushAll();
+
+        $dbForConsole->create();
+
+        foreach ($collections as $key => $collection) {
+            $dbForConsole->createCollection($key);
+
+            foreach ($collection['attributes'] as $i => $attribute) {
+                $dbForConsole->createAttribute(
+                    $key,
+                    $attribute['$id'],
+                    $attribute['type'],
+                    $attribute['size'],
+                    $attribute['required'],
+                    $attribute['signed'],
+                    $attribute['array'],
+                    $attribute['filters'],
+                );
+            }
+
+            foreach ($collection['indexes'] as $i => $index) {
+                $dbForConsole->createIndex(
+                    $key,
+                    $index['$id'],
+                    $index['type'],
+                    $index['attributes'],
+                    $index['lengths'],
+                    $index['orders'],
+                );
+            }
+        }
+
+        Console::success('[Setup] - Server database init completed...');
+    }
 
     Console::success('Server started succefully (max payload is '.number_format($payloadSize).' bytes)');
 
@@ -60,22 +109,6 @@ $http->on('start', function (Server $http) use ($payloadSize) {
         $http->shutdown();
     });
 });
-
-Files::load(__DIR__ . '/../public');
-
-include __DIR__ . '/controllers/general.php';
-
-$domain = App::getEnv('_APP_DOMAIN', '');
-
-Console::info('Issuing a TLS certificate for the master domain ('.$domain.') in 30 seconds.
-    Make sure your domain points to your server IP or restart your Appwrite server to try again.'); // TODO move this to installation script
-
-ResqueScheduler::enqueueAt(\time() + 30, 'v1-certificates', 'CertificatesV1', [
-    'document' => [],
-    'domain' => $domain,
-    'validateTarget' => false,
-    'validateCNAME' => false,
-]);
 
 $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) {
     $request = new Request($swooleRequest);
@@ -99,6 +132,9 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     try {
         Authorization::cleanRoles();
         Authorization::setRole('*');
+
+        Authorization2::cleanRoles();
+        Authorization2::setRole('*');
 
         $app->run($request, $response);
     } catch (\Throwable $th) {

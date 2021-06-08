@@ -15,7 +15,7 @@ return [
             [
                 'key' => 'web',
                 'name' => 'Web',
-                'version' => '2.0.0',
+                'version' => '3.0.4',
                 'url' => 'https://github.com/appwrite/sdk-for-web',
                 'package' => 'https://www.npmjs.com/package/appwrite',
                 'enabled' => true,
@@ -28,11 +28,41 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-web.git',
                 'gitRepoName' => 'sdk-for-web',
                 'gitUserName' => 'appwrite',
+                'demos' => [
+                    [
+                        'icon' => 'react.svg',
+                        'name' => 'Todo App with React JS',
+                        'description' => 'A simple Todo app that uses both the Appwrite account and database APIs.',
+                        'source' => 'https://github.com/appwrite/todo-with-react',
+                        'url' => 'https://appwrite-todo-with-react.vercel.app/',
+                    ],
+                    [
+                        'icon' => 'vue.svg',
+                        'name' => 'Todo App with Vue JS',
+                        'description' => 'A simple Todo app that uses both the Appwrite account and database APIs.',
+                        'source' => 'https://github.com/appwrite/todo-with-vue',
+                        'url' => 'https://appwrite-todo-with-vue.vercel.app/',
+                    ],
+                    [
+                        'icon' => 'angular.svg',
+                        'name' => 'Todo App with Angular.js',
+                        'description' => 'A simple Todo app that uses both the Appwrite account and database APIs.',
+                        'source' => 'https://github.com/appwrite/todo-with-angular',
+                        'url' => 'https://appwrite-todo-with-angular.vercel.app/',
+                    ],
+                    [
+                        'icon' => 'svelte.svg',
+                        'name' => 'Todo App with Svelte',
+                        'description' => 'A simple Todo app that uses both the Appwrite account and database APIs.',
+                        'source' => 'https://github.com/appwrite/todo-with-svelte',
+                        'url' => 'https://appwrite-todo-with-svelte.vercel.app/',
+                    ],
+                ]
             ],
             [
                 'key' => 'flutter',
                 'name' => 'Flutter',
-                'version' => '0.4.0-dev.3',
+                'version' => '0.6.2',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter',
                 'package' => 'https://pub.dev/packages/appwrite',
                 'enabled' => true,
@@ -121,7 +151,7 @@ return [
             [
                 'key' => 'web',
                 'name' => 'Console',
-                'version' => '1.0.0',
+                'version' => '2.0.0',
                 'url' => 'https://github.com/appwrite/sdk-for-console',
                 'package' => '',
                 'enabled' => true,
@@ -148,7 +178,7 @@ return [
             [
                 'key' => 'nodejs',
                 'name' => 'Node.js',
-                'version' => '2.0.0',
+                'version' => '2.2.2',
                 'url' => 'https://github.com/appwrite/sdk-for-node',
                 'package' => 'https://www.npmjs.com/package/node-appwrite',
                 'enabled' => true,
@@ -165,7 +195,7 @@ return [
             [
                 'key' => 'deno',
                 'name' => 'Deno',
-                'version' => '0.1.1',
+                'version' => '0.2.1',
                 'url' => 'https://github.com/appwrite/sdk-for-deno',
                 'package' => 'https://deno.land/x/appwrite',
                 'enabled' => true,
@@ -182,7 +212,7 @@ return [
             [
                 'key' => 'php',
                 'name' => 'PHP',
-                'version' => '2.0.0',
+                'version' => '2.1.1',
                 'url' => 'https://github.com/appwrite/sdk-for-php',
                 'package' => 'https://packagist.org/packages/appwrite/appwrite',
                 'enabled' => true,
@@ -199,7 +229,7 @@ return [
             [
                 'key' => 'python',
                 'name' => 'Python',
-                'version' => '0.1.1',
+                'version' => '0.2.1',
                 'url' => 'https://github.com/appwrite/sdk-for-python',
                 'package' => 'https://pypi.org/project/appwrite/',
                 'enabled' => true,
@@ -216,7 +246,7 @@ return [
             [
                 'key' => 'ruby',
                 'name' => 'Ruby',
-                'version' => '2.0.2',
+                'version' => '2.1.1',
                 'url' => 'https://github.com/appwrite/sdk-for-ruby',
                 'package' => 'https://rubygems.org/gems/appwrite',
                 'enabled' => true,
@@ -267,7 +297,7 @@ return [
             [
                 'key' => 'dotnet',
                 'name' => '.NET',
-                'version' => '0.1.0',
+                'version' => '0.3.0',
                 'url' => 'https://github.com/appwrite/sdk-for-dotnet',
                 'package' => 'https://www.nuget.org/packages/Appwrite',
                 'enabled' => true,
@@ -284,7 +314,7 @@ return [
             [
                 'key' => 'dart',
                 'name' => 'Dart',
-                'version' => '0.4.0',
+                'version' => '0.6.1',
                 'url' => 'https://github.com/appwrite/sdk-for-dart',
                 'package' => 'https://pub.dev/packages/dart_appwrite',
                 'enabled' => true,
@@ -301,7 +331,7 @@ return [
             [
                 'key' => 'cli',
                 'name' => 'Command Line',
-                'version' => '0.6.0',
+                'version' => '0.10.1',
                 'url' => 'https://github.com/appwrite/sdk-for-cli',
                 'package' => 'https://github.com/appwrite/sdk-for-cli',
                 'enabled' => true,

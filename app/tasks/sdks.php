@@ -21,20 +21,6 @@ use Appwrite\SDK\Language\Swift;
 $cli
     ->task('sdks')
     ->action(function () {
-        function getSSLPage($url)
-        {
-            $ch = \curl_init();
-            \curl_setopt($ch, CURLOPT_HEADER, false);
-            \curl_setopt($ch, CURLOPT_URL, $url);
-            \curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            \curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-            \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            $result = \curl_exec($ch);
-            \curl_close($ch);
-
-            return $result;
-        }
-
         $platforms = Config::getParam('platforms');
         $selected = \strtolower(Console::confirm('Choose SDK ("*" for all):'));
         $version = Console::confirm('Choose an Appwrite version');
@@ -42,7 +28,7 @@ $cli
         $production = ($git) ? (Console::confirm('Type "Appwrite" to push code to production git repos') == 'Appwrite') : false;
         $message = ($git) ? Console::confirm('Please enter your commit message:') : '';
 
-        if(!in_array($version, ['0.6.x', '0.7.x'])) {
+        if(!in_array($version, ['0.6.x', '0.7.x', '0.8.x'])) {
             throw new Exception('Unknown version given');
         }
 
@@ -143,8 +129,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'dart':
                         $config = new Dart();
                         $config->setPackageName('dart_appwrite');
-                        $warning = $warning."\n\n > This is the Dart SDK for integrating with Appwrite from your Dart server-side code.
-                            If you're looking for the Flutter SDK you should check [appwrite/sdk-for-flutter](https://github.com/appwrite/sdk-for-flutter)";
+                        $warning = $warning."\n\n > This is the Dart SDK for integrating with Appwrite from your Dart server-side code. If you're looking for the Flutter SDK you should check [appwrite/sdk-for-flutter](https://github.com/appwrite/sdk-for-flutter)";
                         break;
                     case 'go':
                         $config = new Go();
@@ -192,6 +177,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setGettingStarted($gettingStarted)
                     ->setChangelog($changelog)
                     ->setExamples($examples)
+                    ->setTwitter(APP_SOCIAL_TWITTER_HANDLE)
+                    ->setDiscord(APP_SOCIAL_DISCORD_CHANNEL, APP_SOCIAL_DISCORD)
+                    ->setDefaultHeaders([
+                        'X-Appwrite-Response-Format' => '0.8.0',
+                    ])
                 ;
                 
                 try {

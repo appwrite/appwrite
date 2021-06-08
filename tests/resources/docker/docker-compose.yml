@@ -62,7 +62,7 @@ services:
     depends_on:
       - mariadb
       - redis
-      - clamav
+      # - clamav
       - influxdb
     environment:
       - _APP_ENV
@@ -81,6 +81,7 @@ services:
       - _APP_USAGE_STATS
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
+      - _APP_STORAGE_ANTIVIRUS=disabled
       - _APP_STORAGE_LIMIT
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_FUNCTIONS_CONTAINERS
@@ -326,14 +327,14 @@ services:
     volumes:
       - appwrite-redis:/data:rw
 
-  clamav:
-    image: appwrite/clamav:1.3.0
-    container_name: appwrite-clamav
-    restart: unless-stopped
-    networks:
-      - appwrite
-    volumes:
-      - appwrite-uploads:/storage/uploads
+  # clamav:
+  #   image: appwrite/clamav:1.2.0
+  #   container_name: appwrite-clamav
+  #   restart: unless-stopped
+  #   networks:
+  #     - appwrite
+  #   volumes:
+  #     - appwrite-uploads:/storage/uploads
 
   influxdb:
     image: influxdb:1.6
@@ -345,7 +346,7 @@ services:
       - appwrite-influxdb:/var/lib/influxdb:rw
 
   telegraf:
-    image: appwrite/telegraf:1.0.0
+    image: appwrite/telegraf:1.1.0
     container_name: appwrite-telegraf
     restart: unless-stopped
     networks:
