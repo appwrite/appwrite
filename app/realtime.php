@@ -102,19 +102,17 @@ $server->on('workerStart', function ($server, $workerId) use (&$subscriptions, &
                 $payload[$projectId] = $value['connectionsTotal'];
             }
             foreach ($subscriptions['console']['role:member']['project'] as $connection => $value) {
-                foreach ($stats as $projectId => $value) {
-                    $server->push(
-                        $connection,
-                        json_encode([
-                            'event' => 'stats.connections',
-                            'channels' => ['project'],
-                            'timestamp' => time(),
-                            'payload' => $payload
-                        ]),
-                        SWOOLE_WEBSOCKET_OPCODE_TEXT,
-                        SWOOLE_WEBSOCKET_FLAG_FIN | SWOOLE_WEBSOCKET_FLAG_COMPRESS
-                    );
-                }
+                $server->push(
+                    $connection,
+                    json_encode([
+                        'event' => 'stats.connections',
+                        'channels' => ['project'],
+                        'timestamp' => time(),
+                        'payload' => $payload
+                    ]),
+                    SWOOLE_WEBSOCKET_OPCODE_TEXT,
+                    SWOOLE_WEBSOCKET_FLAG_FIN | SWOOLE_WEBSOCKET_FLAG_COMPRESS
+                );
             }
         }
     });
