@@ -257,7 +257,7 @@
           args.map(function(value) {
             let result = getValue(value, prefix, data);
 
-            return result;
+            return result ?? undefined;
           })
         );
       };

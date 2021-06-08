@@ -5,7 +5,7 @@
         var sdk = new window.Appwrite();
 
         sdk
-            .setEndpoint(APP_ENV.API)
+            .setEndpoint(window.location.protocol + '//' + window.location.host + APP_ENV.API)
             .setProject('console')
             .setLocale(APP_ENV.LOCALE)
         ;

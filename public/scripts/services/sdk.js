@@ -5,7 +5,7 @@
         var sdk = new window.Appwrite();
 
         sdk
-            .setEndpoint(APP_ENV.API)
+            .setEndpoint(window.location.protocol + '//' + window.location.host + APP_ENV.API)
             .setProject(router.params.project || '')
             .setLocale(APP_ENV.LOCALE)
             .setMode('admin')

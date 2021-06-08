@@ -104,9 +104,9 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                         <div class="metric margin-bottom-small">Bandwidth</div>
 
                         <div class="margin-top-large value small">
-                            <b class="text-size-small sum small" data-ls-bind="{{usage.functions.total|statsTotal}}" data-default="0"></b>
+                            <b class="text-size-small sum small" data-ls-bind="{{realtime.current|accessProject}}" data-default="0"></b>
                             <br />
-                            <b>Func. Executions</b>
+                            <b>Realtime Connections</b>
                         </div>
                     </div>
                 </div>
