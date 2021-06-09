@@ -113,7 +113,7 @@ return [
                 'name' => 'Android',
                 'version' => '0.0.0-SNAPSHOT',
                 'url' => 'https://github.com/appwrite/sdk-for-android',
-                'package' => 'https://pub.dev/packages/appwrite',
+                'package' => 'https://repo1.maven.org/maven2/io/appwrite/sdk-for-android/',
                 'enabled' => true,
                 'beta' => true,
                 'dev' => false,
