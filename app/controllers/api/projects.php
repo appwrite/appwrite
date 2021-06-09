@@ -97,7 +97,7 @@ App::post('/v1/projects')
         $audit = new Audit($dbForInternal);
         $audit->setup();
 
-        $adapter    = new TimeLimit("", 0, 1, $dbForInternal);
+        $adapter = new TimeLimit("", 0, 1, $dbForInternal);
         $adapter->setup();
 
         foreach ($collections as $key => $collection) {
