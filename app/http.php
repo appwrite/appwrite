@@ -14,6 +14,8 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Validator\Authorization as Authorization2;
+use Utopia\Audit\Audit;
+use Utopia\Abuse\Adapters\TimeLimit;
 
 // xdebug_start_trace('/tmp/trace');
 
@@ -67,6 +69,12 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         $register->get('cache')->flushAll();
 
         $dbForConsole->create();
+        
+        $audit = new Audit($dbForConsole);
+        $audit->setup();
+
+        $adapter = new TimeLimit("", 0, 1, $dbForConsole);
+        $adapter->setup();
 
         foreach ($collections as $key => $collection) {
             $dbForConsole->createCollection($key);
