@@ -1,0 +1,3 @@
+rootProject.name = "Appwrite Android SDK"
+include ':example'
+include ':library'
