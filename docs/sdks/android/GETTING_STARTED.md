@@ -1,14 +1,14 @@
 ## Getting Started
 
 ### Add your Android Platform
-To initialize your SDK and start interacting with Appwrite services, you need to add a new Android platform to your project. To add a new platform, go to your Appwrite console, choose the project you created in the step before, and click the 'Add Platform' button.
+To initialize your SDK and start interacting with Appwrite services, you need to add a new Android platform to your project. To add a new platform, go to your Appwrite console, select your project (create one if you haven't already), and click the 'Add Platform' button on the project Dashboard.
 
 From the options, choose to add a new **Android** platform and add your app credentials.
 
 Add your app <u>name</u> and <u>package name</u>. Your package name is generally the applicationId in your app-level `build.gradle` file. By registering a new platform, you are allowing your app to communicate with the Appwrite API.
 
-### OAuth
-In order to capture the Appwrite OAuth callback url, the following activity needs to be added to your [AndroidManifest.xml](). Be sure to replace the **[PROJECT_ID]** string with your actual Appwrite project ID. You can find your Appwrite project ID in your project settings screen in the console.
+### Registering additional activities
+In order to capture the Appwrite OAuth callback url, the following activity needs to be added to your [AndroidManifest.xml](https://github.com/appwrite/playground-for-android/blob/master/app/src/main/AndroidManifest.xml). Be sure to replace the **[PROJECT_ID]** string with your actual Appwrite project ID. You can find your Appwrite project ID in your project settings screen in the console.
 
 ```xml
 <manifest>
@@ -27,7 +27,7 @@ In order to capture the Appwrite OAuth callback url, the following activity need
 
 ### Init your SDK
 
-<p>Initialize your SDK code with your project ID, which can be found in your project settings page.
+<p>Initialize your SDK with your Appwrite server API endpoint and project ID, which can be found in your project settings page.
 
 ```kotlin
 import io.appwrite.Client
@@ -45,7 +45,7 @@ When trying to connect to Appwrite from an emulator or a mobile device, localhos
 
 ### Make Your First Request
 
-<p>Once your SDK object is set, access any of the Appwrite services and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the API References section.
+<p>Once your SDK object is set, access any of the Appwrite services and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the [API References](https://appwrite.io/docs) section.
 
 ```kotlin
 // Register User
