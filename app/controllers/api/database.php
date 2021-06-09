@@ -2,6 +2,8 @@
 
 use Utopia\App;
 use Utopia\Exception;
+use Utopia\Validator\Boolean;
+use Utopia\Validator\Numeric;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Text;
@@ -297,38 +299,48 @@ App::post('/v1/database/collections/:collectionId/attributes')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE)
-    ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
-    ->param('id', null, new Text(256), 'Attribute ID.')
+    ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
+    ->param('id', '', new Text(256), 'Attribute ID.')
     ->param('type', null, new Text(256), 'Attribute type.')
-    ->param('size', null, new Integer(), 'Attribute size.')
-    ->param('required', null, new Boolean(), 'Is required flag.')
-    ->param('signed', true, new Boolean(), 'Is signed flag.')
-    ->param('array', null, new Boolean(), 'Is array flag.')
+    // TODO@kodumbeats add units to description
+    ->param('size', null, new Numeric(), 'Attribute size.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('signed', null, new Boolean(), 'Is attribute signed?')
+    ->param('array', null, new Boolean(), 'Is attribute an array?')
+    // TODO@kodumbeats "We should have here a whitelist of allowed values. We should add a link to a reference in the future documentation. We might be able to hide this option from the public API for now."
     ->param('filters', [], new ArrayList(), 'Array of filters.')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForExternal')
     ->inject('audits')
-    ->action(function ($collectionId, $id, $type, $size, $required, $signed, $array, $filters, $response, $dbForInternal, $audits) {
+    ->action(function ($collectionId, $id, $type, $size, $required, $signed, $array, $filters, $response, $dbForExternal, $audits) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal*/
+        /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $audits */
 
-        $collection = $dbForInternal->getCollection($collectionId);
+        // TODO@kodumbeats handle failed attribute creation
+        $success = $dbForExternal->createAttribute($collectionId, $id, $type, $size, $required, $signed, $array, $filters);
 
-        // TODO@kodumbeats find better name for var
-        $success = $dbForInternal->createAttribute($collectionId, $id, $type, $size, $required, $signed, $array, $filters);
-
-        $attributes = $collection->getAttributes();
+        // Database->createAttribute() does not return a document
+        // So we need to create one for the response
+        $attribute = new Document2([
+            '$collection' => $collectionId,
+            '$id' => $id,
+            'type' => $type,
+            'size' => $size,
+            'required' => $required,
+            'signed' => $signed,
+            'array' => $array,
+            'filters' => $filters
+        ]);
 
         $audits
             ->setParam('event', 'database.attributes.create')
-            ->setParam('resource', 'database/attributes/'.$attributes[$id]->getId())
-            ->setParam('data', $attributes[$id])
+            ->setParam('resource', 'database/attributes/'.$attribute->getId())
+            ->setParam('data', $attribute)
         ;
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED)
-        $response->dynamic2($attributes['$id'], Response::MODEL_ATTRIBUTE)
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($attribute, Response::MODEL_ATTRIBUTE);
     });
 
 App::get('v1/database/collections/:collectionId/attributes')
@@ -342,19 +354,20 @@ App::get('v1/database/collections/:collectionId/attributes')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_LIST)
-    ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
+    ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->inject('response')
-    ->inject('dbForInternal')
-    ->action(function ($collectionId, $response, $dbForInternal) {
+    ->inject('dbForExternal')
+    ->action(function ($collectionId, $response, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForExternal */
 
-        $collection = $dbForInternal->getCollection($collectionId);
+        $collection = $dbForExternal->getCollection($collectionId);
 
+        // TODO@kodumbeats array_merge collectionId to each attribute
         $attributes = $collection->getAttributes();
 
-        $response->dynamic2(new Document([
-            'sum' => \count($attributes)
+        $response->dynamic2(new Document2([
+            'sum' => \count($attributes),
             'attributes' => $attributes
         ]), Response::MODEL_ATTRIBUTE_LIST);
     });
@@ -370,20 +383,30 @@ App::get('v1/database/collections/:collectionId/attributes/:attributeId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE)
-    ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
-    ->param('attributeId', '', new UID(), 'Attribute unique ID.')
+    ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
+    ->param('attributeId', '', new Text(256), 'Attribute ID.')
     ->inject('response')
-    ->inject('dbForInternal')
-    ->action(function ($collectionId, $attributeId, $response, $dbForInternal) {
+    ->inject('dbForExternal')
+    ->action(function ($collectionId, $attributeId, $response, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForExternal */
 
-        $collection = $dbForInternal->getCollection($collectionId);
+        $collection = $dbForExternal->getCollection($collectionId);
 
         $attributes = $collection->getAttributes();
 
-        $response->dynamic2($attributes[$attributeId]
-        ), Response::MODEL_ATTRIBUTE);
+        // Search for attribute
+        $attributeIndex = array_search($attributeId, array_column($attributes, '$id'));
+
+        if ($attributeIndex === false) {
+            throw new Exception('Attribute not found', 404);
+        }
+
+        $attribute = new Document2([\array_merge($attributes[$attributeIndex], [
+            'collectionId' => $collectionId,
+        ])]);
+        
+        $response->dynamic2($attribute, Response::MODEL_ATTRIBUTE);
     });
 
 App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
@@ -397,37 +420,45 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
     ->label('sdk.description', '/docs/references/database/delete-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
-    ->param('attributeId', '', new UID(), 'Attribute unique ID.')
+    ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
+    ->param('attributeId', '', new Text(256), 'Attribute ID.')
     ->inject('response')
-    ->inject('dbForInternal')
+    ->inject('dbForExternal')
     ->inject('events')
     ->inject('audits')
     ->inject('deletes')
-    ->action(function ($collectionId, $attributeId, $response, $dbForInternal, $events, $audits, $deletes) {
+    ->action(function ($collectionId, $attributeId, $response, $dbForExternal, $events, $audits, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
 
-        $collection = $dbForInternal->getCollection($collectionId);
+        $collection = $dbForExternal->getCollection($collectionId);
 
         $attributes = $collection->getAttributes();
 
-        $attribute = $collection[$attributeId];
+        // Search for attribute
+        $attributeIndex = array_search($attributeId, array_column($attributes, '$id'));
 
-        $success = $collection->deleteAttribute($collectionId, $attributeId);
+        if ($attributeIndex === false) {
+            throw new Exception('Attribute not found', 404);
+        }
+
+        $attribute = new Document2([\array_merge($attributes[$attributeIndex], [
+            'collectionId' => $collectionId,
+        ])]);
 
         // TODO@kodumbeats use the deletes worker to handle this
+        $success = $dbForExternal->deleteAttribute($collectionId, $attributeId);
+
         // $deletes
         //     ->setParam('type', DELETE_TYPE_DOCUMENT)
         //     ->setParam('document', $attribute)
         // ;
 
-        // TODO@kodumbeats
-        // $events
-        //     ->setParam('payload', $response->output($attribute, Response::MODEL_ATTRIBUTE))
-        // ;
+        $events
+            ->setParam('payload', $response->output2($attribute, Response::MODEL_ATTRIBUTE))
+        ;
 
         $audits
             ->setParam('event', 'database.attributes.delete')
@@ -450,31 +481,43 @@ App::post('/v1/database/collections/:collectionId/indexes')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_INDEX)
-    ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
-    ->param('name', null, new Text(256), 'Index name.')
+    ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
+    ->param('id', null, new Text(256), 'Index ID.')
+    // TODO@kodumbeats type should be a whitelist of supported index types
     ->param('type', null, new Text(256), 'Index type.')
+    ->param('attributes', null, new ArrayList(new Text(256)), 'Array of attributes to index.')
+    ->param('lengths', null, new ArrayList(new Text(256)), 'Array of index lengths.')
+    ->param('orders', null, new ArrayList(new Text(256)), 'Array of index orders.')
     ->inject('response')
-    ->action(function ($collectionId, $name, $type, $response, $projectDB, $audits) {
+    ->inject('dbForExternal')
+    ->inject('audits')
+    ->action(function ($collectionId, $id, $type, $attributes, $lengths, $orders, $response, $dbForExternal, $audits) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Event\Event $audits */
 
-        try {
-            $data = $projectDB->createIndex($collectionId, $name, $type);
-        } catch (\Exception $exception) {
-            throw new Exception('Failed creating index', 500);
-        }
+        $success = $dbForExternal->createIndex($collectionId, $id, $type, $attributes, $lengths, $orders);
+
+        // Database->createIndex() does not return a document
+        // So we need to create one for the response
+        $index = new Document2([
+            '$collection' => $collectionId,
+            '$id' => $id,
+            'type' => $type,
+            'attributes' => $attributes,
+            'lengths' => $lengths,
+            'orders' => $orders,
+        ]);
 
         $audits
             ->setParam('event', 'database.indexes.create')
-            ->setParam('resource', 'database/indexes/'.$data['$id'])
-            ->setParam('data', $data->getArrayCopy())
+            ->setParam('resource', 'database/indexes/'.$index->getId())
+            ->setParam('data', $index->getArrayCopy())
         ;
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($data, Response::MODEL_INDEX)
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($index, Response::MODEL_INDEX);
+       
     });
 
 App::get('v1/database/collections/:collectionId/indexes')
@@ -488,20 +531,22 @@ App::get('v1/database/collections/:collectionId/indexes')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_INDEX_LIST)
-    ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
+    ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($response, $projectDB) {
+    ->inject('dbForExternal')
+    ->action(function ($collectionId, $response, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForExternal */
 
-        // $results = $projectDB->getIndexes([
-        // ]);
+        $collection = $dbForExternal->getCollection($collectionId);
 
-        // $response->dynamic(new Document([
-            // 'sum' => $projectDB->getSum(),
-            // 'collections' => $results
-        // ]), Response::MODEL_INDEX_LIST);
+        // TODO@kodumbeats decode index string and merge ['$collection' => $collectionId]
+        $indexes = $collection->getAttribute('indexes');
+
+        $response->dynamic2(new Document2([
+            'sum' => \count($indexes),
+            'attributes' => $indexes,
+        ]), Response::MODEL_INDEX_LIST);
     });
 
 App::get('v1/database/collections/:collectionId/indexes/:indexId')
@@ -515,20 +560,31 @@ App::get('v1/database/collections/:collectionId/indexes/:indexId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_INDEX)
-    ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
-    ->param('indexId', null, new UID(), 'Index unique ID')
+    ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
+    ->param('indexId', null, new Text(256), 'Index ID.')
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($collectionId, $indexId, $response, $projectDB) {
+    ->action(function ($collectionId, $indexId, $response, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
-        // $results = $projectDB->getIndex([
-        // ]);
+        $collection = $dbForExternal->getCollection($collectionId);
 
-        // $response->dynamic(new Document([
-            // 'collections' => $results
-        // ]), Response::MODEL_INDEX);
+        // TODO@kodumbeats decode 'indexes' into array
+        $indexes = $collection->getAttribute('indexes');
+
+        // // Search for index
+        $indexIndex = array_search($indexId, array_column($indexes, '$id'));
+
+        if ($indexIndex === false) {
+            throw new Exception('Index not found', 404);
+        }
+
+        $index = new Document2([\array_merge($indexes[$indexIndex], [
+            'collectionId' => $collectionId,
+        ])]);
+        
+        $response->dynamic2($index, Response::MODEL_INDEX);
     });
 
 App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
@@ -543,36 +599,49 @@ App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
-    ->param('indexId', '', new UID(), 'Attribute unique ID.')
+    ->param('indexId', '', new UID(), 'Index unique ID.')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForExternal')
     ->inject('events')
     ->inject('audits')
     ->inject('deletes')
-    ->action(function ($collectionId, $indexId, $response, $projectDB, $events, $audits, $deletes) {
+    ->action(function ($collectionId, $indexId, $response, $dbForExternal, $events, $audits, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
 
-        $index = $projectDB->getDocument($indexId, false);
+        $collection = $dbForExternal->getCollection($collectionId);
 
-        if (!$projectDB->deleteAttribute($collectionId, $indexId)) {
-            throw new Exception('Failed to remove attribute from DB', 500);
+        // TODO@kodumbeats decode 'indexes' into array
+        $indexes = $collection->getAttribute('indexes');
+
+        // // Search for index
+        $indexIndex = array_search($indexId, array_column($indexes, '$id'));
+
+        if ($indexIndex === false) {
+            throw new Exception('Index not found', 404);
         }
 
-        $deletes
-            ->setParam('type', DELETE_TYPE_DOCUMENT)
-            ->setParam('document', $index)
-        ;
+        $index = new Document2([\array_merge($indexes[$indexIndex], [
+            'collectionId' => $collectionId,
+        ])]);
+
+        // TODO@kodumbeats use the deletes worker to handle this
+        $success = $dbForExternal->deleteIndex($collectionId, $indexId);
+
+        // $deletes
+        //     ->setParam('type', DELETE_TYPE_DOCUMENT)
+        //     ->setParam('document', $attribute)
+        // ;
 
         $events
-            ->setParam('payload', $response->output($index, Response::MODEL_INDEX))
+            ->setParam('payload', $response->output2($index, Response::MODEL_INDEX))
         ;
 
         $audits
             ->setParam('event', 'database.indexes.delete')
-            ->setParam('resource', 'database/attributes/'.$index->getId())
+            ->setParam('resource', 'database/indexes/'.$index->getId())
             ->setParam('data', $index->getArrayCopy())
         ;
 
