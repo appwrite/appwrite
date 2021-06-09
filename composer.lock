@@ -1607,7 +1607,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/lohanidamodar/abuse",
-                "reference": "525cdf6674e11a7229cba31941915ac50a3e575a"
+                "reference": "4f3349b3c1c85353708d13f7eb3c34c0762d4828"
             },
             "require": {
                 "ext-pdo": "*",
@@ -1641,7 +1641,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2021-06-04T08:40:29+00:00"
+            "time": "2021-06-09T09:11:16+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1704,7 +1704,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/lohanidamodar/audit",
-                "reference": "3421b6a54740fbb29570004848cdc0b818717e83"
+                "reference": "b3b85524717bbf52cfe71f01474c4012bfd4323a"
             },
             "require": {
                 "ext-pdo": "*",
@@ -1738,7 +1738,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2021-06-04T08:41:19+00:00"
+            "time": "2021-06-09T09:10:27+00:00"
         },
         {
             "name": "utopia-php/cache",
