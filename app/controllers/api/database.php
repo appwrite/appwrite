@@ -317,6 +317,12 @@ App::post('/v1/database/collections/:collectionId/attributes')
         /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $audits */
 
+        $collection = $dbForExternal->getCollection($collectionId);
+
+        if (empty($collection)) {
+            throw new Exception('Collection not found', 404);
+        }
+
         // TODO@kodumbeats handle failed attribute creation
         $success = $dbForExternal->createAttribute($collectionId, $id, $type, $size, $required, $signed, $array, $filters);
 
@@ -363,6 +369,10 @@ App::get('v1/database/collections/:collectionId/attributes')
 
         $collection = $dbForExternal->getCollection($collectionId);
 
+        if (empty($collection)) {
+            throw new Exception('Collection not found', 404);
+        }
+
         // TODO@kodumbeats array_merge collectionId to each attribute
         $attributes = $collection->getAttributes();
 
@@ -392,6 +402,10 @@ App::get('v1/database/collections/:collectionId/attributes/:attributeId')
         /** @var Utopia\Database\Database $dbForExternal */
 
         $collection = $dbForExternal->getCollection($collectionId);
+
+        if (empty($collection)) {
+            throw new Exception('Collection not found', 404);
+        }
 
         $attributes = $collection->getAttributes();
 
@@ -434,6 +448,10 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
         /** @var Appwrite\Event\Event $audits */
 
         $collection = $dbForExternal->getCollection($collectionId);
+
+        if (empty($collection)) {
+            throw new Exception('Collection not found', 404);
+        }
 
         $attributes = $collection->getAttributes();
 
@@ -496,6 +514,12 @@ App::post('/v1/database/collections/:collectionId/indexes')
         /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Event\Event $audits */
 
+        $collection = $dbForExternal->getCollection($collectionId);
+
+        if (empty($collection)) {
+            throw new Exception('Collection not found', 404);
+        }
+
         $success = $dbForExternal->createIndex($collectionId, $id, $type, $attributes, $lengths, $orders);
 
         // Database->createIndex() does not return a document
@@ -540,6 +564,10 @@ App::get('v1/database/collections/:collectionId/indexes')
 
         $collection = $dbForExternal->getCollection($collectionId);
 
+        if (empty($collection)) {
+            throw new Exception('Collection not found', 404);
+        }
+
         // TODO@kodumbeats decode index string and merge ['$collection' => $collectionId]
         $indexes = $collection->getAttribute('indexes');
 
@@ -569,6 +597,10 @@ App::get('v1/database/collections/:collectionId/indexes/:indexId')
         /** @var Appwrite\Database\Database $projectDB */
 
         $collection = $dbForExternal->getCollection($collectionId);
+
+        if (empty($collection)) {
+            throw new Exception('Collection not found', 404);
+        }
 
         // TODO@kodumbeats decode 'indexes' into array
         $indexes = $collection->getAttribute('indexes');
@@ -612,6 +644,10 @@ App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
         /** @var Appwrite\Event\Event $audits */
 
         $collection = $dbForExternal->getCollection($collectionId);
+
+        if (empty($collection)) {
+            throw new Exception('Collection not found', 404);
+        }
 
         // TODO@kodumbeats decode 'indexes' into array
         $indexes = $collection->getAttribute('indexes');
