@@ -41,12 +41,20 @@ class Document extends Any
                 'default' => '',
                 'example' => '5e5ea5c15117e',
             ])
-            ->addRule('$permissions', [
-                'type' => Response::MODEL_PERMISSIONS,
-                'description' => 'Document permissions.',
-                'default' => new \stdClass,
-                'example' => new \stdClass,
-                'array' => false,
-            ]);
+            ->addRule('$read', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Document read permissions.',
+                'default' => '',
+                'example' => '',
+                'array' => true,
+            ])
+            ->addRule('$write', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Document write permissions.',
+                'default' => '',
+                'example' => '',
+                'array' => true,
+            ])
+        ;
     }
 }

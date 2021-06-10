@@ -14,38 +14,55 @@ class Collection extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Collection ID.',
                 'default' => '',
-                'example' => '5e5ea5c16897e',
+                'example' => '',
             ])
-            ->addRule('$permissions', [
-                'type' => Response::MODEL_PERMISSIONS,
-                'description' => 'Collection permissions.',
-                'default' => new \stdClass,
-                'example' => new \stdClass,
-                'array' => false,
+            ->addRule('$read', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Collection read permissions.',
+                'default' => '',
+                'example' => '',
+                'array' => true
+            ])
+            ->addRule('$write', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Collection write permissions.',
+                'default' => '',
+                'example' => '',
+                'array' => true
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Collection name.',
                 'default' => '',
-                'example' => 'Movies',
+                'example' => '',
             ])
-            ->addRule('dateCreated', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Collection creation date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+            ->addRule('attributes', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Collection attributes.',
+                'default' => '',
+                'example' => '',
+                'array' => true
             ])
-            ->addRule('dateUpdated', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Collection creation date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981550,
+            ->addRule('indexes', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Collection indexes.',
+                'default' => '',
+                'example' => '',
+                'array' => true
             ])
-            ->addRule('rules', [
-                'type' => Response::MODEL_RULE,
-                'description' => 'Collection rules.',
-                'default' => [],
-                'array' => true,
+            ->addRule('attributesInQueue', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Collection attributes in creation queue.',
+                'default' => '',
+                'example' => '',
+                'array' => true
+            ])
+            ->addRule('indexesInQueue', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Collection indexes in creation queue.',
+                'default' => '',
+                'example' => '',
+                'array' => true
             ])
         ;
     }
