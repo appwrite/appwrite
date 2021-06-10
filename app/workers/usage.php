@@ -38,7 +38,7 @@ class UsageV1 extends Worker
         $httpMethod = $this->args['httpMethod'] ?? '';
         $httpRequest = $this->args['httpRequest'] ?? 0;
 
-        $functionId = $this->args['functionId'];
+        $functionId = $this->args['functionId'] ?? '';
         $functionExecution = $this->args['functionExecution'] ?? 0;
         $functionExecutionTime = $this->args['functionExecutionTime'] ?? 0;
         $functionStatus = $this->args['functionStatus'] ?? '';
@@ -65,7 +65,7 @@ class UsageV1 extends Worker
         }
 
         if($realtimeMessages >= 1) {
-            $statsd->count('realtime.message'.$tags, $realtimeMessages);
+            $statsd->count('realtime.messages'.$tags, $realtimeMessages);
         }
 
         $statsd->count('network.inbound'.$tags, $networkRequestSize);
