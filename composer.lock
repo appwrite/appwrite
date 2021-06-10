@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5cf39daf305902a168233757d4a00066",
+    "content-hash": "854dfbc035c52bb373210e5d31271c65",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1919,16 +1919,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.2.0",
+            "version": "0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "b5dd144d582f3355c13f5430b1b3d7eb850bc5cd"
+                "reference": "c5f9599d933f493ca69e57d34d903939425662f8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/b5dd144d582f3355c13f5430b1b3d7eb850bc5cd",
-                "reference": "b5dd144d582f3355c13f5430b1b3d7eb850bc5cd",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/c5f9599d933f493ca69e57d34d903939425662f8",
+                "reference": "c5f9599d933f493ca69e57d34d903939425662f8",
                 "shasum": ""
             },
             "require": {
@@ -1941,7 +1941,9 @@
                 "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
+                "fakerphp/faker": "^1.14",
                 "phpunit/phpunit": "^9.4",
+                "utopia-php/cli": "^0.11.0",
                 "vimeo/psalm": "4.0.1"
             },
             "type": "library",
@@ -1974,9 +1976,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.2.0"
+                "source": "https://github.com/utopia-php/database/tree/0.3.0"
             },
-            "time": "2021-05-26T18:41:44+00:00"
+            "time": "2021-06-09T12:39:37+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -6142,5 +6144,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.0.0"
+    "plugin-api-version": "2.1.0"
 }
