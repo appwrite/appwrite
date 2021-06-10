@@ -476,7 +476,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$id];
         
-        $services = ['functions','webhooks', 'avatars','health','locale','storage','teams'];
+        $services = ['functions', 'webhooks', 'avatars', 'health', 'locale', 'storage', 'teams'];
 
         /**
          * Test for Disabled
