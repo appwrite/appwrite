@@ -256,7 +256,7 @@ window.ls.filter
     return '';
   })
   .add("accessProject", function($value, router) {
-    return $value.hasOwnProperty(router.params.project) ? $value[router.params.project] : 0;
+    return ($value && $value.hasOwnProperty(router.params.project)) ? $value[router.params.project] : 0;
   })
 ;
 

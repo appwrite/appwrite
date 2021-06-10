@@ -102,12 +102,28 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                             <span data-ls-bind="{{usage.network.total|humanFileUnit}}" class="text-size-small unit"></span>
                         </div>
                         <div class="metric margin-bottom-small">Bandwidth</div>
-
-                        <div class="margin-top-large value small">
-                            <b class="text-size-small sum small" data-ls-bind="{{realtime.current|accessProject}}" data-default="0"></b>
-                            <br />
-                            <b>Realtime Connections</b>
+                    </div>
+                </div>
+            </div>
+            <div class="box dashboard">
+                <div class="row responsive">
+                    <div class="col span-9">
+                        <div class="chart pull-end">
+                            <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Connections=usage.realtimeConnections.data,Messages=usage.realtimeMessages.data" />
                         </div>
+
+                        <div class="chart-metric">
+                            <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.realtimeConnections.total|statsTotal}}">N/A</span></div>
+                            <div class="metric margin-bottom-small">Connections <span class="tooltip" data-tooltip="Total number of Realtime Connections established"><i class="icon-info-circled"></i></span></div>
+                            <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.realtimeMessages.total|statsTotal}}">N/A</span></div>
+                            <div class="metric margin-bottom-small">Messages <span class="tooltip" data-tooltip="Total number of Realtime Messages sent"><i class="icon-info-circled"></i></span></div>
+                        </div>
+                    </div>
+                    <div class="col span-3">
+                        <div class="value margin-bottom-small">
+                            <span class="sum" data-ls-bind="{{realtime.current|accessProject}}" data-default="0">0</span>
+                        </div>
+                        <div class="metric margin-bottom-small">Live</div>
                     </div>
                 </div>
             </div>
