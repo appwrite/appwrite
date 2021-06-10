@@ -13,6 +13,8 @@ class Origin extends Validator
     const CLIENT_TYPE_FLUTTER_MACOS = 'flutter-macos';
     const CLIENT_TYPE_FLUTTER_WINDOWS = 'flutter-windows';
     const CLIENT_TYPE_FLUTTER_LINUX = 'flutter-linux';
+    const CLIENT_TYPE_ANDROID = 'android';
+
     
     const SCHEME_TYPE_HTTP = 'http';
     const SCHEME_TYPE_HTTPS = 'https';
@@ -69,6 +71,7 @@ class Origin extends Validator
                 case self::CLIENT_TYPE_FLUTTER_MACOS:
                 case self::CLIENT_TYPE_FLUTTER_WINDOWS:
                 case self::CLIENT_TYPE_FLUTTER_LINUX:
+                case self::CLIENT_TYPE_ANDROID:
                     $this->clients[] = (isset($platform['key'])) ? $platform['key'] : '';
                     break;
                 
@@ -90,7 +93,7 @@ class Origin extends Validator
     }
 
     /**
-     * Check if Origin has been whiltlisted
+     * Check if Origin has been whitelisted
      *  for access to the API
      *
      * @param mixed $origin
