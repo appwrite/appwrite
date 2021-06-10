@@ -832,7 +832,7 @@ $collections = [
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Status For Functions',
-                'key' => 'statusForfunctions',
+                'key' => 'statusForFunctions',
                 'type' => Database::SYSTEM_VAR_TYPE_BOOLEAN,
                 'default' => true,
                 'required' => false,
@@ -841,7 +841,7 @@ $collections = [
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Status For Webhooks',
-                'key' => 'statusForwebhooks',
+                'key' => 'statusForWebhooks',
                 'type' => Database::SYSTEM_VAR_TYPE_BOOLEAN,
                 'default' => true,
                 'required' => false,
@@ -850,7 +850,7 @@ $collections = [
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Status For Tasks',
-                'key' => 'statusFortasks',
+                'key' => 'statusForTasks',
                 'type' => Database::SYSTEM_VAR_TYPE_BOOLEAN,
                 'default' => true,
                 'required' => false,
@@ -859,7 +859,7 @@ $collections = [
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Status For Avatars',
-                'key' => 'statusForavatars',
+                'key' => 'statusForAvatars',
                 'type' => Database::SYSTEM_VAR_TYPE_BOOLEAN,
                 'default' => true,
                 'required' => false,
@@ -868,7 +868,7 @@ $collections = [
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Status For Health',
-                'key' => 'statusForhealth',
+                'key' => 'statusForHealth',
                 'type' => Database::SYSTEM_VAR_TYPE_BOOLEAN,
                 'default' => true,
                 'required' => false,
@@ -877,7 +877,7 @@ $collections = [
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Status For Locale',
-                'key' => 'statusForlocale',
+                'key' => 'statusForLocale',
                 'type' => Database::SYSTEM_VAR_TYPE_BOOLEAN,
                 'default' => true,
                 'required' => false,
@@ -886,7 +886,7 @@ $collections = [
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Status For Storage',
-                'key' => 'statusForstorage',
+                'key' => 'statusForStorage',
                 'type' => Database::SYSTEM_VAR_TYPE_BOOLEAN,
                 'default' => true,
                 'required' => false,
@@ -895,7 +895,7 @@ $collections = [
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Status For Teams',
-                'key' => 'statusForteams',
+                'key' => 'statusForTeams',
                 'type' => Database::SYSTEM_VAR_TYPE_BOOLEAN,
                 'default' => true,
                 'required' => false,

@@ -92,7 +92,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
 
     $service = $route->getLabel('sdk.namespace','');
     if(!empty($service)) {
-        if(!$project->getAttribute('statusFor' . $service, true)) {
+        if(!$project->getAttribute('statusFor' . \ucfirst($service), true)) {
             throw new Exception('Service is disabled', 503);
         }
     }
