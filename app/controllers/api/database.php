@@ -36,63 +36,26 @@ App::post('/v1/database/collections')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_COLLECTION)
-    ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
-    ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->param('rules', [], function ($projectDB) { return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES], ['$collection' => Database::SYSTEM_COLLECTION_RULES, '$permissions' => ['read' => [], 'write' => []]])); }, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation.', false, ['projectDB'])
+    ->param('id', '', new Text(255), 'Collection ID. Max length: 255 chars.')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForExternal')
     ->inject('audits')
-    ->action(function ($name, $read, $write, $rules, $response, $projectDB, $audits) {
+    ->action(function ($id, $response, $dbForExternal, $audits) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $audits */
-
-        $parsedRules = [];
-
-        foreach ($rules as &$rule) {
-            $parsedRules[] = \array_merge([
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                '$permissions' => [
-                    'read' => $read,
-                    'write' => $write,
-                ],
-            ], $rule);
-        }
-
-        try {
-            $data = $projectDB->createDocument([
-                '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
-                'name' => $name,
-                'dateCreated' => \time(),
-                'dateUpdated' => \time(),
-                'structure' => true,
-                '$permissions' => [
-                    'read' => $read,
-                    'write' => $write,
-                ],
-                'rules' => $parsedRules,
-            ]);
-        } catch (AuthorizationException $exception) {
-            throw new Exception('Unauthorized permissions', 401);
-        } catch (StructureException $exception) {
-            throw new Exception('Bad structure. '.$exception->getMessage(), 400);
-        } catch (\Exception $exception) {
-            throw new Exception('Failed saving document to DB', 500);
-        }
-
-        if (false === $data) {
-            throw new Exception('Failed saving collection to DB', 500);
-        }
+        
+        $collection = $dbForExternal->createCollection($id);
+        $collection = $dbForExternal->getCollection($id);
 
         $audits
             ->setParam('event', 'database.collections.create')
-            ->setParam('resource', 'database/collection/'.$data->getId())
-            ->setParam('data', $data->getArrayCopy())
+            ->setParam('resource', 'database/collection/'.$collection->getId())
+            ->setParam('data', $collection->getArrayCopy())
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($data, Response::MODEL_COLLECTION);
+        $response->dynamic2($collection, Response::MODEL_COLLECTION);
     });
 
 App::get('/v1/database/collections')
@@ -106,29 +69,19 @@ App::get('/v1/database/collections')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_COLLECTION_LIST)
-    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 40000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
+    ->inject('dbForExternal')
+    ->action(function ($limit, $offset, $response, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForExternal */
 
-        $results = $projectDB->getCollection([
-            'limit' => $limit,
-            'offset' => $offset,
-            'orderType' => $orderType,
-            'search' => $search,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_COLLECTIONS,
-            ],
-        ]);
+        $collections = $dbForExternal->listCollections($limit, $offset);
 
-        $response->dynamic(new Document([
-            'collections' => $results,
-            'sum' => $projectDB->getSum(),
+        $response->dynamic2(new Document2([
+            'collections' => $collections,
+            'sum' => \count($collections),
         ]), Response::MODEL_COLLECTION_LIST);
     });
 
@@ -146,17 +99,17 @@ App::get('/v1/database/collections/:collectionId')
     ->param('collectionId', '', new UID(), 'Collection unique ID.')
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($collectionId, $response, $projectDB) {
+    ->action(function ($collectionId, $response, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForExternal */
         
-        $collection = $projectDB->getDocument($collectionId, false);
+        $collection = $dbForExternal->getCollection($collectionId);
 
-        if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+        if (empty($collection)) {
             throw new Exception('Collection not found', 404);
         }
 
-        $response->dynamic($collection, Response::MODEL_COLLECTION);
+        $response->dynamic2($collection, Response::MODEL_COLLECTION);
     });
 
 App::put('/v1/database/collections/:collectionId')
@@ -249,33 +202,32 @@ App::delete('/v1/database/collections/:collectionId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('collectionId', '', new UID(), 'Collection unique ID.')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForExternal')
     ->inject('events')
     ->inject('audits')
     ->inject('deletes')
-    ->action(function ($collectionId, $response, $projectDB, $events, $audits, $deletes) {
+    ->action(function ($collectionId, $response, $dbForExternal, $events, $audits, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
 
-        $collection = $projectDB->getDocument($collectionId, false);
+        $collection = $dbForExternal->getCollection($collectionId);
 
-        if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+        if (empty($collection)) {
             throw new Exception('Collection not found', 404);
         }
 
-        if (!$projectDB->deleteDocument($collectionId)) {
-            throw new Exception('Failed to remove collection from DB', 500);
-        }
+        $dbForExternal->deleteCollection($collectionId);
 
-        $deletes
-            ->setParam('type', DELETE_TYPE_DOCUMENT)
-            ->setParam('document', $collection)
-        ;
+        // TODO@kodumbeats use worker to handle this
+        // $deletes
+        //     ->setParam('type', DELETE_TYPE_DOCUMENT)
+        //     ->setParam('document', $collection)
+        // ;
 
         $events
-            ->setParam('eventData', $response->output($collection, Response::MODEL_COLLECTION))
+            ->setParam('eventData', $response->output2($collection, Response::MODEL_COLLECTION))
         ;
 
         $audits
@@ -308,7 +260,7 @@ App::post('/v1/database/collections/:collectionId/attributes')
     ->param('signed', null, new Boolean(), 'Is attribute signed?')
     ->param('array', null, new Boolean(), 'Is attribute an array?')
     // TODO@kodumbeats "We should have here a whitelist of allowed values. We should add a link to a reference in the future documentation. We might be able to hide this option from the public API for now."
-    ->param('filters', [], new ArrayList(), 'Array of filters.')
+    ->param('filters', [], new ArrayList(new Text(256)), 'Array of filters.')
     ->inject('response')
     ->inject('dbForExternal')
     ->inject('audits')
@@ -700,17 +652,17 @@ App::post('/v1/database/collections/:collectionId/documents')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
     ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
-    ->param('parentDocument', '', new UID(), 'Parent document unique ID. Use when you want your new document to be a child of a parent document.', true)
-    ->param('parentProperty', '', new Key(), 'Parent document property name. Use when you want your new document to be a child of a parent document.', true)
-    ->param('parentPropertyType', Document::SET_TYPE_ASSIGN, new WhiteList([Document::SET_TYPE_ASSIGN, Document::SET_TYPE_APPEND, Document::SET_TYPE_PREPEND], true), 'Parent document property connection type. You can set this value to **assign**, **append** or **prepend**, default value is assign. Use when you want your new document to be a child of a parent document.', true)
+    // ->param('parentDocument', '', new UID(), 'Parent document unique ID. Use when you want your new document to be a child of a parent document.', true)
+    // ->param('parentProperty', '', new Key(), 'Parent document property name. Use when you want your new document to be a child of a parent document.', true)
+    // ->param('parentPropertyType', Document::SET_TYPE_ASSIGN, new WhiteList([Document::SET_TYPE_ASSIGN, Document::SET_TYPE_APPEND, Document::SET_TYPE_PREPEND], true), 'Parent document property connection type. You can set this value to **assign**, **append** or **prepend**, default value is assign. Use when you want your new document to be a child of a parent document.', true)
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForExternal')
     ->inject('user')
     ->inject('audits')
-    ->action(function ($collectionId, $data, $read, $write, $parentDocument, $parentProperty, $parentPropertyType, $response, $projectDB, $user, $audits) {
+    ->action(function ($collectionId, $data, $read, $write, /*$parentDocument, $parentProperty, $parentPropertyType,*/ $response, $dbForExternal, $user, $audits) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Database\Database $dbForExternal */
+        /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
     
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
@@ -723,85 +675,38 @@ App::post('/v1/database/collections/:collectionId/documents')
             throw new Exception('$id is not allowed for creating new documents, try update instead', 400);
         }
         
-        $collection = $projectDB->getDocument($collectionId, false);
+        $collection = $dbForExternal->getCollection($collectionId);
 
-        if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+        if (empty($collection)) {
             throw new Exception('Collection not found', 404);
         }
 
         $data['$collection'] = $collectionId; // Adding this param to make API easier for developers
-        $data['$permissions'] = [
-            'read' => (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? [], //  By default set read permissions for user
-            'write' => (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? [], //  By default set write permissions for user
-        ];
-
-        // Read parent document + validate not 404 + validate read / write permission like patch method
-        // Add payload to parent document property
-        if ((!empty($parentDocument)) && (!empty($parentProperty))) {
-            $parentDocument = $projectDB->getDocument($parentDocument, false);
-
-            if (empty($parentDocument->getArrayCopy())) { // Check empty
-                throw new Exception('No parent document found', 404);
-            }
-
-            /*
-             * 1. Check child has valid structure,
-             * 2. Check user have write permission for parent document
-             * 3. Assign parent data (including child) to $data
-             * 4. Validate the combined result has valid structure (inside $projectDB->createDocument method)
-             */
-
-            $new = new Document($data);
-
-            $structure = new Structure($projectDB);
-
-            if (!$structure->isValid($new)) {
-                throw new Exception('Invalid data structure: '.$structure->getDescription(), 400);
-            }
-
-            $authorization = new Authorization($parentDocument, 'write');
-
-            if (!$authorization->isValid($new->getPermissions())) {
-                throw new Exception('Unauthorized permissions', 401);
-            }
-
-            $parentDocument
-                ->setAttribute($parentProperty, $data, $parentPropertyType);
-
-            $data = $parentDocument->getArrayCopy();
-            $collection = $projectDB->getDocument($parentDocument->getCollection(), false);
-        }
+        $data['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; //  By default set read permissions for user
+        $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; //  By default set write permissions for user
 
         /**
-         * Set default collection values
+         * TODO@kodumbeats Set default collection values
          */
-        foreach ($collection->getAttribute('rules') as $key => $rule) {
-            $key = $rule['key'] ?? '';
-            $default = $rule['default'] ?? null;
+        // foreach ($collection->getAttribute('rules') as $key => $rule) {
+        //     $key = $rule['key'] ?? '';
+        //     $default = $rule['default'] ?? null;
 
-            if (!isset($data[$key])) {
-                $data[$key] = $default;
-            }
-        }
+        //     if (!isset($data[$key])) {
+        //         $data[$key] = $default;
+        //     }
+        // }
 
-        try {
-            $data = $projectDB->createDocument($data);
-        } catch (AuthorizationException $exception) {
-            throw new Exception('Unauthorized permissions', 401);
-        } catch (StructureException $exception) {
-            throw new Exception('Bad structure. '.$exception->getMessage(), 400);
-        } catch (\Exception $exception) {
-            throw new Exception('Failed saving document to DB'.$exception->getMessage(), 500);
-        }
+        $document = $dbForExternal->createDocument($collectionId, new Document2($data));
 
         $audits
             ->setParam('event', 'database.documents.create')
-            ->setParam('resource', 'database/document/'.$data['$id'])
-            ->setParam('data', $data->getArrayCopy())
+            ->setParam('resource', 'database/document/'.$document->getId())
+            ->setParam('data', $document->getArrayCopy())
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($data, Response::MODEL_DOCUMENT);
+        $response->dynamic2($document, Response::MODEL_DOCUMENT);
     });
 
 App::get('/v1/database/collections/:collectionId/documents')
@@ -881,19 +786,24 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, new UID(), 'Document unique ID.')
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($collectionId, $documentId, $response, $projectDB) {
+    ->inject('dbForExternal')
+    ->action(function ($collectionId, $documentId, $response, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForExternal */
 
-        $document = $projectDB->getDocument($documentId, false);
-        $collection = $projectDB->getDocument($collectionId, false);
+        $collection = $dbForExternal->getCollection($collectionId);
 
-        if (empty($document->getArrayCopy()) || $document->getCollection() != $collection->getId()) { // Check empty
+        if (empty($collection)) {
+            throw new Exception('Collection not found', 404);
+        }
+
+        $document = $dbForExternal->getDocument($collectionId, $documentId);
+
+        if ($document->isEmpty()) {
             throw new Exception('No document found', 404);
         }
 
-        $response->dynamic($document, Response::MODEL_DOCUMENT);
+        $response->dynamic2($document, Response::MODEL_DOCUMENT);
     });
 
 App::patch('/v1/database/collections/:collectionId/documents/:documentId')
@@ -985,35 +895,28 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
     ->inject('projectDB')
     ->inject('events')
     ->inject('audits')
-    ->action(function ($collectionId, $documentId, $response, $projectDB, $events, $audits) {
+    ->action(function ($collectionId, $documentId, $response, $dbForExternal, $events, $audits) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
 
-        $collection = $projectDB->getDocument($collectionId, false);
-        $document = $projectDB->getDocument($documentId, false);
+        $collection = $dbForExternal->getCollection($collectionId);
 
-        if (empty($document->getArrayCopy()) || $document->getCollection() != $collectionId) { // Check empty
-            throw new Exception('No document found', 404);
-        }
-
-        if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+        if (empty($collection)) {
             throw new Exception('Collection not found', 404);
         }
 
-        try {
-            $projectDB->deleteDocument($documentId);
-        } catch (AuthorizationException $exception) {
-            throw new Exception('Unauthorized permissions', 401);
-        } catch (StructureException $exception) {
-            throw new Exception('Bad structure. '.$exception->getMessage(), 400);
-        } catch (\Exception $exception) {
-            throw new Exception('Failed to remove document from DB', 500);
+        $document = $dbForExternal->getDocument($collectionId, $documentId);
+
+        if ($document->isEmpty()) {
+            throw new Exception('No document found', 404);
         }
 
+        $success = $dbForExternal->deleteDocument($collectionId, $documentId);
+
         $events
-            ->setParam('eventData', $response->output($document, Response::MODEL_DOCUMENT))
+            ->setParam('eventData', $response->output2($document, Response::MODEL_DOCUMENT))
         ;
 
         $audits
