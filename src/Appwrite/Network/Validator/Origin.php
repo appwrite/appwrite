@@ -93,7 +93,7 @@ class Origin extends Validator
     }
 
     /**
-     * Check if Origin has been whitelisted
+     * Check if Origin has been allowed
      *  for access to the API
      *
      * @param mixed $origin
