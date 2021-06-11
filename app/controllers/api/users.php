@@ -40,6 +40,8 @@ App::post('/v1/users')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
+        $email = \strtolower($email);
+
         try {
             $userId = $dbForInternal->getId();
             $user = $dbForInternal->createDocument('users', new Document([
@@ -362,23 +364,17 @@ App::patch('/v1/users/:userId/verification')
     ->inject('projectDB')
     ->action(function ($userId, $emailVerification, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
 
-        $user = $projectDB->getDocument($userId);
+        $user = $dbForInternal->getDocument('users', $userId);
 
-        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+        if ($user->isEmpty()) {
             throw new Exception('User not found', 404);
         }
 
-        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
-            'emailVerification' => $emailVerification,
-        ]));
+        $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', $emailVerification));
 
-        if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
-        }
-
-        $response->dynamic($user, Response::MODEL_USER);
+        $response->dynamic2($user, Response::MODEL_USER);
     });
 
 App::patch('/v1/users/:userId/prefs')

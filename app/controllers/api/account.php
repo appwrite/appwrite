@@ -58,15 +58,16 @@ App::post('/v1/account')
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
 
+        $email = \strtolower($email);
         if ('console' === $project->getId()) {
-            $whitlistEmails = $project->getAttribute('authWhitelistEmails');
-            $whitlistIPs = $project->getAttribute('authWhitelistIPs');
+            $whitelistEmails = $project->getAttribute('authWhitelistEmails');
+            $whitelistIPs = $project->getAttribute('authWhitelistIPs');
 
-            if (!empty($whitlistEmails) && !\in_array($email, $whitlistEmails)) {
+            if (!empty($whitelistEmails) && !\in_array($email, $whitelistEmails)) {
                 throw new Exception('Console registration is restricted to specific emails. Contact your administrator for more information.', 401);
             }
 
-            if (!empty($whitlistIPs) && !\in_array($request->getIP(), $whitlistIPs)) {
+            if (!empty($whitelistIPs) && !\in_array($request->getIP(), $whitelistIPs)) {
                 throw new Exception('Console registration is restricted to specific IPs. Contact your administrator for more information.', 401);
             }
         }
@@ -153,6 +154,7 @@ App::post('/v1/account/sessions')
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
 
+        $email = \strtolower($email);
         $protocol = $request->getProtocol();
         
         $profile = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [$email])], 1); // Get user by email address
@@ -1004,7 +1006,8 @@ App::patch('/v1/account/email')
             throw new Exception('Invalid credentials', 401);
         }
 
-        $profile = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [$email])], 1); // Get user by email address
+        $email = \strtolower($email);
+        $profile = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [\strtolower($email)])], 1); // Get user by email address
 
         if ($profile) {
             throw new Exception('User already registered', 400);
@@ -1298,6 +1301,7 @@ App::post('/v1/account/recovery')
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
+        $email = \strtolower($email);
         $profile = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [$email])], 1); // Get user by email address
 
         if (!$profile) {
