@@ -24,8 +24,6 @@ use Utopia\Database\Document as Document2;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization as Authorization2;
 
-use function Amp\Promise\wait;
-
 App::post('/v1/database/collections')
     ->desc('Create Collection')
     ->groups(['api', 'database'])
