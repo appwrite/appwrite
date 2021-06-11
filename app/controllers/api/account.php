@@ -602,7 +602,7 @@ App::post('/v1/account/sessions/anonymous')
             throw new Exception('Failed to create anonymous user.', 401);
         }
 
-        if ($user->getId()) {
+        if (!$user->isEmpty()) {
             throw new Exception('Cannot create an anonymous user when logged in.', 401);
         }
 
@@ -662,7 +662,8 @@ App::post('/v1/account/sessions/anonymous')
 
         Authorization::setRole('user:'.$user->getId());
 
-        $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
+        $user = $dbForInternal->updateDocument('users', $user->getId(),
+            $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND));
 
         $audits
             ->setParam('userId', $user->getId())
