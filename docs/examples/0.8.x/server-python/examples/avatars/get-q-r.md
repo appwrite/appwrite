@@ -11,4 +11,4 @@ client = Client()
 
 avatars = Avatars(client)
 
-result = avatars.get_q_r('[TEXT]')
+result = avatars.get_qr('[TEXT]')

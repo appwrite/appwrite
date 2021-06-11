@@ -10,6 +10,6 @@ client
 
 locale = Appwrite::Locale.new(client);
 
-response = locale.get_countries_e_u();
+response = locale.get_countries_eu();
 
 puts response
