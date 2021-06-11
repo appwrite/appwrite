@@ -5,7 +5,7 @@ use Utopia\Audit\Audit;
 use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 use Utopia\CLI\Console;
 
-require_once __DIR__.'/../init.php';
+require_once __DIR__.'/../workers.php';
 
 Console::title('Audits V1 Worker');
 Console::success(APP_NAME.' audits worker v1 has started');

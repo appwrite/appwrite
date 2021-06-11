@@ -11,6 +11,12 @@ if (\file_exists(__DIR__.'/../vendor/autoload.php')) {
     require_once __DIR__.'/../vendor/autoload.php';
 }
 
+ini_set('memory_limit','512M');
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+ini_set('default_socket_timeout', -1);
+error_reporting(E_ALL);
+
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
@@ -18,6 +24,8 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
+use Appwrite\Database\Pool\PDOPool;
+use Appwrite\Database\Pool\RedisPool;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
 use Appwrite\Extend\PDO;
@@ -145,23 +153,32 @@ Database::addFilter('encrypt',
 /*
  * Registry
  */
-$register->set('db', function () { // Register DB connection
+$register->set('dbPool', function () { // Register DB connection
     $dbHost = App::getEnv('_APP_DB_HOST', '');
     $dbUser = App::getEnv('_APP_DB_USER', '');
     $dbPass = App::getEnv('_APP_DB_PASS', '');
     $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
+    $pool = new PDOPool(10, $dbHost, $dbScheme, $dbUser, $dbPass);
 
-    $pdo = new PDO("mysql:host={$dbHost};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
-        PDONative::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
-        PDONative::ATTR_TIMEOUT => 3, // Seconds
-        PDONative::ATTR_PERSISTENT => true
-    ));
+    return $pool;
+});
+$register->set('redisPool', function () {
+    $redisHost = App::getEnv('_APP_REDIS_HOST', '');
+    $redisPort = App::getEnv('_APP_REDIS_PORT', '');
+    $redisUser = App::getEnv('_APP_REDIS_USER', '');
+    $redisPass = App::getEnv('_APP_REDIS_PASS', '');
+    $redisAuth = [];
 
-    // Connection settings
-    $pdo->setAttribute(PDONative::ATTR_DEFAULT_FETCH_MODE, PDONative::FETCH_ASSOC);   // Return arrays
-    $pdo->setAttribute(PDONative::ATTR_ERRMODE, PDONative::ERRMODE_EXCEPTION);        // Handle all errors with exceptions
+    if ($redisUser) {
+        $redisAuth[] = $redisUser;
+    }
+    if ($redisPass) {
+        $redisAuth[] = $redisPass;
+    }
 
-    return $pdo;
+    $pool = new RedisPool(10, $redisHost, $redisPort, $redisAuth);
+
+    return $pool;
 });
 $register->set('influxdb', function () { // Register DB connection
     $host = App::getEnv('_APP_INFLUXDB_HOST', '');
@@ -184,25 +201,6 @@ $register->set('statsd', function () { // Register DB connection
     $statsd = new \Domnikl\Statsd\Client($connection);
 
     return $statsd;
-});
-$register->set('cache', function () { // Register cache connection
-    $redis = new Redis();
-    $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
-    $user = App::getEnv('_APP_REDIS_USER','');
-    $pass = App::getEnv('_APP_REDIS_PASS','');
-    $auth = [];
-    if(!empty($user)) {
-        $auth["user"] = $user;
-    }
-    if(!empty($pass)) {
-        $auth["pass"] = $pass;
-    }
-    if(!empty($auth)) {
-        $redis->auth($auth);
-    }
-    $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
-
-    return $redis;
 });
 $register->set('smtp', function () {
     $mail = new PHPMailer(true);
@@ -387,7 +385,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     /** @var Appwrite\Database\Document $project */
     /** @var Appwrite\Database\Database $consoleDB */
     /** @var Appwrite\Database\Database $projectDB */
-    /** @var bool $mode */
+    /** @var string $mode */
 
     Authorization::setDefaultStatus(true);
 

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6704f7df5ffe0baac3633dc8e683ed78",
+    "content-hash": "19426f6ef8c8da256a0ff0fba2c11051",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1899,16 +1899,16 @@
         },
         {
             "name": "utopia-php/registry",
-            "version": "0.4.0",
+            "version": "0.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/registry.git",
-                "reference": "7aebbc6c5f3f04ff7a35ac3dad39fa91c9bd7c2d"
+                "reference": "bedc4ed54527b2803e6dfdccc39449f98522b70d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/registry/zipball/7aebbc6c5f3f04ff7a35ac3dad39fa91c9bd7c2d",
-                "reference": "7aebbc6c5f3f04ff7a35ac3dad39fa91c9bd7c2d",
+                "url": "https://api.github.com/repos/utopia-php/registry/zipball/bedc4ed54527b2803e6dfdccc39449f98522b70d",
+                "reference": "bedc4ed54527b2803e6dfdccc39449f98522b70d",
                 "shasum": ""
             },
             "require": {
@@ -1945,9 +1945,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/registry/issues",
-                "source": "https://github.com/utopia-php/registry/tree/0.4.0"
+                "source": "https://github.com/utopia-php/registry/tree/0.5.0"
             },
-            "time": "2021-03-10T06:50:09+00:00"
+            "time": "2021-03-10T10:45:22+00:00"
         },
         {
             "name": "utopia-php/storage",
@@ -4472,16 +4472,16 @@
         },
         {
             "name": "sebastian/global-state",
-            "version": "5.0.2",
+            "version": "5.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/global-state.git",
-                "reference": "a90ccbddffa067b51f574dea6eb25d5680839455"
+                "reference": "23bd5951f7ff26f12d4e3242864df3e08dec4e49"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/global-state/zipball/a90ccbddffa067b51f574dea6eb25d5680839455",
-                "reference": "a90ccbddffa067b51f574dea6eb25d5680839455",
+                "url": "https://api.github.com/repos/sebastianbergmann/global-state/zipball/23bd5951f7ff26f12d4e3242864df3e08dec4e49",
+                "reference": "23bd5951f7ff26f12d4e3242864df3e08dec4e49",
                 "shasum": ""
             },
             "require": {
@@ -4524,7 +4524,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/global-state/issues",
-                "source": "https://github.com/sebastianbergmann/global-state/tree/5.0.2"
+                "source": "https://github.com/sebastianbergmann/global-state/tree/5.0.3"
             },
             "funding": [
                 {
@@ -4532,7 +4532,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2020-10-26T15:55:19+00:00"
+            "time": "2021-06-11T13:31:12+00:00"
         },
         {
             "name": "sebastian/lines-of-code",
