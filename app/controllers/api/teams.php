@@ -456,7 +456,6 @@ App::get('/v1/teams/:teamId/memberships')
         ]), Response::MODEL_MEMBERSHIP_LIST);
     });
 
-
 App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->desc('Update Membership Roles')
     ->groups(['api', 'teams'])
