@@ -417,11 +417,14 @@ services:
       - appwrite-influxdb:/var/lib/influxdb:rw
 
   telegraf:
-    image: appwrite/telegraf:1.1.0
+    image: appwrite/telegraf:1.2.0
     container_name: appwrite-telegraf
     restart: unless-stopped
     networks:
       - appwrite
+    environment: 
+      - _APP_INFLUXDB_HOST
+      - _APP_INFLUXDB_PORT
 
 networks:
   gateway:
