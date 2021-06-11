@@ -343,7 +343,7 @@ App::get('/v1/storage/files/:fileId/preview')
 
         $image = new Image($source);
 
-        $image->crop((int) $width, (int) $height, (int) $gravity);
+        $image->crop((int) $width, (int) $height, $gravity);
         
         if (!empty($opacity) || $opacity==0) {
             $image->setOpacity($opacity);
