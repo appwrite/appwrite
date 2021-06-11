@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use stdClass;
 
 class Collection extends Model
 {
@@ -37,31 +38,31 @@ class Collection extends Model
                 'example' => '',
             ])
             ->addRule('attributes', [
-                'type' => self::TYPE_STRING,
+                'type' => Response::MODEL_ATTRIBUTE,
                 'description' => 'Collection attributes.',
-                'default' => '',
-                'example' => '',
+                'default' => [],
+                'example' => new stdClass,
                 'array' => true
             ])
             ->addRule('indexes', [
-                'type' => self::TYPE_STRING,
+                'type' => Response::MODEL_INDEX,
                 'description' => 'Collection indexes.',
-                'default' => '',
-                'example' => '',
+                'default' => [],
+                'example' => new stdClass,
                 'array' => true
             ])
             ->addRule('attributesInQueue', [
-                'type' => self::TYPE_STRING,
+                'type' => Response::MODEL_ATTRIBUTE,
                 'description' => 'Collection attributes in creation queue.',
-                'default' => '',
-                'example' => '',
+                'default' => [],
+                'example' => new stdClass,
                 'array' => true
             ])
             ->addRule('indexesInQueue', [
-                'type' => self::TYPE_STRING,
+                'type' => Response::MODEL_INDEX,
                 'description' => 'Collection indexes in creation queue.',
-                'default' => '',
-                'example' => '',
+                'default' => [],
+                'example' => new stdClass,
                 'array' => true
             ])
         ;
