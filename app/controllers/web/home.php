@@ -8,6 +8,7 @@ use Utopia\App;
 use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Exception;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 
