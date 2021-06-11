@@ -24,6 +24,8 @@ use Utopia\Database\Document as Document2;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization as Authorization2;
 
+use function Amp\Promise\wait;
+
 App::post('/v1/database/collections')
     ->desc('Create Collection')
     ->groups(['api', 'database'])
@@ -98,11 +100,11 @@ App::get('/v1/database/collections/:collectionId')
     ->label('sdk.response.model', Response::MODEL_COLLECTION)
     ->param('collectionId', '', new UID(), 'Collection unique ID.')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForExternal')
     ->action(function ($collectionId, $response, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal */
-        
+
         $collection = $dbForExternal->getCollection($collectionId);
 
         if ($collection->isEmpty()) {
@@ -257,10 +259,10 @@ App::post('/v1/database/collections/:collectionId/attributes')
     // TODO@kodumbeats add units to description
     ->param('size', null, new Numeric(), 'Attribute size.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('signed', null, new Boolean(), 'Is attribute signed?')
-    ->param('array', null, new Boolean(), 'Is attribute an array?')
+    ->param('signed', true, new Boolean(), 'Is attribute signed?', true)
+    ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     // TODO@kodumbeats "We should have here a whitelist of allowed values. We should add a link to a reference in the future documentation. We might be able to hide this option from the public API for now."
-    ->param('filters', [], new ArrayList(new Text(256)), 'Array of filters.')
+    ->param('filters', [], new ArrayList(new Text(256)), 'Array of filters.', true)
     ->inject('response')
     ->inject('dbForExternal')
     ->inject('audits')
@@ -597,7 +599,7 @@ App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
 
         $collection = $dbForExternal->getCollection($collectionId);
 
-        if (empty($collection)) {
+        if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
         }
 
@@ -677,7 +679,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         
         $collection = $dbForExternal->getCollection($collectionId);
 
-        if (empty($collection)) {
+        if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
         }
 
@@ -793,7 +795,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
 
         $collection = $dbForExternal->getCollection($collectionId);
 
-        if (empty($collection)) {
+        if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
         }
 
@@ -903,7 +905,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
 
         $collection = $dbForExternal->getCollection($collectionId);
 
-        if (empty($collection)) {
+        if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
         }
 

@@ -182,6 +182,8 @@ class Response extends SwooleResponse
             // Entities
             ->setModel(new Permissions())
             ->setModel(new Collection())
+            ->setModel(new Attribute())
+            ->setModel(new Index())
             ->setModel(new ModelDocument())
             ->setModel(new Rule())
             ->setModel(new Log())
