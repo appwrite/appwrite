@@ -18,8 +18,8 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
-            'read' => ['*'],
-            'write' => ['*'],
+            'read' => ['role:all'],
+            'write' => ['role:all'],
         ]);
 
         $this->assertEquals($file['headers']['status-code'], 201);
@@ -185,8 +185,8 @@ trait StorageBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'read' => ['*'],
-            'write' => ['*'],
+            'read' => ['role:all'],
+            'write' => ['role:all'],
         ]);
 
         $this->assertEquals(200, $file['headers']['status-code']);

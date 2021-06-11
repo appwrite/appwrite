@@ -44,7 +44,7 @@ MultipartFile file = MultipartFile.fromFile('./path-to-file/image.jpg', filename
 
 storage.createFile(
     file: file,
-    read: ['*'],
+    read: ['role:all'],
     write: []
 )
 .then((response) {

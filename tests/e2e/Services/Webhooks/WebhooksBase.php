@@ -18,8 +18,8 @@ trait WebhooksBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Actors',
-            'read' => ['*'],
-            'write' => ['*'],
+            'read' => ['role:all'],
+            'write' => ['role:all'],
             'rules' => [
                 [
                     'label' => 'First Name',
@@ -79,8 +79,8 @@ trait WebhooksBase
                 'lastName' => 'Evans',
                  
             ],
-            'read' => ['*'],
-            'write' => ['*'],
+            'read' => ['role:all'],
+            'write' => ['role:all'],
         ]);
 
         $this->assertEquals($document['headers']['status-code'], 201);
@@ -122,8 +122,8 @@ trait WebhooksBase
                 'firstName' => 'Chris1',
                 'lastName' => 'Evans2',
             ],
-            'read' => ['*'],
-            'write' => ['*'],
+            'read' => ['role:all'],
+            'write' => ['role:all'],
         ]);
 
         $this->assertEquals($document['headers']['status-code'], 200);
@@ -164,8 +164,8 @@ trait WebhooksBase
                 'lastName' => 'Cooper',
                  
             ],
-            'read' => ['*'],
-            'write' => ['*'],
+            'read' => ['role:all'],
+            'write' => ['role:all'],
         ]);
 
         $this->assertEquals($document['headers']['status-code'], 201);
@@ -209,8 +209,8 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
-            'read' => ['*'],
-            'write' => ['*'],
+            'read' => ['role:all'],
+            'write' => ['role:all'],
             'folderId' => 'xyz',
         ]);
 
@@ -254,8 +254,8 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'read' => ['*'],
-            'write' => ['*'],
+            'read' => ['role:all'],
+            'write' => ['role:all'],
         ]);
 
         $this->assertEquals($file['headers']['status-code'], 200);

@@ -88,7 +88,7 @@ App::post('/v1/account')
             $userId = $dbForInternal->getId();
             $user = $dbForInternal->createDocument('users', new Document([
                 '$id' => $userId,
-                '$read' => ['*'],
+                '$read' => ['role:all'],
                 '$write' => ['user:'.$userId],
                 'email' => $email,
                 'emailVerification' => false,
@@ -464,7 +464,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     $userId = $dbForInternal->getId();
                     $user = $dbForInternal->createDocument('users', new Document([
                         '$id' => $userId,
-                        '$read' => ['*'],
+                        '$read' => ['role:all'],
                         '$write' => ['user:'.$userId],
                         'email' => $email,
                         'emailVerification' => true,
@@ -621,7 +621,7 @@ App::post('/v1/account/sessions/anonymous')
         $userId = $dbForInternal->getId();
         $user = $dbForInternal->createDocument('users', new Document([
             '$id' => $userId,
-            '$read' => ['*'], 
+            '$read' => ['role:all'], 
             '$write' => ['user:'.$userId],
             'email' => null,
             'emailVerification' => false,

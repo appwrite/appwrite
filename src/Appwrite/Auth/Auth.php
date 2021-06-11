@@ -16,6 +16,7 @@ class Auth
     /**
      * User Roles.
      */
+    const USER_ROLE_ALL = 'all';
     const USER_ROLE_GUEST = 'guest';
     const USER_ROLE_MEMBER = 'member';
     const USER_ROLE_ADMIN = 'admin';
@@ -23,7 +24,6 @@ class Auth
     const USER_ROLE_OWNER = 'owner';
     const USER_ROLE_APP = 'app';
     const USER_ROLE_SYSTEM = 'system';
-    const USER_ROLE_ALL = '*';
 
     /**
      * Token Types.
