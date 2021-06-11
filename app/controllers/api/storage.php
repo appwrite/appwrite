@@ -436,11 +436,11 @@ App::get('/v1/storage/files/:fileId/view')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($fileId, $response, $projectDB) {
+    ->action(function ($fileId, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $file  = $projectDB->getDocument('files', $fileId);
+        $file  = $dbForInternal->getDocument('files', $fileId);
         $mimes = Config::getParam('storage-mimes');
 
         if (empty($file->getId())) {
