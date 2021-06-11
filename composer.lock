@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "271f550b529e2380be5501863def0560",
+    "content-hash": "0456f223731164e0d43456a74949d8bf",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1919,16 +1919,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.2.0",
+            "version": "0.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "b5dd144d582f3355c13f5430b1b3d7eb850bc5cd"
+                "reference": "6f8b7184ae4971672188607ea311a22a50da6767"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/b5dd144d582f3355c13f5430b1b3d7eb850bc5cd",
-                "reference": "b5dd144d582f3355c13f5430b1b3d7eb850bc5cd",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/6f8b7184ae4971672188607ea311a22a50da6767",
+                "reference": "6f8b7184ae4971672188607ea311a22a50da6767",
                 "shasum": ""
             },
             "require": {
@@ -1941,7 +1941,9 @@
                 "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
+                "fakerphp/faker": "^1.14",
                 "phpunit/phpunit": "^9.4",
+                "utopia-php/cli": "^0.11.0",
                 "vimeo/psalm": "4.0.1"
             },
             "type": "library",
@@ -1974,9 +1976,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.2.0"
+                "source": "https://github.com/utopia-php/database/tree/0.3.1"
             },
-            "time": "2021-05-26T18:41:44+00:00"
+            "time": "2021-06-11T15:02:46+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -4740,16 +4742,16 @@
         },
         {
             "name": "sebastian/global-state",
-            "version": "5.0.2",
+            "version": "5.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/global-state.git",
-                "reference": "a90ccbddffa067b51f574dea6eb25d5680839455"
+                "reference": "23bd5951f7ff26f12d4e3242864df3e08dec4e49"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/global-state/zipball/a90ccbddffa067b51f574dea6eb25d5680839455",
-                "reference": "a90ccbddffa067b51f574dea6eb25d5680839455",
+                "url": "https://api.github.com/repos/sebastianbergmann/global-state/zipball/23bd5951f7ff26f12d4e3242864df3e08dec4e49",
+                "reference": "23bd5951f7ff26f12d4e3242864df3e08dec4e49",
                 "shasum": ""
             },
             "require": {
@@ -4792,7 +4794,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/global-state/issues",
-                "source": "https://github.com/sebastianbergmann/global-state/tree/5.0.2"
+                "source": "https://github.com/sebastianbergmann/global-state/tree/5.0.3"
             },
             "funding": [
                 {
@@ -4800,7 +4802,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2020-10-26T15:55:19+00:00"
+            "time": "2021-06-11T13:31:12+00:00"
         },
         {
             "name": "sebastian/lines-of-code",

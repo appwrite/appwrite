@@ -46,11 +46,13 @@ App::post('/v1/projects')
     ->inject('dbForConsole')
     ->inject('dbForInternal')
     ->inject('dbForExternal')
-    ->action(function ($name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $dbForConsole, $dbForInternal, $dbForExternal) {
+    ->inject('consoleDB')
+    ->action(function ($name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $dbForConsole, $dbForInternal, $dbForExternal, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
+        /** @var Appwrite\Database\Database $consoleDB */
 
         $team = $dbForConsole->getDocument('teams', $teamId);
 
@@ -119,6 +121,8 @@ App::post('/v1/projects')
                 );
             }
         }
+
+        $consoleDB->createNamespace($project->getId());
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic2($project, Response::MODEL_PROJECT);

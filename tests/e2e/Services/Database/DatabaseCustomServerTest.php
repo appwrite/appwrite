@@ -120,4 +120,3 @@ class DatabaseCustomServerTest extends Scope
 
         $this->assertEquals($response['headers']['status-code'], 404);
     }
-}

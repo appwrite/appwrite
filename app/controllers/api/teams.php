@@ -286,7 +286,7 @@ App::post('/v1/teams/:teamId/memberships')
                 $userId = $dbForInternal->getId();
                 $invitee = $dbForInternal->createDocument('users', new Document([
                     '$id' => $userId,
-                    '$read' => ['user:'.$userId, '*'],
+                    '$read' => ['user:'.$userId, 'role:all'],
                     '$write' => ['user:'.$userId],
                     'email' => $email,
                     'emailVerification' => false,
@@ -323,7 +323,7 @@ App::post('/v1/teams/:teamId/memberships')
 
         $membership = new Document([
             '$id' => $dbForInternal->getId(),
-            '$read' => ['*'],
+            '$read' => ['role:all'],
             '$write' => ['user:'.$invitee->getId(), 'team:'.$team->getId().'/owner'],
             'userId' => $invitee->getId(),
             'teamId' => $team->getId(),

@@ -46,7 +46,7 @@ App::post('/v1/users')
             $userId = $dbForInternal->getId();
             $user = $dbForInternal->createDocument('users', new Document([
                 '$id' => $userId,
-                '$read' => ['*'],
+                '$read' => ['role:all'],
                 '$write' => ['user:'.$userId],
                 'email' => $email,
                 'emailVerification' => false,
@@ -361,8 +361,8 @@ App::patch('/v1/users/:userId/verification')
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('emailVerification', false, new Boolean(), 'User Email Verification Status.')
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($userId, $emailVerification, $response, $projectDB) {
+    ->inject('dbForInternal')
+    ->action(function ($userId, $emailVerification, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
@@ -527,7 +527,7 @@ App::delete('/v1/users/:userId')
         
         // $dbForInternal->createDocument('users', new Document([
         //     '$id' => $userId,
-        //     '$read' => ['*'],
+        //     '$read' => ['role:all'],
         // ]));
 
         $deletes
