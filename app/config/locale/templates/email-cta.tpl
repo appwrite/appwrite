@@ -1,7 +1,7 @@
 <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="btn btn-primary">
   <tbody>
     <tr>
-      <td align="left">
+      <td>
         <table role="presentation" border="0" cellpadding="0" cellspacing="0">
           <tbody>
             <tr>
@@ -18,9 +18,7 @@
   </tbody>
 </table>
 <p>
-  <small>
-    <a href="{{redirect}}" target="_blank">
-      {{redirect}}
-    </a>
-  </small>
+  <a href="{{redirect}}" target="_blank">
+    {{redirect}}
+  </a>
 </p>
