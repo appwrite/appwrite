@@ -54,8 +54,10 @@ RUN \
   make && make install && \
   cd .. && \
   ## Imagick Extension
-  git clone --depth 1 --branch $PHP_IMAGICK_VERSION https://github.com/Imagick/imagick && \
+  ## Last working commit https://github.com/Imagick/imagick/commit/35741750aa1cda2b7ac354bfa6128fa037e9cf32
+  git clone --branch $PHP_IMAGICK_VERSION https://github.com/Imagick/imagick && \
   cd imagick && \
+  git checkout 35741750aa1cda2b7ac354bfa6128fa037e9cf32 && \
   phpize && \
   ./configure && \
   make && make install && \

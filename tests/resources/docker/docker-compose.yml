@@ -346,7 +346,7 @@ services:
       - appwrite-influxdb:/var/lib/influxdb:rw
 
   telegraf:
-    image: appwrite/telegraf:1.0.0
+    image: appwrite/telegraf:1.1.0
     container_name: appwrite-telegraf
     restart: unless-stopped
     networks:

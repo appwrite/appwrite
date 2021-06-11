@@ -285,7 +285,8 @@ App::post('/v1/teams/:teamId/memberships')
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
-
+        
+        $email = \strtolower($email);
         $name = (empty($name)) ? $email : $name;
         $team = $projectDB->getDocument($teamId);
 
@@ -784,7 +785,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
             $team = $projectDB->updateDocument(\array_merge($team->getArrayCopy(), [
-                'sum' => $team->getAttribute('sum', 0) - 1,
+                'sum' => \max($team->getAttribute('sum', 0) - 1, 0), // Ensure that sum >= 0
             ]));
         }
 
