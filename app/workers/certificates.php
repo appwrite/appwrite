@@ -37,12 +37,12 @@ class CertificatesV1
          * 1. Get new domain document - DONE
          *  1.1. Validate domain is valid, public suffix is known and CNAME records are verified - DONE
          * 2. Check if a certificate already exists - DONE
-         * 3. Check if certificate is about to expire, if not - skip it
+         * 3. Run certbot, which handles the renewal check
          *  3.1. Create / renew certificate
          *  3.2. Update loadblancer
          *  3.3. Update database (domains, change date, expiry)
          *  3.4. Set retry on failure
-         *  3.5. Schedule to renew certificate in 60 days
+         *  3.5. Schedule to check certificate renewal in 24 hours
          */
 
         Authorization::disable();
@@ -57,9 +57,6 @@ class CertificatesV1
         
         // Options
         $domain = new Domain((!empty($domain)) ? $domain : '');
-        $expiry = 60 * 60 * 24 * 30 * 2; // 60 days
-        $safety = 60 * 60; // 1 hour
-        $renew  = (\time() + $expiry);
 
         if(empty($domain->get())) {
             throw new Exception('Missing domain');
@@ -101,13 +98,11 @@ class CertificatesV1
 
         // throw new Exception('cert issued at'.date('d.m.Y H:i', $certificate['issueDate']).' | renew date is: '.date('d.m.Y H:i', ($certificate['issueDate'] + ($expiry))).' | condition is '.$condition);
 
-        $certificate = (!empty($certificate) && $certificate instanceof $certificate) ? $certificate->getArrayCopy() : [];
+        $now = \time();
+        $tomorrow = $now + (60 * 60 * 24); // 24 hours from now
 
-        if(!empty($certificate)
-            && isset($certificate['issueDate'])
-            && (($certificate['issueDate'] + ($expiry)) > \time())) { // Check last issue time
-                throw new Exception('Renew isn\'t required');
-        }
+        $certificate = (!empty($certificate) && $certificate instanceof $certificate) ? $certificate->getArrayCopy() : [];
+        $issueDate = $certificate['issueDate'] ?? $now;
 
         $staging = (App::isProduction()) ? '' : ' --dry-run';
         $email = App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS');
@@ -122,34 +117,12 @@ class CertificatesV1
         $exit = Console::execute("certbot certonly --webroot --noninteractive --agree-tos{$staging}"
             ." --email ".$email
             ." -w ".APP_STORAGE_CERTIFICATES
+            ." --config-dir ".APP_STORAGE_CERTIFICATES
+            ." --keep-until-expiring " // Default is to renew 30 days before expiration.
             ." -d {$domain->get()}", '', $stdout, $stderr);
 
         if($exit !== 0) {
             throw new Exception('Failed to issue a certificate with message: '.$stderr);
-        }
-
-        $path = APP_STORAGE_CERTIFICATES.'/'.$domain->get();
-
-        if(!\is_readable($path)) {
-            if (!\mkdir($path, 0755, true)) {
-                throw new Exception('Failed to create path...');
-            }
-        }
-        
-        if(!@\rename('/etc/letsencrypt/live/'.$domain->get().'/cert.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/cert.pem')) {
-            throw new Exception('Failed to rename certificate cert.pem: '.\json_encode($stdout));
-        }
-
-        if(!@\rename('/etc/letsencrypt/live/'.$domain->get().'/chain.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/chain.pem')) {
-            throw new Exception('Failed to rename certificate chain.pem: '.\json_encode($stdout));
-        }
-
-        if(!@\rename('/etc/letsencrypt/live/'.$domain->get().'/fullchain.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/fullchain.pem')) {
-            throw new Exception('Failed to rename certificate fullchain.pem: '.\json_encode($stdout));
-        }
-
-        if(!@\rename('/etc/letsencrypt/live/'.$domain->get().'/privkey.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/privkey.pem')) {
-            throw new Exception('Failed to rename certificate privkey.pem: '.\json_encode($stdout));
         }
 
         $certificate = \array_merge($certificate, [
@@ -159,8 +132,8 @@ class CertificatesV1
                 'write' => [],
             ],
             'domain' => $domain->get(),
-            'issueDate' => \time(),
-            'renewDate' => $renew,
+            'issueDate' => $issueDate,
+            'checkDate' => $tomorrow, 
             'attempts' => 0,
             'log' => \json_encode($stdout),
         ]);
@@ -173,7 +146,7 @@ class CertificatesV1
 
         if(!empty($document)) {
             $document = \array_merge($document, [
-                'updated' => \time(),
+                'updated' => $now,
                 'certificateId' => $certificate->getId(),
             ]);
     
@@ -187,14 +160,14 @@ class CertificatesV1
         $config = 
 "tls:
   certificates:
-    - certFile: /storage/certificates/{$domain->get()}/fullchain.pem
-      keyFile: /storage/certificates/{$domain->get()}/privkey.pem";
+    - certFile: /storage/certificates/live/{$domain->get()}/fullchain.pem
+      keyFile: /storage/certificates/live/{$domain->get()}/privkey.pem";
 
         if(!\file_put_contents(APP_STORAGE_CONFIG.'/'.$domain->get().'.yml', $config)) {
             throw new Exception('Failed to save SSL configuration');
         }
 
-        ResqueScheduler::enqueueAt($renew + $safety, 'v1-certificates', 'CertificatesV1', [
+        ResqueScheduler::enqueueAt($tomorrow, 'v1-certificates', 'CertificatesV1', [
             'document' => [],
             'domain' => $domain->get(),
             'validateTarget' => $validateTarget,
