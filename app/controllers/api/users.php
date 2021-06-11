@@ -41,6 +41,7 @@ App::post('/v1/users')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
+        $email = \strtolower($email);
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
             'limit' => 1,
             'filters' => [

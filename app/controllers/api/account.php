@@ -58,15 +58,16 @@ App::post('/v1/account')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
 
+        $email = \strtolower($email);
         if ('console' === $project->getId()) {
-            $whitlistEmails = $project->getAttribute('authWhitelistEmails');
-            $whitlistIPs = $project->getAttribute('authWhitelistIPs');
+            $whitelistEmails = $project->getAttribute('authWhitelistEmails');
+            $whitelistIPs = $project->getAttribute('authWhitelistIPs');
 
-            if (!empty($whitlistEmails) && !\in_array($email, $whitlistEmails)) {
+            if (!empty($whitelistEmails) && !\in_array($email, $whitelistEmails)) {
                 throw new Exception('Console registration is restricted to specific emails. Contact your administrator for more information.', 401);
             }
 
-            if (!empty($whitlistIPs) && !\in_array($request->getIP(), $whitlistIPs)) {
+            if (!empty($whitelistIPs) && !\in_array($request->getIP(), $whitelistIPs)) {
                 throw new Exception('Console registration is restricted to specific IPs. Contact your administrator for more information.', 401);
             }
         }
@@ -174,6 +175,7 @@ App::post('/v1/account/sessions')
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
 
+        $email = \strtolower($email);
         $protocol = $request->getProtocol();
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
             'limit' => 1,
@@ -1086,6 +1088,7 @@ App::patch('/v1/account/email')
             throw new Exception('Invalid credentials', 401);
         }
 
+        $email = \strtolower($email);
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
             'limit' => 1,
             'filters' => [
@@ -1408,7 +1411,8 @@ App::post('/v1/account/recovery')
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
-
+        
+        $email = \strtolower($email);
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
             'limit' => 1,
             'filters' => [
