@@ -1590,6 +1590,15 @@ $collections = [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Name',
+                'key' => 'name',
+                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
+                'default' => '',
+                'required' => false,
+                'array' => false,
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Code Path',
                 'key' => 'path',
                 'type' => Database::SYSTEM_VAR_TYPE_TEXT,

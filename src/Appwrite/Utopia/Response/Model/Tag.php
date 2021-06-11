@@ -34,6 +34,12 @@ class Tag extends Model
                 'default' => '',
                 'example' => 'enabled',
             ])
+            ->addRule('name', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Function Name.',
+                'default' => '',
+                'example' => 'Hello World Script',
+            ])
             ->addRule('size', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The code size in bytes.',

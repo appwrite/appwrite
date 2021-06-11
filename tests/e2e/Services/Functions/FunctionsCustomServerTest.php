@@ -184,6 +184,7 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'command' => 'php index.php',
             'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
+            'name' => 'Hello World!'
         ]);
 
         $tagId = $tag['body']['$id'] ?? '';
@@ -192,6 +193,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($tag['body']['$id']);
         $this->assertIsInt($tag['body']['dateCreated']);
         $this->assertEquals('php index.php', $tag['body']['command']);
+        $this->assertEquals('Hello World!', $tag['body']['name']);
         $this->assertGreaterThan(10000, $tag['body']['size']);
        
         /**
