@@ -1,0 +1,77 @@
+import org.jetbrains.kotlin.config.KotlinCompilerVersion
+
+plugins {
+    id("com.android.library")
+    id("kotlin-android")
+}
+
+ext {
+    PUBLISH_GROUP_ID = 'io.appwrite'
+    PUBLISH_ARTIFACT_ID = 'sdk-for-android'
+    PUBLISH_VERSION = '0.0.0-SNAPSHOT'
+    POM_URL = ''
+    POM_SCM_URL = 'https://github.com/appwrite/sdk-for-android'
+    POM_ISSUE_URL = 'https://github.com/appwrite/sdk-for-android/issues'
+    POM_DESCRIPTION = 'Appwrite is an open-source backend as a service server that abstract and simplify complex and repetitive development tasks behind a very simple to use REST API. Appwrite aims to help you develop your apps faster and in a more secure way. Use the Android SDK to integrate your app with the Appwrite server to easily start interacting with all of Appwrite backend APIs and tools. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)'
+    POM_LICENSE_URL = 'https://opensource.org/licenses/GPL-3.0'
+    POM_LICENSE_NAME = "GPL-3.0"
+    POM_DEVELOPER_ID = ''
+    POM_DEVELOPER_NAME = 'appwrite'
+    POM_DEVELOPER_EMAIL = ''
+    GITHUB_SCM_CONNECTION = 'scm:git:git://github.com/appwrite/sdk-for-android.git'
+}
+
+android {
+    compileSdkVersion(30)
+
+    defaultConfig {
+        minSdkVersion(21)
+        targetSdkVersion(30)
+        versionCode = 1
+        versionName = "1.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("consumer-rules.pro")
+    }
+
+    buildTypes {
+        named("release") {
+            minifyEnabled false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
+dependencies {
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${KotlinCompilerVersion.VERSION}")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.3")
+
+    api(platform("com.squareup.okhttp3:okhttp-bom:4.9.0"))
+    api("com.squareup.okhttp3:okhttp")
+    implementation("com.squareup.okhttp3:okhttp-urlconnection")
+    implementation("com.squareup.okhttp3:logging-interceptor")
+    implementation("com.google.code.gson:gson:2.8.5")
+
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.3.1")
+    implementation("androidx.lifecycle:lifecycle-common-java8:2.3.1")
+    implementation("androidx.appcompat:appcompat:1.2.0")
+    implementation("androidx.fragment:fragment-ktx:1.3.2")
+    implementation("androidx.activity:activity-ktx:1.2.2")
+    implementation("androidx.browser:browser:1.3.0")
+    implementation("com.github.franmontiel:PersistentCookieJar:v1.0.1")
+
+    testImplementation 'junit:junit:4.+'
+}
+
+apply from: "${rootProject.projectDir}/scripts/publish-module.gradle"
