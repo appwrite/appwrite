@@ -17,7 +17,7 @@ use Appwrite\Database\Validator\Structure;
 use Appwrite\Database\Validator\Collection;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Exception\Authorization as AuthorizationException;
-use Appwrite\Database\Exception\Structure as StructureException;
+use Utopia\Database\Exception\Structure as StructureException;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database as Database2;
 use Utopia\Database\Document as Document2;
@@ -699,7 +699,12 @@ App::post('/v1/database/collections/:collectionId/documents')
         //     }
         // }
 
-        $document = $dbForExternal->createDocument($collectionId, new Document2($data));
+        // TODO@kodumbeats catch other exceptions
+        try {
+            $document = $dbForExternal->createDocument($collectionId, new Document2($data));
+        } catch (StructureException $exception) {
+            throw new Exception($exception->getMessage(), 400);
+        }
 
         $audits
             ->setParam('event', 'database.documents.create')
