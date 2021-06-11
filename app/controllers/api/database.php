@@ -105,7 +105,7 @@ App::get('/v1/database/collections/:collectionId')
         
         $collection = $dbForExternal->getCollection($collectionId);
 
-        if (empty($collection)) {
+        if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
         }
 
@@ -214,7 +214,7 @@ App::delete('/v1/database/collections/:collectionId')
 
         $collection = $dbForExternal->getCollection($collectionId);
 
-        if (empty($collection)) {
+        if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
         }
 
@@ -271,7 +271,7 @@ App::post('/v1/database/collections/:collectionId/attributes')
 
         $collection = $dbForExternal->getCollection($collectionId);
 
-        if (empty($collection)) {
+        if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
         }
 
@@ -321,7 +321,7 @@ App::get('v1/database/collections/:collectionId/attributes')
 
         $collection = $dbForExternal->getCollection($collectionId);
 
-        if (empty($collection)) {
+        if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
         }
 
@@ -401,7 +401,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
 
         $collection = $dbForExternal->getCollection($collectionId);
 
-        if (empty($collection)) {
+        if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
         }
 
@@ -468,7 +468,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
 
         $collection = $dbForExternal->getCollection($collectionId);
 
-        if (empty($collection)) {
+        if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
         }
 
@@ -516,7 +516,7 @@ App::get('v1/database/collections/:collectionId/indexes')
 
         $collection = $dbForExternal->getCollection($collectionId);
 
-        if (empty($collection)) {
+        if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
         }
 
@@ -546,11 +546,11 @@ App::get('v1/database/collections/:collectionId/indexes/:indexId')
     ->inject('projectDB')
     ->action(function ($collectionId, $indexId, $response, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForExternal */
 
         $collection = $dbForExternal->getCollection($collectionId);
 
-        if (empty($collection)) {
+        if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
         }
 
