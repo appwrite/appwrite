@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2d21d6dff0d1764f94854a32d5312b0d",
+    "content-hash": "e3617b2fd699e599dc2c1d7ed74c9f44",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1603,21 +1603,16 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.4.1",
+            "version": "dev-feat-utopia-db-integration",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "8b7973aae4b02489bd22ffea45b985608f13b6d9"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/8b7973aae4b02489bd22ffea45b985608f13b6d9",
-                "reference": "8b7973aae4b02489bd22ffea45b985608f13b6d9",
-                "shasum": ""
+                "url": "https://github.com/lohanidamodar/abuse",
+                "reference": "4f3349b3c1c85353708d13f7eb3c34c0762d4828"
             },
             "require": {
                 "ext-pdo": "*",
-                "php": ">=7.4"
+                "php": ">=7.4",
+                "utopia-php/database": "0.2.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.4",
@@ -1629,7 +1624,6 @@
                     "Utopia\\Abuse\\": "src/Abuse"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -1641,17 +1635,13 @@
             ],
             "description": "A simple abuse library to manage application usage limits",
             "keywords": [
-                "Abuse",
+                "abuse",
                 "framework",
                 "php",
                 "upf",
                 "utopia"
             ],
-            "support": {
-                "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.4.1"
-            },
-            "time": "2021-06-05T14:31:33+00:00"
+            "time": "2021-06-09T09:11:16+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1710,21 +1700,16 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "0.5.1",
+            "version": "dev-feat-utopia-db-integration",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/audit.git",
-                "reference": "154a850170a58667a15e4b65fbabb6cd0b709dd9"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/154a850170a58667a15e4b65fbabb6cd0b709dd9",
-                "reference": "154a850170a58667a15e4b65fbabb6cd0b709dd9",
-                "shasum": ""
+                "url": "https://github.com/lohanidamodar/audit",
+                "reference": "b3b85524717bbf52cfe71f01474c4012bfd4323a"
             },
             "require": {
                 "ext-pdo": "*",
-                "php": ">=7.1"
+                "php": ">=7.4",
+                "utopia-php/database": "0.2.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -1736,7 +1721,6 @@
                     "Utopia\\Audit\\": "src/Audit"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -1748,17 +1732,13 @@
             ],
             "description": "A simple audit library to manage application users logs",
             "keywords": [
-                "Audit",
+                "audit",
                 "framework",
                 "php",
                 "upf",
                 "utopia"
             ],
-            "support": {
-                "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/0.5.1"
-            },
-            "time": "2020-12-21T17:28:53+00:00"
+            "time": "2021-06-09T09:10:27+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -6190,7 +6170,10 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/abuse": 20,
+        "utopia-php/audit": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
