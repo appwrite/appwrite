@@ -13,7 +13,6 @@ use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Audit\Audit;
-use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MariaDB;
 
