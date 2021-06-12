@@ -18,7 +18,6 @@ use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\ArrayList;
 use Utopia\Audit\Audit;
-use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
