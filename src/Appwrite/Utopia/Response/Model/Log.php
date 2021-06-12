@@ -10,12 +10,6 @@ class Log extends Model
     public function __construct()
     {
         $this
-            ->addRule('userId', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Event name.',
-                'default' => '',
-                'example' => 'account.sessions.create',
-            ])
             ->addRule('event', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Event name.',

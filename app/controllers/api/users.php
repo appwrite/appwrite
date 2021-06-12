@@ -277,7 +277,6 @@ App::get('/v1/users/:userId/logs')
             $clientEngineVersion = (isset($client['engine_version'])) ? $client['engine_version'] : '';
 
             $output[$i] = new Document([
-                'userId' => $log['userId'],
                 'event' => $log['event'],
                 'ip' => $log['ip'],
                 'time' => $log['time'],

@@ -872,7 +872,6 @@ App::get('/v1/account/logs')
             $detector = new Detector($log['userAgent']);
 
             $output[$i] = new Document(array_merge([
-                'userId' => $log['userId'],
                 'event' => $log['event'],
                 'ip' => $log['ip'],
                 'time' => $log['time'],
