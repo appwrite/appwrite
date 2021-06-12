@@ -179,6 +179,7 @@ App::post('/v1/account/sessions')
         $session = new Document(array_merge(
             [
                 '$id' => $dbForInternal->getId(),
+                'userId' => $profile->getId(),
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => $email,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
@@ -498,6 +499,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $session = new Document(array_merge([
             '$id' => $dbForInternal->getId(),
+            'userId' => $user->getId(),
             'provider' => $provider,
             'providerUid' => $oauth2ID,
             'providerToken' => $accessToken,
@@ -647,6 +649,7 @@ App::post('/v1/account/sessions/anonymous')
         $session = new Document(array_merge(
             [
                 '$id' => $dbForInternal->getId(),
+                'userId' => $user->getId(),
                 'provider' => Auth::SESSION_PROVIDER_ANONYMOUS,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'expire' => $expiry,
@@ -1135,13 +1138,15 @@ App::delete('/v1/account/sessions/:sessionId')
     ->inject('response')
     ->inject('user')
     ->inject('dbForInternal')
+    ->inject('locale')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($sessionId, $request, $response, $user, $dbForInternal, $audits, $events) {
+    ->action(function ($sessionId, $request, $response, $user, $dbForInternal, $locale, $audits, $events) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Locale\Locale $locale */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
 
@@ -1167,7 +1172,10 @@ App::delete('/v1/account/sessions/:sessionId')
                 $session->setAttribute('current', false);
                 
                 if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
-                    $session->setAttribute('current', true);
+                    $session
+                        ->setAttribute('current', true)
+                        ->setAttribute('countryName', (isset($countries[strtoupper($session->getAttribute('countryCode'))])) ? $countries[strtoupper($session->getAttribute('countryCode'))] : $locale->getText('locale.country.unknown'))
+                    ;
                     
                     if (!Config::getParam('domainVerification')) {
                         $response
@@ -1210,13 +1218,15 @@ App::delete('/v1/account/sessions')
     ->inject('response')
     ->inject('user')
     ->inject('dbForInternal')
+    ->inject('locale')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($request, $response, $user, $dbForInternal, $audits, $events) {
+    ->action(function ($request, $response, $user, $dbForInternal, $locale, $audits, $events) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Locale\Locale $locale */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
 
@@ -1238,7 +1248,10 @@ App::delete('/v1/account/sessions')
                 ;
             }
 
-            $session->setAttribute('current', false);
+            $session
+                ->setAttribute('current', false)
+                ->setAttribute('countryName', (isset($countries[strtoupper($session->getAttribute('countryCode'))])) ? $countries[strtoupper($session->getAttribute('countryCode'))] : $locale->getText('locale.country.unknown'))
+            ;
 
             if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
                 $session->setAttribute('current', true);
@@ -1312,6 +1325,7 @@ App::post('/v1/account/recovery')
         $secret = Auth::tokenGenerator();
         $recovery = new Document([
             '$id' => $dbForInternal->getId(),
+            'userId' => $profile->getId(),
             'type' => Auth::TOKEN_TYPE_RECOVERY,
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => \time() + Auth::TOKEN_EXPIRATION_RECOVERY,
@@ -1495,6 +1509,7 @@ App::post('/v1/account/verification')
         
         $verification = new Document([
             '$id' => $dbForInternal->getId(),
+            'userId' => $user->getId(),
             'type' => Auth::TOKEN_TYPE_VERIFICATION,
             'secret' => Auth::hash($verificationSecret), // One way hash encryption to protect DB leak
             'expire' => \time() + Auth::TOKEN_EXPIRATION_CONFIRM,
