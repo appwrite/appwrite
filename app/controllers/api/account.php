@@ -872,9 +872,10 @@ App::get('/v1/account/logs')
             $detector = new Detector($log['userAgent']);
 
             $output[$i] = new Document(array_merge([
+                'userId' => $log['userId'],
                 'event' => $log['event'],
                 'ip' => $log['ip'],
-                'time' => \strtotime($log['time']),
+                'time' => $log['time'],
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
             $record = $geodb->get($log['ip']);
