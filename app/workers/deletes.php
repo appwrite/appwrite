@@ -32,14 +32,15 @@ class DeletesV1
 
     public function perform()
     { 
-        $projectId = isset($this->args['projectId']) ? $this->args['projectId'] : '';
-        $type = $this->args['type'];
+        $projectId = $this->args['projectId'] ?? '';
+        $type = $this->args['type'] ?? '';
         
         switch (strval($type)) {
             case DELETE_TYPE_DOCUMENT:
-                $document = $this->args['document'];
+                $document = $this->args['document'] ?? '';
                 $document = new Document($document);
-                switch (strval($document->getCollection())) {
+                
+                switch ($document->getCollection()) {
                     case Database::SYSTEM_COLLECTION_PROJECTS:
                         $this->deleteProject($document);
                         break;
@@ -78,7 +79,6 @@ class DeletesV1
             default:
                 Console::error('No delete operation for type: '.$type);
                 break;
-            
             }
     }
 
