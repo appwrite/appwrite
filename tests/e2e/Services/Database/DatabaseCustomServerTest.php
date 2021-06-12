@@ -26,7 +26,7 @@ class DatabaseCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Actors',
-            'read' => ['*'],
+            'read' => ['role:all'],
             'write' => ['role:member', 'role:admin'],
             'rules' => [
                 [

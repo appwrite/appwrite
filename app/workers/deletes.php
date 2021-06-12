@@ -7,6 +7,7 @@ use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
+use Appwrite\Resque\Worker;
 use Utopia\Storage\Device\Local;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
@@ -19,30 +20,29 @@ use Utopia\Database\Adapter\MariaDB;
 require_once __DIR__.'/../init.php';
 
 Console::title('Deletes V1 Worker');
-
 Console::success(APP_NAME.' deletes worker v1 has started'."\n");
 
-class DeletesV1
+class DeletesV1 extends Worker
 {
-
     public $args = [];
 
     protected $consoleDB = null;
 
-    public function setUp(): void
+    public function init(): void
     {
     }
 
-    public function perform()
-    { 
-        $projectId = isset($this->args['projectId']) ? $this->args['projectId'] : '';
-        $type = $this->args['type'];
+    public function run(): void
+    {
+        $projectId = $this->args['projectId'] ?? '';
+        $type = $this->args['type'] ?? '';
         
         switch (strval($type)) {
             case DELETE_TYPE_DOCUMENT:
-                $document = $this->args['document'];
+                $document = $this->args['document'] ?? '';
                 $document = new Document($document);
-                switch (strval($document->getCollection())) {
+                
+                switch ($document->getCollection()) {
                     case Database::SYSTEM_COLLECTION_PROJECTS:
                         $this->deleteProject($document);
                         break;
@@ -81,13 +81,11 @@ class DeletesV1
             default:
                 Console::error('No delete operation for type: '.$type);
                 break;
-            
             }
     }
 
-    public function tearDown(): void
+    public function shutdown(): void
     {
-        // ... Remove environment for this job
     }
     
     protected function deleteDocuments(Document $document, $projectId) 

@@ -225,6 +225,7 @@ App::get('/v1/storage/files/:fileId/preview')
     ->param('fileId', '', new UID(), 'File unique ID')
     ->param('width', 0, new Range(0, 4000), 'Resize preview image width, Pass an integer between 0 to 4000.', true)
     ->param('height', 0, new Range(0, 4000), 'Resize preview image height, Pass an integer between 0 to 4000.', true)
+    ->param('gravity', Image::GRAVITY_CENTER, new WhiteList([Image::GRAVITY_CENTER, Image::GRAVITY_NORTH, Image::GRAVITY_NORTHWEST, Image::GRAVITY_NORTHEAST, Image::GRAVITY_WEST, Image::GRAVITY_EAST, Image::GRAVITY_SOUTHWEST, Image::GRAVITY_SOUTH, Image::GRAVITY_SOUTHEAST]), 'Image crop gravity', true)
     ->param('quality', 100, new Range(0, 100), 'Preview image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->param('borderWidth', 0, new Range(0, 100), 'Preview image border in pixels. Pass an integer between 0 to 100. Defaults to 0.', true)
     ->param('borderColor', '', new HexColor(), 'Preview image border color. Use a valid HEX color, no # is needed for prefix.', true)
@@ -237,7 +238,7 @@ App::get('/v1/storage/files/:fileId/preview')
     ->inject('response')
     ->inject('project')
     ->inject('dbForInternal')
-    ->action(function ($fileId, $width, $height, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $dbForInternal) {
+    ->action(function ($fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $dbForInternal) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
@@ -325,7 +326,7 @@ App::get('/v1/storage/files/:fileId/preview')
 
         $image = new Image($source);
 
-        $image->crop((int) $width, (int) $height);
+        $image->crop((int) $width, (int) $height, $gravity);
         
         if (!empty($opacity) || $opacity==0) {
             $image->setOpacity($opacity);
@@ -436,11 +437,11 @@ App::get('/v1/storage/files/:fileId/view')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($fileId, $response, $projectDB) {
+    ->action(function ($fileId, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $file  = $projectDB->getDocument('files', $fileId);
+        $file  = $dbForInternal->getDocument('files', $fileId);
         $mimes = Config::getParam('storage-mimes');
 
         if (empty($file->getId())) {

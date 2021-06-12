@@ -139,10 +139,10 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     
     try {
         Authorization::cleanRoles();
-        Authorization::setRole('*');
+        Authorization::setRole('role:all');
 
         Authorization2::cleanRoles();
-        Authorization2::setRole('*');
+        Authorization2::setRole('role:all');
 
         $app->run($request, $response);
     } catch (\Throwable $th) {

@@ -20,7 +20,7 @@ class File extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'File read permissions.',
                 'default' => [],
-                'example' => ['*'],
+                'example' => ['role:all'],
                 'array' => true,
             ])
             ->addRule('$write', [

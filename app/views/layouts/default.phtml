@@ -43,7 +43,7 @@ if(!empty($platforms)) {
     <link rel="apple-touch-icon" href="/images/apple.png">
     <!-- <link rel="preconnect" href="" /> -->
     <?php if (!empty($canonical)): ?>
-        <link rel="canonical" href="<?php echo $canonical; ?>" />
+        <link rel="canonical" href="<?php echo $this->escape($canonical); ?>" />
     <?php endif; ?>
     <?php foreach ($this->getParam('prefetch', []) as $prefetch): ?>
         <link rel="prefetch" href="<?php echo $this->escape($prefetch); ?>" />
@@ -52,12 +52,12 @@ if(!empty($platforms)) {
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
     <meta name="theme-color" content="#24f4d4">
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="<?php echo $this->getParam('title', ''); ?>" />
-    <meta property="og:description" content="<?php echo $this->getParam('description', ''); ?>" />
+    <meta property="og:title" content="<?php echo $this->escape($this->getParam('title', '')); ?>" />
+    <meta property="og:description" content="<?php echo $this->escape($this->getParam('description', '')); ?>" />
     <?php if (!empty($canonical)): ?>
-        <meta property="og:url" content="<?php echo $canonical; ?>" />
+        <meta property="og:url" content="<?php echo $this->escape($canonical); ?>" />
     <?php endif; ?>
-    <meta property="og:image"  content="<?php echo $endpoint; ?>/images/logo.png?v=<?php echo APP_CACHE_BUSTER; ?>" />
+    <meta property="og:image"  content="<?php echo $this->escape($endpoint); ?>/images/logo.png?v=<?php echo APP_CACHE_BUSTER; ?>" />
     <script>
 
         (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -69,11 +69,11 @@ if(!empty($platforms)) {
 
         var APP_ENV = {
             NAME: '<?php echo APP_NAME; ?>',
-            VERSION: '<?php echo $version; ?>',
-            CACHEBUSTER: '<?php echo $version; ?>/<?php echo APP_CACHE_BUSTER; ?>',
-            PROTOCOL: '<?php echo $protocol; ?>',
-            ENDPOINT: '<?php echo $endpoint; ?>',
-            DOMAIN: '<?php echo $domain; ?>',
+            VERSION: '<?php echo $this->escape($version); ?>',
+            CACHEBUSTER: '<?php echo $this->escape($version); ?>/<?php echo APP_CACHE_BUSTER; ?>',
+            PROTOCOL: '<?php echo $this->escape($protocol); ?>',
+            ENDPOINT: '<?php echo $this->escape($endpoint); ?>',
+            DOMAIN: '<?php echo $this->escape($domain); ?>',
             HOME: '<?php echo $this->escape($this->getParam('home')); ?>',
             SETUP: '<?php echo $this->escape($this->getParam('setup')); ?>',
             API: '/v1',
@@ -93,7 +93,7 @@ if(!empty($platforms)) {
 
             script.type   = 'text/javascript';
             script.async  = true;
-            script.src    = '/dist/scripts/app-all.js?v=<?php echo APP_CACHE_BUSTER; ?>.<?php echo $version; ?>';
+            script.src    = '/dist/scripts/app-all.js?v=<?php echo APP_CACHE_BUSTER; ?>.<?php echo $this->escape($version); ?>';
             script.onload = function() {
                 window.ls.run(window);
             };
@@ -142,6 +142,6 @@ if(!empty($platforms)) {
 
     <?php echo $this->exec($this->getParam('footer', [])); ?>
 
-    <!-- Version <?php echo $version; ?> -->
+    <!-- Version <?php echo $this->escape($version); ?> -->
 </body>
 </html>

@@ -39,11 +39,13 @@ App::post('/v1/users')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
+        $email = \strtolower($email);
+
         try {
             $userId = $dbForInternal->getId();
             $user = $dbForInternal->createDocument('users', new Document([
                 '$id' => $userId,
-                '$read' => ['*'],
+                '$read' => ['role:all'],
                 '$write' => ['user:'.$userId],
                 'email' => $email,
                 'emailVerification' => false,
@@ -87,7 +89,7 @@ App::get('/v1/users')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $results = $dbForInternal->find('users', [], $limit, $offset);
+        $results = $dbForInternal->find('users', [], $limit, $offset, ['_id'], [$orderType]);
         $sum = $dbForInternal->count('users', [], APP_LIMIT_COUNT);
 
         $response->dynamic2(new Document([
@@ -353,26 +355,20 @@ App::patch('/v1/users/:userId/verification')
     ->param('userId', '', new UID(), 'User unique ID.')
     ->param('emailVerification', false, new Boolean(), 'User Email Verification Status.')
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($userId, $emailVerification, $response, $projectDB) {
+    ->inject('dbForInternal')
+    ->action(function ($userId, $emailVerification, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
 
-        $user = $projectDB->getDocument($userId);
+        $user = $dbForInternal->getDocument('users', $userId);
 
-        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+        if ($user->isEmpty()) {
             throw new Exception('User not found', 404);
         }
 
-        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
-            'emailVerification' => $emailVerification,
-        ]));
+        $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', $emailVerification));
 
-        if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
-        }
-
-        $response->dynamic($user, Response::MODEL_USER);
+        $response->dynamic2($user, Response::MODEL_USER);
     });
 
 App::patch('/v1/users/:userId/prefs')
@@ -525,7 +521,7 @@ App::delete('/v1/users/:userId')
         
         // $dbForInternal->createDocument('users', new Document([
         //     '$id' => $userId,
-        //     '$read' => ['*'],
+        //     '$read' => ['role:all'],
         // ]));
 
         $deletes

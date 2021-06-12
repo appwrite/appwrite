@@ -257,7 +257,8 @@ App::post('/v1/teams/:teamId/memberships')
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
-
+        
+        $email = \strtolower($email);
         $name = (empty($name)) ? $email : $name;
         $team = $dbForInternal->getDocument('teams', $teamId);
 
@@ -285,7 +286,7 @@ App::post('/v1/teams/:teamId/memberships')
                 $userId = $dbForInternal->getId();
                 $invitee = $dbForInternal->createDocument('users', new Document([
                     '$id' => $userId,
-                    '$read' => ['user:'.$userId, '*'],
+                    '$read' => ['user:'.$userId, 'role:all'],
                     '$write' => ['user:'.$userId],
                     'email' => $email,
                     'emailVerification' => false,
@@ -322,7 +323,7 @@ App::post('/v1/teams/:teamId/memberships')
 
         $membership = new Document([
             '$id' => $dbForInternal->getId(),
-            '$read' => ['*'],
+            '$read' => ['role:all'],
             '$write' => ['user:'.$invitee->getId(), 'team:'.$team->getId().'/owner'],
             'userId' => $invitee->getId(),
             'teamId' => $team->getId(),
@@ -435,7 +436,7 @@ App::get('/v1/teams/:teamId/memberships')
             throw new Exception('Team not found', 404);
         }
 
-        $memberships = $dbForInternal->find('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], $limit, $offset);
+        $memberships = $dbForInternal->find('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], $limit, $offset, ['_id'], [$orderType]);
         $sum = $dbForInternal->count('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], APP_LIMIT_COUNT);
         $users = [];
 
@@ -454,7 +455,6 @@ App::get('/v1/teams/:teamId/memberships')
             'sum' => $sum,
         ]), Response::MODEL_MEMBERSHIP_LIST);
     });
-
 
 App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->desc('Update Membership Roles')
