@@ -150,7 +150,7 @@ App::get('/v1/projects')
 
         $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
 
-        $results = $dbForConsole->find('projects', $queries, $limit, $offset);
+        $results = $dbForConsole->find('projects', $queries, $limit, $offset, ['_id'], [$orderType]);
         $sum = $dbForConsole->count('projects', $queries, APP_LIMIT_COUNT);
 
         $response->dynamic2(new Document([

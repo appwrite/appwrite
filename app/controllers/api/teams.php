@@ -436,7 +436,7 @@ App::get('/v1/teams/:teamId/memberships')
             throw new Exception('Team not found', 404);
         }
 
-        $memberships = $dbForInternal->find('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], $limit, $offset);
+        $memberships = $dbForInternal->find('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], $limit, $offset, ['_id'], [$orderType]);
         $sum = $dbForInternal->count('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], APP_LIMIT_COUNT);
         $users = [];
 

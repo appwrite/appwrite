@@ -90,7 +90,7 @@ App::get('/v1/users')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $results = $dbForInternal->find('users', [], $limit, $offset);
+        $results = $dbForInternal->find('users', [], $limit, $offset, ['_id'], [$orderType]);
         $sum = $dbForInternal->count('users', [], APP_LIMIT_COUNT);
 
         $response->dynamic2(new Document([
