@@ -130,49 +130,49 @@ class Project extends Model
                 'example' => new stdClass,
                 'array' => true,
             ])
-            ->addRule('statusForfunctions', [
+            ->addRule('statusForFunctions', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Functions service status',
                 'default' => true,
                 'example' => true,
             ])
-            ->addRule('statusForwebhooks', [
+            ->addRule('statusForWebhooks', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Webhooks service status',
                 'default' => true,
                 'example' => true,
             ])
-            ->addRule('statusFortasks', [
+            ->addRule('statusForTasks', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Tasks service status',
                 'default' => true,
                 'example' => true,
             ])
-            ->addRule('statusForavatars', [
+            ->addRule('statusForAvatars', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Avatars service status',
                 'default' => true,
                 'example' => true,
             ])
-            ->addRule('statusForhealth', [
+            ->addRule('statusForHealth', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Health service status',
                 'default' => true,
                 'example' => true,
             ])
-            ->addRule('statusForlocale', [
+            ->addRule('statusForLocale', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Locale service status',
                 'default' => true,
                 'example' => true,
             ])
-            ->addRule('statusForstorage', [
+            ->addRule('statusForStorage', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Storage service status',
                 'default' => true,
                 'example' => true,
             ])
-            ->addRule('statusForteams', [
+            ->addRule('statusForTeams', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Teams service status',
                 'default' => true,

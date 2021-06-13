@@ -436,7 +436,7 @@ App::patch('/v1/projects/:projectId/service')
         }
         
         $project = $consoleDB->updateDocument(\array_merge($project->getArrayCopy(), [
-            'statusFor' . $service => $status,
+            'statusFor' . \ucfirst($service) => $status,
         ]));
 
         if (false === $project) {
