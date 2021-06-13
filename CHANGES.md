@@ -5,6 +5,7 @@
 - Added file created date to file info on the console
 - Added file size to file info on the console
 - Refactored Devices page in Console:
+  - Renamed _Devices_ to _Sessions_
   - Add Provider Icon to each Session
   - Add Anonymous Account Placeholder
 - Upgraded telegraf docker image version to v1.1.0
@@ -23,11 +24,13 @@
 # Version 0.8.0
 
 ## Features
+
 - Refactoring SSL generation to work on every request so no domain environment variable is required for SSL generation (#1133)
 - Added Anonymous Login ([RFC-010](https://github.com/appwrite/rfc/blob/main/010-anonymous-login.md), #914)
 - Added events for functions and executions (#971)
 - Added JWT support (#784)
 - Added ARM support (#726)
+- New awesome image preview features, supports borderRadius, borderColor, borderWidth
 - Split token & session models to become 2 different internal entities (#922)
 - Added Dart 2.12 as a new Cloud Functions runtime (#989)
 - Added option to disable email/password (#947)
@@ -35,6 +38,7 @@
 - Added option to disable JWT auth (#947)
 - Added option to disable team invites (#947)
 - Option to limit number of users (good for app launches + root account PR) (#947)
+- Added 2 new endpoints to the projects API to allow new settings
 - Enabled 501 errors (Not Implemented) from the error handler
 - Added Python 3.9 as a new Cloud Functions runtime (#1044)
 - Added Deno 1.8 as a new Cloud Functions runtime (#989)
@@ -64,6 +68,7 @@
 - Environment variable `_APP_FUNCTIONS_ENVS` renamed to `_APP_FUNCTIONS_RUNTIMES` (#1101)
 - Only logged in users can execute functions (for guests, use anonymous login) (#976)
 - Only the user who has triggered the execution get access to the relevant execution logs (#1045)
+- Function execution environment variable `APPWRITE_FUNCTION_EVENT_PAYLOAD` renamed to `APPWRITE_FUNCTION_EVENT_DATA` (#1045)
 - Function execution environment variable `APPWRITE_FUNCTION_ENV_NAME` renamed to `APPWRITE_FUNCTION_RUNTIME_NAME` (#1101)
 - Function execution environment variable `APPWRITE_FUNCTION_ENV_VERSION` renamed to `APPWRITE_FUNCTION_RUNTIME_VERSION` (#1101)
 - Introduces rate limits for:
@@ -88,6 +93,7 @@
 - Fixed certificates worker error on successful operations (#1010)
 - Fixed head requests not responding (#998)
 - Fixed bug when using auth credential for the Redis container (#993)
+- Fixed server warning logs on 3\*\* redirect endpoints (#1013)
 
 # Version 0.7.1
 
@@ -111,6 +117,7 @@
 - Upgraded phpmailer/phpmailer lib to version 6.3.0
 - Upgraded adhocore/jwt lib to version 1.1.2
 - Upgraded domnikl/statsd to slickdeals/statsd version 3.0
+
 ## Bug Fixes
 
 - Updated missing storage env vars
@@ -154,7 +161,9 @@
 - Webhooks payloads are now exactly the same as any of the API response objects, documentation added
 - Added new locale: Marathi -mr (@spielers)
 - New and consistent response format for all API object + new response examples in the docs
+  - Removed user roles attribute from user object (can be fetched from /v1/teams/memberships) \*\*
   - Removed type attribute from session object response (used only internally)
+  - \*\* - might be changed before merging to master
   - Added fallback option to 0.6 format for backward compatibility with any changes (@christyjacob4 [#772](https://github.com/appwrite/appwrite/pull/772))
 - Added option to disable mail sending by setting an empty SMTP host value ([#730](https://github.com/appwrite/appwrite/issues/730))
 - Upgraded installation script ([#490](https://github.com/appwrite/appwrite/issues/490))
@@ -419,6 +428,7 @@
 - New Locale API route for fetching a list of continents
 
 ## Bug Fixes
+
 - Fix for typos in PT-BR translations
 - Fix for UI crash when project user was missing a name
 - Fix for it locale including the en templates by mistake

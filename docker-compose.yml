@@ -3,6 +3,7 @@
 # Avoid using this file in your production environment.
 # We're exposing here sensetive ports and mounting code volumes for rapid development and debugging of the server stack.
 
+version: "3"
 
 services:
   traefik:
@@ -32,6 +33,7 @@ services:
     networks:
       - gateway
       - appwrite
+
   appwrite:
     container_name: appwrite
     build:
@@ -39,6 +41,7 @@ services:
       args:
         - TESTING=true
         - VERSION=dev
+    ports:
       - 9501:80
     networks:
       - appwrite
@@ -216,6 +219,7 @@ services:
       context: .
     networks:
       - appwrite
+    volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-functions:/storage/functions:rw
@@ -244,6 +248,7 @@ services:
       context: .
     networks:
       - appwrite
+    volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
@@ -387,6 +392,7 @@ services:
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
+    command: "mysqld --innodb-flush-method=fsync" # add ' --query_cache_size=0' for DB tests
     # command: mv /var/lib/mysql/ib_logfile0 /var/lib/mysql/ib_logfile0.bu && mv /var/lib/mysql/ib_logfile1 /var/lib/mysql/ib_logfile1.bu
 
   # smtp:
@@ -400,6 +406,7 @@ services:
   #     - RELAY_FROM_HOSTS=192.168.0.0/16 ; *.yourdomain.com
   #     - SMARTHOST_HOST=smtp
   #     - SMARTHOST_PORT=587
+
   redis:
     image: redis:6.0-alpine
     container_name: appwrite-redis
@@ -415,6 +422,7 @@ services:
   #     - appwrite
   #   volumes:
   #     - appwrite-uploads:/storage/uploads
+
   influxdb:
     image: appwrite/influxdb:1.0.0
     container_name: appwrite-influxdb
@@ -430,6 +438,7 @@ services:
       - appwrite
 
   # Dev Tools Start ------------------------------------------------------------------------------------------
+  #
   # The Appwrite Team uses the following tools to help debug, monitor and diagnose the Appwrite stack
   #
   # Here is a description of the different tools and why are we using them:
@@ -445,6 +454,7 @@ services:
     image: appwrite/mailcatcher:1.0.0
     container_name: appwrite-mailcatcher
     ports:
+      - "9503:1080"
     networks:
       - appwrite
 
@@ -452,6 +462,7 @@ services:
     image: appwrite/requestcatcher:1.0.0
     container_name: appwrite-requestcatcher
     ports:
+      - "9504:5000"
     networks:
       - appwrite
 
@@ -512,6 +523,7 @@ services:
   #     - './debug:/tmp'
   #   ports:
   #     - '3001:80'
+
   # Dev Tools End   ------------------------------------------------------------------------------------------
 
 networks:

@@ -1,10 +1,4 @@
 {
-  "repositories": [
-    {
-      "type": "git",
-      "url": "https://github.com/Meldiron/php-runtimes"
-    }
-  ],
   "name": "appwrite/server-ce",
   "description": "End to end backend server for frontend and mobile apps.",
   "type": "project",
@@ -41,7 +35,7 @@
     "ext-zlib": "*",
     "ext-sockets": "*",
     "appwrite/php-clamav": "1.1.*",
-    "appwrite/php-runtimes": "dev-feature-custom-runtime#672d6eed701beee05f082e6ac17c327661b995f4",
+    "appwrite/php-runtimes": "0.2.*",
     "utopia-php/framework": "0.14.*",
     "utopia-php/abuse": "0.4.*",
     "utopia-php/analytics": "0.2.*",
