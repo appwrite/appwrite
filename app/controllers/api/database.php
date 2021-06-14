@@ -456,8 +456,8 @@ App::post('/v1/database/collections/:collectionId/indexes')
     // TODO@kodumbeats type should be a whitelist of supported index types
     ->param('type', null, new Text(256), 'Index type.')
     ->param('attributes', null, new ArrayList(new Text(256)), 'Array of attributes to index.')
-    ->param('lengths', null, new ArrayList(new Text(256)), 'Array of index lengths.')
-    ->param('orders', null, new ArrayList(new Text(256)), 'Array of index orders.')
+    ->param('lengths', [], new ArrayList(new Text(256)), 'Array of index lengths.', true)
+    ->param('orders', [], new ArrayList(new Text(256)), 'Array of index orders.', true)
     ->inject('response')
     ->inject('dbForExternal')
     ->inject('audits')
@@ -725,56 +725,38 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOCUMENT_LIST)
-    ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
-    ->param('filters', [], new ArrayList(new Text(128)), 'Array of filter strings. Each filter is constructed from a key name, comparison operator (=, !=, >, <, <=, >=) and a value. You can also use a dot (.) separator in attribute names to filter by child document attributes. Examples: \'name=John Doe\' or \'category.$id>=5bed2d152c362\'.', true)
+    ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
+    ->param('queries', [], new ArrayList(new Text(128)), 'Array of query strings.', true)
+    // ->param('queries', [], new Text(128), 'Array of query strings.', true)
     ->param('limit', 25, new Range(0, 100), 'Maximum number of documents to return in response.  Use this value to manage pagination. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 900000000), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
-    ->param('orderField', '', new Text(128), 'Document field that results will be sorted by.', true)
-    ->param('orderType', 'ASC', new WhiteList(['DESC', 'ASC'], true), 'Order direction. Possible values are DESC for descending order, or ASC for ascending order.', true)
-    ->param('orderCast', 'string', new WhiteList(['int', 'string', 'date', 'time', 'datetime'], true), 'Order field type casting. Possible values are int, string, date, time or datetime. The database will attempt to cast the order field to the value you pass here. The default value is a string.', true)
-    ->param('search', '', new Text(256), 'Search query. Enter any free text search. The database will try to find a match against all document attributes and children. Max length: 256 chars.', true)
+    ->param('orderAttributes', [], new ArrayList(new Text(128)), 'Array of attributes used to sort results.', true)
+    ->param('orderTypes', [], new ArrayList(new WhiteList(['DESC', 'ASC'], true)), 'Array of order directions for sorting attribtues. Possible values are DESC for descending order, or ASC for ascending order.', true)
+    // ->param('orderField', '', new Text(128), 'Document field that results will be sorted by.', true)
+    // ->param('orderCast', 'string', new WhiteList(['int', 'string', 'date', 'time', 'datetime'], true), 'Order field type casting. Possible values are int, string, date, time or datetime. The database will attempt to cast the order field to the value you pass here. The default value is a string.', true)
+    // ->param('search', '', new Text(256), 'Search query. Enter any free text search. The database will try to find a match against all document attributes and children. Max length: 256 chars.', true)
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($collectionId, $filters, $limit, $offset, $orderField, $orderType, $orderCast, $search, $response, $projectDB) {
+    ->inject('dbForExternal')
+    ->action(function ($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $response, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForExternal */
 
-        $collection = $projectDB->getDocument($collectionId, false);
+        $collection = $dbForExternal->getCollection($collectionId);
 
-        if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+        if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
         }
 
-        $list = $projectDB->getCollection([
-            'limit' => $limit,
-            'offset' => $offset,
-            'orderField' => $orderField,
-            'orderType' => $orderType,
-            'orderCast' => $orderCast,
-            'search' => $search,
-            'filters' => \array_merge($filters, [
-                '$collection='.$collectionId,
-            ]),
-        ]);
+        $queries = \array_map(function ($query) {
+            return Query::parse($query);
+        }, $queries);
 
-        // if (App::isDevelopment()) {
-        //     $collection
-        //         ->setAttribute('debug', $projectDB->getDebug())
-        //         ->setAttribute('limit', $limit)
-        //         ->setAttribute('offset', $offset)
-        //         ->setAttribute('orderField', $orderField)
-        //         ->setAttribute('orderType', $orderType)
-        //         ->setAttribute('orderCast', $orderCast)
-        //         ->setAttribute('filters', $filters)
-        //     ;
-        // }
+        $documents = $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes);
 
-        $collection
-            ->setAttribute('sum', $projectDB->getSum())
-            ->setAttribute('documents', $list)
-        ;
-
-        $response->dynamic($collection, Response::MODEL_DOCUMENT_LIST);
+        $response->dynamic2(new Document2([
+            'sum' => \count($documents),
+            'documents' => $documents,
+        ]), Response::MODEL_DOCUMENT_LIST);
     });
 
 App::get('/v1/database/collections/:collectionId/documents/:documentId')
