@@ -6,6 +6,7 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Filesystem;
@@ -22,7 +23,9 @@ use Utopia\Image\Image;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
-use Utopia\Validator\Numeric;
+use Utopia\Validator\Integer;
+use Appwrite\Database\Exception\Authorization as AuthorizationException;
+use Appwrite\Database\Exception\Structure as StructureException;
 
 App::post('/v1/storage/buckets')
     ->desc('Create storage bucket')
@@ -36,16 +39,60 @@ App::post('/v1/storage/buckets')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_BUCKET)
-    ->param('file', [], new File(), 'Binary file.', false)
+    ->param('name', '', new Text(128), 'Bucket name', false)
+    ->param('maximumFileSize', 0, new Integer(), 'Maximum file size supported', false)
+    ->param('allowedFileExtensions', '*', new Text(128), 'Allowed file extensions', false)
+    ->param('enabled', true, new Boolean(), 'Bucket enabled', true)
+    ->param('adapter', 'local', new WhiteList(['local']), 'Storage adapter', true)
+    ->param('encryption', true, new Boolean(), 'encryption is enabled', true)
+    ->param('antiVirus', true, new Boolean(), 'Virus scanning is enabled', true)
     ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
-    ->inject('request')
     ->inject('response')
     ->inject('projectDB')
     ->inject('user')
     ->inject('audits')
-    ->inject('usage')
-    ->action(function ($file, $read, $write, $request, $response, $projectDB, $user, $audits, $usage) {
+    ->action(function ($name, $maximumFileSize, $allowedFileExtensions, $enabled, $adapter, $encryption, $antiVirus, $read, $write, $response, $projectDB, $user, $audits) {
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Database\Document $user */
+        /** @var Appwrite\Event\Event $audits */
+
+        try {
+            $data = $projectDB->createDocument([
+                '$collection' => Database::SYSTEM_COLLECTION_BUCKETS,
+                'dateCreated' => \time(),
+                'name' => $name,
+                'maximumFileSize' => $maximumFileSize,
+                'allowedFileExtensions' => $allowedFileExtensions,
+                'enabled' => $enabled,
+                'adapter' => $adapter,
+                'encryption' => $encryption,
+                'antiVirus' => $antiVirus,
+            ]);
+            $data['$permissions'] = [
+                'read' => (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? [], //  By default set read permissions for user
+                'write' => (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? [], //  By default set write permissions for user
+            ];
+        } catch (AuthorizationException $exception) {
+            throw new Exception('Unauthorized permissions', 401);
+        } catch (StructureException $exception) {
+            throw new Exception('Bad structure. '.$exception->getMessage(), 400);
+        } catch (\Exception $exception) {
+            throw new Exception('Failed saving document to DB', 500);
+        }
+
+        $audits
+            ->setParam('event', 'database.collections.create')
+            ->setParam('resource', 'database/collection/'.$data->getId())
+            ->setParam('data', $data->getArrayCopy())
+        ;
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($data, Response::MODEL_BUCKET)
+        ;
 
     });
 
