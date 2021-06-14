@@ -8,6 +8,7 @@ use Utopia\Validator\WhiteList;
 use Appwrite\Network\Validator\Email;
 use Utopia\Validator\Text;
 use Utopia\Validator\Range;
+use Utopia\Validator\Boolean;
 use Utopia\Audit\Audit;
 use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 use Appwrite\Auth\Auth;
@@ -40,6 +41,7 @@ App::post('/v1/users')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
+        $email = \strtolower($email);
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
             'limit' => 1,
             'filters' => [
@@ -359,6 +361,43 @@ App::patch('/v1/users/:userId/status')
 
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
             'status' => (int)$status,
+        ]));
+
+        if (false === $user) {
+            throw new Exception('Failed saving user to DB', 500);
+        }
+
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::patch('/v1/users/:userId/verification')
+    ->desc('Update Email Verification')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.update.verification')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'updateVerification')
+    ->label('sdk.description', '/docs/references/users/update-user-verification.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('emailVerification', false, new Boolean(), 'User Email Verification Status.')
+    ->inject('response')
+    ->inject('projectDB')
+    ->action(function ($userId, $emailVerification, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+
+        $user = $projectDB->getDocument($userId);
+
+        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            throw new Exception('User not found', 404);
+        }
+
+        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
+            'emailVerification' => $emailVerification,
         ]));
 
         if (false === $user) {

@@ -1,32 +1,32 @@
 <?php
 
-use Utopia\App;
-use Utopia\CLI\Console;
-use Utopia\Config\Config;
 use Appwrite\Database\Database;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
+use Appwrite\Resque\Worker;
 use Cron\CronExpression;
+use Utopia\App;
+use Utopia\CLI\Console;
+use Utopia\Config\Config;
 
 require_once __DIR__.'/../init.php';
 
 Console::title('Tasks V1 Worker');
-
 Console::success(APP_NAME.' tasks worker v1 has started');
 
-class TasksV1
+class TasksV1 extends Worker
 {
     /**
      * @var array
      */
     public $args = [];
 
-    public function setUp(): void
+    public function init(): void
     {
     }
 
-    public function perform()
+    public function run(): void
     {
         global $register;
 
@@ -73,11 +73,11 @@ class TasksV1
         }
 
         if ($task->getAttribute('updated') !== $updated) { // Task have already been rescheduled by owner
-            return false;
+            return;
         }
 
         if ($task->getAttribute('status') !== 'play') { // Skip task and don't schedule again
-            return false;
+            return;
         }
 
         // Reschedule
@@ -202,11 +202,10 @@ class TasksV1
 
         // Send alert if needed (use SMTP as default for now)
 
-        return true;
+        return;
     }
 
-    public function tearDown(): void
+    public function shutdown(): void
     {
-        // ... Remove environment for this job
     }
 }

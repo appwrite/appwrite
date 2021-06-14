@@ -6,53 +6,49 @@ For you to init your SDK and interact with Appwrite services you need to add a w
 From the options, choose to add a **Web** platform and add your client app hostname. By adding your hostname to your project platform you are allowing cross-domain communication between your project and the Appwrite API.
 
 ### Init your SDK
-Initialize your SDK code with your project ID which can be found in your project settings page.
+Initialize your SDK with your Appwrite server API endpoint and project ID which can be found in your project settings page.
 
 ```js
 // Init your Web SDK
-const appwrite = new Appwrite();
+const sdk = new Appwrite();
 
-appwrite
+sdk
     .setEndpoint('http://localhost/v1') // Your Appwrite Endpoint
     .setProject('455x34dfkj') // Your project ID
-    .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
 ;
 ```
 
 ### Make Your First Request
-Once your SDK object is set, access any of the Appwrite services and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the API References section.
+Once your SDK object is set, access any of the Appwrite services and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the [API References](https://appwrite.io/docs) section.
 
 ```js
 // Register User
-appwrite
-    .account.create('me@example.com', 'password', 'Jane Doe')
-        .then(function (response) {
-            console.log(response);
-        }, function (error) {
-            console.log(error);
-        });
+sdk.account.create('me@example.com', 'password', 'Jane Doe')
+    .then(function (response) {
+        console.log(response);
+    }, function (error) {
+        console.log(error);
+    });
 
 ```
 
 ### Full Example
 ```js
 // Init your Web SDK
-const appwrite = new Appwrite();
+const sdk = new Appwrite();
 
-appwrite
+sdk
     .setEndpoint('http://localhost/v1') // Your Appwrite Endpoint
     .setProject('455x34dfkj')
-    .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
 ;
 
 // Register User
-appwrite
-    .account.create('me@example.com', 'password', 'Jane Doe')
-        .then(function (response) {
-            console.log(response);
-        }, function (error) {
-            console.log(error);
-        });
+sdk.account.create('me@example.com', 'password', 'Jane Doe')
+    .then(function (response) {
+        console.log(response);
+    }, function (error) {
+        console.log(error);
+    });
 ```
 
 ### Learn more

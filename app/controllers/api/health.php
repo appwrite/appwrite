@@ -262,11 +262,17 @@ App::get('/v1/health/anti-virus')
 
         $antiVirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
             (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
-
-        $response->json([
-            'status' => (@$antiVirus->ping()) ? 'online' : 'offline',
-            'version' => @$antiVirus->version(),
-        ]);
+        try {
+            $response->json([
+                'status' => (@$antiVirus->ping()) ? 'online' : 'offline',
+                'version' => @$antiVirus->version(),
+            ]);
+        } catch( RuntimeException $e) {
+            $response->json([
+                'status' => 'offline',
+                'version' => '',
+            ]);
+        }
     });
 
 App::get('/v1/health/stats') // Currently only used internally

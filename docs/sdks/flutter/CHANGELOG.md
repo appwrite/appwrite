@@ -1,3 +1,15 @@
+## 0.6.3
+
+- Removed default values, nothing should change in usage as default values are already allocated in server
+
+## 0.6.2
+
+- Fixed deployment bug
+
+## 0.6.1
+
+- Fix for image preview param types
+
 ## 0.6.0
 
 - Upgraded to Null-safety, minimum Dart SDK required 2.12.0

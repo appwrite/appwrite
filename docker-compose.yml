@@ -2,7 +2,6 @@
 # This is a development version of THE Appwrite docker-compose.yml file.
 # Avoid using this file in your production environment.
 # We're exposing here sensetive ports and mounting code volumes for rapid development and debugging of the server stack.
-# For a production ready compose file please use: https://appwrite.io/docker-compose.yml
 
 version: '3'
 
@@ -431,10 +430,13 @@ services:
       - appwrite-influxdb:/var/lib/influxdb:rw
 
   telegraf:
-    image: appwrite/telegraf:1.1.0
+    image: appwrite/telegraf:1.2.0
     container_name: appwrite-telegraf
     networks:
       - appwrite
+    environment: 
+      - _APP_INFLUXDB_HOST
+      - _APP_INFLUXDB_PORT
 
   # Dev Tools Start ------------------------------------------------------------------------------------------
   # 

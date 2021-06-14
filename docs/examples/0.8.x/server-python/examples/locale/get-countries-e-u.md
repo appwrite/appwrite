@@ -11,4 +11,4 @@ client = Client()
 
 locale = Locale(client)
 
-result = locale.get_countries_e_u()
+result = locale.get_countries_eu()

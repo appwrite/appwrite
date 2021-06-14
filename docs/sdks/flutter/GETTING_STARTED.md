@@ -23,7 +23,7 @@ The Appwrite SDK uses ASWebAuthenticationSession on iOS 12+ and SFAuthentication
 4. In Deployment Info, 'Target' select iOS 11.0
 
 ### Android
-In order to capture the Appwrite OAuth callback url, the following activity needs to be added to your [AndroidManifest.xml](https://github.com/appwrite/playground-for-flutter/blob/master/android/app/src/main/AndroidManifest.xml). Be sure to relpace the **[PROJECT_ID]** string with your actual Appwrite project ID. You can find your Appwrite project ID in you project settings screen in your Appwrite console.
+In order to capture the Appwrite OAuth callback url, the following activity needs to be added to your [AndroidManifest.xml](https://github.com/appwrite/playground-for-flutter/blob/master/android/app/src/main/AndroidManifest.xml). Be sure to replace the **[PROJECT_ID]** string with your actual Appwrite project ID. You can find your Appwrite project ID in your project settings screen in the console.
 
 ```xml
 <manifest>
@@ -48,7 +48,7 @@ While running Flutter Web, make sure your Appwrite server and your Flutter clien
 
 ### Init your SDK
 
-<p>Initialize your SDK code with your project ID, which can be found in your project settings page.
+<p>Initialize your SDK with your Appwrite server API endpoint and project ID, which can be found in your project settings page.
 
 ```dart
 import 'package:appwrite/appwrite.dart';
@@ -68,7 +68,7 @@ When trying to connect to Appwrite from an emulator or a mobile device, localhos
 
 ### Make Your First Request
 
-<p>Once your SDK object is set, access any of the Appwrite services and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the API References section.
+<p>Once your SDK object is set, access any of the Appwrite services and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the [API References](https://appwrite.io/docs) section.
 
 ```dart
 // Register User

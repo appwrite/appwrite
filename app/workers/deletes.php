@@ -5,6 +5,7 @@ use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
+use Appwrite\Resque\Worker;
 use Utopia\Storage\Device\Local;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
@@ -16,21 +17,19 @@ use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 require_once __DIR__.'/../init.php';
 
 Console::title('Deletes V1 Worker');
-
 Console::success(APP_NAME.' deletes worker v1 has started'."\n");
 
-class DeletesV1
+class DeletesV1 extends Worker
 {
-
     public $args = [];
 
     protected $consoleDB = null;
 
-    public function setUp(): void
+    public function init(): void
     {
     }
 
-    public function perform()
+    public function run(): void
     {
         $projectId = isset($this->args['projectId']) ? $this->args['projectId'] : '';   
         $type = $this->args['type'];
@@ -85,9 +84,8 @@ class DeletesV1
             }
     }
 
-    public function tearDown(): void
+    public function shutdown(): void
     {
-        // ... Remove environment for this job
     }
     
     protected function deleteDocuments(Document $document, $projectId) 
@@ -138,11 +136,22 @@ class DeletesV1
             }
         }
 
-        // Delete Memberships
+        // Delete Memberships and decrement team membership counts
         $this->deleteByGroup([
             '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
             'userId='.$document->getId(),
-        ], $this->getProjectDB($projectId));
+        ], $this->getProjectDB($projectId), function(Document $document) use ($projectId) {
+
+            if ($document->getAttribute('confirm')) { // Count only confirmed members
+                $teamId = $document->getAttribute('teamId');
+                $team = $this->getProjectDB($projectId)->getDocument($teamId);
+                if(!$team->isEmpty()) {
+                    $team = $this->getProjectDB($projectId)->updateDocument(\array_merge($team->getArrayCopy(), [
+                        'sum' => \max($team->getAttribute('sum', 0) - 1, 0), // Ensure that sum >= 0
+                    ]));
+                }
+            }
+        });
     }
 
     protected function deleteExecutionLogs($timestamp) 
