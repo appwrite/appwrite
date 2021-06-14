@@ -17,7 +17,6 @@ use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 require_once __DIR__.'/../workers.php';
 
 Console::title('Deletes V1 Worker');
-
 Console::success(APP_NAME.' deletes worker v1 has started'."\n");
 
 class DeletesV1 extends Worker

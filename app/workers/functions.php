@@ -6,7 +6,6 @@ use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
-use Appwrite\Event\Realtime;
 use Appwrite\Resque\Worker;
 use Cron\CronExpression;
 use Swoole\Runtime;

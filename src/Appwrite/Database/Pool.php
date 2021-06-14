@@ -9,7 +9,7 @@ abstract class Pool
 
     abstract public function get();
 
-    public function destruct ()
+    public function destruct()
     {
         $this->available = false;
         while (!$this->pool->isEmpty()) {

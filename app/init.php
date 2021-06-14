@@ -161,19 +161,21 @@ $register->set('dbPool', function () { // Register DB connection
 
     return $pool;
 });
-
 $register->set('redisPool', function () {
-    $user = App::getEnv('_APP_REDIS_USER', '');
-    $pass = App::getEnv('_APP_REDIS_PASS', '');
-    $auth = [];
-    if ($user) {
-        $auth[] = $user;
+    $redisHost = App::getEnv('_APP_REDIS_HOST', '');
+    $redisPort = App::getEnv('_APP_REDIS_PORT', '');
+    $redisUser = App::getEnv('_APP_REDIS_USER', '');
+    $redisPass = App::getEnv('_APP_REDIS_PASS', '');
+    $redisAuth = [];
+
+    if ($redisUser) {
+        $redisAuth[] = $redisUser;
     }
-    if ($pass) {
-        $auth[] = $pass;
+    if ($redisPass) {
+        $redisAuth[] = $redisPass;
     }
 
-    $pool = new RedisPool(10, App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''), $auth);
+    $pool = new RedisPool(10, $redisHost, $redisPort, $redisAuth);
 
     return $pool;
 });
