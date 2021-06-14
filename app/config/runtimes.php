@@ -1,7 +1,6 @@
 <?php
 
 use Utopia\App;
-use Utopia\CLI\Console;
 use Utopia\System\System;
 use Appwrite\Runtimes\Runtimes;
 use Appwrite\Runtimes\Runtime;
@@ -51,8 +50,6 @@ foreach($uniqueRuntimeNames as $runtimeImageName => $runtimeImageVersions) {
     }
 
     $runtimes->add($customRuntime);
-    Console::log('Loaded custom runtime environment "' . $runtimeImageName . '" with versions: ' . join(", ", $runtimeImageVersions));
-
 }
 
 /**
