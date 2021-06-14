@@ -32,7 +32,7 @@ class DeletesV1
 
     public function perform()
     {
-        $projectId = $this->args['projectId'];   
+        $projectId = isset($this->args['projectId']) ? $this->args['projectId'] : '';   
         $type = $this->args['type'];
         
         switch (strval($type)) {
@@ -101,8 +101,6 @@ class DeletesV1
     }
 
     protected function deleteMemberships(Document $document, $projectId) {
-        var_dump("In deleteMembership");
-        var_dump($document);
         // Delete Memberships
         $this->deleteByGroup([
             '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
@@ -232,7 +230,6 @@ class DeletesV1
         Authorization::disable();
 
         Console::success($document->getAttribute('name', 'noname'));
-        var_dump($document);
         if($database->deleteDocument($document->getId())) {
             Console::success('Deleted document "'.$document->getId().'" successfully');
 
@@ -266,7 +263,6 @@ class DeletesV1
             Authorization::disable();
             $projects = $this->getConsoleDB()->getCollection([
                 'limit' => $limit,
-                'offset' => $count,
                 'orderType' => 'ASC',
                 'orderCast' => 'string',
                 'filters' => [
@@ -309,7 +305,6 @@ class DeletesV1
 
             $results = $database->getCollection([
                 'limit' => $limit,
-                'offset' => $count,
                 'orderField' => '$id',
                 'orderType' => 'ASC',
                 'orderCast' => 'string',
@@ -317,12 +312,6 @@ class DeletesV1
             ]);
 
             Authorization::reset();
-
-            var_dump("chunk=".$chunk);
-            var_dump("sum=".$sum);
-            var_dump("limit=".$limit);
-            var_dump("offset=".$count);
-            var_dump("count(results)=".count($results));
 
             $sum = count($results);
 
