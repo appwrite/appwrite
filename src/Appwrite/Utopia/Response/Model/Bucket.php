@@ -60,13 +60,13 @@ class Bucket extends Model
             'default' => '',
             'example' => 'jpg,png',
         ])
-        ->addRule('encrypted', [
+        ->addRule('encryption', [
             'type' => self::TYPE_BOOLEAN,
             'description' => 'Bucket is encrypted.',
             'default' => true,
             'example' => false,
         ])
-        ->addRule('antivirus', [
+        ->addRule('antiVirus', [
             'type' => self::TYPE_BOOLEAN,
             'description' => 'Virus scanning is enabled.',
             'default' => true,

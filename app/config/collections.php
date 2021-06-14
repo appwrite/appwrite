@@ -1500,7 +1500,7 @@ $collections = [
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Encryption',
-                'key' => 'encrypted',
+                'key' => 'encryption',
                 'type' => Database::SYSTEM_VAR_TYPE_BOOLEAN,
                 'default' => true,
                 'required' => true,
@@ -1509,7 +1509,7 @@ $collections = [
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Virus Scan',
-                'key' => 'antivirus',
+                'key' => 'antiVirus',
                 'type' => Database::SYSTEM_VAR_TYPE_BOOLEAN,
                 'default' => true,
                 'required' => true,
