@@ -78,7 +78,8 @@ class Response extends SwooleResponse
     // Storage
     const MODEL_FILE = 'file';
     const MODEL_FILE_LIST = 'fileList';
-    const MODEL_BUCKET = 'bucket'; // - Missing
+    const MODEL_BUCKET = 'bucket';
+    const MODEL_BUCKET_LIST = 'bucketList';
 
     // Locale
     const MODEL_LOCALE = 'locale';
@@ -154,6 +155,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Sessions List', self::MODEL_SESSION_LIST, 'sessions', self::MODEL_SESSION))
             ->setModel(new BaseList('Logs List', self::MODEL_LOG_LIST, 'logs', self::MODEL_LOG, false))
             ->setModel(new BaseList('Files List', self::MODEL_FILE_LIST, 'files', self::MODEL_FILE))
+            ->setModel(new BaseList('Buckets List', self::MODEL_BUCKET_LIST, 'buckets', self::MODEL_BUCKET))
             ->setModel(new BaseList('Teams List', self::MODEL_TEAM_LIST, 'teams', self::MODEL_TEAM))
             ->setModel(new BaseList('Memberships List', self::MODEL_MEMBERSHIP_LIST, 'memberships', self::MODEL_MEMBERSHIP))
             ->setModel(new BaseList('Functions List', self::MODEL_FUNCTION_LIST, 'functions', self::MODEL_FUNCTION))
