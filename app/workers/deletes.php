@@ -229,7 +229,6 @@ class DeletesV1
     {
         Authorization::disable();
 
-        Console::success($document->getAttribute('name', 'noname'));
         if($database->deleteDocument($document->getId())) {
             Console::success('Deleted document "'.$document->getId().'" successfully');
 
