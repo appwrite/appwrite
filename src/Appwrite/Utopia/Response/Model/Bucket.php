@@ -19,14 +19,14 @@ class Bucket extends Model
         ])
         ->addRule('$permissions', [
             'type' => Response::MODEL_PERMISSIONS,
-            'description' => 'File permissions.',
+            'description' => 'Bucket permissions.',
             'default' => new \stdClass,
             'example' => new \stdClass,
             'array' => false,
         ])
         ->addRule('dateCreated', [
             'type' => self::TYPE_INTEGER,
-            'description' => 'File creation date in Unix timestamp.',
+            'description' => 'Bucket creation date in Unix timestamp.',
             'default' => 0,
             'example' => 1592981250,
         ])
