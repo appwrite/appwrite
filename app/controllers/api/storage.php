@@ -24,6 +24,31 @@ use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Validator\Numeric;
 
+App::post('/v1/storage/buckets')
+    ->desc('Create storage bucket')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'buckets.write')
+    ->label('event', 'storage.buckets.create')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'createBucket')
+    ->label('sdk.description', '/docs/references/storage/create-bucket.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BUCKET)
+    ->param('file', [], new File(), 'Binary file.', false)
+    ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->inject('request')
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('user')
+    ->inject('audits')
+    ->inject('usage')
+    ->action(function ($file, $read, $write, $request, $response, $projectDB, $user, $audits, $usage) {
+
+    });
+
 App::post('/v1/storage/files')
     ->desc('Create File')
     ->groups(['api', 'storage'])
