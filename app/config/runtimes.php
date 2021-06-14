@@ -15,8 +15,6 @@ $runtimes = new Runtimes();
  * Load custom runtimes
  */ 
 $customRuntimes = empty(App::getEnv('_APP_FUNCTIONS_CUSTOM_RUNTIMES')) ? [] : \explode(',', App::getEnv('_APP_FUNCTIONS_CUSTOM_RUNTIMES'));
-Console::log(json_encode($customRuntimes));
-Console::log(json_encode(App::getEnv('_APP_FUNCTIONS_CUSTOM_RUNTIMES')));
 
 $uniqueRuntimeNames = array();
 foreach ($customRuntimes as $customRuntimeName) {
