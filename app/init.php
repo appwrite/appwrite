@@ -28,7 +28,6 @@ use Appwrite\Database\Pool\PDOPool;
 use Appwrite\Database\Pool\RedisPool;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
-use Appwrite\Extend\PDO;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\App;
 use Utopia\View;
@@ -37,7 +36,6 @@ use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
-use PDO as PDONative;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
