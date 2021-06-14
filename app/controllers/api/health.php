@@ -267,7 +267,7 @@ App::get('/v1/health/anti-virus')
                 'status' => (@$antiVirus->ping()) ? 'online' : 'offline',
                 'version' => @$antiVirus->version(),
             ]);
-        } catch( RuntimeException $e) {
+        } catch( \Exception $e) {
             $response->json([
                 'status' => 'offline',
                 'version' => '',
