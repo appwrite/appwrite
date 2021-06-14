@@ -2,17 +2,24 @@
 
 global $cli;
 
+use Appwrite\Auth\Auth;
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
 use Utopia\Analytics\GoogleAnalytics;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\View;
+use Utopia\Validator\Text;
 
 $cli
     ->task('install')
     ->desc('Install Appwrite')
-    ->action(function () {
+    ->param('httpPort', '', new Text(4), 'Server HTTP port', true)
+    ->param('httpsPort', '', new Text(4), 'Server HTTPS port', true)
+    ->param('organization', 'appwrite', new Text(0), 'Docker Registry organization', true)
+    ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
+    ->param('interactive','Y', new Text(1), 'Run an interactive session', true)
+    ->action(function ($httpPort, $httpsPort, $organization, $image, $interactive) {
         /**
          * 1. Start - DONE
          * 2. Check for older setup and get older version - DONE
@@ -60,6 +67,9 @@ $cli
         $data = @file_get_contents($path.'/docker-compose.yml');
 
         if($data !== false) {
+            $time = \time();
+            Console::info('Compose file found, creating backup: docker-compose.yml.'.$time.'.backup');
+            file_put_contents($path.'/docker-compose.yml.'.$time.'.backup',$data);
             $compose = new Compose($data);
             $appwrite = $compose->getService('appwrite');
             $oldVersion = ($appwrite) ? $appwrite->getImageVersion() : null;
@@ -85,6 +95,8 @@ $cli
                 $data = @file_get_contents($path.'/.env');
 
                 if($data !== false) { // Fetch all env vars from previous .env file
+                    Console::info('Env file found, creating backup: .env.'.$time.'.backup');
+                    file_put_contents($path.'/.env.'.$time.'.backup',$data);
                     $env = new Env($data);
 
                     foreach ($env->list() as $key => $value) {
@@ -108,23 +120,43 @@ $cli
             }
         }
 
-        $httpPort = Console::confirm('Choose your server HTTP port: (default: '.$defaultHTTPPort.')');
-        $httpPort = ($httpPort) ? $httpPort : $defaultHTTPPort;
+        if(empty($httpPort)) {
+            $httpPort = Console::confirm('Choose your server HTTP port: (default: '.$defaultHTTPPort.')');
+            $httpPort = ($httpPort) ? $httpPort : $defaultHTTPPort;
+        }
 
-        $httpsPort = Console::confirm('Choose your server HTTPS port: (default: '.$defaultHTTPSPort.')');
-        $httpsPort = ($httpsPort) ? $httpsPort : $defaultHTTPSPort;
+        if(empty($httpsPort)) {
+            $httpsPort = Console::confirm('Choose your server HTTPS port: (default: '.$defaultHTTPSPort.')');
+            $httpsPort = ($httpsPort) ? $httpsPort : $defaultHTTPSPort;
+        }
     
         $input = [];
 
         foreach($vars as $key => $var) {
-            if(!$var['required']) {
+            if(!empty($var['filter']) && ($interactive !== 'Y' || !Console::isInteractive())) {
+                if($data && $var['default'] !== null) {
+                    $input[$var['name']] = $var['default'];
+                    continue;
+                }
+
+                if($var['filter'] === 'token') {
+                    $input[$var['name']] = Auth::tokenGenerator();
+                    continue;
+                }
+
+                if($var['filter'] === 'password') {
+                    $input[$var['name']] = Auth::passwordGenerator();
+                    continue;
+                }
+            }
+            if(!$var['required'] || !Console::isInteractive() || $interactive !== 'Y') {
                 $input[$var['name']] = $var['default'];
                 continue;
             }
 
             $input[$var['name']] = Console::confirm($var['question'].' (default: \''.$var['default'].'\')');
 
-            if(empty($input[$key])) {
+            if(empty($input[$var['name']])) {
                 $input[$var['name']] = $var['default'];
             }
         }
@@ -136,6 +168,8 @@ $cli
             ->setParam('httpPort', $httpPort)
             ->setParam('httpsPort', $httpsPort)
             ->setParam('version', APP_VERSION_STABLE)
+            ->setParam('organization', $organization)
+            ->setParam('image', $image)
         ;
         
         $templateForEnv

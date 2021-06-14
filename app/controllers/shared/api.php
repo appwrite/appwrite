@@ -48,7 +48,9 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     //TODO make sure we get array here
 
     foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
-        if (!is_null($value)) $timeLimit->setParam('{param-'.$key.'}', (\is_array($value)) ? \json_encode($value) : $value);
+        if(!empty($value)) {
+            $timeLimit->setParam('{param-'.$key.'}', (\is_array($value)) ? \json_encode($value) : $value);
+        }
     }
 
     $abuse = new Abuse($timeLimit);
@@ -61,12 +63,12 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
         ;
     }
 
-    $isPreviliggedUser = Auth::isPreviliggedUser(Authorization::$roles);
+    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
     $isAppUser = Auth::isAppUser(Authorization::$roles);
 
     if (($abuse->check() // Route is rate-limited
         && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') // Abuse is not diabled
-        && (!$isAppUser && !$isPreviliggedUser)) // User is not an admin or API key
+        && (!$isAppUser && !$isPrivilegedUser)) // User is not an admin or API key
         {
         throw new Exception('Too many requests', 429);
     }
@@ -76,9 +78,10 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
      */
     $events
         ->setParam('projectId', $project->getId())
+        ->setParam('webhooks', $project->getAttribute('webhooks', []))
         ->setParam('userId', $user->getId())
         ->setParam('event', $route->getLabel('event', ''))
-        ->setParam('payload', [])
+        ->setParam('eventData', [])
         ->setParam('functionId', null)	
         ->setParam('executionId', null)	
         ->setParam('trigger', 'event')
@@ -110,6 +113,61 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
 
 }, ['utopia', 'request', 'response', 'project', 'user', 'register', 'events', 'audits', 'usage', 'deletes'], 'api');
 
+
+App::init(function ($utopia, $request, $response, $project, $user) {
+    /** @var Utopia\App $utopia */
+    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Response $response */
+    /** @var Appwrite\Database\Document $project */
+    /** @var Appwrite\Database\Document $user */
+    /** @var Utopia\Registry\Registry $register */
+    /** @var Appwrite\Event\Event $events */
+    /** @var Appwrite\Event\Event $audits */
+    /** @var Appwrite\Event\Event $usage */
+    /** @var Appwrite\Event\Event $deletes */
+    /** @var Appwrite\Event\Event $functions */
+
+    $route = $utopia->match($request);
+
+    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
+    $isAppUser = Auth::isAppUser(Authorization::$roles);
+
+    if($isAppUser || $isPrivilegedUser) { // Skip limits for app and console devs
+        return;
+    }
+
+    switch ($route->getLabel('auth.type', '')) {
+        case 'emailPassword':
+            if($project->getAttribute('usersAuthEmailPassword', true) === false) {
+                throw new Exception('Email / Password authentication is disabled for this project', 501);
+            }
+            break;
+
+        case 'anonymous':
+            if($project->getAttribute('usersAuthAnonymous', true) === false) {
+                throw new Exception('Anonymous authentication is disabled for this project', 501);
+            }
+            break;
+
+        case 'invites':
+            if($project->getAttribute('usersAuthInvites', true) === false) {
+                throw new Exception('Invites authentication is disabled for this project', 501);
+            }
+            break;
+
+        case 'jwt':
+            if($project->getAttribute('usersAuthJWT', true) === false) {
+                throw new Exception('JWT authentication is disabled for this project', 501);
+            }
+            break;
+        
+        default:
+            throw new Exception('Unsupported authentication route');
+            break;
+    }
+
+}, ['utopia', 'request', 'response', 'project', 'user'], 'auth');
+
 App::shutdown(function ($utopia, $request, $response, $project, $events, $audits, $usage, $deletes, $mode) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
@@ -123,8 +181,8 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
     /** @var bool $mode */
 
     if (!empty($events->getParam('event'))) {
-        if(empty($events->getParam('payload'))) {
-            $events->setParam('payload', $response->getPayload());
+        if(empty($events->getParam('eventData'))) {
+            $events->setParam('eventData', $response->getPayload());
         }
 
         $webhooks = clone $events;

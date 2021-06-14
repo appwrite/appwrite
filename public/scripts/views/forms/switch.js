@@ -6,7 +6,7 @@
     controller: function(element) {
       let input = window.document.createElement("input");
       input.type = "checkbox";
-      input.className = "button switch";
+      input.className = "button switch " + element.className;
 
       let syncA = function() {
         let value = input.checked ? "true" : "false"
