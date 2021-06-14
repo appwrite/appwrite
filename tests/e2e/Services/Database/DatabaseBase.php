@@ -64,7 +64,27 @@ trait DatabaseBase
             'array' => true,
         ]);
 
-        $this->assertEquals(1,1);
+        $this->assertEquals($title['headers']['status-code'], 201);
+        $this->assertEquals($title['body']['$collection'], $data['moviesId']);
+        $this->assertEquals($title['body']['$id'], 'title');
+        $this->assertEquals($title['body']['type'], 'string');
+        $this->assertEquals($title['body']['size'], 256);
+        $this->assertEquals($title['body']['required'], true);
+
+        $this->assertEquals($releaseYear['headers']['status-code'], 201);
+        $this->assertEquals($releaseYear['body']['$collection'], $data['moviesId']);
+        $this->assertEquals($releaseYear['body']['$id'], 'releaseYear');
+        $this->assertEquals($releaseYear['body']['type'], 'integer');
+        $this->assertEquals($releaseYear['body']['size'], 0);
+        $this->assertEquals($releaseYear['body']['required'], true);
+
+        $this->assertEquals($actors['headers']['status-code'], 201);
+        $this->assertEquals($actors['body']['$collection'], $data['moviesId']);
+        $this->assertEquals($actors['body']['$id'], 'actors');
+        $this->assertEquals($actors['body']['type'], 'string');
+        $this->assertEquals($actors['body']['size'], 256);
+        $this->assertEquals($actors['body']['required'], false);
+        $this->assertEquals($actors['body']['array'], true);
 
         return $data;
     }
