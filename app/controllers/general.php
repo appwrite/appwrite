@@ -15,6 +15,7 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Response\Filters\V06;
+use Appwrite\Utopia\Response\Filters\V07;
 use Utopia\CLI\Console;
 
 Config::setParam('domainVerification', false);
@@ -63,9 +64,9 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
                 $dbDomain = $consoleDB->createDocument($dbDomain);
                 Authorization::enable();
 
-                Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in ~30 seconds..'); // TODO move this to installation script
+                Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in a few seconds...'); // TODO move this to installation script
 
-                ResqueScheduler::enqueueAt(\time() + 30, 'v1-certificates', 'CertificatesV1', [
+                Resque::enqueue('v1-certificates', 'CertificatesV1', [
                     'document' => $dbDomain,
                     'domain' => $domain->get(),
                     'validateTarget' => false,
@@ -135,6 +136,9 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
         switch($responseFormat) {
             case version_compare ($responseFormat , '0.6.2', '<=') :
                 Response::setFilter(new V06());
+                break;
+            case version_compare ($responseFormat , '0.7.2', '<=') :
+                Response::setFilter(new V07());
                 break;
             default:
                 Response::setFilter(null);

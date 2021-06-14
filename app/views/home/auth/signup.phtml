@@ -1,7 +1,14 @@
 <?php
 $root = ($this->getParam('root') !== 'disabled');
 ?>
-<div class="zone medium signup">
+<div class="zone medium signup"
+    data-service="account.get"
+    data-name="account"
+    data-scope="console"
+    data-event="load"
+    data-success="redirect"
+    data-success-param-redirect-url="/console"
+    data-success-param-trigger-events="account.get">
     <h1 class="zone xl margin-bottom-large margin-top">
         Sign Up
     </h1>
@@ -12,6 +19,7 @@ $root = ($this->getParam('root') !== 'disabled');
 
     <form name="account.create"
         data-analytics
+        data-newsletter
         data-analytics-activity
         data-analytics-event="submit"
         data-analytics-category="home"
@@ -44,6 +52,13 @@ $root = ($this->getParam('root') !== 'disabled');
                 <input type="checkbox" required />
             </div>
             By signing up, you agree to the <a data-ls-attrs="href={{env.HOME}}/policy/terms" tabindex="-1" target="_blank" rel="noopener">Terms and Conditions</a> and <a data-ls-attrs="href={{env.HOME}}/policy/privacy" target="_blank" tabindex="-1" rel="noopener">Privacy Policy</a>
+        </div>
+
+        <div class="newsletter margin-top margin-bottom-large">
+            <div class="pull-start margin-end-small margin-bottom">
+                <input id="newsletter" type="checkbox" />
+            </div>
+            Sign up for our <a data-ls-attrs="href={{env.HOME}}/updates" tabindex="-1" target="_blank" rel="noopener">monthly newsletter</a> <span class="text-fade">(optional)</span>.
         </div>
 
         <button type="submit">Sign Up</button>

@@ -440,7 +440,7 @@ App::post('/v1/teams/:teamId/memberships')
             ->setParam('{{text-cta}}', '#ffffff')
         ;
 
-        if (!$isPrivilegedUser && !$isAppUser) { // No need in comfirmation when in admin or app mode
+        if (!$isPrivilegedUser && !$isAppUser) { // No need of confirmation when in admin or app mode
             $mails
                 ->setParam('event', 'teams.memberships.create')
                 ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name')))
@@ -465,6 +465,69 @@ App::post('/v1/teams/:teamId/memberships')
                 'name' => $name,
             ])), Response::MODEL_MEMBERSHIP)
         ;
+    });
+
+App::patch('/v1/teams/:teamId/memberships/:membershipId')
+    ->desc('Update Membership Roles')
+    ->groups(['api', 'teams'])
+    ->label('event', 'teams.memberships.update')
+    ->label('scope', 'teams.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'teams')
+    ->label('sdk.method', 'updateMembershipRoles')
+    ->label('sdk.description', '/docs/references/teams/update-team-membership-roles.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
+    ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->param('membershipId', '', new UID(), 'Membership ID.')
+    ->param('roles', [], new ArrayList(new Key()), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('user')
+    ->inject('projectDB')
+    ->inject('audits')
+    ->action(function ($teamId, $membershipId, $roles, $request, $response, $user, $projectDB,$audits) {
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Document $user */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $audits */
+
+        $team = $projectDB->getDocument($teamId);
+        if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+            throw new Exception('Team not found', 404);
+        }
+
+        $membership = $projectDB->getDocument($membershipId);
+        if (empty($membership->getId()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $membership->getCollection()) {
+            throw new Exception('Membership not found', 404);
+        }
+
+
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
+        $isAppUser = Auth::isAppUser(Authorization::$roles);
+        $isOwner = Authorization::isRole('team:'.$team->getId().'/owner');;
+        
+        if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
+            throw new Exception('User is not allowed to modify roles', 401);
+        }
+
+        // Update the roles
+        $membership->setAttribute('roles', $roles);
+        $membership = $projectDB->updateDocument($membership->getArrayCopy());
+
+        if (false === $membership) {
+            throw new Exception('Failed updating membership', 500);
+        }
+
+        $audits
+            ->setParam('userId', $user->getId())
+            ->setParam('event', 'teams.memberships.update')
+            ->setParam('resource', 'teams/'.$teamId)
+        ;
+
+        $response->dynamic(new Document($membership->getArrayCopy()), Response::MODEL_MEMBERSHIP);
     });
 
 App::get('/v1/teams/:teamId/memberships')
