@@ -3,7 +3,7 @@
 namespace Appwrite\Tests;
 
 use Appwrite\Database\Document;
-use Appwrite\Realtime\Realtime;
+use Appwrite\Realtime;
 use PHPUnit\Framework\TestCase;
 
 class RealtimeChannelsTest extends TestCase
@@ -46,7 +46,7 @@ class RealtimeChannelsTest extends TestCase
          */
         for ($i = 0; $i < $this->connectionsPerChannel; $i++) {
             foreach ($this->allChannels as $index => $channel) {
-                Realtime::setUser(new Document([
+                Realtime\Parser::setUser(new Document([
                     '$id' => 'user' . $this->connectionsCount,
                     'memberships' => [
                         [
@@ -57,10 +57,10 @@ class RealtimeChannelsTest extends TestCase
                         ]
                     ]
                 ]));
-                $roles = Realtime::getRoles();
-                $parsedChannels = Realtime::parseChannels([0 => $channel]);
+                $roles = Realtime\Parser::getRoles();
+                $parsedChannels = Realtime\Parser::parseChannels([0 => $channel]);
 
-                Realtime::subscribe(
+                Realtime\Parser::subscribe(
                     '1',
                     $this->connectionsCount,
                     $roles,
@@ -78,14 +78,14 @@ class RealtimeChannelsTest extends TestCase
          */
         for ($i = 0; $i < $this->connectionsPerChannel; $i++) {
             foreach ($this->allChannels as $index => $channel) {
-                Realtime::setUser(new Document([
+                Realtime\Parser::setUser(new Document([
                     '$id' => ''
                 ]));
 
-                $roles = Realtime::getRoles();
-                $parsedChannels = Realtime::parseChannels([0 => $channel]);
+                $roles = Realtime\Parser::getRoles();
+                $parsedChannels = Realtime\Parser::parseChannels([0 => $channel]);
 
-                Realtime::subscribe(
+                Realtime\Parser::subscribe(
                     '1',
                     $this->connectionsCount,
                     $roles,
@@ -130,13 +130,13 @@ class RealtimeChannelsTest extends TestCase
          */
         $this->assertCount($this->connectionsTotal, $this->connections);
 
-        Realtime::unsubscribe(-1, $this->subscriptions, $this->connections);
+        Realtime\Parser::unsubscribe(-1, $this->subscriptions, $this->connections);
 
         $this->assertCount($this->connectionsTotal, $this->connections);
         $this->assertCount(($this->connectionsAuthenticated + (3 * $this->connectionsPerChannel) + 2), $this->subscriptions['1']);
 
         for ($i = 0; $i < $this->connectionsCount; $i++) {
-            Realtime::unsubscribe($i, $this->subscriptions, $this->connections);
+            Realtime\Parser::unsubscribe($i, $this->subscriptions, $this->connections);
 
             $this->assertCount(($this->connectionsCount - $i - 1), $this->connections);
         }
@@ -161,7 +161,7 @@ class RealtimeChannelsTest extends TestCase
                 ]
             ];
 
-            $receivers = Realtime::identifyReceivers(
+            $receivers = Realtime\Parser::identifyReceivers(
                 $event,
                 $this->subscriptions
             );
@@ -197,7 +197,7 @@ class RealtimeChannelsTest extends TestCase
                     ]
                 ];
 
-                $receivers = Realtime::identifyReceivers(
+                $receivers = Realtime\Parser::identifyReceivers(
                     $event,
                     $this->subscriptions
                 );
@@ -234,7 +234,7 @@ class RealtimeChannelsTest extends TestCase
                 ]
             ];
 
-            $receivers = Realtime::identifyReceivers(
+            $receivers = Realtime\Parser::identifyReceivers(
                 $event,
                 $this->subscriptions
             );
@@ -271,7 +271,7 @@ class RealtimeChannelsTest extends TestCase
                 ]
             ];
 
-            $receivers = Realtime::identifyReceivers(
+            $receivers = Realtime\Parser::identifyReceivers(
                 $event,
                 $this->subscriptions
             );
@@ -300,7 +300,7 @@ class RealtimeChannelsTest extends TestCase
                 ]
             ];
 
-            $receivers = Realtime::identifyReceivers(
+            $receivers = Realtime\Parser::identifyReceivers(
                 $event,
                 $this->subscriptions
             );
