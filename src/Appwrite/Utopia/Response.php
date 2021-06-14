@@ -78,7 +78,8 @@ class Response extends SwooleResponse
     // Storage
     const MODEL_FILE = 'file';
     const MODEL_FILE_LIST = 'fileList';
-    const MODEL_BUCKET = 'bucket'; // - Missing
+    const MODEL_BUCKET = 'bucket';
+    const MODEL_BUCKET_LIST = 'bucketList';
 
     // Locale
     const MODEL_LOCALE = 'locale';
