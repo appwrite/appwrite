@@ -7,7 +7,6 @@ use Utopia\CLI\Console;
 require_once __DIR__.'/../workers.php';
 
 Console::title('Usage V1 Worker');
-
 Console::success(APP_NAME.' usage worker v1 has started');
 
 class UsageV1 extends Worker

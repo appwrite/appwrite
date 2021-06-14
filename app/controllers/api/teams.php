@@ -285,7 +285,8 @@ App::post('/v1/teams/:teamId/memberships')
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
-
+        
+        $email = \strtolower($email);
         $name = (empty($name)) ? $email : $name;
         $team = $projectDB->getDocument($teamId);
 
@@ -433,7 +434,7 @@ App::post('/v1/teams/:teamId/memberships')
         $title = \sprintf($locale->getText('account.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]']));
         
         $body
-            ->setParam('{{content}}', $content->render())
+            ->setParam('{{content}}', $content->render(false))
             ->setParam('{{cta}}', $cta->render())
             ->setParam('{{title}}', $title)
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
@@ -441,10 +442,9 @@ App::post('/v1/teams/:teamId/memberships')
             ->setParam('{{team}}', $team->getAttribute('name', '[TEAM-NAME]'))
             ->setParam('{{owner}}', $user->getAttribute('name', ''))
             ->setParam('{{redirect}}', $url)
-            ->setParam('{{bg-body}}', '#f6f6f6')
+            ->setParam('{{bg-body}}', '#f7f7f7')
             ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{bg-cta}}', '#3498db')
-            ->setParam('{{bg-cta-hover}}', '#34495e')
+            ->setParam('{{bg-cta}}', '#073b4c')
             ->setParam('{{text-content}}', '#000000')
             ->setParam('{{text-cta}}', '#ffffff')
         ;
@@ -784,7 +784,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
             $team = $projectDB->updateDocument(\array_merge($team->getArrayCopy(), [
-                'sum' => $team->getAttribute('sum', 0) - 1,
+                'sum' => \max($team->getAttribute('sum', 0) - 1, 0), // Ensure that sum >= 0
             ]));
         }
 

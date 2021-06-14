@@ -2,7 +2,7 @@
     "use strict";
 
     window.ls.container.set('sdk', function (window, router) {
-        var sdk = new window.Appwrite();
+        var sdk = new window.Appwrite.Appwrite();
 
         sdk
             .setEndpoint(window.location.protocol + '//' + window.location.host + APP_ENV.API)

@@ -17,7 +17,6 @@ use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 require_once __DIR__.'/../workers.php';
 
 Console::title('Deletes V1 Worker');
-
 Console::success(APP_NAME.' deletes worker v1 has started'."\n");
 
 class DeletesV1 extends Worker
@@ -32,7 +31,7 @@ class DeletesV1 extends Worker
 
     public function run(): void
     {
-        $projectId = $this->args['projectId'];   
+        $projectId = isset($this->args['projectId']) ? $this->args['projectId'] : '';
         $type = $this->args['type'];
         
         switch (strval($type)) {
@@ -126,11 +125,22 @@ class DeletesV1 extends Worker
             }
         }
 
-        // Delete Memberships
+        // Delete Memberships and decrement team membership counts
         $this->deleteByGroup([
             '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
             'userId='.$document->getId(),
-        ], $this->getProjectDB($projectId));
+        ], $this->getProjectDB($projectId), function(Document $document) use ($projectId) {
+
+            if ($document->getAttribute('confirm')) { // Count only confirmed members
+                $teamId = $document->getAttribute('teamId');
+                $team = $this->getProjectDB($projectId)->getDocument($teamId);
+                if(!$team->isEmpty()) {
+                    $team = $this->getProjectDB($projectId)->updateDocument(\array_merge($team->getArrayCopy(), [
+                        'sum' => \max($team->getAttribute('sum', 0) - 1, 0), // Ensure that sum >= 0
+                    ]));
+                }
+            }
+        });
     }
 
     protected function deleteExecutionLogs($timestamp) 

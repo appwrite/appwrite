@@ -58,15 +58,16 @@ App::post('/v1/account')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
 
+        $email = \strtolower($email);
         if ('console' === $project->getId()) {
-            $whitlistEmails = $project->getAttribute('authWhitelistEmails');
-            $whitlistIPs = $project->getAttribute('authWhitelistIPs');
+            $whitelistEmails = $project->getAttribute('authWhitelistEmails');
+            $whitelistIPs = $project->getAttribute('authWhitelistIPs');
 
-            if (!empty($whitlistEmails) && !\in_array($email, $whitlistEmails)) {
+            if (!empty($whitelistEmails) && !\in_array($email, $whitelistEmails)) {
                 throw new Exception('Console registration is restricted to specific emails. Contact your administrator for more information.', 401);
             }
 
-            if (!empty($whitlistIPs) && !\in_array($request->getIP(), $whitlistIPs)) {
+            if (!empty($whitelistIPs) && !\in_array($request->getIP(), $whitelistIPs)) {
                 throw new Exception('Console registration is restricted to specific IPs. Contact your administrator for more information.', 401);
             }
         }
@@ -174,6 +175,7 @@ App::post('/v1/account/sessions')
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
 
+        $email = \strtolower($email);
         $protocol = $request->getProtocol();
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
             'limit' => 1,
@@ -386,7 +388,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('projectDB')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $projectDB, $geodb, $audits) use ($oauthDefaultSuccess) {
+    ->inject('events')
+    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $projectDB, $geodb, $audits, $events) use ($oauthDefaultSuccess) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
@@ -578,6 +581,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             ->setParam('resource', 'users/'.$user->getId())
             ->setParam('data', ['provider' => $provider])
         ;
+
+        $events->setParam('eventData', $response->output($session, Response::MODEL_SESSION));
 
         if (!Config::getParam('domainVerification')) {
             $response
@@ -1083,6 +1088,7 @@ App::patch('/v1/account/email')
             throw new Exception('Invalid credentials', 401);
         }
 
+        $email = \strtolower($email);
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
             'limit' => 1,
             'filters' => [
@@ -1272,16 +1278,16 @@ App::delete('/v1/account/sessions/:sessionId')
                     ->setParam('resource', '/user/'.$user->getId())
                 ;
 
-                if (!Config::getParam('domainVerification')) {
-                    $response
-                        ->addHeader('X-Fallback-Cookies', \json_encode([]))
-                    ;
-                }
-                
                 $session->setAttribute('current', false);
-
+                
                 if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
                     $session->setAttribute('current', true);
+                    
+                    if (!Config::getParam('domainVerification')) {
+                        $response
+                            ->addHeader('X-Fallback-Cookies', \json_encode([]))
+                        ;
+                    }
 
                     $response
                         ->addCookie(Auth::$cookieName.'_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
@@ -1405,7 +1411,8 @@ App::post('/v1/account/recovery')
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
-
+        
+        $email = \strtolower($email);
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
             'limit' => 1,
             'filters' => [
@@ -1459,17 +1466,16 @@ App::post('/v1/account/recovery')
         $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
 
         $body
-            ->setParam('{{content}}', $content->render())
+            ->setParam('{{content}}', $content->render(false))
             ->setParam('{{cta}}', $cta->render())
             ->setParam('{{title}}', $locale->getText('account.emails.recovery.title'))
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
             ->setParam('{{name}}', $profile->getAttribute('name'))
             ->setParam('{{redirect}}', $url)
-            ->setParam('{{bg-body}}', '#f6f6f6')
+            ->setParam('{{bg-body}}', '#f7f7f7')
             ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{bg-cta}}', '#3498db')
-            ->setParam('{{bg-cta-hover}}', '#34495e')
+            ->setParam('{{bg-cta}}', '#073b4c')
             ->setParam('{{text-content}}', '#000000')
             ->setParam('{{text-cta}}', '#ffffff')
         ;
@@ -1662,17 +1668,16 @@ App::post('/v1/account/verification')
         $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
 
         $body
-            ->setParam('{{content}}', $content->render())
+            ->setParam('{{content}}', $content->render(false))
             ->setParam('{{cta}}', $cta->render())
             ->setParam('{{title}}', $locale->getText('account.emails.verification.title'))
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
             ->setParam('{{name}}', $user->getAttribute('name'))
             ->setParam('{{redirect}}', $url)
-            ->setParam('{{bg-body}}', '#f6f6f6')
+            ->setParam('{{bg-body}}', '#f7f7f7')
             ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{bg-cta}}', '#3498db')
-            ->setParam('{{bg-cta-hover}}', '#34495e')
+            ->setParam('{{bg-cta}}', '#073b4c')
             ->setParam('{{text-content}}', '#000000')
             ->setParam('{{text-cta}}', '#ffffff')
         ;

@@ -25,7 +25,7 @@ Make sure to fill all data needed and that your provider array key name:
 
 ### Add Provider Logo
 
-Add a logo image to your new provider in this path: `./public/images/oauth2`. Your logo should be a png 100×100px file with the name of your provider (all lowercase). Please make sure to leave about 30px padding around the logo to be consistent with other logos.
+Add a logo image to your new provider in this path: `./public/images/users`. Your logo should be a png 100×100px file with the name of your provider (all lowercase). Please make sure to leave about 30px padding around the logo to be consistent with other logos.
 
 ### Add Provider Class
 

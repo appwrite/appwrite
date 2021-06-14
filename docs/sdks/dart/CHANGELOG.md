@@ -1,3 +1,7 @@
+## 0.6.2
+
+- Removed default values, nothing should change in usage as default values are already allocated in server
+
 ## 0.6.1
 
 - Fix for image preview param types
