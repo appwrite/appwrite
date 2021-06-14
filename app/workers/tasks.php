@@ -10,7 +10,7 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 
-require_once __DIR__.'/../init.php';
+require_once __DIR__.'/../workers.php';
 
 Console::title('Tasks V1 Worker');
 Console::success(APP_NAME.' tasks worker v1 has started');
