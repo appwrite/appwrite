@@ -5,7 +5,7 @@ namespace Appwrite\Realtime;
 use Appwrite\Auth\Auth;
 use Appwrite\Database\Document;
 
-class Realtime
+class Parser
 {
     /**
      * @var Document $user

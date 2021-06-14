@@ -12,26 +12,6 @@ use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Config\Config;
-use Utopia\Domains\Domain;
-
-// xdebug_start_trace('/tmp/trace');
-
-Files::load(__DIR__ . '/../public');
-
-include __DIR__ . '/controllers/general.php';
-
-$domain = App::getEnv('_APP_DOMAIN', '');
-
-Console::info('Issuing a TLS certificate for the master domain ('.$domain.') in 30 seconds.
-    Make sure your domain points to your server IP or restart your Appwrite server to try again.'); // TODO move this to installation script
-
-ResqueScheduler::enqueueAt(\time() + 30, 'v1-certificates', 'CertificatesV1', [
-    'document' => [],
-    'domain' => $domain,
-    'validateTarget' => false,
-    'validateCNAME' => false,
-]);
 
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
@@ -101,8 +81,8 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     $register->set('db', function () use (&$db) {
         return $db;
     });
-    
-    $register->set('cache', function () use (&$redis) { // Register cache connection
+
+    $register->set('cache', function () use (&$redis) {
         return $redis;
     });
 

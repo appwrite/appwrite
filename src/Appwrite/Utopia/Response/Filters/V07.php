@@ -55,6 +55,8 @@ class V07 extends Filter {
             case Response::MODEL_ANY:
             case Response::MODEL_PREFERENCES: /** ANY was replaced by PREFERENCES in 0.8.x but this is backward compatible with 0.7.x */
             case Response::MODEL_NONE:
+            case Response::MODEL_ERROR:
+            case Response::MODEL_ERROR_DEV:
                 $parsedResponse = $content; 
                 break;
             default:

@@ -13,11 +13,11 @@ class RedisPool extends Pool
     {
         $this->pool = new SplQueue;
         $this->size = $size;
-        for ($i=0; $i < $this->size; $i++) { 
+        for ($i = 0; $i < $this->size; $i++) {
             $redis = new Redis();
             $redis->pconnect($host, $port);
             $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
-            
+
             if ($auth) {
                 $redis->auth($auth);
             }
@@ -26,12 +26,12 @@ class RedisPool extends Pool
         }
     }
 
-    public function put (Redis $redis)
+    public function put(Redis $redis)
     {
         $this->pool->enqueue($redis);
     }
 
-    public function get (): Redis
+    public function get(): Redis
     {
         if ($this->available && !$this->pool->isEmpty()) {
             return $this->pool->dequeue();

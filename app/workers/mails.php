@@ -7,7 +7,6 @@ use Utopia\CLI\Console;
 require_once __DIR__.'/../workers.php';
 
 Console::title('Mails V1 Worker');
-
 Console::success(APP_NAME.' mails worker v1 has started'."\n");
 
 class MailsV1 extends Worker

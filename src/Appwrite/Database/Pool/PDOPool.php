@@ -12,12 +12,12 @@ class PDOPool extends Pool
     {
         $this->pool = new SplQueue;
         $this->size = $size;
-        for ($i=0; $i < $this->size; $i++) { 
+        for ($i = 0; $i < $this->size; $i++) {
             $pdo = new PDO(
-                "mysql:".
-                "host={$host};".
-                "dbname={$schema};" .
-                "charset={$charset}",
+                "mysql:" .
+                    "host={$host};" .
+                    "dbname={$schema};" .
+                    "charset={$charset}",
                 $user,
                 $pass,
                 [
@@ -28,17 +28,17 @@ class PDOPool extends Pool
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true
                 ]
-                );
+            );
             $this->pool->enqueue($pdo);
         }
     }
 
-    public function put (PDO $pdo)
+    public function put(PDO $pdo)
     {
         $this->pool->enqueue($pdo);
     }
 
-    public function get (): PDO
+    public function get(): PDO
     {
         if ($this->available && count($this->pool) > 0) {
             return $this->pool->dequeue();

@@ -3,7 +3,7 @@
 namespace Appwrite\Tests;
 
 use Appwrite\Database\Document;
-use Appwrite\Realtime\Realtime;
+use Appwrite\Realtime;
 use PHPUnit\Framework\TestCase;
 
 class RealtimeTest extends TestCase
@@ -21,7 +21,7 @@ class RealtimeTest extends TestCase
 
     public function testUser()
     {
-        Realtime::setUser(new Document([
+        Realtime\Parser::setUser(new Document([
             '$id' => '123',
             'memberships' => [
                 [
@@ -40,7 +40,7 @@ class RealtimeTest extends TestCase
             ]
         ]));
 
-        $roles = Realtime::getRoles();
+        $roles = Realtime\Parser::getRoles();
 
         $this->assertCount(7, $roles);
         $this->assertContains('user:123', $roles);
@@ -59,7 +59,7 @@ class RealtimeTest extends TestCase
             4 => 'account.456'
         ];
 
-        $channels = Realtime::parseChannels($channels);
+        $channels = Realtime\Parser::parseChannels($channels);
 
         $this->assertCount(4, $channels);
         $this->assertArrayHasKey('files', $channels);
@@ -69,7 +69,7 @@ class RealtimeTest extends TestCase
         $this->assertArrayNotHasKey('account', $channels);
         $this->assertArrayNotHasKey('account.456', $channels);
 
-        Realtime::subscribe('1', 1, $roles, $this->subscriptions, $this->connections, $channels);
+        Realtime\Parser::subscribe('1', 1, $roles, $this->subscriptions, $this->connections, $channels);
 
         $event = [
             'project' => '1',
@@ -81,7 +81,7 @@ class RealtimeTest extends TestCase
             ]
         ];
 
-        $receivers = Realtime::identifyReceivers(
+        $receivers = Realtime\Parser::identifyReceivers(
             $event, 
             $this->subscriptions
         );
@@ -91,7 +91,7 @@ class RealtimeTest extends TestCase
 
         $event['permissions'] = ['role:member'];
 
-        $receivers = Realtime::identifyReceivers(
+        $receivers = Realtime\Parser::identifyReceivers(
             $event, 
             $this->subscriptions
         );
@@ -101,7 +101,7 @@ class RealtimeTest extends TestCase
 
         $event['permissions'] = ['user:123'];
 
-        $receivers = Realtime::identifyReceivers(
+        $receivers = Realtime\Parser::identifyReceivers(
             $event, 
             $this->subscriptions
         );
@@ -111,7 +111,7 @@ class RealtimeTest extends TestCase
 
         $event['permissions'] = ['team:abc'];
 
-        $receivers = Realtime::identifyReceivers(
+        $receivers = Realtime\Parser::identifyReceivers(
             $event, 
             $this->subscriptions
         );
@@ -121,7 +121,7 @@ class RealtimeTest extends TestCase
 
         $event['permissions'] = ['team:abc/administrator'];
 
-        $receivers = Realtime::identifyReceivers(
+        $receivers = Realtime\Parser::identifyReceivers(
             $event, 
             $this->subscriptions
         );
@@ -131,7 +131,7 @@ class RealtimeTest extends TestCase
 
         $event['permissions'] = ['team:abc/god'];
 
-        $receivers = Realtime::identifyReceivers(
+        $receivers = Realtime\Parser::identifyReceivers(
             $event, 
             $this->subscriptions
         );
@@ -141,7 +141,7 @@ class RealtimeTest extends TestCase
 
         $event['permissions'] = ['team:def'];
 
-        $receivers = Realtime::identifyReceivers(
+        $receivers = Realtime\Parser::identifyReceivers(
             $event, 
             $this->subscriptions
         );
@@ -151,7 +151,7 @@ class RealtimeTest extends TestCase
 
         $event['permissions'] = ['team:def/guest'];
 
-        $receivers = Realtime::identifyReceivers(
+        $receivers = Realtime\Parser::identifyReceivers(
             $event, 
             $this->subscriptions
         );
@@ -161,7 +161,7 @@ class RealtimeTest extends TestCase
 
         $event['permissions'] = ['user:456'];
 
-        $receivers = Realtime::identifyReceivers(
+        $receivers = Realtime\Parser::identifyReceivers(
             $event, 
             $this->subscriptions
         );
@@ -170,7 +170,7 @@ class RealtimeTest extends TestCase
 
         $event['permissions'] = ['team:def/member'];
 
-        $receivers = Realtime::identifyReceivers(
+        $receivers = Realtime\Parser::identifyReceivers(
             $event, 
             $this->subscriptions
         );
@@ -180,7 +180,7 @@ class RealtimeTest extends TestCase
         $event['permissions'] = ['*'];
         $event['data']['channels'] = ['documents.123'];
 
-        $receivers = Realtime::identifyReceivers(
+        $receivers = Realtime\Parser::identifyReceivers(
             $event, 
             $this->subscriptions
         );
@@ -189,7 +189,7 @@ class RealtimeTest extends TestCase
 
         $event['data']['channels'] = ['documents.789'];
 
-        $receivers = Realtime::identifyReceivers(
+        $receivers = Realtime\Parser::identifyReceivers(
             $event, 
             $this->subscriptions
         );
@@ -199,20 +199,20 @@ class RealtimeTest extends TestCase
 
         $event['project'] = '2';
 
-        $receivers = Realtime::identifyReceivers(
+        $receivers = Realtime\Parser::identifyReceivers(
             $event, 
             $this->subscriptions
         );
 
         $this->assertEmpty($receivers);
 
-        Realtime::unsubscribe(2, $this->subscriptions, $this->connections);
+        Realtime\Parser::unsubscribe(2, $this->subscriptions, $this->connections);
 
         $this->assertCount(1, $this->connections);
         $this->assertCount(7, $this->subscriptions['1']);
 
 
-        Realtime::unsubscribe(1, $this->subscriptions, $this->connections);
+        Realtime\Parser::unsubscribe(1, $this->subscriptions, $this->connections);
 
         $this->assertEmpty($this->connections);
         $this->assertEmpty($this->subscriptions);

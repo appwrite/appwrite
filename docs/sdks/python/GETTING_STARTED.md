@@ -1,7 +1,7 @@
 ## Getting Started
 
 ### Init your SDK
-Initialize your SDK code with your project ID which can be found in your project settings page and your new API secret Key from project's API keys section.
+Initialize your SDK with your Appwrite server API endpoint and project ID which can be found in your project settings page and your new API secret Key from project's API keys section.
 
 ```python
 from appwrite.client import Client
@@ -18,7 +18,7 @@ client = Client()
 ```
 
 ### Make Your First Request
-Once your SDK object is set, create any of the Appwrite service objects and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the API References section.
+Once your SDK object is set, create any of the Appwrite service objects and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the [API References](https://appwrite.io/docs) section.
 
 ```python
 users = Users(client)
