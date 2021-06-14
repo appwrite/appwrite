@@ -629,7 +629,7 @@ $collections = [
         'indexes' => [
             [
                 '$id' => '_key_bucket',
-                'type' => Database::INDEX_UNIQUE,
+                'type' => Database::INDEX_KEY,
                 'attributes' => ['bucketId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
@@ -852,7 +852,7 @@ $collections = [
         'indexes' => [
             [
                 '$id' => '_key_function',
-                'type' => Database::INDEX_UNIQUE,
+                'type' => Database::INDEX_KEY,
                 'attributes' => ['functionId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
@@ -960,7 +960,7 @@ $collections = [
         'indexes' => [
             [
                 '$id' => '_key_function',
-                'type' => Database::INDEX_UNIQUE,
+                'type' => Database::INDEX_KEY,
                 'attributes' => ['functionId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],

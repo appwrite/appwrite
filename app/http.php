@@ -3,8 +3,6 @@
 require_once __DIR__.'/../vendor/autoload.php';
 
 use Appwrite\Database\Validator\Authorization;
-use Utopia\Swoole\Files;
-use Utopia\Swoole\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Process;
 use Swoole\Http\Server;
@@ -14,6 +12,10 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Validator\Authorization as Authorization2;
+use Utopia\Audit\Audit;
+use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Swoole\Files;
+use Utopia\Swoole\Request;
 
 // xdebug_start_trace('/tmp/trace');
 
@@ -67,6 +69,12 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         $register->get('cache')->flushAll();
 
         $dbForConsole->create();
+        
+        $audit = new Audit($dbForConsole);
+        $audit->setup();
+
+        $adapter = new TimeLimit("", 0, 1, $dbForConsole);
+        $adapter->setup();
 
         foreach ($collections as $key => $collection) {
             $dbForConsole->createCollection($key);

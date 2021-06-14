@@ -96,7 +96,7 @@ class HTTPTest extends Scope
 
     public function testSpecSwagger2()
     {
-        $response = $this->client->call(Client::METHOD_GET, '/specs/swagger2?platform=client', [
+        $response = $this->client->call(Client::METHOD_GET, '/specs/swagger2?platform=console', [
             'content-type' => 'application/json',
         ], []);
 
@@ -105,11 +105,13 @@ class HTTPTest extends Scope
         }
 
         $client = new Client();
-        $client->setEndpoint('https://validator.swagger.io');
+        $client->setEndpoint('http://appwrite-swagger-validator:8080');
 
         /**
          * Test for SUCCESS
          */
+        http://localhost:9506/validator?url=http://petstore.swagger.io/v2/swagger.json
+
         $response = $client->call(Client::METHOD_POST, '/validator/debug', [
             'content-type' => 'application/json',
         ], json_decode(file_get_contents(realpath(__DIR__ . '/../../resources/swagger2.json')), true));
@@ -124,7 +126,7 @@ class HTTPTest extends Scope
 
     public function testSpecOpenAPI3()
     {
-        $response = $this->client->call(Client::METHOD_GET, '/specs/open-api3?platform=client', [
+        $response = $this->client->call(Client::METHOD_GET, '/specs/open-api3?platform=console', [
             'content-type' => 'application/json',
         ], []);
 
@@ -133,7 +135,7 @@ class HTTPTest extends Scope
         }
 
         $client = new Client();
-        $client->setEndpoint('https://validator.swagger.io');
+        $client->setEndpoint('http://appwrite-swagger-validator:8080');
 
         /**
          * Test for SUCCESS

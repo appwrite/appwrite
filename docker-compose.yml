@@ -430,10 +430,13 @@ services:
       - appwrite-influxdb:/var/lib/influxdb:rw
 
   telegraf:
-    image: appwrite/telegraf:1.1.0
+    image: appwrite/telegraf:1.2.0
     container_name: appwrite-telegraf
     networks:
       - appwrite
+    environment: 
+      - _APP_INFLUXDB_HOST
+      - _APP_INFLUXDB_PORT
 
   # Dev Tools Start ------------------------------------------------------------------------------------------
   # 
@@ -470,6 +473,17 @@ services:
     restart: always
     ports:
       - 9505:8080
+    networks:
+      - appwrite
+
+  swagger-validator:
+    image: 'swaggerapi/swagger-validator-v2:v2.0.5'
+    container_name: appwrite-swagger-validator
+    ports:
+      - '9506:8080'
+    environment:
+      - REJECT_LOCAL=false
+      - REJECT_REDIRECT=false
     networks:
       - appwrite
 

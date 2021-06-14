@@ -12,6 +12,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Task\Validator\Cron;
 use Utopia\App;
 use Utopia\Exception;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -499,13 +500,13 @@ App::get('/v1/functions/:functionId/tags')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TAG_LIST)
     ->param('functionId', '', new UID(), 'Function unique ID.')
-    // ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    // ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($functionId, $limit, $offset, $response, $dbForInternal) {
+    ->action(function ($functionId, $search, $limit, $offset, $orderType, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
@@ -517,7 +518,7 @@ App::get('/v1/functions/:functionId/tags')
 
         $queries[] = new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]);
         
-        $results = $dbForInternal->find('tags', $queries, $limit, $offset);
+        $results = $dbForInternal->find('tags', $queries, $limit, $offset, ['_id'], [$orderType]);
         $sum = $dbForInternal->count('tags', $queries, APP_LIMIT_COUNT);
 
         $response->dynamic2(new Document([
@@ -759,7 +760,7 @@ App::get('/v1/functions/:functionId/executions')
 
         $results = $dbForInternal->find('executions', [
             new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]),
-        ], $limit, $offset);
+        ], $limit, $offset, ['_id'], [Database::ORDER_DESC]);
         
         $sum = $dbForInternal->count('executions', [
             new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]),
