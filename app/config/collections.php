@@ -1481,6 +1481,16 @@ $collections = [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Adapter Crednetials',
+                'key' => 'adapterCredentials',
+                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
+                'default' => '',
+                'required' => false,
+                'array' => false,
+                'filter' => ['json']
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Maximum File Size',
                 'key' => 'maximumFileSize',
                 'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,
