@@ -1454,11 +1454,20 @@ $collections = [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Date Updated',
+                'key' => 'dateUpdated',
+                'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,
+                'default' => 0,
+                'required' => false,
+                'array' => false,
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Enabled',
                 'key' => 'enabled',
                 'type' => Database::SYSTEM_VAR_TYPE_BOOLEAN,
                 'default' => true,
-                'required' => false,
+                'required' => true,
                 'array' => false,
             ],
             [
@@ -1505,7 +1514,7 @@ $collections = [
                 'type' => Database::SYSTEM_VAR_TYPE_TEXT,
                 'default' => '',
                 'required' => true,
-                'array' => false,
+                'array' => true,
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
