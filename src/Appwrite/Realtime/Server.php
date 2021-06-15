@@ -24,11 +24,11 @@ use Utopia\Swoole\Request as SwooleRequest;
 
 class Server
 {
-    private Registry $register;
-    private SwooleServer $server;
-    private Table $stats;
-    private array $subscriptions;
-    private array $connections;
+    public Registry $register;
+    public SwooleServer $server;
+    public Table $stats;
+    public array $subscriptions;
+    public array $connections;
 
     public function __construct(Registry &$register, $host = '0.0.0.0', $port = 80, $config = [])
     {
@@ -59,7 +59,7 @@ class Server
      * @param SwooleServer $server 
      * @return void 
      */
-    private function onStart(SwooleServer $server): void
+    public function onStart(SwooleServer $server): void
     {
         Console::success('Server started succefully');
         Console::info("Master pid {$server->master_pid}, manager pid {$server->manager_pid}");
@@ -108,7 +108,7 @@ class Server
      * @return void 
      * @throws Exception 
      */
-    private function onWorkerStart(SwooleServer $server, int $workerId): void
+    public function onWorkerStart(SwooleServer $server, int $workerId): void
     {
         Console::success('Worker ' . $workerId . ' started succefully');
 
@@ -165,7 +165,7 @@ class Server
      * @throws Exception 
      * @throws UtopiaException 
      */
-    private function onOpen(SwooleServer $server, Request $request): void
+    public function onOpen(SwooleServer $server, Request $request): void
     {
         $app = new App('UTC');
         $connection = $request->fd;
@@ -291,7 +291,7 @@ class Server
      * @param Frame $frame 
      * @return void 
      */
-    private function onMessage(SwooleServer $server, Frame $frame)
+    public function onMessage(SwooleServer $server, Frame $frame)
     {
         $server->push($frame->fd, 'Sending messages is not allowed.');
         $server->close($frame->fd);
@@ -304,7 +304,7 @@ class Server
      * @param int $connection 
      * @return void 
      */
-    private function onClose(SwooleServer $server, int $connection)
+    public function onClose(SwooleServer $server, int $connection)
     {
         if (array_key_exists($connection, $this->connections)) {
             $this->stats->decr($this->connections[$connection]['projectId'], 'connectionsTotal');
@@ -332,7 +332,7 @@ class Server
      * @param int $workerId 
      * @return void 
      */
-    private function onRedisPublish(string $payload, SwooleServer &$server, int $workerId)
+    public function onRedisPublish(string $payload, SwooleServer &$server, int $workerId)
     {
         $event = json_decode($payload, true);
 
@@ -369,7 +369,7 @@ class Server
      * @param SwooleServer $server 
      * @return void 
      */
-    private function tickSendProjectUsage(SwooleServer &$server)
+    public function tickSendProjectUsage(SwooleServer &$server)
     {
         if (
             array_key_exists('console', $this->subscriptions)
