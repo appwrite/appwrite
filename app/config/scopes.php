@@ -31,6 +31,9 @@ return [ // List of publicly visible scopes
     'files.write' => [
         'description' => 'Access to create, update, and delete your project\'s storage files',
     ],
+    'buckets.read' => [
+        'description' => 'Access to read your project\'s storage buckets',
+    ],
     'buckets.write' => [
         'description' => 'Access to create, update, and delete your project\'s storage buckets',
     ],
