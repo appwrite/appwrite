@@ -136,18 +136,18 @@ App::get('/v1/storage/buckets/:bucketId')
     ->label('sdk.response.model', Response::MODEL_BUCKET)
     ->param('bucketId', '', new UID(), 'Bucket unique ID.')
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($bucketId, $response, $projectDB) {
+    ->inject('dbForInternal')
+    ->action(function ($bucketId, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
 
-        $bucket = $projectDB->getDocument($bucketId);
+        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if (empty($bucket->getId()) || Database::SYSTEM_COLLECTION_BUCKETS != $bucket->getCollection()) {
+        if (empty($bucket->getId())) {
             throw new Exception('Bucket not found', 404);
         }
 
-        $response->dynamic($bucket, Response::MODEL_BUCKET);
+        $response->dynamic2($bucket, Response::MODEL_BUCKET);
     });
 
 
