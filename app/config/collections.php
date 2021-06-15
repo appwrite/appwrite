@@ -1440,7 +1440,7 @@ $collections = [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_BUCKETS,
         '$permissions' => ['read' => ['*']],
-        'name' => 'File',
+        'name' => 'Bucket',
         'structure' => true,
         'rules' => [
             [
