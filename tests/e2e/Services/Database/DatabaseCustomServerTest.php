@@ -25,7 +25,7 @@ class DatabaseCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'id' => 'Actors',
+            'name' => 'Actors',
         ]);
 
         $this->assertEquals($actors['headers']['status-code'], 201);

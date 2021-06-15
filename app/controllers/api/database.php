@@ -16,7 +16,7 @@ use Appwrite\Database\Validator\Key;
 use Appwrite\Database\Validator\Structure;
 use Appwrite\Database\Validator\Collection;
 use Appwrite\Database\Validator\Authorization;
-use Appwrite\Database\Exception\Authorization as AuthorizationException;
+use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database as Database2;
@@ -690,8 +690,6 @@ App::post('/v1/database/collections/:collectionId/documents')
         $data['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; //  By default set read permissions for user
         $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; //  By default set write permissions for user
 
-        // var_dump($collection->getAttributes());
-
         /**
          * TODO@kodumbeats How to assign default values to attributes
          */
@@ -868,9 +866,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
             throw new Exception('Unauthorized permissions', 401);
         } catch (StructureException $exception) {
             throw new Exception('Bad structure. '.$exception->getMessage(), 400);
-        } catch (\Exception $exception) {
-            throw new Exception($exception->getMessage(), 400);
-        }
+        } 
 
         $audits
             ->setParam('event', 'database.documents.update')

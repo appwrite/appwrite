@@ -487,7 +487,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'name' => 'Captain America',
+                'title' => 'Captain America',
                 'releaseYear' => 1944,
                 'actors' => [],
             ],
@@ -497,24 +497,23 @@ trait DatabaseBase
 
         $this->assertEquals($document['headers']['status-code'], 201);
         $this->assertEquals($document['body']['$collection'], $data['moviesId']);
-        $this->assertEquals($document['body']['name'], 'Captain America');
+        $this->assertEquals($document['body']['title'], 'Captain America');
         $this->assertEquals($document['body']['releaseYear'], 1944);
-        $this->assertIsArray($document['body']['$permissions']);
-        $this->assertIsArray($document['body']['$permissions']['read']);
-        $this->assertIsArray($document['body']['$permissions']['write']);
+        $this->assertIsArray($document['body']['$read']);
+        $this->assertIsArray($document['body']['$write']);
 
         if($this->getSide() == 'client') {
-            $this->assertCount(1, $document['body']['$permissions']['read']);
-            $this->assertCount(1, $document['body']['$permissions']['write']);
-            $this->assertEquals(['user:'.$this->getUser()['$id']], $document['body']['$permissions']['read']);
-            $this->assertEquals(['user:'.$this->getUser()['$id']], $document['body']['$permissions']['write']);    
+            $this->assertCount(1, $document['body']['$read']);
+            $this->assertCount(1, $document['body']['$write']);
+            $this->assertEquals(['user:'.$this->getUser()['$id']], $document['body']['$read']);
+            $this->assertEquals(['user:'.$this->getUser()['$id']], $document['body']['$write']);    
         }
 
         if($this->getSide() == 'server') {
-            $this->assertCount(0, $document['body']['$permissions']['read']);
-            $this->assertCount(0, $document['body']['$permissions']['write']);
-            $this->assertEquals([], $document['body']['$permissions']['read']);
-            $this->assertEquals([], $document['body']['$permissions']['write']);    
+            $this->assertCount(0, $document['body']['$read']);
+            $this->assertCount(0, $document['body']['$write']);
+            $this->assertEquals([], $document['body']['$read']);
+            $this->assertEquals([], $document['body']['$write']);    
         }
 
         // Updated and Inherit Permissions
@@ -524,7 +523,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'name' => 'Captain America 2',
+                'title' => 'Captain America 2',
                 'releaseYear' => 1945,
                 'actors' => [],
             ],
@@ -532,21 +531,21 @@ trait DatabaseBase
         ]);
 
         $this->assertEquals($document['headers']['status-code'], 200);
-        $this->assertEquals($document['body']['name'], 'Captain America 2');
+        $this->assertEquals($document['body']['title'], 'Captain America 2');
         $this->assertEquals($document['body']['releaseYear'], 1945);
 
         if($this->getSide() == 'client') {
-            $this->assertCount(1, $document['body']['$permissions']['read']);
-            $this->assertCount(1, $document['body']['$permissions']['write']);
-            $this->assertEquals(['role:all'], $document['body']['$permissions']['read']);
-            $this->assertEquals(['user:'.$this->getUser()['$id']], $document['body']['$permissions']['write']);    
+            $this->assertCount(1, $document['body']['$read']);
+            $this->assertCount(1, $document['body']['$write']);
+            $this->assertEquals(['role:all'], $document['body']['$read']);
+            $this->assertEquals(['user:'.$this->getUser()['$id']], $document['body']['$write']);    
         }
 
         if($this->getSide() == 'server') {
-            $this->assertCount(1, $document['body']['$permissions']['read']);
-            $this->assertCount(0, $document['body']['$permissions']['write']);
-            $this->assertEquals(['role:all'], $document['body']['$permissions']['read']);
-            $this->assertEquals([], $document['body']['$permissions']['write']);    
+            $this->assertCount(1, $document['body']['$read']);
+            $this->assertCount(0, $document['body']['$write']);
+            $this->assertEquals(['role:all'], $document['body']['$read']);
+            $this->assertEquals([], $document['body']['$write']);    
         }
 
         $document = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
@@ -555,21 +554,21 @@ trait DatabaseBase
         ], $this->getHeaders()));
 
         $this->assertEquals($document['headers']['status-code'], 200);
-        $this->assertEquals($document['body']['name'], 'Captain America 2');
+        $this->assertEquals($document['body']['title'], 'Captain America 2');
         $this->assertEquals($document['body']['releaseYear'], 1945);
 
         if($this->getSide() == 'client') {
-            $this->assertCount(1, $document['body']['$permissions']['read']);
-            $this->assertCount(1, $document['body']['$permissions']['write']);
-            $this->assertEquals(['role:all'], $document['body']['$permissions']['read']);
-            $this->assertEquals(['user:'.$this->getUser()['$id']], $document['body']['$permissions']['write']);    
+            $this->assertCount(1, $document['body']['$read']);
+            $this->assertCount(1, $document['body']['$write']);
+            $this->assertEquals(['role:all'], $document['body']['$read']);
+            $this->assertEquals(['user:'.$this->getUser()['$id']], $document['body']['$write']);    
         }
 
         if($this->getSide() == 'server') {
-            $this->assertCount(1, $document['body']['$permissions']['read']);
-            $this->assertCount(0, $document['body']['$permissions']['write']);
-            $this->assertEquals(['role:all'], $document['body']['$permissions']['read']);
-            $this->assertEquals([], $document['body']['$permissions']['write']);    
+            $this->assertCount(1, $document['body']['$read']);
+            $this->assertCount(0, $document['body']['$write']);
+            $this->assertEquals(['role:all'], $document['body']['$read']);
+            $this->assertEquals([], $document['body']['$write']);    
         }
 
         // Reset Permissions
@@ -579,7 +578,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'name' => 'Captain America 3',
+                'title' => 'Captain America 3',
                 'releaseYear' => 1946,
                 'actors' => [],
             ],
@@ -593,12 +592,12 @@ trait DatabaseBase
 
         if($this->getSide() == 'server') {
             $this->assertEquals($document['headers']['status-code'], 200);
-            $this->assertEquals($document['body']['name'], 'Captain America 3');
+            $this->assertEquals($document['body']['title'], 'Captain America 3');
             $this->assertEquals($document['body']['releaseYear'], 1946);
-            $this->assertCount(0, $document['body']['$permissions']['read']);
-            $this->assertCount(0, $document['body']['$permissions']['write']);
-            $this->assertEquals([], $document['body']['$permissions']['read']);
-            $this->assertEquals([], $document['body']['$permissions']['write']);    
+            $this->assertCount(0, $document['body']['$read']);
+            $this->assertCount(0, $document['body']['$write']);
+            $this->assertEquals([], $document['body']['$read']);
+            $this->assertEquals([], $document['body']['$write']);    
         }
 
         return $data;
