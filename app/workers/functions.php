@@ -1,17 +1,18 @@
 <?php
 
-use Appwrite\Database\Database;
-use Appwrite\Database\Document;
-use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
-use Appwrite\Database\Adapter\Redis as RedisAdapter;
-use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
 use Appwrite\Resque\Worker;
 use Cron\CronExpression;
 use Swoole\Runtime;
 use Utopia\App;
+use Utopia\Cache\Adapter\Redis;
+use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 
 require_once __DIR__.'/../init.php';
 
@@ -152,10 +153,9 @@ class FunctionsV1 extends Worker
         $userId = $this->args['userId'] ?? '';
         $jwt = $this->args['jwt'] ?? '';
 
-        $database = new Database();
-        $database->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
-        $database->setNamespace('app_'.$projectId);
-        $database->setMocks(Config::getParam('collections', []));
+        $cache = new Cache(new Redis($register->get('cache')));
+        $database = new Database(new MariaDB($register->get('db')), $cache);
+        $database->setNamespace('project_'.$projectId.'_internal');
 
         switch ($trigger) {
             case 'event':
@@ -168,16 +168,7 @@ class FunctionsV1 extends Worker
 
                     Authorization::disable();
 
-                    $functions = $database->getCollection([
-                        'limit' => $limit,
-                        'offset' => $offset,
-                        'orderField' => 'name',
-                        'orderType' => 'ASC',
-                        'orderCast' => 'string',
-                        'filters' => [
-                            '$collection='.Database::SYSTEM_COLLECTION_FUNCTIONS,
-                        ],
-                    ]);
+                    $functions = $database->find('functions', [], $limit, $offset, ['name'], [Database::ORDER_ASC]);
 
                     Authorization::reset();
 
@@ -219,10 +210,10 @@ class FunctionsV1 extends Worker
 
                 // Reschedule
                 Authorization::disable();
-                $function = $database->getDocument($functionId);
+                $function = $database->getDocument('functions', $functionId);
                 Authorization::reset();
 
-                if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+                if (empty($function->getId())) {
                     throw new Exception('Function not found ('.$functionId.')');
                 }
 
@@ -240,9 +231,9 @@ class FunctionsV1 extends Worker
 
                 Authorization::disable();
 
-                $function = $database->updateDocument(array_merge($function->getArrayCopy(), [
-                    'scheduleNext' => $next,
-                ]));
+                $function = $database->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
+                    'scheduleNext' => (int)$next,
+                ])));
 
                 Authorization::reset();
 
@@ -260,10 +251,10 @@ class FunctionsV1 extends Worker
 
             case 'http':
                 Authorization::disable();
-                $function = $database->getDocument($functionId);
+                $function = $database->getDocument('functions', $functionId);
                 Authorization::reset();
 
-                if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+                if (empty($function->getId())) {
                     throw new Exception('Function not found ('.$functionId.')');
                 }
 
@@ -300,7 +291,7 @@ class FunctionsV1 extends Worker
         $runtimes = Config::getParam('runtimes');
 
         Authorization::disable();
-        $tag = $database->getDocument($function->getAttribute('tag', ''));
+        $tag = $database->getDocument('tags', $function->getAttribute('tag', ''));
         Authorization::reset();
 
         if($tag->getAttribute('functionId') !== $function->getId()) {
@@ -309,12 +300,9 @@ class FunctionsV1 extends Worker
 
         Authorization::disable();
 
-        $execution = (!empty($executionId)) ? $database->getDocument($executionId) : $database->createDocument([
-            '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
-            '$permissions' => [
-                'read' => [],
-                'write' => [],
-            ],
+        $execution = (!empty($executionId)) ? $database->getDocument('executions', $executionId) : $database->createDocument('executions', new Document([
+            '$read' => [],
+            '$write' => [],
             'dateCreated' => time(),
             'functionId' => $function->getId(),
             'trigger' => $trigger, // http / schedule / event
@@ -323,7 +311,7 @@ class FunctionsV1 extends Worker
             'stdout' => '',
             'stderr' => '',
             'time' => 0,
-        ]);
+        ]));
 
         if(false === $execution || ($execution instanceof Document && $execution->isEmpty())) {
             throw new Exception('Failed to create or read execution');
@@ -465,20 +453,16 @@ class FunctionsV1 extends Worker
 
         Authorization::disable();
         
-        $execution = $database->updateDocument(array_merge($execution->getArrayCopy(), [
+        $execution = $database->updateDocument('executions', $execution->getId(), new Document(array_merge($execution->getArrayCopy(), [
             'tagId' => $tag->getId(),
             'status' => $functionStatus,
             'exitCode' => $exitCode,
-            'stdout' => \mb_substr($stdout, -4000), // log last 4000 chars output
-            'stderr' => \mb_substr($stderr, -4000), // log last 4000 chars output
-            'time' => $executionTime,
-        ]));
+            'stdout' => \mb_substr($stdout, -8000), // log last 4000 chars output
+            'stderr' => \mb_substr($stderr, -8000), // log last 4000 chars output
+            'time' => (float)$executionTime,
+        ])));
         
         Authorization::reset();
-
-        if (false === $function) {
-            throw new Exception('Failed saving execution to DB', 500);
-        }
 
         $executionUpdate = new Event('v1-webhooks', 'WebhooksV1');
 
