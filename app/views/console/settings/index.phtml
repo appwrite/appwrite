@@ -58,7 +58,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                 <label for="logo">Project Logo</label>
 
                                 <div class="text-align-center clear">
-                                    <input type="hidden" name="logo" data-ls-bind="{{console-project.logo}}" data-read="<?php echo $this->escape(json_encode(['*'])); ?>" data-write="<?php echo $this->escape(json_encode(['team:{{console-project.teamId}}'])); ?>" data-accept="image/*" data-forms-upload="" data-label-button="Upload" data-preview-alt="Project Logo" data-scope="console" data-default="">
+                                    <input type="hidden" name="logo" data-ls-bind="{{console-project.logo}}" data-read="<?php echo $this->escape(json_encode(['role:all'])); ?>" data-write="<?php echo $this->escape(json_encode(['team:{{console-project.teamId}}'])); ?>" data-accept="image/*" data-forms-upload="" data-label-button="Upload" data-preview-alt="Project Logo" data-scope="console" data-default="">
                                 </div>
 
                                 <hr />

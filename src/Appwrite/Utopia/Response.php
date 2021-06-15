@@ -44,6 +44,7 @@ use Appwrite\Utopia\Response\Model\Webhook;
 use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\Mock; // Keep last
 use stdClass;
+use Utopia\Database\Document as DatabaseDocument;
 
 /**
  * @method Response public function setStatusCode(int $code = 200)
@@ -280,6 +281,27 @@ class Response extends SwooleResponse
     }
 
     /**
+     * Validate response objects and outputs
+     *  the response according to given format type
+     * 
+     * @param DatabaseDocument $document
+     * @param string $model
+     * 
+     * return void
+     */
+    public function dynamic2(DatabaseDocument $document, string $model): void
+    {
+        $output = $this->output2($document, $model);
+
+        // If filter is set, parse the output
+        if(self::isFilter()){
+            $output = self::getFilter()->parse($output, $model);
+        }
+
+        $this->json(!empty($output) ? $output : new stdClass());
+    }
+
+    /**
      * Generate valid response object from document data
      * 
      * @param Document $document
@@ -288,6 +310,58 @@ class Response extends SwooleResponse
      * return array
      */
     public function output(Document $document, string $model): array
+    {
+        $data       = $document;
+        $model      = $this->getModel($model);
+        $output     = [];
+
+        if ($model->isAny()) {
+            $this->payload = $document->getArrayCopy();
+            return $this->payload;
+        }
+
+        foreach ($model->getRules() as $key => $rule) {
+            if (!$document->isSet($key)) {
+                if (!is_null($rule['default'])) {
+                    $document->setAttribute($key, $rule['default']);
+                } else {
+                    throw new Exception('Model '.$model->getName().' is missing response key: '.$key);
+                }
+            }
+
+            if ($rule['array']) {
+                if (!is_array($data[$key])) {
+                    throw new Exception($key.' must be an array of type '.$rule['type']);
+                }
+
+                foreach ($data[$key] as &$item) {
+                    if ($item instanceof Document) {
+                        if (!array_key_exists($rule['type'], $this->models)) {
+                            throw new Exception('Missing model for rule: '. $rule['type']);
+                        }
+
+                        $item = $this->output($item, $rule['type']);
+                    }
+                }
+            }
+            
+            $output[$key] = $data[$key];
+        }
+
+        $this->payload = $output;
+
+        return $this->payload;
+    }
+
+    /**
+     * Generate valid response object from document data
+     * 
+     * @param DatabaseDocument $document
+     * @param string $model
+     * 
+     * return array
+     */
+    public function output2(DatabaseDocument $document, string $model): array
     {
         $data       = $document;
         $model      = $this->getModel($model);

@@ -34,8 +34,9 @@ install:
 - sleep 10
 
 script:
-- docker ps
+- docker ps -a
 - docker-compose logs appwrite
+- docker-compose logs mariadb
 - docker-compose logs appwrite-worker-functions
 - docker-compose exec appwrite doctor
 - docker-compose exec appwrite vars

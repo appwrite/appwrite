@@ -124,7 +124,7 @@ class HTTPTest extends Scope
 
     public function testSpecOpenAPI3()
     {
-        $response = $this->client->call(Client::METHOD_GET, '/specs/open-api3?platform=client', [
+        $response = $this->client->call(Client::METHOD_GET, '/specs/open-api3?platform=console', [
             'content-type' => 'application/json',
         ], []);
 
@@ -133,7 +133,7 @@ class HTTPTest extends Scope
         }
 
         $client = new Client();
-        $client->setEndpoint('https://validator.swagger.io');
+        $client->setEndpoint('http://appwrite-swagger-validator:8080');
 
         /**
          * Test for SUCCESS

@@ -3,8 +3,6 @@
 require_once __DIR__.'/../vendor/autoload.php';
 
 use Appwrite\Database\Validator\Authorization;
-use Utopia\Swoole\Files;
-use Utopia\Swoole\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Process;
 use Swoole\Http\Server;
@@ -13,7 +11,11 @@ use Swoole\Http\Response as SwooleResponse;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Domains\Domain;
+use Utopia\Database\Validator\Authorization as Authorization2;
+use Utopia\Audit\Audit;
+use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Swoole\Files;
+use Utopia\Swoole\Request;
 
 // xdebug_start_trace('/tmp/trace');
 
@@ -51,7 +53,59 @@ $http->on('AfterReload', function($serv, $workerId) {
     Console::success('Reload completed...');
 });
 
-$http->on('start', function (Server $http) use ($payloadSize) {
+Files::load(__DIR__ . '/../public');
+
+include __DIR__ . '/controllers/general.php';
+
+$http->on('start', function (Server $http) use ($payloadSize, $register) {
+    $app = new App('UTC');
+    $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
+
+    if(!$dbForConsole->exists()) {
+        Console::success('[Setup] - Server database init started...');
+        
+        $collections = Config::getParam('collections2', []); /** @var array $collections */
+
+        $register->get('cache')->flushAll();
+
+        $dbForConsole->create();
+        
+        $audit = new Audit($dbForConsole);
+        $audit->setup();
+
+        $adapter = new TimeLimit("", 0, 1, $dbForConsole);
+        $adapter->setup();
+
+        foreach ($collections as $key => $collection) {
+            $dbForConsole->createCollection($key);
+
+            foreach ($collection['attributes'] as $i => $attribute) {
+                $dbForConsole->createAttribute(
+                    $key,
+                    $attribute['$id'],
+                    $attribute['type'],
+                    $attribute['size'],
+                    $attribute['required'],
+                    $attribute['signed'],
+                    $attribute['array'],
+                    $attribute['filters'],
+                );
+            }
+
+            foreach ($collection['indexes'] as $i => $index) {
+                $dbForConsole->createIndex(
+                    $key,
+                    $index['$id'],
+                    $index['type'],
+                    $index['attributes'],
+                    $index['lengths'],
+                    $index['orders'],
+                );
+            }
+        }
+
+        Console::success('[Setup] - Server database init completed...');
+    }
 
     Console::success('Server started succefully (max payload is '.number_format($payloadSize).' bytes)');
 
@@ -63,10 +117,6 @@ $http->on('start', function (Server $http) use ($payloadSize) {
         $http->shutdown();
     });
 });
-
-Files::load(__DIR__ . '/../public');
-
-include __DIR__ . '/controllers/general.php';
 
 $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) {
     $request = new Request($swooleRequest);
@@ -89,7 +139,10 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     
     try {
         Authorization::cleanRoles();
-        Authorization::setRole('*');
+        Authorization::setRole('role:all');
+
+        Authorization2::cleanRoles();
+        Authorization2::setRole('role:all');
 
         $app->run($request, $response);
     } catch (\Throwable $th) {

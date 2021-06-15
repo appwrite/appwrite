@@ -28,8 +28,8 @@ class WebhooksCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Actors1',
-            'read' => ['*'],
-            'write' => ['*'],
+            'read' => ['role:all'],
+            'write' => ['role:all'],
             'rules' => [
                 [
                     'label' => 'First Name',
@@ -86,8 +86,8 @@ class WebhooksCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Demo',
-            'read' => ['*'],
-            'write' => ['*'],
+            'read' => ['role:all'],
+            'write' => ['role:all'],
             'rules' => [
                 [
                     'label' => 'First Name',
@@ -307,7 +307,7 @@ class WebhooksCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Test',
             'env' => 'php-8.0',
-            'execute' => ['*'],
+            'execute' => ['role:all'],
             'timeout' => 10,
         ]);
 
@@ -349,7 +349,7 @@ class WebhooksCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Test',
             'env' => 'php-8.0',
-            'execute' => ['*'],
+            'execute' => ['role:all'],
             'vars' => [
                 'key1' => 'value1',
             ]
