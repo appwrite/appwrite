@@ -535,7 +535,7 @@ class FunctionsV1
         if(\count($list) > $max) {
             Console::info('Starting containers cleanup');
 
-            \usort($list, function ($item1, $item2) {
+            \uasort($list, function ($item1, $item2) {
                 return (int)($item1['appwrite-created'] ?? 0) <=> (int)($item2['appwrite-created'] ?? 0);
             });
 
