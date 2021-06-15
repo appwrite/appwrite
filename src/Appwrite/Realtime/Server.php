@@ -2,10 +2,14 @@
 
 namespace Appwrite\Realtime;
 
+use Appwrite\Database\Database;
+use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
+use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Response;
 use Exception;
+use Swoole\Coroutine\Redis;
 use Swoole\Http\Request;
 use Swoole\Http\Response as SwooleResponse;
 use Swoole\Process;
@@ -17,6 +21,7 @@ use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
 use Utopia\Exception as UtopiaException;
 use Utopia\Registry\Registry;
 use Utopia\Swoole\Request as SwooleRequest;
@@ -24,10 +29,46 @@ use Utopia\Swoole\Request as SwooleRequest;
 
 class Server
 {
+    /**
+     * Container scoped Registry.
+     * @var Registry
+     */
     public Registry $register;
+
+    /**
+     * Container scoped Swoole Server.
+     * @var SwooleServer
+     */
     public SwooleServer $server;
+
+    /**
+     * Container scoped Table.
+     * @var Table
+     */
     public Table $stats;
+
+    /**
+     * Container scoped Database connection.
+     * @var Database
+     */
+    public Database $db;
+
+    /**
+     * Container scoped Redis connection.
+     * @var Redis
+     */
+    public Redis $cache;
+
+    /**
+     * Worker scoped subscription.
+     * @var array
+     */
     public array $subscriptions;
+
+    /**
+     * Worker scoped connections.
+     * @var array
+     */
     public array $connections;
 
     public function __construct(Registry &$register, $host = '0.0.0.0', $port = 80, $config = [])
@@ -42,6 +83,11 @@ class Server
         $this->stats->column('connectionsTotal', Table::TYPE_INT);
         $this->stats->column('messages', Table::TYPE_INT);
         $this->stats->create();
+
+        $this->db = new Database();
+        $this->db->setAdapter(new RedisAdapter(new MySQLAdapter($this->register), $this->register));
+        $this->db->setNamespace('app_console');
+        $this->db->setMocks(Config::getParam('collections', []));
 
         $this->server = new SwooleServer($host, $port, SWOOLE_PROCESS);
         $this->server->set($config);
