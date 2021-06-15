@@ -16,7 +16,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'id' => 'Movies',
+            'name' => 'Movies',
         ]);
 
         $this->assertEquals($movies['headers']['status-code'], 201);
@@ -385,8 +385,9 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'name' => 'Thor: Ragnaroc',
+                'title' => 'Thor: Ragnaroc',
                 'releaseYear' => 2017,
+                'actors' => [],
             ],
             'read' => ['user:'.$this->getUser()['$id'], 'testx'],
             'write' => ['user:'.$this->getUser()['$id'], 'testy'],
@@ -396,24 +397,22 @@ trait DatabaseBase
         $collection = $document['body']['$collection'];
 
         $this->assertEquals($document['headers']['status-code'], 201);
-        $this->assertEquals($document['body']['name'], 'Thor: Ragnaroc');
+        $this->assertEquals($document['body']['title'], 'Thor: Ragnaroc');
         $this->assertEquals($document['body']['releaseYear'], 2017);
-        $this->assertEquals($document['body']['$permissions']['read'][1], 'testx');
-        $this->assertEquals($document['body']['$permissions']['write'][1], 'testy');
+        $this->assertEquals($document['body']['$read'][1], 'testx');
+        $this->assertEquals($document['body']['$write'][1], 'testy');
 
         $document = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $collection . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'name' => 'Thor: Ragnarok'
+                'title' => 'Thor: Ragnarok',
             ],
-            'read' => ['user:'.$this->getUser()['$id']],
-            'write' => ['user:'.$this->getUser()['$id']],
         ]);
 
         $this->assertEquals($document['headers']['status-code'], 200);
-        $this->assertEquals($document['body']['name'], 'Thor: Ragnarok');
+        $this->assertEquals($document['body']['title'], 'Thor: Ragnarok');
         $this->assertEquals($document['body']['releaseYear'], 2017);
 
         $document = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collection . '/documents/' . $id, array_merge([
@@ -425,7 +424,7 @@ trait DatabaseBase
         $collection = $document['body']['$collection'];
 
         $this->assertEquals($document['headers']['status-code'], 200);
-        $this->assertEquals($document['body']['name'], 'Thor: Ragnarok');
+        $this->assertEquals($document['body']['title'], 'Thor: Ragnarok');
         $this->assertEquals($document['body']['releaseYear'], 2017);
 
         return [];
@@ -441,8 +440,9 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'name' => 'Thor: Ragnarok',
+                'title' => 'Thor: Ragnarok',
                 'releaseYear' => 2017,
+                'actors' => [],
             ],
             'read' => ['user:'.$this->getUser()['$id']],
             'write' => ['user:'.$this->getUser()['$id']],
