@@ -30,6 +30,12 @@ use Utopia\Registry\Registry;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use PDO as PDONative;
+use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Cache;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Document as Document2;
+use Utopia\Database\Database as Database2;
+use Utopia\Database\Validator\Authorization as Authorization2;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -39,6 +45,8 @@ const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
 const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
+const APP_LIMIT_COUNT = 5000;
+const APP_LIMIT_USERS = 10000;
 const APP_CACHE_BUSTER = 148;
 const APP_VERSION_STABLE = '0.8.0';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
@@ -80,6 +88,7 @@ Config::load('auth', __DIR__.'/config/auth.php');
 Config::load('providers', __DIR__.'/config/providers.php');
 Config::load('platforms', __DIR__.'/config/platforms.php');
 Config::load('collections', __DIR__.'/config/collections.php');
+Config::load('collections2', __DIR__.'/config/collections2.php');
 Config::load('runtimes', __DIR__.'/config/runtimes.php');
 Config::load('roles', __DIR__.'/config/roles.php');  // User roles and scopes
 Config::load('scopes', __DIR__.'/config/scopes.php');  // User roles and scopes
@@ -126,6 +135,27 @@ Database::addFilter('encrypt',
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
         $tag = null;
         
+        return json_encode([
+            'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
+            'method' => OpenSSL::CIPHER_AES_128_GCM,
+            'iv' => bin2hex($iv),
+            'tag' => bin2hex($tag),
+            'version' => '1',
+        ]);
+    },
+    function($value) {
+        $value = json_decode($value, true);
+        $key = App::getEnv('_APP_OPENSSL_KEY_V'.$value['version']);
+
+        return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+    }
+);
+
+Database2::addFilter('encrypt',
+    function($value) {
+        $key = App::getEnv('_APP_OPENSSL_KEY_V1');
+        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+        $tag = null;
         return json_encode([
             'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
             'method' => OpenSSL::CIPHER_AES_128_GCM,
@@ -381,15 +411,16 @@ App::setResource('clients', function($request, $console, $project) {
     return $clients;
 }, ['request', 'console', 'project']);
 
-App::setResource('user', function($mode, $project, $console, $request, $response, $projectDB, $consoleDB) {
+App::setResource('user', function($mode, $project, $console, $request, $response, $dbForInternal, $dbForConsole) {
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
-    /** @var Appwrite\Database\Document $project */
-    /** @var Appwrite\Database\Database $consoleDB */
-    /** @var Appwrite\Database\Database $projectDB */
+    /** @var Utopia\Database\Document $project */
+    /** @var Utopia\Database\Database $dbForInternal */
+    /** @var Utopia\Database\Database $dbForConsole */
     /** @var bool $mode */
 
     Authorization::setDefaultStatus(true);
+    Authorization2::setDefaultStatus(true);
 
     Auth::setCookieName('a_session_'.$project->getId());
 
@@ -411,37 +442,38 @@ App::setResource('user', function($mode, $project, $console, $request, $response
         $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
     }
 
-    Auth::$unique = $session['id'];
-    Auth::$secret = $session['secret'];
+    Auth::$unique = $session['id'] ?? '';
+    Auth::$secret = $session['secret'] ?? '';
 
     if (APP_MODE_ADMIN !== $mode) {
-        $user = $projectDB->getDocument(Auth::$unique);
+        if ($project->isEmpty()) {
+            $user = new Document2(['$id' => '', '$collection' => 'users']);
+        }
+        else {
+            $user = $dbForInternal->getDocument('users', Auth::$unique);
+        }
     }
     else {
-        $user = $consoleDB->getDocument(Auth::$unique);
-
-        $user
-            ->setAttribute('$id', 'admin-'.$user->getAttribute('$id'))
-        ;
+        $user = $dbForConsole->getDocument('users', Auth::$unique);
     }
 
-    if (empty($user->getId()) // Check a document has been found in the DB
-        || Database::SYSTEM_COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
+    if ($user->isEmpty() // Check a document has been found in the DB
         || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)) { // Validate user has valid login token
-        $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+        $user = new Document2(['$id' => '', '$collection' => 'users']);
     }
 
     if (APP_MODE_ADMIN === $mode) {
-        if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
+        if ($user->find('teamId', $project->getAttribute('teamId'), 'memberships')) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
+            Authorization2::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         } else {
-            $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+            $user = new Document2(['$id' => '', '$collection' => 'users']);
         }
     }
 
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
 
-    if (!empty($authJWT)) { // JWT authentication
+    if (!empty($authJWT) && !$project->isEmpty()) { // JWT authentication
         $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
 
         try {
@@ -454,34 +486,81 @@ App::setResource('user', function($mode, $project, $console, $request, $response
         $jwtSessionId = $payload['sessionId'] ?? '';
 
         if($jwtUserId && $jwtSessionId) {
-            $user = $projectDB->getDocument($jwtUserId);
+            $user = $dbForInternal->getDocument('users', $jwtUserId);
         }
 
-        if (empty($user->search('$id', $jwtSessionId, $user->getAttribute('tokens')))) { // Match JWT to active token
-            $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+        if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
+            $user = new Document2(['$id' => '', '$collection' => 'users']);
         }
     }
 
     return $user;
-}, ['mode', 'project', 'console', 'request', 'response', 'projectDB', 'consoleDB']);
+}, ['mode', 'project', 'console', 'request', 'response', 'dbForInternal', 'dbForConsole']);
 
-App::setResource('project', function($consoleDB, $request) {
+App::setResource('project', function($dbForConsole, $request, $console) {
     /** @var Utopia\Swoole\Request $request */
-    /** @var Appwrite\Database\Database $consoleDB */
+    /** @var Utopia\Database\Database $dbForConsole */
+    /** @var Utopia\Database\Document $console */
+
+    $projectId = $request->getParam('project',
+        $request->getHeader('x-appwrite-project', 'console'));
+    
+    if($projectId === 'console') {
+        return $console;
+    }
 
     Authorization::disable();
+    Authorization2::disable();
 
-    $project = $consoleDB->getDocument($request->getParam('project',
-        $request->getHeader('x-appwrite-project', '')));
+    $project = $dbForConsole->getDocument('projects', $projectId);
 
     Authorization::reset();
+    Authorization2::reset();
 
     return $project;
-}, ['consoleDB', 'request']);
+}, ['dbForConsole', 'request', 'console']);
 
-App::setResource('console', function($consoleDB) {
-    return $consoleDB->getDocument('console');
-}, ['consoleDB']);
+App::setResource('console', function() {
+    return new Document2([
+        '$id' => 'console',
+        '$collection' => 'projects',
+        'name' => 'Appwrite',
+        'description' => 'Appwrite core engine',
+        'logo' => '',
+        'teamId' => -1,
+        'webhooks' => [],
+        'keys' => [],
+        'platforms' => [
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+                'name' => 'Production',
+                'type' => 'web',
+                'hostname' => 'appwrite.io',
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+                'name' => 'Development',
+                'type' => 'web',
+                'hostname' => 'appwrite.test',
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+                'name' => 'Localhost',
+                'type' => 'web',
+                'hostname' => 'localhost',
+            ], // Current host is added on app init
+        ],
+        'legalName' => '',
+        'legalCountry' => '',
+        'legalState' => '',
+        'legalCity' => '',
+        'legalAddress' => '',
+        'legalTaxId' => '',
+        'authWhitelistEmails' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
+        'authWhitelistIPs' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
+        'usersAuthLimit' => (App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
+    ]);
+}, []);
 
 App::setResource('consoleDB', function($register) {
     $consoleDB = new Database();
@@ -500,6 +579,33 @@ App::setResource('projectDB', function($register, $project) {
 
     return $projectDB;
 }, ['register', 'project']);
+
+App::setResource('dbForInternal', function($register, $project) {
+    $cache = new Cache(new RedisCache($register->get('cache')));
+
+    $database = new Database2(new MariaDB($register->get('db')), $cache);
+    $database->setNamespace('project_'.$project->getId().'_internal');
+
+    return $database;
+}, ['register', 'project']);
+
+App::setResource('dbForExternal', function($register, $project) {
+    $cache = new Cache(new RedisCache($register->get('cache')));
+
+    $database = new Database2(new MariaDB($register->get('db')), $cache);
+    $database->setNamespace('project_'.$project->getId().'_external');
+
+    return $database;
+}, ['register', 'project']);
+
+App::setResource('dbForConsole', function($register) {
+    $cache = new Cache(new RedisCache($register->get('cache')));
+
+    $database = new Database2(new MariaDB($register->get('db')), $cache);
+    $database->setNamespace('project_console_internal');
+
+    return $database;
+}, ['register']);
 
 App::setResource('mode', function($request) {
     /** @var Utopia\Swoole\Request $request */

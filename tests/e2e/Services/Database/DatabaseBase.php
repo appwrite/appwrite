@@ -17,7 +17,7 @@ trait DatabaseBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Actors',
-            'read' => ['*'],
+            'read' => ['role:all'],
             'write' => ['role:member', 'role:admin'],
             'rules' => [
                 [
@@ -53,7 +53,7 @@ trait DatabaseBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Movies',
-            'read' => ['*'],
+            'read' => ['role:all'],
             'write' => ['role:member', 'role:admin'],
             'rules' => [
                 [
@@ -553,7 +553,7 @@ trait DatabaseBase
                 'releaseYear' => 1945,
                 'actors' => [],
             ],
-            'read' => ['*'],
+            'read' => ['role:all'],
         ]);
 
         $this->assertEquals($document['headers']['status-code'], 200);
@@ -563,14 +563,14 @@ trait DatabaseBase
         if($this->getSide() == 'client') {
             $this->assertCount(1, $document['body']['$permissions']['read']);
             $this->assertCount(1, $document['body']['$permissions']['write']);
-            $this->assertEquals(['*'], $document['body']['$permissions']['read']);
+            $this->assertEquals(['role:all'], $document['body']['$permissions']['read']);
             $this->assertEquals(['user:'.$this->getUser()['$id']], $document['body']['$permissions']['write']);    
         }
 
         if($this->getSide() == 'server') {
             $this->assertCount(1, $document['body']['$permissions']['read']);
             $this->assertCount(0, $document['body']['$permissions']['write']);
-            $this->assertEquals(['*'], $document['body']['$permissions']['read']);
+            $this->assertEquals(['role:all'], $document['body']['$permissions']['read']);
             $this->assertEquals([], $document['body']['$permissions']['write']);    
         }
 
@@ -586,14 +586,14 @@ trait DatabaseBase
         if($this->getSide() == 'client') {
             $this->assertCount(1, $document['body']['$permissions']['read']);
             $this->assertCount(1, $document['body']['$permissions']['write']);
-            $this->assertEquals(['*'], $document['body']['$permissions']['read']);
+            $this->assertEquals(['role:all'], $document['body']['$permissions']['read']);
             $this->assertEquals(['user:'.$this->getUser()['$id']], $document['body']['$permissions']['write']);    
         }
 
         if($this->getSide() == 'server') {
             $this->assertCount(1, $document['body']['$permissions']['read']);
             $this->assertCount(0, $document['body']['$permissions']['write']);
-            $this->assertEquals(['*'], $document['body']['$permissions']['read']);
+            $this->assertEquals(['role:all'], $document['body']['$permissions']['read']);
             $this->assertEquals([], $document['body']['$permissions']['write']);    
         }
 

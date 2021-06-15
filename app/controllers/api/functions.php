@@ -2,9 +2,6 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Database;
-use Appwrite\Database\Document;
-use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Validator\UID;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Validator\File;
@@ -14,6 +11,11 @@ use Utopia\Storage\Validator\Upload;
 use Appwrite\Utopia\Response;
 use Appwrite\Task\Validator\Cron;
 use Utopia\App;
+use Utopia\Exception;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Text;
@@ -21,7 +23,6 @@ use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Config\Config;
 use Cron\CronExpression;
-use Utopia\Exception;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -45,16 +46,13 @@ App::post('/v1/functions')
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, 900), 'Function maximum execution time in seconds.', true)
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($name, $execute, $env, $vars, $events, $schedule, $timeout, $response, $projectDB) {
+    ->inject('dbForInternal')
+    ->action(function ($name, $execute, $env, $vars, $events, $schedule, $timeout, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
 
-        $function = $projectDB->createDocument([
-            '$collection' => Database::SYSTEM_COLLECTION_FUNCTIONS,
-            '$permissions' => [
-                'execute' => $execute,
-            ],
+        $function = $dbForInternal->createDocument('functions', new Document([
+            'execute' => $execute,
             'dateCreated' => time(),
             'dateUpdated' => time(),
             'status' => 'disabled',
@@ -64,19 +62,13 @@ App::post('/v1/functions')
             'vars' => $vars,
             'events' => $events,
             'schedule' => $schedule,
-            'schedulePrevious' => null,
-            'scheduleNext' => null,
+            'schedulePrevious' => 0,
+            'scheduleNext' => 0,
             'timeout' => $timeout,
-        ]);
+        ]));
 
-        if (false === $function) {
-            throw new Exception('Failed saving function to DB', 500);
-        }
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($function, Response::MODEL_FUNCTION)
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($function, Response::MODEL_FUNCTION);
     });
 
 App::get('/v1/functions')
@@ -95,24 +87,16 @@ App::get('/v1/functions')
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
+    ->inject('dbForInternal')
+    ->action(function ($search, $limit, $offset, $orderType, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
 
-        $results = $projectDB->getCollection([
-            'limit' => $limit,
-            'offset' => $offset,
-            'orderType' => $orderType,
-            'search' => $search,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_FUNCTIONS,
-            ],
-        ]);
+        $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
 
-        $response->dynamic(new Document([
-            'sum' => $projectDB->getSum(),
-            'functions' => $results
+        $response->dynamic2(new Document([
+            'functions' => $dbForInternal->find('functions', $queries, $limit, $offset, ['_id'], [$orderType]),
+            'sum' => $dbForInternal->count('functions', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_FUNCTION_LIST);
     });
 
@@ -129,18 +113,18 @@ App::get('/v1/functions/:functionId')
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($functionId, $response, $projectDB) {
+    ->inject('dbForInternal')
+    ->action(function ($functionId, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
 
-        $function = $projectDB->getDocument($functionId);
+        $function = $dbForInternal->getDocument('functions', $functionId);
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+        if (empty($function->getId())) {
             throw new Exception('Function not found', 404);
         }
 
-        $response->dynamic($function, Response::MODEL_FUNCTION);
+        $response->dynamic2($function, Response::MODEL_FUNCTION);
     });
 
 App::get('/v1/functions/:functionId/usage')
@@ -154,18 +138,18 @@ App::get('/v1/functions/:functionId/usage')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d']), 'Date range.', true)
     ->inject('response')
     ->inject('project')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('register')
-    ->action(function ($functionId, $range, $response, $project, $projectDB, $register) {
+    ->action(function ($functionId, $range, $response, $project, $dbForInternal, $register) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
-        /** @var Appwrite\Database\Database $consoleDB */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $consoleDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Registry\Registry $register */
 
-        $function = $projectDB->getDocument($functionId);
+        $function = $dbForInternal->getDocument('functions', $functionId);
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+        if (empty($function->getId())) {
             throw new Exception('Function not found', 404);
         }
         
@@ -284,39 +268,33 @@ App::put('/v1/functions/:functionId')
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, 900), 'Function maximum execution time in seconds.', true)
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('project')
-    ->action(function ($functionId, $name, $execute, $vars, $events, $schedule, $timeout, $response, $projectDB, $project) {
+    ->action(function ($functionId, $name, $execute, $vars, $events, $schedule, $timeout, $response, $dbForInternal, $project) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Database\Document $project */
 
-        $function = $projectDB->getDocument($functionId);
+        $function = $dbForInternal->getDocument('functions', $functionId);
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+        if (empty($function->getId())) {
             throw new Exception('Function not found', 404);
         }
 
         $original = $function->getAttribute('schedule', '');
         $cron = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? new CronExpression($schedule) : null;
-        $next = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : null;
+        $next = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
 
-        $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
-            '$permissions' => [
-                'execute' => $execute,
-            ],
+        $function = $dbForInternal->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
+            'execute' => $execute,
             'dateUpdated' => time(),
             'name' => $name,
             'vars' => $vars,
             'events' => $events,
             'schedule' => $schedule,
-            'scheduleNext' => $next,
+            'scheduleNext' => (int)$next,
             'timeout' => $timeout,
-        ]));
-
-        if (false === $function) {
-            throw new Exception('Failed saving function to DB', 500);
-        }
+        ])));
 
         if ($next && $schedule !== $original) {
             ResqueScheduler::enqueueAt($next, 'v1-functions', 'FunctionsV1', [
@@ -328,7 +306,7 @@ App::put('/v1/functions/:functionId')
             ]);  // Async task rescheduale
         }
 
-        $response->dynamic($function, Response::MODEL_FUNCTION);
+        $response->dynamic2($function, Response::MODEL_FUNCTION);
     });
 
 App::patch('/v1/functions/:functionId/tag')
@@ -346,32 +324,32 @@ App::patch('/v1/functions/:functionId/tag')
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('tag', '', new UID(), 'Tag unique ID.')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('project')
-    ->action(function ($functionId, $tag, $response, $projectDB, $project) {
+    ->action(function ($functionId, $tag, $response, $dbForInternal, $project) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Database\Document $project */
 
-        $function = $projectDB->getDocument($functionId);
-        $tag = $projectDB->getDocument($tag);
+        $function = $dbForInternal->getDocument('functions', $functionId);
+        $tag = $dbForInternal->getDocument('tags', $tag);
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+        if (empty($function->getId())) {
             throw new Exception('Function not found', 404);
         }
 
-        if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
+        if (empty($tag->getId())) {
             throw new Exception('Tag not found', 404);
         }
 
         $schedule = $function->getAttribute('schedule', '');
         $cron = (empty($function->getAttribute('tag')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-        $next = (empty($function->getAttribute('tag')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : null;
+        $next = (empty($function->getAttribute('tag')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
 
-        $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
+        $function = $dbForInternal->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'tag' => $tag->getId(),
-            'scheduleNext' => $next,
-        ]));
+            'scheduleNext' => (int)$next,
+        ])));
 
         if ($next) { // Init first schedule
             ResqueScheduler::enqueueAt($next, 'v1-functions', 'FunctionsV1', [
@@ -383,11 +361,7 @@ App::patch('/v1/functions/:functionId/tag')
             ]);  // Async task rescheduale
         }
 
-        if (false === $function) {
-            throw new Exception('Failed saving function to DB', 500);
-        }
-
-        $response->dynamic($function, Response::MODEL_FUNCTION);
+        $response->dynamic2($function, Response::MODEL_FUNCTION);
     });
 
 App::delete('/v1/functions/:functionId')
@@ -403,26 +377,26 @@ App::delete('/v1/functions/:functionId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('deletes')
-    ->action(function ($functionId, $response, $projectDB, $deletes) {
+    ->action(function ($functionId, $response, $dbForInternal, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $deletes */
 
-        $function = $projectDB->getDocument($functionId);
+        $function = $dbForInternal->getDocument('functions', $functionId);
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+        if (empty($function->getId())) {
             throw new Exception('Function not found', 404);
         }
 
-        if (!$projectDB->deleteDocument($function->getId())) {
+        if (!$dbForInternal->deleteDocument('functions', $function->getId())) {
             throw new Exception('Failed to remove function from DB', 500);
         }
 
         $deletes
             ->setParam('type', DELETE_TYPE_DOCUMENT)
-            ->setParam('document', $function->getArrayCopy())
+            ->setParam('document', $function)
         ;
 
         $response->noContent();
@@ -447,17 +421,17 @@ App::post('/v1/functions/:functionId/tags')
     ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', false)
     ->inject('request')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($functionId, $command, $file, $request, $response, $projectDB, $usage) {
+    ->action(function ($functionId, $command, $file, $request, $response, $dbForInternal, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $usage */
 
-        $function = $projectDB->getDocument($functionId);
+        $function = $dbForInternal->getDocument('functions', $functionId);
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+        if (empty($function->getId())) {
             throw new Exception('Function not found', 404);
         }
 
@@ -496,31 +470,22 @@ App::post('/v1/functions/:functionId/tags')
             throw new Exception('Failed moving file', 500);
         }
         
-        $tag = $projectDB->createDocument([
-            '$collection' => Database::SYSTEM_COLLECTION_TAGS,
-            '$permissions' => [
-                'read' => [],
-                'write' => [],
-            ],
+        $tag = $dbForInternal->createDocument('tags', new Document([
+            '$read' => [],
+            '$write' => [],
             'functionId' => $function->getId(),
             'dateCreated' => time(),
             'command' => $command,
             'path' => $path,
             'size' => $size,
-        ]);
-
-        if (false === $tag) {
-            throw new Exception('Failed saving tag to DB', 500);
-        }
+        ]));
 
         $usage
             ->setParam('storage', $tag->getAttribute('size', 0))
         ;
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($tag, Response::MODEL_TAG)
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($tag, Response::MODEL_TAG);
     });
 
 App::get('/v1/functions/:functionId/tags')
@@ -540,31 +505,25 @@ App::get('/v1/functions/:functionId/tags')
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($functionId, $search, $limit, $offset, $orderType, $response, $projectDB) {
+    ->inject('dbForInternal')
+    ->action(function ($functionId, $search, $limit, $offset, $orderType, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
 
-        $function = $projectDB->getDocument($functionId);
+        $function = $dbForInternal->getDocument('functions', $functionId);
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+        if (empty($function->getId())) {
             throw new Exception('Function not found', 404);
         }
-        
-        $results = $projectDB->getCollection([
-            'limit' => $limit,
-            'offset' => $offset,
-            'orderType' => $orderType,
-            'search' => $search,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_TAGS,
-                'functionId='.$function->getId(),
-            ],
-        ]);
 
-        $response->dynamic(new Document([
-            'sum' => $projectDB->getSum(),
-            'tags' => $results
+        $queries[] = new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]);
+        
+        $results = $dbForInternal->find('tags', $queries, $limit, $offset, ['_id'], [$orderType]);
+        $sum = $dbForInternal->count('tags', $queries, APP_LIMIT_COUNT);
+
+        $response->dynamic2(new Document([
+            'tags' => $results,
+            'sum' => $sum,
         ]), Response::MODEL_TAG_LIST);
     });
 
@@ -582,28 +541,28 @@ App::get('/v1/functions/:functionId/tags/:tagId')
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('tagId', '', new UID(), 'Tag unique ID.')
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($functionId, $tagId, $response, $projectDB) {
+    ->inject('dbForInternal')
+    ->action(function ($functionId, $tagId, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
 
-        $function = $projectDB->getDocument($functionId);
+        $function = $dbForInternal->getDocument('functions', $functionId);
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+        if (empty($function->getId())) {
             throw new Exception('Function not found', 404);
         }
 
-        $tag = $projectDB->getDocument($tagId);
+        $tag = $dbForInternal->getDocument('tags', $tagId);
 
         if ($tag->getAttribute('functionId') !== $function->getId()) {
             throw new Exception('Tag not found', 404);
         }
 
-        if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
+        if (empty($tag->getId())) {
             throw new Exception('Tag not found', 404);
         }
 
-        $response->dynamic($tag, Response::MODEL_TAG);
+        $response->dynamic2($tag, Response::MODEL_TAG);
     });
 
 App::delete('/v1/functions/:functionId/tags/:tagId')
@@ -620,45 +579,41 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('tagId', '', new UID(), 'Tag unique ID.')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($functionId, $tagId, $response, $projectDB, $usage) {
+    ->action(function ($functionId, $tagId, $response, $dbForInternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $usage */
 
-        $function = $projectDB->getDocument($functionId);
+        $function = $dbForInternal->getDocument('functions', $functionId);
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+        if (empty($function->getId())) {
             throw new Exception('Function not found', 404);
         }
         
-        $tag = $projectDB->getDocument($tagId);
+        $tag = $dbForInternal->getDocument('tags', $tagId);
 
         if ($tag->getAttribute('functionId') !== $function->getId()) {
             throw new Exception('Tag not found', 404);
         }
 
-        if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
+        if (empty($tag->getId())) {
             throw new Exception('Tag not found', 404);
         }
 
         $device = Storage::getDevice('functions');
 
         if ($device->delete($tag->getAttribute('path', ''))) {
-            if (!$projectDB->deleteDocument($tag->getId())) {
+            if (!$dbForInternal->deleteDocument('tags', $tag->getId())) {
                 throw new Exception('Failed to remove tag from DB', 500);
             }
         }
 
         if($function->getAttribute('tag') === $tag->getId()) { // Reset function tag
-            $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
+            $function = $dbForInternal->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
                 'tag' => '',
-            ]));
-    
-            if (false === $function) {
-                throw new Exception('Failed saving function to DB', 500);
-            }
+            ])));
         }
 
         $usage
@@ -687,29 +642,29 @@ App::post('/v1/functions/:functionId/executions')
     // ->param('async', 1, new Range(0, 1), 'Execute code asynchronously. Pass 1 for true, 0 for false. Default value is 1.', true)
     ->inject('response')
     ->inject('project')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('user')
-    ->action(function ($functionId, $data, /*$async,*/ $response, $project, $projectDB, $user) {
+    ->action(function ($functionId, $data, /*$async,*/ $response, $project, $dbForInternal, $user) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Database\Document $user */
 
         Authorization::disable();
 
-        $function = $projectDB->getDocument($functionId);
+        $function = $dbForInternal->getDocument('functions', $functionId);
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+        if (empty($function->getId())) {
             throw new Exception('Function not found', 404);
         }
 
-        $tag = $projectDB->getDocument($function->getAttribute('tag'));
+        $tag = $dbForInternal->getDocument('tags', $function->getAttribute('tag'));
 
         if ($tag->getAttribute('functionId') !== $function->getId()) {
             throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
         }
 
-        if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
+        if (empty($tag->getId())) {
             throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
         }
 
@@ -717,33 +672,27 @@ App::post('/v1/functions/:functionId/executions')
 
         $validator = new Authorization($function, 'execute');
 
-        if (!$validator->isValid($function->getPermissions())) { // Check if user has write access to execute function
+        if (!$validator->isValid($function->getAttribute('execute'))) { // Check if user has write access to execute function
             throw new Exception($validator->getDescription(), 401);
         }
 
         Authorization::disable();
 
-        $execution = $projectDB->createDocument([
-            '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
-            '$permissions' => [
-                'read' => (!empty($user->getId())) ? ['user:' . $user->getId()] : [],
-                'write' => [],
-            ],
+        $execution = $dbForInternal->createDocument('executions', new Document([
+            '$read' => (!empty($user->getId())) ? ['user:' . $user->getId()] : [],
+            '$write' => [],
             'dateCreated' => time(),
             'functionId' => $function->getId(),
+            'tagId' => $tag->getId(),
             'trigger' => 'http', // http / schedule / event
             'status' => 'waiting', // waiting / processing / completed / failed
             'exitCode' => 0,
             'stdout' => '',
             'stderr' => '',
-            'time' => 0,
-        ]);
+            'time' => 0.0,
+        ]));
 
         Authorization::reset();
-
-        if (false === $execution) {
-            throw new Exception('Failed saving execution to DB', 500);
-        }
         
         $jwt = ''; // initialize
         if (!empty($user->getId())) { // If userId exists, generate a JWT for function
@@ -777,10 +726,8 @@ App::post('/v1/functions/:functionId/executions')
             'jwt' => $jwt,
         ]);
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($execution, Response::MODEL_EXECUTION)
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($execution, Response::MODEL_EXECUTION);
     });
 
 App::get('/v1/functions/:functionId/executions')
@@ -795,38 +742,33 @@ App::get('/v1/functions/:functionId/executions')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_EXECUTION_LIST)
     ->param('functionId', '', new UID(), 'Function unique ID.')
-    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($functionId, $search, $limit, $offset, $orderType, $response, $projectDB) {
+    ->inject('dbForInternal')
+    ->action(function ($functionId, $limit, $offset, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         
         Authorization::disable();
-        $function = $projectDB->getDocument($functionId);
+        $function = $dbForInternal->getDocument('functions', $functionId);
         Authorization::reset();
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+        if (empty($function->getId())) {
             throw new Exception('Function not found', 404);
         }
-        
-        $results = $projectDB->getCollection([
-            'limit' => $limit,
-            'offset' => $offset,
-            'orderType' => $orderType,
-            'search' => $search,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_EXECUTIONS,
-                'functionId='.$function->getId(),
-            ],
-        ]);
 
-        $response->dynamic(new Document([
-            'sum' => $projectDB->getSum(),
-            'executions' => $results
+        $results = $dbForInternal->find('executions', [
+            new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]),
+        ], $limit, $offset, ['_id'], [Database::ORDER_DESC]);
+        
+        $sum = $dbForInternal->count('executions', [
+            new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]),
+        ], APP_LIMIT_COUNT);
+
+        $response->dynamic2(new Document([
+            'executions' => $results,
+            'sum' => $sum,
         ]), Response::MODEL_EXECUTION_LIST);
     });
 
@@ -844,28 +786,28 @@ App::get('/v1/functions/:functionId/executions/:executionId')
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('executionId', '', new UID(), 'Execution unique ID.')
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($functionId, $executionId, $response, $projectDB) {
+    ->inject('dbForInternal')
+    ->action(function ($functionId, $executionId, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         
         Authorization::disable();
-        $function = $projectDB->getDocument($functionId);
+        $function = $dbForInternal->getDocument('functions', $functionId);
         Authorization::reset();
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+        if (empty($function->getId())) {
             throw new Exception('Function not found', 404);
         }
 
-        $execution = $projectDB->getDocument($executionId);
+        $execution = $dbForInternal->getDocument('executions', $executionId);
 
         if ($execution->getAttribute('functionId') !== $function->getId()) {
             throw new Exception('Execution not found', 404);
         }
 
-        if (empty($execution->getId()) || Database::SYSTEM_COLLECTION_EXECUTIONS != $execution->getCollection()) {
+        if (empty($execution->getId())) {
             throw new Exception('Execution not found', 404);
         }
 
-        $response->dynamic($execution, Response::MODEL_EXECUTION);
+        $response->dynamic2($execution, Response::MODEL_EXECUTION);
     });
