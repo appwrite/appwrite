@@ -967,6 +967,131 @@ $collections = [
             ]
         ],
     ],
+    'buckets' => [
+        '$collection' => Database::COLLECTIONS,
+        '$id' => 'buckets',
+        '$permissions' => ['read' => ['*']],
+        'name' => 'Buckets',
+        'structure' => true,
+        'attributes' => [
+            [
+                '$id' => 'dateCreated',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'signed' => false,
+                'size' => 0,
+                'required' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'dateUpdated',
+                'type' => Database::VAR_INTEGER,
+                'size' => 0,
+                'format' => '',
+                'signed' => true,
+                'required' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'enabled',
+                'type' => Database::VAR_BOOLEAN,
+                'signed' => true,
+                'size' => 0,
+                'format' => '',
+                'filters' => [],
+                'required' => true,
+                'array' => false,
+            ],
+            [
+                '$id' => 'name',
+                'type' => Database::VAR_STRING,
+                'signed' => true,
+                'size' => 128,
+                'format' => '',
+                'filters' => [],
+                'required' => true,
+                'array' => false,
+            ],
+            [
+                
+                'label' => 'Adapter',
+                '$id' => 'adapter',
+                'type' => Database::VAR_STRING,
+                'signed' => true,
+                'size' => 64,
+                'format' => '',
+                'filters' => [],
+                'required' => true,
+                'array' => false,
+            ],
+            [
+                
+                '$id' => 'adapterCredentials',
+                'type' => Database::VAR_STRING,
+                'signed' => true,
+                'size' => 16384,
+                'format' => '',
+                'required' => false,
+                'array' => false,
+                'filters' => ['json']
+            ],
+            [
+                '$id' => 'maximumFileSize',
+                'type' => Database::VAR_INTEGER,
+                'signed' => true,
+                'size' => 0,
+                'format' => '',
+                'filters' => [],
+                'required' => true,
+                'array' => false,
+            ],
+            [
+                '$id' => 'allowedFileExtensions',
+                'type' => Database::VAR_STRING,
+                'signed' => true,
+                'size' => 64,
+                'format' => '',
+                'filters' => [],
+                'required' => true,
+                'array' => true,
+            ],
+            [
+                
+                'label' => 'Encryption',
+                '$id' => 'encryption',
+                'type' => Database::VAR_BOOLEAN,
+                'signed' => true,
+                'size' => 0,
+                'format' => '',
+                'filters' => [],
+                'required' => true,
+                'array' => false,
+            ],
+            [
+                
+                'label' => 'Virus Scan',
+                '$id' => 'antiVirus',
+                'type' => Database::VAR_BOOLEAN,
+                'signed' => true,
+                'size' => 0,
+                'format' => '',
+                'filters' => [],
+                'required' => true,
+                'array' => false,
+            ],
+        ],
+        'indexes' => [
+            [
+                '$id' => '_fulltext_name',
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => ['name'],
+                'lengths' => [1024],
+                'orders' => [Database::ORDER_ASC],
+            ]
+        ]
+    ]
 ];
 
 /*
