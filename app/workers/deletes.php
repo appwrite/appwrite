@@ -1,6 +1,8 @@
 <?php
 
 use Appwrite\Database\Database;
+use Utopia\Database\Database as Database2;
+use Utopia\Cache\Adapter\Redis as RedisCache;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
@@ -12,7 +14,8 @@ use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Audit\Audit;
-use Utopia\Audit\Adapters\MySQL as AuditAdapter;
+use Utopia\Cache\Cache;
+use Utopia\Database\Adapter\MariaDB;
 
 require_once __DIR__.'/../init.php';
 
@@ -31,14 +34,15 @@ class DeletesV1 extends Worker
 
     public function run(): void
     {
-        $projectId = isset($this->args['projectId']) ? $this->args['projectId'] : '';
-        $type = $this->args['type'];
+        $projectId = $this->args['projectId'] ?? '';
+        $type = $this->args['type'] ?? '';
         
         switch (strval($type)) {
             case DELETE_TYPE_DOCUMENT:
-                $document = $this->args['document'];
+                $document = $this->args['document'] ?? '';
                 $document = new Document($document);
-                switch (strval($document->getCollection())) {
+                
+                switch ($document->getCollection()) {
                     case Database::SYSTEM_COLLECTION_PROJECTS:
                         $this->deleteProject($document);
                         break;
@@ -77,7 +81,6 @@ class DeletesV1 extends Worker
             default:
                 Console::error('No delete operation for type: '.$type);
                 break;
-            
             }
     }
 
@@ -165,12 +168,9 @@ class DeletesV1 extends Worker
             throw new Exception('Failed to delete audit logs. No timestamp provided');
         }
 
-        $timeLimit = new TimeLimit("", 0, 1, function () use ($register) {
-            return $register->get('db');
-        });
-
-        $this->deleteForProjectIds(function($projectId) use ($timeLimit, $timestamp){
-            $timeLimit->setNamespace('app_'.$projectId);
+        
+        $this->deleteForProjectIds(function($projectId) use ($timestamp){
+            $timeLimit = new TimeLimit("", 0, 1, $this->getInternalDB($projectId));
             $abuse = new Abuse($timeLimit); 
 
             $status = $abuse->cleanup($timestamp);
@@ -187,9 +187,7 @@ class DeletesV1 extends Worker
             throw new Exception('Failed to delete audit logs. No timestamp provided');
         }
         $this->deleteForProjectIds(function($projectId) use ($register, $timestamp){
-            $adapter = new AuditAdapter($register->get('db'));
-            $adapter->setNamespace('app_'.$projectId);
-            $audit = new Audit($adapter);
+            $audit = new Audit($this->getInternalDB($projectId));
             $status = $audit->cleanup($timestamp);
             if (!$status) {
                 throw new Exception('Failed to delete Audit logs for project'.$projectId);
@@ -372,5 +370,19 @@ class DeletesV1 extends Worker
         $projectDB->setMocks(Config::getParam('collections', []));
 
         return $projectDB;
+    }
+    
+    /**
+     * @return Database2
+     */
+    protected function getInternalDB($projectId): Database2
+    {
+        global $register;
+        
+        $cache = new Cache(new RedisCache($register->get('cache')));
+        $dbForInternal = new Database2(new MariaDB($register->get('db')), $cache);
+        $dbForInternal->setNamespace('project_'.$projectId.'_internal'); // Main DB
+
+        return $dbForInternal;
     }
 }
