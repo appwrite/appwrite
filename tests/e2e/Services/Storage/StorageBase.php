@@ -275,4 +275,26 @@ trait StorageBase
 
         return ['bucketId' => $bucketId];
     }
+
+    /**
+     * @depends testCreateBucket
+     */
+    public function testListBucket($data): array
+    {
+        $id = $data['bucketId'] ?? '';
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals($id, $response['body']['buckets'][0]['$id']);
+        $this->assertEquals('Test Bucket', $response['body']['buckets'][0]['name']);
+
+        return $data;
+    }
 }
