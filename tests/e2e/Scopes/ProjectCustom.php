@@ -73,6 +73,7 @@ trait ProjectCustom
                 'documents.write',
                 'files.read',
                 'files.write',
+                'buckets.write',
                 'functions.read',
                 'functions.write',
                 'execution.read',
