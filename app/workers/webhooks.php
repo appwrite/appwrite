@@ -8,7 +8,6 @@ require_once __DIR__.'/../workers.php';
 
 Console::title('Webhooks V1 Worker');
 Console::success(APP_NAME.' webhooks worker v1 has started');
-use Appwrite\Resque\Worker;
 
 class WebhooksV1 extends Worker
 {
