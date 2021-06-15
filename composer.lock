@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "399d2426ca92e04b6d6fb84a91c316c3",
+    "content-hash": "2265ffb849947cca22a5874e3d2f241f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1918,7 +1918,6 @@
                 "phpunit/phpunit": "^9.3",
                 "vimeo/psalm": "4.0.1"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -2128,7 +2127,7 @@
                 "shasum": ""
             },
             "require": {
-                "php": "^5.3.3 || ^7.0 || ^8.0",
+                "php": "^7.2 || ^8.0",
                 "symfony/polyfill-ctype": "^1.8"
             },
             "conflict": {
@@ -2136,9 +2135,14 @@
                 "vimeo/psalm": "<4.6.1 || 4.6.2"
             },
             "require-dev": {
-                "phpunit/phpunit": "^4.8.36 || ^7.5.13"
+                "phpunit/phpunit": "^8.5.13"
             },
             "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.10-dev"
+                }
+            },
             "autoload": {
                 "psr-4": {
                     "Webmozart\\Assert\\": "src/"
@@ -2165,6 +2169,72 @@
                 "source": "https://github.com/webmozarts/assert/tree/1.10.0"
             },
             "time": "2021-03-09T10:59:23+00:00"
+        },
+        {
+            "name": "webonyx/graphql-php",
+            "version": "v14.8.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/webonyx/graphql-php.git",
+                "reference": "7149ebfb0ba4132ca3cc5ef943b8e2ece58a5d5b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/webonyx/graphql-php/zipball/7149ebfb0ba4132ca3cc5ef943b8e2ece58a5d5b",
+                "reference": "7149ebfb0ba4132ca3cc5ef943b8e2ece58a5d5b",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "php": "^7.1||^8.0"
+            },
+            "require-dev": {
+                "amphp/amp": "^2.3",
+                "doctrine/coding-standard": "^6.0",
+                "nyholm/psr7": "^1.2",
+                "phpbench/phpbench": "^0.16.10",
+                "phpstan/extension-installer": "^1.0",
+                "phpstan/phpstan": "0.12.82",
+                "phpstan/phpstan-phpunit": "0.12.18",
+                "phpstan/phpstan-strict-rules": "0.12.9",
+                "phpunit/phpunit": "^7.2|^8.5",
+                "psr/http-message": "^1.0",
+                "react/promise": "2.*",
+                "simpod/php-coveralls-mirror": "^3.0",
+                "squizlabs/php_codesniffer": "3.5.4"
+            },
+            "suggest": {
+                "psr/http-message": "To use standard GraphQL server",
+                "react/promise": "To leverage async resolving on React PHP platform"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "GraphQL\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A PHP port of GraphQL reference implementation",
+            "homepage": "https://github.com/webonyx/graphql-php",
+            "keywords": [
+                "api",
+                "graphql"
+            ],
+            "support": {
+                "issues": "https://github.com/webonyx/graphql-php/issues",
+                "source": "https://github.com/webonyx/graphql-php/tree/v14.8.0"
+            },
+            "funding": [
+                {
+                    "url": "https://opencollective.com/webonyx-graphql-php",
+                    "type": "open_collective"
+                }
+            ],
+            "time": "2021-06-01T10:24:56+00:00"
         }
     ],
     "packages-dev": [
@@ -2709,20 +2779,20 @@
         },
         {
             "name": "felixfbecker/advanced-json-rpc",
-            "version": "v3.2.0",
+            "version": "v3.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/felixfbecker/php-advanced-json-rpc.git",
-                "reference": "06f0b06043c7438959dbdeed8bb3f699a19be22e"
+                "reference": "b5f37dbff9a8ad360ca341f3240dc1c168b45447"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/felixfbecker/php-advanced-json-rpc/zipball/06f0b06043c7438959dbdeed8bb3f699a19be22e",
-                "reference": "06f0b06043c7438959dbdeed8bb3f699a19be22e",
+                "url": "https://api.github.com/repos/felixfbecker/php-advanced-json-rpc/zipball/b5f37dbff9a8ad360ca341f3240dc1c168b45447",
+                "reference": "b5f37dbff9a8ad360ca341f3240dc1c168b45447",
                 "shasum": ""
             },
             "require": {
-                "netresearch/jsonmapper": "^1.0 || ^2.0",
+                "netresearch/jsonmapper": "^1.0 || ^2.0 || ^3.0 || ^4.0",
                 "php": "^7.1 || ^8.0",
                 "phpdocumentor/reflection-docblock": "^4.3.4 || ^5.0.0"
             },
@@ -2748,9 +2818,9 @@
             "description": "A more advanced JSONRPC implementation",
             "support": {
                 "issues": "https://github.com/felixfbecker/php-advanced-json-rpc/issues",
-                "source": "https://github.com/felixfbecker/php-advanced-json-rpc/tree/v3.2.0"
+                "source": "https://github.com/felixfbecker/php-advanced-json-rpc/tree/v3.2.1"
             },
-            "time": "2021-01-10T17:48:47+00:00"
+            "time": "2021-06-11T22:34:44+00:00"
         },
         {
             "name": "felixfbecker/language-server-protocol",
@@ -2999,16 +3069,16 @@
         },
         {
             "name": "netresearch/jsonmapper",
-            "version": "v2.1.0",
+            "version": "v4.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/cweiske/jsonmapper.git",
-                "reference": "e0f1e33a71587aca81be5cffbb9746510e1fe04e"
+                "reference": "8bbc021a8edb2e4a7ea2f8ad4fa9ec9dce2fcb8d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/cweiske/jsonmapper/zipball/e0f1e33a71587aca81be5cffbb9746510e1fe04e",
-                "reference": "e0f1e33a71587aca81be5cffbb9746510e1fe04e",
+                "url": "https://api.github.com/repos/cweiske/jsonmapper/zipball/8bbc021a8edb2e4a7ea2f8ad4fa9ec9dce2fcb8d",
+                "reference": "8bbc021a8edb2e4a7ea2f8ad4fa9ec9dce2fcb8d",
                 "shasum": ""
             },
             "require": {
@@ -3016,10 +3086,10 @@
                 "ext-pcre": "*",
                 "ext-reflection": "*",
                 "ext-spl": "*",
-                "php": ">=5.6"
+                "php": ">=7.1"
             },
             "require-dev": {
-                "phpunit/phpunit": "~4.8.35 || ~5.7 || ~6.4 || ~7.0",
+                "phpunit/phpunit": "~7.5 || ~8.0 || ~9.0",
                 "squizlabs/php_codesniffer": "~3.5"
             },
             "type": "library",
@@ -3044,9 +3114,9 @@
             "support": {
                 "email": "cweiske@cweiske.de",
                 "issues": "https://github.com/cweiske/jsonmapper/issues",
-                "source": "https://github.com/cweiske/jsonmapper/tree/master"
+                "source": "https://github.com/cweiske/jsonmapper/tree/v4.0.0"
             },
-            "time": "2020-04-16T18:48:43+00:00"
+            "time": "2020-12-01T19:48:11+00:00"
         },
         {
             "name": "nikic/php-parser",
@@ -4468,16 +4538,16 @@
         },
         {
             "name": "sebastian/global-state",
-            "version": "5.0.2",
+            "version": "5.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/global-state.git",
-                "reference": "a90ccbddffa067b51f574dea6eb25d5680839455"
+                "reference": "23bd5951f7ff26f12d4e3242864df3e08dec4e49"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/global-state/zipball/a90ccbddffa067b51f574dea6eb25d5680839455",
-                "reference": "a90ccbddffa067b51f574dea6eb25d5680839455",
+                "url": "https://api.github.com/repos/sebastianbergmann/global-state/zipball/23bd5951f7ff26f12d4e3242864df3e08dec4e49",
+                "reference": "23bd5951f7ff26f12d4e3242864df3e08dec4e49",
                 "shasum": ""
             },
             "require": {
@@ -4520,7 +4590,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/global-state/issues",
-                "source": "https://github.com/sebastianbergmann/global-state/tree/5.0.2"
+                "source": "https://github.com/sebastianbergmann/global-state/tree/5.0.3"
             },
             "funding": [
                 {
@@ -4528,7 +4598,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2020-10-26T15:55:19+00:00"
+            "time": "2021-06-11T13:31:12+00:00"
         },
         {
             "name": "sebastian/lines-of-code",
@@ -6021,5 +6091,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.1.0"
+    "plugin-api-version": "2.0.0"
 }
