@@ -110,24 +110,16 @@ App::get('/v1/storage/buckets')
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
-    ->inject('projectDB')
-    ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
+    ->inject('dbForInternal')
+    ->action(function ($search, $limit, $offset, $orderType, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
 
-        $results = $projectDB->getCollection([
-            'limit' => $limit,
-            'offset' => $offset,
-            'orderType' => $orderType,
-            'search' => $search,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_BUCKETS,
-            ],
-        ]);
+        $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, $search)] : [];
 
-        $response->dynamic(new Document([
-            'sum' => $projectDB->getSum(),
-            'buckets' => $results
+        $response->dynamic2(new Document([
+            'buckets' => $dbForInternal->find('buckets', $queries, $limit, $offset, ['_id'], [$orderType]),
+            'sum' => $dbForInternal->count('buckets', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_BUCKET_LIST);
     });
 
