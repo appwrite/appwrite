@@ -26,7 +26,6 @@ use Utopia\Validator\Integer;
 use Appwrite\Database\Exception\Authorization as AuthorizationException;
 use Appwrite\Database\Exception\Structure as StructureException;
 use Utopia\Database\Query;
-use Utopia\Validator\Numeric;
 
 App::post('/v1/storage/buckets')
     ->desc('Create storage bucket')
@@ -50,20 +49,21 @@ App::post('/v1/storage/buckets')
     ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('user')
     ->inject('audits')
-    ->action(function ($name, $maximumFileSize, $allowedFileExtensions, $enabled, $adapter, $encryption, $antiVirus, $read, $write, $response, $projectDB, $user, $audits) {
+    ->action(function ($name, $maximumFileSize, $allowedFileExtensions, $enabled, $adapter, $encryption, $antiVirus, $read, $write, $response, $dbForInternal, $user, $audits) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
 
         try {
             $data = [
-                '$collection' => Database::SYSTEM_COLLECTION_BUCKETS,
+                '$collection' => 'buckets',
                 'dateCreated' => \time(),
+                'dateUpdated' => \time(),
                 'name' => $name,
                 'maximumFileSize' => $maximumFileSize,
                 'allowedFileExtensions' => $allowedFileExtensions,
@@ -72,30 +72,26 @@ App::post('/v1/storage/buckets')
                 'encryption' => $encryption,
                 'antiVirus' => $antiVirus,
             ];
-            $data['$permissions'] = [
-                'read' => (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? [], //  By default set read permissions for user
-                'write' => (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? [], //  By default set write permissions for user
-            ];
-            $data = $projectDB->createDocument($data);
+
+            $data['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? []; //  By default set read permissions for user
+            $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? []; //  By default set write permissions for user
+            $data = $dbForInternal->createDocument('buckets', new Document($data));
         } catch (AuthorizationException $exception) {
             throw new Exception('Unauthorized permissions', 401);
         } catch (StructureException $exception) {
-            throw new Exception('Bad structure. '.$exception->getMessage(), 400);
-        } catch (\Exception $exception) {
+            throw new Exception('Bad structure. ' . $exception->getMessage(), 400);
+        } catch (\Exception$exception) {
             throw new Exception('Failed saving document to DB', 500);
         }
 
         $audits
             ->setParam('event', 'database.collections.create')
-            ->setParam('resource', 'database/collection/'.$data->getId())
+            ->setParam('resource', 'database/collection/' . $data->getId())
             ->setParam('data', $data->getArrayCopy())
         ;
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($data, Response::MODEL_BUCKET)
-        ;
-
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($data, Response::MODEL_BUCKET);
     });
 
 App::get('/v1/storage/buckets')
