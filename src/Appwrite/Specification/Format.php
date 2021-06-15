@@ -62,6 +62,7 @@ abstract class Format
      * @param Route[] $routes
      * @param Model[] $models
      * @param array $keys
+     * @param int $authCount
      */
     public function __construct(App $app, array $services, array $routes, array $models, array $keys, int $authCount)
     {

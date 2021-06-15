@@ -6,7 +6,6 @@ use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Appwrite\ClamAV\Network;
 use Appwrite\Event\Event;
-use RuntimeException;
 
 App::get('/v1/health')
     ->desc('Get HTTP')
@@ -268,7 +267,7 @@ App::get('/v1/health/anti-virus')
                 'status' => (@$antiVirus->ping()) ? 'online' : 'offline',
                 'version' => @$antiVirus->version(),
             ]);
-        } catch( RuntimeException $e) {
+        } catch( \Exception $e) {
             $response->json([
                 'status' => 'offline',
                 'version' => '',

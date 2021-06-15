@@ -78,6 +78,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
         Config::setParam('domains', $domains);
     }
 
+
     $localeParam = (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
 
     if (\in_array($localeParam, Config::getParam('locale-codes'))) {
@@ -85,6 +86,8 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
     };
 
     $route = $utopia->match($request);
+
+    // var_dump("*********** In general.php init with route {$route->getURL()} *************");
 
     if (!empty($route->getLabel('sdk.auth', [])) && empty($project->getId()) && ($route->getLabel('scope', '') !== 'public')) {
         throw new Exception('Missing or unknown project ID', 400);
@@ -338,6 +341,8 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     }
 
     //$_SERVER = []; // Reset before reporting to error log to avoid keys being compromised
+
+    var_dump("*********** In general.php::error error->getCode() {$error->getCode()} *************");
 
     $output = ((App::isDevelopment())) ? [
         'message' => $error->getMessage(),

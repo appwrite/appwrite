@@ -280,7 +280,7 @@ App::delete('/v1/database/collections/:collectionId')
             ->setParam('data', $collection->getArrayCopy())
         ;
 
-        $response->noContent();
+        $response->dynamic(new Document(), Response::MODEL_NONE);
     });
 
 App::post('/v1/database/collections/:collectionId/documents')
@@ -623,5 +623,5 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
             ->setParam('data', $document->getArrayCopy()) // Audit document in case of malicious or disastrous action
         ;
 
-        $response->noContent();
+        $response->dynamic(new Document(), Response::MODEL_NONE);
     });

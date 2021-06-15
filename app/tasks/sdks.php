@@ -202,7 +202,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     \exec('rm -rf '.$target.' && \
                         mkdir -p '.$target.' && \
                         cd '.$target.' && \
-                        git init && \
+                        git init --initial-branch=master && \
                         git remote add origin '.$gitUrl.' && \
                         git fetch && \
                         git pull '.$gitUrl.' && \

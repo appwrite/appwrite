@@ -124,6 +124,9 @@ class Response extends SwooleResponse
     // Tests (keep last)
     const MODEL_MOCK = 'mock';
 
+    // Content type
+    const CONTENT_TYPE_NULL = 'null';
+
     /**
      * @var Filter
      */
@@ -133,6 +136,11 @@ class Response extends SwooleResponse
      * @var array
      */
     protected $payload = [];
+
+    /**
+     * @var string
+     */
+    protected $model = '';
 
     /**
      * Response constructor.
@@ -255,6 +263,17 @@ class Response extends SwooleResponse
     }
 
     /**
+     * Returns the model that was used to 
+     * parse the currrent payload
+     * 
+     * @return string
+     */
+    public function getCurrentModel(): string
+    {
+        return $this->model;
+    }
+
+    /**
      * Validate response objects and outputs
      *  the response according to given format type
      * 
@@ -268,11 +287,30 @@ class Response extends SwooleResponse
         $output = $this->output($document, $model);
 
         // If filter is set, parse the output
-        if(self::isFilter()){
+        if(self::isFilter()) {
             $output = self::getFilter()->parse($output, $model);
         }
 
-        $this->json(!empty($output) ? $output : new stdClass());
+        switch($this->getContentType()) {
+            case self::CONTENT_TYPE_JSON:
+                $this->json(!empty($output) ? $output : new stdClass());
+                break;
+            
+            case self::CONTENT_TYPE_YAML:
+                $this->yaml(!empty($output) ? $output : new stdClass());
+                break;
+                
+            case self::CONTENT_TYPE_NULL:
+                break;
+
+            default :
+                if ($model === self::MODEL_NONE) {
+                    $this->noContent();
+                } else {
+                    $this->json(!empty($output) ? $output : new stdClass());
+                }
+                break;
+        }
     }
 
     /**
@@ -289,7 +327,9 @@ class Response extends SwooleResponse
         $model      = $this->getModel($model);
         $output     = [];
 
-        if ($model->isAny()) {
+        $this->model = $model->getType();
+
+        if ($model->isAny() || $model->isNone()) {
             $this->payload = $document->getArrayCopy();
             return $this->payload;
         }
@@ -391,4 +431,5 @@ class Response extends SwooleResponse
     {
         return self::$filter != null;
     }
+
 }

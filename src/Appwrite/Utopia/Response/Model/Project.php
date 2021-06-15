@@ -90,7 +90,7 @@ class Project extends Model
                 'example' => '131102020',
             ])
             ->addRule('usersAuthLimit', [
-                'type' => self::TYPE_BOOLEAN,
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Max users allowed. 0 is unlimited.',
                 'default' => 0,
                 'example' => 100,

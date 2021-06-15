@@ -10,6 +10,6 @@ client
 
 health = Appwrite::Health.new(client);
 
-response = health.get_d_b();
+response = health.get_db();
 
 puts response

@@ -21,6 +21,7 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
 use Appwrite\Extend\PDO;
+use Appwrite\GraphQL\Builder;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\App;
 use Utopia\View;
@@ -30,6 +31,7 @@ use Utopia\Registry\Registry;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use PDO as PDONative;
+use Utopia\CLI\Console;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -39,7 +41,7 @@ const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
 const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
-const APP_CACHE_BUSTER = 146;
+const APP_CACHE_BUSTER = 148;
 const APP_VERSION_STABLE = '0.8.0';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
@@ -233,7 +235,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2021-02.mmdb');
+    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2021-06.mmdb');
 });
 
 /*
@@ -510,3 +512,23 @@ App::setResource('geodb', function($register) {
     /** @var Utopia\Registry\Registry $register */
     return $register->get('geodb');
 }, ['register']);
+
+App::setResource('schema', function($utopia, $response, $request, $register) {
+    $schema = null;
+    try {
+        /* 
+        * Try to get the schema from the register. 
+        * If there is no schema catch the exception and generate it.
+        */
+        Console::log('Getting Schema from register...');
+        $schema = $register->get('_schema');
+    } catch (Exception $e) {
+        Console::error('Schema not present. Generating Schema...');
+        $schema = Builder::buildSchema($utopia, $response, $register);
+        $register->set('_schema', function () use ($schema){
+            return $schema;
+        });
+    }
+
+    return $schema;
+}, ['utopia', 'response', 'request', 'register']);

@@ -40,6 +40,7 @@ App::post('/v1/users')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
+        $email = \strtolower($email);
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
             'limit' => 1,
             'filters' => [
@@ -215,7 +216,7 @@ App::get('/v1/users/:userId/sessions')
             'sum' => count($sessions),
             'sessions' => $sessions
         ]), Response::MODEL_SESSION_LIST);
-    }, ['response', 'projectDB', 'locale']);
+    });
 
 App::get('/v1/users/:userId/logs')
     ->desc('Get User Logs')
@@ -449,7 +450,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
         }
 
         // TODO : Response filter implementation
-        $response->noContent();
+        $response->dynamic(new Document(), Response::MODEL_NONE);
     });
 
 App::delete('/v1/users/:userId/sessions')
@@ -493,7 +494,7 @@ App::delete('/v1/users/:userId/sessions')
         ;
 
         // TODO : Response filter implementation
-        $response->noContent();
+        $response->dynamic(new Document(), Response::MODEL_NONE);
     });
 
 App::delete('/v1/users/:userId')
@@ -553,5 +554,5 @@ App::delete('/v1/users/:userId')
         ;
 
         // TODO : Response filter implementation
-        $response->noContent();
+        $response->dynamic(new Document(), Response::MODEL_NONE);
     });

@@ -4,7 +4,6 @@ namespace Appwrite\Specification\Format;
 
 use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
-use Appwrite\Utopia\Response\Model;
 use stdClass;
 use Utopia\Validator;
 
@@ -188,7 +187,7 @@ class Swagger2 extends Format
                 ];
             }
 
-            if($route->getLabel('sdk.response.code', 500) === 204) {
+            if(in_array($route->getLabel('sdk.response.code', 500), [204, 301, 302, 308], true)) {
                 $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')]['description'] = 'No content';
                 unset($temp['responses'][(string)$route->getLabel('sdk.response.code', '500')]['schema']);
             }
@@ -218,7 +217,7 @@ class Swagger2 extends Format
             $bodyRequired = [];
 
             foreach ($route->getParams() as $name => $param) { // Set params
-                $validator = (\is_callable($param['validator'])) ? call_user_func_array($param['validator'], $this->app->getResources($param['injections'])) : $param['validator']; /* @var $validator \Utopia\Validator */
+                $validator = (\is_callable($param['validator'])) ? call_user_func_array($param['validator'], $this->app->getResources($param['injections'])) : $param['validator']; /** @var \Utopia\Validator $validator */
 
                 $node = [
                     'name' => $name,
@@ -279,6 +278,7 @@ class Swagger2 extends Format
                         $node['x-example'] = $validator->getMin();
                         break;
                     case 'Utopia\Validator\Numeric':
+                    case 'Utopia\Validator\Integer':
                         $node['type'] = $validator->getType();
                         $node['format'] = 'int32';
                         break;
@@ -355,13 +355,16 @@ class Swagger2 extends Format
         }
         foreach ($this->models as $model) {
             foreach ($model->getRules() as $rule) {
-                if (!in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])) {
+                if (
+                    in_array($model->getType(), $usedModels)
+                    && !in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])
+                ) {
                     $usedModels[] = $rule['type'];
                 }
             }
         }
         foreach ($this->models as $model) {
-            if (!in_array($model->getType(), $usedModels) && $model->getType() !== 'error') {
+            if (!in_array($model->getType(), $usedModels)) {
                 continue;
             }
 

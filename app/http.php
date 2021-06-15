@@ -90,7 +90,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     try {
         Authorization::cleanRoles();
         Authorization::setRole('*');
-
+        
         $app->run($request, $response);
     } catch (\Throwable $th) {
         Console::error('[Error] Type: '.get_class($th));

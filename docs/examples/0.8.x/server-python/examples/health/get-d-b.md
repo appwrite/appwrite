@@ -11,4 +11,4 @@ client = Client()
 
 health = Health(client)
 
-result = health.get_d_b()
+result = health.get_db()
