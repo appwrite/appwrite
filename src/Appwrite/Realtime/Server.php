@@ -55,10 +55,11 @@ class Server
 
     /**
      * This is executed when the Realtime server starts.
+     * 
      * @param SwooleServer $server 
      * @return void 
      */
-    public function onStart(SwooleServer $server): void
+    private function onStart(SwooleServer $server): void
     {
         Console::success('Server started succefully');
         Console::info("Master pid {$server->master_pid}, manager pid {$server->manager_pid}");
@@ -101,12 +102,13 @@ class Server
 
     /**
      * This is executed when a WebSocket worker process starts.
+     * 
      * @param SwooleServer $server 
      * @param int $workerId 
      * @return void 
      * @throws Exception 
      */
-    public function onWorkerStart(SwooleServer $server, int $workerId): void
+    private function onWorkerStart(SwooleServer $server, int $workerId): void
     {
         Console::success('Worker ' . $workerId . ' started succefully');
 
@@ -163,7 +165,7 @@ class Server
      * @throws Exception 
      * @throws UtopiaException 
      */
-    public function onOpen(SwooleServer $server, Request $request): void
+    private function onOpen(SwooleServer $server, Request $request): void
     {
         $app = new App('UTC');
         $connection = $request->fd;
@@ -284,11 +286,12 @@ class Server
 
     /**
      * This is executed when a message is received by the Realtime server.
+     * 
      * @param SwooleServer $server 
      * @param Frame $frame 
      * @return void 
      */
-    public function onMessage(SwooleServer $server, Frame $frame)
+    private function onMessage(SwooleServer $server, Frame $frame)
     {
         $server->push($frame->fd, 'Sending messages is not allowed.');
         $server->close($frame->fd);
@@ -296,11 +299,12 @@ class Server
 
     /**
      * This is executed when a Realtime connection is closed.
+     * 
      * @param SwooleServer $server 
      * @param int $connection 
      * @return void 
      */
-    public function onClose(SwooleServer $server, int $connection)
+    private function onClose(SwooleServer $server, int $connection)
     {
         if (array_key_exists($connection, $this->connections)) {
             $this->stats->decr($this->connections[$connection]['projectId'], 'connectionsTotal');
@@ -311,25 +315,25 @@ class Server
 
     /**
      * This is executed when an event is published on realtime channel in Redis.
+     * 
+     * Supported Resources:
+     *  - Collection
+     *  - Document
+     *  - File
+     *  - Account
+     *  - Session
+     *  - Team? (not implemented yet)
+     *  - Membership? (not implemented yet)
+     *  - Function
+     *  - Execution
+     * 
      * @param string $payload 
      * @param SwooleServer $server 
      * @param int $workerId 
      * @return void 
      */
-    public function onRedisPublish(string $payload, SwooleServer &$server, int $workerId)
+    private function onRedisPublish(string $payload, SwooleServer &$server, int $workerId)
     {
-        /**
-         * Supported Resources:
-         *  - Collection
-         *  - Document
-         *  - File
-         *  - Account
-         *  - Session
-         *  - Team? (not implemented yet)
-         *  - Membership? (not implemented yet)
-         *  - Function
-         *  - Execution
-         */
         $event = json_decode($payload, true);
 
         $receivers = Parser::identifyReceivers($event, $this->subscriptions);
@@ -361,10 +365,11 @@ class Server
 
     /**
      * This sends the usage to the `console` channel.
+     * 
      * @param SwooleServer $server 
      * @return void 
      */
-    public function tickSendProjectUsage(SwooleServer &$server)
+    private function tickSendProjectUsage(SwooleServer &$server)
     {
         if (
             array_key_exists('console', $this->subscriptions)
