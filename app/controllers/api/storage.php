@@ -40,8 +40,8 @@ App::post('/v1/storage/buckets')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_BUCKET)
     ->param('name', '', new Text(128), 'Bucket name', false)
-    ->param('maximumFileSize', 0, new Integer(), 'Maximum file size supported', false)
-    ->param('allowedFileExtensions', '*', new Text(128), 'Allowed file extensions', false)
+    ->param('maximumFileSize', 0, new Integer(), 'Maximum file size supported', true)
+    ->param('allowedFileExtensions', ['*'], new ArrayList(new Text(64)), 'Allowed file extensions', true)
     ->param('enabled', true, new Boolean(), 'Bucket enabled', true)
     ->param('adapter', 'local', new WhiteList(['local']), 'Storage adapter', true)
     ->param('encryption', true, new Boolean(), 'encryption is enabled', true)
@@ -60,7 +60,7 @@ App::post('/v1/storage/buckets')
         /** @var Appwrite\Event\Event $audits */
 
         try {
-            $data = $projectDB->createDocument([
+            $data = [
                 '$collection' => Database::SYSTEM_COLLECTION_BUCKETS,
                 'dateCreated' => \time(),
                 'name' => $name,
@@ -70,11 +70,12 @@ App::post('/v1/storage/buckets')
                 'adapter' => $adapter,
                 'encryption' => $encryption,
                 'antiVirus' => $antiVirus,
-            ]);
+            ];
             $data['$permissions'] = [
                 'read' => (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? [], //  By default set read permissions for user
                 'write' => (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? [], //  By default set write permissions for user
             ];
+            $data = $projectDB->createDocument($data);
         } catch (AuthorizationException $exception) {
             throw new Exception('Unauthorized permissions', 401);
         } catch (StructureException $exception) {
