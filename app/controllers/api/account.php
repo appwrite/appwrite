@@ -993,15 +993,9 @@ App::get('/v1/account/sessions/:sessionId')
         ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
         : $sessionId;
 
-        $session = $projectDB->getCollectionFirst([ // Get user by sessionId
-            'limit' => 1,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_SESSIONS,
-                '$id='.$sessionId,
-            ],
-        ]);
+        $session = $projectDB->getDocument($sessionId); // get user by session ID
 
-        if ($session == false) {
+        if (empty($session->getId()) || Database::SYSTEM_COLLECTION_SESSIONS != $session->getCollection()) {
             throw new Exception('Session not found', 404);
         };
 
