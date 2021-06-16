@@ -988,6 +988,7 @@ App::get('/v1/account/sessions/:sessionId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
+        /** @var Appwrite\Database\Database $projectDB */
 
         $sessionId = ($sessionId === 'current')
         ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
@@ -995,7 +996,7 @@ App::get('/v1/account/sessions/:sessionId')
 
         $session = $projectDB->getDocument($sessionId); // get user by session ID
 
-        if (empty($session->getId()) || Database::SYSTEM_COLLECTION_SESSIONS != $session->getCollection()) {
+        if ($session->isEmpty() || Database::SYSTEM_COLLECTION_SESSIONS != $session->getCollection()) {
             throw new Exception('Session not found', 404);
         };
 
