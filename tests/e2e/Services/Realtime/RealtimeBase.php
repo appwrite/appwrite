@@ -686,4 +686,69 @@ trait RealtimeBase
 
         $client->close();
     }
+
+    public function testChannelTeams()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        $client = $this->getWebsocket(['teams'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_'.$projectId.'=' . $session
+        ]);
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertCount(1, $response);
+        $this->assertArrayHasKey('teams', $response);
+
+        /**
+         * Test Team Create
+         */
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'name' => 'Arsenal'
+        ]);
+
+        $teamId = $team['body']['$id'] ?? '';
+
+        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertNotEmpty($team['body']['$id']);
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('timestamp', $response);
+        $this->assertCount(2, $response['channels']);
+        $this->assertContains('teams', $response['channels']);
+        $this->assertContains('teams.' . $teamId, $response['channels']);
+        $this->assertEquals('teams.create', $response['event']);
+        $this->assertNotEmpty($response['payload']);
+
+        /**
+         * Test Team Update
+         */
+        $team = $this->client->call(Client::METHOD_PUT, '/teams/'.$teamId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'name' => 'Manchester'
+        ]);
+
+        $this->assertEquals($team['headers']['status-code'], 200);
+        $this->assertNotEmpty($team['body']['$id']);
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('timestamp', $response);
+        $this->assertCount(2, $response['channels']);
+        $this->assertContains('teams', $response['channels']);
+        $this->assertContains('teams.' . $teamId, $response['channels']);
+        $this->assertEquals('teams.update', $response['event']);
+        $this->assertNotEmpty($response['payload']);
+
+        $client->close();
+    }
 }

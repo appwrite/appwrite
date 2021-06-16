@@ -2,6 +2,9 @@
 
 namespace Appwrite\Realtime;
 
+use Appwrite\Database\Database;
+use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
+use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Response;
@@ -17,6 +20,7 @@ use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
 use Utopia\Exception as UtopiaException;
 use Utopia\Registry\Registry;
 use Utopia\Swoole\Request as SwooleRequest;
@@ -176,7 +180,7 @@ class Server
             return $db;
         });
 
-        $this->register->set('cache', function () use (&$redis) { // Register cache connection
+        $this->register->set('cache', function () use (&$redis) {
             return $redis;
         });
 
@@ -318,19 +322,11 @@ class Server
      */
     public function onRedisPublish(string $payload, SwooleServer &$server, int $workerId)
     {
-        /**
-         * Supported Resources:
-         *  - Collection
-         *  - Document
-         *  - File
-         *  - Account
-         *  - Session
-         *  - Team? (not implemented yet)
-         *  - Membership? (not implemented yet)
-         *  - Function
-         *  - Execution
-         */
         $event = json_decode($payload, true);
+
+        if ($event['permissionsChanged'] && $event['userId']) {
+            $this->addPermission($event);
+        }
 
         $receivers = Parser::identifyReceivers($event, $this->subscriptions);
 
@@ -389,5 +385,44 @@ class Server
                 );
             }
         }
+    }
+
+    private function addPermission(array $event)
+    {
+        $project = $event['project'];
+        $userId = $event['userId'];
+
+        if (array_key_exists($project, $this->subscriptions) && array_key_exists('user:'.$userId, $this->subscriptions[$project])) {
+            $connection = array_key_first(reset($this->subscriptions[$project]['user:'.$userId]));
+        } else {
+            return;
+        }
+
+        /**
+         * This is redundant soon and will be gone with merging the usage branch.
+         */
+        $db = $this->register->get('dbPool')->get();
+        $redis = $this->register->get('redisPool')->get();
+
+        $this->register->set('db', function () use (&$db) {
+            return $db;
+        });
+
+        $this->register->set('cache', function () use (&$redis) {
+            return $redis;
+        });
+
+        $projectDB = new Database();
+        $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($this->register), $this->register));
+        $projectDB->setNamespace('app_'.$project);
+        $projectDB->setMocks(Config::getParam('collections', []));
+
+        $user = $projectDB->getDocument($userId);
+
+        Parser::setUser($user);
+
+        $roles = Parser::getRoles();
+
+        Parser::subscribe($project, $connection, $roles, $this->subscriptions, $this->connections, $this->connections[$connection]['channels']);
     }
 }
