@@ -138,7 +138,6 @@ App::get('/v1/storage/buckets/:bucketId')
         $response->dynamic2($bucket, Response::MODEL_BUCKET);
     });
 
-
 App::post('/v1/storage/files')
     ->desc('Create File')
     ->groups(['api', 'storage'])
