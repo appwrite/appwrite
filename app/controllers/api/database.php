@@ -37,8 +37,8 @@ App::post('/v1/database/collections')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_COLLECTION)
     ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
-    ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
-    ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->inject('response')
     ->inject('dbForExternal')
     ->inject('audits')
@@ -51,7 +51,13 @@ App::post('/v1/database/collections')
         
         $collection = $dbForExternal->createCollection($id);
 
+        // TODO@kodumbeats what should the default permissions be?
+        $read = (is_null($read)) ? ($collection->getRead() ?? []) : $read; // By default inherit read permissions
+        $write = (is_null($write)) ? ($collection->getWrite() ?? []) : $write; // By default inherit write permissions
+
         $collection->setAttribute('name', $name);
+        $collection->setAttribute('$read', $read);
+        $collection->setAttribute('$write', $write);
 
         $dbForExternal->updateDocument(Database2::COLLECTIONS, $id, $collection);
 
@@ -135,57 +141,34 @@ App::put('/v1/database/collections/:collectionId')
     ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.')
     ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default inherits the existing read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default inherits the existing write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
-    ->param('rules', [], function ($projectDB) { return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES], ['$collection' => Database::SYSTEM_COLLECTION_RULES, '$permissions' => ['read' => [], 'write' => []]])); }, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation.', true, ['projectDB'])
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForExternal')
     ->inject('audits')
-    ->action(function ($collectionId, $name, $read, $write, $rules, $response, $projectDB, $audits) {
+    ->action(function ($collectionId, $name, $read, $write, $rules, $response, $dbForExternal, $audits) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Event\Event $audits */
 
-        $collection = $projectDB->getDocument($collectionId, false);
+        $collection = $dbForExternal->getCollection($collectionId);
 
-        if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+        if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
         }
 
-        $parsedRules = [];
-        $read = (is_null($read)) ? ($collection->getPermissions()['read'] ?? []) : $read; // By default inherit read permissions
-        $write = (is_null($write)) ? ($collection->getPermissions()['write'] ?? []) : $write; // By default inherit write permissions
-
-        foreach ($rules as &$rule) {
-            $parsedRules[] = \array_merge([
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                '$permissions' => [
-                    'read' => $read,
-                    'write' => $write,
-                ],
-            ], $rule);
-        }
+        $read = (is_null($read)) ? ($collection->getRead() ?? []) : $read; // By default inherit read permissions
+        $write = (is_null($write)) ? ($collection->getWrite() ?? []) : $write; // By default inherit write permissions
 
         try {
-            $collection = $projectDB->updateDocument(\array_merge($collection->getArrayCopy(), [
+            $collection = $dbForExternal->updateDocument(Database2::COLLECTIONS, $collection->getId(), new Document2(\array_merge($collection->getArrayCopy(), [
                 'name' => $name,
-                'structure' => true,
-                'dateUpdated' => \time(),
-                '$permissions' => [
-                    'read' => $read,
-                    'write' => $write,
-                ],
-                'rules' => $parsedRules,
-            ]));
+                '$read' => $read,
+                '$write' => $write
+            ])));
         } catch (AuthorizationException $exception) {
             throw new Exception('Unauthorized permissions', 401);
         } catch (StructureException $exception) {
             throw new Exception('Bad structure. '.$exception->getMessage(), 400);
-        } catch (\Exception $exception) {
-            throw new Exception('Failed saving document to DB', 500);
-        }
-
-        if (false === $collection) {
-            throw new Exception('Failed saving collection to DB', 500);
-        }
+        } 
 
         $audits
             ->setParam('event', 'database.collections.update')
@@ -193,7 +176,7 @@ App::put('/v1/database/collections/:collectionId')
             ->setParam('data', $collection->getArrayCopy())
         ;
 
-        $response->dynamic($collection, Response::MODEL_COLLECTION);
+        $response->dynamic2($collection, Response::MODEL_COLLECTION);
     });
 
 App::delete('/v1/database/collections/:collectionId')
@@ -261,12 +244,10 @@ App::post('/v1/database/collections/:collectionId/attributes')
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('id', '', new Text(256), 'Attribute ID.')
     ->param('type', null, new Text(256), 'Attribute type.')
-    // TODO@kodumbeats add units to description
-    ->param('size', null, new Numeric(), 'Attribute size.')
+    ->param('size', null, new Numeric(), 'Attribute size for text attributes, in number of characters. For integers, floats, or bools, use 0.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('signed', true, new Boolean(), 'Is attribute signed?', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
-    // TODO@kodumbeats "We should have here a whitelist of allowed values. We should add a link to a reference in the future documentation. We might be able to hide this option from the public API for now."
     ->param('filters', [], new ArrayList(new Text(256)), 'Array of filters.', true)
     ->inject('response')
     ->inject('dbForExternal')
@@ -282,7 +263,6 @@ App::post('/v1/database/collections/:collectionId/attributes')
             throw new Exception('Collection not found', 404);
         }
 
-        // TODO@kodumbeats handle failed attribute creation
         $success = $dbForExternal->createAttribute($collectionId, $id, $type, $size, $required, $signed, $array, $filters);
 
         // Database->createAttribute() does not return a document
@@ -460,8 +440,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
     ->label('sdk.response.model', Response::MODEL_INDEX)
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('id', null, new Text(256), 'Index ID.')
-    // TODO@kodumbeats type should be a whitelist of supported index types
-    ->param('type', null, new Text(256), 'Index type.')
+    ->param('type', null, new WhiteList([Database2::INDEX_KEY, Database2::INDEX_FULLTEXT, Database2::INDEX_UNIQUE, Database2::INDEX_SPATIAL, Database2::INDEX_ARRAY]), 'Index type.')
     ->param('attributes', null, new ArrayList(new Text(256)), 'Array of attributes to index.')
     ->param('lengths', [], new ArrayList(new Text(256)), 'Array of index lengths.', true)
     ->param('orders', [], new ArrayList(new Text(256)), 'Array of index orders.', true)
@@ -550,7 +529,7 @@ App::get('v1/database/collections/:collectionId/indexes/:indexId')
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('indexId', null, new Text(256), 'Index ID.')
     ->inject('response')
-    ->inject('projectDB')
+    ->inject('dbForExternal')
     ->action(function ($collectionId, $indexId, $response, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal */
