@@ -295,4 +295,44 @@ trait StorageBase
 
         return $data;
     }
+
+    /**
+     * @depends testCreateBucket
+     */
+    public function testGetBucket($data): array
+    {
+        $id = $data['bucketId'] ?? '';
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $id,
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals($id, $response['body']['$id']);
+        $this->assertEquals('Test Bucket', $response['body']['name']);
+        
+        /**
+         * Test for FAILURE
+         */
+        
+        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/empty',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+        $this->assertEquals(404, $response['headers']['status-code']);
+        
+        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/id-is-really-long-id-is-really-long-id-is-really-long-id-is-really-long',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        return $data;
+    }
 }

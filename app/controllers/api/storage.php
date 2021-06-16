@@ -115,6 +115,34 @@ App::get('/v1/storage/buckets')
         ]), Response::MODEL_BUCKET_LIST);
     });
 
+App::get('/v1/storage/buckets/:bucketId')
+    ->desc('Get Bucket')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'buckets.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'getBucket')
+    ->label('sdk.description', '/docs/references/storage/get-bucket.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BUCKET)
+    ->param('bucketId', '', new UID(), 'Bucket unique ID.')
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->action(function ($bucketId, $response, $dbForInternal) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
+
+        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
+
+        if (empty($bucket->getId())) {
+            throw new Exception('Bucket not found', 404);
+        }
+
+        $response->dynamic2($bucket, Response::MODEL_BUCKET);
+    });
+
+
 App::post('/v1/storage/files')
     ->desc('Create File')
     ->groups(['api', 'storage'])
