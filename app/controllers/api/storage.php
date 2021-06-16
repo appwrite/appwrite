@@ -194,6 +194,51 @@ App::put('/v1/storage/buckets/:bucketId')
         $response->dynamic2($bucket, Response::MODEL_BUCKET);
     });
 
+App::delete('/v1/storage/buckets/:bucketId')
+    ->desc('Delete Bucket')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'buckets.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'deleteBucket')
+    ->label('sdk.description', '/docs/references/storage/delete-bucket.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('bucketId', '', new UID(), 'Bucket unique ID.')
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->inject('audits')
+    ->inject('deletes')
+    ->action(function ($bucketId, $response, $dbForInternal, $audits, $deletes) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Event $deletes */
+
+        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
+
+        if (empty($bucket->getId())) {
+            throw new Exception('Bucket not found', 404);
+        }
+
+        $deletes
+            ->setParam('type', DELETE_TYPE_DOCUMENT)
+            ->setParam('document', $bucket)
+        ;
+
+        if(!$dbForInternal->deleteDocument('buckets', $bucketId)) {
+            throw new Exception('Failed to remove project from DB', 500);
+        }
+
+        $audits
+            ->setParam('event', 'storage.buckets.delete')
+            ->setParam('resource', 'storage/buckets/' . $bucket->getId())
+            ->setParam('data', $bucket->getArrayCopy())
+        ;
+
+        $response->noContent();
+    });
+
 App::post('/v1/storage/files')
     ->desc('Create File')
     ->groups(['api', 'storage'])

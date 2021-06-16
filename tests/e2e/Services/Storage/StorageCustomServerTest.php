@@ -75,7 +75,7 @@ class StorageCustomServerTest extends Scope
     /**
      * @depends testCreateBucket
      */
-    public function testGetBucket($data): array
+    public function testGetBucket(array $data): array
     {
         $id = $data['bucketId'] ?? '';
         /**
@@ -115,7 +115,7 @@ class StorageCustomServerTest extends Scope
     /**
      * @depends testCreateBucket
      */
-    public function testUpdateBucket($data):array
+    public function testUpdateBucket(array $data):array
     {
         $id = $data['bucketId'] ?? '';
         /**
@@ -154,4 +154,36 @@ class StorageCustomServerTest extends Scope
 
         return ['bucketId' => $bucketId];
     }
+
+    /**
+     * @depends testCreateBucket
+     */
+    public function testDeleteBucket(array $data): array
+    {
+        $id = $data['bucketId'] ?? '';
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $id,
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEmpty($response['body']);
+        
+        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $id,
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+        $this->assertEquals(404, $response['headers']['status-code']);
+        
+        /**
+         * Test for FAILURE
+         */
+
+        return $data;
+    }
+
 }
