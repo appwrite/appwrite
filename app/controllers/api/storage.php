@@ -136,13 +136,13 @@ App::get('/v1/storage/buckets/:bucketId')
     });
 
 App::put('/v1/storage/buckets/:bucketId')
-    ->desc('Get Bucket')
+    ->desc('Update Bucket')
     ->groups(['api', 'storage'])
-    ->label('scope', 'buckets.read')
+    ->label('scope', 'buckets.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'storage')
-    ->label('sdk.method', 'getBucket')
-    ->label('sdk.description', '/docs/references/storage/get-bucket.md')
+    ->label('sdk.method', 'updateBucket')
+    ->label('sdk.description', '/docs/references/storage/update-bucket.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_BUCKET)
@@ -158,9 +158,8 @@ App::put('/v1/storage/buckets/:bucketId')
     ->param('antiVirus', true, new Boolean(), 'Is virus scanning enabled?', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->inject('user')
     ->inject('audits')
-    ->action(function ($bucketId, $name, $read, $write, $maximumFileSize, $allowedFileExtensions, $enabled, $adapter, $encryption, $antiVirus, $response, $dbForInternal, $user, $audits) {
+    ->action(function ($bucketId, $name, $read, $write, $maximumFileSize, $allowedFileExtensions, $enabled, $adapter, $encryption, $antiVirus, $response, $dbForInternal, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
