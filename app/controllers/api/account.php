@@ -892,7 +892,6 @@ App::get('/v1/account/sessions')
         ]), Response::MODEL_SESSION_LIST);
     });
 
-
 App::get('/v1/account/logs')
     ->desc('Get Account Logs')
     ->groups(['api', 'account'])
@@ -975,11 +974,11 @@ App::get('/v1/account/sessions/:sessionId')
     ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'getSessions')
-    ->label('sdk.description', '/docs/references/account/get-sessions.md')
+    ->label('sdk.method', 'getSession')
+    ->label('sdk.description', '/docs/references/account/get-session.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_SESSION_LIST)
+    ->label('sdk.response.model', Response::MODEL_SESSION)
     ->param('sessionId', null, new UID(), 'Session unique ID. Use the string \'current\' to get the current device session.')
     ->inject('response')
     ->inject('user')
@@ -994,7 +993,7 @@ App::get('/v1/account/sessions/:sessionId')
         ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
         : $sessionId;
 
-        $session = $projectDB->getCollectionFirst([ // Get user by email address
+        $session = $projectDB->getCollectionFirst([ // Get user by sessionId
             'limit' => 1,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_SESSIONS,
@@ -1005,6 +1004,10 @@ App::get('/v1/account/sessions/:sessionId')
         if ($session == false) {
             throw new Exception('Session not found', 404);
         };
+
+        $session->setAttribute('countryName', (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
+        ? $countries[strtoupper($session->getAttribute('countryCode'))]
+        : $locale->getText('locale.country.unknown'));
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
