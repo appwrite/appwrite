@@ -39,6 +39,14 @@ $cli
             ]);
         }
 
+        function notifyDeleteRealtimeUsage() 
+        {
+            Resque::enqueue(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME, [
+                'type' => DELETE_TYPE_REALTIME,
+                'timestamp' => time() - 60
+            ]);
+        }
+
         // # of days in seconds (1 day = 86400s)
         $interval = (int) App::getEnv('_APP_MAINTENANCE_INTERVAL', '86400');
         $executionLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', '1209600');
@@ -51,5 +59,6 @@ $cli
             notifyDeleteExecutionLogs($executionLogsRetention);
             notifyDeleteAbuseLogs($abuseLogsRetention);
             notifyDeleteAuditLogs($auditLogRetention);
+            notifyDeleteRealtimeUsage();
         }, $interval);
     });

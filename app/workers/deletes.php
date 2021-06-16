@@ -69,6 +69,10 @@ class DeletesV1 extends Worker
                 $this->deleteAbuseLogs($this->args['timestamp']);
                 break;
 
+            case DELETE_TYPE_REALTIME:
+                $this->deleteRealtimeUsage($this->args['timestamp']);
+                break;
+
             case DELETE_TYPE_CERTIFICATES:
                 $document = new Document($this->args['document']);
                 $this->deleteCertificates($document);
@@ -195,6 +199,19 @@ class DeletesV1 extends Worker
                 throw new Exception('Failed to delete Audit logs for project'.$projectId);
             }
         });
+    }
+
+    protected function deleteRealtimeUsage($timestamp) 
+    {
+        if (!($consoleDB = $this->getConsoleDB())) {
+            throw new Exception('Failed to get consoleDb.');
+        }  
+        // Delete Dead Realtime Logs
+        $this->deleteByGroup([
+            '$collection='.Database::SYSTEM_COLLECTION_REALTIME_CONNECTIONS,
+            'timestamp<'.$timestamp
+        ], $consoleDB);
+
     }
 
     protected function deleteFunction(Document $document, $projectId)
