@@ -892,6 +892,7 @@ App::get('/v1/account/sessions')
         ]), Response::MODEL_SESSION_LIST);
     });
 
+
 App::get('/v1/account/logs')
     ->desc('Get Account Logs')
     ->groups(['api', 'account'])
@@ -966,6 +967,46 @@ App::get('/v1/account/logs')
         }
 
         $response->dynamic(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
+    });
+
+App::get('/v1/account/sessions/:sessionId')
+    ->desc('Get Session By ID')
+    ->groups(['api', 'account'])
+    ->label('scope', 'account')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'getSessions')
+    ->label('sdk.description', '/docs/references/account/get-sessions.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SESSION_LIST)
+    ->param('sessionId', null, new UID(), 'Session unique ID. Use the string \'current\' to get the current device session.')
+    ->inject('response')
+    ->inject('user')
+    ->inject('locale')
+    ->inject('projectDB')
+    ->action(function ($sessionId, $response, $user, $locale, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Locale\Locale $locale */
+
+        $sessionId = ($sessionId === 'current')
+        ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
+        : $sessionId;
+
+        $session = $projectDB->getCollectionFirst([ // Get user by email address
+            'limit' => 1,
+            'filters' => [
+                '$collection='.Database::SYSTEM_COLLECTION_SESSIONS,
+                '$id='.$sessionId,
+            ],
+        ]);
+
+        if ($session == false) {
+            throw new Exception('Session not found', 404);
+        };
+
+        $response->dynamic($session, Response::MODEL_SESSION);
     });
 
 App::patch('/v1/account/name')
