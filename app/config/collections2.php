@@ -1015,8 +1015,6 @@ $collections = [
                 'array' => false,
             ],
             [
-                
-                'label' => 'Adapter',
                 '$id' => 'adapter',
                 'type' => Database::VAR_STRING,
                 'signed' => true,
@@ -1058,8 +1056,6 @@ $collections = [
                 'array' => true,
             ],
             [
-                
-                'label' => 'Encryption',
                 '$id' => 'encryption',
                 'type' => Database::VAR_BOOLEAN,
                 'signed' => true,
@@ -1070,8 +1066,6 @@ $collections = [
                 'array' => false,
             ],
             [
-                
-                'label' => 'Virus Scan',
                 '$id' => 'antiVirus',
                 'type' => Database::VAR_BOOLEAN,
                 'signed' => true,
