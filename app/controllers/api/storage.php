@@ -23,8 +23,6 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Validator\Integer;
-use Appwrite\Database\Exception\Authorization as AuthorizationException;
-use Appwrite\Database\Exception\Structure as StructureException;
 use Utopia\Database\Query;
 
 App::post('/v1/storage/buckets')
@@ -40,8 +38,8 @@ App::post('/v1/storage/buckets')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_BUCKET)
     ->param('name', '', new Text(128), 'Bucket name', false)
-    ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
-    ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('maximumFileSize', 0, new Integer(), 'Maximum file size allowed.', true)
     ->param('allowedFileExtensions', ['*'], new ArrayList(new Text(64)), 'Allowed file extensions', true)
     ->param('enabled', true, new Boolean(), 'Is bucket enabled?', true)
@@ -59,7 +57,7 @@ App::post('/v1/storage/buckets')
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
 
-        $data = [
+        $data = $dbForInternal->createDocument('buckets', new Document([
             '$collection' => 'buckets',
             'dateCreated' => \time(),
             'dateUpdated' => \time(),
@@ -70,15 +68,13 @@ App::post('/v1/storage/buckets')
             'adapter' => $adapter,
             'encryption' => $encryption,
             'antiVirus' => $antiVirus,
-        ];
-
-        $data['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? []; //  By default set read permissions for user
-        $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? []; //  By default set write permissions for user
-        $data = $dbForInternal->createDocument('buckets', new Document($data));
+            '$read' => $read,
+            '$write' => $write,
+        ]));
 
         $audits
-            ->setParam('event', 'database.collections.create')
-            ->setParam('resource', 'database/collection/' . $data->getId())
+            ->setParam('event', 'storage.buckets.create')
+            ->setParam('resource', 'storage/buckets/' . $data->getId())
             ->setParam('data', $data->getArrayCopy())
         ;
 
