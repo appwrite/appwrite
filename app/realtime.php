@@ -36,4 +36,4 @@ $register->set('cache', function () { // Register cache connection
     return $redis;
 });
 
-$realtimeServer = new Server($register, config: $config);
+$realtimeServer = new Server($register, port: App::getEnv('PORT', 80), config: $config);
