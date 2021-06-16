@@ -39,7 +39,7 @@ class Bucket extends Model
         ])
         ->addRule('dateUpdated', [
             'type' => self::TYPE_INTEGER,
-            'description' => 'Bucket updated date in Unix timestamp.',
+            'description' => 'Bucket update date in Unix timestamp.',
             'default' => 0,
             'example' => 1592981250,
         ])
