@@ -40,49 +40,41 @@ App::post('/v1/storage/buckets')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_BUCKET)
     ->param('name', '', new Text(128), 'Bucket name', false)
+    ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('maximumFileSize', 0, new Integer(), 'Maximum file size allowed.', true)
     ->param('allowedFileExtensions', ['*'], new ArrayList(new Text(64)), 'Allowed file extensions', true)
     ->param('enabled', true, new Boolean(), 'Is bucket enabled?', true)
     ->param('adapter', 'local', new WhiteList(['local']), 'Storage adapter.', true)
     ->param('encryption', true, new Boolean(), 'Is encryption enabled?', true)
     ->param('antiVirus', true, new Boolean(), 'Is virus scanning enabled?', true)
-    ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
-    ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('user')
     ->inject('audits')
-    ->action(function ($name, $maximumFileSize, $allowedFileExtensions, $enabled, $adapter, $encryption, $antiVirus, $read, $write, $response, $dbForInternal, $user, $audits) {
+    ->action(function ($name, $read, $write, $maximumFileSize, $allowedFileExtensions, $enabled, $adapter, $encryption, $antiVirus, $response, $dbForInternal, $user, $audits) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
 
-        try {
-            $data = [
-                '$collection' => 'buckets',
-                'dateCreated' => \time(),
-                'dateUpdated' => \time(),
-                'name' => $name,
-                'maximumFileSize' => $maximumFileSize,
-                'allowedFileExtensions' => $allowedFileExtensions,
-                'enabled' => $enabled,
-                'adapter' => $adapter,
-                'encryption' => $encryption,
-                'antiVirus' => $antiVirus,
-            ];
+        $data = [
+            '$collection' => 'buckets',
+            'dateCreated' => \time(),
+            'dateUpdated' => \time(),
+            'name' => $name,
+            'maximumFileSize' => $maximumFileSize,
+            'allowedFileExtensions' => $allowedFileExtensions,
+            'enabled' => $enabled,
+            'adapter' => $adapter,
+            'encryption' => $encryption,
+            'antiVirus' => $antiVirus,
+        ];
 
-            $data['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? []; //  By default set read permissions for user
-            $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? []; //  By default set write permissions for user
-            $data = $dbForInternal->createDocument('buckets', new Document($data));
-        } catch (AuthorizationException $exception) {
-            throw new Exception('Unauthorized permissions', 401);
-        } catch (StructureException $exception) {
-            throw new Exception('Bad structure. ' . $exception->getMessage(), 400);
-        } catch (\Exception$exception) {
-            throw new Exception('Failed saving document to DB', 500);
-        }
+        $data['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? []; //  By default set read permissions for user
+        $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? []; //  By default set write permissions for user
+        $data = $dbForInternal->createDocument('buckets', new Document($data));
 
         $audits
             ->setParam('event', 'database.collections.create')
