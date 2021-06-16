@@ -59,7 +59,15 @@ include __DIR__ . '/controllers/general.php';
 
 $http->on('start', function (Server $http) use ($payloadSize, $register) {
     $app = new App('UTC');
-    $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
+
+    // Only retry connection once before throwing exception
+    try {
+        $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
+    } catch (\Exception $exception) {
+        Console::warning('[Setup] - Database not ready. Waiting for five seconds...');
+        sleep(5);
+        $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
+    }
 
     if(!$dbForConsole->exists()) {
         Console::success('[Setup] - Server database init started...');
@@ -77,6 +85,8 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         $adapter->setup();
 
         foreach ($collections as $key => $collection) {
+            Console::success('[Setup] - Creating collection: ' . $collection['$id'] . '...');
+
             $dbForConsole->createCollection($key);
 
             foreach ($collection['attributes'] as $i => $attribute) {
