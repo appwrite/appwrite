@@ -111,4 +111,47 @@ class StorageCustomServerTest extends Scope
 
         return $data;
     }
+
+    /**
+     * @depends testCreateBucket
+     */
+    public function testUpdateBucket($data):array
+    {
+        $id = $data['bucketId'] ?? '';
+        /**
+         * Test for SUCCESS
+         */
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Test Bucket Updated',
+            'enabled' => false,
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $this->assertNotEmpty($bucket['body']['$id']);
+        $this->assertIsInt($bucket['body']['dateCreated']);
+        $this->assertIsArray($bucket['body']['$read']);
+        $this->assertIsArray($bucket['body']['$write']);
+        $this->assertIsArray($bucket['body']['allowedFileExtensions']);
+        $this->assertEquals('Test Bucket Updated', $bucket['body']['name']);
+        $this->assertEquals(false, $bucket['body']['enabled']);
+        $this->assertEquals(true, $bucket['body']['encryption']);
+        $this->assertEquals(true, $bucket['body']['antiVirus']);
+        $this->assertEquals('local', $bucket['body']['adapter']);
+        $bucketId = $bucket['body']['$id'];
+        /**
+         * Test for FAILURE
+         */
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => '',
+            'enabled' => 'false',
+        ]);
+        $this->assertEquals(400, $bucket['headers']['status-code']);
+
+        return ['bucketId' => $bucketId];
+    }
 }

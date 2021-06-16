@@ -48,13 +48,10 @@ App::post('/v1/storage/buckets')
     ->param('antiVirus', true, new Boolean(), 'Is virus scanning enabled?', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->inject('user')
     ->inject('audits')
-    ->action(function ($name, $read, $write, $maximumFileSize, $allowedFileExtensions, $enabled, $adapter, $encryption, $antiVirus, $response, $dbForInternal, $user, $audits) {
-        /** @var Utopia\Swoole\Request $request */
+    ->action(function ($name, $read, $write, $maximumFileSize, $allowedFileExtensions, $enabled, $adapter, $encryption, $antiVirus, $response, $dbForInternal, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
-        /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
 
         $data = $dbForInternal->createDocument('buckets', new Document([
@@ -134,6 +131,66 @@ App::get('/v1/storage/buckets/:bucketId')
         if ($bucket->isEmpty()) {
             throw new Exception('Bucket not found', 404);
         }
+
+        $response->dynamic2($bucket, Response::MODEL_BUCKET);
+    });
+
+App::put('/v1/storage/buckets/:bucketId')
+    ->desc('Get Bucket')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'buckets.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'getBucket')
+    ->label('sdk.description', '/docs/references/storage/get-bucket.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BUCKET)
+    ->param('bucketId', '', new UID(), 'Bucket unique ID.')
+    ->param('name', null, new Text(128), 'Bucket name', false)
+    ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default inherits the existing read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default inherits the existing write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('maximumFileSize', 0, new Integer(), 'Maximum file size allowed.', true)
+    ->param('allowedFileExtensions', ['*'], new ArrayList(new Text(64)), 'Allowed file extensions', true)
+    ->param('enabled', true, new Boolean(), 'Is bucket enabled?', true)
+    ->param('adapter', 'local', new WhiteList(['local']), 'Storage adapter.', true)
+    ->param('encryption', true, new Boolean(), 'Is encryption enabled?', true)
+    ->param('antiVirus', true, new Boolean(), 'Is virus scanning enabled?', true)
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->inject('user')
+    ->inject('audits')
+    ->action(function ($bucketId, $name, $read, $write, $maximumFileSize, $allowedFileExtensions, $enabled, $adapter, $encryption, $antiVirus, $response, $dbForInternal, $user, $audits) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Appwrite\Event\Event $audits */
+
+        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
+
+        if (empty($bucket->getId())) {
+            throw new Exception('Bucket not found', 404);
+        }
+
+        $read = (is_null($read)) ? $bucket->getAttribute('$read', []) : $read; // By default inherit read permissions
+        $write = (is_null($write)) ? $bucket->getAttribute('$write',[]) : $write; // By default inherit write permissions
+
+        $bucket = $dbForInternal->updateDocument('buckets', $bucket->getId(), $bucket
+                ->setAttribute('name',$name)
+                ->setAttribute('$read',$read)
+                ->setAttribute('$write',$write)
+                ->setAttribute('maximumFileSize',$maximumFileSize)
+                ->setAttribute('allowedFileExtensions',$allowedFileExtensions)
+                ->setAttribute('enabled',$enabled)
+                ->setAttribute('adapter',$adapter)
+                ->setAttribute('encryption',$encryption)
+                ->setAttribute('antiVirus',$antiVirus)
+        );
+
+        $audits
+            ->setParam('event', 'storage.buckets.update')
+            ->setParam('resource', 'storage/buckets/' . $bucket->getId())
+            ->setParam('data', $bucket->getArrayCopy())
+        ;
 
         $response->dynamic2($bucket, Response::MODEL_BUCKET);
     });
