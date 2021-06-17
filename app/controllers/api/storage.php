@@ -170,8 +170,8 @@ App::put('/v1/storage/buckets/:bucketId')
             throw new Exception('Bucket not found', 404);
         }
 
-        $read = (is_null($read)) ? $bucket->getAttribute('$read', []) : $read; // By default inherit read permissions
-        $write = (is_null($write)) ? $bucket->getAttribute('$write',[]) : $write; // By default inherit write permissions
+        $read ??= $bucket->getAttribute('$read', []); // By default inherit read permissions
+        $write ??= $bucket->getAttribute('$write',[]); // By default inherit write permissions
 
         $bucket = $dbForInternal->updateDocument('buckets', $bucket->getId(), $bucket
                 ->setAttribute('name',$name)
