@@ -163,6 +163,7 @@ class Parser
         $connections[$connection] = [
             'projectId' => $projectId,
             'roles' => $roles,
+            'channels' => $channels
         ];
     }
 

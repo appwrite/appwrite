@@ -282,7 +282,7 @@ class Server
             return $db;
         });
 
-        $this->register->set('cache', function () use (&$redis) { // Register cache connection
+        $this->register->set('cache', function () use (&$redis) {
             return $redis;
         });
 
@@ -440,6 +440,10 @@ class Server
     {
         $event = json_decode($payload, true);
 
+        if ($event['permissionsChanged'] && isset($event['userId'])) {
+            $this->addPermission($event);
+        }
+
         $receivers = Parser::identifyReceivers($event, $this->subscriptions);
 
         // Temporarily print debug logs by default for Alpha testing.
@@ -511,5 +515,44 @@ class Server
                 );
             }
         }
+    }
+
+    private function addPermission(array $event)
+    {
+        $project = $event['project'];
+        $userId = $event['userId'];
+
+        if (array_key_exists($project, $this->subscriptions) && array_key_exists('user:'.$userId, $this->subscriptions[$project])) {
+            $connection = array_key_first(reset($this->subscriptions[$project]['user:'.$userId]));
+        } else {
+            return;
+        }
+
+        /**
+         * This is redundant soon and will be gone with merging the usage branch.
+         */
+        $db = $this->register->get('dbPool')->get();
+        $redis = $this->register->get('redisPool')->get();
+
+        $this->register->set('db', function () use (&$db) {
+            return $db;
+        });
+
+        $this->register->set('cache', function () use (&$redis) {
+            return $redis;
+        });
+
+        $projectDB = new Database();
+        $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($this->register), $this->register));
+        $projectDB->setNamespace('app_'.$project);
+        $projectDB->setMocks(Config::getParam('collections', []));
+
+        $user = $projectDB->getDocument($userId);
+
+        Parser::setUser($user);
+
+        $roles = Parser::getRoles();
+
+        Parser::subscribe($project, $connection, $roles, $this->subscriptions, $this->connections, $this->connections[$connection]['channels']);
     }
 }
