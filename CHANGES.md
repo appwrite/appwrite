@@ -8,7 +8,10 @@
   - Renamed *Devices* to *Sessions*
   - Add Provider Icon to each Session
   - Add Anonymous Account Placeholder
-- Upgraded telegraf docker image version to v1.1.0
+- Upgraded telegraf docker image version to v1.2.0
+- Added new environment variables to the `telegraf` service:
+  - _APP_INFLUXDB_HOST
+  - _APP_INFLUXDB_PORT
 - Added new endpoint to get a session based on it's ID (#1294)
 
 ## Bugs

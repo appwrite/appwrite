@@ -1,26 +1,26 @@
 <?php
 
+use Appwrite\Resque\Worker;
 use Utopia\App;
 use Utopia\CLI\Console;
 
-require_once __DIR__.'/../init.php';
+require_once __DIR__.'/../workers.php';
 
 Console::title('Mails V1 Worker');
-
 Console::success(APP_NAME.' mails worker v1 has started'."\n");
 
-class MailsV1
+class MailsV1 extends Worker
 {
     /**
      * @var array
      */
     public $args = [];
 
-    public function setUp(): void
+    public function init(): void
     {
     }
 
-    public function perform()
+    public function run(): void
     {
         global $register;
 
@@ -68,8 +68,7 @@ class MailsV1
         }
     }
 
-    public function tearDown(): void
+    public function shutdown(): void
     {
-        // ... Remove environment for this job
     }
 }
