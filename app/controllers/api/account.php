@@ -254,7 +254,7 @@ App::post('/v1/account/sessions')
 
         $countries = $locale->getText('countries');
 
-        $countryName = isset($countries[strtoupper($session->getAttribute('countryCode'))])
+        $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
         ? $countries[strtoupper($session->getAttribute('countryCode'))]
         : $locale->getText('locale.country.unknown');
 
@@ -757,7 +757,7 @@ App::post('/v1/account/sessions/anonymous')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
-        $countryName = isset($countries[strtoupper($session->getAttribute('countryCode'))])
+        $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
         ? $countries[strtoupper($session->getAttribute('countryCode'))]
         : $locale->getText('locale.country.unknown');
 
