@@ -254,9 +254,13 @@ App::post('/v1/account/sessions')
 
         $countries = $locale->getText('countries');
 
+        $countryName = isset($countries[strtoupper($session->getAttribute('countryCode'))])
+        ? $countries[strtoupper($session->getAttribute('countryCode'))]
+        : $locale->getText('locale.country.unknown');
+
         $session
             ->setAttribute('current', true)
-            ->setAttribute('countryName', (isset($countries[strtoupper($session->getAttribute('countryCode'))])) ? $countries[strtoupper($session->getAttribute('countryCode'))] : $locale->getText('locale.country.unknown'))
+            ->setAttribute('countryName', $countryName)
         ;
         
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -753,9 +757,13 @@ App::post('/v1/account/sessions/anonymous')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
+        $countryName = isset($countries[strtoupper($session->getAttribute('countryCode'))])
+        ? $countries[strtoupper($session->getAttribute('countryCode'))]
+        : $locale->getText('locale.country.unknown');
+
         $session
             ->setAttribute('current', true)
-            ->setAttribute('countryName', (isset($countries[$session->getAttribute('countryCode')])) ? $countries[$session->getAttribute('countryCode')] : $locale->getText('locale.country.unknown'))
+            ->setAttribute('countryName', $countryName)
         ;
 
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -1001,10 +1009,12 @@ App::get('/v1/account/sessions/:sessionId')
         if ($session->isEmpty() || Database::SYSTEM_COLLECTION_SESSIONS != $session->getCollection()) {
             throw new Exception('Session not found', 404);
         };
-
-        $session->setAttribute('countryName', (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
+        
+        $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
         ? $countries[strtoupper($session->getAttribute('countryCode'))]
-        : $locale->getText('locale.country.unknown'));
+        : $locale->getText('locale.country.unknown');
+
+        $session->setAttribute('countryName', $countryName);
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
