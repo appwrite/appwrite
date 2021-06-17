@@ -312,8 +312,13 @@ App::get('v1/database/collections/:collectionId/attributes')
             throw new Exception('Collection not found', 404);
         }
 
-        // TODO@kodumbeats array_merge collectionId to each attribute
         $attributes = $collection->getAttributes();
+
+        $attributes = array_map(function ($attribute) use ($collection) {
+            return new Document2([\array_merge($attribute, [
+            'collectionId' => $collection->getId(),
+            ])]);
+        }, $attributes);
 
         $response->dynamic2(new Document2([
             'sum' => \count($attributes),
@@ -506,8 +511,13 @@ App::get('v1/database/collections/:collectionId/indexes')
             throw new Exception('Collection not found', 404);
         }
 
-        // TODO@kodumbeats decode index string and merge ['$collection' => $collectionId]
         $indexes = $collection->getAttribute('indexes');
+
+        $indexes = array_map(function ($index) use ($collection) {
+            return new Document2([\array_merge($index, [
+            'collectionId' => $collection->getId(),
+            ])]);
+        }, $indexes);
 
         $response->dynamic2(new Document2([
             'sum' => \count($indexes),
@@ -540,7 +550,6 @@ App::get('v1/database/collections/:collectionId/indexes/:indexId')
             throw new Exception('Collection not found', 404);
         }
 
-        // TODO@kodumbeats decode 'indexes' into array
         $indexes = $collection->getAttribute('indexes');
 
         // // Search for index
@@ -587,7 +596,6 @@ App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
             throw new Exception('Collection not found', 404);
         }
 
-        // TODO@kodumbeats decode 'indexes' into array
         $indexes = $collection->getAttribute('indexes');
 
         // // Search for index
@@ -719,14 +727,10 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->label('sdk.response.model', Response::MODEL_DOCUMENT_LIST)
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('queries', [], new ArrayList(new Text(128)), 'Array of query strings.', true)
-    // ->param('queries', [], new Text(128), 'Array of query strings.', true)
     ->param('limit', 25, new Range(0, 100), 'Maximum number of documents to return in response.  Use this value to manage pagination. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 900000000), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderAttributes', [], new ArrayList(new Text(128)), 'Array of attributes used to sort results.', true)
     ->param('orderTypes', [], new ArrayList(new WhiteList(['DESC', 'ASC'], true)), 'Array of order directions for sorting attribtues. Possible values are DESC for descending order, or ASC for ascending order.', true)
-    // ->param('orderField', '', new Text(128), 'Document field that results will be sorted by.', true)
-    // ->param('orderCast', 'string', new WhiteList(['int', 'string', 'date', 'time', 'datetime'], true), 'Order field type casting. Possible values are int, string, date, time or datetime. The database will attempt to cast the order field to the value you pass here. The default value is a string.', true)
-    // ->param('search', '', new Text(256), 'Search query. Enter any free text search. The database will try to find a match against all document attributes and children. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForExternal')
     ->action(function ($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $response, $dbForExternal) {
