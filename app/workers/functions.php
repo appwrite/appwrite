@@ -6,13 +6,14 @@ use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
+use Appwrite\Resque\Worker;
 use Cron\CronExpression;
 use Swoole\Runtime;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 
-require_once __DIR__.'/../init.php';
+require_once __DIR__.'/../workers.php';
 
 Runtime::enableCoroutine(0);
 
@@ -125,17 +126,17 @@ Console::info(count($list)." functions listed in " . ($executionEnd - $execution
 
 //TODO aviod scheduled execution if delay is bigger than X offest
 
-class FunctionsV1
+class FunctionsV1 extends Worker
 {
     public $args = [];
 
     public $allowed = [];
 
-    public function setUp(): void
+    public function init(): void
     {
     }
 
-    public function perform()
+    public function run(): void
     {
         global $register;
 
@@ -579,7 +580,7 @@ class FunctionsV1
         return $output;
     }
 
-    public function tearDown(): void
+    public function shutdown(): void
     {
     }
 }

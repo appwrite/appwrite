@@ -5,6 +5,7 @@ use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
+use Appwrite\Resque\Worker;
 use Utopia\Storage\Device\Local;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
@@ -13,26 +14,24 @@ use Utopia\Config\Config;
 use Utopia\Audit\Audit;
 use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 
-require_once __DIR__.'/../init.php';
+require_once __DIR__.'/../workers.php';
 
 Console::title('Deletes V1 Worker');
-
 Console::success(APP_NAME.' deletes worker v1 has started'."\n");
 
-class DeletesV1
+class DeletesV1 extends Worker
 {
-
     public $args = [];
 
     protected $consoleDB = null;
 
-    public function setUp(): void
+    public function init(): void
     {
     }
 
-    public function perform()
-    { 
-        $projectId = isset($this->args['projectId']) ? $this->args['projectId'] : '';
+    public function run(): void
+    {
+        $projectId = isset($this->args['projectId']) ? $this->args['projectId'] : '';   
         $type = $this->args['type'];
         
         switch (strval($type)) {
@@ -51,6 +50,9 @@ class DeletesV1
                         break;
                     case Database::SYSTEM_COLLECTION_COLLECTIONS:
                         $this->deleteDocuments($document, $projectId);
+                        break;
+                    case Database::SYSTEM_COLLECTION_TEAMS:
+                        $this->deleteMemberships($document, $projectId);
                         break;
                     default:
                         Console::error('No lazy delete operation available for document of type: '.$document->getCollection());
@@ -82,9 +84,8 @@ class DeletesV1
             }
     }
 
-    public function tearDown(): void
+    public function shutdown(): void
     {
-        // ... Remove environment for this job
     }
     
     protected function deleteDocuments(Document $document, $projectId) 
@@ -95,6 +96,14 @@ class DeletesV1
         $this->deleteByGroup([
             '$collection='.$collectionId
         ], $this->getProjectDB($projectId));   
+    }
+
+    protected function deleteMemberships(Document $document, $projectId) {
+        // Delete Memberships
+        $this->deleteByGroup([
+            '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
+            'teamId='.$document->getId(),
+        ], $this->getProjectDB($projectId));
     }
 
     protected function deleteProject(Document $document)
@@ -214,7 +223,7 @@ class DeletesV1
                 Console::success('Delete code tag: '.$document->getAttribute('path', ''));
             }
             else {
-                Console::error('Dailed to delete code tag: '.$document->getAttribute('path', ''));
+                Console::error('Failed to delete code tag: '.$document->getAttribute('path', ''));
             }
         });
 
@@ -262,7 +271,6 @@ class DeletesV1
             Authorization::disable();
             $projects = $this->getConsoleDB()->getCollection([
                 'limit' => $limit,
-                'offset' => $count,
                 'orderType' => 'ASC',
                 'orderCast' => 'string',
                 'filters' => [
@@ -305,7 +313,6 @@ class DeletesV1
 
             $results = $database->getCollection([
                 'limit' => $limit,
-                'offset' => $count,
                 'orderField' => '$id',
                 'orderType' => 'ASC',
                 'orderCast' => 'string',
