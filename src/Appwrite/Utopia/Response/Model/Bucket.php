@@ -17,16 +17,29 @@ class Bucket extends Model
             'default' => '',
             'example' => '5e5ea5c16897e',
         ])
-        ->addRule('$permissions', [
-            'type' => Response::MODEL_PERMISSIONS,
-            'description' => 'File permissions.',
-            'default' => new \stdClass,
-            'example' => new \stdClass,
-            'array' => false,
+        ->addRule('$read', [
+            'type' => self::TYPE_STRING,
+            'description' => 'File read permissions.',
+            'default' => [],
+            'example' => ['role:all'],
+            'array' => true,
+        ])
+        ->addRule('$write', [
+            'type' => self::TYPE_STRING,
+            'description' => 'File write permissions.',
+            'default' => [],
+            'example' => ['user:608f9da25e7e1'],
+            'array' => true,
         ])
         ->addRule('dateCreated', [
             'type' => self::TYPE_INTEGER,
-            'description' => 'File creation date in Unix timestamp.',
+            'description' => 'Bucket creation date in Unix timestamp.',
+            'default' => 0,
+            'example' => 1592981250,
+        ])
+        ->addRule('dateUpdated', [
+            'type' => self::TYPE_INTEGER,
+            'description' => 'Bucket update date in Unix timestamp.',
             'default' => 0,
             'example' => 1592981250,
         ])

@@ -6,6 +6,7 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Filesystem;
@@ -21,8 +22,121 @@ use Utopia\Image\Image;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
+use Utopia\Validator\Integer;
 use Utopia\Database\Query;
-use Utopia\Validator\Numeric;
+
+App::post('/v1/storage/buckets')
+    ->desc('Create storage bucket')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'buckets.write')
+    ->label('event', 'storage.buckets.create')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'createBucket')
+    ->label('sdk.description', '/docs/references/storage/create-bucket.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BUCKET)
+    ->param('name', '', new Text(128), 'Bucket name', false)
+    ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('maximumFileSize', 0, new Integer(), 'Maximum file size allowed.', true)
+    ->param('allowedFileExtensions', ['*'], new ArrayList(new Text(64)), 'Allowed file extensions', true)
+    ->param('enabled', true, new Boolean(), 'Is bucket enabled?', true)
+    ->param('adapter', 'local', new WhiteList(['local']), 'Storage adapter.', true)
+    ->param('encryption', true, new Boolean(), 'Is encryption enabled?', true)
+    ->param('antiVirus', true, new Boolean(), 'Is virus scanning enabled?', true)
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->inject('user')
+    ->inject('audits')
+    ->action(function ($name, $read, $write, $maximumFileSize, $allowedFileExtensions, $enabled, $adapter, $encryption, $antiVirus, $response, $dbForInternal, $user, $audits) {
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Appwrite\Database\Document $user */
+        /** @var Appwrite\Event\Event $audits */
+
+        $data = $dbForInternal->createDocument('buckets', new Document([
+            '$collection' => 'buckets',
+            'dateCreated' => \time(),
+            'dateUpdated' => \time(),
+            'name' => $name,
+            'maximumFileSize' => $maximumFileSize,
+            'allowedFileExtensions' => $allowedFileExtensions,
+            'enabled' => $enabled,
+            'adapter' => $adapter,
+            'encryption' => $encryption,
+            'antiVirus' => $antiVirus,
+            '$read' => $read,
+            '$write' => $write,
+        ]));
+
+        $audits
+            ->setParam('event', 'storage.buckets.create')
+            ->setParam('resource', 'storage/buckets/' . $data->getId())
+            ->setParam('data', $data->getArrayCopy())
+        ;
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($data, Response::MODEL_BUCKET);
+    });
+
+App::get('/v1/storage/buckets')
+    ->desc('List buckets')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'buckets.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'listBuckets')
+    ->label('sdk.description', '/docs/references/storage/list-buckets.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BUCKET_LIST)
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->action(function ($search, $limit, $offset, $orderType, $response, $dbForInternal) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
+
+        $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, $search)] : [];
+
+        $response->dynamic2(new Document([
+            'buckets' => $dbForInternal->find('buckets', $queries, $limit, $offset, ['_id'], [$orderType]),
+            'sum' => $dbForInternal->count('buckets', $queries, APP_LIMIT_COUNT),
+        ]), Response::MODEL_BUCKET_LIST);
+    });
+
+App::get('/v1/storage/buckets/:bucketId')
+    ->desc('Get Bucket')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'buckets.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'getBucket')
+    ->label('sdk.description', '/docs/references/storage/get-bucket.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BUCKET)
+    ->param('bucketId', '', new UID(), 'Bucket unique ID.')
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->action(function ($bucketId, $response, $dbForInternal) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
+
+        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
+
+        if ($bucket->isEmpty()) {
+            throw new Exception('Bucket not found', 404);
+        }
+
+        $response->dynamic2($bucket, Response::MODEL_BUCKET);
+    });
 
 App::post('/v1/storage/files')
     ->desc('Create File')

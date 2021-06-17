@@ -21,6 +21,7 @@ use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
 use Appwrite\Utopia\Response\Model\File;
+use Appwrite\Utopia\Response\Model\Bucket;
 use Appwrite\Utopia\Response\Model\Func;
 use Appwrite\Utopia\Response\Model\JWT;
 use Appwrite\Utopia\Response\Model\Key;
@@ -186,6 +187,7 @@ class Response extends SwooleResponse
             ->setModel(new JWT())
             ->setModel(new Locale())
             ->setModel(new File())
+            ->setModel(new Bucket())
             ->setModel(new Team())
             ->setModel(new Membership())
             ->setModel(new Func())
