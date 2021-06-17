@@ -84,6 +84,7 @@ App::get('/v1/database/collections')
         /** @var Utopia\Database\Database $dbForExternal */
 
         $collections = $dbForExternal->listCollections($limit, $offset);
+        // TODO@kodumbeats allow for filtering collections
 
         $response->dynamic2(new Document([
             'collections' => $collections,
