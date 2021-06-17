@@ -166,7 +166,7 @@ App::put('/v1/storage/buckets/:bucketId')
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if (empty($bucket->getId())) {
+        if ($bucket->isEmpty()) {
             throw new Exception('Bucket not found', 404);
         }
 
