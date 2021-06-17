@@ -8,7 +8,7 @@ use Utopia\Image\Image;
 
 trait StorageBase
 {
-    public function testCreateBucketFile($data):array
+    public function testCreateBucketFile():array
     {
         /**
          * Test for SUCCESS
