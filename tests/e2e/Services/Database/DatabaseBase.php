@@ -17,6 +17,8 @@ trait DatabaseBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Movies',
+            'read' => ['role:all'],
+            'write' => ['role:all'],
         ]);
 
         $this->assertEquals($movies['headers']['status-code'], 201);
