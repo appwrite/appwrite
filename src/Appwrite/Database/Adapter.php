@@ -91,11 +91,20 @@ abstract class Adapter
     /**
      * Delete Unique Key.
      *
-     * @param int $key
+     * @param String $key
      *
      * @return array
      */
     abstract public function deleteUniqueKey($key);
+
+    /**
+     * Add Unique Key.
+     *
+     * @param String $key
+     *
+     * @return array
+     */
+    abstract public function addUniqueKey($key);
 
     /**
      * Create Namespace.

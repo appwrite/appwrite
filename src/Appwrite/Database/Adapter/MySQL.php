@@ -360,7 +360,7 @@ class MySQL extends Adapter
     /**
      * Delete Unique Key.
      *
-     * @param int $key
+     * @param String $key
      *
      * @return array
      *
@@ -373,6 +373,31 @@ class MySQL extends Adapter
         $st1->bindValue(':key', $key, PDO::PARAM_STR);
 
         $st1->execute();
+
+        return [];
+    }
+
+    /**
+     * Add Unique Key.
+     *
+     * @param String $key
+     *
+     * @return array
+     *
+     * @throws Exception
+     */
+
+    public function addUniqueKey($key)
+    {
+        $st = $this->getPDO()->prepare('INSERT INTO `'.$this->getNamespace().'.database.unique`
+        SET `key` = :key;
+        ');
+    
+        $st->bindValue(':key', $key, PDO::PARAM_STR);
+
+        if (!$st->execute()) {
+            throw new Duplicate('Duplicated Property: '.$key);
+        }
 
         return [];
     }
