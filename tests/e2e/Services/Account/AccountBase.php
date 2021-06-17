@@ -1000,6 +1000,11 @@ trait AccountBase
 
         $recovery = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
 
+        $expireTime = strpos($lastEmail['text'], '&expires='.$response['body']['expire'], 0);
+
+        $this->assertNotFalse($expireTime);
+        
+
         /**
          * Test for FAILURE
          */
