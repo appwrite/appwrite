@@ -126,6 +126,7 @@ trait ProjectCustom
                 'storage.files.create',
                 'storage.files.update',
                 'storage.files.delete',
+                'storage.buckets.create',
                 'users.create',
                 'users.update.prefs',
                 'users.update.status',

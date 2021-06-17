@@ -152,6 +152,11 @@ return [
         'model' => Response::MODEL_FILE,
         'note' => '',
     ],
+    'storage.buckets.create' => [
+        'description' => 'This event triggers when a storage bucket is created.',
+        'model' => Response::MODEL_BUCKET,
+        'note' => '',
+    ],
     'users.create' => [
         'description' => 'This event triggers when a user is created from the users API.',
         'model' => Response::MODEL_USER,
