@@ -142,19 +142,14 @@ class Realtime
 
                 break;
             case strpos($this->event, 'teams.memberships') === 0:
+                $this->permissionsChanged = in_array($this->event, ['teams.memberships.update', 'teams.memberships.delete', 'teams.memberships.update.status']);
                 $this->channels[] = 'memberships';
                 $this->channels[] = 'memberships.' . $this->payload->getId();
                 $this->permissions = ['team:' . $this->payload->getAttribute('teamId')];
 
                 break;
-            case strpos($this->event, 'teams.create') === 0:
-                $this->permissionsChanged = true;
-                $this->channels[] = 'teams';
-                $this->channels[] = 'teams.' . $this->payload->getId();
-                $this->permissions = ['user:' . $this->userId];
-
-                break;
             case strpos($this->event, 'teams.') === 0:
+                $this->permissionsChanged = $this->event === 'teams.create';
                 $this->channels[] = 'teams';
                 $this->channels[] = 'teams.' . $this->payload->getId();
                 $this->permissions = ['team:' . $this->payload->getId()];
@@ -187,7 +182,7 @@ class Realtime
                     $this->permissions = $this->payload->getAttribute('$permissions.read');
                 }
                 break;
-            }
+        }
     }
 
     /**

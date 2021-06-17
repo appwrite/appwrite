@@ -324,7 +324,7 @@ class Server
     {
         $event = json_decode($payload, true);
 
-        if ($event['permissionsChanged'] && $event['userId']) {
+        if ($event['permissionsChanged'] && isset($event['userId'])) {
             $this->addPermission($event);
         }
 
