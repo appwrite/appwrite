@@ -52,7 +52,13 @@ class Server
      * Container scoped Database connection.
      * @var Database
      */
-    public Database $db;
+    public Database $consoleDb;
+
+    /**
+     * Container scoped Database connection.
+     * @var Database
+     */
+    public Database $projectDb;
 
     /**
      * Container scoped Redis connection.
@@ -85,10 +91,14 @@ class Server
         $this->usage->column('messages', Table::TYPE_INT);
         $this->usage->create();
 
-        $this->db = new Database();
-        $this->db->setAdapter(new RedisAdapter(new MySQLAdapter($this->register), $this->register));
-        $this->db->setNamespace('app_console');
-        $this->db->setMocks(Config::getParam('collections', []));
+        $this->consoleDb = new Database();
+        $this->consoleDb->setAdapter(new RedisAdapter(new MySQLAdapter($this->register), $this->register));
+        $this->consoleDb->setNamespace('app_console');
+        $this->consoleDb->setMocks(Config::getParam('collections', []));
+
+        $this->projectDb = new Database();
+        $this->projectDb->setAdapter(new RedisAdapter(new MySQLAdapter($this->register), $this->register));
+        $this->projectDb->setMocks(Config::getParam('collections', []));
 
         $this->server = new SwooleServer($host, $port, SWOOLE_PROCESS);
         $this->server->set($config);
@@ -125,7 +135,7 @@ class Server
                     'data' => '{}'
                 ];
                 Authorization::disable();
-                $document = $this->db->createDocument($document);
+                $document = $this->consoleDb->createDocument($document);
                 Authorization::enable();
                 $this->server->document_id = $document->getId();
             });
@@ -189,7 +199,7 @@ class Server
                 'data' => json_encode($payload)
             ];
             try {
-                $document = $this->db->updateDocument($document);
+                $document = $this->consoleDb->updateDocument($document);
             } catch (\Throwable $th) {
                 Console::error('[Error] Type: '.get_class($th));
                 Console::error('[Error] Message: '.$th->getMessage());
@@ -485,7 +495,7 @@ class Server
             && array_key_exists('project', $this->subscriptions['console']['role:member'])
         ) {
             $payload = [];
-            $list = $this->db->getCollection([
+            $list = $this->consoleDb->getCollection([
                 'filters' => [
                     '$collection='.Database::SYSTEM_COLLECTION_REALTIME_CONNECTIONS,
                     'timestamp>'.(time() - 15)
@@ -528,26 +538,9 @@ class Server
             return;
         }
 
-        /**
-         * This is redundant soon and will be gone with merging the usage branch.
-         */
-        $db = $this->register->get('dbPool')->get();
-        $redis = $this->register->get('redisPool')->get();
+        $this->projectDb->setNamespace('app_'.$project);
 
-        $this->register->set('db', function () use (&$db) {
-            return $db;
-        });
-
-        $this->register->set('cache', function () use (&$redis) {
-            return $redis;
-        });
-
-        $projectDB = new Database();
-        $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($this->register), $this->register));
-        $projectDB->setNamespace('app_'.$project);
-        $projectDB->setMocks(Config::getParam('collections', []));
-
-        $user = $projectDB->getDocument($userId);
+        $user = $this->projectDb->getDocument($userId);
 
         Parser::setUser($user);
 
