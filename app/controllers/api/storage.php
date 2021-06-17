@@ -209,11 +209,13 @@ App::delete('/v1/storage/buckets/:bucketId')
     ->inject('dbForInternal')
     ->inject('audits')
     ->inject('deletes')
-    ->action(function ($bucketId, $response, $dbForInternal, $audits, $deletes) {
+    ->inject('events')
+    ->action(function ($bucketId, $response, $dbForInternal, $audits, $deletes, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $deletes */
+        /** @var Appwrite\Event\Event $events */
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
@@ -229,6 +231,10 @@ App::delete('/v1/storage/buckets/:bucketId')
         if(!$dbForInternal->deleteDocument('buckets', $bucketId)) {
             throw new Exception('Failed to remove project from DB', 500);
         }
+
+        $events
+            ->setParam('eventData', $response->output2($bucket, Response::MODEL_BUCKET))
+        ;
 
         $audits
             ->setParam('event', 'storage.buckets.delete')
