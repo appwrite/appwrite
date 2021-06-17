@@ -240,6 +240,35 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
 
+  appwrite-worker-database:
+    entrypoint: worker-database
+    container_name: appwrite-worker-database
+    build:
+      context: .
+    networks:
+      - appwrite
+    volumes: 
+      - appwrite-uploads:/storage/uploads:rw
+      - appwrite-cache:/storage/cache:rw
+      - appwrite-functions:/storage/functions:rw
+      - appwrite-certificates:/storage/certificates:rw
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      - redis
+      - mariadb
+    environment:
+      - _APP_ENV
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+
   appwrite-worker-certificates:
     entrypoint: worker-certificates
     container_name: appwrite-worker-certificates

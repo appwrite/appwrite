@@ -19,7 +19,7 @@ require_once __DIR__.'/../init.php';
 Console::title('Database V1 Worker');
 Console::success(APP_NAME.' database worker v1 has started'."\n");
 
-class DeletesV1 extends Worker
+class DatabaseV1 extends Worker
 {
     public $args = [];
 
@@ -29,6 +29,10 @@ class DeletesV1 extends Worker
 
     public function run(): void
     {
+        $collections = Config::getParam('collections2');
+
+        var_dump($collections);
+
     }
 
     public function shutdown(): void
