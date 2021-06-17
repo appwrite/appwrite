@@ -234,7 +234,7 @@ App::get('/v1/users/:userId/logs')
         
         $countries = $locale->getText('countries');
 
-        $logs = $audit->getLogsByUserAndActions($user->getId(), [
+        $logs = $audit->getLogsByUserAndEvents($user->getId(), [
             'account.create',
             'account.delete',
             'account.update.name',
