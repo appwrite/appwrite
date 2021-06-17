@@ -8,6 +8,46 @@ use Utopia\Image\Image;
 
 trait StorageBase
 {
+    public function testCreateBucketFile($data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'name' => 'Test Bucket',
+        ]);
+        var_dump($bucket);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $this->assertNotEmpty($bucket['body']['$id']);
+        
+        $bucketId = $bucket['body']['$id'];
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/' . $bucketId .'/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+        ]);
+
+        $this->assertEquals($file['headers']['status-code'], 201);
+        $this->assertNotEmpty($file['body']['$id']);
+        $this->assertIsInt($file['body']['dateCreated']);
+        $this->assertEquals('logo.png', $file['body']['name']);
+        $this->assertEquals('image/png', $file['body']['mimeType']);
+        $this->assertEquals(47218, $file['body']['sizeOriginal']);
+
+        /**
+         * Test for FAILURE
+         */
+        return ['fileId' => $file['body']['$id']];
+    }
+    
     public function testCreateFile():array
     {
         /**

@@ -24,6 +24,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Validator\Integer;
 use Utopia\Database\Query;
+use Utopia\Storage\Validator\FileType;
 
 App::post('/v1/storage/buckets')
     ->desc('Create storage bucket')
@@ -243,6 +244,153 @@ App::delete('/v1/storage/buckets/:bucketId')
         ;
 
         $response->noContent();
+    });
+
+App::post('/v1/storage/buckets/:bucketId/files')
+    ->desc('Create File')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'files.write')
+    ->label('event', 'storage.files.create')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'createFile')
+    ->label('sdk.description', '/docs/references/storage/create-file.md')
+    ->label('sdk.request.type', 'multipart/form-data')
+    ->label('sdk.methodType', 'upload')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_FILE)
+    ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
+    ->param('file', [], new File(), 'Binary file.', false)
+    ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->inject('user')
+    ->inject('audits')
+    ->inject('usage')
+    ->action(function ($bucketId, $file, $read, $write, $request, $response, $dbForInternal, $user, $audits, $usage) {
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Appwrite\Database\Document $user */
+        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Event $usage */
+
+        $bucket = $dbForInternal->getDocument('buckets',$bucketId);
+
+        if($bucket->isEmpty()) {
+            throw new Exception("Unable to find the bucket", 404);
+        }
+
+        $file = $request->getFiles('file');
+
+        /*
+         * Validators
+         */
+        $fileType = new FileType($bucket->getAttribute('allowedFileExtensions', ['*']));
+        $fileSize = new FileSize($bucket->getAttribute('maximumFileSize', 0));
+        $upload = new Upload();
+
+        if (empty($file)) {
+            throw new Exception('No file sent', 400);
+        }
+
+        // Make sure we handle a single file and multiple files the same way
+        $file['name'] = (\is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
+        $file['tmp_name'] = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
+        $file['size'] = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+
+        // Check if file type is allowed (feature for project settings?)
+        if (!$fileType->isValid($file['tmp_name'])) {
+        throw new Exception('File type not allowed', 400);
+        }
+
+        if (!$fileSize->isValid($file['size'])) { // Check if file size is exceeding allowed limit
+            throw new Exception('File size not allowed', 400);
+        }
+
+        $device = Storage::getDevice('files');
+
+        if (!$upload->isValid($file['tmp_name'])) {
+            throw new Exception('Invalid file', 403);
+        }
+
+        // Save to storage
+        $size = $device->getFileSize($file['tmp_name']);
+        $path = $device->getPath(\uniqid().'.'.\pathinfo($file['name'], PATHINFO_EXTENSION));
+        $path = $bucket->getId() . '/' . $path;
+        
+        if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
+            throw new Exception('Failed moving file', 500);
+        }
+
+        $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
+
+        if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antiVirus', true)) { // Check if scans are enabled
+            $antiVirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
+                (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
+
+            if (!$antiVirus->fileScan($path)) {
+                $device->delete($path);
+                throw new Exception('Invalid file', 403);
+            }
+        }
+
+        // Compression
+        $compressor = new GZIP();
+        $data = $device->read($path);
+        $data = $compressor->compress($data);
+        
+        if($bucket->getAttribute('encryption', true)) {
+            $key = App::getEnv('_APP_OPENSSL_KEY_V1');
+            $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+            $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
+        }
+
+        if (!$device->write($path, $data, $mimeType)) {
+            throw new Exception('Failed to save file', 500);
+        }
+
+        $sizeActual = $device->getFileSize($path);
+        
+        $data = [
+            '$read' => (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? [], // By default set read permissions for user
+            '$write' => (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? [], // By default set write permissions for user
+            'dateCreated' => \time(),
+            'bucketId' => $bucket->getId(),
+            'name' => $file['name'],
+            'path' => $path,
+            'signature' => $device->getFileHash($path),
+            'mimeType' => $mimeType,
+            'sizeOriginal' => $size,
+            'sizeActual' => $sizeActual,
+            'algorithm' => $compressor->getName(),
+            'comment' => '',
+        ];
+
+        if($bucket->getAttribute('encryption', true)) {
+            $data['openSSLVersion'] = '1';
+            $data['openSSLCipher'] = OpenSSL::CIPHER_AES_128_GCM;
+            $data['openSSLTag'] = \bin2hex($tag);
+            $data['openSSLIV'] = \bin2hex($iv);
+        }
+
+        $file = $dbForInternal->createDocument('files', new Document());
+
+        $audits
+            ->setParam('event', 'storage.files.create')
+            ->setParam('resource', 'storage/files/'.$file->getId())
+        ;
+
+        $usage
+            ->setParam('storage', $sizeActual)
+        ;
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($file, Response::MODEL_FILE);
+        ;
     });
 
 App::post('/v1/storage/files')
