@@ -1,18 +1,18 @@
 <?php
 
-use Utopia\Database\Database;
-use Utopia\Cache\Adapter\Redis as RedisCache;
-use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Resque\Worker;
-use Utopia\Storage\Device\Local;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\CLI\Console;
-use Utopia\Config\Config;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
+use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\CLI\Console;
+use Utopia\Config\Config;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Adapter\MariaDB;
+use Utopia\Storage\Device\Local;
 
 require_once __DIR__.'/../init.php';
 
