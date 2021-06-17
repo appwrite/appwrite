@@ -878,9 +878,11 @@ App::get('/v1/account/sessions')
         foreach ($sessions as $key => $session) { 
             /** @var Document $session */
 
-            $session->setAttribute('countryName', (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
-                ? $countries[strtoupper($session->getAttribute('countryCode'))]
-                : $locale->getText('locale.country.unknown'));
+            $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
+            ? $countries[strtoupper($session->getAttribute('countryCode'))]
+            : $locale->getText('locale.country.unknown');
+
+            $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', ($current == $session->getId()) ? true : false);
 
             $sessions[$key] = $session;
