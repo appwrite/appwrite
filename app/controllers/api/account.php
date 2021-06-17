@@ -850,7 +850,7 @@ App::get('/v1/account/logs')
         $audit = new Audit($dbForInternal);
         $countries = $locale->getText('countries');
 
-        $logs = $audit->getLogsByUserAndActions($user->getId(), [
+        $logs = $audit->getLogsByUserAndEvents($user->getId(), [
             'account.create',
             'account.delete',
             'account.update.name',
