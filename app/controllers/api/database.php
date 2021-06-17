@@ -9,20 +9,13 @@ use Utopia\Validator\WhiteList;
 use Utopia\Validator\Text;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
-use Appwrite\Database\Database;
-use Appwrite\Database\Document;
 use Appwrite\Database\Validator\UID;
-use Appwrite\Database\Validator\Key;
-use Appwrite\Database\Validator\Structure;
-use Appwrite\Database\Validator\Collection;
-use Appwrite\Database\Validator\Authorization;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Appwrite\Utopia\Response;
-use Utopia\Database\Database as Database2;
-use Utopia\Database\Document as Document2;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization as Authorization2;
 
 App::post('/v1/database/collections')
     ->desc('Create Collection')
@@ -59,7 +52,7 @@ App::post('/v1/database/collections')
         $collection->setAttribute('$read', $read);
         $collection->setAttribute('$write', $write);
 
-        $dbForExternal->updateDocument(Database2::COLLECTIONS, $id, $collection);
+        $dbForExternal->updateDocument(Database::COLLECTIONS, $id, $collection);
 
         $audits
             ->setParam('event', 'database.collections.create')
@@ -92,7 +85,7 @@ App::get('/v1/database/collections')
 
         $collections = $dbForExternal->listCollections($limit, $offset);
 
-        $response->dynamic2(new Document2([
+        $response->dynamic2(new Document([
             'collections' => $collections,
             'sum' => \count($collections),
         ]), Response::MODEL_COLLECTION_LIST);
@@ -159,7 +152,7 @@ App::put('/v1/database/collections/:collectionId')
         $write = (is_null($write)) ? ($collection->getWrite() ?? []) : $write; // By default inherit write permissions
 
         try {
-            $collection = $dbForExternal->updateDocument(Database2::COLLECTIONS, $collection->getId(), new Document2(\array_merge($collection->getArrayCopy(), [
+            $collection = $dbForExternal->updateDocument(Database::COLLECTIONS, $collection->getId(), new Document(\array_merge($collection->getArrayCopy(), [
                 'name' => $name,
                 '$read' => $read,
                 '$write' => $write
@@ -267,7 +260,7 @@ App::post('/v1/database/collections/:collectionId/attributes')
 
         // Database->createAttribute() does not return a document
         // So we need to create one for the response
-        $attribute = new Document2([
+        $attribute = new Document([
             '$collection' => $collectionId,
             '$id' => $id,
             'type' => $type,
@@ -315,12 +308,12 @@ App::get('v1/database/collections/:collectionId/attributes')
         $attributes = $collection->getAttributes();
 
         $attributes = array_map(function ($attribute) use ($collection) {
-            return new Document2([\array_merge($attribute, [
+            return new Document([\array_merge($attribute, [
             'collectionId' => $collection->getId(),
             ])]);
         }, $attributes);
 
-        $response->dynamic2(new Document2([
+        $response->dynamic2(new Document([
             'sum' => \count($attributes),
             'attributes' => $attributes
         ]), Response::MODEL_ATTRIBUTE_LIST);
@@ -360,7 +353,7 @@ App::get('v1/database/collections/:collectionId/attributes/:attributeId')
             throw new Exception('Attribute not found', 404);
         }
 
-        $attribute = new Document2([\array_merge($attributes[$attributeIndex], [
+        $attribute = new Document([\array_merge($attributes[$attributeIndex], [
             'collectionId' => $collectionId,
         ])]);
         
@@ -406,7 +399,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
             throw new Exception('Attribute not found', 404);
         }
 
-        $attribute = new Document2([\array_merge($attributes[$attributeIndex], [
+        $attribute = new Document([\array_merge($attributes[$attributeIndex], [
             'collectionId' => $collectionId,
         ])]);
 
@@ -445,7 +438,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
     ->label('sdk.response.model', Response::MODEL_INDEX)
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('id', null, new Text(256), 'Index ID.')
-    ->param('type', null, new WhiteList([Database2::INDEX_KEY, Database2::INDEX_FULLTEXT, Database2::INDEX_UNIQUE, Database2::INDEX_SPATIAL, Database2::INDEX_ARRAY]), 'Index type.')
+    ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE, Database::INDEX_SPATIAL, Database::INDEX_ARRAY]), 'Index type.')
     ->param('attributes', null, new ArrayList(new Text(256)), 'Array of attributes to index.')
     ->param('lengths', [], new ArrayList(new Text(256)), 'Array of index lengths.', true)
     ->param('orders', [], new ArrayList(new Text(256)), 'Array of index orders.', true)
@@ -467,7 +460,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
 
         // Database->createIndex() does not return a document
         // So we need to create one for the response
-        $index = new Document2([
+        $index = new Document([
             '$collection' => $collectionId,
             '$id' => $id,
             'type' => $type,
@@ -514,12 +507,12 @@ App::get('v1/database/collections/:collectionId/indexes')
         $indexes = $collection->getAttribute('indexes');
 
         $indexes = array_map(function ($index) use ($collection) {
-            return new Document2([\array_merge($index, [
+            return new Document([\array_merge($index, [
             'collectionId' => $collection->getId(),
             ])]);
         }, $indexes);
 
-        $response->dynamic2(new Document2([
+        $response->dynamic2(new Document([
             'sum' => \count($indexes),
             'attributes' => $indexes,
         ]), Response::MODEL_INDEX_LIST);
@@ -559,7 +552,7 @@ App::get('v1/database/collections/:collectionId/indexes/:indexId')
             throw new Exception('Index not found', 404);
         }
 
-        $index = new Document2([\array_merge($indexes[$indexIndex], [
+        $index = new Document([\array_merge($indexes[$indexIndex], [
             'collectionId' => $collectionId,
         ])]);
         
@@ -605,7 +598,7 @@ App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
             throw new Exception('Index not found', 404);
         }
 
-        $index = new Document2([\array_merge($indexes[$indexIndex], [
+        $index = new Document([\array_merge($indexes[$indexIndex], [
             'collectionId' => $collectionId,
         ])]);
 
@@ -684,12 +677,12 @@ App::post('/v1/database/collections/:collectionId/documents')
         //     $key = $attribute['$id'] ?? '';
         //     if ($attribute['array'] === true) {
         //         $default = [];
-        //     } elseif ($attribute['type'] === Database2::VAR_STRING) {
+        //     } elseif ($attribute['type'] === Database::VAR_STRING) {
         //         $default = '';
-        //     } elseif ($attribute['type'] === Database2::VAR_BOOLEAN) {
+        //     } elseif ($attribute['type'] === Database::VAR_BOOLEAN) {
         //         $default = false;
-        //     } elseif ($attribute['type'] === Database2::VAR_INTEGER 
-        //         || $attribute['type'] === Database2::VAR_FLOAT) {
+        //     } elseif ($attribute['type'] === Database::VAR_INTEGER 
+        //         || $attribute['type'] === Database::VAR_FLOAT) {
         //         $default = 0;
         //     }
 
@@ -700,7 +693,7 @@ App::post('/v1/database/collections/:collectionId/documents')
 
         // TODO@kodumbeats catch other exceptions
         try {
-            $document = $dbForExternal->createDocument($collectionId, new Document2($data));
+            $document = $dbForExternal->createDocument($collectionId, new Document($data));
         } catch (StructureException $exception) {
             throw new Exception($exception->getMessage(), 400);
         }
@@ -749,7 +742,7 @@ App::get('/v1/database/collections/:collectionId/documents')
 
         $documents = $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes);
 
-        $response->dynamic2(new Document2([
+        $response->dynamic2(new Document([
             'sum' => \count($documents),
             'documents' => $documents,
         ]), Response::MODEL_DOCUMENT_LIST);
@@ -844,7 +837,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         $data['$write'] = (is_null($write)) ? ($document->getWrite() ?? []) : $write; // By default inherit write permissions
 
         try {
-            $document = $dbForExternal->updateDocument($collection->getId(), $document->getId(), new Document2($data));
+            $document = $dbForExternal->updateDocument($collection->getId(), $document->getId(), new Document($data));
         } catch (AuthorizationException $exception) {
             throw new Exception('Unauthorized permissions', 401);
         } catch (StructureException $exception) {
