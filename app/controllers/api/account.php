@@ -1429,6 +1429,8 @@ App::post('/v1/account/recovery')
             throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
         }
 
+        $expireTime = \time() + Auth::TOKEN_EXPIRATION_RECOVERY;
+
         $secret = Auth::tokenGenerator();
         $recovery = new Document([
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
@@ -1436,7 +1438,7 @@ App::post('/v1/account/recovery')
             'userId' => $profile->getId(),
             'type' => Auth::TOKEN_TYPE_RECOVERY,
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-            'expire' => \time() + Auth::TOKEN_EXPIRATION_RECOVERY,
+            'expire' => $expireTime,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
         ]);
@@ -1458,7 +1460,7 @@ App::post('/v1/account/recovery')
         }
 
         $url = Template::parseURL($url);
-        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret]);
+        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret, 'expires' => $expireTime]);
         $url = Template::unParseURL($url);
 
         $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
@@ -1632,6 +1634,8 @@ App::post('/v1/account/verification')
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $verificationSecret = Auth::tokenGenerator();
+
+        $expireTime = \time() + Auth::TOKEN_EXPIRATION_CONFIRM;
         
         $verification = new Document([
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
@@ -1639,7 +1643,7 @@ App::post('/v1/account/verification')
             'userId' => $user->getId(),
             'type' => Auth::TOKEN_TYPE_VERIFICATION,
             'secret' => Auth::hash($verificationSecret), // One way hash encryption to protect DB leak
-            'expire' => \time() + Auth::TOKEN_EXPIRATION_CONFIRM,
+            'expire' => $expireTime,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
         ]);
@@ -1659,9 +1663,9 @@ App::post('/v1/account/verification')
         if (false === $user) {
             throw new Exception('Failed to save user to DB', 500);
         }
-        
+
         $url = Template::parseURL($url);
-        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret]);
+        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret, 'expires' => $expireTime]);
         $url = Template::unParseURL($url);
 
         $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
