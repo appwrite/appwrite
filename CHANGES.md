@@ -9,6 +9,7 @@
   - Add Provider Icon to each Session
   - Add Anonymous Account Placeholder
 - Upgraded telegraf docker image version to v1.1.0
+- Added new endpoint to get a session based on it's ID (#1294)
 
 ## Bugs
 
