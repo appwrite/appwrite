@@ -18,6 +18,11 @@ class Realtime
     protected $event = '';
 
     /**
+     * @var string
+     */
+    protected $userId = '';
+
+    /**
      * @var array
      */
     protected $channels = [];
@@ -26,6 +31,11 @@ class Realtime
      * @var array
      */
     protected $permissions = [];
+
+    /**
+     * @var false
+     */
+    protected $permissionsChanged = false;
 
     /**
      * @var Document
@@ -54,6 +64,16 @@ class Realtime
     public function setProject(string $project): self
     {
         $this->project = $project;
+        return $this;
+    }
+
+    /**
+     * @param string $userId
+     * return $this
+     */
+    public function setUserId(string $userId): self
+    {
+        $this->userId = $userId;
         return $this;
     }
 
@@ -121,6 +141,20 @@ class Realtime
                 $this->permissions = ['user:' . $this->payload->getId()];
 
                 break;
+            case strpos($this->event, 'teams.memberships') === 0:
+                $this->permissionsChanged = in_array($this->event, ['teams.memberships.update', 'teams.memberships.delete', 'teams.memberships.update.status']);
+                $this->channels[] = 'memberships';
+                $this->channels[] = 'memberships.' . $this->payload->getId();
+                $this->permissions = ['team:' . $this->payload->getAttribute('teamId')];
+
+                break;
+            case strpos($this->event, 'teams.') === 0:
+                $this->permissionsChanged = $this->event === 'teams.create';
+                $this->channels[] = 'teams';
+                $this->channels[] = 'teams.' . $this->payload->getId();
+                $this->permissions = ['team:' . $this->payload->getId()];
+
+                break;
             case strpos($this->event, 'database.collections.') === 0:
                 $this->channels[] = 'collections';
                 $this->channels[] = 'collections.' . $this->payload->getId();
@@ -148,7 +182,7 @@ class Realtime
                     $this->permissions = $this->payload->getAttribute('$permissions.read');
                 }
                 break;
-            }
+        }
     }
 
     /**
@@ -166,6 +200,8 @@ class Realtime
         $redis->publish('realtime', json_encode([
             'project' => $this->project,
             'permissions' => $this->permissions,
+            'permissionsChanged' => $this->permissionsChanged,
+            'userId' => $this->userId,
             'data' => [
                 'event' => $this->event,
                 'channels' => $this->channels,

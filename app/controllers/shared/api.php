@@ -201,6 +201,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
         if ($project->getId() !== 'console') {
             $realtime
                 ->setEvent($events->getParam('event'))
+                ->setUserId($events->getParam('userId'))
                 ->setProject($project->getId())
                 ->setPayload($response->getPayload())
                 ->trigger();
