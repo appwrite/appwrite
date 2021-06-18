@@ -1,18 +1,12 @@
 <?php
 
-use Appwrite\Database\Validator\Authorization;
 use Appwrite\Resque\Worker;
-use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\CLI\Console;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Adapter\MariaDB;
-use Utopia\Storage\Device\Local;
 
 require_once __DIR__.'/../init.php';
 
@@ -54,46 +48,6 @@ class DatabaseV1 extends Worker
                 $this->deleteIndex($index, $projectId);
                 break;
 
-            // case DELETE_TYPE_DOCUMENT:
-            //     $document = $this->args['document'] ?? '';
-            //     $document = new Document($document);
-                
-                // switch ($document->getCollection()) {
-                //     case Database::SYSTEM_COLLECTION_PROJECTS:
-                //         $this->deleteProject($document);
-                //         break;
-                //     case Database::SYSTEM_COLLECTION_FUNCTIONS:
-                //         $this->deleteFunction($document, $projectId);
-                //         break;
-                //     case Database::SYSTEM_COLLECTION_USERS:
-                //         $this->deleteUser($document, $projectId);
-                //         break;
-                //     case Database::SYSTEM_COLLECTION_COLLECTIONS:
-                //         $this->deleteDocuments($document, $projectId);
-                //         break;
-                //     default:
-                //         Console::error('No lazy delete operation available for document of type: '.$document->getCollection());
-                //         break;
-                // }
-                // break;
-
-            // case DELETE_TYPE_EXECUTIONS:
-            //     $this->deleteExecutionLogs($this->args['timestamp']);
-            //     break;
-
-            // case DELETE_TYPE_AUDIT:
-            //     $this->deleteAuditLogs($this->args['timestamp']);
-            //     break;
-
-            // case DELETE_TYPE_ABUSE:
-            //     $this->deleteAbuseLogs($this->args['timestamp']);
-            //     break;
-
-            // case DELETE_TYPE_CERTIFICATES:
-            //     $document = new Document($this->args['document']);
-            //     $this->deleteCertificates($document);
-            //     break;
-                        
             default:
                 Console::error('No database operation for type: '.$type);
                 break;
