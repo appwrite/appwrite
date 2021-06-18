@@ -708,6 +708,18 @@ trait AccountBase
 
         $verification = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
 
+        $expireTime = strpos($lastEmail['text'], 'expires='.$response['body']['expire'], 0);
+
+        $this->assertNotFalse($expireTime);
+        
+        $secretTest = strpos($lastEmail['text'], 'secret='.$response['body']['secret'], 0);
+
+        $this->assertNotFalse($secretTest);
+
+        $userIDTest = strpos($lastEmail['text'], 'userId='.$response['body']['userId'], 0);
+
+        $this->assertNotFalse($userIDTest);
+
         /**
          * Test for FAILURE
          */
@@ -1000,10 +1012,17 @@ trait AccountBase
 
         $recovery = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
 
-        $expireTime = strpos($lastEmail['text'], '&expires='.$response['body']['expire'], 0);
+        $expireTime = strpos($lastEmail['text'], 'expires='.$response['body']['expire'], 0);
 
         $this->assertNotFalse($expireTime);
         
+        $secretTest = strpos($lastEmail['text'], 'secret='.$response['body']['secret'], 0);
+
+        $this->assertNotFalse($secretTest);
+
+        $userIDTest = strpos($lastEmail['text'], 'userId='.$response['body']['userId'], 0);
+
+        $this->assertNotFalse($userIDTest);
 
         /**
          * Test for FAILURE
