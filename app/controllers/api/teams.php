@@ -212,7 +212,8 @@ App::delete('/v1/teams/:teamId')
     ->inject('response')
     ->inject('projectDB')
     ->inject('events')
-    ->action(function ($teamId, $response, $projectDB, $events) {
+    ->inject('deletes')
+    ->action(function ($teamId, $response, $projectDB, $events, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $events */
@@ -223,24 +224,14 @@ App::delete('/v1/teams/:teamId')
             throw new Exception('Team not found', 404);
         }
 
-        $memberships = $projectDB->getCollection([
-            'limit' => 2000, // TODO add members limit
-            'offset' => 0,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
-                'teamId='.$teamId,
-            ],
-        ]);
-
-        foreach ($memberships as $member) {
-            if (!$projectDB->deleteDocument($member->getId())) {
-                throw new Exception('Failed to remove membership for team from DB', 500);
-            }
-        }
-
         if (!$projectDB->deleteDocument($teamId)) {
             throw new Exception('Failed to remove team from DB', 500);
         }
+
+        $deletes
+            ->setParam('type', DELETE_TYPE_DOCUMENT)
+            ->setParam('document', $team)
+        ;
 
         $events
             ->setParam('eventData', $response->output($team, Response::MODEL_TEAM))
