@@ -49,8 +49,9 @@ App::post('/v1/database/collections')
         $write = (is_null($write)) ? ($collection->getWrite() ?? []) : $write; // By default inherit write permissions
 
         $collection->setAttribute('name', $name);
-        $collection->setAttribute('$read', $read);
-        $collection->setAttribute('$write', $write);
+        // TODO@kodumbeats Use the default permissions from Utopia for now
+        // $collection->setAttribute('$read', $read);
+        // $collection->setAttribute('$write', $write);
 
         $dbForExternal->updateDocument(Database::COLLECTIONS, $id, $collection);
 
