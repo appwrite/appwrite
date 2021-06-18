@@ -76,16 +76,20 @@ App::get('/v1/database/collections')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_COLLECTION_LIST)
+    ->param('queries', [], new ArrayList(new Text(128)), 'Array of query strings.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 40000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->inject('response')
     ->inject('dbForExternal')
-    ->action(function ($limit, $offset, $response, $dbForExternal) {
+    ->action(function ($queries, $limit, $offset, $response, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal */
 
-        $collections = $dbForExternal->listCollections($limit, $offset);
-        // TODO@kodumbeats allow for filtering collections
+        $queries = \array_map(function ($query) {
+            return Query::parse($query);
+        }, $queries);
+
+        $collections = $dbForExternal->find(Database::COLLECTIONS, $queries, $limit, $offset);
 
         $response->dynamic2(new Document([
             'collections' => $collections,
