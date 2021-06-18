@@ -70,6 +70,120 @@ trait StorageBase
         
         return $data;
     }
+
+    /**
+     * @depends testCreateBucketFile
+     */
+    public function testGetBucketFile(array $data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $file1 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files/' . $data['fileId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $file1['headers']['status-code']);
+        $this->assertNotEmpty($file1['body']['$id']);
+        $this->assertIsInt($file1['body']['dateCreated']);
+        $this->assertEquals('logo.png', $file1['body']['name']);
+        $this->assertEquals('image/png', $file1['body']['mimeType']);
+        $this->assertEquals(47218, $file1['body']['sizeOriginal']);
+        //$this->assertEquals(54944, $file1['body']['sizeActual']);
+        //$this->assertEquals('gzip', $file1['body']['algorithm']);
+        //$this->assertEquals('1', $file1['body']['fileOpenSSLVersion']);
+        //$this->assertEquals('aes-128-gcm', $file1['body']['fileOpenSSLCipher']);
+        //$this->assertNotEmpty($file1['body']['fileOpenSSLTag']);
+        //$this->assertNotEmpty($file1['body']['fileOpenSSLIV']);
+        $this->assertIsArray($file1['body']['$read']);
+        $this->assertIsArray($file1['body']['$write']);
+        $this->assertCount(1, $file1['body']['$read']);
+        $this->assertCount(1, $file1['body']['$write']);
+
+        $file2 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $file2['headers']['status-code']);
+        $this->assertEquals('image/png', $file2['headers']['content-type']);
+        $this->assertNotEmpty($file2['body']);
+        
+        //new image preview features
+        $file3 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'width' => 300,
+            'height' => 100,
+            'borderRadius' => '50',
+            'opacity' => '0.5',
+            'output' => 'png',
+            'rotation' => '45',
+        ]);
+        
+
+        $this->assertEquals(200, $file3['headers']['status-code']);
+        $this->assertEquals('image/png', $file3['headers']['content-type']);
+        $this->assertNotEmpty($file3['body']);
+
+        $image = new \Imagick();
+        $image->readImageBlob($file3['body']);
+        $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.png');
+
+        $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
+        $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
+        $this->assertEquals('PNG', $image->getImageFormat());
+
+        $file4 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'width' => 200,
+            'height' => 80,
+            'borderWidth' => '5',
+            'borderColor' => 'ff0000',
+            'output' => 'jpg',
+        ]);
+        
+        $this->assertEquals(200, $file4['headers']['status-code']);
+        $this->assertEquals('image/jpeg', $file4['headers']['content-type']);
+        $this->assertNotEmpty($file4['body']);
+        
+        $image = new \Imagick();
+        $image->readImageBlob($file4['body']);
+        $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.jpg');
+
+        $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
+        $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
+        $this->assertEquals('JPEG', $image->getImageFormat());
+
+        $file5 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $file5['headers']['status-code']);
+        $this->assertEquals('attachment; filename="logo.png"', $file5['headers']['content-disposition']);
+        $this->assertEquals('image/png', $file5['headers']['content-type']);
+        $this->assertNotEmpty($file5['body']);
+
+        $file6 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/view', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $file6['headers']['status-code']);
+        $this->assertEquals('image/png', $file6['headers']['content-type']);
+        $this->assertNotEmpty($file6['body']);
+
+        /**
+         * Test for FAILURE
+         */
+
+        return $data;
+    }
     
     public function testCreateFile():array
     {

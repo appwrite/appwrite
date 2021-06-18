@@ -429,6 +429,35 @@ App::get('/v1/storage/buckets/:bucketId/files')
         ]), Response::MODEL_FILE_LIST);
     });
 
+App::get('/v1/storage/buckets/:bucketId/files/:fileId')
+    ->desc('Get File')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'files.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'getFile')
+    ->label('sdk.description', '/docs/references/storage/get-file.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_FILE)
+    ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
+    ->param('fileId', '', new UID(), 'File unique ID.')
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->action(function ($bucketId, $fileId, $response, $dbForInternal) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
+
+        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
+        $file = $dbForInternal->getDocument('files', $fileId);
+
+        if ($bucket->isEmpty() || $file->isEmpty()) {
+            throw new Exception('File not found', 404);
+        }
+
+        $response->dynamic2($file, Response::MODEL_FILE);
+    });
+
 App::post('/v1/storage/files')
     ->desc('Create File')
     ->groups(['api', 'storage'])
