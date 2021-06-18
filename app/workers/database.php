@@ -38,10 +38,20 @@ class DatabaseV1 extends Worker
                 $attribute = new Document($attribute);
                 $this->createAttribute($attribute, $projectId);
                 break;
+            case DELETE_TYPE_ATTRIBUTE:
+                $attribute = $this->args['document'] ?? '';
+                $attribute = new Document($attribute);
+                $this->deleteAttribute($attribute, $projectId);
+                break;
             case CREATE_TYPE_INDEX:
                 $index = $this->args['document'] ?? '';
                 $index = new Document($index);
                 $this->createIndex($index, $projectId);
+                break;
+            case DELETE_TYPE_INDEX:
+                $index = $this->args['document'] ?? '';
+                $index = new Document($index);
+                $this->deleteIndex($index, $projectId);
                 break;
 
             // case DELETE_TYPE_DOCUMENT:
@@ -97,8 +107,9 @@ class DatabaseV1 extends Worker
 
     /**
      * @param Document $attribute
+     * @param string $projectId
      */
-    protected function createAttribute($attribute, $projectId)
+    protected function createAttribute($attribute, $projectId): void
     {
         $dbForExternal = $this->getExternalDB($projectId);
 
@@ -118,9 +129,24 @@ class DatabaseV1 extends Worker
     }
 
     /**
-     * @param Document $index
+     * @param Document $attribute
+     * @param string $projectId
      */
-    protected function createIndex($index, $projectId)
+    protected function deleteAttribute($attribute, $projectId): void
+    {
+        $dbForExternal = $this->getExternalDB($projectId);
+
+        $collectionId = $attribute->getCollection();
+        $id = $attribute->getAttribute('$id');
+
+        $success = $dbForExternal->deleteAttribute($collectionId, $id);
+    }
+
+    /**
+     * @param Document $index
+     * @param string $projectId
+     */
+    protected function createIndex($index, $projectId): void
     {
         $dbForExternal = $this->getExternalDB($projectId);
 
@@ -135,6 +161,20 @@ class DatabaseV1 extends Worker
         if ($success) {
             $dbForExternal->removeIndexInQueue($collectionId, $id);
         }
+    }
+
+    /**
+     * @param Document $index
+     * @param string $projectId
+     */
+    protected function deleteIndex($index, $projectId): void
+    {
+        $dbForExternal = $this->getExternalDB($projectId);
+
+        $collectionId = $index->getCollection();
+        $id = $index->getAttribute('$id');
+
+        $success = $dbForExternal->deleteIndex($collectionId, $id);
     }
 
     /**

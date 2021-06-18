@@ -250,6 +250,7 @@ App::post('/v1/database/collections/:collectionId/attributes')
     ->action(function ($collectionId, $id, $type, $size, $required, $signed, $array, $filters, $response, $dbForExternal, $database, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal*/
+        /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
         $collection = $dbForExternal->getCollection($collectionId);
@@ -382,12 +383,13 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
     ->param('attributeId', '', new Text(256), 'Attribute ID.')
     ->inject('response')
     ->inject('dbForExternal')
+    ->inject('database')
     ->inject('events')
     ->inject('audits')
-    ->inject('deletes')
-    ->action(function ($collectionId, $attributeId, $response, $dbForExternal, $events, $audits, $deletes) {
+    ->action(function ($collectionId, $attributeId, $response, $dbForExternal, $database, $events, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal */
+        /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
 
@@ -410,13 +412,10 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
             'collectionId' => $collectionId,
         ])]);
 
-        // TODO@kodumbeats use the deletes worker to handle this
-        $success = $dbForExternal->deleteAttribute($collectionId, $attributeId);
-
-        // $deletes
-        //     ->setParam('type', DELETE_TYPE_DOCUMENT)
-        //     ->setParam('document', $attribute)
-        // ;
+        $database
+            ->setParam('type', DELETE_TYPE_ATTRIBUTE)
+            ->setParam('document', $attribute)
+        ;
 
         $events
             ->setParam('payload', $response->output2($attribute, Response::MODEL_ATTRIBUTE))
@@ -587,12 +586,13 @@ App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
     ->param('indexId', '', new UID(), 'Index unique ID.')
     ->inject('response')
     ->inject('dbForExternal')
+    ->inject('database')
     ->inject('events')
     ->inject('audits')
-    ->inject('deletes')
-    ->action(function ($collectionId, $indexId, $response, $dbForExternal, $events, $audits, $deletes) {
+    ->action(function ($collectionId, $indexId, $response, $dbForExternal, $database, $events, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal */
+        /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
 
@@ -615,13 +615,10 @@ App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
             'collectionId' => $collectionId,
         ])]);
 
-        // TODO@kodumbeats use the deletes worker to handle this
-        $success = $dbForExternal->deleteIndex($collectionId, $indexId);
-
-        // $deletes
-        //     ->setParam('type', DELETE_TYPE_DOCUMENT)
-        //     ->setParam('document', $attribute)
-        // ;
+        $database
+            ->setParam('type', DELETE_TYPE_INDEX)
+            ->setParam('document', $index)
+        ;
 
         $events
             ->setParam('payload', $response->output2($index, Response::MODEL_INDEX))
