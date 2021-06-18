@@ -88,6 +88,24 @@ trait DatabaseBase
         $this->assertEquals($actors['body']['required'], false);
         $this->assertEquals($actors['body']['array'], true);
 
+        // wait for database worker to create attributes
+        sleep(5);
+
+        $movies = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), []); 
+
+        $this->assertEquals($movies['body']['$id'], $title['body']['$collection']);
+        $this->assertEquals($movies['body']['$id'], $releaseYear['body']['$collection']);
+        $this->assertEquals($movies['body']['$id'], $actors['body']['$collection']);
+        $this->assertIsArray($movies['body']['attributes']);
+        $this->assertCount(3, $movies['body']['attributes']);
+        $this->assertEquals($movies['body']['attributes'][0]['$id'], $title['body']['$id']);
+        $this->assertEquals($movies['body']['attributes'][1]['$id'], $releaseYear['body']['$id']);
+        $this->assertEquals($movies['body']['attributes'][2]['$id'], $actors['body']['$id']);
+
         return $data;
     }
 

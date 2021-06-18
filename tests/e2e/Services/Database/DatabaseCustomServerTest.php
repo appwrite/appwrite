@@ -55,11 +55,21 @@ class DatabaseCustomServerTest extends Scope
             'required' => true,
         ]);
 
+        // wait for database worker to finish creating attributes
+        sleep(5);
+
         $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $actors['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), []); 
+
+        $this->assertEquals($collection['body']['$id'], $firstName['body']['$collection']);
+        $this->assertEquals($collection['body']['$id'], $lastName['body']['$collection']);
+        $this->assertIsArray($collection['body']['attributes']);
+        $this->assertCount(2, $collection['body']['attributes']);
+        $this->assertEquals($collection['body']['attributes'][0]['$id'], $firstName['body']['$id']);
+        $this->assertEquals($collection['body']['attributes'][1]['$id'], $lastName['body']['$id']);
 
         // Add Documents to the collection
         $document1 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $actors['body']['$id'] . '/documents', array_merge([
