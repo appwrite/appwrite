@@ -17,16 +17,17 @@ trait StorageBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
+        ], $this->getHeaders()), [
             'name' => 'Test Bucket',
+            'read' => ['role:all'],
+            'write' => ['role:all'],
         ]);
-        var_dump($bucket);
         $this->assertEquals(201, $bucket['headers']['status-code']);
         $this->assertNotEmpty($bucket['body']['$id']);
         
         $bucketId = $bucket['body']['$id'];
 
-        $file = $this->client->call(Client::METHOD_POST, '/storage/' . $bucketId .'/files', array_merge([
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId .'/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -34,8 +35,7 @@ trait StorageBase
             'read' => ['role:all'],
             'write' => ['role:all'],
         ]);
-
-        $this->assertEquals($file['headers']['status-code'], 201);
+        $this->assertEquals(201, $file['headers']['status-code']);
         $this->assertNotEmpty($file['body']['$id']);
         $this->assertIsInt($file['body']['dateCreated']);
         $this->assertEquals('logo.png', $file['body']['name']);
