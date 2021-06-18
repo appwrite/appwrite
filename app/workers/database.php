@@ -39,9 +39,9 @@ class DatabaseV1 extends Worker
                 $this->createAttribute($attribute, $projectId);
                 break;
             case CREATE_TYPE_INDEX:
-                $attribute = $this->args['document'] ?? '';
-                $attribute = new Document($attribute);
-                $this->createAttribute($attribute, $projectId);
+                $index = $this->args['document'] ?? '';
+                $index = new Document($index);
+                $this->createIndex($index, $projectId);
                 break;
 
             // case DELETE_TYPE_DOCUMENT:

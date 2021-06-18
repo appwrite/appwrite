@@ -131,6 +131,20 @@ trait DatabaseBase
         $this->assertCount(1, $titleIndex['body']['attributes']);
         $this->assertEquals($titleIndex['body']['attributes'][0], 'title');
 
+        // wait for database worker to create index
+        sleep(5);
+
+        $movies = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), []); 
+
+        $this->assertEquals($movies['body']['$id'], $titleIndex['body']['$collection']);
+        $this->assertIsArray($movies['body']['indexes']);
+        $this->assertCount(1, $movies['body']['indexes']);
+        $this->assertEquals($movies['body']['indexes'][0]['$id'], $titleIndex['body']['$id']);
+
         return $data;
     }
 
