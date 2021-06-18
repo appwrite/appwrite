@@ -45,7 +45,30 @@ trait StorageBase
         /**
          * Test for FAILURE
          */
-        return ['fileId' => $file['body']['$id']];
+        return ['bucketId' => $bucketId,'fileId' => $file['body']['$id']];
+    }
+
+    /**
+     * @depends testCreateBucketFile
+     */
+    public function testListBucketFiles(array $data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(200, $files['headers']['status-code']);
+        $this->assertGreaterThan(0, $files['body']['sum']);
+        $this->assertGreaterThan(0, count($files['body']['files']));
+
+        /**
+         * Test for FAILURE
+         */
+        
+        return $data;
     }
     
     public function testCreateFile():array

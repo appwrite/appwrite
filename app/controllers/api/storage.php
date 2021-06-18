@@ -395,6 +395,40 @@ App::post('/v1/storage/buckets/:bucketId/files')
         ;
     });
 
+App::get('/v1/storage/buckets/:bucketId/files')
+    ->desc('List Files')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'files.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'listFiles')
+    ->label('sdk.description', '/docs/references/storage/list-files.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_FILE_LIST)
+    ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->action(function ($bucketId, $search, $limit, $offset, $orderType, $response, $dbForInternal) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
+
+        $queries = [new Query('bucketId', Query::TYPE_EQUAL, [$bucketId])];
+
+        if($search) {
+            $queries[] = [new Query('name', Query::TYPE_SEARCH, [$search])];
+        }
+
+        $response->dynamic2(new Document([
+            'files' => $dbForInternal->find('files', $queries, $limit, $offset, ['_id'], [$orderType]),
+            'sum' => $dbForInternal->count('files', $queries, APP_LIMIT_COUNT),
+        ]), Response::MODEL_FILE_LIST);
+    });
+
 App::post('/v1/storage/files')
     ->desc('Create File')
     ->groups(['api', 'storage'])
