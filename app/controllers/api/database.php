@@ -245,8 +245,9 @@ App::post('/v1/database/collections/:collectionId/attributes')
     ->param('filters', [], new ArrayList(new Whitelist(['encrypt', 'json'])), 'Array of filters.', true)
     ->inject('response')
     ->inject('dbForExternal')
+    ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $id, $type, $size, $required, $signed, $array, $filters, $response, $dbForExternal, $audits) {
+    ->action(function ($collectionId, $id, $type, $size, $required, $signed, $array, $filters, $response, $dbForExternal, $database, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $audits */
@@ -257,9 +258,9 @@ App::post('/v1/database/collections/:collectionId/attributes')
             throw new Exception('Collection not found', 404);
         }
 
-        $success = $dbForExternal->createAttribute($collectionId, $id, $type, $size, $required, $signed, $array, $filters);
+        $success = $dbForExternal->addAttributeInQueue($collectionId, $id, $type, $size, $required, $signed, $array, $filters);
 
-        // Database->createAttribute() does not return a document
+        // Database->addAttributeInQueue() does not return a document
         // So we need to create one for the response
         $attribute = new Document([
             '$collection' => $collectionId,
@@ -271,6 +272,11 @@ App::post('/v1/database/collections/:collectionId/attributes')
             'array' => $array,
             'filters' => $filters
         ]);
+
+        $database
+            ->setParam('type', CREATE_TYPE_ATTRIBUTE)
+            ->setParam('document', $attribute)
+        ;
 
         $audits
             ->setParam('event', 'database.attributes.create')
@@ -445,8 +451,9 @@ App::post('/v1/database/collections/:collectionId/indexes')
     ->param('orders', [], new ArrayList(new Text(256)), 'Array of index orders.', true)
     ->inject('response')
     ->inject('dbForExternal')
+    ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $id, $type, $attributes, $lengths, $orders, $response, $dbForExternal, $audits) {
+    ->action(function ($collectionId, $id, $type, $attributes, $lengths, $orders, $response, $dbForExternal, $database, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Event\Event $audits */
@@ -457,7 +464,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
             throw new Exception('Collection not found', 404);
         }
 
-        $success = $dbForExternal->createIndex($collectionId, $id, $type, $attributes, $lengths, $orders);
+        $success = $dbForExternal->addIndexInQueue($collectionId, $id, $type, $attributes, $lengths, $orders);
 
         // Database->createIndex() does not return a document
         // So we need to create one for the response
@@ -469,6 +476,11 @@ App::post('/v1/database/collections/:collectionId/indexes')
             'lengths' => $lengths,
             'orders' => $orders,
         ]);
+
+        $database
+            ->setParam('type', CREATE_TYPE_INDEX)
+            ->setParam('document', $index)
+        ;
 
         $audits
             ->setParam('event', 'database.indexes.create')
