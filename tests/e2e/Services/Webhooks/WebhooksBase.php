@@ -587,4 +587,79 @@ trait WebhooksBase
         
         return array_merge(['bucketId' => $bucket['body']['$id']]);
     }
+
+    /**
+     * @depends testCreateStorageBucket
+     */
+    public function testUpdateStorageBucket(array $data): array
+    {
+        $id = $data['bucketId'];
+        /**
+         * Test for SUCCESS
+         */
+        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'name' => 'Test Bucket Updated',
+            'enabled' => false,
+        ]);
+        
+        $this->assertEquals($bucket['headers']['status-code'], 200);
+        $this->assertNotEmpty($bucket['body']['$id']);
+
+        $webhook = $this->getLastRequest();
+
+        $this->assertEquals($webhook['method'], 'POST');
+        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
+        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'storage.buckets.update');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), true);
+        $this->assertNotEmpty($webhook['data']['$id']);
+        $this->assertEquals('Test Bucket Updated', $webhook['data']['name']);
+        $this->assertEquals(false, $webhook['data']['enabled']);
+        $this->assertIsArray($webhook['data']['$read']);
+        $this->assertIsArray($webhook['data']['$write']);
+        
+        return array_merge(['bucketId' => $bucket['body']['$id']]);
+    }
+
+    /**
+     * @depends testCreateStorageBucket
+     */
+    public function testDeleteStorageBucket(array $data)
+    {
+        $id = $data['bucketId'];
+        /**
+         * Test for SUCCESS
+         */
+        $bucket = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+        
+        $this->assertEquals($bucket['headers']['status-code'], 204);
+        $this->assertEmpty($bucket['body']);
+
+        $webhook = $this->getLastRequest();
+
+        $this->assertEquals($webhook['method'], 'POST');
+        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
+        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'storage.buckets.delete');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), true);
+        $this->assertNotEmpty($webhook['data']['$id']);
+        $this->assertEquals('Test Bucket Updated', $webhook['data']['name']);
+        $this->assertEquals(false, $webhook['data']['enabled']);
+        $this->assertIsArray($webhook['data']['$read']);
+        $this->assertIsArray($webhook['data']['$write']);
+    }
 }
