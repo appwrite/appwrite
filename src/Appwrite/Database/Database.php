@@ -43,7 +43,7 @@ class Database
     const SYSTEM_COLLECTION_EXECUTIONS = 'executions';
 
     // Realtime
-    const SYSTEM_COLLECTION_REALTIME_CONNECTIONS = 'realtimeConnections';
+    const SYSTEM_COLLECTION_CONNECTIONS = 'connections';
     
     // Var Types
     const SYSTEM_VAR_TYPE_TEXT = 'text';

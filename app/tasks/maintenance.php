@@ -39,7 +39,7 @@ $cli
             ]);
         }
 
-        function notifyDeleteRealtimeUsage() 
+        function notifyDeleteConnections() 
         {
             Resque::enqueue(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME, [
                 'type' => DELETE_TYPE_REALTIME,
@@ -59,6 +59,6 @@ $cli
             notifyDeleteExecutionLogs($executionLogsRetention);
             notifyDeleteAbuseLogs($abuseLogsRetention);
             notifyDeleteAuditLogs($auditLogRetention);
-            notifyDeleteRealtimeUsage();
+            notifyDeleteConnections();
         }, $interval);
     });

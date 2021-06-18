@@ -125,14 +125,14 @@ class Server
         try {
             go(function() {
                 $document = [
-                    '$collection' => Database::SYSTEM_COLLECTION_REALTIME_CONNECTIONS,
+                    '$collection' => Database::SYSTEM_COLLECTION_CONNECTIONS,
                     '$permissions' => [
                         'read' => ['*'],
                         'write' => ['*'],
                     ],
                     'container' => $this->server->container_id,
                     'timestamp' => time(),
-                    'data' => '{}'
+                    'value' => '{}'
                 ];
                 Authorization::disable();
                 $document = $this->consoleDb->createDocument($document);
@@ -147,6 +147,7 @@ class Server
         }
 
 
+        // Run ever 10 seconds
         Timer::tick(10000, function () {
             /** @var Table $stats */
             foreach ($this->usage as $projectId => $value) {
@@ -177,6 +178,7 @@ class Server
             }
         });
 
+        // Run ever 10 seconds
         Timer::tick(10000, function () {
             $payload = [];
             foreach ($this->usage as $projectId => $value) {
@@ -189,14 +191,14 @@ class Server
             }
             $document = [
                 '$id' => $this->server->document_id,
-                '$collection' => Database::SYSTEM_COLLECTION_REALTIME_CONNECTIONS,
+                '$collection' => Database::SYSTEM_COLLECTION_CONNECTIONS,
                 '$permissions' => [
                     'read' => ['*'],
                     'write' => ['*'],
                 ],
                 'container' => $this->server->container_id,
                 'timestamp' => time(),
-                'data' => json_encode($payload)
+                'value' => json_encode($payload)
             ];
             try {
                 $document = $this->consoleDb->updateDocument($document);
@@ -497,13 +499,13 @@ class Server
             $payload = [];
             $list = $this->consoleDb->getCollection([
                 'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_REALTIME_CONNECTIONS,
+                    '$collection='.Database::SYSTEM_COLLECTION_CONNECTIONS,
                     'timestamp>'.(time() - 15)
                 ],
             ]);
 
             foreach ($list as $document) {
-                foreach (json_decode($document->getAttribute('data')) as $projectId => $value) {
+                foreach (json_decode($document->getAttribute('value')) as $projectId => $value) {
                     if (array_key_exists($projectId, $payload)) {
                         $payload[$projectId] +=  $value;
                     } else {

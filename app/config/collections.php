@@ -1698,15 +1698,15 @@ $collections = [
             ],
         ],
     ],
-    Database::SYSTEM_COLLECTION_REALTIME_CONNECTIONS => [
+    Database::SYSTEM_COLLECTION_CONNECTIONS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
-        '$id' => Database::SYSTEM_COLLECTION_REALTIME_CONNECTIONS,
+        '$id' => Database::SYSTEM_COLLECTION_CONNECTIONS,
         '$permissions' => ['read' => ['*']],
         'name' => 'Realtime Connections',
         'structure' => true,
         'rules' => [
             [
-                '$collection' => Database::SYSTEM_COLLECTION_REALTIME_CONNECTIONS,
+                '$collection' => Database::SYSTEM_COLLECTION_CONNECTIONS,
                 'label' => 'Container',
                 'key' => 'container',
                 'type' => Database::SYSTEM_VAR_TYPE_TEXT,
@@ -1714,7 +1714,7 @@ $collections = [
                 'array' => false,
             ],
             [
-                '$collection' => Database::SYSTEM_COLLECTION_REALTIME_CONNECTIONS,
+                '$collection' => Database::SYSTEM_COLLECTION_CONNECTIONS,
                 'label' => 'Timestamp',
                 'key' => 'timestamp',
                 'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,
@@ -1722,9 +1722,9 @@ $collections = [
                 'array' => false,
             ],
             [
-                '$collection' => Database::SYSTEM_COLLECTION_REALTIME_CONNECTIONS,
-                'label' => 'Data',
-                'key' => 'data',
+                '$collection' => Database::SYSTEM_COLLECTION_CONNECTIONS,
+                'label' => 'Value',
+                'key' => 'value',
                 'type' => Database::SYSTEM_VAR_TYPE_TEXT,
                 'required' => true,
                 'array' => false,
