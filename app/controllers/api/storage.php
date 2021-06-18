@@ -328,7 +328,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
         $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
 
-        if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antiVirus', true)) { // Check if scans are enabled
+        if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antiVirus', true) && $size <= APP_LIMIT_ANTIVIRUS) {
             $antiVirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
                 (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
 
@@ -339,11 +339,13 @@ App::post('/v1/storage/buckets/:bucketId/files')
         }
 
         // Compression
-        $compressor = new GZIP();
         $data = $device->read($path);
-        $data = $compressor->compress($data);
+        if($size <= APP_LIMIT_COMPRESSION) {
+            $compressor = new GZIP();
+            $data = $compressor->compress($data);
+        }
         
-        if($bucket->getAttribute('encryption', true)) {
+        if($bucket->getAttribute('encryption', true) && $size <= APP_LIMIT_ENCRYPTION) {
             $key = App::getEnv('_APP_OPENSSL_KEY_V1');
             $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
             $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
@@ -366,7 +368,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             'mimeType' => $mimeType,
             'sizeOriginal' => $size,
             'sizeActual' => $sizeActual,
-            'algorithm' => $compressor->getName(),
+            'algorithm' => empty($compressor) ? '' : $compressor->getName(),
             'comment' => '',
         ];
 
@@ -377,7 +379,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             $data['openSSLIV'] = \bin2hex($iv);
         }
 
-        $file = $dbForInternal->createDocument('files', new Document());
+        $file = $dbForInternal->createDocument('files', new Document($data));
 
         $audits
             ->setParam('event', 'storage.files.create')
