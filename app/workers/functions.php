@@ -71,9 +71,6 @@ Console::success('Finished warmup in '.$warmupTime.' seconds');
 $stdout = '';
 $stderr = '';
 
-$exitCode = Console::execute('docker ps --all --format "name={{.Names}}&status={{.Status}}&labels={{.Labels}}" --filter label=appwrite-type=function'
-    , '', $stdout, $stderr, 30);
-
 $executionStart = \microtime(true);
 
 $exitCode = Console::execute('docker ps --all --format "name={{.Names}}&status={{.Status}}&labels={{.Labels}}" --filter label=appwrite-type=function'
