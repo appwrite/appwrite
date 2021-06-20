@@ -184,6 +184,76 @@ trait StorageBase
 
         return $data;
     }
+
+    /**
+     * @depends testCreateBucketFile
+     */
+    public function testUpdateBucketFile(array $data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $file = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $data['bucketId'] . '/files/' . $data['fileId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'read' => ['role:all','user:x'],
+            'write' => ['role:all', 'user:x'],
+        ]);
+
+        $this->assertEquals(200, $file['headers']['status-code']);
+        $this->assertNotEmpty($file['body']['$id']);
+        $this->assertIsInt($file['body']['dateCreated']);
+        $this->assertEquals('logo.png', $file['body']['name']);
+        $this->assertEquals('image/png', $file['body']['mimeType']);
+        $this->assertEquals(47218, $file['body']['sizeOriginal']);
+        //$this->assertEquals(54944, $file['body']['sizeActual']);
+        //$this->assertEquals('gzip', $file['body']['algorithm']);
+        //$this->assertEquals('1', $file['body']['fileOpenSSLVersion']);
+        //$this->assertEquals('aes-128-gcm', $file['body']['fileOpenSSLCipher']);
+        //$this->assertNotEmpty($file['body']['fileOpenSSLTag']);
+        //$this->assertNotEmpty($file['body']['fileOpenSSLIV']);
+        $this->assertIsArray($file['body']['$read']);
+        $this->assertIsArray($file['body']['$write']);
+        $this->assertCount(2, $file['body']['$read']);
+        $this->assertCount(2, $file['body']['$write']);
+        
+        /**
+         * Test for FAILURE
+         */
+
+        return $data;
+    }
+
+    /**
+     * @depends testUpdateBucketFile
+     */
+    public function testDeleteBucketFile(array $data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $file = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $data['bucketId'] . '/files/' . $data['fileId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $file['headers']['status-code']);
+        $this->assertEmpty($file['body']);
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $file['headers']['status-code']);
+                
+        /**
+         * Test for FAILURE
+         */
+        
+        return $data;
+    }
     
     public function testCreateFile():array
     {
