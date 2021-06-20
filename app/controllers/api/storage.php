@@ -41,12 +41,12 @@ App::post('/v1/storage/buckets')
     ->param('name', '', new Text(128), 'Bucket name', false)
     ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
-    ->param('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0) , new Integer(), 'Maximum file size allowed in bytes. Maximum allowed value is ' . App::getEnv('_APP_STORAGE_LIMIT', 0) . '. For self hosted version you can change the limit by changing _APP_STORAGE_LIMIT environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
+    ->param('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0) , new Integer(), 'Maximum file size allowed in bytes. Maximum allowed value is ' . App::getEnv('_APP_STORAGE_LIMIT', 0) . '. For self-hosted setups you can change the max limit by changing the `_APP_STORAGE_LIMIT` environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64)), 'Allowed file extensions', true)
     ->param('enabled', true, new Boolean(), 'Is bucket enabled?', true)
     ->param('adapter', 'local', new WhiteList(['local']), 'Storage adapter.', true)
     ->param('encryption', true, new Boolean(), 'Is encryption enabled? For file size above ' . Storage::human(APP_LIMIT_ENCRYPTION) . ' encryption is skipped even if it\'s enabled', true)
-    ->param('antiVirus', true, new Boolean(), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ENCRYPTION) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
+    ->param('antiVirus', true, new Boolean(), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('audits')
@@ -156,7 +156,7 @@ App::put('/v1/storage/buckets/:bucketId')
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64)), 'Allowed file extensions', true)
     ->param('enabled', true, new Boolean(), 'Is bucket enabled?', true)
     ->param('encryption', true, new Boolean(), 'Is encryption enabled? For file size above ' . Storage::human(APP_LIMIT_ENCRYPTION) . ' encryption is skipped even if it\'s enabled', true)
-    ->param('antiVirus', true, new Boolean(), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ENCRYPTION) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
+    ->param('antiVirus', true, new Boolean(), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('audits')
@@ -278,7 +278,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $usage */
 
-        $bucket = $dbForInternal->getDocument('buckets',$bucketId);
+        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
         if($bucket->isEmpty()) {
             throw new Exception("Unable to find the bucket", 404);
@@ -392,7 +392,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic2($file, Response::MODEL_FILE);
-        ;
     });
 
 App::get('/v1/storage/buckets/:bucketId/files')
