@@ -120,7 +120,7 @@ App::get('/v1/functions/:functionId')
 
         $function = $dbForInternal->getDocument('functions', $functionId);
 
-        if (empty($function->getId())) {
+        if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
         }
 
@@ -149,7 +149,7 @@ App::get('/v1/functions/:functionId/usage')
 
         $function = $dbForInternal->getDocument('functions', $functionId);
 
-        if (empty($function->getId())) {
+        if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
         }
         
@@ -277,7 +277,7 @@ App::put('/v1/functions/:functionId')
 
         $function = $dbForInternal->getDocument('functions', $functionId);
 
-        if (empty($function->getId())) {
+        if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
         }
 
@@ -334,11 +334,11 @@ App::patch('/v1/functions/:functionId/tag')
         $function = $dbForInternal->getDocument('functions', $functionId);
         $tag = $dbForInternal->getDocument('tags', $tag);
 
-        if (empty($function->getId())) {
+        if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
         }
 
-        if (empty($tag->getId())) {
+        if ($tag->isEmpty()) {
             throw new Exception('Tag not found', 404);
         }
 
@@ -386,7 +386,7 @@ App::delete('/v1/functions/:functionId')
 
         $function = $dbForInternal->getDocument('functions', $functionId);
 
-        if (empty($function->getId())) {
+        if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
         }
 
@@ -431,7 +431,7 @@ App::post('/v1/functions/:functionId/tags')
 
         $function = $dbForInternal->getDocument('functions', $functionId);
 
-        if (empty($function->getId())) {
+        if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
         }
 
@@ -512,7 +512,7 @@ App::get('/v1/functions/:functionId/tags')
 
         $function = $dbForInternal->getDocument('functions', $functionId);
 
-        if (empty($function->getId())) {
+        if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
         }
 
@@ -548,7 +548,7 @@ App::get('/v1/functions/:functionId/tags/:tagId')
 
         $function = $dbForInternal->getDocument('functions', $functionId);
 
-        if (empty($function->getId())) {
+        if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
         }
 
@@ -558,7 +558,7 @@ App::get('/v1/functions/:functionId/tags/:tagId')
             throw new Exception('Tag not found', 404);
         }
 
-        if (empty($tag->getId())) {
+        if ($tag->isEmpty()) {
             throw new Exception('Tag not found', 404);
         }
 
@@ -588,7 +588,7 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
 
         $function = $dbForInternal->getDocument('functions', $functionId);
 
-        if (empty($function->getId())) {
+        if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
         }
         
@@ -598,7 +598,7 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
             throw new Exception('Tag not found', 404);
         }
 
-        if (empty($tag->getId())) {
+        if ($tag->isEmpty()) {
             throw new Exception('Tag not found', 404);
         }
 
@@ -654,7 +654,7 @@ App::post('/v1/functions/:functionId/executions')
 
         $function = $dbForInternal->getDocument('functions', $functionId);
 
-        if (empty($function->getId())) {
+        if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
         }
 
@@ -664,7 +664,7 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
         }
 
-        if (empty($tag->getId())) {
+        if ($tag->isEmpty()) {
             throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
         }
 
@@ -679,7 +679,7 @@ App::post('/v1/functions/:functionId/executions')
         Authorization::disable();
 
         $execution = $dbForInternal->createDocument('executions', new Document([
-            '$read' => (!empty($user->getId())) ? ['user:' . $user->getId()] : [],
+            '$read' => (!$user->isEmpty()) ? ['user:' . $user->getId()] : [],
             '$write' => [],
             'dateCreated' => time(),
             'functionId' => $function->getId(),
@@ -695,7 +695,7 @@ App::post('/v1/functions/:functionId/executions')
         Authorization::reset();
         
         $jwt = ''; // initialize
-        if (!empty($user->getId())) { // If userId exists, generate a JWT for function
+        if (!$user->isEmpty()) { // If userId exists, generate a JWT for function
             
             $tokens = $user->getAttribute('tokens', []);
             $session = new Document();
@@ -754,7 +754,7 @@ App::get('/v1/functions/:functionId/executions')
         $function = $dbForInternal->getDocument('functions', $functionId);
         Authorization::reset();
 
-        if (empty($function->getId())) {
+        if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
         }
 
@@ -795,7 +795,7 @@ App::get('/v1/functions/:functionId/executions/:executionId')
         $function = $dbForInternal->getDocument('functions', $functionId);
         Authorization::reset();
 
-        if (empty($function->getId())) {
+        if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
         }
 
@@ -805,7 +805,7 @@ App::get('/v1/functions/:functionId/executions/:executionId')
             throw new Exception('Execution not found', 404);
         }
 
-        if (empty($execution->getId())) {
+        if ($execution->isEmpty()) {
             throw new Exception('Execution not found', 404);
         }
 
