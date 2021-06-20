@@ -281,7 +281,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
         if($bucket->isEmpty()) {
-            throw new Exception("Unable to find the bucket", 404);
+            throw new Exception("Bucket not found", 404);
         }
 
         $file = $request->getFiles('file');
@@ -416,6 +416,12 @@ App::get('/v1/storage/buckets/:bucketId/files')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
+        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
+
+        if($bucket->isEmpty()) {
+            throw new Exception("Bucket not found", 404);
+        }
+
         $queries = [new Query('bucketId', Query::TYPE_EQUAL, [$bucketId])];
 
         if($search) {
@@ -448,9 +454,14 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
         /** @var Utopia\Database\Database $dbForInternal */
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
+
+        if($bucket->isEmpty()) {
+            throw new Exception("Bucket not found", 404);
+        }
+
         $file = $dbForInternal->getDocument('files', $fileId);
 
-        if ($bucket->isEmpty() || $file->isEmpty()) {
+        if ($file->isEmpty()) {
             throw new Exception('File not found', 404);
         }
 
