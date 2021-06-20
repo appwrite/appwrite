@@ -58,7 +58,7 @@ Client client = Client();
 client
   .setEndpoint('https://localhost/v1') // Your Appwrite Endpoint
   .setProject('5e8cf4f46b5e8') // Your project ID
-  .setSelfSigned() // Remove in production
+  .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
 ;
 ```
 
@@ -91,7 +91,7 @@ Client client = Client();
 client
   .setEndpoint('https://localhost/v1') // Your Appwrite Endpoint
   .setProject('5e8cf4f46b5e8') // Your project ID
-  .setSelfSigned() // Remove in production
+  .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
   ;
 
 
@@ -104,6 +104,21 @@ Response user = await account
     password: 'password',
     name: 'My Name'
   );
+```
+
+### Error Handling
+The Appwrite Flutter SDK raises `AppwriteException` object with `message`, `code` and `response` properties. You can handle any errors by catching `AppwriteException` and present the `message` to the user or handle it yourself based on the provided error information. Below is an example.
+
+```dart
+Users users = Users(client);
+
+try {
+  final response = await users.create(email: ‘email@example.com’,password: ‘password’, name: ‘name’);
+  print(response.data);
+} on AppwriteException catch(e) {
+  //show message to user or do other operation based on error as required
+  print(e.message);
+}
 ```
 
 ### Learn more

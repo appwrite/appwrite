@@ -1,3 +1,6 @@
+<?php
+$root = ($this->getParam('root') !== 'disabled');
+?>
 <div class="zone medium"
     data-service="account.get"
     data-name="account"
@@ -43,7 +46,7 @@
         <br />
 
         <div class="text-line-high-large text-align-center">
-            <a href="/auth/recovery">Forgot password?</a> or don't have an account? <b><a href="/auth/signup">Sign up now</a></b>
+            <a href="/auth/recovery">Forgot password?</a><?php if(!$root): ?> or don't have an account? <b><a href="/auth/signup">Sign up now</a></b><?php endif; ?>
         </div>
     </div>
     

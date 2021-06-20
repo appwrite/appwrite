@@ -5,6 +5,7 @@ use Utopia\Config\Config;
 use Appwrite\Database\Database;
 
 $providers = Config::getParam('providers', []);
+$auth = Config::getParam('auth', []);
 
 $collections = [
     'console' => [
@@ -45,7 +46,7 @@ $collections = [
         'legalTaxId' => '',
         'authWhitelistEmails' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
         'authWhitelistIPs' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
-        'authWhitelistDomains' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_DOMAINS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_DOMAINS', null)) : [],
+        'usersAuthLimit' => (App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
     ],
     Database::SYSTEM_COLLECTION_COLLECTIONS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
@@ -204,7 +205,7 @@ $collections = [
                 'key' => 'email',
                 'type' => Database::SYSTEM_VAR_TYPE_EMAIL,
                 'default' => '',
-                'required' => true,
+                'required' => false,
                 'array' => false,
             ],
             [
@@ -222,7 +223,7 @@ $collections = [
                 'key' => 'password',
                 'type' => Database::SYSTEM_VAR_TYPE_TEXT,
                 'default' => '',
-                'required' => true,
+                'required' => false,
                 'array' => false,
             ],
             [
@@ -273,6 +274,16 @@ $collections = [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Sessions',
+                'key' => 'sessions',
+                'type' => Database::SYSTEM_VAR_TYPE_DOCUMENT,
+                'default' => [],
+                'required' => false,
+                'array' => true,
+                'list' => [Database::SYSTEM_COLLECTION_SESSIONS],
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Tokens',
                 'key' => 'tokens',
                 'type' => Database::SYSTEM_VAR_TYPE_DOCUMENT,
@@ -293,11 +304,11 @@ $collections = [
             ],
         ],
     ],
-    Database::SYSTEM_COLLECTION_TOKENS => [
+    Database::SYSTEM_COLLECTION_SESSIONS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
-        '$id' => Database::SYSTEM_COLLECTION_TOKENS,
+        '$id' => Database::SYSTEM_COLLECTION_SESSIONS,
         '$permissions' => ['read' => ['*']],
-        'name' => 'Token',
+        'name' => 'Session',
         'structure' => true,
         'rules' => [
             [
@@ -306,16 +317,34 @@ $collections = [
                 'key' => 'userId',
                 'type' => Database::SYSTEM_VAR_TYPE_TEXT,
                 'default' => null,
+                'required' => true,
+                'array' => false,
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Provider',
+                'key' => 'provider',
+                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
+                'default' => '',
+                'required' => true,
+                'array' => false,
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Provider User Identifier',
+                'key' => 'providerUid',
+                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
+                'default' => '',
                 'required' => false,
                 'array' => false,
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Type',
-                'key' => 'type',
-                'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,
-                'default' => null,
-                'required' => true,
+                'label' => 'Provider Token',
+                'key' => 'providerToken',
+                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
+                'default' => '',
+                'required' => false,
                 'array' => false,
             ],
             [
@@ -469,6 +498,69 @@ $collections = [
                 'type' => Database::SYSTEM_VAR_TYPE_TEXT,
                 'default' => '',
                 'required' => false,
+                'array' => false,
+            ],
+        ],
+    ],
+    Database::SYSTEM_COLLECTION_TOKENS => [
+        '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
+        '$id' => Database::SYSTEM_COLLECTION_TOKENS,
+        '$permissions' => ['read' => ['*']],
+        'name' => 'Token',
+        'structure' => true,
+        'rules' => [
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'User ID',
+                'key' => 'userId',
+                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
+                'default' => null,
+                'required' => false,
+                'array' => false,
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Type',
+                'key' => 'type',
+                'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,
+                'default' => null,
+                'required' => true,
+                'array' => false,
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Secret',
+                'key' => 'secret',
+                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
+                'default' => '',
+                'required' => true,
+                'array' => false,
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Expire',
+                'key' => 'expire',
+                'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,
+                'default' => 0,
+                'required' => true,
+                'array' => false,
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'User Agent',
+                'key' => 'userAgent',
+                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
+                'default' => '',
+                'required' => true,
+                'array' => false,
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'IP',
+                'key' => 'ip',
+                'type' => Database::SYSTEM_VAR_TYPE_IP,
+                'default' => '',
+                'required' => true,
                 'array' => false,
             ],
         ],
@@ -677,6 +769,14 @@ $collections = [
                 'key' => 'legalTaxId',
                 'type' => Database::SYSTEM_VAR_TYPE_TEXT,
                 'default' => '',
+                'required' => false,
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Max users allowed',
+                'key' => 'usersAuthLimit',
+                'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,
+                'default' => 0,
                 'required' => false,
             ],
             [
@@ -1172,6 +1272,24 @@ $collections = [
                 'required' => false,
                 'array' => false,
             ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Updated Date',
+                'key' => 'updated',
+                'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,
+                'default' => 0,
+                'required' => false,
+                'array' => false,
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Certificate ID',
+                'key' => 'certificateId',
+                'type' => Database::SYSTEM_VAR_TYPE_KEY,
+                'default' => '',
+                'required' => false,
+                'array' => false,
+            ],
         ],
     ],
     Database::SYSTEM_COLLECTION_FILES => [
@@ -1617,25 +1735,16 @@ foreach ($providers as $index => $provider) {
         'array' => false,
         'filter' => ['encrypt'],
     ];
+}
 
-    $collections[Database::SYSTEM_COLLECTION_USERS]['rules'][] = [
+foreach ($auth as $index => $method) {
+    $collections[Database::SYSTEM_COLLECTION_PROJECTS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
-        'label' => 'OAuth2 '.\ucfirst($index).' ID',
-        'key' => 'oauth2'.\ucfirst($index),
-        'type' => Database::SYSTEM_VAR_TYPE_TEXT,
-        'default' => '',
+        'label' => $method['name'] || '',
+        'key' => $method['key'] || '',
+        'type' => Database::SYSTEM_VAR_TYPE_BOOLEAN,
+        'default' => true,
         'required' => false,
-        'array' => false,
-    ];
-
-    $collections[Database::SYSTEM_COLLECTION_USERS]['rules'][] = [
-        '$collection' => Database::SYSTEM_COLLECTION_RULES,
-        'label' => 'OAuth2 '.\ucfirst($index).' Access Token',
-        'key' => 'oauth2'.\ucfirst($index).'AccessToken',
-        'type' => Database::SYSTEM_VAR_TYPE_TEXT,
-        'default' => '',
-        'required' => false,
-        'array' => false,
     ];
 }
 
