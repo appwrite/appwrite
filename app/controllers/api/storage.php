@@ -461,7 +461,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $file = $dbForInternal->getDocument('files', $fileId);
 
-        if (empty($file->getId()) || $file->getAttribute('bucketId') != $bucketId)  {
+        if ($file->isEmpty() || $file->getAttribute('bucketId') != $bucketId)  {
             throw new Exception('File not found', 404);
         }
 
@@ -531,7 +531,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $file = $dbForInternal->getDocument('files', $fileId);
 
-        if (empty($file->getId()) || $file->getAttribute('bucketId') != $bucketId) {
+        if ($file->isEmpty() || $file->getAttribute('bucketId') != $bucketId) {
             throw new Exception('File not found', 404);
         }
 
@@ -656,7 +656,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
 
         $file = $dbForInternal->getDocument('files', $fileId);
 
-        if (empty($file->getId()) || $file->getAttribute('bucketId') != $bucketId) {
+        if ($file->isEmpty() || $file->getAttribute('bucketId') != $bucketId) {
             throw new Exception('File not found', 404);
         }
 
@@ -722,7 +722,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         $file  = $dbForInternal->getDocument('files', $fileId);
         $mimes = Config::getParam('storage-mimes');
 
-        if (empty($file->getId()) || $file->getAttribute('bucketId') != $bucketId) {
+        if ($file->isEmpty() || $file->getAttribute('bucketId') != $bucketId) {
             throw new Exception('File not found', 404);
         }
 
@@ -801,7 +801,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $file = $dbForInternal->getDocument('files', $fileId);
 
-        if (empty($file->getId()) || $file->getAttribute('bucketId') != $bucketId) {
+        if ($file->isEmpty() || $file->getAttribute('bucketId') != $bucketId) {
             throw new Exception('File not found', 404);
         }
 
@@ -851,7 +851,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $file = $dbForInternal->getDocument('files', $fileId);
 
-        if (empty($file->getId()) || $file->getAttribute('bucketId') != $bucketId) {
+        if ($file->isEmpty() || $file->getAttribute('bucketId') != $bucketId) {
             throw new Exception('File not found', 404);
         }
 
