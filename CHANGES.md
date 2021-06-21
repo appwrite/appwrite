@@ -10,6 +10,9 @@
   - Add Anonymous Account Placeholder
 - Upgraded telegraf docker image version to v1.1.0
 
+## Breaking Changes (Read before upgrading!)
+- Renamed `env` param on `/v1/functions` to `runtime`
+
 ## Bugs
 
 - Fixed bug when removing a project member on the Appwrite console (#1214)

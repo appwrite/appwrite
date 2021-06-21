@@ -24,7 +24,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Test',
-            'env' => 'php-8.0',
+            'runtime' => 'php-8.0',
             'vars' => [
                 'funcKey1' => 'funcValue1',
                 'funcKey2' => 'funcValue2',
@@ -327,7 +327,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('PHP', $execution['body']['stdout']);
         $this->assertStringContainsString('8.0', $execution['body']['stdout']);
         $this->assertEquals('', $execution['body']['stderr']);
-        $this->assertGreaterThan(0.100, $execution['body']['time']);
+        $this->assertGreaterThan(0.05, $execution['body']['time']);
         $this->assertLessThan(0.500, $execution['body']['time']);
 
         /**
@@ -462,7 +462,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Test '.$name,
-            'env' => $name,
+            'runtime' => $name,
             'vars' => [],
             'events' => [],
             'schedule' => '',
@@ -540,7 +540,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Test '.$name,
-            'env' => $name,
+            'runtime' => $name,
             'vars' => [],
             'events' => [],
             'schedule' => '',
