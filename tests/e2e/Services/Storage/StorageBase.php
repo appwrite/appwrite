@@ -4,11 +4,10 @@ namespace Tests\E2E\Services\Storage;
 
 use CURLFile;
 use Tests\E2E\Client;
-use Utopia\Image\Image;
 
 trait StorageBase
 {
-    public function testCreateBucketFile():array
+    public function testCreateBucketFile(): array
     {
         /**
          * Test for SUCCESS
@@ -16,18 +15,19 @@ trait StorageBase
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $this->getHeaders()), [
             'name' => 'Test Bucket',
+            'maximumFileSize' => 2000000, //2MB
             'read' => ['role:all'],
             'write' => ['role:all'],
         ]);
         $this->assertEquals(201, $bucket['headers']['status-code']);
         $this->assertNotEmpty($bucket['body']['$id']);
-        
+
         $bucketId = $bucket['body']['$id'];
 
-        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId .'/files', array_merge([
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -56,13 +56,34 @@ trait StorageBase
         ]);
         $this->assertEquals(404, $res['headers']['status-code']);
 
-        return ['bucketId' => $bucketId,'fileId' => $file['body']['$id']];
+        /**
+         * Test for FAILURE large file size
+         */
+
+        $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-b/kitten-1.png'), 'image/png', 'kitten-1.png'),
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+        ]);
+
+        $this->assertEquals(400, $res['headers']['status-code']);
+        $this->assertEquals('File size not allowed', $res['body']['message']);
+
+        /**
+         * Test for FAILURE unsupported bucket extension
+         * TODO awaiting FileType validator update
+         */
+
+        return ['bucketId' => $bucketId, 'fileId' => $file['body']['$id']];
     }
 
     /**
      * @depends testCreateBucketFile
      */
-    public function testListBucketFiles(array $data):array
+    public function testListBucketFiles(array $data): array
     {
         /**
          * Test for SUCCESS
@@ -78,7 +99,7 @@ trait StorageBase
         /**
          * Test for FAILURE unknown Bucket
          */
-        
+
         $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/empty/files', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -91,7 +112,7 @@ trait StorageBase
     /**
      * @depends testCreateBucketFile
      */
-    public function testGetBucketFile(array $data):array
+    public function testGetBucketFile(array $data): array
     {
         $bucketId = $data['bucketId'];
         /**
@@ -127,7 +148,7 @@ trait StorageBase
         $this->assertEquals(200, $file2['headers']['status-code']);
         $this->assertEquals('image/png', $file2['headers']['content-type']);
         $this->assertNotEmpty($file2['body']);
-        
+
         //new image preview features
         $file3 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/preview', array_merge([
             'content-type' => 'application/json',
@@ -140,7 +161,6 @@ trait StorageBase
             'output' => 'png',
             'rotation' => '45',
         ]);
-        
 
         $this->assertEquals(200, $file3['headers']['status-code']);
         $this->assertEquals('image/png', $file3['headers']['content-type']);
@@ -164,11 +184,11 @@ trait StorageBase
             'borderColor' => 'ff0000',
             'output' => 'jpg',
         ]);
-        
+
         $this->assertEquals(200, $file4['headers']['status-code']);
         $this->assertEquals('image/jpeg', $file4['headers']['content-type']);
         $this->assertNotEmpty($file4['body']);
-        
+
         $image = new \Imagick();
         $image->readImageBlob($file4['body']);
         $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.jpg');
@@ -213,7 +233,7 @@ trait StorageBase
     /**
      * @depends testCreateBucketFile
      */
-    public function testUpdateBucketFile(array $data):array
+    public function testUpdateBucketFile(array $data): array
     {
         /**
          * Test for SUCCESS
@@ -222,7 +242,7 @@ trait StorageBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'read' => ['role:all','user:x'],
+            'read' => ['role:all', 'user:x'],
             'write' => ['role:all', 'user:x'],
         ]);
 
@@ -242,7 +262,7 @@ trait StorageBase
         $this->assertIsArray($file['body']['$write']);
         $this->assertCount(2, $file['body']['$read']);
         $this->assertCount(2, $file['body']['$write']);
-        
+
         /**
          * Test for FAILURE unknown Bucket
          */
@@ -251,19 +271,19 @@ trait StorageBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'read' => ['role:all','user:x'],
+            'read' => ['role:all', 'user:x'],
             'write' => ['role:all', 'user:x'],
         ]);
-        
+
         $this->assertEquals(404, $file['headers']['status-code']);
-        
+
         return $data;
     }
 
     /**
      * @depends testUpdateBucketFile
      */
-    public function testDeleteBucketFile(array $data):array
+    public function testDeleteBucketFile(array $data): array
     {
         /**
          * Test for SUCCESS
@@ -282,15 +302,15 @@ trait StorageBase
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $file['headers']['status-code']);
-                
+
         /**
          * Test for FAILURE
          */
-        
+
         return $data;
     }
-    
-    public function testCreateFile():array
+
+    public function testCreateFile(): array
     {
         /**
          * Test for SUCCESS
@@ -316,11 +336,11 @@ trait StorageBase
          */
         return ['fileId' => $file['body']['$id']];
     }
-    
+
     /**
      * @depends testCreateFile
      */
-    public function testGetFile(array $data):array
+    public function testGetFile(array $data): array
     {
         /**
          * Test for SUCCESS
@@ -355,7 +375,7 @@ trait StorageBase
         $this->assertEquals(200, $file2['headers']['status-code']);
         $this->assertEquals('image/png', $file2['headers']['content-type']);
         $this->assertNotEmpty($file2['body']);
-        
+
         //new image preview features
         $file3 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/preview', array_merge([
             'content-type' => 'application/json',
@@ -368,7 +388,6 @@ trait StorageBase
             'output' => 'png',
             'rotation' => '45',
         ]);
-        
 
         $this->assertEquals(200, $file3['headers']['status-code']);
         $this->assertEquals('image/png', $file3['headers']['content-type']);
@@ -392,11 +411,11 @@ trait StorageBase
             'borderColor' => 'ff0000',
             'output' => 'jpg',
         ]);
-        
+
         $this->assertEquals(200, $file4['headers']['status-code']);
         $this->assertEquals('image/jpeg', $file4['headers']['content-type']);
         $this->assertNotEmpty($file4['body']);
-        
+
         $image = new \Imagick();
         $image->readImageBlob($file4['body']);
         $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.jpg');
@@ -430,11 +449,11 @@ trait StorageBase
 
         return $data;
     }
-    
+
     /**
      * @depends testGetFile
      */
-    public function testListFiles(array $data):array
+    public function testListFiles(array $data): array
     {
         /**
          * Test for SUCCESS
@@ -451,14 +470,14 @@ trait StorageBase
         /**
          * Test for FAILURE
          */
-        
+
         return $data;
     }
 
     /**
      * @depends testListFiles
      */
-    public function testUpdateFile(array $data):array
+    public function testUpdateFile(array $data): array
     {
         /**
          * Test for SUCCESS
@@ -487,7 +506,7 @@ trait StorageBase
         $this->assertIsArray($file['body']['$write']);
         $this->assertCount(1, $file['body']['$read']);
         $this->assertCount(1, $file['body']['$write']);
-        
+
         /**
          * Test for FAILURE
          */
@@ -498,7 +517,7 @@ trait StorageBase
     /**
      * @depends testUpdateFile
      */
-    public function testDeleteFile(array $data):array
+    public function testDeleteFile(array $data): array
     {
         /**
          * Test for SUCCESS
@@ -517,11 +536,11 @@ trait StorageBase
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $file['headers']['status-code']);
-                
+
         /**
          * Test for FAILURE
          */
-        
+
         return $data;
     }
 }
