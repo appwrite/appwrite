@@ -1117,7 +1117,7 @@ App::patch('/v1/account/email')
             ]
             ));
 
-        $user = $projectDB->updateDocument($document, ['email' => $email]);
+        $user = $projectDB->updateDocument($document);
 
         $projectDB->addUniqueKey(\md5($document['$collection'].':'.'email'.'='.$email));
 
