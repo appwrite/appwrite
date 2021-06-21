@@ -41,20 +41,26 @@ Co\run(function() use ($runtimes) {  // Warmup: make sure images are ready to ru
 
     foreach($runtimes as $runtime) {
         go(function() use ($runtime) {
-            $stdout = '';
-            $stderr = '';
-        
-            Console::info('Warming up '.$runtime['name'].' '.$runtime['version'].' environment...');
-        
-            Console::execute('docker pull '.$runtime['image'], '', $stdout, $stderr);
-        
-            if(!empty($stdout)) {
-                Console::log($stdout);
+            if($runtime['isCustom'] == true) {
+                Console::log('Loaded custom runtime environment without warming up ' . $runtime['name'] . ' ' . $runtime['version']);
+            } else {
+                $stdout = '';
+                $stderr = '';
+            
+                Console::info('Warming up '.$runtime['name'].' '.$runtime['version'].' environment...');
+            
+                Console::execute('docker pull '.$runtime['image'], '', $stdout, $stderr);
+            
+                if(!empty($stdout)) {
+                    Console::log($stdout);
+                }
+            
+                if(!empty($stderr)) {
+                    Console::error($stderr);
+                }
             }
-        
-            if(!empty($stderr)) {
-                Console::error($stderr);
-            }
+
+           
         });
     }
 });
