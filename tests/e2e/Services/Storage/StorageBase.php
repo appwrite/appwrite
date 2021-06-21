@@ -43,8 +43,19 @@ trait StorageBase
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
 
         /**
-         * Test for FAILURE
+         * Test for FAILURE unknown Bucket
          */
+
+        $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/empty/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+        ]);
+        $this->assertEquals(404, $res['headers']['status-code']);
+
         return ['bucketId' => $bucketId,'fileId' => $file['body']['$id']];
     }
 
@@ -65,9 +76,15 @@ trait StorageBase
         $this->assertGreaterThan(0, count($files['body']['files']));
 
         /**
-         * Test for FAILURE
+         * Test for FAILURE unknown Bucket
          */
         
+        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/empty/files', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(404, $files['headers']['status-code']);
+
         return $data;
     }
 
@@ -76,10 +93,11 @@ trait StorageBase
      */
     public function testGetBucketFile(array $data):array
     {
+        $bucketId = $data['bucketId'];
         /**
          * Test for SUCCESS
          */
-        $file1 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files/' . $data['fileId'], array_merge([
+        $file1 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -101,7 +119,7 @@ trait StorageBase
         $this->assertCount(1, $file1['body']['$read']);
         $this->assertCount(1, $file1['body']['$write']);
 
-        $file2 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/preview', array_merge([
+        $file2 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/preview', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -111,7 +129,7 @@ trait StorageBase
         $this->assertNotEmpty($file2['body']);
         
         //new image preview features
-        $file3 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/preview', array_merge([
+        $file3 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/preview', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -136,7 +154,7 @@ trait StorageBase
         $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
         $this->assertEquals('PNG', $image->getImageFormat());
 
-        $file4 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/preview', array_merge([
+        $file4 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/preview', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -159,7 +177,7 @@ trait StorageBase
         $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
         $this->assertEquals('JPEG', $image->getImageFormat());
 
-        $file5 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/download', array_merge([
+        $file5 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -169,7 +187,7 @@ trait StorageBase
         $this->assertEquals('image/png', $file5['headers']['content-type']);
         $this->assertNotEmpty($file5['body']);
 
-        $file6 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/view', array_merge([
+        $file6 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/view', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -179,8 +197,15 @@ trait StorageBase
         $this->assertNotEmpty($file6['body']);
 
         /**
-         * Test for FAILURE
+         * Test for FAILURE unknown Bucket
          */
+
+        $file1 = $this->client->call(Client::METHOD_GET, '/storage/buckets/empty/files/' . $data['fileId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $file1['headers']['status-code']);
 
         return $data;
     }
@@ -219,9 +244,19 @@ trait StorageBase
         $this->assertCount(2, $file['body']['$write']);
         
         /**
-         * Test for FAILURE
+         * Test for FAILURE unknown Bucket
          */
 
+        $file = $this->client->call(Client::METHOD_PUT, '/storage/buckets/empty/files/' . $data['fileId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'read' => ['role:all','user:x'],
+            'write' => ['role:all', 'user:x'],
+        ]);
+        
+        $this->assertEquals(404, $file['headers']['status-code']);
+        
         return $data;
     }
 
