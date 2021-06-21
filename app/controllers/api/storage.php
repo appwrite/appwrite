@@ -502,12 +502,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
-
-        if($bucket->isEmpty()) {
-            throw new Exception("Bucket not found", 404);
-        }
-
         $storage = 'files';
 
         if (!\extension_loaded('imagick')) {
@@ -516,6 +510,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         if (!Storage::exists($storage)) {
             throw new Exception('No such storage device', 400);
+        }
+        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
+
+        if($bucket->isEmpty()) {
+            throw new Exception("Bucket not found", 404);
         }
 
         if ((\strpos($request->getAccept(), 'image/webp') === false) && ('webp' == $output)) { // Fallback webp to jpeg when no browser support
