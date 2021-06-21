@@ -41,6 +41,41 @@ trait StorageBase
         $this->assertEquals('logo.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
+        $this->assertTrue(md5_file(realpath(__DIR__ . '/../../../resources/logo.png')) != $file['body']['signature']); // should validate that the file is encrypted
+
+        /**
+         * Test for Large File above 20MB
+         * This should also validate the test for when Bucket encryption
+         * is disabled as we are using same test
+         */
+        $bucket2 = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'name' => 'Test Bucket 2',
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+        ]);
+        $this->assertEquals(201, $bucket2['headers']['status-code']);
+        $this->assertNotEmpty($bucket2['body']['$id']);
+
+        $file2 = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket2['body']['$id'] . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4'), 'video/mp4', 'large-file.mp4'),
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+        ]);
+
+        $this->assertEquals(201, $file2['headers']['status-code']);
+        $this->assertNotEmpty($file2['body']['$id']);
+        $this->assertIsInt($file2['body']['dateCreated']);
+        $this->assertEquals('large-file.mp4', $file2['body']['name']);
+        $this->assertEquals('video/mp4', $file2['body']['mimeType']);
+        $this->assertEquals(23660615, $file2['body']['sizeOriginal']);
+        $this->assertEquals(md5_file(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4')), $file2['body']['signature']); // should validate that the file is not encrypted
 
         /**
          * Test for FAILURE unknown Bucket
