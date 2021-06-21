@@ -598,7 +598,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         if (!empty($background)) {
             $image->setBackground('#'.$background);
         }
-
         
         if (!empty($borderWidth) ) {
             $image->setBorder($borderWidth, '#'.$borderColor);
