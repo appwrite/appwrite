@@ -19,6 +19,7 @@ trait StorageBase
         ], $this->getHeaders()), [
             'name' => 'Test Bucket',
             'maximumFileSize' => 2000000, //2MB
+            'allowedFileExtensions' => ["jpg", "png"],
             'read' => ['role:all'],
             'write' => ['role:all'],
         ]);
@@ -92,7 +93,7 @@ trait StorageBase
         $this->assertEquals(404, $res['headers']['status-code']);
 
         /**
-         * Test for FAILURE large file size
+         * Test for FAILURE file above bucket's file size limit
          */
 
         $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
@@ -108,9 +109,20 @@ trait StorageBase
         $this->assertEquals('File size not allowed', $res['body']['message']);
 
         /**
-         * Test for FAILURE unsupported bucket extension
-         * TODO awaiting FileType validator update
+         * Test for FAILURE unsupported bucket file extension
          */
+
+        $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-a/kitten-3.gif'), 'image/gif', 'kitten-3.gif'),
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+        ]);
+
+        $this->assertEquals(400, $res['headers']['status-code']);
+        $this->assertEquals('File extension not allowed', $res['body']['message']);
 
         return ['bucketId' => $bucketId, 'fileId' => $file['body']['$id'],  'largeFileId' => $file2['body']['$id'], 'largeBucketId' => $bucket2['body']['$id']];
     }
