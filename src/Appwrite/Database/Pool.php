@@ -1,10 +1,12 @@
 <?php
 namespace Appwrite\Database;
 
+use Swoole\Coroutine\Channel;
+
 abstract class Pool
 {
+    protected Channel $pool;
     protected $available = true;
-    protected $pool;
     protected $size = 5;
 
     abstract public function get();
