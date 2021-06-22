@@ -11,7 +11,7 @@
 - Upgraded telegraf docker image version to v1.1.0
 
 ## Breaking Changes (Read before upgrading!)
-- Renamed `env` param on `/v1/functions` to `runtime`
+- Renamed `env` param on `/v1/functions` to `runtime` (#1314)
 
 ## Bugs
 
