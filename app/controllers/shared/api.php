@@ -31,47 +31,47 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
         throw new Exception('Missing or unknown project ID', 400);
     }
 
-    /*
-     * Abuse Check
-     */
-    $timeLimit = new TimeLimit($route->getLabel('abuse-key', 'url:{url},ip:{ip}'), $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), function () use ($register) {
-        return $register->get('db');
-    });
-    $timeLimit->setNamespace('app_'.$project->getId());
-    $timeLimit
-        ->setParam('{userId}', $user->getId())
-        ->setParam('{userAgent}', $request->getUserAgent(''))
-        ->setParam('{ip}', $request->getIP())
-        ->setParam('{url}', $request->getHostname().$route->getURL())
-    ;
+    // /*
+    //  * Abuse Check
+    //  */
+    // $timeLimit = new TimeLimit($route->getLabel('abuse-key', 'url:{url},ip:{ip}'), $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), function () use ($register) {
+    //     return $register->get('db');
+    // });
+    // $timeLimit->setNamespace('app_'.$project->getId());
+    // $timeLimit
+    //     ->setParam('{userId}', $user->getId())
+    //     ->setParam('{userAgent}', $request->getUserAgent(''))
+    //     ->setParam('{ip}', $request->getIP())
+    //     ->setParam('{url}', $request->getHostname().$route->getURL())
+    // ;
 
-    //TODO make sure we get array here
+    // //TODO make sure we get array here
 
-    foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
-        if(!empty($value)) {
-            $timeLimit->setParam('{param-'.$key.'}', (\is_array($value)) ? \json_encode($value) : $value);
-        }
-    }
+    // foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
+    //     if(!empty($value)) {
+    //         $timeLimit->setParam('{param-'.$key.'}', (\is_array($value)) ? \json_encode($value) : $value);
+    //     }
+    // }
 
-    $abuse = new Abuse($timeLimit);
+    // $abuse = new Abuse($timeLimit);
 
-    if ($timeLimit->limit()) {
-        $response
-            ->addHeader('X-RateLimit-Limit', $timeLimit->limit())
-            ->addHeader('X-RateLimit-Remaining', $timeLimit->remaining())
-            ->addHeader('X-RateLimit-Reset', $timeLimit->time() + $route->getLabel('abuse-time', 3600))
-        ;
-    }
+    // if ($timeLimit->limit()) {
+    //     $response
+    //         ->addHeader('X-RateLimit-Limit', $timeLimit->limit())
+    //         ->addHeader('X-RateLimit-Remaining', $timeLimit->remaining())
+    //         ->addHeader('X-RateLimit-Reset', $timeLimit->time() + $route->getLabel('abuse-time', 3600))
+    //     ;
+    // }
 
-    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
-    $isAppUser = Auth::isAppUser(Authorization::$roles);
+    // $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
+    // $isAppUser = Auth::isAppUser(Authorization::$roles);
 
-    if (($abuse->check() // Route is rate-limited
-        && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') // Abuse is not diabled
-        && (!$isAppUser && !$isPrivilegedUser)) // User is not an admin or API key
-        {
-        throw new Exception('Too many requests', 429);
-    }
+    // if (($abuse->check() // Route is rate-limited
+    //     && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') // Abuse is not diabled
+    //     && (!$isAppUser && !$isPrivilegedUser)) // User is not an admin or API key
+    //     {
+    //     throw new Exception('Too many requests', 429);
+    // }
 
     /*
      * Background Jobs

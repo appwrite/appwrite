@@ -78,11 +78,11 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     $db = $register->get('dbPool')->get();
     $redis = $register->get('redisPool')->get();
 
-    $register->set('db', function () use (&$db) {
+    App::setResource('db', function () use (&$db) {
         return $db;
     });
 
-    $register->set('cache', function () use (&$redis) {
+    App::setResource('cache', function () use (&$redis) {
         return $redis;
     });
 

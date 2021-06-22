@@ -54,7 +54,7 @@ class MySQL extends Adapter
      * @param PDO $pdo
      * @param Redis $redis
      */
-    public function __construct(PDO $pdo, Redis $redis)
+    public function __construct($pdo, Redis $redis)
     {
         $this->pdo = $pdo;
         $this->redis = $redis;
@@ -939,7 +939,7 @@ class MySQL extends Adapter
      *
      * @throws Exception
      */
-    protected function getPDO(): PDO
+    protected function getPDO()
     {
         return $this->pdo;
     }
