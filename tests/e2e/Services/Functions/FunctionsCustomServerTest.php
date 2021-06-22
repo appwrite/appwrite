@@ -43,7 +43,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $response1['headers']['status-code']);
         $this->assertNotEmpty($response1['body']['$id']);
         $this->assertEquals('Test', $response1['body']['name']);
-        $this->assertEquals('php-8.0', $response1['body']['env']);
+        $this->assertEquals('php-8.0', $response1['body']['runtime']);
         $this->assertIsInt($response1['body']['dateCreated']);
         $this->assertIsInt($response1['body']['dateUpdated']);
         $this->assertEquals('', $response1['body']['tag']);
