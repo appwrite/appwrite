@@ -112,7 +112,7 @@ trait StorageBase
          * TODO awaiting FileType validator update
          */
 
-        return ['bucketId' => $bucketId, 'fileId' => $file['body']['$id']];
+        return ['bucketId' => $bucketId, 'fileId' => $file['body']['$id'],  'largeFileId' => $file2['body']['$id'], 'largeBucketId' => $bucket2['body']['$id']];
     }
 
     /**
@@ -252,15 +252,29 @@ trait StorageBase
         $this->assertNotEmpty($file6['body']);
 
         /**
+         * Test large files decompress successfully
+         */
+        $file7 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['largeBucketId'] . '/files/' . $data['largeFileId'] . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $fileData = $file7['body'];
+        $this->assertEquals(200, $file7['headers']['status-code']);
+        $this->assertEquals('attachment; filename="large-file.mp4"', $file7['headers']['content-disposition']);
+        $this->assertEquals('video/mp4', $file7['headers']['content-type']);
+        $this->assertNotEmpty($fileData);
+        $this->assertEquals(md5_file(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4')), md5($fileData)); // validate the file is downloaded correctly
+
+        /**
          * Test for FAILURE unknown Bucket
          */
 
-        $file1 = $this->client->call(Client::METHOD_GET, '/storage/buckets/empty/files/' . $data['fileId'], array_merge([
+        $file8 = $this->client->call(Client::METHOD_GET, '/storage/buckets/empty/files/' . $data['fileId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals(404, $file1['headers']['status-code']);
+        $this->assertEquals(404, $file8['headers']['status-code']);
 
         return $data;
     }
