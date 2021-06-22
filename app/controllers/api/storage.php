@@ -372,7 +372,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             'comment' => '',
         ];
 
-        if($bucket->getAttribute('encryption', true)) {
+        if($bucket->getAttribute('encryption', true) && $size <= APP_LIMIT_ENCRYPTION) {
             $data['openSSLVersion'] = '1';
             $data['openSSLCipher'] = OpenSSL::CIPHER_AES_128_GCM;
             $data['openSSLTag'] = \bin2hex($tag);
@@ -664,11 +664,9 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             throw new Exception('File not found in '.$path, 404);
         }
 
-        $compressor = new GZIP();
         $device = Storage::getDevice('files');
 
         $source = $device->read($path);
-
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
             $source = OpenSSL::decrypt(
                 $source,
@@ -679,8 +677,10 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
                 \hex2bin($file->getAttribute('openSSLTag'))
             );
         }
-
-        $source = $compressor->decompress($source);
+        if(!empty($file->getAttribute('algorithm', ''))) {
+            $compressor = new GZIP();
+            $source = $compressor->decompress($source);
+        }
 
         // Response
         $response
