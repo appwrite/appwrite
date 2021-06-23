@@ -360,7 +360,7 @@ class MySQL extends Adapter
     /**
      * Delete Unique Key.
      *
-     * @param String $key
+     * @param string $key
      *
      * @return array
      *
@@ -380,13 +380,12 @@ class MySQL extends Adapter
     /**
      * Add Unique Key.
      *
-     * @param String $key
+     * @param string $key
      *
      * @return array
      *
      * @throws Exception
      */
-
     public function addUniqueKey($key)
     {
         $st = $this->getPDO()->prepare('INSERT INTO `'.$this->getNamespace().'.database.unique`

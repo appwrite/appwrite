@@ -91,7 +91,7 @@ abstract class Adapter
     /**
      * Delete Unique Key.
      *
-     * @param String $key
+     * @param string $key
      *
      * @return array
      */
@@ -100,7 +100,7 @@ abstract class Adapter
     /**
      * Add Unique Key.
      *
-     * @param String $key
+     * @param string $key
      *
      * @return array
      */
