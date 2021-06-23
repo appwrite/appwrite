@@ -93,8 +93,8 @@ class MySQL extends Adapter
               ORDER BY `order`
         ');
 
-        $st->bindParam(':documentUid', $document['uid'], PDO::PARAM_STR);
-        $st->bindParam(':documentRevision', $document['revision'], PDO::PARAM_STR);
+        $st->bindParam(':documentUid', $document['uid'], PDO::PARAM_STR, 32);
+        $st->bindParam(':documentRevision', $document['revision'], PDO::PARAM_STR, 32);
 
         $st->execute();
 
@@ -122,8 +122,8 @@ class MySQL extends Adapter
               ORDER BY `order`
         ');
 
-        $st->bindParam(':start', $document['uid'], PDO::PARAM_STR);
-        $st->bindParam(':revision', $document['revision'], PDO::PARAM_STR);
+        $st->bindParam(':start', $document['uid'], PDO::PARAM_STR, 32);
+        $st->bindParam(':revision', $document['revision'], PDO::PARAM_STR, 32);
 
         $st->execute();
 
