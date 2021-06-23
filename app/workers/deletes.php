@@ -31,7 +31,7 @@ class DeletesV1 extends Worker
 
     public function run(): void
     {
-        $projectId = isset($this->args['projectId']) ? $this->args['projectId'] : '';
+        $projectId = isset($this->args['projectId']) ? $this->args['projectId'] : '';   
         $type = $this->args['type'];
         
         switch (strval($type)) {
@@ -50,6 +50,9 @@ class DeletesV1 extends Worker
                         break;
                     case Database::SYSTEM_COLLECTION_COLLECTIONS:
                         $this->deleteDocuments($document, $projectId);
+                        break;
+                    case Database::SYSTEM_COLLECTION_TEAMS:
+                        $this->deleteMemberships($document, $projectId);
                         break;
                     default:
                         Console::error('No lazy delete operation available for document of type: '.$document->getCollection());
@@ -93,6 +96,14 @@ class DeletesV1 extends Worker
         $this->deleteByGroup([
             '$collection='.$collectionId
         ], $this->getProjectDB($projectId));   
+    }
+
+    protected function deleteMemberships(Document $document, $projectId) {
+        // Delete Memberships
+        $this->deleteByGroup([
+            '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
+            'teamId='.$document->getId(),
+        ], $this->getProjectDB($projectId));
     }
 
     protected function deleteProject(Document $document)
@@ -212,7 +223,7 @@ class DeletesV1 extends Worker
                 Console::success('Delete code tag: '.$document->getAttribute('path', ''));
             }
             else {
-                Console::error('Dailed to delete code tag: '.$document->getAttribute('path', ''));
+                Console::error('Failed to delete code tag: '.$document->getAttribute('path', ''));
             }
         });
 
@@ -260,7 +271,6 @@ class DeletesV1 extends Worker
             Authorization::disable();
             $projects = $this->getConsoleDB()->getCollection([
                 'limit' => $limit,
-                'offset' => $count,
                 'orderType' => 'ASC',
                 'orderCast' => 'string',
                 'filters' => [
@@ -303,7 +313,6 @@ class DeletesV1 extends Worker
 
             $results = $database->getCollection([
                 'limit' => $limit,
-                'offset' => $count,
                 'orderField' => '$id',
                 'orderType' => 'ASC',
                 'orderCast' => 'string',

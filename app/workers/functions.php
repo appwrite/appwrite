@@ -72,9 +72,6 @@ Console::success('Finished warmup in '.$warmupTime.' seconds');
 $stdout = '';
 $stderr = '';
 
-$exitCode = Console::execute('docker ps --all --format "name={{.Names}}&status={{.Status}}&labels={{.Labels}}" --filter label=appwrite-type=function'
-    , '', $stdout, $stderr, 30);
-
 $executionStart = \microtime(true);
 
 $exitCode = Console::execute('docker ps --all --format "name={{.Names}}&status={{.Status}}&labels={{.Labels}}" --filter label=appwrite-type=function'
@@ -332,12 +329,12 @@ class FunctionsV1 extends Worker
         
         Authorization::reset();
 
-        $runtime = (isset($runtimes[$function->getAttribute('env', '')]))
-            ? $runtimes[$function->getAttribute('env', '')]
+        $runtime = (isset($runtimes[$function->getAttribute('runtime', '')]))
+            ? $runtimes[$function->getAttribute('runtime', '')]
             : null;
 
         if(\is_null($runtime)) {
-            throw new Exception('Environment "'.$function->getAttribute('env', '').' is not supported');
+            throw new Exception('Runtime "'.$function->getAttribute('runtime', '').' is not supported');
         }
 
         $vars = \array_merge($function->getAttribute('vars', []), [
