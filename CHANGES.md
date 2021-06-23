@@ -21,6 +21,9 @@
   - _APP_INFLUXDB_HOST
   - _APP_INFLUXDB_PORT
 
+## Breaking Changes (Read before upgrading!)
+- Renamed `env` param on `/v1/functions` to `runtime` (#1314)
+
 ## Bugs
 
 - Fixed bug causing runtimes conflict and hanging executions when max Functions containers limit passed (#1288)
