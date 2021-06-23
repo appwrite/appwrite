@@ -75,6 +75,8 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         return;
     }
 
+    $app = new App('UTC');
+
     $db = $register->get('dbPool')->get();
     $redis = $register->get('redisPool')->get();
 
@@ -86,7 +88,9 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         return $redis;
     });
 
-    $app = new App('UTC');
+    App::setResource('app', function() use (&$app) {
+        return $app;
+    });
     
     try {
         Authorization::cleanRoles();

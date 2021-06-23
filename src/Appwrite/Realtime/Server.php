@@ -402,18 +402,10 @@ class Server
          * This is redundant soon and will be gone with merging the usage branch.
          */
         $db = $this->register->get('dbPool')->get();
-        $redis = $this->register->get('redisPool')->get();
-
-        $this->register->set('db', function () use (&$db) {
-            return $db;
-        });
-
-        $this->register->set('cache', function () use (&$redis) {
-            return $redis;
-        });
+        $cache = $this->register->get('redisPool')->get();
 
         $projectDB = new Database();
-        $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($this->register), $this->register));
+        $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
         $projectDB->setNamespace('app_'.$project);
         $projectDB->setMocks(Config::getParam('collections', []));
 
@@ -424,5 +416,8 @@ class Server
         $roles = Parser::getRoles();
 
         Parser::subscribe($project, $connection, $roles, $this->subscriptions, $this->connections, $this->connections[$connection]['channels']);
+
+        $this->register->get('dbPool')->put($db);
+        $this->register->get('redisPool')->put($cache);
     }
 }

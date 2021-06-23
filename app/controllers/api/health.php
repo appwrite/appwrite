@@ -42,12 +42,12 @@ App::get('/v1/health/db')
     ->label('sdk.method', 'getDB')
     ->label('sdk.description', '/docs/references/health/get-db.md')
     ->inject('response')
-    ->inject('register')
-    ->action(function ($response, $register) {
+    ->inject('app')
+    ->action(function ($response, $app) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Registry\Registry $register */
+        /** @var Utopia\App $app */
 
-        $register->get('db'); /* @var $db PDO */
+        $app->getResource('db');
 
         $response->json(['status' => 'OK']);
     });
@@ -61,11 +61,11 @@ App::get('/v1/health/cache')
     ->label('sdk.method', 'getCache')
     ->label('sdk.description', '/docs/references/health/get-cache.md')
     ->inject('response')
-    ->inject('register')
-    ->action(function ($response, $register) {
+    ->inject('app')
+    ->action(function ($response, $app) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Registry\Registry $register */
-        $register->get('cache'); /* @var $cache Predis\Client */
+        /** @var Utopia\App $register */
+        $app->getResource('cache');
 
         $response->json(['status' => 'OK']);
     });

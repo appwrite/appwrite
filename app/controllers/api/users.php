@@ -232,18 +232,18 @@ App::get('/v1/users/:userId/logs')
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->inject('response')
-    ->inject('register')
     ->inject('project')
     ->inject('projectDB')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function ($userId, $response, $register, $project, $projectDB, $locale, $geodb) {
+    ->inject('app')
+    ->action(function ($userId, $response, $project, $projectDB, $locale, $geodb, $app) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Registry\Registry $register */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
+        /** @var Utopia\App $app */
         
         $user = $projectDB->getDocument($userId);
 
@@ -251,7 +251,7 @@ App::get('/v1/users/:userId/logs')
             throw new Exception('User not found', 404);
         }
 
-        $adapter = new AuditAdapter($register->get('db'));
+        $adapter = new AuditAdapter($app->getResource('db'));
         $adapter->setNamespace('app_'.$project->getId());
 
         $audit = new Audit($adapter);

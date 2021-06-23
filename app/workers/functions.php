@@ -138,6 +138,9 @@ class FunctionsV1 extends Worker
     {
         global $register;
 
+        $db = $register->get('db');
+        $cache = $register->get('cache');
+
         $projectId = $this->args['projectId'] ?? '';
         $functionId = $this->args['functionId'] ?? '';
         $webhooks = $this->args['webhooks'] ?? [];
@@ -151,7 +154,7 @@ class FunctionsV1 extends Worker
         $jwt = $this->args['jwt'] ?? '';
 
         $database = new Database();
-        $database->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+        $database->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
         $database->setNamespace('app_'.$projectId);
         $database->setMocks(Config::getParam('collections', []));
 
