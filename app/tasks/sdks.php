@@ -28,7 +28,7 @@ $cli
         $production = ($git) ? (Console::confirm('Type "Appwrite" to push code to production git repos') == 'Appwrite') : false;
         $message = ($git) ? Console::confirm('Please enter your commit message:') : '';
 
-        if(!in_array($version, ['0.6.x', '0.7.x', '0.8.x'])) {
+        if(!in_array($version, ['0.6.x', '0.7.x', '0.8.x', '0.9.x'])) {
             throw new Exception('Unknown version given');
         }
 
@@ -221,8 +221,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 \exec('mkdir -p '.$resultExamples.' && cp -r '.$result.'/docs/examples '.$resultExamples);
                 Console::success("Copied code examples for {$language['name']} SDK to: {$resultExamples}");
 
-                \exec('rm -rf '.$result);
-                Console::success("Removed source code directory '{$result}' for {$language['name']} SDK");
+                // \exec('rm -rf '.$result);
+                // Console::success("Removed source code directory '{$result}' for {$language['name']} SDK");
             }
         }
 

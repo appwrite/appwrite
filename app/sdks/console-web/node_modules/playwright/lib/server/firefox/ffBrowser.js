@@ -1,0 +1,340 @@
+"use strict";
+/**
+ * Copyright 2018 Google Inc. All rights reserved.
+ * Modifications copyright (c) Microsoft Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the 'License');
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an 'AS IS' BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.FFBrowserContext = exports.FFBrowser = void 0;
+const errors_1 = require("../../utils/errors");
+const utils_1 = require("../../utils/utils");
+const browser_1 = require("../browser");
+const browserContext_1 = require("../browserContext");
+const network = __importStar(require("../network"));
+const ffConnection_1 = require("./ffConnection");
+const ffPage_1 = require("./ffPage");
+class FFBrowser extends browser_1.Browser {
+    constructor(connection, options) {
+        super(options);
+        this._version = '';
+        this._connection = connection;
+        this._ffPages = new Map();
+        this._contexts = new Map();
+        this._connection.on(ffConnection_1.ConnectionEvents.Disconnected, () => this._onDisconnect());
+        this._connection.on('Browser.attachedToTarget', this._onAttachedToTarget.bind(this));
+        this._connection.on('Browser.detachedFromTarget', this._onDetachedFromTarget.bind(this));
+        this._connection.on('Browser.downloadCreated', this._onDownloadCreated.bind(this));
+        this._connection.on('Browser.downloadFinished', this._onDownloadFinished.bind(this));
+        this._connection.on('Browser.videoRecordingFinished', this._onVideoRecordingFinished.bind(this));
+    }
+    static async connect(transport, options) {
+        const connection = new ffConnection_1.FFConnection(transport, options.protocolLogger, options.browserLogsCollector);
+        const browser = new FFBrowser(connection, options);
+        if (options.__testHookOnConnectToBrowser)
+            await options.__testHookOnConnectToBrowser();
+        const promises = [
+            connection.send('Browser.enable', { attachToDefaultContext: !!options.persistent }),
+            browser._initVersion(),
+        ];
+        if (options.persistent) {
+            browser._defaultContext = new FFBrowserContext(browser, undefined, options.persistent);
+            promises.push(browser._defaultContext._initialize());
+        }
+        if (options.proxy)
+            promises.push(browser._connection.send('Browser.setBrowserProxy', toJugglerProxyOptions(options.proxy)));
+        await Promise.all(promises);
+        return browser;
+    }
+    async _initVersion() {
+        const result = await this._connection.send('Browser.getInfo');
+        this._version = result.version.substring(result.version.indexOf('/') + 1);
+    }
+    isConnected() {
+        return !this._connection._closed;
+    }
+    async newContext(options) {
+        browserContext_1.validateBrowserContextOptions(options, this.options);
+        if (options.isMobile)
+            throw new Error('options.isMobile is not supported in Firefox');
+        const { browserContextId } = await this._connection.send('Browser.createBrowserContext', { removeOnDetach: true });
+        const context = new FFBrowserContext(this, browserContextId, options);
+        await context._initialize();
+        this._contexts.set(browserContextId, context);
+        return context;
+    }
+    contexts() {
+        return Array.from(this._contexts.values());
+    }
+    version() {
+        return this._version;
+    }
+    _onDetachedFromTarget(payload) {
+        const ffPage = this._ffPages.get(payload.targetId);
+        this._ffPages.delete(payload.targetId);
+        ffPage.didClose();
+    }
+    _onAttachedToTarget(payload) {
+        const { targetId, browserContextId, openerId, type } = payload.targetInfo;
+        utils_1.assert(type === 'page');
+        const context = browserContextId ? this._contexts.get(browserContextId) : this._defaultContext;
+        utils_1.assert(context, `Unknown context id:${browserContextId}, _defaultContext: ${this._defaultContext}`);
+        const session = this._connection.createSession(payload.sessionId, type);
+        const opener = openerId ? this._ffPages.get(openerId) : null;
+        const ffPage = new ffPage_1.FFPage(session, context, opener);
+        this._ffPages.set(targetId, ffPage);
+    }
+    _onDownloadCreated(payload) {
+        const ffPage = this._ffPages.get(payload.pageTargetId);
+        utils_1.assert(ffPage);
+        if (!ffPage)
+            return;
+        let originPage = ffPage._initializedPage;
+        // If it's a new window download, report it on the opener page.
+        if (!originPage) {
+            // Resume the page creation with an error. The page will automatically close right
+            // after the download begins.
+            ffPage._markAsError(new Error('Starting new page download'));
+            if (ffPage._opener)
+                originPage = ffPage._opener._initializedPage;
+        }
+        if (!originPage)
+            return;
+        this._downloadCreated(originPage, payload.uuid, payload.url, payload.suggestedFileName);
+    }
+    _onDownloadFinished(payload) {
+        const error = payload.canceled ? 'canceled' : payload.error;
+        this._downloadFinished(payload.uuid, error);
+    }
+    _onVideoRecordingFinished(payload) {
+        var _a;
+        (_a = this._takeVideo(payload.screencastId)) === null || _a === void 0 ? void 0 : _a.reportFinished();
+    }
+    _onDisconnect() {
+        for (const video of this._idToVideo.values())
+            video.artifact.reportFinished(errors_1.kBrowserClosedError);
+        this._idToVideo.clear();
+        this._didClose();
+    }
+}
+exports.FFBrowser = FFBrowser;
+class FFBrowserContext extends browserContext_1.BrowserContext {
+    constructor(browser, browserContextId, options) {
+        super(browser, options, browserContextId);
+        this._browser = browser;
+    }
+    async _initialize() {
+        utils_1.assert(!this._ffPages().length);
+        const browserContextId = this._browserContextId;
+        const promises = [super._initialize()];
+        promises.push(this._browser._connection.send('Browser.setDownloadOptions', {
+            browserContextId,
+            downloadOptions: {
+                behavior: this._options.acceptDownloads ? 'saveToDisk' : 'cancel',
+                downloadsDir: this._browser.options.downloadsPath,
+            },
+        }));
+        if (this._options.viewport) {
+            const viewport = {
+                viewportSize: { width: this._options.viewport.width, height: this._options.viewport.height },
+                deviceScaleFactor: this._options.deviceScaleFactor || 1,
+            };
+            promises.push(this._browser._connection.send('Browser.setDefaultViewport', { browserContextId, viewport }));
+        }
+        if (this._options.hasTouch)
+            promises.push(this._browser._connection.send('Browser.setTouchOverride', { browserContextId, hasTouch: true }));
+        if (this._options.userAgent)
+            promises.push(this._browser._connection.send('Browser.setUserAgentOverride', { browserContextId, userAgent: this._options.userAgent }));
+        if (this._options.bypassCSP)
+            promises.push(this._browser._connection.send('Browser.setBypassCSP', { browserContextId, bypassCSP: true }));
+        if (this._options.ignoreHTTPSErrors)
+            promises.push(this._browser._connection.send('Browser.setIgnoreHTTPSErrors', { browserContextId, ignoreHTTPSErrors: true }));
+        if (this._options.javaScriptEnabled === false)
+            promises.push(this._browser._connection.send('Browser.setJavaScriptDisabled', { browserContextId, javaScriptDisabled: true }));
+        if (this._options.locale)
+            promises.push(this._browser._connection.send('Browser.setLocaleOverride', { browserContextId, locale: this._options.locale }));
+        if (this._options.timezoneId)
+            promises.push(this._browser._connection.send('Browser.setTimezoneOverride', { browserContextId, timezoneId: this._options.timezoneId }));
+        if (this._options.permissions)
+            promises.push(this.grantPermissions(this._options.permissions));
+        if (this._options.extraHTTPHeaders || this._options.locale)
+            promises.push(this.setExtraHTTPHeaders(this._options.extraHTTPHeaders || []));
+        if (this._options.httpCredentials)
+            promises.push(this.setHTTPCredentials(this._options.httpCredentials));
+        if (this._options.geolocation)
+            promises.push(this.setGeolocation(this._options.geolocation));
+        if (this._options.offline)
+            promises.push(this.setOffline(this._options.offline));
+        promises.push(this._browser._connection.send('Browser.setColorScheme', {
+            browserContextId,
+            colorScheme: this._options.colorScheme !== undefined ? this._options.colorScheme : 'light',
+        }));
+        promises.push(this._browser._connection.send('Browser.setReducedMotion', {
+            browserContextId,
+            reducedMotion: this._options.reducedMotion !== undefined ? this._options.reducedMotion : 'no-preference',
+        }));
+        if (this._options.recordVideo) {
+            promises.push(this._ensureVideosPath().then(() => {
+                return this._browser._connection.send('Browser.setVideoRecordingOptions', {
+                    // validateBrowserContextOptions ensures correct video size.
+                    ...this._options.recordVideo.size,
+                    dir: this._options.recordVideo.dir,
+                    browserContextId: this._browserContextId
+                });
+            }));
+        }
+        if (this._options.proxy) {
+            promises.push(this._browser._connection.send('Browser.setContextProxy', {
+                browserContextId: this._browserContextId,
+                ...toJugglerProxyOptions(this._options.proxy)
+            }));
+        }
+        await Promise.all(promises);
+    }
+    _ffPages() {
+        return Array.from(this._browser._ffPages.values()).filter(ffPage => ffPage._browserContext === this);
+    }
+    pages() {
+        return this._ffPages().map(ffPage => ffPage._initializedPage).filter(pageOrNull => !!pageOrNull);
+    }
+    async newPageDelegate() {
+        browserContext_1.assertBrowserContextIsNotOwned(this);
+        const { targetId } = await this._browser._connection.send('Browser.newPage', {
+            browserContextId: this._browserContextId
+        }).catch(e => {
+            if (e.message.includes('Failed to override timezone'))
+                throw new Error(`Invalid timezone ID: ${this._options.timezoneId}`);
+            throw e;
+        });
+        return this._browser._ffPages.get(targetId);
+    }
+    async _doCookies(urls) {
+        const { cookies } = await this._browser._connection.send('Browser.getCookies', { browserContextId: this._browserContextId });
+        return network.filterCookies(cookies.map(c => {
+            const copy = { ...c };
+            delete copy.size;
+            delete copy.session;
+            return copy;
+        }), urls);
+    }
+    async addCookies(cookies) {
+        const cc = network.rewriteCookies(cookies).map(c => ({
+            ...c,
+            expires: c.expires && c.expires !== -1 ? c.expires : undefined,
+        }));
+        await this._browser._connection.send('Browser.setCookies', { browserContextId: this._browserContextId, cookies: cc });
+    }
+    async clearCookies() {
+        await this._browser._connection.send('Browser.clearCookies', { browserContextId: this._browserContextId });
+    }
+    async _doGrantPermissions(origin, permissions) {
+        const webPermissionToProtocol = new Map([
+            ['geolocation', 'geo'],
+            ['persistent-storage', 'persistent-storage'],
+            ['push', 'push'],
+            ['notifications', 'desktop-notification'],
+        ]);
+        const filtered = permissions.map(permission => {
+            const protocolPermission = webPermissionToProtocol.get(permission);
+            if (!protocolPermission)
+                throw new Error('Unknown permission: ' + permission);
+            return protocolPermission;
+        });
+        await this._browser._connection.send('Browser.grantPermissions', { origin: origin, browserContextId: this._browserContextId, permissions: filtered });
+    }
+    async _doClearPermissions() {
+        await this._browser._connection.send('Browser.resetPermissions', { browserContextId: this._browserContextId });
+    }
+    async setGeolocation(geolocation) {
+        browserContext_1.verifyGeolocation(geolocation);
+        this._options.geolocation = geolocation;
+        await this._browser._connection.send('Browser.setGeolocationOverride', { browserContextId: this._browserContextId, geolocation: geolocation || null });
+    }
+    async setExtraHTTPHeaders(headers) {
+        this._options.extraHTTPHeaders = headers;
+        let allHeaders = this._options.extraHTTPHeaders;
+        if (this._options.locale)
+            allHeaders = network.mergeHeaders([allHeaders, network.singleHeader('Accept-Language', this._options.locale)]);
+        await this._browser._connection.send('Browser.setExtraHTTPHeaders', { browserContextId: this._browserContextId, headers: allHeaders });
+    }
+    async setOffline(offline) {
+        this._options.offline = offline;
+        await this._browser._connection.send('Browser.setOnlineOverride', { browserContextId: this._browserContextId, override: offline ? 'offline' : 'online' });
+    }
+    async _doSetHTTPCredentials(httpCredentials) {
+        this._options.httpCredentials = httpCredentials;
+        await this._browser._connection.send('Browser.setHTTPCredentials', { browserContextId: this._browserContextId, credentials: httpCredentials || null });
+    }
+    async _doAddInitScript(source) {
+        await this._browser._connection.send('Browser.addScriptToEvaluateOnNewDocument', { browserContextId: this._browserContextId, script: source });
+    }
+    async _doExposeBinding(binding) {
+        const worldName = binding.world === 'utility' ? ffPage_1.UTILITY_WORLD_NAME : '';
+        await this._browser._connection.send('Browser.addBinding', { browserContextId: this._browserContextId, worldName, name: binding.name, script: binding.source });
+    }
+    async _doUpdateRequestInterception() {
+        await this._browser._connection.send('Browser.setRequestInterception', { browserContextId: this._browserContextId, enabled: !!this._requestInterceptor });
+    }
+    async _onClosePersistent() { }
+    async _doClose() {
+        utils_1.assert(this._browserContextId);
+        await this._browser._connection.send('Browser.removeBrowserContext', { browserContextId: this._browserContextId });
+        this._browser._contexts.delete(this._browserContextId);
+    }
+}
+exports.FFBrowserContext = FFBrowserContext;
+function toJugglerProxyOptions(proxy) {
+    const proxyServer = new URL(proxy.server);
+    let port = parseInt(proxyServer.port, 10);
+    let type = 'http';
+    if (proxyServer.protocol === 'socks5:')
+        type = 'socks';
+    else if (proxyServer.protocol === 'socks4:')
+        type = 'socks4';
+    else if (proxyServer.protocol === 'https:')
+        type = 'https';
+    if (proxyServer.port === '') {
+        if (proxyServer.protocol === 'http:')
+            port = 80;
+        else if (proxyServer.protocol === 'https:')
+            port = 443;
+    }
+    return {
+        type,
+        bypass: proxy.bypass ? proxy.bypass.split(',').map(domain => domain.trim()) : [],
+        host: proxyServer.hostname,
+        port,
+        username: proxy.username,
+        password: proxy.password
+    };
+}
+//# sourceMappingURL=ffBrowser.js.map
