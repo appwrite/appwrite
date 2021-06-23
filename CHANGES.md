@@ -9,6 +9,7 @@
   - Add Provider Icon to each Session
   - Add Anonymous Account Placeholder
 - Upgraded telegraf docker image version to v1.1.0
+- Upgraded phpmailer version to 6.5.0 (#1317)
 
 ## Bugs
 
