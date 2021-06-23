@@ -246,14 +246,12 @@ App::post('/v1/database/collections/:collectionId/attributes')
     ->param('type', null, new Text(256), 'Attribute type.')
     ->param('size', null, new Numeric(), 'Attribute size for text attributes, in number of characters. For integers, floats, or bools, use 0.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('signed', true, new Boolean(), 'Is attribute signed?', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
-    // ->param('filters', [], new ArrayList(new Whitelist(['encrypt', 'json'])), 'Array of filters.', true)
     ->inject('response')
     ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $id, $type, $size, $required, $signed, $array, $filters, $response, $dbForExternal, $database, $audits) {
+    ->action(function ($collectionId, $id, $type, $size, $required, $array, $response, $dbForExternal, $database, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
@@ -265,10 +263,16 @@ App::post('/v1/database/collections/:collectionId/attributes')
             throw new Exception('Collection not found', 404);
         }
 
+        // integers are signed by default, and filters are hidden from the endpoint.
+        $signed = true;
+        $filters = [];
+
         $success = $dbForExternal->addAttributeInQueue($collectionId, $id, $type, $size, $required, $signed, $array, $filters);
 
         // Database->addAttributeInQueue() does not return a document
         // So we need to create one for the response
+        //
+        // TODO@kodumbeats should $signed and $filters be part of the response model?
         $attribute = new Document([
             '$collection' => $collectionId,
             '$id' => $id,
@@ -323,7 +327,7 @@ App::get('v1/database/collections/:collectionId/attributes')
 
         $attributes = array_map(function ($attribute) use ($collection) {
             return new Document([\array_merge($attribute, [
-            'collectionId' => $collection->getId(),
+                'collectionId' => $collection->getId(),
             ])]);
         }, $attributes);
 
@@ -452,13 +456,12 @@ App::post('/v1/database/collections/:collectionId/indexes')
     ->param('id', null, new Key(), 'Index ID.')
     ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE, Database::INDEX_SPATIAL, Database::INDEX_ARRAY]), 'Index type.')
     ->param('attributes', null, new ArrayList(new Key()), 'Array of attributes to index.')
-    // ->param('lengths', [], new ArrayList(new Text(256)), 'Array of index lengths.', true)
     ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'])), 'Array of index orders.', true)
     ->inject('response')
     ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $id, $type, $attributes, $lengths, $orders, $response, $dbForExternal, $database, $audits) {
+    ->action(function ($collectionId, $id, $type, $attributes, $orders, $response, $dbForExternal, $database, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Event\Event $audits */
@@ -469,10 +472,15 @@ App::post('/v1/database/collections/:collectionId/indexes')
             throw new Exception('Collection not found', 404);
         }
 
+        // lengths hidden by default
+        $lengths = [];
+
         $success = $dbForExternal->addIndexInQueue($collectionId, $id, $type, $attributes, $lengths, $orders);
 
         // Database->createIndex() does not return a document
         // So we need to create one for the response
+        // 
+        // TODO@kodumbeats should $lengths be a part of the response model?
         $index = new Document([
             '$collection' => $collectionId,
             '$id' => $id,
@@ -526,7 +534,7 @@ App::get('v1/database/collections/:collectionId/indexes')
 
         $indexes = array_map(function ($index) use ($collection) {
             return new Document([\array_merge($index, [
-            'collectionId' => $collection->getId(),
+                'collectionId' => $collection->getId(),
             ])]);
         }, $indexes);
 
