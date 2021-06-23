@@ -211,24 +211,24 @@ class Server
                 throw new Exception('Missing or unknown project ID', 1008);
             }
 
-            // /*
-            //  * Abuse Check
-            //  *
-            //  * Abuse limits are connecting 128 times per minute and ip address.
-            //  */
-            // $timeLimit = new TimeLimit('url:{url},ip:{ip}', 128, 60, function () use ($db) {
-            //     return $db;
-            // });
-            // $timeLimit
-            //     ->setNamespace('app_' . $project->getId())
-            //     ->setParam('{ip}', $request->getIP())
-            //     ->setParam('{url}', $request->getURI());
+            /*
+             * Abuse Check
+             *
+             * Abuse limits are connecting 128 times per minute and ip address.
+             */
+            $timeLimit = new TimeLimit('url:{url},ip:{ip}', 128, 60, function () use (&$db) {
+                return $db;
+            });
+            $timeLimit
+                ->setNamespace('app_' . $project->getId())
+                ->setParam('{ip}', $request->getIP())
+                ->setParam('{url}', $request->getURI());
 
-            // $abuse = new Abuse($timeLimit);
+            $abuse = new Abuse($timeLimit);
 
-            // if ($abuse->check() && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
-            //     throw new Exception('Too many requests', 1013);
-            // }
+            if ($abuse->check() && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+                throw new Exception('Too many requests', 1013);
+            }
 
             /*
              * Validate Client Domain - Check to avoid CSRF attack.
