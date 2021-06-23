@@ -26,7 +26,7 @@ export default function () {
       'X-Appwrite-Project': '60479fe35d95d'
     }}
 
-    const resDb = http.get('http://localhost:9501/v1/health/db', config);
+    const resDb = http.get('http://localhost:9501/', config);
 
     check(resDb, {
         'status is 200': (r) => r.status === 200,
