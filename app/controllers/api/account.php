@@ -254,9 +254,13 @@ App::post('/v1/account/sessions')
 
         $countries = $locale->getText('countries');
 
+        $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
+        ? $countries[strtoupper($session->getAttribute('countryCode'))]
+        : $locale->getText('locale.country.unknown');
+
         $session
             ->setAttribute('current', true)
-            ->setAttribute('countryName', (isset($countries[strtoupper($session->getAttribute('countryCode'))])) ? $countries[strtoupper($session->getAttribute('countryCode'))] : $locale->getText('locale.country.unknown'))
+            ->setAttribute('countryName', $countryName)
         ;
         
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -753,9 +757,13 @@ App::post('/v1/account/sessions/anonymous')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
+        $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
+        ? $countries[strtoupper($session->getAttribute('countryCode'))]
+        : $locale->getText('locale.country.unknown');
+
         $session
             ->setAttribute('current', true)
-            ->setAttribute('countryName', (isset($countries[$session->getAttribute('countryCode')])) ? $countries[$session->getAttribute('countryCode')] : $locale->getText('locale.country.unknown'))
+            ->setAttribute('countryName', $countryName)
         ;
 
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -878,9 +886,11 @@ App::get('/v1/account/sessions')
         foreach ($sessions as $key => $session) { 
             /** @var Document $session */
 
-            $session->setAttribute('countryName', (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
-                ? $countries[strtoupper($session->getAttribute('countryCode'))]
-                : $locale->getText('locale.country.unknown'));
+            $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
+            ? $countries[strtoupper($session->getAttribute('countryCode'))]
+            : $locale->getText('locale.country.unknown');
+
+            $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', ($current == $session->getId()) ? true : false);
 
             $sessions[$key] = $session;
@@ -966,6 +976,47 @@ App::get('/v1/account/logs')
         }
 
         $response->dynamic(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
+    });
+
+App::get('/v1/account/sessions/:sessionId')
+    ->desc('Get Session By ID')
+    ->groups(['api', 'account'])
+    ->label('scope', 'account')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'getSession')
+    ->label('sdk.description', '/docs/references/account/get-session.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SESSION)
+    ->param('sessionId', null, new UID(), 'Session unique ID. Use the string \'current\' to get the current device session.')
+    ->inject('response')
+    ->inject('user')
+    ->inject('locale')
+    ->inject('projectDB')
+    ->action(function ($sessionId, $response, $user, $locale, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Locale\Locale $locale */
+        /** @var Appwrite\Database\Database $projectDB */
+
+        $sessionId = ($sessionId === 'current')
+        ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
+        : $sessionId;
+
+        $session = $projectDB->getDocument($sessionId); // get user by session ID
+
+        if ($session->isEmpty() || Database::SYSTEM_COLLECTION_SESSIONS != $session->getCollection()) {
+            throw new Exception('Session not found', 404);
+        };
+        
+        $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
+        ? $countries[strtoupper($session->getAttribute('countryCode'))]
+        : $locale->getText('locale.country.unknown');
+
+        $session->setAttribute('countryName', $countryName);
+
+        $response->dynamic($session, Response::MODEL_SESSION);
     });
 
 App::patch('/v1/account/name')
