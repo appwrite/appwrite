@@ -145,6 +145,7 @@ class FunctionsV1 extends Worker
         $event = $this->args['event'] ?? '';
         $scheduleOriginal = $this->args['scheduleOriginal'] ?? '';
         $eventData = (!empty($this->args['eventData'])) ? json_encode($this->args['eventData']) : '';
+        var_dump($eventData);
         $data = $this->args['data'] ?? '';
         $userId = $this->args['userId'] ?? '';
         $jwt = $this->args['jwt'] ?? '';
@@ -353,7 +354,7 @@ class FunctionsV1 extends Worker
 
         \array_walk($vars, function (&$value, $key) {
             $key = $this->filterEnvKey($key);
-            $value = \escapeshellarg((empty($value)) ? 'null' : $value);
+            $value = \escapeshellarg((empty($value)) ? '' : $value);
             $value = "--env {$key}={$value}";
         });
 
