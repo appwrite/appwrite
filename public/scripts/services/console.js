@@ -2,7 +2,7 @@
     "use strict";
 
     window.ls.container.set('console', function (window) {
-        var sdk = new window.Appwrite.Appwrite();
+        var sdk = new window.Appwrite();
 
         sdk
             .setEndpoint(APP_ENV.ENDPOINT + APP_ENV.API)
