@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e2b6f0456d2d1a51f14fa8c5244b1024",
+    "content-hash": "ba882fb2e25e5d4304a6574986a6a7e9",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -115,16 +115,16 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.3.0",
+            "version": "dev-main",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/php-runtimes.git",
-                "reference": "39be003cdff22c8447de151921001eb5d3bf2319"
+                "reference": "cc7090a67d8824c779190b38873f0f8154f906b2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/php-runtimes/zipball/39be003cdff22c8447de151921001eb5d3bf2319",
-                "reference": "39be003cdff22c8447de151921001eb5d3bf2319",
+                "url": "https://api.github.com/repos/appwrite/php-runtimes/zipball/cc7090a67d8824c779190b38873f0f8154f906b2",
+                "reference": "cc7090a67d8824c779190b38873f0f8154f906b2",
                 "shasum": ""
             },
             "require": {
@@ -136,6 +136,7 @@
                 "utopia-php/cli": "0.11.*",
                 "vimeo/psalm": "4.0.1"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -144,7 +145,7 @@
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
-                "BSD-3"
+                "BSD-3-Clause"
             ],
             "authors": [
                 {
@@ -164,9 +165,9 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/php-runtimes/issues",
-                "source": "https://github.com/appwrite/php-runtimes/tree/0.3.0"
+                "source": "https://github.com/appwrite/php-runtimes/tree/main"
             },
-            "time": "2021-06-15T07:52:43+00:00"
+            "time": "2021-06-23T07:17:12+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -6052,7 +6053,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "appwrite/php-runtimes": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

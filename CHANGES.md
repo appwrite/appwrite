@@ -20,6 +20,7 @@
 - Added new environment variables to the `telegraf` service: (#1202)
   - _APP_INFLUXDB_HOST
   - _APP_INFLUXDB_PORT
+- Added new endpoint to get a session based on it's ID (#1294)
 
 ## Breaking Changes (Read before upgrading!)
 - Renamed `env` param on `/v1/functions` to `runtime` (#1314)
