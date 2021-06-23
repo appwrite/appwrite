@@ -51,7 +51,7 @@
         "utopia-php/domains": "1.1.*",
         "utopia-php/swoole": "0.2.*",
         "utopia-php/storage": "0.5.*",
-        "utopia-php/image": "0.3.*",
+        "utopia-php/image": "0.4.*",
         "resque/php-resque": "1.3.6",
         "matomo/device-detector": "4.2.2",
         "dragonmantank/cron-expression": "3.1.0",
