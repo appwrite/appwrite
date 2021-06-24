@@ -22,7 +22,7 @@ trait RealtimeBase
         ];
         return new WebSocketClient('ws://appwrite-traefik/v1/realtime?' . http_build_query($query), [
             'headers' => $headers,
-            'timeout' => 60,
+            'timeout' => 30,
         ]);
     }
 
@@ -622,7 +622,7 @@ trait RealtimeBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Test',
-            'env' => 'php-7.4',
+            'runtime' => 'php-7.4',
             'execute' => ['*'],
             'timeout' => 10,
         ]);

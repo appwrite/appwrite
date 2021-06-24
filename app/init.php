@@ -190,7 +190,6 @@ $register->set('redisPool', function () {
         ->withPort($redisPort)
         ->withAuth($redisAuth)
         ->withDbIndex(0)
-        ->withTimeout(1)
     );
 
     return $pool;
