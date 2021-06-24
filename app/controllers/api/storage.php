@@ -291,7 +291,13 @@ App::post('/v1/storage/buckets/:bucketId/files')
          */
         $allowedFileExtensions = $bucket->getAttribute('allowedFileExtensions', []);
         $fileExt = new FileExt($allowedFileExtensions);
-        $fileSize = new FileSize($bucket->getAttribute('maximumFileSize', 0));
+
+        $maximumFileSize = $bucket->getAttribute('maximumFileSize', 0);
+        if($maximumFileSize > (int) App::getEnv('_APP_STORAGE_LIMIT',0)) {
+            throw new Exception('Server error', 500);
+        }
+
+        $fileSize = new FileSize($maximumFileSize);
         $upload = new Upload();
 
         if (empty($file)) {
