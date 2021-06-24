@@ -1,1 +1,3 @@
 Allow the user to login to their account using the OAuth2 provider of their choice. Each OAuth2 provider should be enabled from the Appwrite console first. Use the success and failure arguments to provide a redirect URL's back to your app when login is completed.
+
+If there is already an active session, the new account details is attached to the same account that has the active session. If there is no active sessions, it will look for the user with the same email address as the email received from OAuth2 provider and attach new session to the existing user if found or create a new user if the email doesn't exist in the database.
