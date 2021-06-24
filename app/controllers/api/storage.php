@@ -281,7 +281,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
         if($bucket->isEmpty()) {
-            throw new Exception("Bucket not found", 404);
+            throw new Exception('Bucket not found', 404);
         }
 
         $file = $request->getFiles('file');
@@ -420,7 +420,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
         if($bucket->isEmpty()) {
-            throw new Exception("Bucket not found", 404);
+            throw new Exception('Bucket not found', 404);
         }
 
         $queries = [new Query('bucketId', Query::TYPE_EQUAL, [$bucketId])];
@@ -457,7 +457,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
         if($bucket->isEmpty()) {
-            throw new Exception("Bucket not found", 404);
+            throw new Exception('Bucket not found', 404);
         }
 
         $file = $dbForInternal->getDocument('files', $fileId);
@@ -515,7 +515,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
         if($bucket->isEmpty()) {
-            throw new Exception("Bucket not found", 404);
+            throw new Exception('Bucket not found', 404);
         }
 
         if ((\strpos($request->getAccept(), 'image/webp') === false) && ('webp' == $output)) { // Fallback webp to jpeg when no browser support
@@ -650,7 +650,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
         if($bucket->isEmpty()) {
-            throw new Exception("Bucket not found", 404);
+            throw new Exception('Bucket not found', 404);
         }
 
         $file = $dbForInternal->getDocument('files', $fileId);
@@ -715,7 +715,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
         if($bucket->isEmpty()) {
-            throw new Exception("Bucket not found", 404);
+            throw new Exception('Bucket not found', 404);
         }
 
         $file  = $dbForInternal->getDocument('files', $fileId);
@@ -795,7 +795,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
         if($bucket->isEmpty()) {
-            throw new Exception("Bucket not found", 404);
+            throw new Exception('Bucket not found', 404);
         }
 
         $file = $dbForInternal->getDocument('files', $fileId);
@@ -845,7 +845,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
         if($bucket->isEmpty()) {
-            throw new Exception("Bucket not found", 404);
+            throw new Exception('Bucket not found', 404);
         }
 
         $file = $dbForInternal->getDocument('files', $fileId);
