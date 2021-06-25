@@ -915,13 +915,27 @@ App::post('/v1/storage/files')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $usage */
 
+        $bucketId = 'default';
+        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
+
+        if($bucket->isEmpty()) {
+            throw new Exception('Bucket not found', 404);
+        }
+
         $file = $request->getFiles('file');
 
         /*
          * Validators
          */
-        //$fileType = new FileType(array(FileType::FILE_TYPE_PNG, FileType::FILE_TYPE_GIF, FileType::FILE_TYPE_JPEG));
-        $fileSize = new FileSize(App::getEnv('_APP_STORAGE_LIMIT', 0));
+        $allowedFileExtensions = $bucket->getAttribute('allowedFileExtensions', []);
+        $fileExt = new FileExt($allowedFileExtensions);
+
+        $maximumFileSize = $bucket->getAttribute('maximumFileSize', 0);
+        if($maximumFileSize > (int) App::getEnv('_APP_STORAGE_LIMIT',0)) {
+            throw new Exception('Server error', 500);
+        }
+
+        $fileSize = new FileSize($maximumFileSize);
         $upload = new Upload();
 
         if (empty($file)) {
@@ -934,9 +948,9 @@ App::post('/v1/storage/files')
         $file['size'] = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
         // Check if file type is allowed (feature for project settings?)
-        //if (!$fileType->isValid($file['tmp_name'])) {
-        //throw new Exception('File type not allowed', 400);
-        //}
+        if (!empty($allowedFileExtensions) && !$fileExt->isValid($file['name'])) {
+            throw new Exception('File extension not allowed', 400);
+        }
 
         if (!$fileSize->isValid($file['size'])) { // Check if file size is exceeding allowed limit
             throw new Exception('File size not allowed', 400);
@@ -951,6 +965,7 @@ App::post('/v1/storage/files')
         // Save to storage
         $size = $device->getFileSize($file['tmp_name']);
         $path = $device->getPath(\uniqid().'.'.\pathinfo($file['name'], PATHINFO_EXTENSION));
+        $path = $bucket->getId() . '/' . $path;
         
         if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
             throw new Exception('Failed moving file', 500);
@@ -958,7 +973,7 @@ App::post('/v1/storage/files')
 
         $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
 
-        if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
+        if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antiVirus', true) && $size <= APP_LIMIT_ANTIVIRUS) {
             $antiVirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
                 (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
 
@@ -969,12 +984,17 @@ App::post('/v1/storage/files')
         }
 
         // Compression
-        $compressor = new GZIP();
         $data = $device->read($path);
-        $data = $compressor->compress($data);
-        $key = App::getEnv('_APP_OPENSSL_KEY_V1');
-        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-        $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
+        if($size <= APP_LIMIT_COMPRESSION) {
+            $compressor = new GZIP();
+            $data = $compressor->compress($data);
+        }
+        
+        if($bucket->getAttribute('encryption', true) && $size <= APP_LIMIT_ENCRYPTION) {
+            $key = App::getEnv('_APP_OPENSSL_KEY_V1');
+            $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+            $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
+        }
 
         if (!$device->write($path, $data, $mimeType)) {
             throw new Exception('Failed to save file', 500);
@@ -982,24 +1002,29 @@ App::post('/v1/storage/files')
 
         $sizeActual = $device->getFileSize($path);
         
-        $file = $dbForInternal->createDocument('files', new Document([
+        $data = [
             '$read' => (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? [], // By default set read permissions for user
             '$write' => (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? [], // By default set write permissions for user
             'dateCreated' => \time(),
-            'bucketId' => '',
+            'bucketId' => $bucket->getId(),
             'name' => $file['name'],
             'path' => $path,
             'signature' => $device->getFileHash($path),
             'mimeType' => $mimeType,
             'sizeOriginal' => $size,
             'sizeActual' => $sizeActual,
-            'algorithm' => $compressor->getName(),
+            'algorithm' => empty($compressor) ? '' : $compressor->getName(),
             'comment' => '',
-            'openSSLVersion' => '1',
-            'openSSLCipher' => OpenSSL::CIPHER_AES_128_GCM,
-            'openSSLTag' => \bin2hex($tag),
-            'openSSLIV' => \bin2hex($iv),
-        ]));
+        ];
+
+        if($bucket->getAttribute('encryption', true) && $size <= APP_LIMIT_ENCRYPTION) {
+            $data['openSSLVersion'] = '1';
+            $data['openSSLCipher'] = OpenSSL::CIPHER_AES_128_GCM;
+            $data['openSSLTag'] = \bin2hex($tag);
+            $data['openSSLIV'] = \bin2hex($iv);
+        }
+
+        $file = $dbForInternal->createDocument('files', new Document($data));
 
         $audits
             ->setParam('event', 'storage.files.create')
@@ -1012,7 +1037,6 @@ App::post('/v1/storage/files')
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic2($file, Response::MODEL_FILE);
-        ;
     });
 
 App::get('/v1/storage/files')
