@@ -1180,17 +1180,23 @@ App::put('/v1/storage/files/:fileId')
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
 
+        $bucketId = 'default';
+        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
+
+        if($bucket->isEmpty()) {
+            throw new Exception('Bucket not found', 404);
+        }
+
         $file = $dbForInternal->getDocument('files', $fileId);
 
-        if (empty($file->getId())) {
+        if ($file->isEmpty() || $file->getAttribute('bucketId') != $bucketId) {
             throw new Exception('File not found', 404);
         }
 
-        $file = $dbForInternal->updateDocument('files', $fileId, new Document(\array_merge($file->getArrayCopy(), [
-            '$read' => $read,
-            '$write' => $write,
-            'bucketId' => '',
-        ])));
+        $file = $dbForInternal->updateDocument('files', $fileId, $file
+                ->setAttribute('$read', $read)
+                ->setAttribute('$write', $write)
+        );
 
         $audits
             ->setParam('event', 'storage.files.update')
@@ -1224,9 +1230,16 @@ App::delete('/v1/storage/files/:fileId')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $usage */
         
+        $bucketId = 'default';
+        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
+
+        if($bucket->isEmpty()) {
+            throw new Exception('Bucket not found', 404);
+        }
+
         $file = $dbForInternal->getDocument('files', $fileId);
 
-        if (empty($file->getId())) {
+        if ($file->isEmpty() || $file->getAttribute('bucketId') != $bucketId) {
             throw new Exception('File not found', 404);
         }
 
