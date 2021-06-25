@@ -1031,17 +1031,12 @@ App::get('/v1/storage/files')
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
-    ->inject('dbForInternal')
-    ->action(function ($search, $limit, $offset, $orderType, $response, $dbForInternal) {
+    ->action(function ($search, $limit, $offset, $orderType, $response) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, $search)] : [];
-
-        $response->dynamic2(new Document([
-            'files' => $dbForInternal->find('files', $queries, $limit, $offset, ['_id'], [$orderType]),
-            'sum' => $dbForInternal->count('files', $queries, APP_LIMIT_COUNT),
-        ]), Response::MODEL_FILE_LIST);
+        $response->redirect('/v1/storage/buckets/default/files?='
+        .\http_build_query(['search' => $search, 'limit' => $limit, 'offset' => $offset, 'orderType' => $orderType]));
     });
 
 App::get('/v1/storage/files/:fileId')
@@ -1057,18 +1052,11 @@ App::get('/v1/storage/files/:fileId')
     ->label('sdk.response.model', Response::MODEL_FILE)
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->inject('response')
-    ->inject('dbForInternal')
-    ->action(function ($fileId, $response, $dbForInternal) {
+    ->action(function ($fileId, $response) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $file = $dbForInternal->getDocument('files', $fileId);
-
-        if (empty($file->getId())) {
-            throw new Exception('File not found', 404);
-        }
-
-        $response->dynamic2($file, Response::MODEL_FILE);
+        $response->redirect('/v1/storage/buckets/default/files/'.$fileId);
     });
 
 App::get('/v1/storage/files/:fileId/preview')
@@ -1094,135 +1082,15 @@ App::get('/v1/storage/files/:fileId/preview')
     ->param('rotation', 0, new Range(0,360), 'Preview image rotation in degrees. Pass an integer between 0 and 360.', true)
     ->param('background', '', new HexColor(), 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
     ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
-    ->inject('request')
     ->inject('response')
-    ->inject('project')
-    ->inject('dbForInternal')
-    ->action(function ($fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $dbForInternal) {
+    ->action(function ($fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $response) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $storage = 'files';
-
-        if (!\extension_loaded('imagick')) {
-            throw new Exception('Imagick extension is missing', 500);
-        }
-
-        if (!Storage::exists($storage)) {
-            throw new Exception('No such storage device', 400);
-        }
-
-        if ((\strpos($request->getAccept(), 'image/webp') === false) && ('webp' == $output)) { // Fallback webp to jpeg when no browser support
-            $output = 'jpg';
-        }
-
-        $inputs = Config::getParam('storage-inputs');
-        $outputs = Config::getParam('storage-outputs');
-        $fileLogos = Config::getParam('storage-logos');
-
-        $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
-        $key = \md5($fileId.$width.$height.$quality.$borderWidth.$borderColor.$borderRadius.$opacity.$rotation.$background.$storage.$output);
-
-        $file = $dbForInternal->getDocument('files', $fileId);
-
-        if (empty($file->getId())) {
-            throw new Exception('File not found', 404);
-        }
-
-        $path = $file->getAttribute('path');
-        $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
-        $algorithm = $file->getAttribute('algorithm');
-        $cipher = $file->getAttribute('openSSLCipher');
-        $mime = $file->getAttribute('mimeType');
-
-        if (!\in_array($mime, $inputs)) {
-            $path = (\array_key_exists($mime, $fileLogos)) ? $fileLogos[$mime] : $fileLogos['default'];
-            $algorithm = null;
-            $cipher = null;
-            $background = (empty($background)) ? 'eceff1' : $background;
-            $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
-            $key = \md5($path.$width.$height.$quality.$borderWidth.$borderColor.$borderRadius.$opacity.$rotation.$background.$storage.$output);
-        }
-
-        $compressor = new GZIP();
-        $device = Storage::getDevice('files');
-
-        if (!\file_exists($path)) {
-            throw new Exception('File not found', 404);
-        }
-
-        $cache = new Cache(new Filesystem(APP_STORAGE_CACHE.'/app-'.$project->getId())); // Limit file number or size
-        $data = $cache->load($key, 60 * 60 * 24 * 30 * 3 /* 3 months */);
-
-        if ($data) {
-            $output = (empty($output)) ? $type : $output;
-
-            return $response
-                ->setContentType((\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'])
-                ->addHeader('Expires', $date)
-                ->addHeader('X-Appwrite-Cache', 'hit')
-                ->send($data)
-            ;
-        }
-
-        $source = $device->read($path);
-
-        if (!empty($cipher)) { // Decrypt
-            $source = OpenSSL::decrypt(
-                $source,
-                $file->getAttribute('openSSLCipher'),
-                App::getEnv('_APP_OPENSSL_KEY_V'.$file->getAttribute('openSSLVersion')),
-                0,
-                \hex2bin($file->getAttribute('openSSLIV')),
-                \hex2bin($file->getAttribute('openSSLTag'))
-            );
-        }
-
-        if (!empty($algorithm)) {
-            $source = $compressor->decompress($source);
-        }
-
-        $image = new Image($source);
-
-        $image->crop((int) $width, (int) $height, $gravity);
-        
-        if (!empty($opacity) || $opacity==0) {
-            $image->setOpacity($opacity);
-        }
-
-        if (!empty($background)) {
-            $image->setBackground('#'.$background);
-        }
-
-        
-        if (!empty($borderWidth) ) {
-            $image->setBorder($borderWidth, '#'.$borderColor);
-        }
-
-        if (!empty($borderRadius)) {
-            $image->setBorderRadius($borderRadius);
-        }
-
-        if (!empty($rotation)) {
-            $image->setRotation($rotation);
-        }
-
-        $output = (empty($output)) ? $type : $output;
-
-        $data = $image->output($output, $quality);
-
-        $cache->save($key, $data);
-
-        $response
-            ->setContentType($outputs[$output])
-            ->addHeader('Expires', $date)
-            ->addHeader('X-Appwrite-Cache', 'miss')
-            ->send($data)
-        ;
-
-        unset($image);
+        $response->redirect('/v1/storage/buckets/default/files/'.$fileId.'/preview?'
+        .\http_build_query(['width' => $width, 'height' => $height, 'gravity' => $gravity, 'quality' => $quality, 'borderWidth' => $borderWidth, 'borderColor' => $borderColor, 'borderRadius' => $borderRadius, 'opacity' => $opacity, 'rotation' => $rotation, 'background' => $background, 'output' => $output]));
     });
 
 App::get('/v1/storage/files/:fileId/download')
@@ -1238,49 +1106,11 @@ App::get('/v1/storage/files/:fileId/download')
     ->label('sdk.methodType', 'location')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->inject('response')
-    ->inject('dbForInternal')
-    ->action(function ($fileId, $response, $dbForInternal) {
+    ->action(function ($fileId, $response) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $file = $dbForInternal->getDocument('files', $fileId);
-
-        if (empty($file->getId())) {
-            throw new Exception('File not found', 404);
-        }
-
-        $path = $file->getAttribute('path', '');
-
-        if (!\file_exists($path)) {
-            throw new Exception('File not found in '.$path, 404);
-        }
-
-        $compressor = new GZIP();
-        $device = Storage::getDevice('files');
-
-        $source = $device->read($path);
-
-        if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
-            $source = OpenSSL::decrypt(
-                $source,
-                $file->getAttribute('openSSLCipher'),
-                App::getEnv('_APP_OPENSSL_KEY_V'.$file->getAttribute('openSSLVersion')),
-                0,
-                \hex2bin($file->getAttribute('openSSLIV')),
-                \hex2bin($file->getAttribute('openSSLTag'))
-            );
-        }
-
-        $source = $compressor->decompress($source);
-
-        // Response
-        $response
-            ->setContentType($file->getAttribute('mimeType'))
-            ->addHeader('Content-Disposition', 'attachment; filename="'.$file->getAttribute('name', '').'"')
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
-            ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->send($source)
-        ;
+        $response->redirect('/v1/storage/buckets/default/files/'.$fileId.'/download');
     });
 
 App::get('/v1/storage/files/:fileId/view')
@@ -1296,59 +1126,11 @@ App::get('/v1/storage/files/:fileId/view')
     ->label('sdk.methodType', 'location')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->inject('response')
-    ->inject('dbForInternal')
-    ->action(function ($fileId, $response, $dbForInternal) {
+    ->action(function ($fileId, $response) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $file  = $dbForInternal->getDocument('files', $fileId);
-        $mimes = Config::getParam('storage-mimes');
-
-        if (empty($file->getId())) {
-            throw new Exception('File not found', 404);
-        }
-
-        $path = $file->getAttribute('path', '');
-
-        if (!\file_exists($path)) {
-            throw new Exception('File not found in '.$path, 404);
-        }
-
-        $compressor = new GZIP();
-        $device = Storage::getDevice('files');
-
-        $contentType = 'text/plain';
-
-        if (\in_array($file->getAttribute('mimeType'), $mimes)) {
-            $contentType = $file->getAttribute('mimeType');
-        }
-
-        $source = $device->read($path);
-
-        if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
-            $source = OpenSSL::decrypt(
-                $source,
-                $file->getAttribute('openSSLCipher'),
-                App::getEnv('_APP_OPENSSL_KEY_V'.$file->getAttribute('openSSLVersion')),
-                0,
-                \hex2bin($file->getAttribute('openSSLIV')),
-                \hex2bin($file->getAttribute('openSSLTag'))
-            );
-        }
-
-        $output = $compressor->decompress($source);
-        $fileName = $file->getAttribute('name', '');
-
-        // Response
-        $response
-            ->setContentType($contentType)
-            ->addHeader('Content-Security-Policy', 'script-src none;')
-            ->addHeader('X-Content-Type-Options', 'nosniff')
-            ->addHeader('Content-Disposition', 'inline; filename="'.$fileName.'"')
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
-            ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->send($output)
-        ;
+        $response->redirect('/v1/storage/buckets/default/files/'.$fileId.'/view');
     });
 
 App::put('/v1/storage/files/:fileId')
