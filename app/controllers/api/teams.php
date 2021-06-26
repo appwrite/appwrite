@@ -188,10 +188,12 @@ App::delete('/v1/teams/:teamId')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('events')
-    ->action(function ($teamId, $response, $dbForInternal, $events) {
+    ->inject('deletes')
+    ->action(function ($teamId, $response, $dbForInternal, $events, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $events */
+        /** @var Appwrite\Event\Event $deletes */
 
         $team = $dbForInternal->getDocument('teams', $teamId);
 
@@ -213,6 +215,11 @@ App::delete('/v1/teams/:teamId')
         if (!$dbForInternal->deleteDocument('teams', $teamId)) {
             throw new Exception('Failed to remove team from DB', 500);
         }
+
+        $deletes
+            ->setParam('type', DELETE_TYPE_DOCUMENT)
+            ->setParam('document', $team)
+        ;
 
         $events
             ->setParam('eventData', $response->output2($team, Response::MODEL_TEAM))

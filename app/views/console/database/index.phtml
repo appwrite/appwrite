@@ -99,7 +99,8 @@
 
                         <input type="hidden" id="collection-read" name="read" required data-cast-to="json" value="<?php echo htmlentities(json_encode([])); ?>" />
                         <input type="hidden" id="collection-write" name="write" required data-cast-to="json" value="<?php echo htmlentities(json_encode([])); ?>" />
-
+                        <input type="hidden" id="collection-rules" name="rules" required data-cast-to="json" value="{}" />
+                        
                         <hr />
 
                         <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>

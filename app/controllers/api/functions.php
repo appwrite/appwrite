@@ -40,14 +40,14 @@ App::post('/v1/functions')
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
     ->param('execute', [], new ArrayList(new Text(64)), 'An array of strings with execution permissions. By default no user is granted with any execute permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->param('env', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution enviornment.')
+    ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
     ->param('vars', [], new Assoc(), 'Key-value JSON object.', true)
     ->param('events', [], new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)), 'Events list.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, 900), 'Function maximum execution time in seconds.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($name, $execute, $env, $vars, $events, $schedule, $timeout, $response, $dbForInternal) {
+    ->action(function ($name, $execute, $runtime, $vars, $events, $schedule, $timeout, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
@@ -57,7 +57,7 @@ App::post('/v1/functions')
             'dateUpdated' => time(),
             'status' => 'disabled',
             'name' => $name,
-            'env' => $env,
+            'runtime' => $runtime,
             'tag' => '',
             'vars' => $vars,
             'events' => $events,
