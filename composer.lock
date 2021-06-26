@@ -835,16 +835,16 @@
         },
         {
             "name": "phpmailer/phpmailer",
-            "version": "v6.4.1",
+            "version": "v6.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPMailer/PHPMailer.git",
-                "reference": "9256f12d8fb0cd0500f93b19e18c356906cbed3d"
+                "reference": "a5b5c43e50b7fba655f793ad27303cd74c57363c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/9256f12d8fb0cd0500f93b19e18c356906cbed3d",
-                "reference": "9256f12d8fb0cd0500f93b19e18c356906cbed3d",
+                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/a5b5c43e50b7fba655f793ad27303cd74c57363c",
+                "reference": "a5b5c43e50b7fba655f793ad27303cd74c57363c",
                 "shasum": ""
             },
             "require": {
@@ -899,7 +899,7 @@
             "description": "PHPMailer is a full-featured email creation and transfer class for PHP",
             "support": {
                 "issues": "https://github.com/PHPMailer/PHPMailer/issues",
-                "source": "https://github.com/PHPMailer/PHPMailer/tree/v6.4.1"
+                "source": "https://github.com/PHPMailer/PHPMailer/tree/v6.5.0"
             },
             "funding": [
                 {
@@ -907,7 +907,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-04-29T12:25:04+00:00"
+            "time": "2021-06-16T14:33:43+00:00"
         },
         {
             "name": "psr/http-client",
@@ -1325,16 +1325,16 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.4.1",
+            "version": "0.4.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "8b7973aae4b02489bd22ffea45b985608f13b6d9"
+                "reference": "286b52209818e5033573e6441d65adbc48a6f715"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/8b7973aae4b02489bd22ffea45b985608f13b6d9",
-                "reference": "8b7973aae4b02489bd22ffea45b985608f13b6d9",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/286b52209818e5033573e6441d65adbc48a6f715",
+                "reference": "286b52209818e5033573e6441d65adbc48a6f715",
                 "shasum": ""
             },
             "require": {
@@ -1371,9 +1371,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.4.1"
+                "source": "https://github.com/utopia-php/abuse/tree/0.4.2"
             },
-            "time": "2021-06-05T14:31:33+00:00"
+            "time": "2021-06-23T15:04:44+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1432,21 +1432,21 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "0.5.1",
+            "version": "0.5.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "154a850170a58667a15e4b65fbabb6cd0b709dd9"
+                "reference": "57e4f8f932164bdfd48ec32bf8d7d3f1bf7518e4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/154a850170a58667a15e4b65fbabb6cd0b709dd9",
-                "reference": "154a850170a58667a15e4b65fbabb6cd0b709dd9",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/57e4f8f932164bdfd48ec32bf8d7d3f1bf7518e4",
+                "reference": "57e4f8f932164bdfd48ec32bf8d7d3f1bf7518e4",
                 "shasum": ""
             },
             "require": {
                 "ext-pdo": "*",
-                "php": ">=7.1"
+                "php": ">=7.4"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -1478,9 +1478,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/0.5.1"
+                "source": "https://github.com/utopia-php/audit/tree/0.5.2"
             },
-            "time": "2020-12-21T17:28:53+00:00"
+            "time": "2021-06-23T16:02:40+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -1743,16 +1743,16 @@
         },
         {
             "name": "utopia-php/image",
-            "version": "0.3.2",
+            "version": "0.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/image.git",
-                "reference": "2044fdd44d87c4253cfe929cca975fd037461b00"
+                "reference": "5b4ac25e70a95fa10b39c129b742ac66748d40b8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/image/zipball/2044fdd44d87c4253cfe929cca975fd037461b00",
-                "reference": "2044fdd44d87c4253cfe929cca975fd037461b00",
+                "url": "https://api.github.com/repos/utopia-php/image/zipball/5b4ac25e70a95fa10b39c129b742ac66748d40b8",
+                "reference": "5b4ac25e70a95fa10b39c129b742ac66748d40b8",
                 "shasum": ""
             },
             "require": {
@@ -1790,9 +1790,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/image/issues",
-                "source": "https://github.com/utopia-php/image/tree/0.3.2"
+                "source": "https://github.com/utopia-php/image/tree/0.5.0"
             },
-            "time": "2021-06-10T09:16:11+00:00"
+            "time": "2021-06-25T03:40:03+00:00"
         },
         {
             "name": "utopia-php/locale",

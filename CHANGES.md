@@ -16,6 +16,7 @@
   - Renamed *Devices* to *Sessions*
   - Add Provider Icon to each Session
   - Add Anonymous Account Placeholder
+- Upgraded phpmailer version to 6.5.0 (#1317)
 - Upgraded telegraf docker image version to v1.2.0
 - Added new environment variables to the `telegraf` service: (#1202)
   - _APP_INFLUXDB_HOST
@@ -24,6 +25,7 @@
 
 ## Breaking Changes (Read before upgrading!)
 - Renamed `env` param on `/v1/functions` to `runtime` (#1314)
+- Renamed `deleteUser` method in all SDKs to `delete` (#1216)
 
 ## Bugs
 
@@ -41,10 +43,6 @@
 ## Security
 
 - Fixed potential XSS injection on the console
-
-## Breaking Changes (Read before upgrading!)
-
-- Renamed `deleteUser` method in all SDKs to `delete` (#1216)
 
 # Version 0.8.0
 
