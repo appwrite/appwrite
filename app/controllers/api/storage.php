@@ -22,7 +22,6 @@ use Utopia\Image\Image;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
-use Utopia\Validator\Numeric;
 
 App::post('/v1/storage/files')
     ->desc('Create File')
