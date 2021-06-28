@@ -432,8 +432,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
 
     if (APP_MODE_ADMIN !== $mode) {
         $user = $projectDB->getDocument(Auth::$unique);
-    }
-    else {
+    } else {
         $user = $consoleDB->getDocument(Auth::$unique);
         
         $user
@@ -450,8 +449,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     if (APP_MODE_ADMIN === $mode) {
         if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
-        }
-        else {
+        } else {
             $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
         }
     }

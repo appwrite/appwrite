@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Auth\Auth;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Database;
@@ -43,7 +44,7 @@ $stats->create();
 
 $server = new Server($adapter);
 
-$server->onStart(function(SwooleServer $server) use ($stats) {
+$server->onStart(function (SwooleServer $server) use ($stats) {
     Console::success('Server started succefully');
     Console::info("Master pid {$server->master_pid}, manager pid {$server->manager_pid}");
 
@@ -82,7 +83,7 @@ $server->onStart(function(SwooleServer $server) use ($stats) {
     });
 });
 
-$server->onWorkerStart(function(SwooleServer $swooleServer, int $workerId) use ($server, $register, $stats, &$subscriptions, &$connections) {
+$server->onWorkerStart(function (SwooleServer $swooleServer, int $workerId) use ($server, $register, $stats, &$subscriptions, &$connections) {
     Console::success('Worker ' . $workerId . ' started succefully');
 
     $attempts = 0;
@@ -107,7 +108,7 @@ $server->onWorkerStart(function(SwooleServer $swooleServer, int $workerId) use (
                 'channels' => ['project'],
                 'timestamp' => time(),
                 'payload' => $payload
-            ])); 
+            ]));
         }
     });
 
@@ -137,38 +138,38 @@ $server->onWorkerStart(function(SwooleServer $swooleServer, int $workerId) use (
                 if ($event['permissionsChanged'] && isset($event['userId'])) {
                     $project = $event['project'];
                     $userId = $event['userId'];
-            
-                    if (array_key_exists($project, $subscriptions) && array_key_exists('user:'.$userId, $subscriptions[$project])) {
-                        $connection = array_key_first(reset($subscriptions[$project]['user:'.$userId]));
+
+                    if (array_key_exists($project, $subscriptions) && array_key_exists('user:' . $userId, $subscriptions[$project])) {
+                        $connection = array_key_first(reset($subscriptions[$project]['user:' . $userId]));
                     } else {
                         return;
                     }
-            
+
                     /**
                      * This is redundant soon and will be gone with merging the usage branch.
                      */
                     $db = $register->get('dbPool')->get();
                     $cache = $register->get('redisPool')->get();
-            
+
                     $projectDB = new Database();
                     $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
-                    $projectDB->setNamespace('app_'.$project);
+                    $projectDB->setNamespace('app_' . $project);
                     $projectDB->setMocks(Config::getParam('collections', []));
-            
+
                     $user = $projectDB->getDocument($userId);
-            
+
                     Parser::setUser($user);
-            
-                    $roles = Parser::getRoles();
-            
+
+                    $roles = Auth::getRoles($user);
+
                     Parser::subscribe($project, $connection, $roles, $subscriptions, $connections, $connections[$connection]['channels']);
-            
+
                     $register->get('dbPool')->put($db);
                     $register->get('redisPool')->put($cache);
                 }
-        
+
                 $receivers = Parser::identifyReceivers($event, $subscriptions);
-                
+
                 // Temporarily print debug logs by default for Alpha testing.
                 // if (App::isDevelopment() && !empty($receivers)) {
                 if (!empty($receivers)) {
@@ -199,7 +200,7 @@ $server->onWorkerStart(function(SwooleServer $swooleServer, int $workerId) use (
     Console::error('Failed to restart pub/sub...');
 });
 
-$server->onOpen(function(SwooleServer $swooleServer, SwooleRequest $request) use ($server, $register, $stats, &$subscriptions, &$connections) {
+$server->onOpen(function (SwooleServer $swooleServer, SwooleRequest $request) use ($server, $register, $stats, &$subscriptions, &$connections) {
     $app = new App('UTC');
     $connection = $request->fd;
     $request = new Request($request);
@@ -315,13 +316,13 @@ $server->onOpen(function(SwooleServer $swooleServer, SwooleRequest $request) use
     }
 });
 
-$server->onMessage(function(SwooleServer $swooleServer, Frame $frame) use ($server) {
+$server->onMessage(function (SwooleServer $swooleServer, Frame $frame) use ($server) {
     $connection = $frame->fd;
     $server->send([$connection], 'Sending messages is not allowed.');
     $server->close($connection, 1003);
 });
 
-$server->onClose(function(SwooleServer $server, int $connection) use (&$connections, &$subscriptions, $stats) {
+$server->onClose(function (SwooleServer $server, int $connection) use (&$connections, &$subscriptions, $stats) {
     if (array_key_exists($connection, $connections)) {
         $stats->decr($connections[$connection]['projectId'], 'connectionsTotal');
     }

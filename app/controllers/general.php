@@ -240,21 +240,11 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
         }
     }
 
-    if ($user->getId()) {
-        Authorization::setRole('user:'.$user->getId());
-    }
-
     Authorization::setRole('role:'.$role);
 
-    \array_map(function ($node) {
-        if (isset($node['teamId']) && isset($node['roles'])) {
-            Authorization::setRole('team:'.$node['teamId']);
-
-            foreach ($node['roles'] as $nodeRole) { // Set all team roles
-                Authorization::setRole('team:'.$node['teamId'].'/'.$nodeRole);
-            }
-        }
-    }, $user->getAttribute('memberships', []));
+    foreach (Auth::getRoles($user) as $role) {
+        Authorization::setRole($role);
+    }
 
     // TDOO Check if user is root
 

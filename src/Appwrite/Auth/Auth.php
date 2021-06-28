@@ -271,4 +271,31 @@ class Auth
 
         return false;
     }
+
+    /**
+     * Returns all roles for a user.
+     * 
+     * @param Document $user 
+     * @return array 
+     */
+    public static function getRoles(Document $user): array
+    {
+        $roles = [];
+
+        if ($user->getId()) {
+            $roles[] = 'user:'.$user->getId();
+        }
+
+        foreach ($user->getAttribute('memberships', []) as $node) {
+            if (isset($node['teamId']) && isset($node['roles'])) {
+                $roles[] = 'team:' . $node['teamId'];
+
+                foreach ($node['roles'] as $nodeRole) { // Set all team roles
+                    $roles[] = 'team:' . $node['teamId'] . '/' . $nodeRole;
+                }
+            }
+        }
+
+        return $roles;
+    }
 }
