@@ -5,8 +5,9 @@ use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Database;
 use Appwrite\Event\Event;
+use Appwrite\Event\Realtime as RealtimeEvent;
+use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
-use Appwrite\Realtime\Parser;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Swoole\Process;
@@ -43,6 +44,8 @@ $stats->column('messages', Table::TYPE_INT);
 $stats->create();
 
 $server = new Server($adapter);
+
+$realtime = new Realtime();
 
 $server->onStart(function (SwooleServer $server) use ($stats) {
     Console::success('Server started succefully');
@@ -83,7 +86,7 @@ $server->onStart(function (SwooleServer $server) use ($stats) {
     });
 });
 
-$server->onWorkerStart(function (SwooleServer $swooleServer, int $workerId) use ($server, $register, $stats, &$subscriptions, &$connections) {
+$server->onWorkerStart(function (SwooleServer $swooleServer, int $workerId) use ($server, $register, $stats, $realtime) {
     Console::success('Worker ' . $workerId . ' started succefully');
 
     $attempts = 0;
@@ -93,22 +96,22 @@ $server->onWorkerStart(function (SwooleServer $swooleServer, int $workerId) use 
     /**
      * Sending current connections to project channels on the console project every 5 seconds.
      */
-    Timer::tick(5000, function () use ($server, $stats, &$subscriptions) {
-        if (
-            array_key_exists('console', $subscriptions)
-            && array_key_exists('role:member', $subscriptions['console'])
-            && array_key_exists('project', $subscriptions['console']['role:member'])
-        ) {
+    Timer::tick(5000, function () use ($server, $stats, $realtime) {
+        if ($realtime->hasSubscriber('console', 'role:member', 'project')) {
             $payload = [];
             foreach ($stats as $projectId => $value) {
                 $payload[$projectId] = $value['connectionsTotal'];
             }
-            $server->send(array_keys($subscriptions['console']['role:member']['project']), json_encode([
+
+            $event = [
                 'event' => 'stats.connections',
                 'channels' => ['project'],
+                'permissions' => ['role:member'],
                 'timestamp' => time(),
                 'payload' => $payload
-            ]));
+            ];
+
+            $server->send($realtime->getReceivers($event), json_encode($event));
         }
     });
 
@@ -132,43 +135,38 @@ $server->onWorkerStart(function (SwooleServer $swooleServer, int $workerId) use 
                 Console::error('Pub/sub failed (worker: ' . $workerId . ')');
             }
 
-            $redis->subscribe(['realtime'], function ($redis, $channel, $payload) use ($server, $workerId, $stats, $register, &$connections, &$subscriptions) {
+            $redis->subscribe(['realtime'], function ($redis, $channel, $payload) use ($server, $workerId, $stats, $register, $realtime) {
                 $event = json_decode($payload, true);
 
                 if ($event['permissionsChanged'] && isset($event['userId'])) {
-                    $project = $event['project'];
+                    $projectId = $event['project'];
                     $userId = $event['userId'];
 
-                    if (array_key_exists($project, $subscriptions) && array_key_exists('user:' . $userId, $subscriptions[$project])) {
-                        $connection = array_key_first(reset($subscriptions[$project]['user:' . $userId]));
+                    if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
+                        $connection = array_key_first(reset($realtime->subscriptions[$projectId]['user:' . $userId]));
                     } else {
                         return;
                     }
 
-                    /**
-                     * This is redundant soon and will be gone with merging the usage branch.
-                     */
                     $db = $register->get('dbPool')->get();
                     $cache = $register->get('redisPool')->get();
 
                     $projectDB = new Database();
                     $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
-                    $projectDB->setNamespace('app_' . $project);
+                    $projectDB->setNamespace('app_' . $projectId);
                     $projectDB->setMocks(Config::getParam('collections', []));
 
                     $user = $projectDB->getDocument($userId);
 
-                    Parser::setUser($user);
-
                     $roles = Auth::getRoles($user);
 
-                    Parser::subscribe($project, $connection, $roles, $subscriptions, $connections, $connections[$connection]['channels']);
+                    $realtime->subscribe($projectId, $connection, $roles, $realtime->connections[$connection]['channels']);
 
                     $register->get('dbPool')->put($db);
                     $register->get('redisPool')->put($cache);
                 }
 
-                $receivers = Parser::identifyReceivers($event, $subscriptions);
+                $receivers = $realtime->getReceivers($event);
 
                 // Temporarily print debug logs by default for Alpha testing.
                 // if (App::isDevelopment() && !empty($receivers)) {
@@ -200,7 +198,7 @@ $server->onWorkerStart(function (SwooleServer $swooleServer, int $workerId) use 
     Console::error('Failed to restart pub/sub...');
 });
 
-$server->onOpen(function (SwooleServer $swooleServer, SwooleRequest $request) use ($server, $register, $stats, &$subscriptions, &$connections) {
+$server->onOpen(function (SwooleServer $swooleServer, SwooleRequest $request) use ($server, $register, $stats, &$realtime) {
     $app = new App('UTC');
     $connection = $request->fd;
     $request = new Request($request);
@@ -276,10 +274,12 @@ $server->onOpen(function (SwooleServer $swooleServer, SwooleRequest $request) us
             throw new Exception($originValidator->getDescription(), 1008);
         }
 
-        Parser::setUser($user);
+        $roles = [
+            'role:' . (($user->isEmpty()) ? Auth::USER_ROLE_GUEST : Auth::USER_ROLE_MEMBER),
+            ...Auth::getRoles($user)
+        ];
 
-        $roles = Parser::getRoles();
-        $channels = Parser::parseChannels($request->getQuery('channels', []));
+        $channels = RealtimeEvent::convertChannels($request->getQuery('channels', []), $user);
 
         /**
          * Channels Check
@@ -288,7 +288,7 @@ $server->onOpen(function (SwooleServer $swooleServer, SwooleRequest $request) us
             throw new Exception('Missing channels', 1008);
         }
 
-        Parser::subscribe($project->getId(), $connection, $roles, $subscriptions, $connections, $channels);
+        $realtime->subscribe($project->getId(), $connection, $roles, $channels);
 
         $server->send([$connection], json_encode($channels));
 
@@ -322,11 +322,12 @@ $server->onMessage(function (SwooleServer $swooleServer, Frame $frame) use ($ser
     $server->close($connection, 1003);
 });
 
-$server->onClose(function (SwooleServer $server, int $connection) use (&$connections, &$subscriptions, $stats) {
-    if (array_key_exists($connection, $connections)) {
-        $stats->decr($connections[$connection]['projectId'], 'connectionsTotal');
+$server->onClose(function (SwooleServer $server, int $connection) use ($realtime, $stats) {
+    if (array_key_exists($connection, $realtime->connections)) {
+        $stats->decr($realtime->connections[$connection]['projectId'], 'connectionsTotal');
     }
-    Parser::unsubscribe($connection, $subscriptions, $connections);
+    $realtime->unsubscribe($connection);
+
     Console::info('Connection close: ' . $connection);
 });
 

@@ -280,10 +280,10 @@ class Auth
      */
     public static function getRoles(Document $user): array
     {
-        $roles = [];
-
         if ($user->getId()) {
             $roles[] = 'user:'.$user->getId();
+        } else {
+            return [];
         }
 
         foreach ($user->getAttribute('memberships', []) as $node) {

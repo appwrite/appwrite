@@ -122,6 +122,42 @@ class Realtime
     }
 
     /**
+     * Converts the channels from the Query Params into an array. 
+     * Also renames the account channel to account.USER_ID and removes all illegal account channel variations.
+     * @param array $channels 
+     * @param Document $user 
+     * @return array 
+     */
+    public static function convertChannels(array $channels, Document $user): array
+    {
+        $channels = array_flip($channels);
+
+        foreach ($channels as $key => $value) {
+            switch (true) {
+                case strpos($key, 'account.') === 0:
+                    unset($channels[$key]);
+                    break;
+                
+                case $key === 'account':
+                    if (!empty($user->getId())) {
+                        $channels['account.' . $user->getId()] = $value;
+                    }
+                    unset($channels['account']);
+                    break;
+            }
+        }
+
+        if (\array_key_exists('account', $channels)) {
+            if ($user->getId()) {
+                $channels['account.' . $user->getId()] = $channels['account'];
+            }
+            unset($channels['account']);
+        }
+
+        return $channels;
+    }
+
+    /**
      * Populate channels array based on the event name and payload.
      *
      * @return void
