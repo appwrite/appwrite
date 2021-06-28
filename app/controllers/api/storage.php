@@ -294,7 +294,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
         $maximumFileSize = $bucket->getAttribute('maximumFileSize', 0);
         if($maximumFileSize > (int) App::getEnv('_APP_STORAGE_LIMIT',0)) {
-            throw new Exception('Server error', 500);
+            throw new Exception('Error bucket maximum file size is larger than _APP_STORAGE_LIMIT', 500);
         }
 
         $fileSize = new FileSize($maximumFileSize);
