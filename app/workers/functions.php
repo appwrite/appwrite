@@ -7,6 +7,7 @@ use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
 use Appwrite\Resque\Worker;
+use Appwrite\Utopia\Response\Model\Execution;
 use Cron\CronExpression;
 use Swoole\Runtime;
 use Utopia\App;
@@ -480,6 +481,7 @@ class FunctionsV1 extends Worker
             throw new Exception('Failed saving execution to DB', 500);
         }
 
+        $executionModel = new Execution();
         $executionUpdate = new Event('v1-webhooks', 'WebhooksV1');
 
         $executionUpdate
@@ -487,7 +489,7 @@ class FunctionsV1 extends Worker
             ->setParam('userId', $userId)
             ->setParam('webhooks', $webhooks)
             ->setParam('event', 'functions.executions.update')
-            ->setParam('eventData', $execution->getArrayCopy());
+            ->setParam('eventData', $execution->getArrayCopy(array_keys($executionModel->getRules())));
 
         $executionUpdate->trigger();
 
