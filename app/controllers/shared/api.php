@@ -9,7 +9,7 @@ use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 
-App::init(function ($utopia, $request, $response, $project, $user, $register, $events, $audits, $usage, $deletes) {
+App::init(function ($utopia, $request, $response, $project, $user, $register, $events, $audits, $usage, $deletes, $db) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
@@ -34,8 +34,8 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     /*
      * Abuse Check
      */
-    $timeLimit = new TimeLimit($route->getLabel('abuse-key', 'url:{url},ip:{ip}'), $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), function () use ($register) {
-        return $register->get('db');
+    $timeLimit = new TimeLimit($route->getLabel('abuse-key', 'url:{url},ip:{ip}'), $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), function () use (&$db) {
+        return $db;
     });
     $timeLimit->setNamespace('app_'.$project->getId());
     $timeLimit
@@ -111,7 +111,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
         ->setParam('projectId', $project->getId())
     ;
 
-}, ['utopia', 'request', 'response', 'project', 'user', 'register', 'events', 'audits', 'usage', 'deletes'], 'api');
+}, ['utopia', 'request', 'response', 'project', 'user', 'register', 'events', 'audits', 'usage', 'deletes', 'db'], 'api');
 
 
 App::init(function ($utopia, $request, $response, $project, $user) {

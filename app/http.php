@@ -3,8 +3,6 @@
 require_once __DIR__.'/../vendor/autoload.php';
 
 use Appwrite\Database\Validator\Authorization;
-use Utopia\Swoole\Files;
-use Utopia\Swoole\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Process;
 use Swoole\Http\Server;
@@ -12,6 +10,8 @@ use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Swoole\Files;
+use Utopia\Swoole\Request;
 
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
@@ -75,18 +75,22 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         return;
     }
 
+    $app = new App('UTC');
+
     $db = $register->get('dbPool')->get();
     $redis = $register->get('redisPool')->get();
 
-    $register->set('db', function () use (&$db) {
+    App::setResource('db', function () use (&$db) {
         return $db;
     });
 
-    $register->set('cache', function () use (&$redis) {
+    App::setResource('cache', function () use (&$redis) {
         return $redis;
     });
 
-    $app = new App('UTC');
+    App::setResource('app', function() use (&$app) {
+        return $app;
+    });
     
     try {
         Authorization::cleanRoles();

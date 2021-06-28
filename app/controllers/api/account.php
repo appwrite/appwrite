@@ -914,19 +914,20 @@ App::get('/v1/account/logs')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->inject('response')
-    ->inject('register')
     ->inject('project')
     ->inject('user')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function ($response, $register, $project, $user, $locale, $geodb) {
+    ->inject('app')
+    ->action(function ($response, $project, $user, $locale, $geodb, $app) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
+        /** @var Utopia\App $app */
 
-        $adapter = new AuditAdapter($register->get('db'));
+        $adapter = new AuditAdapter($app->getResource('db'));
         $adapter->setNamespace('app_'.$project->getId());
 
         $audit = new Audit($adapter);
