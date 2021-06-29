@@ -90,13 +90,6 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
         throw new Exception('Missing or unknown project ID', 400);
     }
 
-    $service = $route->getLabel('sdk.namespace','');
-    if(!empty($service)) {
-        if(!$project->getAttribute('statusFor' . \ucfirst($service), true) && !Auth::isPrivilegedUser(Authorization::$roles)) {
-            throw new Exception('Service is disabled', 503);
-        }
-    }
-
     $referrer = $request->getReferer();
     $origin = \parse_url($request->getOrigin($referrer), PHP_URL_HOST);
     $protocol = \parse_url($request->getOrigin($referrer), PHP_URL_SCHEME);
@@ -263,7 +256,12 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
         }
     }, $user->getAttribute('memberships', []));
 
-    // TDOO Check if user is root
+    $service = $route->getLabel('sdk.namespace','');
+    if(!empty($service)) {
+        if(!$project->getAttribute('statusFor' . \ucfirst($service), true) && !Auth::isPrivilegedUser(Authorization::$roles)) {
+            throw new Exception('Service is disabled', 503);
+        }
+    }
 
     if (!\in_array($scope, $scopes)) {
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) { // Check if permission is denied because project is missing
