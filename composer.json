@@ -51,7 +51,7 @@
         "utopia-php/domains": "1.1.*",
         "utopia-php/swoole": "0.2.*",
         "utopia-php/storage": "0.5.*",
-        "utopia-php/websocket": "dev-main",
+        "utopia-php/websocket": "dev-fix-adapter-interface",
         "utopia-php/image": "0.5.*",
         "resque/php-resque": "1.3.6",
         "matomo/device-detector": "4.2.3",
@@ -71,8 +71,8 @@
     },
     "repositories": [
         {
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/websocket"
+            "type": "git",
+            "url": "https://github.com/utopia-php/websocket.git"
         }
     ],
     "provide": {
