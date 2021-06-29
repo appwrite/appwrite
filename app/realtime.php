@@ -10,12 +10,9 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
-use Swoole\Process;
 use Swoole\Runtime;
 use Swoole\Table;
 use Swoole\Timer;
-use Swoole\WebSocket\Frame;
-use Swoole\WebSocket\Server as SwooleServer;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
@@ -47,9 +44,8 @@ $server = new Server($adapter);
 
 $realtime = new Realtime();
 
-$server->onStart(function (SwooleServer $server) use ($stats) {
+$server->onStart(function () use ($stats) {
     Console::success('Server started succefully');
-    Console::info("Master pid {$server->master_pid}, manager pid {$server->manager_pid}");
 
     Timer::tick(10000, function () use ($stats) {
         foreach ($stats as $projectId => $value) {
@@ -79,14 +75,9 @@ $server->onStart(function (SwooleServer $server) use ($stats) {
             }
         }
     });
-
-    Process::signal(2, function () use ($server) {
-        Console::log('Stop by Ctrl+C');
-        $server->shutdown();
-    });
 });
 
-$server->onWorkerStart(function (SwooleServer $swooleServer, int $workerId) use ($server, $register, $stats, $realtime) {
+$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime) {
     Console::success('Worker ' . $workerId . ' started succefully');
 
     $attempts = 0;
@@ -198,9 +189,8 @@ $server->onWorkerStart(function (SwooleServer $swooleServer, int $workerId) use 
     Console::error('Failed to restart pub/sub...');
 });
 
-$server->onOpen(function (SwooleServer $swooleServer, SwooleRequest $request) use ($server, $register, $stats, &$realtime) {
+$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime) {
     $app = new App('UTC');
-    $connection = $request->fd;
     $request = new Request($request);
 
     /** @var PDO $db */
@@ -208,7 +198,7 @@ $server->onOpen(function (SwooleServer $swooleServer, SwooleRequest $request) us
     /** @var Redis $redis */
     $redis = $register->get('redisPool')->get();
 
-    Console::info("Connection open (user: {$connection}, worker: {$swooleServer->getWorkerId()})");
+    Console::info("Connection open (user: {$connection})");
 
     App::setResource('db', function () use (&$db) {
         return $db;
@@ -248,9 +238,7 @@ $server->onOpen(function (SwooleServer $swooleServer, SwooleRequest $request) us
          *
          * Abuse limits are connecting 128 times per minute and ip address.
          */
-        $timeLimit = new TimeLimit('url:{url},ip:{ip}', 128, 60, function () use (&$db) {
-            return $db;
-        });
+        $timeLimit = new TimeLimit('url:{url},ip:{ip}', 128, 60, $db);
         $timeLimit
             ->setNamespace('app_' . $project->getId())
             ->setParam('{ip}', $request->getIP())
@@ -316,13 +304,12 @@ $server->onOpen(function (SwooleServer $swooleServer, SwooleRequest $request) us
     }
 });
 
-$server->onMessage(function (SwooleServer $swooleServer, Frame $frame) use ($server) {
-    $connection = $frame->fd;
+$server->onMessage(function (int $connection, string $message) use ($server) {
     $server->send([$connection], 'Sending messages is not allowed.');
     $server->close($connection, 1003);
 });
 
-$server->onClose(function (SwooleServer $server, int $connection) use ($realtime, $stats) {
+$server->onClose(function (int $connection) use ($realtime, $stats) {
     if (array_key_exists($connection, $realtime->connections)) {
         $stats->decr($realtime->connections[$connection]['projectId'], 'connectionsTotal');
     }
