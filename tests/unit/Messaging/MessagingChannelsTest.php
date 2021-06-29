@@ -2,19 +2,21 @@
 
 namespace Appwrite\Tests;
 
+use Appwrite\Auth\Auth;
 use Appwrite\Database\Document;
-use Appwrite\Realtime;
+use Appwrite\Event\Realtime as EventRealtime;
+use Appwrite\Messaging;
+use Appwrite\Messaging\Adapter\Realtime;
 use PHPUnit\Framework\TestCase;
 
-class RealtimeChannelsTest extends TestCase
+class MessagingChannelsTest extends TestCase
 {
     /**
      * Configures how many Connections the Test should Mock.
      */
     public $connectionsPerChannel = 10;
 
-    public $connections = [];
-    public $subscriptions = [];
+    public Realtime $realtime;
     public $connectionsCount = 0;
     public $connectionsAuthenticated = 0;
     public $connectionsGuest = 0;
@@ -41,12 +43,14 @@ class RealtimeChannelsTest extends TestCase
         $this->connectionsGuest = count($this->allChannels) * $this->connectionsPerChannel;
         $this->connectionsTotal = $this->connectionsAuthenticated + $this->connectionsGuest;
 
+        $this->realtime = new Realtime();
+
         /**
          * Add Authenticated Clients
          */
         for ($i = 0; $i < $this->connectionsPerChannel; $i++) {
             foreach ($this->allChannels as $index => $channel) {
-                Realtime\Parser::setUser(new Document([
+                $user = new Document([
                     '$id' => 'user' . $this->connectionsCount,
                     'memberships' => [
                         [
@@ -56,16 +60,19 @@ class RealtimeChannelsTest extends TestCase
                             ]
                         ]
                     ]
-                ]));
-                $roles = Realtime\Parser::getRoles();
-                $parsedChannels = Realtime\Parser::parseChannels([0 => $channel]);
+                ]);
 
-                Realtime\Parser::subscribe(
+                $roles = [
+                    'role:' . (($user->isEmpty()) ? Auth::USER_ROLE_GUEST : Auth::USER_ROLE_MEMBER),
+                    ...Auth::getRoles($user)
+                ];
+
+                $parsedChannels = EventRealtime::convertChannels([0 => $channel], $user);
+
+                $this->realtime->subscribe(
                     '1',
                     $this->connectionsCount,
                     $roles,
-                    $this->subscriptions,
-                    $this->connections,
                     $parsedChannels
                 );
 
@@ -78,19 +85,21 @@ class RealtimeChannelsTest extends TestCase
          */
         for ($i = 0; $i < $this->connectionsPerChannel; $i++) {
             foreach ($this->allChannels as $index => $channel) {
-                Realtime\Parser::setUser(new Document([
+                $user = new Document([
                     '$id' => ''
-                ]));
+                ]);
 
-                $roles = Realtime\Parser::getRoles();
-                $parsedChannels = Realtime\Parser::parseChannels([0 => $channel]);
+                $roles = [
+                    'role:' . (($user->isEmpty()) ? Auth::USER_ROLE_GUEST : Auth::USER_ROLE_MEMBER),
+                    ...Auth::getRoles($user)
+                ];
 
-                Realtime\Parser::subscribe(
+                $parsedChannels = EventRealtime::convertChannels([0 => $channel], $user);
+
+                $this->realtime->subscribe(
                     '1',
                     $this->connectionsCount,
                     $roles,
-                    $this->subscriptions,
-                    $this->connections,
                     $parsedChannels
                 );
 
@@ -101,8 +110,7 @@ class RealtimeChannelsTest extends TestCase
 
     public function tearDown(): void
     {
-        $this->connections = [];
-        $this->subscriptions = [];
+        unset($this->realtime);
         $this->connectionsCount = 0;
     }
 
@@ -111,7 +119,7 @@ class RealtimeChannelsTest extends TestCase
         /**
          * Check for 1 project.
          */
-        $this->assertCount(1, $this->subscriptions);
+        $this->assertCount(1, $this->realtime->subscriptions);
 
         /**
          * Check for correct amount of subscriptions:
@@ -121,28 +129,28 @@ class RealtimeChannelsTest extends TestCase
          *  - 1 role:guest
          *  - 1 role:member
          */
-        $this->assertCount(($this->connectionsAuthenticated + (3 * $this->connectionsPerChannel) + 2), $this->subscriptions['1']);
+        $this->assertCount(($this->connectionsAuthenticated + (3 * $this->connectionsPerChannel) + 2), $this->realtime->subscriptions['1']);
 
         /**
          * Check for connections
          *  - Authenticated
          *  - Guests
          */
-        $this->assertCount($this->connectionsTotal, $this->connections);
+        $this->assertCount($this->connectionsTotal, $this->realtime->connections);
+        
+        $this->realtime->unsubscribe(-1);
 
-        Realtime\Parser::unsubscribe(-1, $this->subscriptions, $this->connections);
-
-        $this->assertCount($this->connectionsTotal, $this->connections);
-        $this->assertCount(($this->connectionsAuthenticated + (3 * $this->connectionsPerChannel) + 2), $this->subscriptions['1']);
+        $this->assertCount($this->connectionsTotal, $this->realtime->connections);
+        $this->assertCount(($this->connectionsAuthenticated + (3 * $this->connectionsPerChannel) + 2), $this->realtime->subscriptions['1']);
 
         for ($i = 0; $i < $this->connectionsCount; $i++) {
-            Realtime\Parser::unsubscribe($i, $this->subscriptions, $this->connections);
+            $this->realtime->unsubscribe($i);
 
-            $this->assertCount(($this->connectionsCount - $i - 1), $this->connections);
+            $this->assertCount(($this->connectionsCount - $i - 1), $this->realtime->connections);
         }
 
-        $this->assertEmpty($this->connections);
-        $this->assertEmpty($this->subscriptions);
+        $this->assertEmpty($this->realtime->connections);
+        $this->assertEmpty($this->realtime->subscriptions);
     }
 
     /**
@@ -161,10 +169,7 @@ class RealtimeChannelsTest extends TestCase
                 ]
             ];
 
-            $receivers = Realtime\Parser::identifyReceivers(
-                $event,
-                $this->subscriptions
-            );
+            $receivers = $this->realtime->getReceivers($event);
 
             /**
              * Every Client subscribed to the Wildcard should receive this event.
@@ -197,10 +202,7 @@ class RealtimeChannelsTest extends TestCase
                     ]
                 ];
 
-                $receivers = Realtime\Parser::identifyReceivers(
-                    $event,
-                    $this->subscriptions
-                );
+                $receivers = $this->realtime->getReceivers($event);
 
                 /**
                  * Every Role subscribed to a Channel should receive this event.
@@ -234,10 +236,7 @@ class RealtimeChannelsTest extends TestCase
                 ]
             ];
 
-            $receivers = Realtime\Parser::identifyReceivers(
-                $event,
-                $this->subscriptions
-            );
+            $receivers = $this->realtime->getReceivers($event);
 
             /**
              * Every Client subscribed to a Channel should receive this event.
@@ -271,10 +270,7 @@ class RealtimeChannelsTest extends TestCase
                 ]
             ];
 
-            $receivers = Realtime\Parser::identifyReceivers(
-                $event,
-                $this->subscriptions
-            );
+            $receivers = $this->realtime->getReceivers($event);
 
             /**
              * Every Team Member should receive this event.
@@ -300,10 +296,7 @@ class RealtimeChannelsTest extends TestCase
                 ]
             ];
 
-            $receivers = Realtime\Parser::identifyReceivers(
-                $event,
-                $this->subscriptions
-            );
+            $receivers = $this->realtime->getReceivers($event);
 
             /**
              * Only 1 Team Member of a role should have access to a specific channel.
