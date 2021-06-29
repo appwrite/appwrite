@@ -176,9 +176,7 @@ class DeletesV1 extends Worker
             throw new Exception('Failed to delete audit logs. No timestamp provided');
         }
 
-        $timeLimit = new TimeLimit("", 0, 1, function () use ($register) {
-            return $register->get('db');
-        });
+        $timeLimit = new TimeLimit("", 0, 1, $register->get('db'));
 
         $this->deleteForProjectIds(function($projectId) use ($timeLimit, $timestamp){
             $timeLimit->setNamespace('app_'.$projectId);
@@ -358,9 +356,12 @@ class DeletesV1 extends Worker
     {
         global $register;
 
+        $db = $register->get('db');
+        $cache = $register->get('cache');
+
         if($this->consoleDB === null) {
             $this->consoleDB = new Database();
-            $this->consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+            $this->consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));;
             $this->consoleDB->setNamespace('app_console'); // Main DB
             $this->consoleDB->setMocks(Config::getParam('collections', []));
         }
@@ -374,9 +375,12 @@ class DeletesV1 extends Worker
     protected function getProjectDB($projectId): Database
     {
         global $register;
-        
+
+        $db = $register->get('db');
+        $cache = $register->get('cache');
+
         $projectDB = new Database();
-        $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+        $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
         $projectDB->setNamespace('app_'.$projectId); // Main DB
         $projectDB->setMocks(Config::getParam('collections', []));
 
