@@ -53,8 +53,7 @@ RUN \
   make && make install && \
   cd .. && \
   ## Imagick Extension
-  ## Last working commit https://github.com/Imagick/imagick/commit/35741750aa1cda2b7ac354bfa6128fa037e9cf32
-  git clone --depth 1 --branch $PHP_IMAGICK_VERSION https://github.com/Imagick/imagick && \
+  git clone --depth 1 --branch $PHP_IMAGICK_VERSION https://github.com/imagick/imagick && \
   cd imagick && \
   phpize && \
   ./configure && \
@@ -151,10 +150,12 @@ RUN \
   brotli-dev \
   yaml-dev \
   imagemagick \
+  imagemagick-dev \
   libmaxminddb-dev \
   certbot \
   docker-cli \
   docker-compose \
+  libgomp \
   && docker-php-ext-install sockets opcache pdo_mysql \
   && apk del .deps \
   && rm -rf /var/cache/apk/*
