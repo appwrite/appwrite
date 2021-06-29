@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f0045a975cc1e8215cdfef44472b702f",
+    "content-hash": "b1c7f49f79e05bcbc3b078242198b854",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -6113,7 +6113,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/websocket": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
