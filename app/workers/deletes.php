@@ -176,9 +176,7 @@ class DeletesV1 extends Worker
             throw new Exception('Failed to delete audit logs. No timestamp provided');
         }
 
-        $timeLimit = new TimeLimit("", 0, 1, function () use ($register) {
-            return $register->get('db');
-        });
+        $timeLimit = new TimeLimit("", 0, 1, $register->get('db'));
 
         $this->deleteForProjectIds(function($projectId) use ($timeLimit, $timestamp){
             $timeLimit->setNamespace('app_'.$projectId);

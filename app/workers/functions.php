@@ -8,6 +8,7 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
 use Appwrite\Event\Realtime;
 use Appwrite\Resque\Worker;
+use Appwrite\Utopia\Response\Model\Execution;
 use Cron\CronExpression;
 use Swoole\Runtime;
 use Utopia\App;
@@ -481,6 +482,7 @@ class FunctionsV1 extends Worker
             throw new Exception('Failed saving execution to DB', 500);
         }
 
+        $executionModel = new Execution();
         $executionUpdate = new Event('v1-webhooks', 'WebhooksV1');
 
         $executionUpdate
@@ -488,7 +490,7 @@ class FunctionsV1 extends Worker
             ->setParam('userId', $userId)
             ->setParam('webhooks', $webhooks)
             ->setParam('event', 'functions.executions.update')
-            ->setParam('payload', $execution->getArrayCopy());
+            ->setParam('eventData', $execution->getArrayCopy(array_keys($executionModel->getRules())));
 
         $executionUpdate->trigger();
 
@@ -531,7 +533,7 @@ class FunctionsV1 extends Worker
         if(\count($list) > $max) {
             Console::info('Starting containers cleanup');
 
-            \usort($list, function ($item1, $item2) {
+            \uasort($list, function ($item1, $item2) {
                 return (int)($item1['appwrite-created'] ?? 0) <=> (int)($item2['appwrite-created'] ?? 0);
             });
 

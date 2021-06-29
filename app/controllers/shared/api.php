@@ -35,9 +35,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     /*
      * Abuse Check
      */
-    $timeLimit = new TimeLimit($route->getLabel('abuse-key', 'url:{url},ip:{ip}'), $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), function () use (&$db) {
-        return $db;
-    });
+    $timeLimit = new TimeLimit($route->getLabel('abuse-key', 'url:{url},ip:{ip}'), $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $db);
     $timeLimit->setNamespace('app_'.$project->getId());
     $timeLimit
         ->setParam('{userId}', $user->getId())

@@ -46,7 +46,6 @@ App::get('/v1/health/db')
     ->action(function ($response, $app) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\App $app */
-
         $app->getResource('db');
 
         $response->json(['status' => 'OK']);

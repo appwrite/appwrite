@@ -4,14 +4,14 @@ require_once __DIR__.'/../vendor/autoload.php';
 
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Utopia\Response;
-use Utopia\Swoole\Files;
-use Utopia\Swoole\Request;
 use Swoole\Process;
 use Swoole\Http\Server;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Swoole\Files;
+use Utopia\Swoole\Request;
 
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 

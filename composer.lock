@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3cf401f31fafb8aa517415681d53c516",
+    "content-hash": "f0045a975cc1e8215cdfef44472b702f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -715,16 +715,16 @@
         },
         {
             "name": "matomo/device-detector",
-            "version": "4.2.2",
+            "version": "4.2.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/matomo-org/device-detector.git",
-                "reference": "dc270e7645d286d6f01d516a6634aba8b31ad668"
+                "reference": "d879f07496d6e6ee89cef5bcd925383d9b0c2cc0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/dc270e7645d286d6f01d516a6634aba8b31ad668",
-                "reference": "dc270e7645d286d6f01d516a6634aba8b31ad668",
+                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/d879f07496d6e6ee89cef5bcd925383d9b0c2cc0",
+                "reference": "d879f07496d6e6ee89cef5bcd925383d9b0c2cc0",
                 "shasum": ""
             },
             "require": {
@@ -780,7 +780,7 @@
                 "source": "https://github.com/matomo-org/matomo",
                 "wiki": "https://dev.matomo.org/"
             },
-            "time": "2021-02-26T07:31:42+00:00"
+            "time": "2021-05-12T14:14:25+00:00"
         },
         {
             "name": "mustangostang/spyc",
@@ -834,16 +834,16 @@
         },
         {
             "name": "phpmailer/phpmailer",
-            "version": "v6.4.1",
+            "version": "v6.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPMailer/PHPMailer.git",
-                "reference": "9256f12d8fb0cd0500f93b19e18c356906cbed3d"
+                "reference": "a5b5c43e50b7fba655f793ad27303cd74c57363c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/9256f12d8fb0cd0500f93b19e18c356906cbed3d",
-                "reference": "9256f12d8fb0cd0500f93b19e18c356906cbed3d",
+                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/a5b5c43e50b7fba655f793ad27303cd74c57363c",
+                "reference": "a5b5c43e50b7fba655f793ad27303cd74c57363c",
                 "shasum": ""
             },
             "require": {
@@ -898,7 +898,7 @@
             "description": "PHPMailer is a full-featured email creation and transfer class for PHP",
             "support": {
                 "issues": "https://github.com/PHPMailer/PHPMailer/issues",
-                "source": "https://github.com/PHPMailer/PHPMailer/tree/v6.4.1"
+                "source": "https://github.com/PHPMailer/PHPMailer/tree/v6.5.0"
             },
             "funding": [
                 {
@@ -906,7 +906,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-04-29T12:25:04+00:00"
+            "time": "2021-06-16T14:33:43+00:00"
         },
         {
             "name": "psr/http-client",
@@ -1192,31 +1192,33 @@
         },
         {
             "name": "slickdeals/statsd",
-            "version": "3.0.2",
+            "version": "3.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Slickdeals/statsd-php.git",
-                "reference": "393c6565efbfb23c8296ae3099a62fb6366c6ce3"
+                "reference": "225588a0a079e145359049f6e5e23eedb1b4c17f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Slickdeals/statsd-php/zipball/393c6565efbfb23c8296ae3099a62fb6366c6ce3",
-                "reference": "393c6565efbfb23c8296ae3099a62fb6366c6ce3",
+                "url": "https://api.github.com/repos/Slickdeals/statsd-php/zipball/225588a0a079e145359049f6e5e23eedb1b4c17f",
+                "reference": "225588a0a079e145359049f6e5e23eedb1b4c17f",
                 "shasum": ""
             },
             "require": {
-                "php": ">= 7.2"
+                "php": ">= 7.3 || ^8"
+            },
+            "replace": {
+                "domnikl/statsd": "self.version"
             },
             "require-dev": {
-                "flyeralarm/php-code-validator": "^2.2",
-                "phpunit/phpunit": "~8.0",
-                "vimeo/psalm": "^3.4"
+                "friendsofphp/php-cs-fixer": "^3.0",
+                "phpunit/phpunit": "^9",
+                "vimeo/psalm": "^4.6"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Domnikl\\Statsd\\": "src/",
-                    "Domnikl\\Test\\Statsd\\": "tests/unit"
+                    "Domnikl\\Statsd\\": "src/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -1230,7 +1232,7 @@
                 }
             ],
             "description": "a PHP client for statsd",
-            "homepage": "https://domnikl.github.com/statsd-php",
+            "homepage": "https://github.com/Slickdeals/statsd-php",
             "keywords": [
                 "Metrics",
                 "monitoring",
@@ -1239,9 +1241,10 @@
                 "udp"
             ],
             "support": {
-                "source": "https://github.com/Slickdeals/statsd-php/tree/3.0.2"
+                "issues": "https://github.com/Slickdeals/statsd-php/issues",
+                "source": "https://github.com/Slickdeals/statsd-php/tree/3.1.0"
             },
-            "time": "2020-01-03T14:24:58+00:00"
+            "time": "2021-06-04T20:33:46+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -1324,16 +1327,16 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.4.2",
+            "version": "0.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "286b52209818e5033573e6441d65adbc48a6f715"
+                "reference": "339c1720e5aa5314276128170463594b81f84760"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/286b52209818e5033573e6441d65adbc48a6f715",
-                "reference": "286b52209818e5033573e6441d65adbc48a6f715",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/339c1720e5aa5314276128170463594b81f84760",
+                "reference": "339c1720e5aa5314276128170463594b81f84760",
                 "shasum": ""
             },
             "require": {
@@ -1370,9 +1373,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.4.2"
+                "source": "https://github.com/utopia-php/abuse/tree/0.5.0"
             },
-            "time": "2021-06-23T15:04:44+00:00"
+            "time": "2021-06-28T10:11:01+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1742,16 +1745,16 @@
         },
         {
             "name": "utopia-php/image",
-            "version": "0.3.2",
+            "version": "0.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/image.git",
-                "reference": "2044fdd44d87c4253cfe929cca975fd037461b00"
+                "reference": "5b4ac25e70a95fa10b39c129b742ac66748d40b8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/image/zipball/2044fdd44d87c4253cfe929cca975fd037461b00",
-                "reference": "2044fdd44d87c4253cfe929cca975fd037461b00",
+                "url": "https://api.github.com/repos/utopia-php/image/zipball/5b4ac25e70a95fa10b39c129b742ac66748d40b8",
+                "reference": "5b4ac25e70a95fa10b39c129b742ac66748d40b8",
                 "shasum": ""
             },
             "require": {
@@ -1789,9 +1792,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/image/issues",
-                "source": "https://github.com/utopia-php/image/tree/0.3.2"
+                "source": "https://github.com/utopia-php/image/tree/0.5.0"
             },
-            "time": "2021-06-10T09:16:11+00:00"
+            "time": "2021-06-25T03:40:03+00:00"
         },
         {
             "name": "utopia-php/locale",
@@ -3875,16 +3878,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "9.5.4",
+            "version": "9.5.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "c73c6737305e779771147af66c96ca6a7ed8a741"
+                "reference": "fb9b8333f14e3dce976a60ef6a7e05c7c7ed8bfb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/c73c6737305e779771147af66c96ca6a7ed8a741",
-                "reference": "c73c6737305e779771147af66c96ca6a7ed8a741",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/fb9b8333f14e3dce976a60ef6a7e05c7c7ed8bfb",
+                "reference": "fb9b8333f14e3dce976a60ef6a7e05c7c7ed8bfb",
                 "shasum": ""
             },
             "require": {
@@ -3914,7 +3917,7 @@
                 "sebastian/global-state": "^5.0.1",
                 "sebastian/object-enumerator": "^4.0.3",
                 "sebastian/resource-operations": "^3.0.3",
-                "sebastian/type": "^2.3",
+                "sebastian/type": "^2.3.4",
                 "sebastian/version": "^3.0.2"
             },
             "require-dev": {
@@ -3962,7 +3965,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/phpunit/issues",
-                "source": "https://github.com/sebastianbergmann/phpunit/tree/9.5.4"
+                "source": "https://github.com/sebastianbergmann/phpunit/tree/9.5.6"
             },
             "funding": [
                 {
@@ -3974,7 +3977,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-03-23T07:16:29+00:00"
+            "time": "2021-06-23T05:14:38+00:00"
         },
         {
             "name": "psr/container",
@@ -4990,16 +4993,16 @@
         },
         {
             "name": "swoole/ide-helper",
-            "version": "4.6.6",
+            "version": "4.6.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/swoole/ide-helper.git",
-                "reference": "d29d71267f8ed4e4993dc057ca53ffdb5d2703b7"
+                "reference": "0d1409b8274117addfe64d3ea412812a69807411"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/swoole/ide-helper/zipball/d29d71267f8ed4e4993dc057ca53ffdb5d2703b7",
-                "reference": "d29d71267f8ed4e4993dc057ca53ffdb5d2703b7",
+                "url": "https://api.github.com/repos/swoole/ide-helper/zipball/0d1409b8274117addfe64d3ea412812a69807411",
+                "reference": "0d1409b8274117addfe64d3ea412812a69807411",
                 "shasum": ""
             },
             "require-dev": {
@@ -5022,7 +5025,7 @@
             "description": "IDE help files for Swoole.",
             "support": {
                 "issues": "https://github.com/swoole/ide-helper/issues",
-                "source": "https://github.com/swoole/ide-helper/tree/4.6.6"
+                "source": "https://github.com/swoole/ide-helper/tree/4.6.7"
             },
             "funding": [
                 {
@@ -5038,7 +5041,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2021-04-22T16:38:11+00:00"
+            "time": "2021-05-14T16:05:16+00:00"
         },
         {
             "name": "symfony/console",
@@ -6110,9 +6113,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/websocket": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
