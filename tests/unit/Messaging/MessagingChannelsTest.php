@@ -60,10 +60,7 @@ class MessagingChannelsTest extends TestCase
                     ]
                 ]);
 
-                $roles = [
-                    'role:' . (($user->isEmpty()) ? Auth::USER_ROLE_GUEST : Auth::USER_ROLE_MEMBER),
-                    ...Auth::getRoles($user)
-                ];
+                $roles = Auth::getRoles($user);
 
                 $parsedChannels = Realtime::convertChannels([0 => $channel], $user);
 
@@ -87,10 +84,7 @@ class MessagingChannelsTest extends TestCase
                     '$id' => ''
                 ]);
 
-                $roles = [
-                    'role:' . (($user->isEmpty()) ? Auth::USER_ROLE_GUEST : Auth::USER_ROLE_MEMBER),
-                    ...Auth::getRoles($user)
-                ];
+                $roles = Auth::getRoles($user);
 
                 $parsedChannels = Realtime::convertChannels([0 => $channel], $user);
 
