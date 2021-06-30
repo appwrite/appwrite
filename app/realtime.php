@@ -261,10 +261,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception($originValidator->getDescription(), 1008);
         }
 
-        $roles = [
-            'role:' . (($user->isEmpty()) ? Auth::USER_ROLE_GUEST : Auth::USER_ROLE_MEMBER),
-            ...Auth::getRoles($user)
-        ];
+        $roles = Auth::getRoles($user);
 
         $channels = Realtime::convertChannels($request->getQuery('channels', []), $user);
 

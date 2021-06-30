@@ -282,8 +282,9 @@ class Auth
     {
         if ($user->getId()) {
             $roles[] = 'user:'.$user->getId();
+            $roles[] = 'role:'.Auth::USER_ROLE_MEMBER;
         } else {
-            return [];
+            return ['role:'.Auth::USER_ROLE_GUEST];
         }
 
         foreach ($user->getAttribute('memberships', []) as $node) {
