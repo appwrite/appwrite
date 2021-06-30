@@ -463,13 +463,20 @@ class FunctionsV1
         Console::info("Function executed in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
 
         Authorization::disable();
-        
+
+        $outputLimit = App::getEnv('_APP_FUNCTIONS_MAX_OUTPUT', 65535);
+
+        if (mb_strlen($stdout) > $outputLimit) {
+            $functionStatus = 'failed';
+            $stderr .= "\n Output limit exceeded. Maximum output allowed is {$outputLimit}. Output has been truncated.";
+        }
+
         $execution = $database->updateDocument(array_merge($execution->getArrayCopy(), [
             'tagId' => $tag->getId(),
             'status' => $functionStatus,
             'exitCode' => $exitCode,
-            'stdout' => \mb_substr($stdout, -4000), // log last 4000 chars output
-            'stderr' => \mb_substr($stderr, -4000), // log last 4000 chars output
+            'stdout' => \mb_substr($stdout, -$outputLimit), // log last chars output according to _APP_FUNCTIONS_MAX_OUTPUT
+            'stderr' => \mb_substr($stderr, -$outputLimit), // log last chars output according to _APP_FUNCTIONS_MAX_OUTPUT
             'time' => $executionTime,
         ]));
         

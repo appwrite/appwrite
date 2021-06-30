@@ -114,6 +114,7 @@ services:
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
       - _APP_FUNCTIONS_RUNTIMES
+      - _APP_FUNCTIONS_MAX_OUTPUT
 
   appwrite-worker-usage:
     entrypoint: worker-usage
@@ -302,6 +303,7 @@ services:
       - _APP_FUNCTIONS_CPUS
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
+      - _APP_FUNCTIONS_MAX_OUTPUT
       - _APP_USAGE_STATS
       - DOCKERHUB_PULL_USERNAME
       - DOCKERHUB_PULL_PASSWORD
