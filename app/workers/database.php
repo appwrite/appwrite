@@ -68,13 +68,13 @@ class DatabaseV1 extends Worker
         $dbForExternal = $this->getExternalDB($projectId);
 
         $collectionId = $attribute->getCollection();
-        $id = $attribute->getAttribute('$id');
-        $type = $attribute->getAttribute('type');
-        $size = $attribute->getAttribute('size');
-        $required = $attribute->getAttribute('required');
-        $signed = $attribute->getAttribute('signed');
-        $array = $attribute->getAttribute('array');
-        $filters = $attribute->getAttribute('filters');
+        $id = $attribute->getAttribute('$id', '');
+        $type = $attribute->getAttribute('type', '');
+        $size = $attribute->getAttribute('size', 0);
+        $required = $attribute->getAttribute('required', false);
+        $signed = $attribute->getAttribute('signed', true);
+        $array = $attribute->getAttribute('array', false);
+        $filters = $attribute->getAttribute('filters', []);
 
         $success = $dbForExternal->createAttribute($collectionId, $id, $type, $size, $required, $signed, $array, $filters);
         if ($success) {
@@ -105,11 +105,11 @@ class DatabaseV1 extends Worker
         $dbForExternal = $this->getExternalDB($projectId);
 
         $collectionId = $index->getCollection();
-        $id = $index->getAttribute('$id');
-        $type = $index->getAttribute('type');
-        $attributes = $index->getAttribute('attributes');
-        $lengths = $index->getAttribute('lengths');
-        $orders = $index->getAttribute('orders');
+        $id = $index->getAttribute('$id', '');
+        $type = $index->getAttribute('type', '');
+        $attributes = $index->getAttribute('attributes', []);
+        $lengths = $index->getAttribute('lengths', []);
+        $orders = $index->getAttribute('orders', []);
 
         $success = $dbForExternal->createIndex($collectionId, $id, $type, $attributes, $lengths, $orders);
         if ($success) {
