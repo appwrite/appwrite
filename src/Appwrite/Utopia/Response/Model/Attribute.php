@@ -14,19 +14,19 @@ class Attribute extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Collection ID.',
                 'default' => '',
-                'example' => '',
+                'example' => '60ccf71b98a2d',
             ])
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Attribute ID.',
                 'default' => '',
-                'example' => '',
+                'example' => '60ccf71b98a2d',
             ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Attribute type.',
                 'default' => '',
-                'example' => '',
+                'example' => 'integer',
             ])
             ->addRule('size', [
                 'type' => self::TYPE_STRING,
