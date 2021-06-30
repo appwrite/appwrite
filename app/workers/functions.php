@@ -464,7 +464,7 @@ class FunctionsV1
 
         Authorization::disable();
 
-        $outputLimit = App::getEnv('_APP_FUNCTIONS_MAX_OUTPUT', 65535);
+        $outputLimit = App::getEnv('_APP_FUNCTIONS_OUTPUT_MAX', 65535);
 
         if (mb_strlen($stdout) > $outputLimit) {
             $functionStatus = 'failed';
@@ -475,8 +475,8 @@ class FunctionsV1
             'tagId' => $tag->getId(),
             'status' => $functionStatus,
             'exitCode' => $exitCode,
-            'stdout' => \mb_substr($stdout, -$outputLimit), // log last chars output according to _APP_FUNCTIONS_MAX_OUTPUT
-            'stderr' => \mb_substr($stderr, -$outputLimit), // log last chars output according to _APP_FUNCTIONS_MAX_OUTPUT
+            'stdout' => \mb_substr($stdout, -$outputLimit), // log last chars output according to _APP_FUNCTIONS_OUTPUT_MAX
+            'stderr' => \mb_substr($stderr, -$outputLimit), // log last chars output according to _APP_FUNCTIONS_OUTPUT_MAX
             'time' => $executionTime,
         ]));
         

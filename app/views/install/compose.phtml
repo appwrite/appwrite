@@ -98,7 +98,7 @@ services:
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
       - _APP_FUNCTIONS_RUNTIMES
-      - _APP_FUNCTIONS_MAX_OUTPUT
+      - _APP_FUNCTIONS_OUTPUT_MAX
 
   appwrite-worker-usage:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -269,7 +269,7 @@ services:
       - _APP_FUNCTIONS_MEMORY_SWAP
       - _APP_FUNCTIONS_RUNTIMES
       - _APP_USAGE_STATS
-      - _APP_FUNCTIONS_MAX_OUTPUT
+      - _APP_FUNCTIONS_OUTPUT_MAX
 
   appwrite-worker-mails:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
