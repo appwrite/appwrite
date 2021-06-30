@@ -341,10 +341,6 @@ App::setResource('events', function($register) {
     return new Event('', '');
 }, ['register']);
 
-App::setResource('realtime', function($register) {
-    return new Realtime('', '', []);
-}, ['register']);
-
 App::setResource('audits', function($register) {
     return new Event(Event::AUDITS_QUEUE_NAME, Event::AUDITS_CLASS_NAME);
 }, ['register']);

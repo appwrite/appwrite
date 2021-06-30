@@ -6,7 +6,7 @@ use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
-use Appwrite\Event\Realtime;
+use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
 use Appwrite\Utopia\Response\Model\Execution;
 use Cron\CronExpression;
@@ -494,9 +494,15 @@ class FunctionsV1 extends Worker
 
         $executionUpdate->trigger();
 
-        $realtimeUpdate = new Realtime($projectId, 'functions.executions.update', $execution->getArrayCopy());
+        $target = Realtime::fromPayload('functions.executions.update', $execution);
 
-        $realtimeUpdate->trigger();
+        Realtime::send(
+            $projectId, 
+            $execution->getArrayCopy(), 
+            'functions.executions.update', 
+            $target['channels'], 
+            $target['permissions']
+        );
 
         $usage = new Event('v1-usage', 'UsageV1');
 

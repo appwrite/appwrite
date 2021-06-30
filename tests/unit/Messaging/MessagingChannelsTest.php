@@ -4,8 +4,6 @@ namespace Appwrite\Tests;
 
 use Appwrite\Auth\Auth;
 use Appwrite\Database\Document;
-use Appwrite\Event\Realtime as EventRealtime;
-use Appwrite\Messaging;
 use Appwrite\Messaging\Adapter\Realtime;
 use PHPUnit\Framework\TestCase;
 
@@ -67,7 +65,7 @@ class MessagingChannelsTest extends TestCase
                     ...Auth::getRoles($user)
                 ];
 
-                $parsedChannels = EventRealtime::convertChannels([0 => $channel], $user);
+                $parsedChannels = Realtime::convertChannels([0 => $channel], $user);
 
                 $this->realtime->subscribe(
                     '1',
@@ -94,7 +92,7 @@ class MessagingChannelsTest extends TestCase
                     ...Auth::getRoles($user)
                 ];
 
-                $parsedChannels = EventRealtime::convertChannels([0 => $channel], $user);
+                $parsedChannels = Realtime::convertChannels([0 => $channel], $user);
 
                 $this->realtime->subscribe(
                     '1',

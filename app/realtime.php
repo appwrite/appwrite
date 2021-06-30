@@ -5,7 +5,6 @@ use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Database;
 use Appwrite\Event\Event;
-use Appwrite\Event\Realtime as RealtimeEvent;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
 use Swoole\Http\Request as SwooleRequest;
@@ -267,7 +266,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             ...Auth::getRoles($user)
         ];
 
-        $channels = RealtimeEvent::convertChannels($request->getQuery('channels', []), $user);
+        $channels = Realtime::convertChannels($request->getQuery('channels', []), $user);
 
         /**
          * Channels Check
