@@ -423,4 +423,39 @@ class AccountCustomClientTest extends Scope
 
         return [];
     }
+
+    public function testGetSessionByID() {
+        $session = $this->testCreateAnonymousAccount();
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]));
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($response['body']['provider'], 'anonymous');
+
+        $sessionID = $response['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/'.$sessionID, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]));
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($response['body']['provider'], 'anonymous');
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/97823askjdkasd80921371980', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]));
+
+        $this->assertEquals($response['headers']['status-code'], 404);
+    }
 }

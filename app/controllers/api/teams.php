@@ -135,7 +135,7 @@ App::get('/v1/teams/:teamId')
 
         $team = $dbForInternal->getDocument('teams', $teamId);
 
-        if (empty($team->getId())) {
+        if ($team->isEmpty()) {
             throw new Exception('Team not found', 404);
         }
 
@@ -164,7 +164,7 @@ App::put('/v1/teams/:teamId')
 
         $team = $dbForInternal->getDocument('teams', $teamId);
 
-        if (empty($team->getId())) {
+        if ($team->isEmpty()) {
             throw new Exception('Team not found', 404);
         }
 
@@ -188,14 +188,16 @@ App::delete('/v1/teams/:teamId')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('events')
-    ->action(function ($teamId, $response, $dbForInternal, $events) {
+    ->inject('deletes')
+    ->action(function ($teamId, $response, $dbForInternal, $events, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $events */
+        /** @var Appwrite\Event\Event $deletes */
 
         $team = $dbForInternal->getDocument('teams', $teamId);
 
-        if (empty($team->getId())) {
+        if ($team->isEmpty()) {
             throw new Exception('Team not found', 404);
         }
 
@@ -213,6 +215,11 @@ App::delete('/v1/teams/:teamId')
         if (!$dbForInternal->deleteDocument('teams', $teamId)) {
             throw new Exception('Failed to remove team from DB', 500);
         }
+
+        $deletes
+            ->setParam('type', DELETE_TYPE_DOCUMENT)
+            ->setParam('document', $team)
+        ;
 
         $events
             ->setParam('eventData', $response->output2($team, Response::MODEL_TEAM))
@@ -262,7 +269,7 @@ App::post('/v1/teams/:teamId/memberships')
         $name = (empty($name)) ? $email : $name;
         $team = $dbForInternal->getDocument('teams', $teamId);
 
-        if (empty($team->getId())) {
+        if ($team->isEmpty()) {
             throw new Exception('Team not found', 404);
         }
 
@@ -432,7 +439,7 @@ App::get('/v1/teams/:teamId/memberships')
 
         $team = $dbForInternal->getDocument('teams', $teamId);
 
-        if (empty($team->getId())) {
+        if ($team->isEmpty()) {
             throw new Exception('Team not found', 404);
         }
 
@@ -555,7 +562,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $membership = $dbForInternal->getDocument('memberships', $membershipId);
 
-        if (empty($membership->getId())) {
+        if ($membership->isEmpty()) {
             throw new Exception('Membership not found', 404);
         }
 
@@ -569,7 +576,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         
         Authorization::reset();
 
-        if (empty($team->getId())) {
+        if ($team->isEmpty()) {
             throw new Exception('Team not found', 404);
         }
 
@@ -581,7 +588,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception('Invite does not belong to current user ('.$user->getAttribute('email').')', 401);
         }
 
-        if (empty($user->getId())) {
+        if ($user->isEmpty()) {
             $user = $dbForInternal->getDocument('users', $userId); // Get user
         }
 
@@ -678,7 +685,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
 
         $membership = $dbForInternal->getDocument('memberships', $membershipId);
 
-        if (empty($membership->getId())) {
+        if ($membership->isEmpty()) {
             throw new Exception('Invite not found', 404);
         }
 
@@ -694,7 +701,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
 
         $team = $dbForInternal->getDocument('teams', $teamId);
 
-        if (empty($team->getId())) {
+        if ($team->isEmpty()) {
             throw new Exception('Team not found', 404);
         }
 

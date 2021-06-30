@@ -47,9 +47,9 @@ class Func extends Model
                 'default' => '',
                 'example' => 'enabled',
             ])
-            ->addRule('env', [
+            ->addRule('runtime', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function execution environment.',
+                'description' => 'Function execution runtime.',
                 'default' => '',
                 'example' => 'python-3.8',
             ])

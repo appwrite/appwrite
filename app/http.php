@@ -17,14 +17,6 @@ use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Swoole\Files;
 use Utopia\Swoole\Request;
 
-// xdebug_start_trace('/tmp/trace');
-
-ini_set('memory_limit','512M');
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-ini_set('default_socket_timeout', -1);
-error_reporting(E_ALL);
-
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
 $payloadSize = max(4000000 /* 4mb */, App::getEnv('_APP_STORAGE_LIMIT', 10000000 /* 10mb */));
@@ -128,7 +120,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
     });
 });
 
-$http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) {
+$http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register) {
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
 
@@ -144,6 +136,17 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
         return;
     }
+
+    $db = $register->get('dbPool')->get();
+    $redis = $register->get('redisPool')->get();
+
+    $register->set('db', function () use (&$db) {
+        return $db;
+    });
+
+    $register->set('cache', function () use (&$redis) {
+        return $redis;
+    });
 
     $app = new App('UTC');
     
@@ -167,6 +170,14 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         else {
             $swooleResponse->end('500: Server Error');
         }
+    } finally {
+        /** @var PDOPool $dbPool */
+        $dbPool = $register->get('dbPool');
+        $dbPool->put($db);
+
+        /** @var RedisPool $redisPool */
+        $redisPool = $register->get('redisPool');
+        $redisPool->put($redis);
     }
 });
 

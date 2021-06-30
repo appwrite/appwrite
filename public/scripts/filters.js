@@ -234,21 +234,21 @@ window.ls.filter
 
     return $value.join(", ").replace(/,\s([^,]+)$/, ' and $1');
   })
-  .add("envName", function($value, env) {
+  .add("runtimeName", function($value, env) {
     if(env && env.RUNTIMES && env.RUNTIMES[$value]) {
       return env.RUNTIMES[$value].name;
     }
 
     return '';
   })
-  .add("envLogo", function($value, env) {
+  .add("runtimeLogo", function($value, env) {
     if(env && env.RUNTIMES && env.RUNTIMES[$value]) {
       return env.RUNTIMES[$value].logo;
     }
 
     return '';
   })
-  .add("envVersion", function($value, env) {
+  .add("runtimeVersion", function($value, env) {
     if(env && env.RUNTIMES && env.RUNTIMES[$value]) {
       return env.RUNTIMES[$value].version;
     }

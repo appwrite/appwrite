@@ -29,7 +29,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
 
     $route = $utopia->match($request);
 
-    if (empty($project->getId()) && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
+    if ($project->isEmpty() && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
         throw new Exception('Missing or unknown project ID', 400);
     }
 

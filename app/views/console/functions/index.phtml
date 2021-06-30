@@ -40,14 +40,14 @@ $runtimes = $this->getParam('runtimes', []);
                         <ul data-ls-loop="project-functions.functions" data-ls-as="function" class="list">
                             <li class="clear">
                                 <div class="pull-start margin-end avatar-container">
-                                    <img src="" data-ls-attrs="src=/images/runtimes/{{function.env|envLogo}}?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Function Env." class="avatar" loading="lazy" width="60" height="60" />
+                                    <img src="" data-ls-attrs="src=/images/runtimes/{{function.runtime|runtimeLogo}}?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Function Runtime" class="avatar" loading="lazy" width="60" height="60" />
                                 </div>
 
                                 <a data-ls-attrs="href=/console/functions/function?id={{function.$id}}&project={{router.params.project}}" class="button pull-end">Settings</a>
 
                                 <span data-ls-bind="{{function.name}}"></span>
 
-                                <p class="text-fade margin-bottom-no" data-ls-bind="{{function.env|envName}} {{function.env|envVersion}}"></p>
+                                <p class="text-fade margin-bottom-no" data-ls-bind="{{function.runtime|runtimeName}} {{function.runtime|runtimeVersion}}"></p>
                             </li>
                         </ul>
                     </div>
@@ -109,12 +109,14 @@ $runtimes = $this->getParam('runtimes', []);
                             <label for="name">Name</label>
                             <input type="text" id="name" name="name" required autocomplete="off" class="margin-bottom" maxlength="128" />
                             
-                            <label for="env">Runtimes</label>
-                            <select name="env" id="env" required class="margin-bottom-xl">
+                            <label for="runtime">Runtimes</label>
+                            <select name="runtime" id="runtime" required class="margin-bottom-xl">
                                 <?php foreach($runtimes as $key => $runtime): ?>
                                     <option value="<?php echo $this->escape($key); ?>"><?php echo $this->escape($runtime['name']); ?> <?php echo $this->escape($runtime['version']); ?></option>
                                 <?php endforeach; ?>
                             </select>
+
+                            <input id="execute" name="execute" value="" hidden/>
 
                             <footer>
                                 <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>

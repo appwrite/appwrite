@@ -14,7 +14,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
-require_once __DIR__.'/../init.php';
+require_once __DIR__.'/../workers.php';
 
 Runtime::enableCoroutine(0);
 
@@ -71,9 +71,6 @@ Console::success('Finished warmup in '.$warmupTime.' seconds');
  */
 $stdout = '';
 $stderr = '';
-
-$exitCode = Console::execute('docker ps --all --format "name={{.Names}}&status={{.Status}}&labels={{.Labels}}" --filter label=appwrite-type=function'
-    , '', $stdout, $stderr, 30);
 
 $executionStart = \microtime(true);
 
@@ -319,12 +316,12 @@ class FunctionsV1 extends Worker
         
         Authorization::reset();
 
-        $runtime = (isset($runtimes[$function->getAttribute('env', '')]))
-            ? $runtimes[$function->getAttribute('env', '')]
+        $runtime = (isset($runtimes[$function->getAttribute('runtime', '')]))
+            ? $runtimes[$function->getAttribute('runtime', '')]
             : null;
 
         if(\is_null($runtime)) {
-            throw new Exception('Environment "'.$function->getAttribute('env', '').' is not supported');
+            throw new Exception('Runtime "'.$function->getAttribute('runtime', '').' is not supported');
         }
 
         $vars = \array_merge($function->getAttribute('vars', []), [
@@ -520,7 +517,7 @@ class FunctionsV1 extends Worker
         if(\count($list) > $max) {
             Console::info('Starting containers cleanup');
 
-            \usort($list, function ($item1, $item2) {
+            \uasort($list, function ($item1, $item2) {
                 return (int)($item1['appwrite-created'] ?? 0) <=> (int)($item2['appwrite-created'] ?? 0);
             });
 

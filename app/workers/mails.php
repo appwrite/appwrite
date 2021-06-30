@@ -4,7 +4,7 @@ use Appwrite\Resque\Worker;
 use Utopia\App;
 use Utopia\CLI\Console;
 
-require_once __DIR__.'/../init.php';
+require_once __DIR__.'/../workers.php';
 
 Console::title('Mails V1 Worker');
 Console::success(APP_NAME.' mails worker v1 has started'."\n");

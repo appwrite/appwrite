@@ -54,7 +54,7 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'name' => 'Test',
             'execute' => ['user:'.$this->getUser()['$id']],
-            'env' => 'php-8.0',
+            'runtime' => 'php-8.0',
             'vars' => [
                 'funcKey1' => 'funcValue1',
                 'funcKey2' => 'funcValue2',
@@ -140,7 +140,7 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'name' => 'Test',
             'execute' => ['role:all'],
-            'env' => 'php-8.0',
+            'runtime' => 'php-8.0',
             'vars' => [
                 'funcKey1' => 'funcValue1',
                 'funcKey2' => 'funcValue2',
