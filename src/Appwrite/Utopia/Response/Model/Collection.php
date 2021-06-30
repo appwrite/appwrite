@@ -15,20 +15,20 @@ class Collection extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Collection ID.',
                 'default' => '',
-                'example' => '',
+                'example' => '5e5ea5c16897e',
             ])
             ->addRule('$read', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Collection read permissions.',
                 'default' => '',
-                'example' => '',
+                'example' => 'role:all',
                 'array' => true
             ])
             ->addRule('$write', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Collection write permissions.',
                 'default' => '',
-                'example' => '',
+                'example' => 'user:608f9da25e7e1',
                 'array' => true
             ])
             ->addRule('name', [

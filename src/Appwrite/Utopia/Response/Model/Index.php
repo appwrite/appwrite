@@ -14,7 +14,7 @@ class Index extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Collection ID.',
                 'default' => '',
-                'example' => '',
+                'example' => '5e5ea5c16d55',
             ])
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,

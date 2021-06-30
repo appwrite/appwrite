@@ -45,14 +45,14 @@ class Document extends Any
                 'type' => self::TYPE_STRING,
                 'description' => 'Document read permissions.',
                 'default' => '',
-                'example' => '',
+                'example' => 'role:all',
                 'array' => true,
             ])
             ->addRule('$write', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Document write permissions.',
                 'default' => '',
-                'example' => '',
+                'example' => 'user:608f9da25e7e1',
                 'array' => true,
             ])
         ;
