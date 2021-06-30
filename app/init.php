@@ -430,7 +430,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
         $user = $projectDB->getDocument(Auth::$unique);
     } else {
         $user = $consoleDB->getDocument(Auth::$unique);
-        
+
         $user
             ->setAttribute('$id', 'admin-'.$user->getAttribute('$id'))
         ;

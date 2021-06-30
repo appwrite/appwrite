@@ -234,7 +234,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
             ]);
 
             $role = Auth::USER_ROLE_APP;
-            $scopes = \array_merge($roles[Auth::USER_ROLE_APP]['scopes'], $key->getAttribute('scopes', []));
+            $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
 
             Authorization::setRole('role:'.Auth::USER_ROLE_APP);
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
