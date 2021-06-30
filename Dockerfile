@@ -16,7 +16,7 @@ FROM php:8.0-cli-alpine as step1
 
 ENV PHP_REDIS_VERSION=5.3.4 \
     PHP_SWOOLE_VERSION=v4.6.6 \
-    PHP_IMAGICK_VERSION=master \
+    PHP_IMAGICK_VERSION=3.5.0 \
     PHP_YAML_VERSION=2.2.1 \
     PHP_MAXMINDDB_VERSION=v1.10.1
 
@@ -53,10 +53,8 @@ RUN \
   make && make install && \
   cd .. && \
   ## Imagick Extension
-  ## Last working commit https://github.com/Imagick/imagick/commit/35741750aa1cda2b7ac354bfa6128fa037e9cf32
-  git clone --branch $PHP_IMAGICK_VERSION https://github.com/Imagick/imagick && \
+  git clone --depth 1 --branch $PHP_IMAGICK_VERSION https://github.com/imagick/imagick && \
   cd imagick && \
-  git checkout 35741750aa1cda2b7ac354bfa6128fa037e9cf32 && \
   phpize && \
   ./configure && \
   make && make install && \
@@ -152,10 +150,12 @@ RUN \
   brotli-dev \
   yaml-dev \
   imagemagick \
+  imagemagick-dev \
   libmaxminddb-dev \
   certbot \
   docker-cli \
   docker-compose \
+  libgomp \
   && docker-php-ext-install sockets opcache pdo_mysql \
   && apk del .deps \
   && rm -rf /var/cache/apk/*
