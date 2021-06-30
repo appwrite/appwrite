@@ -248,10 +248,6 @@ services:
     networks:
       - appwrite
     volumes: 
-      - appwrite-uploads:/storage/uploads:rw
-      - appwrite-cache:/storage/cache:rw
-      - appwrite-functions:/storage/functions:rw
-      - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
