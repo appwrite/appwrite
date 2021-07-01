@@ -31,7 +31,7 @@ class DeletesV1 extends Worker
 
     public function run(): void
     {
-        $projectId = isset($this->args['projectId']) ? $this->args['projectId'] : '';
+        $projectId = isset($this->args['projectId']) ? $this->args['projectId'] : '';   
         $type = $this->args['type'];
         
         switch (strval($type)) {
@@ -50,6 +50,9 @@ class DeletesV1 extends Worker
                         break;
                     case Database::SYSTEM_COLLECTION_COLLECTIONS:
                         $this->deleteDocuments($document, $projectId);
+                        break;
+                    case Database::SYSTEM_COLLECTION_TEAMS:
+                        $this->deleteMemberships($document, $projectId);
                         break;
                     default:
                         Console::error('No lazy delete operation available for document of type: '.$document->getCollection());
@@ -93,6 +96,14 @@ class DeletesV1 extends Worker
         $this->deleteByGroup([
             '$collection='.$collectionId
         ], $this->getProjectDB($projectId));   
+    }
+
+    protected function deleteMemberships(Document $document, $projectId) {
+        // Delete Memberships
+        $this->deleteByGroup([
+            '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
+            'teamId='.$document->getId(),
+        ], $this->getProjectDB($projectId));
     }
 
     protected function deleteProject(Document $document)
@@ -165,9 +176,7 @@ class DeletesV1 extends Worker
             throw new Exception('Failed to delete audit logs. No timestamp provided');
         }
 
-        $timeLimit = new TimeLimit("", 0, 1, function () use ($register) {
-            return $register->get('db');
-        });
+        $timeLimit = new TimeLimit("", 0, 1, $register->get('db'));
 
         $this->deleteForProjectIds(function($projectId) use ($timeLimit, $timestamp){
             $timeLimit->setNamespace('app_'.$projectId);
@@ -212,7 +221,7 @@ class DeletesV1 extends Worker
                 Console::success('Delete code tag: '.$document->getAttribute('path', ''));
             }
             else {
-                Console::error('Dailed to delete code tag: '.$document->getAttribute('path', ''));
+                Console::error('Failed to delete code tag: '.$document->getAttribute('path', ''));
             }
         });
 
@@ -260,7 +269,6 @@ class DeletesV1 extends Worker
             Authorization::disable();
             $projects = $this->getConsoleDB()->getCollection([
                 'limit' => $limit,
-                'offset' => $count,
                 'orderType' => 'ASC',
                 'orderCast' => 'string',
                 'filters' => [
@@ -303,7 +311,6 @@ class DeletesV1 extends Worker
 
             $results = $database->getCollection([
                 'limit' => $limit,
-                'offset' => $count,
                 'orderField' => '$id',
                 'orderType' => 'ASC',
                 'orderCast' => 'string',
@@ -349,9 +356,12 @@ class DeletesV1 extends Worker
     {
         global $register;
 
+        $db = $register->get('db');
+        $cache = $register->get('cache');
+
         if($this->consoleDB === null) {
             $this->consoleDB = new Database();
-            $this->consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+            $this->consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));;
             $this->consoleDB->setNamespace('app_console'); // Main DB
             $this->consoleDB->setMocks(Config::getParam('collections', []));
         }
@@ -365,9 +375,12 @@ class DeletesV1 extends Worker
     protected function getProjectDB($projectId): Database
     {
         global $register;
-        
+
+        $db = $register->get('db');
+        $cache = $register->get('cache');
+
         $projectDB = new Database();
-        $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+        $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
         $projectDB->setNamespace('app_'.$projectId); // Main DB
         $projectDB->setMocks(Config::getParam('collections', []));
 

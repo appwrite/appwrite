@@ -201,7 +201,8 @@
                  * Use this endpoint to create a JSON Web Token. You can use the resulting JWT
                  * to authenticate on behalf of the current user when working with the
                  * Appwrite server-side API and SDKs. The JWT secret is valid for 15 minutes
-                 * from its creation and will be invalid if the user will logout.
+                 * from its creation and will be invalid if the user will logout in that time
+                 * frame.
                  *
                  * @throws {AppwriteException}
                  * @returns {Promise}
@@ -1288,7 +1289,7 @@
                  *
                  * @param {string} name
                  * @param {string[]} execute
-                 * @param {string} env
+                 * @param {string} runtime
                  * @param {object} vars
                  * @param {string[]} events
                  * @param {string} schedule
@@ -1296,15 +1297,15 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                create: (name, execute, env, vars, events, schedule, timeout) => __awaiter(this, void 0, void 0, function* () {
+                create: (name, execute, runtime, vars, events, schedule, timeout) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
                     if (typeof execute === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "execute"');
                     }
-                    if (typeof env === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "env"');
+                    if (typeof runtime === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "runtime"');
                     }
                     let path = '/functions';
                     let payload = {};
@@ -1314,8 +1315,8 @@
                     if (typeof execute !== 'undefined') {
                         payload['execute'] = execute;
                     }
-                    if (typeof env !== 'undefined') {
-                        payload['env'] = env;
+                    if (typeof runtime !== 'undefined') {
+                        payload['runtime'] = runtime;
                     }
                     if (typeof vars !== 'undefined') {
                         payload['vars'] = vars;
@@ -2236,7 +2237,7 @@
                  *
                  *
                  * @param {string} projectId
-                 * @param {string} limit
+                 * @param {number} limit
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
@@ -3320,6 +3321,7 @@
                  * @param {string} fileId
                  * @param {number} width
                  * @param {number} height
+                 * @param {string} gravity
                  * @param {number} quality
                  * @param {number} borderWidth
                  * @param {string} borderColor
@@ -3331,7 +3333,7 @@
                  * @throws {AppwriteException}
                  * @returns {URL}
                  */
-                getFilePreview: (fileId, width, height, quality, borderWidth, borderColor, borderRadius, opacity, rotation, background, output) => {
+                getFilePreview: (fileId, width, height, gravity, quality, borderWidth, borderColor, borderRadius, opacity, rotation, background, output) => {
                     if (typeof fileId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "fileId"');
                     }
@@ -3342,6 +3344,9 @@
                     }
                     if (typeof height !== 'undefined') {
                         payload['height'] = height;
+                    }
+                    if (typeof gravity !== 'undefined') {
+                        payload['gravity'] = gravity;
                     }
                     if (typeof quality !== 'undefined') {
                         payload['quality'] = quality;
@@ -3987,6 +3992,33 @@
                     let payload = {};
                     if (typeof status !== 'undefined') {
                         payload['status'] = status;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Update Email Verification
+                 *
+                 * Update the user email verification status by its unique ID.
+                 *
+                 * @param {string} userId
+                 * @param {boolean} emailVerification
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateVerification: (userId, emailVerification) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof emailVerification === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "emailVerification"');
+                    }
+                    let path = '/users/{userId}/verification'.replace('{userId}', userId);
+                    let payload = {};
+                    if (typeof emailVerification !== 'undefined') {
+                        payload['emailVerification'] = emailVerification;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('patch', uri, {

@@ -24,8 +24,6 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
-use Appwrite\Database\Pool\PDOPool;
-use Appwrite\Database\Pool\RedisPool;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
 use Appwrite\Event\Realtime;
@@ -37,6 +35,10 @@ use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
+use Swoole\Database\PDOConfig;
+use Swoole\Database\PDOPool;
+use Swoole\Database\RedisConfig;
+use Swoole\Database\RedisPool;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -154,10 +156,21 @@ Database::addFilter('encrypt',
  */
 $register->set('dbPool', function () { // Register DB connection
     $dbHost = App::getEnv('_APP_DB_HOST', '');
+    $dbPort = App::getEnv('_APP_DB_PORT', '');
     $dbUser = App::getEnv('_APP_DB_USER', '');
     $dbPass = App::getEnv('_APP_DB_PASS', '');
     $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
-    $pool = new PDOPool(10, $dbHost, $dbScheme, $dbUser, $dbPass);
+
+
+    $pool = new PDOPool((new PDOConfig())
+        ->withHost($dbHost)
+        ->withPort($dbPort)
+        // ->withUnixSocket('/tmp/mysql.sock')
+        ->withDbName($dbScheme)
+        ->withCharset('utf8mb4')
+        ->withUsername($dbUser)
+        ->withPassword($dbPass)
+    );
 
     return $pool;
 });
@@ -166,16 +179,18 @@ $register->set('redisPool', function () {
     $redisPort = App::getEnv('_APP_REDIS_PORT', '');
     $redisUser = App::getEnv('_APP_REDIS_USER', '');
     $redisPass = App::getEnv('_APP_REDIS_PASS', '');
-    $redisAuth = [];
+    $redisAuth = '';
 
-    if ($redisUser) {
-        $redisAuth[] = $redisUser;
-    }
-    if ($redisPass) {
-        $redisAuth[] = $redisPass;
+    if ($redisUser && $redisPass) {
+        $redisAuth = $redisUser.':'.$redisPass;
     }
 
-    $pool = new RedisPool(10, $redisHost, $redisPort, $redisAuth);
+    $pool = new RedisPool((new RedisConfig)
+        ->withHost($redisHost)
+        ->withPort($redisPort)
+        ->withAuth($redisAuth)
+        ->withDbIndex(0)
+    );
 
     return $pool;
 });
@@ -326,10 +341,6 @@ App::setResource('events', function($register) {
     return new Event('', '');
 }, ['register']);
 
-App::setResource('realtime', function($register) {
-    return new Realtime('', '', []);
-}, ['register']);
-
 App::setResource('audits', function($register) {
     return new Event(Event::AUDITS_QUEUE_NAME, Event::AUDITS_CLASS_NAME);
 }, ['register']);
@@ -417,10 +428,9 @@ App::setResource('user', function($mode, $project, $console, $request, $response
 
     if (APP_MODE_ADMIN !== $mode) {
         $user = $projectDB->getDocument(Auth::$unique);
-    }
-    else {
+    } else {
         $user = $consoleDB->getDocument(Auth::$unique);
-        
+
         $user
             ->setAttribute('$id', 'admin-'.$user->getAttribute('$id'))
         ;
@@ -435,8 +445,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     if (APP_MODE_ADMIN === $mode) {
         if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
-        }
-        else {
+        } else {
             $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
         }
     }
@@ -485,23 +494,23 @@ App::setResource('console', function($consoleDB) {
     return $consoleDB->getDocument('console');
 }, ['consoleDB']);
 
-App::setResource('consoleDB', function($register) {
+App::setResource('consoleDB', function($db, $cache) {
     $consoleDB = new Database();
-    $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+    $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
     $consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
     $consoleDB->setMocks(Config::getParam('collections', []));
 
     return $consoleDB;
-}, ['register']);
+}, ['db', 'cache']);
 
-App::setResource('projectDB', function($register, $project) {
+App::setResource('projectDB', function($db, $cache, $project) {
     $projectDB = new Database();
-    $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+    $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
     $projectDB->setNamespace('app_'.$project->getId());
     $projectDB->setMocks(Config::getParam('collections', []));
 
     return $projectDB;
-}, ['register', 'project']);
+}, ['db', 'cache', 'project']);
 
 App::setResource('mode', function($request) {
     /** @var Utopia\Swoole\Request $request */
