@@ -446,7 +446,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_OUTPUT_MAX',
-                'description' => 'The maximum length of characters a function execution is allowed to output. The default value is 65535',
+                'description' => 'The maximum length of characters a function execution is allowed to output. The default value is 65535 which is also the maximum due to the MariaDB TEXT Type. Do not raise this variable over 65535!',
                 'introduction' => '0.9.0',
                 'default' => '65535',
                 'required' => false,
