@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4a8aef8b74437a2d504b3dda4b343515",
+    "content-hash": "b30bdf7eb1369ae7f2f742e2f30055ae",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2403,16 +2403,16 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "dev-master",
+            "version": "0.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "127c11b667e78f9815fd3b85c3fbfc10c14936eb"
+                "reference": "96c41c44f930a4d40184cd0f3c7dca76d2cca7e1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/127c11b667e78f9815fd3b85c3fbfc10c14936eb",
-                "reference": "127c11b667e78f9815fd3b85c3fbfc10c14936eb",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/96c41c44f930a4d40184cd0f3c7dca76d2cca7e1",
+                "reference": "96c41c44f930a4d40184cd0f3c7dca76d2cca7e1",
                 "shasum": ""
             },
             "require": {
@@ -2426,7 +2426,6 @@
             "require-dev": {
                 "phpunit/phpunit": "^7.0"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -2447,9 +2446,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/master"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.11.0"
             },
-            "time": "2021-06-30T13:33:59+00:00"
+            "time": "2021-07-01T13:51:23+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",
@@ -6067,9 +6066,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "appwrite/sdk-generator": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
