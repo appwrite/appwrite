@@ -16,6 +16,7 @@ use Appwrite\SDK\Language\DotNet;
 use Appwrite\SDK\Language\Flutter;
 use Appwrite\SDK\Language\Go;
 use Appwrite\SDK\Language\Kotlin;
+use Appwrite\SDK\Language\Android;
 use Appwrite\SDK\Language\Swift;
 
 $cli
@@ -142,6 +143,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config = new DotNet();
                         break;
                     case 'android':
+                        $config = new Android();
+                        break;
+                    case 'kotlin':
                         $config = new Kotlin();
                         break;
                     default:
