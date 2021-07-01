@@ -52,62 +52,80 @@ include __DIR__ . '/controllers/general.php';
 $http->on('start', function (Server $http) use ($payloadSize, $register) {
     $app = new App('UTC');
 
-    // Only retry connection once before throwing exception
-    try {
-        $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
-    } catch (\Exception $exception) {
-        Console::warning('[Setup] - Database not ready. Waiting for five seconds...');
-        sleep(5);
-        $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
-    }
+    go(function() use ($register, $app) {
 
-    if(!$dbForConsole->exists()) {
-        Console::success('[Setup] - Server database init started...');
-        
-        $collections = Config::getParam('collections2', []); /** @var array $collections */
-
-        $register->get('cache')->flushAll();
-
-        $dbForConsole->create();
-        
-        $audit = new Audit($dbForConsole);
-        $audit->setup();
-
-        $adapter = new TimeLimit("", 0, 1, $dbForConsole);
-        $adapter->setup();
-
-        foreach ($collections as $key => $collection) {
-            Console::success('[Setup] - Creating collection: ' . $collection['$id'] . '...');
-
-            $dbForConsole->createCollection($key);
-
-            foreach ($collection['attributes'] as $i => $attribute) {
-                $dbForConsole->createAttribute(
-                    $key,
-                    $attribute['$id'],
-                    $attribute['type'],
-                    $attribute['size'],
-                    $attribute['required'],
-                    $attribute['signed'],
-                    $attribute['array'],
-                    $attribute['filters'],
-                );
-            }
-
-            foreach ($collection['indexes'] as $i => $index) {
-                $dbForConsole->createIndex(
-                    $key,
-                    $index['$id'],
-                    $index['type'],
-                    $index['attributes'],
-                    $index['lengths'],
-                    $index['orders'],
-                );
-            }
+        // Only retry connection once before throwing exception
+        try {
+            $db = $register->get('dbPool')->get();
+        } catch (\Exception $exception) {
+            Console::warning('[Setup] - Database not ready. Waiting for five seconds...');
+            sleep(5);
         }
+        $db = $register->get('dbPool')->get();
+        $redis = $register->get('redisPool')->get();
 
-        Console::success('[Setup] - Server database init completed...');
-    }
+        App::setResource('db', function () use (&$db) {
+            return $db;
+        });
+
+        App::setResource('cache', function () use (&$redis) {
+            return $redis;
+        });
+
+        App::setResource('app', function() use (&$app) {
+            return $app;
+        });
+
+        $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
+
+        if(!$dbForConsole->exists()) {
+            Console::success('[Setup] - Server database init started...');
+            
+            $collections = Config::getParam('collections2', []); /** @var array $collections */
+
+            $redis->flushAll();
+
+            $dbForConsole->create();
+            
+            $audit = new \Utopia\Audit\Audit($dbForConsole);
+            $audit->setup();
+
+            $adapter = new TimeLimit("", 0, 1, $dbForConsole);
+            $adapter->setup();
+
+            foreach ($collections as $key => $collection) {
+                Console::success('[Setup] - Creating collection: ' . $collection['$id'] . '...');
+
+                $dbForConsole->createCollection($key);
+
+                foreach ($collection['attributes'] as $i => $attribute) {
+                    $dbForConsole->createAttribute(
+                        $key,
+                        $attribute['$id'],
+                        $attribute['type'],
+                        $attribute['size'],
+                        $attribute['required'],
+                        $attribute['signed'],
+                        $attribute['array'],
+                        $attribute['filters'],
+                    );
+                }
+
+                foreach ($collection['indexes'] as $i => $index) {
+                    $dbForConsole->createIndex(
+                        $key,
+                        $index['$id'],
+                        $index['type'],
+                        $index['attributes'],
+                        $index['lengths'],
+                        $index['orders'],
+                    );
+                }
+            }
+
+            Console::success('[Setup] - Server database init completed...');
+        }
+    });
 
     Console::success('Server started succefully (max payload is '.number_format($payloadSize).' bytes)');
 
