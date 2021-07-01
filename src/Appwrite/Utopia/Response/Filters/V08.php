@@ -5,19 +5,21 @@ namespace Appwrite\Utopia\Response\Filters;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filter;
 use Exception;
-class V07 extends Filter {
+
+
+class V08 extends Filter {
     
-    // Convert 0.8 Data format to 0.7 format
+    // Convert 0.9 Data format to 0.8 format
     public function parse(array $content, string $model): array {
         
         $parsedResponse = [];
 
         switch($model) {
 
-            case Response::MODEL_DOCUMENT_LIST: /** ANY was replaced by DOCUMENT in 0.8.x but this is backward compatible with 0.7.x */
-            case Response::MODEL_DOCUMENT: /** ANY was replaced by DOCUMENT in 0.8.x but this is backward compatible with 0.7.x */
-            case Response::MODEL_USER_LIST: /** [FIELDS ADDED in 0.8.x] passwordUpdate */
-            case Response::MODEL_USER: /** [FIELDS ADDED in 0.8.x] passwordUpdate */
+            case Response::MODEL_DOCUMENT_LIST: 
+            case Response::MODEL_DOCUMENT: 
+            case Response::MODEL_USER_LIST:
+            case Response::MODEL_USER:
             case Response::MODEL_COLLECTION_LIST:
             case Response::MODEL_COLLECTION:
             case Response::MODEL_FILE_LIST:
@@ -30,8 +32,8 @@ class V07 extends Filter {
             case Response::MODEL_TEAM:
             case Response::MODEL_MEMBERSHIP_LIST:
             case Response::MODEL_MEMBERSHIP:
-            case Response::MODEL_SESSION_LIST: /** [FIELDS ADDED in 0.8.x] provider, providerUid, providerToken */
-            case Response::MODEL_SESSION: /** [FIELDS ADDED in 0.8.x] provider, providerUid, providerToken */
+            case Response::MODEL_SESSION_LIST:
+            case Response::MODEL_SESSION:
             case Response::MODEL_JWT:
             case Response::MODEL_LOG:
             case Response::MODEL_LOG_LIST:
@@ -62,7 +64,7 @@ class V07 extends Filter {
             case Response::MODEL_WEBHOOK_LIST:
             case Response::MODEL_MOCK:
             case Response::MODEL_ANY:
-            case Response::MODEL_PREFERENCES: /** ANY was replaced by PREFERENCES in 0.8.x but this is backward compatible with 0.7.x */
+            case Response::MODEL_PREFERENCES:
             case Response::MODEL_NONE:
             case Response::MODEL_ERROR:
             case Response::MODEL_ERROR_DEV:
@@ -71,8 +73,8 @@ class V07 extends Filter {
             case Response::MODEL_FUNCTION_LIST: /** Function property env was renamed to runtime in 0.9.x  */
                 $parsedResponse = $this->parseFunctionList($content);
                 break;
-            case Response::MODEL_FUNCTION:
-                $parsedResponse = $this->parseFunctionList($content); /** Function property env was renamed to runtime in 0.9.x  */
+            case Response::MODEL_FUNCTION: /** Function property env was renamed to runtime in 0.9.x  */
+                $parsedResponse = $this->parseFunctionList($content);
                 break;
             default:
                 throw new Exception('Received invalid model : '.$model);
@@ -96,5 +98,4 @@ class V07 extends Filter {
         $content['functions'] = $parsedResponse;
         return $content;
     }
-
 }
