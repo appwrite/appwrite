@@ -600,32 +600,26 @@ App::setResource('projectDB', function($db, $cache, $project) {
     return $projectDB;
 }, ['db', 'cache', 'project']);
 
-App::setResource('dbForInternal', function($register, $project) {
-    $cache = new Cache(new RedisCache($register->get('cache')));
+App::setResource('dbForInternal', function($db, $cache, $project) {
+    $dbForInternal = new Database2(new MariaDB($db), $cache);
+    $dbForInternal->setNamespace('project_'.$project->getId().'_internal');
 
-    $database = new Database2(new MariaDB($register->get('db')), $cache);
-    $database->setNamespace('project_'.$project->getId().'_internal');
+    return $dbForInternal;
+}, ['db', 'cache', 'project']);
 
-    return $database;
-}, ['register', 'project']);
+App::setResource('dbForExternal', function($db, $cache, $project) {
+    $dbForExternal = new Database2(new MariaDB($db), $cache);
+    $dbForExternal->setNamespace('project_'.$project->getId().'_external');
 
-App::setResource('dbForExternal', function($register, $project) {
-    $cache = new Cache(new RedisCache($register->get('cache')));
+    return $dbForExternal;
+}, ['db', 'cache', 'project']);
 
-    $database = new Database2(new MariaDB($register->get('db')), $cache);
-    $database->setNamespace('project_'.$project->getId().'_external');
+App::setResource('dbForConsole', function($db, $cache) {
+    $dbForConsole = new Database2(new MariaDB($db), $cache);
+    $dbForConsole->setNamespace('project_console_internal');
 
-    return $database;
-}, ['register', 'project']);
-
-App::setResource('dbForConsole', function($register) {
-    $cache = new Cache(new RedisCache($register->get('cache')));
-
-    $database = new Database2(new MariaDB($register->get('db')), $cache);
-    $database->setNamespace('project_console_internal');
-
-    return $database;
-}, ['register']);
+    return $dbForConsole;
+}, ['db', 'cache']);
 
 App::setResource('mode', function($request) {
     /** @var Utopia\Swoole\Request $request */
