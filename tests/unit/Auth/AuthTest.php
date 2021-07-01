@@ -231,7 +231,7 @@ class AuthTest extends TestCase
 
         $roles = Auth::getRoles($user);
 
-        $this->assertCount(6, $roles);
+        $this->assertCount(7, $roles);
         $this->assertContains('role:member', $roles);
         $this->assertContains('user:123', $roles);
         $this->assertContains('team:abc', $roles);
