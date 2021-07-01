@@ -218,12 +218,11 @@ App::get('/v1/users/:userId/logs')
     ->inject('geodb')
     ->action(function ($userId, $response, $dbForInternal, $locale, $geodb) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Registry\Registry $register */
         /** @var Appwrite\Database\Document $project */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
-        
+
         $user = $dbForInternal->getDocument('users', $userId);
 
         if ($user->isEmpty()) {

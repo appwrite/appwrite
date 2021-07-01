@@ -137,18 +137,22 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         return;
     }
 
+    $app = new App('UTC');
+
     $db = $register->get('dbPool')->get();
     $redis = $register->get('redisPool')->get();
 
-    $register->set('db', function () use (&$db) {
+    App::setResource('db', function () use (&$db) {
         return $db;
     });
 
-    $register->set('cache', function () use (&$redis) {
+    App::setResource('cache', function () use (&$redis) {
         return $redis;
     });
 
-    $app = new App('UTC');
+    App::setResource('app', function() use (&$app) {
+        return $app;
+    });
     
     try {
         Authorization::cleanRoles();

@@ -2,6 +2,7 @@
 
 use Appwrite\Event\Event;
 use Appwrite\Resque\Worker;
+use Appwrite\Utopia\Response\Model\Execution;
 use Cron\CronExpression;
 use Swoole\Runtime;
 use Utopia\App;
@@ -137,6 +138,9 @@ class FunctionsV1 extends Worker
     public function run(): void
     {
         global $register;
+
+        $db = $register->get('db');
+        $cache = $register->get('cache');
 
         $projectId = $this->args['projectId'] ?? '';
         $functionId = $this->args['functionId'] ?? '';
@@ -461,6 +465,7 @@ class FunctionsV1 extends Worker
         
         Authorization::reset();
 
+        $executionModel = new Execution();
         $executionUpdate = new Event('v1-webhooks', 'WebhooksV1');
 
         $executionUpdate
@@ -468,17 +473,7 @@ class FunctionsV1 extends Worker
             ->setParam('userId', $userId)
             ->setParam('webhooks', $webhooks)
             ->setParam('event', 'functions.executions.update')
-            ->setParam('eventData', [
-                '$id' => $execution['$id'],
-                'functionId' => $execution['functionId'],
-                'dateCreated' => $execution['dateCreated'],
-                'trigger' => $execution['trigger'],
-                'status' => $execution['status'],
-                'exitCode' => $execution['exitCode'],
-                'stdout' => $execution['stdout'],
-                'stderr' => $execution['stderr'],
-                'time' => $execution['time']
-            ]);
+            ->setParam('eventData', $execution->getArrayCopy(array_keys($executionModel->getRules())));
 
         $executionUpdate->trigger();
 
