@@ -1,7 +1,9 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
+use Appwrite\Messaging\Adapter\Realtime;
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Abuse\Abuse;
@@ -9,7 +11,7 @@ use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 
-App::init(function ($utopia, $request, $response, $project, $user, $register, $events, $audits, $usage, $deletes) {
+App::init(function ($utopia, $request, $response, $project, $user, $register, $events, $audits, $usage, $deletes, $db) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
@@ -21,6 +23,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     /** @var Appwrite\Event\Event $usage */
     /** @var Appwrite\Event\Event $deletes */
     /** @var Appwrite\Event\Event $functions */
+    /** @var PDO $db */
 
     Storage::setDevice('files', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
     Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId()));
@@ -34,9 +37,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     /*
      * Abuse Check
      */
-    $timeLimit = new TimeLimit($route->getLabel('abuse-key', 'url:{url},ip:{ip}'), $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), function () use ($register) {
-        return $register->get('db');
-    });
+    $timeLimit = new TimeLimit($route->getLabel('abuse-key', 'url:{url},ip:{ip}'), $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $db);
     $timeLimit->setNamespace('app_'.$project->getId());
     $timeLimit
         ->setParam('{userId}', $user->getId())
@@ -111,7 +112,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
         ->setParam('projectId', $project->getId())
     ;
 
-}, ['utopia', 'request', 'response', 'project', 'user', 'register', 'events', 'audits', 'usage', 'deletes'], 'api');
+}, ['utopia', 'request', 'response', 'project', 'user', 'register', 'events', 'audits', 'usage', 'deletes', 'db'], 'api');
 
 App::init(function ($utopia, $request, $response, $project, $user) {
     /** @var Utopia\App $utopia */
@@ -167,7 +168,7 @@ App::init(function ($utopia, $request, $response, $project, $user) {
 
 }, ['utopia', 'request', 'response', 'project', 'user'], 'auth');
 
-App::shutdown(function ($utopia, $request, $response, $project, $events, $audits, $usage, $deletes, $realtime, $mode) {
+App::shutdown(function ($utopia, $request, $response, $project, $events, $audits, $usage, $deletes, $mode) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
@@ -176,8 +177,6 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
     /** @var Appwrite\Event\Event $audits */
     /** @var Appwrite\Event\Event $usage */
     /** @var Appwrite\Event\Event $deletes */
-    /** @var Appwrite\Event\Realtime $realtime */
-    /** @var Appwrite\Event\Event $functions */
     /** @var bool $mode */
 
     if (!empty($events->getParam('event'))) {
@@ -199,12 +198,20 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
             ->trigger();
 
         if ($project->getId() !== 'console') {
-            $realtime
-                ->setEvent($events->getParam('event'))
-                ->setUserId($events->getParam('userId'))
-                ->setProject($project->getId())
-                ->setPayload($response->getPayload())
-                ->trigger();
+            $payload = new Document($response->getPayload());
+            $target = Realtime::fromPayload($events->getParam('event'), $payload);
+
+            Realtime::send(
+                $project->getId(), 
+                $response->getPayload(), 
+                $events->getParam('event'), 
+                $target['channels'], 
+                $target['permissions'], 
+                [
+                    'permissionsChanged' => $target['permissionsChanged'], 
+                    'userId' => $events->getParam('userId')
+                ]
+            );
         }
     }
     
@@ -229,4 +236,4 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
         ;
     }
 
-}, ['utopia', 'request', 'response', 'project', 'events', 'audits', 'usage', 'deletes', 'realtime', 'mode'], 'api');
+}, ['utopia', 'request', 'response', 'project', 'events', 'audits', 'usage', 'deletes', 'mode'], 'api');

@@ -2,26 +2,47 @@
 
 ## Features
 
-- Added file created date to file info on the console
-- Added file size to file info on the console
-- Refactored Devices page in Console:
+- Added support for Android
+- Added a new gravity option when croping storage images using the file preview endpoint (#1260)
+- Upgraded GEOIP DB file to Jun 2021 release (#1256)
+- Added file created date to file info on the console (#1183)
+- Added file size to file info on the console (#1183)
+- Added internal support for connection pools for improved performance (#1278)
+- Added new abstraction for workers executable files (#1276)
+- Added a new API in the Users API to allow you to force update your user verification status (#1223)
+- Using a fixed commit to avoid breaking changes for imagemagick extenstion (#1274)
+- Updated the design of all the email templates (#1225)
+- Refactored Devices page in Console: (#1167)
   - Renamed *Devices* to *Sessions*
   - Add Provider Icon to each Session
   - Add Anonymous Account Placeholder
+- Upgraded phpmailer version to 6.5.0 (#1317)
 - Upgraded telegraf docker image version to v1.2.0
-- Added new environment variables to the `telegraf` service:
+- Added new environment variables to the `telegraf` service: (#1202)
   - _APP_INFLUXDB_HOST
   - _APP_INFLUXDB_PORT
+- Added new endpoint to get a session based on it's ID (#1294)
+
+## Breaking Changes (Read before upgrading!)
+- Renamed `env` param on `/v1/functions` to `runtime` (#1314)
+- Renamed `deleteUser` method in all SDKs to `delete` (#1216)
 
 ## Bugs
 
-- Fixed bug when removing a project member on the Appwrite console (#1214)
+- Fixed bug causing runtimes conflict and hanging executions when max Functions containers limit passed (#1288)
+- Fixed 404 error when removing a project member on the Appwrite console (#1214)
 - Fixed Swoole buffer output size to allow downloading files bigger than allowed size (#1189)
 - Fixed ClamAV status when anti virus is not running (#1188)
 - Fixed deleteSession which was removing cookieFallback from the localstorage on any logout instead of current session (#1206)
 - Fixed Nepal flag (#1173)
 - Fixed a bug in the Twitch OAuth adapter (#1209)
 - Fixed missing session object when OAuth session creation event is triggered (#1208)
+- Fixed bug where we didn't ignore the email case, converted all emails to lowercase internally (#1243)
+- Fixed a console bug where you can't click a user with no name, added a placehoder for anonyomous users (#1220)
+
+## Security
+
+- Fixed potential XSS injection on the console
 
 # Version 0.8.0
 

@@ -236,25 +236,14 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
             $role = Auth::USER_ROLE_APP;
             $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
 
+            Authorization::setRole('role:'.Auth::USER_ROLE_APP);
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
         }
     }
 
-    if ($user->getId()) {
-        Authorization::setRole('user:'.$user->getId());
+    foreach (Auth::getRoles($user) as $role) {
+        Authorization::setRole($role);
     }
-
-    Authorization::setRole('role:'.$role);
-
-    \array_map(function ($node) {
-        if (isset($node['teamId']) && isset($node['roles'])) {
-            Authorization::setRole('team:'.$node['teamId']);
-
-            foreach ($node['roles'] as $nodeRole) { // Set all team roles
-                Authorization::setRole('team:'.$node['teamId'].'/'.$nodeRole);
-            }
-        }
-    }, $user->getAttribute('memberships', []));
 
     // TDOO Check if user is root
 

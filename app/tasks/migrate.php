@@ -17,13 +17,13 @@ $cli
 
         $consoleDB = new Database();
         $consoleDB
-            ->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register))
+            ->setAdapter(new RedisAdapter(new MySQLAdapter($register->get('db'), $register->get('cache')), $register->get('cache')))
             ->setNamespace('app_console') // Main DB
             ->setMocks(Config::getParam('collections', []));
 
         $projectDB = new Database();
         $projectDB
-            ->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register))
+            ->setAdapter(new RedisAdapter(new MySQLAdapter($register->get('db'), $register->get('cache')), $register->get('cache')))
             ->setMocks(Config::getParam('collections', []));
 
         $console = $consoleDB->getDocument('console');

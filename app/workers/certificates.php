@@ -28,8 +28,11 @@ class CertificatesV1 extends Worker
     {
         global $register;
 
+        $db = $register->get('db');
+        $cache = $register->get('cache');
+
         $consoleDB = new Database();
-        $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+        $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
         $consoleDB->setNamespace('app_console'); // Main DB
         $consoleDB->setMocks(Config::getParam('collections', []));
 
