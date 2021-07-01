@@ -179,7 +179,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setTwitter(APP_SOCIAL_TWITTER_HANDLE)
                     ->setDiscord(APP_SOCIAL_DISCORD_CHANNEL, APP_SOCIAL_DISCORD)
                     ->setDefaultHeaders([
-                        'X-Appwrite-Response-Format' => '0.8.0',
+                        'X-Appwrite-Response-Format' => '0.9.0',
                     ])
                 ;
                 
@@ -221,8 +221,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 \exec('mkdir -p '.$resultExamples.' && cp -r '.$result.'/docs/examples '.$resultExamples);
                 Console::success("Copied code examples for {$language['name']} SDK to: {$resultExamples}");
 
-                \exec('rm -rf '.$result);
-                Console::success("Removed source code directory '{$result}' for {$language['name']} SDK");
+                // \exec('rm -rf '.$result);
+                // Console::success("Removed source code directory '{$result}' for {$language['name']} SDK");
             }
         }
 
