@@ -601,21 +601,21 @@ App::setResource('projectDB', function($db, $cache, $project) {
 }, ['db', 'cache', 'project']);
 
 App::setResource('dbForInternal', function($db, $cache, $project) {
-    $dbForInternal = new Database2(new MariaDB($db), $cache);
+    $dbForInternal = new Database2(new MariaDB($db), new Cache(new RedisCache($cache)));
     $dbForInternal->setNamespace('project_'.$project->getId().'_internal');
 
     return $dbForInternal;
 }, ['db', 'cache', 'project']);
 
 App::setResource('dbForExternal', function($db, $cache, $project) {
-    $dbForExternal = new Database2(new MariaDB($db), $cache);
+    $dbForExternal = new Database2(new MariaDB($db), new Cache(new RedisCache($cache)));
     $dbForExternal->setNamespace('project_'.$project->getId().'_external');
 
     return $dbForExternal;
 }, ['db', 'cache', 'project']);
 
 App::setResource('dbForConsole', function($db, $cache) {
-    $dbForConsole = new Database2(new MariaDB($db), $cache);
+    $dbForConsole = new Database2(new MariaDB($db), new Cache(new RedisCache($cache)));
     $dbForConsole->setNamespace('project_console_internal');
 
     return $dbForConsole;
