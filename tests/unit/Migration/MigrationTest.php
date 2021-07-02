@@ -4,8 +4,11 @@ namespace Appwrite\Tests;
 
 use Appwrite\Database\Document;
 use Appwrite\Migration\Migration;
+use PHPUnit\Framework\ExpectationFailedException;
+use PHPUnit\Framework\Exception;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
+use SebastianBergmann\RecursionContext\InvalidArgumentException;
 
 abstract class MigrationTest extends TestCase
 {
@@ -36,4 +39,17 @@ abstract class MigrationTest extends TestCase
         ]);
     }
 
+    /**
+     * Check versions array integrity.
+     */
+    public function testMigrationVersions()
+    {
+        require_once __DIR__.'/../../../app/init.php';
+
+        foreach (Migration::$versions as $version => $class) {
+            $this->assertTrue(class_exists('Appwrite\\Migration\\Version\\'.$class));
+        }
+        // Test if current version exists
+        $this->assertArrayHasKey(APP_VERSION_STABLE, Migration::$versions);
+    }
 }
