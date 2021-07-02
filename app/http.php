@@ -105,6 +105,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                         $attribute['type'],
                         $attribute['size'],
                         $attribute['required'],
+                        $attribute['default'],
                         $attribute['signed'],
                         $attribute['array'],
                         $attribute['filters'],
