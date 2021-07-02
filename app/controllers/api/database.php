@@ -476,8 +476,30 @@ App::post('/v1/database/collections/:collectionId/indexes')
             throw new Exception('Collection not found', 404);
         }
 
+        if (\count($attributes) !== \count($orders)) {
+            throw new Exception('Must have one order per attribute', 400);
+        }
+
+        $oldAttributes = $collection->getAttribute('attributes');
+
         // lengths hidden by default
         $lengths = [];
+
+        // set attribute size as length for strings, null otherwise
+        foreach ($attributes as $key => &$attribute) {
+            // find attribute metadata in collection document
+            $attributeIndex = \array_search($attribute, array_column($oldAttributes, '$id'));
+
+            if ($attributeIndex === false) {
+                throw new Exception('Unknown attribute: ' . $attribute, 400);
+            }
+
+            $type = $oldAttributes[$attributeIndex]['type'];
+            $size = $oldAttributes[$attributeIndex]['size'];
+
+            // Only set length for indexes on strings
+            $length[$key] = ($type === Database::VAR_STRING) ? $size : null;
+        }
 
         $success = $dbForExternal->addIndexInQueue($collectionId, $id, $type, $attributes, $lengths, $orders);
 
