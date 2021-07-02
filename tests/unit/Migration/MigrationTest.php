@@ -4,11 +4,8 @@ namespace Appwrite\Tests;
 
 use Appwrite\Database\Document;
 use Appwrite\Migration\Migration;
-use PHPUnit\Framework\ExpectationFailedException;
-use PHPUnit\Framework\Exception;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
-use SebastianBergmann\RecursionContext\InvalidArgumentException;
 
 abstract class MigrationTest extends TestCase
 {
