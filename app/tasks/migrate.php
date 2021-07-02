@@ -8,20 +8,16 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
+use Appwrite\Migration\Migration;
 use Utopia\Validator\Text;
 
 $cli
     ->task('migrate')
     ->param('version', APP_VERSION_STABLE, new Text(8), 'Version to migrate to.', true)
     ->action(function ($version) use ($register) {
-        $versions = [
-            '0.6.0' => 'V05',
-            '0.7.0' => 'V06',
-            '0.8.0' => 'V07',
-            '0.9.0' => 'V08',
-        ];
+        
 
-        if (!array_key_exists($version, $versions)) {
+        if (!array_key_exists($version, Migration::$versions)) {
             Console::error("Version {$version} not found.");
             Console::exit(1);
             return;
@@ -52,7 +48,7 @@ $cli
         $projects = [$console];
         $count = 0;
 
-        $class = "Appwrite\\Migration\\Version\\$versions[$version]";
+        $class = 'Appwrite\\Migration\\Version\\'.Migration::$versions[$version];
         $migration = new $class($register->get('db'));
 
         while ($sum > 0) {
