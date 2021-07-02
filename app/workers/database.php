@@ -140,10 +140,18 @@ class DatabaseV1 extends Worker
     protected function getInternalDB($projectId): Database
     {
         global $register;
-        
-        $cache = new Cache(new RedisCache($register->get('cache')));
-        $dbForInternal = new Database(new MariaDB($register->get('db')), $cache);
-        $dbForInternal->setNamespace('project_'.$projectId.'_internal'); // Main DB
+
+        $dbForInternal = null;
+
+        go(function() use ($register, $projectId, &$dbForInternal) {
+            $db = $register->get('dbPool')->get();
+            $redis = $register->get('redisPool')->get();
+
+            $cache = new Cache(new RedisCache($redis));
+            $dbForInternal = new Database(new MariaDB($db), $cache);
+            $dbForInternal->setNamespace('project_'.$projectId.'_internal'); // Main DB
+
+        });
 
         return $dbForInternal;
     }
@@ -156,10 +164,18 @@ class DatabaseV1 extends Worker
     protected function getExternalDB($projectId): Database
     {
         global $register;
-        
-        $cache = new Cache(new RedisCache($register->get('cache')));
-        $dbForExternal = new Database(new MariaDB($register->get('db')), $cache);
-        $dbForExternal->setNamespace('project_'.$projectId.'_external'); // Main DB
+
+        $dbForExternal = null;
+
+        go(function() use ($register, $projectId, &$dbForExternal) {
+            $db = $register->get('dbPool')->get();
+            $redis = $register->get('redisPool')->get();
+
+            $cache = new Cache(new RedisCache($redis));
+            $dbForExternal = new Database(new MariaDB($db), $cache);
+            $dbForExternal->setNamespace('project_'.$projectId.'_external'); // Main DB
+
+        });
 
         return $dbForExternal;
     }
