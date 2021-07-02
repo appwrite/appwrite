@@ -16,6 +16,7 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Response\Filters\V06;
 use Appwrite\Utopia\Response\Filters\V07;
+use Appwrite\Utopia\Response\Filters\V08;
 use Utopia\CLI\Console;
 
 Config::setParam('domainVerification', false);
@@ -139,6 +140,9 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
                 break;
             case version_compare ($responseFormat , '0.7.2', '<=') :
                 Response::setFilter(new V07());
+                break;
+            case version_compare ($responseFormat , '0.8.0', '<=') :
+                Response::setFilter(new V08());
                 break;
             default:
                 Response::setFilter(null);

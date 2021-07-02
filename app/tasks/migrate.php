@@ -14,16 +14,18 @@ $cli
     ->task('migrate')
     ->action(function () use ($register) {
         Console::success('Starting Data Migration');
+        $db = $register->get('db', true);
+        $cache = $register->get('cache', true);
 
         $consoleDB = new Database();
         $consoleDB
-            ->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register))
+            ->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache))
             ->setNamespace('app_console') // Main DB
             ->setMocks(Config::getParam('collections', []));
 
         $projectDB = new Database();
         $projectDB
-            ->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register))
+            ->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache))
             ->setMocks(Config::getParam('collections', []));
 
         $console = $consoleDB->getDocument('console');
@@ -36,7 +38,7 @@ $cli
         $projects = [$console];
         $count = 0;
 
-        $migration = new Version\V07($register->get('db')); //TODO: remove hardcoded version and move to dynamic migration
+        $migration = new Version\V08($register->get('db')); //TODO: remove hardcoded version and move to dynamic migration
 
         while ($sum > 0) {
             foreach ($projects as $project) {

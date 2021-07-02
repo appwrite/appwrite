@@ -7,6 +7,7 @@ use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
 use Appwrite\Resque\Worker;
+use Appwrite\Utopia\Response\Model\Execution;
 use Cron\CronExpression;
 use Swoole\Runtime;
 use Utopia\App;
@@ -70,9 +71,6 @@ Console::success('Finished warmup in '.$warmupTime.' seconds');
  */
 $stdout = '';
 $stderr = '';
-
-$exitCode = Console::execute('docker ps --all --format "name={{.Names}}&status={{.Status}}&labels={{.Labels}}" --filter label=appwrite-type=function'
-    , '', $stdout, $stderr, 30);
 
 $executionStart = \microtime(true);
 
@@ -140,6 +138,9 @@ class FunctionsV1 extends Worker
     {
         global $register;
 
+        $db = $register->get('db');
+        $cache = $register->get('cache');
+
         $projectId = $this->args['projectId'] ?? '';
         $functionId = $this->args['functionId'] ?? '';
         $webhooks = $this->args['webhooks'] ?? [];
@@ -153,7 +154,7 @@ class FunctionsV1 extends Worker
         $jwt = $this->args['jwt'] ?? '';
 
         $database = new Database();
-        $database->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+        $database->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
         $database->setNamespace('app_'.$projectId);
         $database->setMocks(Config::getParam('collections', []));
 
@@ -331,12 +332,12 @@ class FunctionsV1 extends Worker
         
         Authorization::reset();
 
-        $runtime = (isset($runtimes[$function->getAttribute('env', '')]))
-            ? $runtimes[$function->getAttribute('env', '')]
+        $runtime = (isset($runtimes[$function->getAttribute('runtime', '')]))
+            ? $runtimes[$function->getAttribute('runtime', '')]
             : null;
 
         if(\is_null($runtime)) {
-            throw new Exception('Environment "'.$function->getAttribute('env', '').' is not supported');
+            throw new Exception('Runtime "'.$function->getAttribute('runtime', '').' is not supported');
         }
 
         $vars = \array_merge($function->getAttribute('vars', []), [
@@ -480,6 +481,7 @@ class FunctionsV1 extends Worker
             throw new Exception('Failed saving execution to DB', 500);
         }
 
+        $executionModel = new Execution();
         $executionUpdate = new Event('v1-webhooks', 'WebhooksV1');
 
         $executionUpdate
@@ -487,17 +489,7 @@ class FunctionsV1 extends Worker
             ->setParam('userId', $userId)
             ->setParam('webhooks', $webhooks)
             ->setParam('event', 'functions.executions.update')
-            ->setParam('eventData', [
-                '$id' => $execution['$id'],
-                'functionId' => $execution['functionId'],
-                'dateCreated' => $execution['dateCreated'],
-                'trigger' => $execution['trigger'],
-                'status' => $execution['status'],
-                'exitCode' => $execution['exitCode'],
-                'stdout' => $execution['stdout'],
-                'stderr' => $execution['stderr'],
-                'time' => $execution['time']
-            ]);
+            ->setParam('eventData', $execution->getArrayCopy(array_keys($executionModel->getRules())));
 
         $executionUpdate->trigger();
 
@@ -536,7 +528,7 @@ class FunctionsV1 extends Worker
         if(\count($list) > $max) {
             Console::info('Starting containers cleanup');
 
-            \usort($list, function ($item1, $item2) {
+            \uasort($list, function ($item1, $item2) {
                 return (int)($item1['appwrite-created'] ?? 0) <=> (int)($item2['appwrite-created'] ?? 0);
             });
 
