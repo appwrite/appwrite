@@ -467,6 +467,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
     ->action(function ($collectionId, $id, $type, $attributes, $orders, $response, $dbForExternal, $database, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal */
+        /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
         $collection = $dbForExternal->getCollection($collectionId);
