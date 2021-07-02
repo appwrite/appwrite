@@ -53,6 +53,64 @@ class WebhooksCustomServerTest extends Scope
         return array_merge(['actorsId' => $actors['body']['$id']]);
     }
 
+    /**
+     * @depends testCreateAttributes
+     */
+    public function testCreateDeleteIndexes($data): array
+    {
+        $index = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['actorsId'] . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'id' => 'fullname',
+            'type' => 'text',
+            'attributes' => ['lastName', 'firstName'],
+            'orders' => ['ASC', 'ASC'],
+        ]);
+
+        $this->assertEquals($index['headers']['status-code'], 201);
+        $this->assertEquals($index['body']['$collection'], $data['actorsId']);
+        $this->assertEquals($index['body']['$id'], 'fullname');
+
+        // wait for database worker to create index
+        sleep(5);
+
+        $webhook = $this->getLastRequest();
+
+        $this->assertEquals($webhook['method'], 'POST');
+        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
+        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'database.indexes.create');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), true);
+
+        // Remove index
+        $index = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $data['actorsId'] . '/indexes/' . $index['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        // wait for database worker to remove index
+        sleep(5);
+
+        $webhook = $this->getLastRequest();
+
+        $this->assertEquals($webhook['method'], 'DELETE');
+        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
+        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'database.indexes.delete');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), true);
+
+        return $data;
+    }
+
     public function testDeleteCollection(): array
     {
         /**
