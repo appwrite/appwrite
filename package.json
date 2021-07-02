@@ -14,6 +14,8 @@
     "gulp-clean-css": "^4.3.0",
     "gulp-concat": "^2.6.1",
     "gulp-jsmin": "^0.1.5",
-    "gulp-less": "^5.0.0"
+    "gulp-less": "^4.0.1",
+    "ls-service-form2json": "^1.0.0",
+    "yargs-parser": "^20.2.7"
   }
 }

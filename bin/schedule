@@ -7,4 +7,4 @@ else
     REDIS_BACKEND="redis://${_APP_REDIS_USER}:${_APP_REDIS_PASS}@${_APP_REDIS_HOST}:${_APP_REDIS_PORT}"
 fi
 
-INTERVAL=1 REDIS_BACKEND=$REDIS_BACKEND RESQUE_PHP='/usr/src/code/vendor/autoload.php' php /usr/src/code/vendor/bin/resque-scheduler
+REDIS_BACKEND=$REDIS_BACKEND RESQUE_PHP='/usr/src/code/vendor/autoload.php' php /usr/src/code/vendor/bin/resque-scheduler

@@ -13,7 +13,7 @@
   - _APP_INFLUXDB_HOST
   - _APP_INFLUXDB_PORT
 - Added `expires` parameter to Account Recovery and Email Validation URL's
-- Upgraded phpmailer version to 6.5.0 (#1317)
+
 ## Bugs
 
 - Fixed bug when removing a project member on the Appwrite console (#1214)
