@@ -145,7 +145,7 @@ App::put('/v1/database/collections/:collectionId')
     ->inject('response')
     ->inject('dbForExternal')
     ->inject('audits')
-    ->action(function ($collectionId, $name, $read, $write, $rules, $response, $dbForExternal, $audits) {
+    ->action(function ($collectionId, $name, $read, $write, $response, $dbForExternal, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Event\Event $audits */
