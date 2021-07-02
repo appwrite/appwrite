@@ -264,8 +264,8 @@ class WebhooksCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Test',
-            'env' => 'php-8.0',
-            'runtime' => ['role:all'],
+            'execute' => ['role:all'],
+            'runtime' => 'php-8.0',
             'timeout' => 10,
         ]);
 
