@@ -457,7 +457,7 @@ return [
                 'name' => '_APP_FUNCTIONS_ENVS',
                 'description' => 'Deprectated with 0.8.0, use \'_APP_FUNCTIONS_RUNTIMES\' instead!',
                 'introduction' => '0.7.0',
-                'default' => 'node-14.5,deno-1.8,php-7.4,python-3.9,ruby-3.0,dotnet-5.0',
+                'default' => 'node-14.5,deno-1.8,php-7.4,python-3.9,ruby-3.0,dotnet-5.0,java-16.0',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
