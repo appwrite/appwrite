@@ -15,8 +15,6 @@ $cli
     ->task('migrate')
     ->param('version', APP_VERSION_STABLE, new Text(8), 'Version to migrate to.', true)
     ->action(function ($version) use ($register) {
-        
-
         if (!array_key_exists($version, Migration::$versions)) {
             Console::error("Version {$version} not found.");
             Console::exit(1);
