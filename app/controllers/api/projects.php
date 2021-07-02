@@ -112,6 +112,7 @@ App::post('/v1/projects')
                     $attribute['type'],
                     $attribute['size'],
                     $attribute['required'],
+                    $attribute['default'],
                     $attribute['signed'],
                     $attribute['array'],
                     $attribute['filters'],

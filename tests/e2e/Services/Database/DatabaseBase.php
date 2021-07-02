@@ -63,6 +63,7 @@ trait DatabaseBase
             'type' => 'string',
             'size' => 256,
             'required' => false,
+            'default' => null,
             'array' => true,
         ]);
 

@@ -6,6 +6,7 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\Numeric;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
+use Utopia\Validator\Wildcard;
 use Utopia\Validator\Text;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
@@ -246,12 +247,13 @@ App::post('/v1/database/collections/:collectionId/attributes')
     ->param('type', null, new Text(256), 'Attribute type.')
     ->param('size', null, new Numeric(), 'Attribute size for text attributes, in number of characters. For integers, floats, or bools, use 0.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('default', null, new Wildcard(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $id, $type, $size, $required, $array, $response, $dbForExternal, $database, $audits) {
+    ->action(function ($collectionId, $id, $type, $size, $required, $default, $array, $response, $dbForExternal, $database, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
@@ -267,7 +269,7 @@ App::post('/v1/database/collections/:collectionId/attributes')
         $signed = true;
         $filters = [];
 
-        $success = $dbForExternal->addAttributeInQueue($collectionId, $id, $type, $size, $required, $signed, $array, $filters);
+        $success = $dbForExternal->addAttributeInQueue($collectionId, $id, $type, $size, $required, $default, $signed, $array, $filters);
 
         // Database->addAttributeInQueue() does not return a document
         // So we need to create one for the response
@@ -279,6 +281,7 @@ App::post('/v1/database/collections/:collectionId/attributes')
             'type' => $type,
             'size' => $size,
             'required' => $required,
+            'default' => $default,
             'signed' => $signed,
             'array' => $array,
             'filters' => $filters

@@ -72,11 +72,12 @@ class DatabaseV1 extends Worker
         $type = $attribute->getAttribute('type', '');
         $size = $attribute->getAttribute('size', 0);
         $required = $attribute->getAttribute('required', false);
+        $default = $attribute->getAttribute('default', null);
         $signed = $attribute->getAttribute('signed', true);
         $array = $attribute->getAttribute('array', false);
         $filters = $attribute->getAttribute('filters', []);
 
-        $success = $dbForExternal->createAttribute($collectionId, $id, $type, $size, $required, $signed, $array, $filters);
+        $success = $dbForExternal->createAttribute($collectionId, $id, $type, $size, $required, $default, $signed, $array, $filters);
         if ($success) {
             $removed = $dbForExternal->removeAttributeInQueue($collectionId, $id);
         }
