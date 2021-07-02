@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3ac373911997865bce95b62656cd0af0",
+    "content-hash": "58b51079b2abae7c761ecb0f1cfa774c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1666,16 +1666,16 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "dev-feat-utopia-db-integration",
+            "version": "dev-dev",
             "source": {
                 "type": "git",
                 "url": "https://github.com/kodumbeats/abuse",
-                "reference": "5e78c15e3bd1afcbb5cca417916294b4e63e7e5f"
+                "reference": "5d4e54263d1ae828b2a79ccb8c11aa9881451e82"
             },
             "require": {
                 "ext-pdo": "*",
                 "php": ">=7.4",
-                "utopia-php/database": "0.4.*"
+                "utopia-php/database": "*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.4",
@@ -1704,7 +1704,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2021-07-01T14:20:57+00:00"
+            "time": "2021-07-02T15:33:05+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1763,16 +1763,16 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "dev-feat-utopia-db-integration",
+            "version": "dev-dev",
             "source": {
                 "type": "git",
                 "url": "https://github.com/kodumbeats/audit",
-                "reference": "25535352205f717c2320cd375242e5963677e344"
+                "reference": "6327d91307b260d9d7cf9fa0fbf4d08e408f470a"
             },
             "require": {
                 "ext-pdo": "*",
                 "php": ">=7.4",
-                "utopia-php/database": "0.4.*"
+                "utopia-php/database": "*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -1801,7 +1801,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2021-07-01T14:07:43+00:00"
+            "time": "2021-07-02T15:34:06+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -1962,17 +1962,11 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.4.0",
+            "version": "dev-dev",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/database.git",
-                "reference": "0b59d09a6622b472f82013623fd44e2b1b5504db"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/0b59d09a6622b472f82013623fd44e2b1b5504db",
-                "reference": "0b59d09a6622b472f82013623fd44e2b1b5504db",
-                "shasum": ""
+                "url": "https://github.com/kodumbeats/database",
+                "reference": "3397ca1042df8279e34e8f4d935d9d6c2938f2e8"
             },
             "require": {
                 "ext-mongodb": "*",
@@ -1995,7 +1989,11 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Database"
+                }
+            },
             "license": [
                 "MIT"
             ],
@@ -2017,11 +2015,7 @@
                 "upf",
                 "utopia"
             ],
-            "support": {
-                "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.4.0"
-            },
-            "time": "2021-06-29T15:52:49+00:00"
+            "time": "2021-07-02T14:37:57+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -6235,7 +6229,8 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "utopia-php/abuse": 20,
-        "utopia-php/audit": 20
+        "utopia-php/audit": 20,
+        "utopia-php/database": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
