@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b30bdf7eb1369ae7f2f742e2f30055ae",
+    "content-hash": "65ff5003b9122286423aa030cb6983ea",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -115,16 +115,16 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.3.0",
+            "version": "0.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/php-runtimes.git",
-                "reference": "39be003cdff22c8447de151921001eb5d3bf2319"
+                "reference": "cc7090a67d8824c779190b38873f0f8154f906b2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/php-runtimes/zipball/39be003cdff22c8447de151921001eb5d3bf2319",
-                "reference": "39be003cdff22c8447de151921001eb5d3bf2319",
+                "url": "https://api.github.com/repos/appwrite/php-runtimes/zipball/cc7090a67d8824c779190b38873f0f8154f906b2",
+                "reference": "cc7090a67d8824c779190b38873f0f8154f906b2",
                 "shasum": ""
             },
             "require": {
@@ -144,7 +144,7 @@
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
-                "BSD-3"
+                "BSD-3-Clause"
             ],
             "authors": [
                 {
@@ -164,9 +164,9 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/php-runtimes/issues",
-                "source": "https://github.com/appwrite/php-runtimes/tree/0.3.0"
+                "source": "https://github.com/appwrite/php-runtimes/tree/0.4.0"
             },
-            "time": "2021-06-15T07:52:43+00:00"
+            "time": "2021-06-23T07:17:12+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -2403,16 +2403,16 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.11.0",
+            "version": "0.11.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "96c41c44f930a4d40184cd0f3c7dca76d2cca7e1"
+                "reference": "9809c31f27037d088fb832cdec0e8fbc93d1d388"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/96c41c44f930a4d40184cd0f3c7dca76d2cca7e1",
-                "reference": "96c41c44f930a4d40184cd0f3c7dca76d2cca7e1",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/9809c31f27037d088fb832cdec0e8fbc93d1d388",
+                "reference": "9809c31f27037d088fb832cdec0e8fbc93d1d388",
                 "shasum": ""
             },
             "require": {
@@ -2446,9 +2446,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.11.0"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.11.1"
             },
-            "time": "2021-07-01T13:51:23+00:00"
+            "time": "2021-07-02T10:15:53+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",

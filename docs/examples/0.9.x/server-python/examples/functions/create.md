@@ -11,4 +11,4 @@ client = Client()
 
 functions = Functions(client)
 
-result = functions.create('[NAME]', [], 'java-11')
+result = functions.create('[NAME]', [], 'java-11.0')
