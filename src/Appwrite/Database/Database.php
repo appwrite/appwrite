@@ -371,6 +371,18 @@ class Database
     }
 
     /**
+     * @param int $key
+     *
+     * @return Document|false
+     *
+     * @throws AuthorizationException
+     */
+    public function addUniqueKey($key)
+    {
+        return new Document($this->adapter->addUniqueKey($key));
+    }
+
+    /**
      * @return array
      */
     public function getDebug()
