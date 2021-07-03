@@ -1103,14 +1103,23 @@ App::patch('/v1/account/email')
 
         // TODO after this user needs to confirm mail again
 
-        $user = $projectDB->updateDocument(\array_merge(
+        if (!$isAnonymousUser) {
+            // Remove previous unique ID.
+            $projectDB->deleteUniqueKey(\md5($user->getArrayCopy()['$collection'].':'.'email'.'='.$user->getAttribute('email')));
+        }
+
+        $document = (\array_merge(
             $user->getArrayCopy(),
             ($isAnonymousUser ? [ 'password' => Auth::passwordHash($password) ] : []),
             [
                 'email' => $email,
                 'emailVerification' => false,
             ]
-        ));
+            ));
+
+        $user = $projectDB->updateDocument($document);
+
+        $projectDB->addUniqueKey(\md5($document['$collection'].':'.'email'.'='.$email));
 
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500);
