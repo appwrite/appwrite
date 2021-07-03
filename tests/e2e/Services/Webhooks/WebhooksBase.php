@@ -80,7 +80,7 @@ trait WebhooksBase
         $this->assertEquals($lastName['body']['$id'], 'lastName');
 
         // wait for database worker to kick in
-        sleep(5);
+        sleep(10);
 
         $webhook = $this->getLastRequest();
 
@@ -93,6 +93,8 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['$id'], 'lastName');
+        
+        // TODO@kodumbeats test webhook for removing attribute
 
         return $data;
     }

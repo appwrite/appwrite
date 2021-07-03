@@ -459,7 +459,9 @@ App::post('/v1/database/collections/:collectionId/indexes')
     ->param('id', null, new Key(), 'Index ID.')
     ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE, Database::INDEX_SPATIAL, Database::INDEX_ARRAY]), 'Index type.')
     ->param('attributes', null, new ArrayList(new Key()), 'Array of attributes to index.')
-    ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'])), 'Array of index orders.', true)
+    // TODO@kodumbeats debug below
+    // ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, Database::VAR_STRING)), 'Array of index orders.', true)
+    ->param('orders', [], new ArrayList(new Text(4)), 'Array of index orders.', true)
     ->inject('response')
     ->inject('dbForExternal')
     ->inject('database')
@@ -476,17 +478,18 @@ App::post('/v1/database/collections/:collectionId/indexes')
             throw new Exception('Collection not found', 404);
         }
 
-        if (\count($attributes) !== \count($orders)) {
-            throw new Exception('Must have one order per attribute', 400);
-        }
-
-        $oldAttributes = $collection->getAttribute('attributes');
+        // Convert Document[] to array of attribute metadata
+        $oldAttributes = \array_map(function ($a) {
+            return $a->getArrayCopy();
+        }, $collection->getAttribute('attributes'));
 
         // lengths hidden by default
         $lengths = [];
 
+        var_dump($oldAttributes);
+
         // set attribute size as length for strings, null otherwise
-        foreach ($attributes as $key => &$attribute) {
+        foreach ($attributes as $key => $attribute) {
             // find attribute metadata in collection document
             $attributeIndex = \array_search($attribute, array_column($oldAttributes, '$id'));
 
@@ -494,11 +497,11 @@ App::post('/v1/database/collections/:collectionId/indexes')
                 throw new Exception('Unknown attribute: ' . $attribute, 400);
             }
 
-            $type = $oldAttributes[$attributeIndex]['type'];
-            $size = $oldAttributes[$attributeIndex]['size'];
+            $attributeType = $oldAttributes[$attributeIndex]['type'];
+            $attributeSize = $oldAttributes[$attributeIndex]['size'];
 
             // Only set length for indexes on strings
-            $length[$key] = ($type === Database::VAR_STRING) ? $size : null;
+            $lengths[$key] = ($attributeType === Database::VAR_STRING) ? $attributeSize : null;
         }
 
         $success = $dbForExternal->addIndexInQueue($collectionId, $id, $type, $attributes, $lengths, $orders);
