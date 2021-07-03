@@ -701,7 +701,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'env',
+                '$id' => 'runtime',
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
