@@ -39,7 +39,7 @@
         "appwrite/php-runtimes": "0.3.*",
 
         "utopia-php/framework": "0.14.*",
-        "utopia-php/abuse": "dev-feat-upgrade-db",
+        "utopia-php/abuse": "dev-feat-utopia-db-integration",
         "utopia-php/analytics": "0.2.*",
         "utopia-php/audit": "dev-feat-utopia-db-integration",
         "utopia-php/cache": "0.4.*",
@@ -65,7 +65,11 @@
     "repositories": [
         {
             "type": "git",
-            "url": "https://github.com/eldadfux/audit"
+            "url": "https://github.com/lohanidamodar/abuse"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/lohanidamodar/audit"
         }
     ],
     "require-dev": {
