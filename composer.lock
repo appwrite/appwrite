@@ -848,16 +848,16 @@
         },
         {
             "name": "matomo/device-detector",
-            "version": "4.2.2",
+            "version": "4.2.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/matomo-org/device-detector.git",
-                "reference": "dc270e7645d286d6f01d516a6634aba8b31ad668"
+                "reference": "d879f07496d6e6ee89cef5bcd925383d9b0c2cc0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/dc270e7645d286d6f01d516a6634aba8b31ad668",
-                "reference": "dc270e7645d286d6f01d516a6634aba8b31ad668",
+                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/d879f07496d6e6ee89cef5bcd925383d9b0c2cc0",
+                "reference": "d879f07496d6e6ee89cef5bcd925383d9b0c2cc0",
                 "shasum": ""
             },
             "require": {
@@ -913,7 +913,7 @@
                 "source": "https://github.com/matomo-org/matomo",
                 "wiki": "https://dev.matomo.org/"
             },
-            "time": "2021-02-26T07:31:42+00:00"
+            "time": "2021-05-12T14:14:25+00:00"
         },
         {
             "name": "mongodb/mongodb",
@@ -1448,31 +1448,33 @@
         },
         {
             "name": "slickdeals/statsd",
-            "version": "3.0.2",
+            "version": "3.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Slickdeals/statsd-php.git",
-                "reference": "393c6565efbfb23c8296ae3099a62fb6366c6ce3"
+                "reference": "225588a0a079e145359049f6e5e23eedb1b4c17f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Slickdeals/statsd-php/zipball/393c6565efbfb23c8296ae3099a62fb6366c6ce3",
-                "reference": "393c6565efbfb23c8296ae3099a62fb6366c6ce3",
+                "url": "https://api.github.com/repos/Slickdeals/statsd-php/zipball/225588a0a079e145359049f6e5e23eedb1b4c17f",
+                "reference": "225588a0a079e145359049f6e5e23eedb1b4c17f",
                 "shasum": ""
             },
             "require": {
-                "php": ">= 7.2"
+                "php": ">= 7.3 || ^8"
+            },
+            "replace": {
+                "domnikl/statsd": "self.version"
             },
             "require-dev": {
-                "flyeralarm/php-code-validator": "^2.2",
-                "phpunit/phpunit": "~8.0",
-                "vimeo/psalm": "^3.4"
+                "friendsofphp/php-cs-fixer": "^3.0",
+                "phpunit/phpunit": "^9",
+                "vimeo/psalm": "^4.6"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Domnikl\\Statsd\\": "src/",
-                    "Domnikl\\Test\\Statsd\\": "tests/unit"
+                    "Domnikl\\Statsd\\": "src/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -1486,7 +1488,7 @@
                 }
             ],
             "description": "a PHP client for statsd",
-            "homepage": "https://domnikl.github.com/statsd-php",
+            "homepage": "https://github.com/Slickdeals/statsd-php",
             "keywords": [
                 "Metrics",
                 "monitoring",
@@ -1495,9 +1497,10 @@
                 "udp"
             ],
             "support": {
-                "source": "https://github.com/Slickdeals/statsd-php/tree/3.0.2"
+                "issues": "https://github.com/Slickdeals/statsd-php/issues",
+                "source": "https://github.com/Slickdeals/statsd-php/tree/3.1.0"
             },
-            "time": "2020-01-03T14:24:58+00:00"
+            "time": "2021-06-04T20:33:46+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -2723,16 +2726,16 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.10.11",
+            "version": "0.11.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "f73391d482660798f4077d54760d67e633bdde1e"
+                "reference": "9809c31f27037d088fb832cdec0e8fbc93d1d388"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/f73391d482660798f4077d54760d67e633bdde1e",
-                "reference": "f73391d482660798f4077d54760d67e633bdde1e",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/9809c31f27037d088fb832cdec0e8fbc93d1d388",
+                "reference": "9809c31f27037d088fb832cdec0e8fbc93d1d388",
                 "shasum": ""
             },
             "require": {
@@ -2766,9 +2769,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.10.11"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.11.1"
             },
-            "time": "2021-06-07T11:37:50+00:00"
+            "time": "2021-07-02T10:15:53+00:00"
         },
         {
             "name": "composer/semver",
@@ -4127,16 +4130,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "9.5.4",
+            "version": "9.5.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "c73c6737305e779771147af66c96ca6a7ed8a741"
+                "reference": "fb9b8333f14e3dce976a60ef6a7e05c7c7ed8bfb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/c73c6737305e779771147af66c96ca6a7ed8a741",
-                "reference": "c73c6737305e779771147af66c96ca6a7ed8a741",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/fb9b8333f14e3dce976a60ef6a7e05c7c7ed8bfb",
+                "reference": "fb9b8333f14e3dce976a60ef6a7e05c7c7ed8bfb",
                 "shasum": ""
             },
             "require": {
@@ -4166,7 +4169,7 @@
                 "sebastian/global-state": "^5.0.1",
                 "sebastian/object-enumerator": "^4.0.3",
                 "sebastian/resource-operations": "^3.0.3",
-                "sebastian/type": "^2.3",
+                "sebastian/type": "^2.3.4",
                 "sebastian/version": "^3.0.2"
             },
             "require-dev": {
@@ -4214,7 +4217,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/phpunit/issues",
-                "source": "https://github.com/sebastianbergmann/phpunit/tree/9.5.4"
+                "source": "https://github.com/sebastianbergmann/phpunit/tree/9.5.6"
             },
             "funding": [
                 {
@@ -4226,7 +4229,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-03-23T07:16:29+00:00"
+            "time": "2021-06-23T05:14:38+00:00"
         },
         {
             "name": "psr/container",
@@ -5242,16 +5245,16 @@
         },
         {
             "name": "swoole/ide-helper",
-            "version": "4.6.6",
+            "version": "4.6.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/swoole/ide-helper.git",
-                "reference": "d29d71267f8ed4e4993dc057ca53ffdb5d2703b7"
+                "reference": "0d1409b8274117addfe64d3ea412812a69807411"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/swoole/ide-helper/zipball/d29d71267f8ed4e4993dc057ca53ffdb5d2703b7",
-                "reference": "d29d71267f8ed4e4993dc057ca53ffdb5d2703b7",
+                "url": "https://api.github.com/repos/swoole/ide-helper/zipball/0d1409b8274117addfe64d3ea412812a69807411",
+                "reference": "0d1409b8274117addfe64d3ea412812a69807411",
                 "shasum": ""
             },
             "require-dev": {
@@ -5274,7 +5277,7 @@
             "description": "IDE help files for Swoole.",
             "support": {
                 "issues": "https://github.com/swoole/ide-helper/issues",
-                "source": "https://github.com/swoole/ide-helper/tree/4.6.6"
+                "source": "https://github.com/swoole/ide-helper/tree/4.6.7"
             },
             "funding": [
                 {
@@ -5290,7 +5293,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2021-04-22T16:38:11+00:00"
+            "time": "2021-05-14T16:05:16+00:00"
         },
         {
             "name": "symfony/console",
@@ -6255,5 +6258,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.0.0"
+    "plugin-api-version": "2.1.0"
 }

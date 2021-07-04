@@ -2,6 +2,7 @@
 
 use Appwrite\Event\Event;
 use Appwrite\Resque\Worker;
+use Appwrite\Utopia\Response\Model\Execution;
 use Cron\CronExpression;
 use Swoole\Runtime;
 use Utopia\App;
@@ -138,6 +139,9 @@ class FunctionsV1 extends Worker
     {
         global $register;
 
+        $db = $register->get('db');
+        $cache = $register->get('cache');
+
         $projectId = $this->args['projectId'] ?? '';
         $functionId = $this->args['functionId'] ?? '';
         $webhooks = $this->args['webhooks'] ?? [];
@@ -150,8 +154,8 @@ class FunctionsV1 extends Worker
         $userId = $this->args['userId'] ?? '';
         $jwt = $this->args['jwt'] ?? '';
 
-        $cache = new Cache(new Redis($register->get('cache')));
-        $database = new Database(new MariaDB($register->get('db')), $cache);
+        $cache = new Cache(new Redis($cache));
+        $database = new Database(new MariaDB($db), $cache);
         $database->setNamespace('project_'.$projectId.'_internal');
 
         switch ($trigger) {
@@ -461,6 +465,11 @@ class FunctionsV1 extends Worker
         
         Authorization::reset();
 
+        if (false === $function) {
+            throw new Exception('Failed saving execution to DB', 500);
+        }
+
+        $executionModel = new Execution();
         $executionUpdate = new Event('v1-webhooks', 'WebhooksV1');
 
         $executionUpdate
@@ -468,17 +477,7 @@ class FunctionsV1 extends Worker
             ->setParam('userId', $userId)
             ->setParam('webhooks', $webhooks)
             ->setParam('event', 'functions.executions.update')
-            ->setParam('eventData', [
-                '$id' => $execution['$id'],
-                'functionId' => $execution['functionId'],
-                'dateCreated' => $execution['dateCreated'],
-                'trigger' => $execution['trigger'],
-                'status' => $execution['status'],
-                'exitCode' => $execution['exitCode'],
-                'stdout' => $execution['stdout'],
-                'stderr' => $execution['stderr'],
-                'time' => $execution['time']
-            ]);
+            ->setParam('eventData', $execution->getArrayCopy(array_keys($executionModel->getRules())));
 
         $executionUpdate->trigger();
 
