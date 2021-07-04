@@ -14,6 +14,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Validator\Authorization as Authorization2;
 use Utopia\Audit\Audit;
 use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Database\Document;
 use Utopia\Swoole\Files;
 use Utopia\Swoole\Request;
 
@@ -62,6 +63,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
 
         $dbForConsole->create();
         
+        
         $audit = new Audit($dbForConsole);
         $audit->setup();
 
@@ -69,31 +71,32 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         $adapter->setup();
 
         foreach ($collections as $key => $collection) {
-            $dbForConsole->createCollection($key);
+            $attributes = [];
+            $indexes = [];
 
-            foreach ($collection['attributes'] as $i => $attribute) {
-                $dbForConsole->createAttribute(
-                    $key,
-                    $attribute['$id'],
-                    $attribute['type'],
-                    $attribute['size'],
-                    $attribute['required'],
-                    $attribute['signed'],
-                    $attribute['array'],
-                    $attribute['filters'],
-                );
+            foreach ($collection['attributes'] as $attribute) {
+                $attributes[] = new Document([
+                    '$id' => $attribute['$id'],
+                    'type' => $attribute['type'],
+                    'size' => $attribute['size'],
+                    'required' => $attribute['required'],
+                    'signed' => $attribute['signed'],
+                    'array' => $attribute['array'],
+                    'filters' => $attribute['filters'],
+                ]);
             }
 
-            foreach ($collection['indexes'] as $i => $index) {
-                $dbForConsole->createIndex(
-                    $key,
-                    $index['$id'],
-                    $index['type'],
-                    $index['attributes'],
-                    $index['lengths'],
-                    $index['orders'],
-                );
+            foreach ($collection['indexes'] as $index) {
+                $indexes[] = new Document([
+                    '$id' => $index['$id'],
+                    'type' => $index['type'],
+                    'attributes' => $index['attributes'],
+                    'lengths' => $index['lengths'],
+                    'orders' => $index['orders'],
+                ]);
             }
+
+            $dbForConsole->createCollection($key, $attributes, $indexes);
         }
 
         Console::success('[Setup] - Server database init completed...');
