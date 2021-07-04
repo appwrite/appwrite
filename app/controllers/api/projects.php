@@ -96,10 +96,10 @@ App::post('/v1/projects')
         $dbForExternal->setNamespace('project_' . $project->getId() . '_external');
         $dbForExternal->create();
 
-        $audit = new Audit($dbForConsole);
+        $audit = new Audit($dbForInternal);
         $audit->setup();
 
-        $adapter = new TimeLimit("", 0, 1, $dbForConsole);
+        $adapter = new TimeLimit("", 0, 1, $dbForInternal);
         $adapter->setup();
 
         foreach ($collections as $key => $collection) {
@@ -128,7 +128,7 @@ App::post('/v1/projects')
                 ]);
             }
 
-            $dbForConsole->createCollection($key, $attributes, $indexes);
+            $dbForInternal->createCollection($key, $attributes, $indexes);
         }
 
         $consoleDB->createNamespace($project->getId());
