@@ -103,31 +103,32 @@ App::post('/v1/projects')
         $adapter->setup();
 
         foreach ($collections as $key => $collection) {
-            $dbForInternal->createCollection($key);
+            $attributes = [];
+            $indexes = [];
 
-            foreach ($collection['attributes'] as $i => $attribute) {
-                $dbForInternal->createAttribute(
-                    $key,
-                    $attribute['$id'],
-                    $attribute['type'],
-                    $attribute['size'],
-                    $attribute['required'],
-                    $attribute['signed'],
-                    $attribute['array'],
-                    $attribute['filters'],
-                );
+            foreach ($collection['attributes'] as $attribute) {
+                $attributes[] = new Document([
+                    '$id' => $attribute['$id'],
+                    'type' => $attribute['type'],
+                    'size' => $attribute['size'],
+                    'required' => $attribute['required'],
+                    'signed' => $attribute['signed'],
+                    'array' => $attribute['array'],
+                    'filters' => $attribute['filters'],
+                ]);
             }
 
-            foreach ($collection['indexes'] as $i => $index) {
-                $dbForInternal->createIndex(
-                    $key,
-                    $index['$id'],
-                    $index['type'],
-                    $index['attributes'],
-                    $index['lengths'],
-                    $index['orders'],
-                );
+            foreach ($collection['indexes'] as $index) {
+                $indexes[] = new Document([
+                    '$id' => $index['$id'],
+                    'type' => $index['type'],
+                    'attributes' => $index['attributes'],
+                    'lengths' => $index['lengths'],
+                    'orders' => $index['orders'],
+                ]);
             }
+
+            $dbForInternal->createCollection($key, $attributes, $indexes);
         }
 
         $consoleDB->createNamespace($project->getId());

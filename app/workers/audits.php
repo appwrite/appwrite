@@ -8,7 +8,7 @@ use Utopia\CLI\Console;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
 
-require_once __DIR__.'/../init.php';
+require_once __DIR__.'/../workers.php';
 
 Console::title('Audits V1 Worker');
 Console::success(APP_NAME.' audits worker v1 has started');

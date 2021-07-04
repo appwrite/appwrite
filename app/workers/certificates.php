@@ -11,7 +11,7 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 
-require_once __DIR__.'/../init.php';
+require_once __DIR__.'/../workers.php';
 
 Console::title('Certificates V1 Worker');
 Console::success(APP_NAME.' certificates worker v1 has started');
