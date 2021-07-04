@@ -591,6 +591,29 @@ trait AccountBase
         
         $this->assertEquals($response['headers']['status-code'], 400);
 
+        // Test if we can create a new account with the old email
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' =>  $data['email'],
+            'password' =>  $data['password'],
+            'name' =>  $data['name'],
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertEquals($response['body']['email'], $data['email']);
+        $this->assertEquals($response['body']['name'], $data['name'],);
+        
+
         $data['email'] = $newEmail;
 
         return $data;

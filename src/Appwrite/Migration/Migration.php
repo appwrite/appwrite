@@ -32,6 +32,16 @@ abstract class Migration
     protected $projectDB;
 
     /**
+     * @var array
+     */
+    public static array $versions = [
+        '0.6.0' => 'V05',
+        '0.7.0' => 'V06',
+        '0.8.0' => 'V07',
+        '0.9.0' => 'V08',
+    ];
+
+    /**
      * Migration constructor.
      * 
      * @param PDO $pdo

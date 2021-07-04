@@ -8,12 +8,20 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
-use Appwrite\Migration\Version;
+use Appwrite\Migration\Migration;
+use Utopia\Validator\Text;
 
 $cli
     ->task('migrate')
-    ->action(function () use ($register) {
-        Console::success('Starting Data Migration');
+    ->param('version', APP_VERSION_STABLE, new Text(8), 'Version to migrate to.', true)
+    ->action(function ($version) use ($register) {
+        if (!array_key_exists($version, Migration::$versions)) {
+            Console::error("Version {$version} not found.");
+            Console::exit(1);
+            return;
+        }
+
+        Console::success('Starting Data Migration to version '.$version);
         $db = $register->get('db', true);
         $cache = $register->get('cache', true);
 
@@ -38,7 +46,8 @@ $cli
         $projects = [$console];
         $count = 0;
 
-        $migration = new Version\V08($register->get('db')); //TODO: remove hardcoded version and move to dynamic migration
+        $class = 'Appwrite\\Migration\\Version\\'.Migration::$versions[$version];
+        $migration = new $class($register->get('db'));
 
         while ($sum > 0) {
             foreach ($projects as $project) {
