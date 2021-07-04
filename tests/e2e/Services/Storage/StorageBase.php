@@ -376,6 +376,18 @@ trait StorageBase
         /**
          * Test for SUCCESS
          */
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'name' => 'Test Bucket',
+            'maximumFileSize' => 2000000, //2MB
+            'allowedFileExtensions' => ["jpg", "png"],
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+        ]);
+        
         $file = $this->client->call(Client::METHOD_POST, '/storage/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
