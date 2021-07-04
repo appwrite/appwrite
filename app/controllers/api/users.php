@@ -118,7 +118,7 @@ App::get('/v1/users/:userId')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if (empty($user->getId())) {
+        if ($user->isEmpty()) {
             throw new Exception('User not found', 404);
         }
 
@@ -145,7 +145,7 @@ App::get('/v1/users/:userId/prefs')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if (empty($user->getId())) {
+        if ($user->isEmpty()) {
             throw new Exception('User not found', 404);
         }
 
@@ -176,7 +176,7 @@ App::get('/v1/users/:userId/sessions')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if (empty($user->getId())) {
+        if ($user->isEmpty()) {
             throw new Exception('User not found', 404);
         }
 
@@ -226,7 +226,7 @@ App::get('/v1/users/:userId/logs')
         
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if (empty($user->getId())) {
+        if ($user->isEmpty()) {
             throw new Exception('User not found', 404);
         }
 
@@ -234,7 +234,7 @@ App::get('/v1/users/:userId/logs')
         
         $countries = $locale->getText('countries');
 
-        $logs = $audit->getLogsByUserAndActions($user->getId(), [
+        $logs = $audit->getLogsByUserAndEvents($user->getId(), [
             'account.create',
             'account.delete',
             'account.update.name',
@@ -331,7 +331,7 @@ App::patch('/v1/users/:userId/status')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if (empty($user->getId())) {
+        if ($user->isEmpty()) {
             throw new Exception('User not found', 404);
         }
 
@@ -425,7 +425,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if (empty($user->getId())) {
+        if ($user->isEmpty()) {
             throw new Exception('User not found', 404);
         }
 
@@ -473,7 +473,7 @@ App::delete('/v1/users/:userId/sessions')
 
         $user = $dbForInternal->getDocument('users', $userId);
 
-        if (empty($user->getId())) {
+        if ($user->isEmpty()) {
             throw new Exception('User not found', 404);
         }
 

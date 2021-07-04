@@ -1481,8 +1481,8 @@ $collections = [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Env',
-                'key' => 'env',
+                'label' => 'Runtime',
+                'key' => 'runtime',
                 'type' => Database::SYSTEM_VAR_TYPE_TEXT,
                 'default' => '',
                 'required' => false,

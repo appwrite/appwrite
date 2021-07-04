@@ -14,16 +14,9 @@ use Utopia\Config\Config;
 use Utopia\Database\Validator\Authorization as Authorization2;
 use Utopia\Audit\Audit;
 use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Database\Document;
 use Utopia\Swoole\Files;
 use Utopia\Swoole\Request;
-
-// xdebug_start_trace('/tmp/trace');
-
-ini_set('memory_limit','512M');
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-ini_set('default_socket_timeout', -1);
-error_reporting(E_ALL);
 
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
@@ -70,6 +63,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
 
         $dbForConsole->create();
         
+        
         $audit = new Audit($dbForConsole);
         $audit->setup();
 
@@ -77,31 +71,32 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         $adapter->setup();
 
         foreach ($collections as $key => $collection) {
-            $dbForConsole->createCollection($key);
+            $attributes = [];
+            $indexes = [];
 
-            foreach ($collection['attributes'] as $i => $attribute) {
-                $dbForConsole->createAttribute(
-                    $key,
-                    $attribute['$id'],
-                    $attribute['type'],
-                    $attribute['size'],
-                    $attribute['required'],
-                    $attribute['signed'],
-                    $attribute['array'],
-                    $attribute['filters'],
-                );
+            foreach ($collection['attributes'] as $attribute) {
+                $attributes[] = new Document([
+                    '$id' => $attribute['$id'],
+                    'type' => $attribute['type'],
+                    'size' => $attribute['size'],
+                    'required' => $attribute['required'],
+                    'signed' => $attribute['signed'],
+                    'array' => $attribute['array'],
+                    'filters' => $attribute['filters'],
+                ]);
             }
 
-            foreach ($collection['indexes'] as $i => $index) {
-                $dbForConsole->createIndex(
-                    $key,
-                    $index['$id'],
-                    $index['type'],
-                    $index['attributes'],
-                    $index['lengths'],
-                    $index['orders'],
-                );
+            foreach ($collection['indexes'] as $index) {
+                $indexes[] = new Document([
+                    '$id' => $index['$id'],
+                    'type' => $index['type'],
+                    'attributes' => $index['attributes'],
+                    'lengths' => $index['lengths'],
+                    'orders' => $index['orders'],
+                ]);
             }
+
+            $dbForConsole->createCollection($key, $attributes, $indexes);
         }
 
         Console::success('[Setup] - Server database init completed...');
@@ -118,7 +113,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
     });
 });
 
-$http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) {
+$http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register) {
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
 
@@ -134,6 +129,17 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
         return;
     }
+
+    $db = $register->get('dbPool')->get();
+    $redis = $register->get('redisPool')->get();
+
+    $register->set('db', function () use (&$db) {
+        return $db;
+    });
+
+    $register->set('cache', function () use (&$redis) {
+        return $redis;
+    });
 
     $app = new App('UTC');
     
@@ -157,6 +163,14 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         else {
             $swooleResponse->end('500: Server Error');
         }
+    } finally {
+        /** @var PDOPool $dbPool */
+        $dbPool = $register->get('dbPool');
+        $dbPool->put($db);
+
+        /** @var RedisPool $redisPool */
+        $redisPool = $register->get('redisPool');
+        $redisPool->put($redis);
     }
 });
 
