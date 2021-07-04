@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "190f538a137242ae4e1738d920626fe7",
+    "content-hash": "68ed82b309f6a9dd878ef031424ac00a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1663,17 +1663,11 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "dev-feat-upgrade-db",
+            "version": "dev-feat-utopia-db-integration",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "bca147f43848da35cbf0f1dcdcac69b5b1736274"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/bca147f43848da35cbf0f1dcdcac69b5b1736274",
-                "reference": "bca147f43848da35cbf0f1dcdcac69b5b1736274",
-                "shasum": ""
+                "url": "https://github.com/lohanidamodar/abuse",
+                "reference": "9742a72dfecb27e74e2d8d8018b7bdbec6637de6"
             },
             "require": {
                 "ext-pdo": "*",
@@ -1690,7 +1684,6 @@
                     "Utopia\\Abuse\\": "src/Abuse"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -1702,17 +1695,13 @@
             ],
             "description": "A simple abuse library to manage application usage limits",
             "keywords": [
-                "Abuse",
+                "abuse",
                 "framework",
                 "php",
                 "upf",
                 "utopia"
             ],
-            "support": {
-                "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/feat-upgrade-db"
-            },
-            "time": "2021-07-03T17:39:54+00:00"
+            "time": "2021-07-04T06:06:38+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1774,8 +1763,8 @@
             "version": "dev-feat-utopia-db-integration",
             "source": {
                 "type": "git",
-                "url": "https://github.com/eldadfux/audit",
-                "reference": "056205ac6f90ce9525f8773b6d8acd5b8cd58d17"
+                "url": "https://github.com/lohanidamodar/audit",
+                "reference": "e4b03bf3dd86fbde8608ae2b6774851bb66e665b"
             },
             "require": {
                 "ext-pdo": "*",
@@ -1809,7 +1798,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2021-07-03T17:45:07+00:00"
+            "time": "2021-07-04T12:02:18+00:00"
         },
         {
             "name": "utopia-php/cache",
