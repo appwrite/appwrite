@@ -858,6 +858,7 @@ App::get('/v1/account/logs')
         /** @var Utopia\Database\Database $dbForInternal */
 
         $audit = new Audit($dbForInternal);
+
         $countries = $locale->getText('countries');
 
         $logs = $audit->getLogsByUserAndEvents($user->getId(), [
@@ -921,30 +922,35 @@ App::get('/v1/account/sessions/:sessionId')
     ->inject('response')
     ->inject('user')
     ->inject('locale')
-    ->inject('projectDB')
-    ->action(function ($sessionId, $response, $user, $locale, $projectDB) {
+    ->inject('dbForInternal')
+    ->action(function ($sessionId, $response, $user, $locale, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
 
-        $sessionId = ($sessionId === 'current')
-        ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
-        : $sessionId;
+        $sessions   = $user->getAttribute('sessions', []);
+        $sessionId  = ($sessionId === 'current')
+            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
+            : $sessionId;
 
-        $session = $projectDB->getDocument($sessionId); // get user by session ID
+        foreach ($sessions as $session) { /** @var Document $session */
+            if ($sessionId == $session->getId()) {
 
-        if ($session->isEmpty() || Database::SYSTEM_COLLECTION_SESSIONS != $session->getCollection()) {
-            throw new Exception('Session not found', 404);
-        };
-        
-        $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
-        ? $countries[strtoupper($session->getAttribute('countryCode'))]
-        : $locale->getText('locale.country.unknown');
+                $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
+                    ? $countries[strtoupper($session->getAttribute('countryCode'))]
+                    : $locale->getText('locale.country.unknown');
 
-        $session->setAttribute('countryName', $countryName);
+                $session
+                    ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
+                    ->setAttribute('countryName', $countryName)
+                ;
+                    
+                return $response->dynamic2($session, Response::MODEL_SESSION);
+            }
+        }
 
-        $response->dynamic($session, Response::MODEL_SESSION);
+        throw new Exception('Session not found', 404);
     });
 
 App::patch('/v1/account/name')

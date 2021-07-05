@@ -36,6 +36,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
      * Abuse Check
      */
     $timeLimit = new TimeLimit($route->getLabel('abuse-key', 'url:{url},ip:{ip}'), $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForInternal);
+
     $timeLimit
         ->setParam('{userId}', $user->getId())
         ->setParam('{userAgent}', $request->getUserAgent(''))
@@ -110,7 +111,6 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     ;
 
 }, ['utopia', 'request', 'response', 'project', 'user', 'register', 'events', 'audits', 'usage', 'deletes', 'dbForInternal'], 'api');
-
 
 App::init(function ($utopia, $request, $response, $project, $user) {
     /** @var Utopia\App $utopia */
