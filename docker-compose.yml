@@ -62,7 +62,7 @@ services:
       - ./psalm.xml:/usr/src/code/psalm.xml
       - ./tests:/usr/src/code/tests
       - ./app:/usr/src/code/app
-      # - ./vendor:/usr/src/code/vendor
+      # - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
@@ -388,7 +388,7 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=password
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
-      - MYSQL_USER=${_APP_DB_USER}
+      - MYSQL_USER=user
       - MYSQL_PASSWORD=${_APP_DB_PASS}
     command: 'mysqld --innodb-flush-method=fsync' # add ' --query_cache_size=0' for DB tests
     # command: mv /var/lib/mysql/ib_logfile0 /var/lib/mysql/ib_logfile0.bu && mv /var/lib/mysql/ib_logfile1 /var/lib/mysql/ib_logfile1.bu
@@ -473,6 +473,17 @@ services:
     restart: always
     ports:
       - 9505:8080
+    networks:
+      - appwrite
+
+  swagger-validator:
+    image: 'swaggerapi/swagger-validator-v2:v2.0.5'
+    container_name: appwrite-swagger-validator
+    ports:
+      - '9506:8080'
+    environment:
+      - REJECT_LOCAL=false
+      - REJECT_REDIRECT=false
     networks:
       - appwrite
 

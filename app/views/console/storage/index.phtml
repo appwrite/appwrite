@@ -106,11 +106,11 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                                         <input type="hidden" data-ls-attrs="id=file-folderId-{{file.$id}}" name="folderId" data-cast-to="integer" value="1">
 
                                                         <label for="file-read">Read Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                                                        <input type="hidden" data-ls-attrs="id=file-read-{{file.$id}}" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.read}}" placeholder="User ID, Team ID or Role" />
+                                                        <input type="hidden" data-ls-attrs="id=file-read-{{file.$id}}" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{file.$read}}" placeholder="User ID, Team ID or Role" />
                                                         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
                                                         
                                                         <label for="file-write">Write Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                                                        <input type="hidden" data-ls-attrs="id=file-write-{{file.$id}}" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.write}}" placeholder="User ID, Team ID or Role" />
+                                                        <input type="hidden" data-ls-attrs="id=file-write-{{file.$id}}" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{file.$write}}" placeholder="User ID, Team ID or Role" />
                                                         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
                                                     </form>
 
@@ -243,7 +243,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">(Max file size allowed: <?php echo $fileLimitHuman; ?>)</div>
 
                         <label for="file-read">Read Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                        <input type="hidden" id="file-read" name="read" data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['*'])); ?>" placeholder="User ID, Team ID or Role" />
+                        <input type="hidden" id="file-read" name="read" data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['role:all'])); ?>" placeholder="User ID, Team ID or Role" />
                         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
                         
                         <label for="file-write">Write Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>

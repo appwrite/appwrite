@@ -44,12 +44,12 @@ App::get('/')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('response')
-    ->inject('consoleDB')
+    ->inject('dbForConsole')
     ->inject('project')
-    ->action(function ($response, $consoleDB, $project) {
+    ->action(function ($response, $dbForConsole, $project) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Database $consoleDB */
-        /** @var Appwrite\Database\Document $project */
+        /** @var Utopia\Database\Database $dbForConsole */
+        /** @var Utopia\Database\Document $project */
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -61,13 +61,7 @@ App::get('/')
             $whitlistRoot = App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled');
 
             if($whitlistRoot !== 'disabled') {
-                $consoleDB->getCollection([ // Count users
-                    'filters' => [
-                        '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                    ],
-                ]);
-                    
-                $sum = $consoleDB->getSum();
+                $sum = $dbForConsole->count('users', [], APP_LIMIT_USERS);
 
                 if($sum !== 0) {
                     return $response->redirect('/auth/signin');
@@ -239,6 +233,7 @@ App::get('/specs/:format')
     ->groups(['web', 'home'])
     ->label('scope', 'public')
     ->label('docs', false)
+    ->label('origin', '*')
     ->param('format', 'swagger2', new WhiteList(['swagger2', 'open-api3'], true), 'Spec format.', true)
     ->param('platform', APP_PLATFORM_CLIENT, new WhiteList([APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER, APP_PLATFORM_CONSOLE], true), 'Choose target platform.', true)
     ->param('tests', 0, function () {return new Range(0, 1);}, 'Include only test services.', true)

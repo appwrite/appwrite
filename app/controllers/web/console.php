@@ -236,7 +236,7 @@ App::get('/console/database/collection')
         $collection = $projectDB->getDocument($id, false);
         Authorization::reset();
 
-        if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+        if ($collection->isEmpty() || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
             throw new Exception('Collection not found', 404);
         }
 
@@ -273,7 +273,7 @@ App::get('/console/database/document')
         $collection = $projectDB->getDocument($collection, false);
         Authorization::reset();
 
-        if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+        if ($collection->isEmpty() || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
             throw new Exception('Collection not found', 404);
         }
 

@@ -32,6 +32,7 @@ foreach ([
     realpath(__DIR__ . '/../vendor/psr/log'),
     realpath(__DIR__ . '/../vendor/matomo'),
     realpath(__DIR__ . '/../vendor/symfony'),
+    realpath(__DIR__ . '/../vendor/mongodb'),
 ] as $key => $value) {
     if($value !== false) {
         $preloader->ignore($value);

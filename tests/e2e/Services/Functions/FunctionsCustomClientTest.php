@@ -139,7 +139,7 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-key' => $apikey,
         ], [
             'name' => 'Test',
-            'execute' => ['*'],
+            'execute' => ['role:all'],
             'runtime' => 'php-8.0',
             'vars' => [
                 'funcKey1' => 'funcValue1',

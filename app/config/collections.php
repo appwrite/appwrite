@@ -11,7 +11,7 @@ $collections = [
     'console' => [
         '$id' => 'console',
         '$collection' => 'projects',
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Appwrite',
         'description' => 'Appwrite core engine',
         'logo' => '',
@@ -51,7 +51,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_COLLECTIONS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_COLLECTIONS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Collections',
         'structure' => true,
         'rules' => [
@@ -106,7 +106,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_RULES => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_RULES,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Collections Rule',
         'structure' => true,
         'rules' => [
@@ -186,7 +186,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_USERS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_USERS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'User',
         'structure' => true,
         'rules' => [
@@ -307,7 +307,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_SESSIONS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_SESSIONS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Session',
         'structure' => true,
         'rules' => [
@@ -505,7 +505,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_TOKENS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_TOKENS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Token',
         'structure' => true,
         'rules' => [
@@ -568,7 +568,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_MEMBERSHIPS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_MEMBERSHIPS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Membership',
         'structure' => true,
         'rules' => [
@@ -640,7 +640,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_TEAMS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_TEAMS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Team',
         'structure' => true,
         'rules' => [
@@ -676,7 +676,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_PROJECTS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_PROJECTS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Project',
         'structure' => true,
         'rules' => [
@@ -834,7 +834,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_WEBHOOKS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_WEBHOOKS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Webhook',
         'structure' => true,
         'rules' => [
@@ -898,7 +898,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_KEYS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_KEYS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Key',
         'structure' => true,
         'rules' => [
@@ -934,7 +934,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_TASKS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_TASKS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Task',
         'structure' => true,
         'rules' => [
@@ -1088,7 +1088,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_PLATFORMS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_PLATFORMS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Platform',
         'structure' => true,
         'rules' => [
@@ -1160,7 +1160,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_DOMAINS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_DOMAINS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Domains',
         'structure' => true,
         'rules' => [
@@ -1223,7 +1223,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_CERTIFICATES => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_CERTIFICATES,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Certificates',
         'structure' => true,
         'rules' => [
@@ -1295,7 +1295,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_FILES => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_FILES,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'File',
         'structure' => true,
         'rules' => [
@@ -1439,7 +1439,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_FUNCTIONS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_FUNCTIONS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Functions',
         'structure' => true,
         'rules' => [
@@ -1557,7 +1557,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_TAGS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_TAGS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Tags',
         'structure' => true,
         'rules' => [
@@ -1611,7 +1611,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_EXECUTIONS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_EXECUTIONS,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Executions',
         'structure' => true,
         'rules' => [
@@ -1701,7 +1701,7 @@ $collections = [
     Database::SYSTEM_COLLECTION_RESERVED => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$id' => Database::SYSTEM_COLLECTION_RESERVED,
-        '$permissions' => ['read' => ['*']],
+        '$permissions' => ['read' => ['role:all']],
         'name' => 'Reserved',
         'structure' => true,
     ],

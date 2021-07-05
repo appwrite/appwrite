@@ -9,33 +9,34 @@ use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 
-App::init(function ($utopia, $request, $response, $project, $user, $register, $events, $audits, $usage, $deletes, $db) {
+App::init(function ($utopia, $request, $response, $project, $user, $register, $events, $audits, $usage, $deletes, $dbForInternal) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
-    /** @var Appwrite\Database\Document $project */
-    /** @var Appwrite\Database\Document $user */
+    /** @var Utopia\Database\Document $project */
+    /** @var Utopia\Database\Document $user */
     /** @var Utopia\Registry\Registry $register */
     /** @var Appwrite\Event\Event $events */
     /** @var Appwrite\Event\Event $audits */
     /** @var Appwrite\Event\Event $usage */
     /** @var Appwrite\Event\Event $deletes */
     /** @var Appwrite\Event\Event $functions */
+    /** @var Utopia\Database\Database $dbForInternal */
 
     Storage::setDevice('files', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
     Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId()));
 
     $route = $utopia->match($request);
 
-    if (empty($project->getId()) && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
+    if ($project->isEmpty() && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
         throw new Exception('Missing or unknown project ID', 400);
     }
 
     /*
      * Abuse Check
      */
-    $timeLimit = new TimeLimit($route->getLabel('abuse-key', 'url:{url},ip:{ip}'), $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $db);
-    $timeLimit->setNamespace('app_'.$project->getId());
+    $timeLimit = new TimeLimit($route->getLabel('abuse-key', 'url:{url},ip:{ip}'), $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForInternal);
+
     $timeLimit
         ->setParam('{userId}', $user->getId())
         ->setParam('{userAgent}', $request->getUserAgent(''))
@@ -65,7 +66,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     $isAppUser = Auth::isAppUser(Authorization::$roles);
 
     if (($abuse->check() // Route is rate-limited
-        && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') // Abuse is not diabled
+        && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') // Abuse is not disabled
         && (!$isAppUser && !$isPrivilegedUser)) // User is not an admin or API key
         {
         throw new Exception('Too many requests', 429);
@@ -109,8 +110,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
         ->setParam('projectId', $project->getId())
     ;
 
-}, ['utopia', 'request', 'response', 'project', 'user', 'register', 'events', 'audits', 'usage', 'deletes', 'db'], 'api');
-
+}, ['utopia', 'request', 'response', 'project', 'user', 'register', 'events', 'audits', 'usage', 'deletes', 'dbForInternal'], 'api');
 
 App::init(function ($utopia, $request, $response, $project, $user) {
     /** @var Utopia\App $utopia */

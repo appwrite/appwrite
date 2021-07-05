@@ -85,10 +85,8 @@ App::post('/v1/database/collections')
             ->setParam('data', $data->getArrayCopy())
         ;
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($data, Response::MODEL_COLLECTION)
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($data, Response::MODEL_COLLECTION);
     });
 
 App::get('/v1/database/collections')
@@ -123,8 +121,8 @@ App::get('/v1/database/collections')
         ]);
 
         $response->dynamic(new Document([
+            'collections' => $results,
             'sum' => $projectDB->getSum(),
-            'collections' => $results
         ]), Response::MODEL_COLLECTION_LIST);
     });
 
@@ -399,10 +397,8 @@ App::post('/v1/database/collections/:collectionId/documents')
             ->setParam('data', $data->getArrayCopy())
         ;
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($data, Response::MODEL_DOCUMENT)
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($data, Response::MODEL_DOCUMENT);
     });
 
 App::get('/v1/database/collections/:collectionId/documents')

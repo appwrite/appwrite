@@ -432,7 +432,7 @@ class V06Test extends TestCase
     {
         $content = [
             '$id' => '5e5ea5c16897e',
-            '$permissions' => ['read' => ['*'], 'write' => ['*']],
+            '$permissions' => ['read' => ['role:all'], 'write' => ['role:all']],
             'name' => 'Pink.png',
             'dateCreated' => 1592981250,
             'signature' => '5d529fd02b544198ae075bd57c1762bb',
@@ -444,7 +444,7 @@ class V06Test extends TestCase
         $parsedResponse = $this->filter->parse($content, $model);
 
         $this->assertEquals($parsedResponse['$id'], '5e5ea5c16897e');
-        $this->assertEquals($parsedResponse['$permissions'], ['read' => ['*'], 'write' => ['*']]);
+        $this->assertEquals($parsedResponse['$permissions'], ['read' => ['role:all'], 'write' => ['role:all']]);
         $this->assertEquals($parsedResponse['name'], 'Pink.png');
         $this->assertEquals($parsedResponse['dateCreated'], 1592981250);
         $this->assertEquals($parsedResponse['signature'], '5d529fd02b544198ae075bd57c1762bb');
@@ -467,7 +467,7 @@ class V06Test extends TestCase
     {
         $content = [
             '$id' => '5e5ea5c16897e',
-            '$permissions' => ['read' => ['*'], 'write' => ['*']],
+            '$permissions' => ['read' => ['role:all'], 'write' => ['role:all']],
             'name' => 'Movies',
             'dateCreated' => 1592981250,
             'dateUpdated' => '5d529fd02b544198ae075bd57c1762bb',
@@ -478,7 +478,7 @@ class V06Test extends TestCase
         $parsedResponse = $this->filter->parse($content, $model);
 
         $this->assertEquals($parsedResponse['$id'], '5e5ea5c16897e');
-        $this->assertEquals($parsedResponse['$permissions'], ['read' => ['*'], 'write' => ['*']]);
+        $this->assertEquals($parsedResponse['$permissions'], ['read' => ['role:all'], 'write' => ['role:all']]);
         $this->assertEquals($parsedResponse['name'], 'Movies');
         $this->assertEquals($parsedResponse['dateCreated'], 1592981250);
         $this->assertEquals($parsedResponse['dateUpdated'], '5d529fd02b544198ae075bd57c1762bb');
@@ -495,7 +495,7 @@ class V06Test extends TestCase
             'collections' => [
                 0 => [
                     '$id' => '5e5ea5c16897e',
-                    '$permissions' => ['read' => ['*'], 'write' => ['*']],
+                    '$permissions' => ['read' => ['role:all'], 'write' => ['role:all']],
                     'name' => 'Movies',
                     'dateCreated' => 1592981250,
                     'dateUpdated' => '5d529fd02b544198ae075bd57c1762bb',
@@ -509,7 +509,7 @@ class V06Test extends TestCase
 
         $this->assertEquals($parsedResponse['sum'], 1);
         $this->assertEquals($parsedResponse['collections'][0]['$id'], '5e5ea5c16897e');
-        $this->assertEquals($parsedResponse['collections'][0]['$permissions'], ['read' => ['*'], 'write' => ['*']]);
+        $this->assertEquals($parsedResponse['collections'][0]['$permissions'], ['read' => ['role:all'], 'write' => ['role:all']]);
         $this->assertEquals($parsedResponse['collections'][0]['name'], 'Movies');
         $this->assertEquals($parsedResponse['collections'][0]['dateCreated'], 1592981250);
         $this->assertEquals($parsedResponse['collections'][0]['dateUpdated'], '5d529fd02b544198ae075bd57c1762bb');
