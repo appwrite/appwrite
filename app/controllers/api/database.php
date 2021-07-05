@@ -51,9 +51,8 @@ App::post('/v1/database/collections')
         $write = (is_null($write)) ? ($collection->getWrite() ?? []) : $write; // By default inherit write permissions
 
         $collection->setAttribute('name', $name);
-        // TODO@kodumbeats Use the default permissions from Utopia for now
-        // $collection->setAttribute('$read', $read);
-        // $collection->setAttribute('$write', $write);
+        $collection->setAttribute('$read', $read);
+        $collection->setAttribute('$write', $write);
 
         $dbForExternal->updateDocument(Database::COLLECTIONS, $id, $collection);
 
@@ -723,28 +722,6 @@ App::post('/v1/database/collections/:collectionId/documents')
         $data['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; //  By default set read permissions for user
         $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; //  By default set write permissions for user
 
-        /**
-         * TODO@kodumbeats How to assign default values to attributes
-         */
-        // foreach ($collection->getAttributes() as $key => $attribute) {
-        //     $key = $attribute['$id'] ?? '';
-        //     if ($attribute['array'] === true) {
-        //         $default = [];
-        //     } elseif ($attribute['type'] === Database::VAR_STRING) {
-        //         $default = '';
-        //     } elseif ($attribute['type'] === Database::VAR_BOOLEAN) {
-        //         $default = false;
-        //     } elseif ($attribute['type'] === Database::VAR_INTEGER 
-        //         || $attribute['type'] === Database::VAR_FLOAT) {
-        //         $default = 0;
-        //     }
-
-        //     if (!isset($data[$key])) {
-        //         $data[$key] = $default;
-        //     }
-        // }
-
-        // TODO@kodumbeats catch other exceptions
         try {
             $document = $dbForExternal->createDocument($collectionId, new Document($data));
         } catch (StructureException $exception) {
