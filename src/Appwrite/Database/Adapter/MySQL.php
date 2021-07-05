@@ -517,12 +517,13 @@ class MySQL extends Adapter
      * Get Collection.
      *
      * @param array $options
+     * @param array $filterTypes
      *
      * @throws Exception
      *
      * @return array
      */
-    public function getCollection(array $options)
+    public function getCollection(array $options, array $filterTypes = [])
     {
         $start = \microtime(true);
         $orderCastMap = [
@@ -568,8 +569,15 @@ class MySQL extends Adapter
 
             //$path = implode('.', $path);
 
+            $castToInt = array_key_exists($key, $filterTypes) && $filterTypes[$key] === 'numeric';
+
             $key = $this->getPDO()->quote($key, PDO::PARAM_STR);
             $value = $this->getPDO()->quote($value, PDO::PARAM_STR);
+
+            if ($castToInt) {
+                $value .= '+0';
+            }
+
             //$path               = $this->getPDO()->quote($path, PDO::PARAM_STR);
             $options['offset'] = (int) $options['offset'];
             $options['limit'] = (int) $options['limit'];
@@ -676,7 +684,7 @@ class MySQL extends Adapter
             ORDER BY sort_ff {$options['orderType']} %s";
 
         $st = $this->getPDO()->prepare(\sprintf($query, $select, $range));
-
+        var_dump(\sprintf($query, $select, $range));
         $st->execute();
 
         $results = ['data' => []];
