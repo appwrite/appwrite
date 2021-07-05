@@ -684,7 +684,7 @@ class MySQL extends Adapter
             ORDER BY sort_ff {$options['orderType']} %s";
 
         $st = $this->getPDO()->prepare(\sprintf($query, $select, $range));
-        var_dump(\sprintf($query, $select, $range));
+
         $st->execute();
 
         $results = ['data' => []];
