@@ -17,7 +17,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Validator\UID;
 use DeviceDetector\DeviceDetector;
-use Utopia\Database\Validator\Key;
+use Appwrite\Database\Validator\CustomId;
 
 App::post('/v1/users')
     ->desc('Create User')
@@ -31,7 +31,7 @@ App::post('/v1/users')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
-    ->param('userId', 'unique()', new Key(), 'Unique Id. Passing the string `unique()` will auto generate your ID.')
+    ->param('userId', 'unique()', new CustomId(), 'Unique Id. Passing the string `unique()` will auto generate your ID.')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
