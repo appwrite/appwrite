@@ -3,7 +3,11 @@
 ## Features
 
 - Added support for Android
-- Added a new Cloud Functions runtime for Java
+- Added a new Cloud Functions runtime for
+  - Java 16.0
+  - Java 11.0
+  - Node 16.0
+  - Dart 2.13
 - Added a new gravity option when croping storage images using the file preview endpoint (#1260)
 - Upgraded GEOIP DB file to Jun 2021 release (#1256)
 - Added file created date to file info on the console (#1183)
@@ -24,6 +28,7 @@
   - _APP_INFLUXDB_PORT
 - Added new endpoint to get a session based on it's ID (#1294)
 - Added added a new version param to the migration script (#1342)
+- Improved Queue Interval for all workers from 5 seconds to 1 (#1308 Thanks to @Meldiron)
 
 ## Breaking Changes (Read before upgrading!)
 - Renamed `env` param on `/v1/functions` to `runtime` (#1314)
