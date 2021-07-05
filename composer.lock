@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "58b51079b2abae7c761ecb0f1cfa774c",
+    "content-hash": "ca8cf356c884e8d332b04bebf9d3b11b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -115,16 +115,16 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.3.0",
+            "version": "0.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/php-runtimes.git",
-                "reference": "39be003cdff22c8447de151921001eb5d3bf2319"
+                "reference": "cc7090a67d8824c779190b38873f0f8154f906b2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/php-runtimes/zipball/39be003cdff22c8447de151921001eb5d3bf2319",
-                "reference": "39be003cdff22c8447de151921001eb5d3bf2319",
+                "url": "https://api.github.com/repos/appwrite/php-runtimes/zipball/cc7090a67d8824c779190b38873f0f8154f906b2",
+                "reference": "cc7090a67d8824c779190b38873f0f8154f906b2",
                 "shasum": ""
             },
             "require": {
@@ -144,7 +144,7 @@
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
-                "BSD-3"
+                "BSD-3-Clause"
             ],
             "authors": [
                 {
@@ -164,9 +164,9 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/php-runtimes/issues",
-                "source": "https://github.com/appwrite/php-runtimes/tree/0.3.0"
+                "source": "https://github.com/appwrite/php-runtimes/tree/0.4.0"
             },
-            "time": "2021-06-15T07:52:43+00:00"
+            "time": "2021-06-23T07:17:12+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -1666,16 +1666,16 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "dev-dev",
+            "version": "dev-feat-utopia-db-integration",
             "source": {
                 "type": "git",
-                "url": "https://github.com/kodumbeats/abuse",
-                "reference": "5d4e54263d1ae828b2a79ccb8c11aa9881451e82"
+                "url": "https://github.com/lohanidamodar/abuse",
+                "reference": "9742a72dfecb27e74e2d8d8018b7bdbec6637de6"
             },
             "require": {
                 "ext-pdo": "*",
                 "php": ">=7.4",
-                "utopia-php/database": "*"
+                "utopia-php/database": "0.5.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.4",
@@ -1704,7 +1704,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2021-07-02T15:33:05+00:00"
+            "time": "2021-07-04T06:06:38+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1763,16 +1763,16 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "dev-dev",
+            "version": "dev-feat-utopia-db-integration",
             "source": {
                 "type": "git",
-                "url": "https://github.com/kodumbeats/audit",
-                "reference": "6327d91307b260d9d7cf9fa0fbf4d08e408f470a"
+                "url": "https://github.com/lohanidamodar/audit",
+                "reference": "e4b03bf3dd86fbde8608ae2b6774851bb66e665b"
             },
             "require": {
                 "ext-pdo": "*",
                 "php": ">=7.4",
-                "utopia-php/database": "*"
+                "utopia-php/database": "0.5.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -1801,7 +1801,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2021-07-02T15:34:06+00:00"
+            "time": "2021-07-04T12:02:18+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -1962,11 +1962,17 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-dev",
+            "version": "0.5.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/kodumbeats/database",
-                "reference": "3397ca1042df8279e34e8f4d935d9d6c2938f2e8"
+                "url": "https://github.com/utopia-php/database.git",
+                "reference": "e050e51060df72eff3af9fc24fc95a41ca9a2096"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/e050e51060df72eff3af9fc24fc95a41ca9a2096",
+                "reference": "e050e51060df72eff3af9fc24fc95a41ca9a2096",
+                "shasum": ""
             },
             "require": {
                 "ext-mongodb": "*",
@@ -1989,11 +1995,7 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Utopia\\Tests\\": "tests/Database"
-                }
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -2015,7 +2017,11 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2021-07-02T14:37:57+00:00"
+            "support": {
+                "issues": "https://github.com/utopia-php/database/issues",
+                "source": "https://github.com/utopia-php/database/tree/0.5.0"
+            },
+            "time": "2021-07-03T16:49:44+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2720,16 +2726,16 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.11.0",
+            "version": "0.11.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "96c41c44f930a4d40184cd0f3c7dca76d2cca7e1"
+                "reference": "9809c31f27037d088fb832cdec0e8fbc93d1d388"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/96c41c44f930a4d40184cd0f3c7dca76d2cca7e1",
-                "reference": "96c41c44f930a4d40184cd0f3c7dca76d2cca7e1",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/9809c31f27037d088fb832cdec0e8fbc93d1d388",
+                "reference": "9809c31f27037d088fb832cdec0e8fbc93d1d388",
                 "shasum": ""
             },
             "require": {
@@ -2763,9 +2769,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.11.0"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.11.1"
             },
-            "time": "2021-07-01T13:51:23+00:00"
+            "time": "2021-07-02T10:15:53+00:00"
         },
         {
             "name": "composer/semver",
@@ -3361,16 +3367,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v4.10.5",
+            "version": "v4.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "4432ba399e47c66624bc73c8c0f811e5c109576f"
+                "reference": "fe14cf3672a149364fb66dfe11bf6549af899f94"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/4432ba399e47c66624bc73c8c0f811e5c109576f",
-                "reference": "4432ba399e47c66624bc73c8c0f811e5c109576f",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/fe14cf3672a149364fb66dfe11bf6549af899f94",
+                "reference": "fe14cf3672a149364fb66dfe11bf6549af899f94",
                 "shasum": ""
             },
             "require": {
@@ -3411,9 +3417,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v4.10.5"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v4.11.0"
             },
-            "time": "2021-05-03T19:11:20+00:00"
+            "time": "2021-07-03T13:36:55+00:00"
         },
         {
             "name": "openlss/lib-array2xml",
@@ -6229,8 +6235,7 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "utopia-php/abuse": 20,
-        "utopia-php/audit": 20,
-        "utopia-php/database": 20
+        "utopia-php/audit": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

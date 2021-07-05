@@ -601,24 +601,30 @@ App::setResource('projectDB', function($db, $cache, $project) {
 }, ['db', 'cache', 'project']);
 
 App::setResource('dbForInternal', function($db, $cache, $project) {
-    $dbForInternal = new Database2(new MariaDB($db), new Cache(new RedisCache($cache)));
-    $dbForInternal->setNamespace('project_'.$project->getId().'_internal');
+    $cache = new Cache(new RedisCache($cache));
 
-    return $dbForInternal;
+    $database = new Database2(new MariaDB($db), $cache);
+    $database->setNamespace('project_'.$project->getId().'_internal');
+
+    return $database;
 }, ['db', 'cache', 'project']);
 
 App::setResource('dbForExternal', function($db, $cache, $project) {
-    $dbForExternal = new Database2(new MariaDB($db), new Cache(new RedisCache($cache)));
-    $dbForExternal->setNamespace('project_'.$project->getId().'_external');
+    $cache = new Cache(new RedisCache($cache));
 
-    return $dbForExternal;
+    $database = new Database2(new MariaDB($db), $cache);
+    $database->setNamespace('project_'.$project->getId().'_external');
+
+    return $database;
 }, ['db', 'cache', 'project']);
 
 App::setResource('dbForConsole', function($db, $cache) {
-    $dbForConsole = new Database2(new MariaDB($db), new Cache(new RedisCache($cache)));
-    $dbForConsole->setNamespace('project_console_internal');
+    $cache = new Cache(new RedisCache($cache));
 
-    return $dbForConsole;
+    $database = new Database2(new MariaDB($db), $cache);
+    $database->setNamespace('project_console_internal');
+
+    return $database;
 }, ['db', 'cache']);
 
 App::setResource('mode', function($request) {

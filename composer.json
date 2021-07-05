@@ -36,16 +36,16 @@
         "ext-sockets": "*",
 
         "appwrite/php-clamav": "1.1.*",
-        "appwrite/php-runtimes": "0.3.*",
+        "appwrite/php-runtimes": "0.4.*",
 
         "utopia-php/framework": "0.14.*",
-        "utopia-php/abuse": "dev-dev",
+        "utopia-php/abuse": "dev-feat-utopia-db-integration",
         "utopia-php/analytics": "0.2.*",
-        "utopia-php/audit": "dev-dev",
+        "utopia-php/audit": "dev-feat-utopia-db-integration",
         "utopia-php/cache": "0.4.*",
         "utopia-php/cli": "0.11.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "dev-dev",
+        "utopia-php/database": "0.5.*",
         "utopia-php/locale": "0.3.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/preloader": "0.2.*",
@@ -65,19 +65,15 @@
     "repositories": [
         {
             "type": "git",
-            "url": "https://github.com/kodumbeats/audit"
+            "url": "https://github.com/lohanidamodar/abuse"
         },
         {
             "type": "git",
-            "url": "https://github.com/kodumbeats/abuse"
-        },
-        {
-            "type": "git",
-            "url": "https://github.com/kodumbeats/database"
+            "url": "https://github.com/lohanidamodar/audit"
         }
     ],
     "require-dev": {
-        "appwrite/sdk-generator": "0.11.0",
+        "appwrite/sdk-generator": "0.11.1",
         "swoole/ide-helper": "4.6.7",
         "phpunit/phpunit": "9.5.6",
         "vimeo/psalm": "4.7.2"

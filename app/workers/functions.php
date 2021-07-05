@@ -154,8 +154,8 @@ class FunctionsV1 extends Worker
         $userId = $this->args['userId'] ?? '';
         $jwt = $this->args['jwt'] ?? '';
 
-        $cache = new Cache(new Redis($register->get('cache')));
-        $database = new Database(new MariaDB($register->get('db')), $cache);
+        $cache = new Cache(new Redis($cache));
+        $database = new Database(new MariaDB($db), $cache);
         $database->setNamespace('project_'.$projectId.'_internal');
 
         switch ($trigger) {
