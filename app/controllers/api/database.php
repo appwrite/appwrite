@@ -77,24 +77,21 @@ App::get('/v1/database/collections')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_COLLECTION_LIST)
-    ->param('queries', [], new ArrayList(new Text(128)), 'Array of query strings.', true)
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 40000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForExternal')
-    ->action(function ($queries, $limit, $offset, $response, $dbForExternal) {
+    ->action(function ($search, $limit, $offset, $orderType, $response, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal */
 
-        $queries = \array_map(function ($query) {
-            return Query::parse($query);
-        }, $queries);
-
-        $collections = $dbForExternal->find(Database::COLLECTIONS, $queries, $limit, $offset);
+        $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
 
         $response->dynamic2(new Document([
-            'collections' => $collections,
-            'sum' => \count($collections),
+            'collections' => $dbForInternal->find(Database::COLLECTIONS, $queries, $limit, $offset, ['_id'], [$orderType]),
+            'sum' => $dbForInternal->count(Database::COLLECTIONS, $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_COLLECTION_LIST);
     });
 
