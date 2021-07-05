@@ -14,7 +14,7 @@ class Attribute extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Collection ID.',
                 'default' => '',
-                'example' => '60ccf71b98a2d',
+                'example' => '5e5ea5c16d55',
             ])
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
@@ -26,19 +26,19 @@ class Attribute extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Attribute type.',
                 'default' => '',
-                'example' => 'integer',
+                'example' => 'string',
             ])
             ->addRule('size', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Attribute size.',
                 'default' => 0,
-                'example' => 0,
+                'example' => 128,
             ])
             ->addRule('required', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Is attribute required?',
                 'default' => false,
-                'example' => false,
+                'example' => true,
             ])
             ->addRule('signed', [
                 'type' => self::TYPE_BOOLEAN,
