@@ -52,55 +52,83 @@ include __DIR__ . '/controllers/general.php';
 
 $http->on('start', function (Server $http) use ($payloadSize, $register) {
     $app = new App('UTC');
-    $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
 
-    if(!$dbForConsole->exists()) {
-        Console::success('[Setup] - Server database init started...');
-        
-        $collections = Config::getParam('collections2', []); /** @var array $collections */
-
-        $register->get('cache')->flushAll();
-
-        $dbForConsole->create();
-        
-        
-        $audit = new Audit($dbForConsole);
-        $audit->setup();
-
-        $adapter = new TimeLimit("", 0, 1, $dbForConsole);
-        $adapter->setup();
-
-        foreach ($collections as $key => $collection) {
-            $attributes = [];
-            $indexes = [];
-
-            foreach ($collection['attributes'] as $attribute) {
-                $attributes[] = new Document([
-                    '$id' => $attribute['$id'],
-                    'type' => $attribute['type'],
-                    'size' => $attribute['size'],
-                    'required' => $attribute['required'],
-                    'signed' => $attribute['signed'],
-                    'array' => $attribute['array'],
-                    'filters' => $attribute['filters'],
-                ]);
-            }
-
-            foreach ($collection['indexes'] as $index) {
-                $indexes[] = new Document([
-                    '$id' => $index['$id'],
-                    'type' => $index['type'],
-                    'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'],
-                    'orders' => $index['orders'],
-                ]);
-            }
-
-            $dbForConsole->createCollection($key, $attributes, $indexes);
+    go(function() use ($register, $app) {
+        // Only retry connection once before throwing exception
+        try {
+            $db = $register->get('dbPool')->get();
+        } catch (\Exception $exception) {
+            Console::warning('[Setup] - Database not ready. Waiting for five seconds...');
+            sleep(5);
         }
 
-        Console::success('[Setup] - Server database init completed...');
-    }
+        $db = $register->get('dbPool')->get();
+        $redis = $register->get('redisPool')->get();
+
+        App::setResource('db', function () use (&$db) {
+            return $db;
+        });
+
+        App::setResource('cache', function () use (&$redis) {
+            return $redis;
+        });
+
+        App::setResource('app', function() use (&$app) {
+            return $app;
+        });
+
+        $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
+
+        if(!$dbForConsole->exists()) {
+            Console::success('[Setup] - Server database init started...');
+
+            $collections = Config::getParam('collections2', []); /** @var array $collections */
+
+            $redis->flushAll();
+
+            $dbForConsole->create();
+
+            $audit = new Audit($dbForConsole);
+            $audit->setup();
+
+            $adapter = new TimeLimit("", 0, 1, $dbForConsole);
+            $adapter->setup();
+
+            foreach ($collections as $key => $collection) {
+                Console::success('[Setup] - Creating collection: ' . $collection['$id'] . '...');
+
+                $attributes = [];
+                $indexes = [];
+
+                foreach ($collection['attributes'] as $attribute) {
+                    $attributes[] = new Document([
+                        '$id' => $attribute['$id'],
+                        'type' => $attribute['type'],
+                        'size' => $attribute['size'],
+                        'required' => $attribute['required'],
+                        'signed' => $attribute['signed'],
+                        'array' => $attribute['array'],
+                        'filters' => $attribute['filters'],
+                    ]);
+                }
+
+                foreach ($collection['indexes'] as $index) {
+                    $indexes[] = new Document([
+                        '$id' => $index['$id'],
+                        'type' => $index['type'],
+                        'attributes' => $index['attributes'],
+                        'lengths' => $index['lengths'],
+                        'orders' => $index['orders'],
+                    ]);
+                }
+
+                $dbForConsole->createCollection($key, $attributes, $indexes);
+                
+            }
+
+            Console::success('[Setup] - Server database init completed...');
+        }
+    });
 
     Console::success('Server started succefully (max payload is '.number_format($payloadSize).' bytes)');
 
@@ -130,18 +158,22 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         return;
     }
 
+    $app = new App('UTC');
+
     $db = $register->get('dbPool')->get();
     $redis = $register->get('redisPool')->get();
 
-    $register->set('db', function () use (&$db) {
+    App::setResource('db', function () use (&$db) {
         return $db;
     });
 
-    $register->set('cache', function () use (&$redis) {
+    App::setResource('cache', function () use (&$redis) {
         return $redis;
     });
 
-    $app = new App('UTC');
+    App::setResource('app', function() use (&$app) {
+        return $app;
+    });
     
     try {
         Authorization::cleanRoles();

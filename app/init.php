@@ -24,8 +24,6 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
-use Appwrite\Database\Pool\PDOPool;
-use Appwrite\Database\Pool\RedisPool;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
 use Appwrite\OpenSSL\OpenSSL;
@@ -42,6 +40,10 @@ use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Document as Document2;
 use Utopia\Database\Database as Database2;
 use Utopia\Database\Validator\Authorization as Authorization2;
+use Swoole\Database\PDOConfig;
+use Swoole\Database\PDOPool;
+use Swoole\Database\RedisConfig;
+use Swoole\Database\RedisPool;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -57,7 +59,7 @@ const APP_LIMIT_ANTIVIRUS = 20971520; //20MB
 const APP_LIMIT_ENCRYPTION = 20971520; //20MB
 const APP_LIMIT_COMPRESSION = 20971520; //20MB
 const APP_CACHE_BUSTER = 148;
-const APP_VERSION_STABLE = '0.8.0';
+const APP_VERSION_STABLE = '0.9.0';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_CACHE = '/storage/cache';
@@ -186,10 +188,21 @@ Database2::addFilter('encrypt',
  */
 $register->set('dbPool', function () { // Register DB connection
     $dbHost = App::getEnv('_APP_DB_HOST', '');
+    $dbPort = App::getEnv('_APP_DB_PORT', '');
     $dbUser = App::getEnv('_APP_DB_USER', '');
     $dbPass = App::getEnv('_APP_DB_PASS', '');
     $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
-    $pool = new PDOPool(10, $dbHost, $dbScheme, $dbUser, $dbPass);
+
+
+    $pool = new PDOPool((new PDOConfig())
+        ->withHost($dbHost)
+        ->withPort($dbPort)
+        // ->withUnixSocket('/tmp/mysql.sock')
+        ->withDbName($dbScheme)
+        ->withCharset('utf8mb4')
+        ->withUsername($dbUser)
+        ->withPassword($dbPass)
+    );
 
     return $pool;
 });
@@ -198,16 +211,18 @@ $register->set('redisPool', function () {
     $redisPort = App::getEnv('_APP_REDIS_PORT', '');
     $redisUser = App::getEnv('_APP_REDIS_USER', '');
     $redisPass = App::getEnv('_APP_REDIS_PASS', '');
-    $redisAuth = [];
+    $redisAuth = '';
 
-    if ($redisUser) {
-        $redisAuth[] = $redisUser;
-    }
-    if ($redisPass) {
-        $redisAuth[] = $redisPass;
+    if ($redisUser && $redisPass) {
+        $redisAuth = $redisUser.':'.$redisPass;
     }
 
-    $pool = new RedisPool(10, $redisHost, $redisPort, $redisAuth);
+    $pool = new RedisPool((new RedisConfig)
+        ->withHost($redisHost)
+        ->withPort($redisPort)
+        ->withAuth($redisAuth)
+        ->withDbIndex(0)
+    );
 
     return $pool;
 });
@@ -561,50 +576,50 @@ App::setResource('console', function() {
     ]);
 }, []);
 
-App::setResource('consoleDB', function($register) {
+App::setResource('consoleDB', function($db, $cache) {
     $consoleDB = new Database();
-    $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+    $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
     $consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
     $consoleDB->setMocks(Config::getParam('collections', []));
 
     return $consoleDB;
-}, ['register']);
+}, ['db', 'cache']);
 
-App::setResource('projectDB', function($register, $project) {
+App::setResource('projectDB', function($db, $cache, $project) {
     $projectDB = new Database();
-    $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+    $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
     $projectDB->setNamespace('app_'.$project->getId());
     $projectDB->setMocks(Config::getParam('collections', []));
 
     return $projectDB;
-}, ['register', 'project']);
+}, ['db', 'cache', 'project']);
 
-App::setResource('dbForInternal', function($register, $project) {
-    $cache = new Cache(new RedisCache($register->get('cache')));
+App::setResource('dbForInternal', function($db, $cache, $project) {
+    $cache = new Cache(new RedisCache($cache));
 
-    $database = new Database2(new MariaDB($register->get('db')), $cache);
+    $database = new Database2(new MariaDB($db), $cache);
     $database->setNamespace('project_'.$project->getId().'_internal');
 
     return $database;
-}, ['register', 'project']);
+}, ['db', 'cache', 'project']);
 
-App::setResource('dbForExternal', function($register, $project) {
-    $cache = new Cache(new RedisCache($register->get('cache')));
+App::setResource('dbForExternal', function($db, $cache, $project) {
+    $cache = new Cache(new RedisCache($cache));
 
-    $database = new Database2(new MariaDB($register->get('db')), $cache);
+    $database = new Database2(new MariaDB($db), $cache);
     $database->setNamespace('project_'.$project->getId().'_external');
 
     return $database;
-}, ['register', 'project']);
+}, ['db', 'cache', 'project']);
 
-App::setResource('dbForConsole', function($register) {
-    $cache = new Cache(new RedisCache($register->get('cache')));
+App::setResource('dbForConsole', function($db, $cache) {
+    $cache = new Cache(new RedisCache($cache));
 
-    $database = new Database2(new MariaDB($register->get('db')), $cache);
+    $database = new Database2(new MariaDB($db), $cache);
     $database->setNamespace('project_console_internal');
 
     return $database;
-}, ['register']);
+}, ['db', 'cache']);
 
 App::setResource('mode', function($request) {
     /** @var Utopia\Swoole\Request $request */
