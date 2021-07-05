@@ -426,8 +426,8 @@ trait DatabaseBase
                 'releaseYear' => 2017,
                 'actors' => [],
             ],
-            'read' => ['user:'.$this->getUser()['$id'], 'testx'],
-            'write' => ['user:'.$this->getUser()['$id'], 'testy'],
+            'read' => ['user:'.$this->getUser()['$id'], 'user:testx'],
+            'write' => ['user:'.$this->getUser()['$id'], 'user:testy'],
         ]);
 
         $id = $document['body']['$id'];
@@ -436,8 +436,8 @@ trait DatabaseBase
         $this->assertEquals($document['headers']['status-code'], 201);
         $this->assertEquals($document['body']['title'], 'Thor: Ragnaroc');
         $this->assertEquals($document['body']['releaseYear'], 2017);
-        $this->assertEquals($document['body']['$read'][1], 'testx');
-        $this->assertEquals($document['body']['$write'][1], 'testy');
+        $this->assertEquals($document['body']['$read'][1], 'user:testx');
+        $this->assertEquals($document['body']['$write'][1], 'user:testy');
 
         $document = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $collection . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',

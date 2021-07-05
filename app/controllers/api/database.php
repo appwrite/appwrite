@@ -3,6 +3,7 @@
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Integer;
 use Utopia\Validator\Numeric;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
@@ -11,7 +12,10 @@ use Utopia\Validator\Text;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
 use Utopia\Database\Validator\Key;
-use Appwrite\Database\Validator\UID;
+use Utopia\Database\Validator\Permissions;
+use Utopia\Database\Validator\QueryValidator;
+use Utopia\Database\Validator\Queries as QueriesValidator;
+use Utopia\Database\Validator\UID;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Appwrite\Utopia\Response;
@@ -32,8 +36,8 @@ App::post('/v1/database/collections')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_COLLECTION)
     ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
-    ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->inject('response')
     ->inject('dbForExternal')
     ->inject('audits')
@@ -43,7 +47,7 @@ App::post('/v1/database/collections')
         /** @var Appwrite\Event\Event $audits */
 
         $id = $dbForExternal->getId();
-        
+
         $collection = $dbForExternal->createCollection($id);
 
         // TODO@kodumbeats what should the default permissions be?
@@ -90,8 +94,8 @@ App::get('/v1/database/collections')
         $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
 
         $response->dynamic2(new Document([
-            'collections' => $dbForInternal->find(Database::COLLECTIONS, $queries, $limit, $offset, ['_id'], [$orderType]),
-            'sum' => $dbForInternal->count(Database::COLLECTIONS, $queries, APP_LIMIT_COUNT),
+            'collections' => $dbForExternal->find(Database::COLLECTIONS, $queries, $limit, $offset, ['_id'], [$orderType]),
+            'sum' => $dbForExternal->count(Database::COLLECTIONS, $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_COLLECTION_LIST);
     });
 
@@ -136,8 +140,8 @@ App::put('/v1/database/collections/:collectionId')
     ->label('sdk.response.model', Response::MODEL_COLLECTION)
     ->param('collectionId', '', new UID(), 'Collection unique ID.')
     ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.')
-    ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default inherits the existing read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
-    ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default inherits the existing write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default inherits the existing read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default inherits the existing write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
     ->inject('dbForExternal')
     ->inject('audits')
@@ -240,8 +244,8 @@ App::post('/v1/database/collections/:collectionId/attributes')
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE)
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('id', '', new Key(), 'Attribute ID.')
-    ->param('type', null, new Text(256), 'Attribute type.')
-    ->param('size', null, new Numeric(), 'Attribute size for text attributes, in number of characters. For integers, floats, or bools, use 0.')
+    ->param('type', null, new Text(8), 'Attribute type.')
+    ->param('size', null, new Integer(), 'Attribute size for text attributes, in number of characters. For integers, floats, or bools, use 0.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Wildcard(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
@@ -456,8 +460,8 @@ App::post('/v1/database/collections/:collectionId/indexes')
     ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE, Database::INDEX_SPATIAL, Database::INDEX_ARRAY]), 'Index type.')
     ->param('attributes', null, new ArrayList(new Key()), 'Array of attributes to index.')
     // TODO@kodumbeats debug below
-    // ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, Database::VAR_STRING)), 'Array of index orders.', true)
-    ->param('orders', [], new ArrayList(new Text(4)), 'Array of index orders.', true)
+    ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, Database::VAR_STRING)), 'Array of index orders.', true)
+    // ->param('orders', [], new ArrayList(new Text(4)), 'Array of index orders.', true)
     ->inject('response')
     ->inject('dbForExternal')
     ->inject('database')
@@ -481,8 +485,6 @@ App::post('/v1/database/collections/:collectionId/indexes')
 
         // lengths hidden by default
         $lengths = [];
-
-        var_dump($oldAttributes);
 
         // set attribute size as length for strings, null otherwise
         foreach ($attributes as $key => $attribute) {
@@ -686,8 +688,8 @@ App::post('/v1/database/collections/:collectionId/documents')
     ->label('sdk.response.model', Response::MODEL_DOCUMENT)
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
-    ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
-    ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
     ->inject('dbForExternal')
     ->inject('user')
@@ -767,6 +769,18 @@ App::get('/v1/database/collections/:collectionId/documents')
             return Query::parse($query);
         }, $queries);
 
+        // TODO@kodumbeats find a more efficient alternative to this
+        $schema = $collection->getArrayCopy()['attributes'];
+        $indexes = $collection->getArrayCopy()['indexes'];
+        $indexesInQueue = $collection->getArrayCopy()['indexesInQueue'];
+
+        // TODO@kodumbeats use strict query validation
+        $validator = new QueriesValidator(new QueryValidator($schema), $indexes, $indexesInQueue, false);
+
+        if (!$validator->isValid($queries)) {
+            throw new Exception($validator->getDescription(), 400);
+        }
+
         $documents = $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes);
 
         $response->dynamic2(new Document([
@@ -824,8 +838,8 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, new UID(), 'Document unique ID.')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
-    ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default inherits the existing read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
-    ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default inherits the existing write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default inherits the existing read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default inherits the existing write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
     ->inject('dbForExternal')
     ->inject('audits')
