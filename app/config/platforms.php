@@ -125,8 +125,8 @@ return [
                 'gitRepoName' => 'sdk-for-android',
                 'gitUserName' => 'appwrite',
                 'docDirectories' => [
-                    'Java' => realpath(__DIR__ . '/../sdks/client-android/docs/java'),
-                    'Kotlin' => realpath(__DIR__ . '/../sdks/client-android/docs/kotlin')
+                    'Kotlin' => 'examples/kotlin',
+                    'Java' => 'examples/java',
                 ],
             ],
             // [
@@ -367,8 +367,8 @@ return [
                 'gitRepoName' => 'sdk-for-kotlin',
                 'gitUserName' => 'appwrite',
                 'docDirectories' => [
-                    'Java' => realpath(__DIR__ . '/../sdks/server-kotlin/docs/java'),
-                    'Kotlin' => realpath(__DIR__ . '/../sdks/server-kotlin/docs/kotlin')
+                    'Kotlin' => 'examples/kotlin',
+                    'Java' => 'examples/java',
                 ],
             ],
         ],
