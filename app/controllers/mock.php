@@ -3,19 +3,19 @@
 global $utopia, $request, $response;
 
 use Appwrite\Database\Document;
+use Appwrite\Network\Validator\Host;
 use Appwrite\Utopia\Response;
 use Utopia\App;
+use Utopia\Validator\ArrayList;
 use Utopia\Validator\Numeric;
 use Utopia\Validator\Text;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\Host;
 use Utopia\Storage\Validator\File;
 
 App::get('/v1/mock/tests/foo')
     ->desc('Get Foo')
     ->groups(['mock'])
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'foo')
     ->label('sdk.method', 'get')
     ->label('sdk.description', 'Mock a get request.')
@@ -33,7 +33,7 @@ App::post('/v1/mock/tests/foo')
     ->desc('Post Foo')
     ->groups(['mock'])
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'foo')
     ->label('sdk.method', 'post')
     ->label('sdk.description', 'Mock a post request.')
@@ -51,7 +51,7 @@ App::patch('/v1/mock/tests/foo')
     ->desc('Patch Foo')
     ->groups(['mock'])
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'foo')
     ->label('sdk.method', 'patch')
     ->label('sdk.description', 'Mock a patch request.')
@@ -69,7 +69,7 @@ App::put('/v1/mock/tests/foo')
     ->desc('Put Foo')
     ->groups(['mock'])
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'foo')
     ->label('sdk.method', 'put')
     ->label('sdk.description', 'Mock a put request.')
@@ -87,7 +87,7 @@ App::delete('/v1/mock/tests/foo')
     ->desc('Delete Foo')
     ->groups(['mock'])
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'foo')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', 'Mock a delete request.')
@@ -105,7 +105,7 @@ App::get('/v1/mock/tests/bar')
     ->desc('Get Bar')
     ->groups(['mock'])
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'bar')
     ->label('sdk.method', 'get')
     ->label('sdk.description', 'Mock a get request.')
@@ -123,7 +123,7 @@ App::post('/v1/mock/tests/bar')
     ->desc('Post Bar')
     ->groups(['mock'])
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'bar')
     ->label('sdk.method', 'post')
     ->label('sdk.description', 'Mock a post request.')
@@ -141,7 +141,7 @@ App::patch('/v1/mock/tests/bar')
     ->desc('Patch Bar')
     ->groups(['mock'])
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'bar')
     ->label('sdk.method', 'patch')
     ->label('sdk.description', 'Mock a patch request.')
@@ -159,7 +159,7 @@ App::put('/v1/mock/tests/bar')
     ->desc('Put Bar')
     ->groups(['mock'])
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'bar')
     ->label('sdk.method', 'put')
     ->label('sdk.description', 'Mock a put request.')
@@ -177,7 +177,7 @@ App::delete('/v1/mock/tests/bar')
     ->desc('Delete Bar')
     ->groups(['mock'])
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'bar')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', 'Mock a delete request.')
@@ -191,11 +191,36 @@ App::delete('/v1/mock/tests/bar')
     ->action(function ($x, $y, $z) {
     });
 
+App::get('/v1/mock/tests/general/download')
+    ->desc('Download File')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'general')
+    ->label('sdk.method', 'download')
+    ->label('sdk.methodType', 'location')
+    ->label('sdk.description', 'Mock a file download request.')
+    ->label('sdk.response.type', '*/*')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.mock', true)
+    ->inject('response')
+    ->action(function ($response) {
+        /** @var Utopia\Swoole\Request $request */
+        
+        $response
+            ->setContentType('text/plain')
+            ->addHeader('Content-Disposition', 'attachment; filename="test.txt"')
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
+            ->addHeader('X-Peak', \memory_get_peak_usage())
+            ->send("Download test passed.")
+        ;
+    });
+
 App::post('/v1/mock/tests/general/upload')
     ->desc('Upload File')
     ->groups(['mock'])
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'general')
     ->label('sdk.method', 'upload')
     ->label('sdk.description', 'Mock a file upload request.')
@@ -240,12 +265,13 @@ App::get('/v1/mock/tests/general/redirect')
     ->desc('Redirect')
     ->groups(['mock'])
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'general')
     ->label('sdk.method', 'redirect')
     ->label('sdk.description', 'Mock a redirect request.')
     ->label('sdk.response.code', Response::STATUS_CODE_MOVED_PERMANENTLY)
     ->label('sdk.response.type', Response::CONTENT_TYPE_HTML)
+    ->label('sdk.response.model', Response::MODEL_MOCK)
     ->label('sdk.mock', true)
     ->inject('response')
     ->action(function ($response) {
@@ -258,7 +284,7 @@ App::get('/v1/mock/tests/general/redirect/done')
     ->desc('Redirected')
     ->groups(['mock'])
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'general')
     ->label('sdk.method', 'redirected')
     ->label('sdk.description', 'Mock a redirected request.')
@@ -273,7 +299,7 @@ App::get('/v1/mock/tests/general/set-cookie')
     ->desc('Set Cookie')
     ->groups(['mock'])
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'general')
     ->label('sdk.method', 'setCookie')
     ->label('sdk.description', 'Mock a set cookie request.')
@@ -292,7 +318,7 @@ App::get('/v1/mock/tests/general/get-cookie')
     ->desc('Get Cookie')
     ->groups(['mock'])
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'general')
     ->label('sdk.method', 'getCookie')
     ->label('sdk.description', 'Mock a cookie response.')
@@ -313,10 +339,10 @@ App::get('/v1/mock/tests/general/empty')
     ->desc('Empty Response')
     ->groups(['mock'])
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'general')
     ->label('sdk.method', 'empty')
-    ->label('sdk.description', 'Mock a an empty response.')
+    ->label('sdk.description', 'Mock an empty response.')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->label('sdk.mock', true)
@@ -331,10 +357,10 @@ App::get('/v1/mock/tests/general/400-error')
     ->desc('400 Error')
     ->groups(['mock'])
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'general')
     ->label('sdk.method', 'error400')
-    ->label('sdk.description', 'Mock a an 400 failed request.')
+    ->label('sdk.description', 'Mock a 400 failed request.')
     ->label('sdk.response.code', Response::STATUS_CODE_BAD_REQUEST)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ERROR)
@@ -347,16 +373,38 @@ App::get('/v1/mock/tests/general/500-error')
     ->desc('500 Error')
     ->groups(['mock'])
     ->label('scope', 'public')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'general')
     ->label('sdk.method', 'error500')
-    ->label('sdk.description', 'Mock a an 500 failed request.')
+    ->label('sdk.description', 'Mock a 500 failed request.')
     ->label('sdk.response.code', Response::STATUS_CODE_INTERNAL_SERVER_ERROR)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ERROR)
     ->label('sdk.mock', true)
     ->action(function () {
         throw new Exception('Mock 500 error', 500);
+    });
+
+App::get('/v1/mock/tests/general/502-error')
+    ->desc('502 Error')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'general')
+    ->label('sdk.method', 'error502')
+    ->label('sdk.description', 'Mock a 502 bad gateway.')
+    ->label('sdk.response.code', Response::STATUS_CODE_BAD_GATEWAY)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_TEXT)
+    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('sdk.mock', true)
+    ->inject('response')
+    ->action(function ($response) {
+        /** @var Appwrite\Utopia\Response $response */
+
+        $response
+            ->setStatusCode(502)
+            ->text('This is a text error')
+        ;
     });
 
 App::get('/v1/mock/tests/general/oauth2')
@@ -370,7 +418,7 @@ App::get('/v1/mock/tests/general/oauth2')
     ->param('scope', '', new Text(100), 'OAuth2 scope list.')
     ->param('state', '', new Text(1024), 'OAuth2 state.')
     ->inject('response')
-    ->action(function ($clientId, $redirectURI, $scope, $state, $response) {
+    ->action(function ($client_id, $redirectURI, $scope, $state, $response) {
         /** @var Appwrite\Utopia\Response $response */
 
         $response->redirect($redirectURI.'?'.\http_build_query(['code' => 'abcdef', 'state' => $state]));
@@ -387,14 +435,14 @@ App::get('/v1/mock/tests/general/oauth2/token')
     ->param('client_secret', '', new Text(100), 'OAuth2 scope list.')
     ->param('code', '', new Text(100), 'OAuth2 state.')
     ->inject('response')
-    ->action(function ($clientId, $redirectURI, $clientSecret, $code, $response) {
+    ->action(function ($client_id, $redirectURI, $client_secret, $code, $response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        if ($clientId != '1') {
+        if ($client_id != '1') {
             throw new Exception('Invalid client ID');
         }
 
-        if ($clientSecret != '123456') {
+        if ($client_secret != '123456') {
             throw new Exception('Invalid client secret');
         }
 
