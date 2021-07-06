@@ -39,8 +39,8 @@ const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
 const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
-const APP_CACHE_BUSTER = 145;
-const APP_VERSION_STABLE = '0.7.2';
+const APP_CACHE_BUSTER = 148;
+const APP_VERSION_STABLE = '0.8.0';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_CACHE = '/storage/cache';
@@ -53,6 +53,7 @@ const APP_SOCIAL_LINKEDIN = 'https://www.linkedin.com/company/appwrite';
 const APP_SOCIAL_INSTAGRAM = 'https://www.instagram.com/appwrite.io';
 const APP_SOCIAL_GITHUB = 'https://github.com/appwrite';
 const APP_SOCIAL_DISCORD = 'https://appwrite.io/discord';
+const APP_SOCIAL_DISCORD_CHANNEL = '564160730845151244';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite'; 
 // Deletion Types
@@ -61,6 +62,11 @@ const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_CERTIFICATES = 'certificates';
+// Auth Types
+const APP_AUTH_TYPE_SESSION = 'Session';
+const APP_AUTH_TYPE_JWT = 'JWT';
+const APP_AUTH_TYPE_KEY = 'Key';
+const APP_AUTH_TYPE_ADMIN = 'Admin';
 
 $register = new Registry();
 
@@ -70,10 +76,11 @@ App::setMode(App::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
  * ENV vars
  */
 Config::load('events', __DIR__.'/config/events.php');
+Config::load('auth', __DIR__.'/config/auth.php');
 Config::load('providers', __DIR__.'/config/providers.php');
 Config::load('platforms', __DIR__.'/config/platforms.php');
 Config::load('collections', __DIR__.'/config/collections.php');
-Config::load('environments', __DIR__.'/config/environments.php');
+Config::load('runtimes', __DIR__.'/config/runtimes.php');
 Config::load('roles', __DIR__.'/config/roles.php');  // User roles and scopes
 Config::load('scopes', __DIR__.'/config/scopes.php');  // User roles and scopes
 Config::load('services', __DIR__.'/config/services.php');  // List of services
@@ -163,8 +170,9 @@ $register->set('influxdb', function () { // Register DB connection
     if (empty($host) || empty($port)) {
         return;
     }
-
+    $driver = new InfluxDB\Driver\Curl("http://{$host}:{$port}");
     $client = new InfluxDB\Client($host, $port, '', '', false, false, 5);
+    $client->setDriver($driver);
 
     return $client;
 });
@@ -225,7 +233,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2021-02.mmdb');
+    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2021-06.mmdb');
 });
 
 /*
@@ -419,7 +427,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
 
     if (empty($user->getId()) // Check a document has been found in the DB
         || Database::SYSTEM_COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
-        || !Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)) { // Validate user has valid login token
+        || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)) { // Validate user has valid login token
         $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
     }
 
