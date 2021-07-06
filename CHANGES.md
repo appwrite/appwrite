@@ -1,4 +1,4 @@
-# NOT PUBLISHED YET
+# Version 0.9.0
 
 ## Features
 
@@ -47,6 +47,7 @@
 - Fixed bug where we didn't ignore the email case, converted all emails to lowercase internally (#1243)
 - Fixed a console bug where you can't click a user with no name, added a placehoder for anonyomous users (#1220)
 - Fixed unique keys not being updated when changing a user's email address (#1301)
+- Fixed a bug where decimal integers where wrongly used with database filters (#1349)
 
 ## Security
 
