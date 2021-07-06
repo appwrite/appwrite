@@ -7,6 +7,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\CLI\Console;
 
 class FunctionsCustomServerTest extends Scope
 {
@@ -406,6 +407,15 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(204, $function['headers']['status-code']);
         $this->assertEmpty($function['body']);
 
+        sleep(5); // DB deletion happens in function worker and is not instant
+
+        $stdout = '';
+        $stderr = '';
+
+        // Check if container got deleted.
+        Console::execute('docker ps --all --format "name={{.Names}}&status={{.Status}}&labels={{.Labels}}" --filter label=appwrite-type=function','', $stdout, $stderr);
+        $this->assertEquals(false, mb_strpos($stdout, $data['tagId']));
+
         $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/tags/' . $data['tagId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -436,7 +446,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(204, $function['headers']['status-code']);
         $this->assertEmpty($function['body']);
 
-        sleep(15); // DB deletion happens in function worker and is not instant
+        sleep(5); // DB deletion happens in function worker and is not instant
 
         $function = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'], array_merge([
             'content-type' => 'application/json',
@@ -444,6 +454,13 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()));
        
         $this->assertEquals(404, $function['headers']['status-code']);
+
+        $stdout = '';
+        $stderr = '';
+
+        // Check if container got deleted.
+        Console::execute('docker ps --all --format "name={{.Names}}&status={{.Status}}&labels={{.Labels}}" --filter label=appwrite-type=function','', $stdout, $stderr);
+        $this->assertEquals(false, mb_strpos($stdout, $data['tagId']));
 
         /**
          * Test for FAILURE
