@@ -708,7 +708,7 @@ trait AccountBase
 
         $verification = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
 
-        $expireTime = strpos($lastEmail['text'], 'expires='.$response['body']['expire'], 0);
+        $expireTime = strpos($lastEmail['text'], 'expire='.$response['body']['expire'], 0);
 
         $this->assertNotFalse($expireTime);
         
@@ -1012,7 +1012,7 @@ trait AccountBase
 
         $recovery = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
 
-        $expireTime = strpos($lastEmail['text'], 'expires='.$response['body']['expire'], 0);
+        $expireTime = strpos($lastEmail['text'], 'expire='.$response['body']['expire'], 0);
 
         $this->assertNotFalse($expireTime);
         
