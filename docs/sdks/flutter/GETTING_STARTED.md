@@ -3,7 +3,7 @@
 ### Add your Flutter Platform
 To init your SDK and start interacting with Appwrite services, you need to add a new Flutter platform to your project. To add a new platform, go to your Appwrite console, choose the project you created in the step before, and click the 'Add Platform' button.
 
-From the options, choose to add a new **Flutter** platform and add your app credentials. Appwrite Flutter SDK currently supports building apps for both iOS and Android.
+From the options, choose to add a new **Flutter** platform and add your app credentials. Appwrite Flutter SDK currently supports building apps for Android, iOS, Linux, Mac OS, Web and Windows.
 
 If you are building your Flutter application for multiple devices, you have to follow this process for each different device.
 
@@ -12,6 +12,15 @@ For **iOS** add your app name and Bundle ID, You can find your Bundle Identifier
 
 #### Android
 For **Android** add your app <u>name</u> and <u>package name</u>, Your package name is generally the applicationId in your app-level build.gradle file. By registering your new app platform, you are allowing your app to communicate with the Appwrite API.
+
+#### Linux
+For **Linux** add your app <u>name</u> and <u>package name</u>, Your package name is generally the `name` in your pubspec.yaml file. If you cannot find the correct package name, run the application in linux, and make any request with proper exception handling, you should get the application id needed to add in the received error message.
+
+#### Windows
+For **Windows** add your app <u>name</u> and <u>package name</u>, Your package name is generally the `name` in your pubspec.yaml file. If you cannot find the correct package name, run the application in windows, and make any request with proper exception handling, you should get the application id needed to add in the received error message.
+
+#### Mac OS
+For **Mac OS** add your app name and Bundle ID, You can find your Bundle Identifier in the General tab for your app's primary target in Xcode.
 
 ### iOS
 
