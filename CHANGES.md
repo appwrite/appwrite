@@ -26,6 +26,7 @@
 - Added new environment variables to the `telegraf` service: (#1202)
   - _APP_INFLUXDB_HOST
   - _APP_INFLUXDB_PORT
+- Added `expires` parameter to Account Recovery and Email Validation URL's
 - Added new endpoint to get a session based on it's ID (#1294)
 - Added added a new version param to the migration script (#1342)
 - Improved Queue Interval for all workers from 5 seconds to 1 (#1308 Thanks to @Meldiron)
