@@ -15,6 +15,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'userId' => 'unique()',
             'email' => 'users.service@example.com',
             'password' => 'password',
             'name' => 'Project User',
@@ -33,7 +34,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'id' => 'user1',
+            'userId' => 'user1',
             'email' => 'users.service1@example.com',
             'password' => 'password',
             'name' => 'Project User',
