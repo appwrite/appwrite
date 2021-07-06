@@ -11,13 +11,13 @@ If you are building your Flutter application for multiple devices, you have to f
 For **iOS** add your app name and Bundle ID, You can find your Bundle Identifier in the General tab for your app's primary target in Xcode.
 
 #### Android
-For **Android** add your app <u>name</u> and <u>package name</u>, Your package name is generally the applicationId in your app-level build.gradle file. By registering your new app platform, you are allowing your app to communicate with the Appwrite API.
+For **Android** add your app <u>name</u> and <u>package name</u>, Your package name is generally the <a href="https://github.com/appwrite/playground-for-flutter/blob/0fdbdff98384fff940ed0b1e08cf14cfe3a2be3e/android/app/build.gradle#L41" target="_blank" rel="noopener">applicationId</a> in your app-level build.gradle file. By registering your new app platform, you are allowing your app to communicate with the Appwrite API.
 
 #### Linux
-For **Linux** add your app <u>name</u> and <u>package name</u>, Your package name is generally the `name` in your pubspec.yaml file. If you cannot find the correct package name, run the application in linux, and make any request with proper exception handling, you should get the application id needed to add in the received error message.
+For **Linux** add your app <u>name</u> and <u>package name</u>, Your package name is generally the **name** in your <a href="https://github.com/appwrite/playground-for-flutter/blob/0fdbdff98384fff940ed0b1e08cf14cfe3a2be3e/pubspec.yaml#L1" target="_blank" rel="noopener">pubspec.yaml<a> file. If you cannot find the correct package name, run the application in linux, and make any request with proper exception handling, you should get the application id needed to add in the received error message.
 
 #### Windows
-For **Windows** add your app <u>name</u> and <u>package name</u>, Your package name is generally the `name` in your pubspec.yaml file. If you cannot find the correct package name, run the application in windows, and make any request with proper exception handling, you should get the application id needed to add in the received error message.
+For **Windows** add your app <u>name</u> and <u>package name</u>, Your package name is generally the **name** in your <a href="https://github.com/appwrite/playground-for-flutter/blob/0fdbdff98384fff940ed0b1e08cf14cfe3a2be3e/pubspec.yaml#L1" target="_blank" rel="noopener">pubspec.yaml</a> file. If you cannot find the correct package name, run the application in windows, and make any request with proper exception handling, you should get the application id needed to add in the received error message.
 
 #### Mac OS
 For **Mac OS** add your app name and Bundle ID, You can find your Bundle Identifier in the General tab for your app's primary target in Xcode.
