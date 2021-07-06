@@ -38,7 +38,7 @@ The Appwrite SDK uses ASWebAuthenticationSession on iOS 12+ and SFAuthentication
 4. In Deployment Info, 'Target' select iOS 11.0
 
 ### Linux
-For **Linux** add your app <u>name</u> and <u>package name</u>, Your package name is generally the **name** in your <a href="https://github.com/appwrite/playground-for-flutter/blob/0fdbdff98384fff940ed0b1e08cf14cfe3a2be3e/pubspec.yaml#L1" target="_blank" rel="noopener">pubspec.yaml<a> file. If you cannot find the correct package name, run the application in linux, and make any request with proper exception handling, you should get the application id needed to add in the received error message.
+For **Linux** add your app <u>name</u> and <u>package name</u>, Your package name is generally the **name** in your <a href="https://github.com/appwrite/playground-for-flutter/blob/0fdbdff98384fff940ed0b1e08cf14cfe3a2be3e/pubspec.yaml#L1" target="_blank" rel="noopener">pubspec.yaml<a> file. If you cannot find the correct package name, run the application in linux, and make any request with proper exception handling, you should get the application ID needed to add in the received error message.
 
 ### Mac OS
 For **Mac OS** add your app name and Bundle ID, You can find your Bundle Identifier in the General tab for your app's primary target in Xcode.
