@@ -62,7 +62,7 @@
         "slickdeals/statsd": "3.1.0"
     },
     "require-dev": {
-        "appwrite/sdk-generator": "0.11.1",
+        "appwrite/sdk-generator": "dev-feat-kotlin-java-docs",
         "swoole/ide-helper": "4.6.7",
         "phpunit/phpunit": "9.5.6",
         "vimeo/psalm": "4.7.2"

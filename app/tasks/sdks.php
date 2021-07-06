@@ -223,9 +223,15 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     Console::success("Remove temp directory '{$target}' for {$language['name']} SDK");
                 }
 
-                \exec('mkdir -p '.$resultExamples.' && cp -r '.$result.'/docs/examples '.$resultExamples);
-                Console::success("Copied code examples for {$language['name']} SDK to: {$resultExamples}");
-
+                $docDirectories = $language['docDirectories'] ?? [''];
+                foreach ($docDirectories as $languageTitle => $path) {
+                    $languagePath = strtolower($languageTitle !== 0 ? '/'.$languageTitle : '');
+                    \exec(
+                        'mkdir -p '.$resultExamples.$languagePath.' && \
+                        cp -r '.$result.'/docs/examples'.$languagePath.' '.$resultExamples
+                    );
+                    Console::success("Copied code examples for {$language['name']} SDK to: {$resultExamples}");
+                }
             }
         }
 
