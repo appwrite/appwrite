@@ -569,14 +569,13 @@ class MySQL extends Adapter
 
             //$path = implode('.', $path);
 
-            $castToInt = array_key_exists($key, $filterTypes) && $filterTypes[$key] === 'numeric';
+            if(array_key_exists($key, $filterTypes) && $filterTypes[$key] === 'numeric') {
+                $value = (float) $value;
+            } else {
+                $value = $this->getPDO()->quote($value, PDO::PARAM_STR);
+            }
 
             $key = $this->getPDO()->quote($key, PDO::PARAM_STR);
-            $value = $this->getPDO()->quote($value, PDO::PARAM_STR);
-
-            if ($castToInt) {
-                $value .= '+0';
-            }
 
             //$path               = $this->getPDO()->quote($path, PDO::PARAM_STR);
             $options['offset'] = (int) $options['offset'];
