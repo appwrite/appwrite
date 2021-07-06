@@ -125,8 +125,8 @@ return [
                 'gitRepoName' => 'sdk-for-android',
                 'gitUserName' => 'appwrite',
                 'docDirectories' => [
-                    'Kotlin' => 'examples/kotlin',
-                    'Java' => 'examples/java',
+                    'Kotlin' => 'kotlin',
+                    'Java' => 'java',
                 ],
             ],
             // [
@@ -367,8 +367,8 @@ return [
                 'gitRepoName' => 'sdk-for-kotlin',
                 'gitUserName' => 'appwrite',
                 'docDirectories' => [
-                    'Kotlin' => 'examples/kotlin',
-                    'Java' => 'examples/java',
+                    'Kotlin' => 'kotlin',
+                    'Java' => 'java',
                 ],
             ],
         ],
