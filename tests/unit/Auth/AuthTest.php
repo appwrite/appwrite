@@ -62,41 +62,55 @@ class AuthTest extends TestCase
         $this->assertEquals(\mb_strlen(Auth::tokenGenerator(5)), 10);
     }
     
-    public function testTokenVerify()
+    public function testSessionVerify()
     {
         $secret = 'secret1';
         $hash = Auth::hash($secret);
         $tokens1 = [
             new Document([
                 '$id' => 'token1',
-                'type' => Auth::TOKEN_TYPE_LOGIN,
                 'expire' => time() + 60 * 60 * 24,
                 'secret' => $hash,
+                'provider' => Auth::SESSION_PROVIDER_EMAIL,
+                'providerUid' => 'test@example.com',
             ]),
             new Document([
                 '$id' => 'token2',
-                'type' => Auth::TOKEN_TYPE_LOGIN,
                 'expire' => time() - 60 * 60 * 24,
                 'secret' => 'secret2',
+                'provider' => Auth::SESSION_PROVIDER_EMAIL,
+                'providerUid' => 'test@example.com',
             ]),
         ];
 
         $tokens2 = [
             new Document([ // Correct secret and type time, wrong expire time
                 '$id' => 'token1',
-                'type' => Auth::TOKEN_TYPE_LOGIN,
                 'expire' => time() - 60 * 60 * 24,
                 'secret' => $hash,
+                'provider' => Auth::SESSION_PROVIDER_EMAIL,
+                'providerUid' => 'test@example.com',
             ]),
             new Document([
                 '$id' => 'token2',
-                'type' => Auth::TOKEN_TYPE_LOGIN,
                 'expire' => time() - 60 * 60 * 24,
                 'secret' => 'secret2',
+                'provider' => Auth::SESSION_PROVIDER_EMAIL,
+                'providerUid' => 'test@example.com',
             ]),
         ];
 
-        $tokens3 = [ // Correct secret and expire time, wrong type
+        $this->assertEquals(Auth::sessionVerify($tokens1, $secret), 'token1');
+        $this->assertEquals(Auth::sessionVerify($tokens1, 'false-secret'), false);
+        $this->assertEquals(Auth::sessionVerify($tokens2, $secret), false);
+        $this->assertEquals(Auth::sessionVerify($tokens2, 'false-secret'), false);
+    }
+
+    public function testTokenVerify()
+    {
+        $secret = 'secret1';
+        $hash = Auth::hash($secret);
+        $tokens1 = [
             new Document([
                 '$id' => 'token1',
                 'type' => Auth::TOKEN_TYPE_RECOVERY,
@@ -105,35 +119,65 @@ class AuthTest extends TestCase
             ]),
             new Document([
                 '$id' => 'token2',
-                'type' => Auth::TOKEN_TYPE_LOGIN,
+                'type' => Auth::TOKEN_TYPE_RECOVERY,
                 'expire' => time() - 60 * 60 * 24,
                 'secret' => 'secret2',
             ]),
         ];
 
-        $this->assertEquals(Auth::tokenVerify($tokens1, Auth::TOKEN_TYPE_LOGIN, $secret), 'token1');
-        $this->assertEquals(Auth::tokenVerify($tokens1, Auth::TOKEN_TYPE_LOGIN, 'false-secret'), false);
-        $this->assertEquals(Auth::tokenVerify($tokens2, Auth::TOKEN_TYPE_LOGIN, $secret), false);
-        $this->assertEquals(Auth::tokenVerify($tokens2, Auth::TOKEN_TYPE_LOGIN, 'false-secret'), false);
-        $this->assertEquals(Auth::tokenVerify($tokens3, Auth::TOKEN_TYPE_LOGIN, $secret), false);
-        $this->assertEquals(Auth::tokenVerify($tokens3, Auth::TOKEN_TYPE_LOGIN, 'false-secret'), false);
+        $tokens2 = [
+            new Document([ // Correct secret and type time, wrong expire time
+                '$id' => 'token1',
+                'type' => Auth::TOKEN_TYPE_RECOVERY,
+                'expire' => time() - 60 * 60 * 24,
+                'secret' => $hash,
+            ]),
+            new Document([
+                '$id' => 'token2',
+                'type' => Auth::TOKEN_TYPE_RECOVERY,
+                'expire' => time() - 60 * 60 * 24,
+                'secret' => 'secret2',
+            ]),
+        ];
+
+        $tokens3 = [ // Correct secret and expire time, wrong type
+            new Document([
+                '$id' => 'token1',
+                'type' => Auth::TOKEN_TYPE_INVITE,
+                'expire' => time() + 60 * 60 * 24,
+                'secret' => $hash,
+            ]),
+            new Document([
+                '$id' => 'token2',
+                'type' => Auth::TOKEN_TYPE_RECOVERY,
+                'expire' => time() - 60 * 60 * 24,
+                'secret' => 'secret2',
+            ]),
+        ];
+
+        $this->assertEquals(Auth::tokenVerify($tokens1, Auth::TOKEN_TYPE_RECOVERY, $secret), 'token1');
+        $this->assertEquals(Auth::tokenVerify($tokens1, Auth::TOKEN_TYPE_RECOVERY, 'false-secret'), false);
+        $this->assertEquals(Auth::tokenVerify($tokens2, Auth::TOKEN_TYPE_RECOVERY, $secret), false);
+        $this->assertEquals(Auth::tokenVerify($tokens2, Auth::TOKEN_TYPE_RECOVERY, 'false-secret'), false);
+        $this->assertEquals(Auth::tokenVerify($tokens3, Auth::TOKEN_TYPE_RECOVERY, $secret), false);
+        $this->assertEquals(Auth::tokenVerify($tokens3, Auth::TOKEN_TYPE_RECOVERY, 'false-secret'), false);
     }
 
-    public function testIsPreviliggedUser()
+    public function testIsPrivilegedUser()
     {
-        $this->assertEquals(false, Auth::isPreviliggedUser([]));
-        $this->assertEquals(false, Auth::isPreviliggedUser(['role:'.Auth::USER_ROLE_GUEST => true]));
-        $this->assertEquals(false, Auth::isPreviliggedUser(['role:'.Auth::USER_ROLE_MEMBER => true]));
-        $this->assertEquals(true, Auth::isPreviliggedUser(['role:'.Auth::USER_ROLE_ADMIN => true]));
-        $this->assertEquals(true, Auth::isPreviliggedUser(['role:'.Auth::USER_ROLE_DEVELOPER => true]));
-        $this->assertEquals(true, Auth::isPreviliggedUser(['role:'.Auth::USER_ROLE_OWNER => true]));
-        $this->assertEquals(false, Auth::isPreviliggedUser(['role:'.Auth::USER_ROLE_APP => true]));
-        $this->assertEquals(false, Auth::isPreviliggedUser(['role:'.Auth::USER_ROLE_SYSTEM => true]));
+        $this->assertEquals(false, Auth::isPrivilegedUser([]));
+        $this->assertEquals(false, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_GUEST => true]));
+        $this->assertEquals(false, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_MEMBER => true]));
+        $this->assertEquals(true, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_ADMIN => true]));
+        $this->assertEquals(true, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_DEVELOPER => true]));
+        $this->assertEquals(true, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_OWNER => true]));
+        $this->assertEquals(false, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_APP => true]));
+        $this->assertEquals(false, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_SYSTEM => true]));
 
-        $this->assertEquals(false, Auth::isPreviliggedUser(['role:'.Auth::USER_ROLE_APP => true, 'role:'.Auth::USER_ROLE_APP => true]));
-        $this->assertEquals(false, Auth::isPreviliggedUser(['role:'.Auth::USER_ROLE_APP => true, 'role:'.Auth::USER_ROLE_GUEST => true]));
-        $this->assertEquals(true, Auth::isPreviliggedUser(['role:'.Auth::USER_ROLE_OWNER => true, 'role:'.Auth::USER_ROLE_GUEST => true]));
-        $this->assertEquals(true, Auth::isPreviliggedUser(['role:'.Auth::USER_ROLE_OWNER => true, 'role:'.Auth::USER_ROLE_ADMIN => true, 'role:'.Auth::USER_ROLE_DEVELOPER => true]));
+        $this->assertEquals(false, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_APP => true, 'role:'.Auth::USER_ROLE_APP => true]));
+        $this->assertEquals(false, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_APP => true, 'role:'.Auth::USER_ROLE_GUEST => true]));
+        $this->assertEquals(true, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_OWNER => true, 'role:'.Auth::USER_ROLE_GUEST => true]));
+        $this->assertEquals(true, Auth::isPrivilegedUser(['role:'.Auth::USER_ROLE_OWNER => true, 'role:'.Auth::USER_ROLE_ADMIN => true, 'role:'.Auth::USER_ROLE_DEVELOPER => true]));
     }
     
     public function testIsAppUser()

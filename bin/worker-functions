@@ -7,4 +7,4 @@ else
     REDIS_BACKEND="redis://${_APP_REDIS_USER}:${_APP_REDIS_PASS}@${_APP_REDIS_HOST}:${_APP_REDIS_PORT}"
 fi
 
-QUEUE='v1-functions' APP_INCLUDE='/usr/src/code/app/workers/functions.php' php /usr/src/code/vendor/bin/resque -dopcache.preload=opcache.preload=/usr/src/code/app/preload.php
+INTERVAL=0.1 QUEUE='v1-functions' APP_INCLUDE='/usr/src/code/app/workers/functions.php' php /usr/src/code/vendor/bin/resque -dopcache.preload=opcache.preload=/usr/src/code/app/preload.php

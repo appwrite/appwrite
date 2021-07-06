@@ -64,6 +64,7 @@ trait TeamsBaseServer
         $this->assertEquals(true, $response['body']['confirm']);
 
         $userUid = $response['body']['userId'];
+        $membershipUid = $response['body']['$id'];
 
         // $response = $this->client->call(Client::METHOD_GET, '/users/'.$userUid, array_merge([
         //     'content-type' => 'application/json',
@@ -117,6 +118,105 @@ trait TeamsBaseServer
         return [
             'teamUid' => $teamUid,
             'userUid' => $userUid,
+            'membershipUid' => $membershipUid
         ];
+    }
+
+    /**
+     * @depends testCreateTeamMembership
+     */
+    public function testUpdateMembershipRoles($data)
+    {
+        $teamUid = $data['teamUid'] ?? '';
+        $membershipUid = $data['membershipUid'] ?? '';
+
+        /**
+         * Test for SUCCESS
+         */
+        $roles = ['admin', 'editor', 'uncle'];
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/'.$teamUid.'/memberships/'.$membershipUid, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'roles' => $roles
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['userId']);
+        $this->assertNotEmpty($response['body']['teamId']);
+        $this->assertCount(count($roles), $response['body']['roles']);
+        $this->assertEquals($roles[0], $response['body']['roles'][0]);
+        $this->assertEquals($roles[1], $response['body']['roles'][1]);
+        $this->assertEquals($roles[2], $response['body']['roles'][2]);
+
+
+        /**
+         * Test for FAILURE
+         */
+        $apiKey = $this->getNewKey(['teams.read']);
+        $roles = ['admin', 'editor', 'uncle'];
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/'.$teamUid.'/memberships/'.$membershipUid, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $apiKey
+        ], [
+            'roles' => $roles
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testUpdateMembershipRoles
+     */
+    public function testDeleteUserUpdatesTeamMembershipCount($data) {
+        $teamUid = $data['teamUid'] ?? '';
+        $userUid = $data['userUid'] ?? '';
+
+        /** Get Team Count */
+        $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamUid, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals('Arsenal', $response['body']['name']);
+        $this->assertEquals(1, $response['body']['sum']);
+        $this->assertIsInt($response['body']['sum']);
+        $this->assertIsInt($response['body']['dateCreated']);
+
+        
+        /** Delete User */
+        $user = $this->client->call(Client::METHOD_DELETE, '/users/' . $userUid, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($user['headers']['status-code'], 204);
+
+        /** Wait for deletes worker to delete membership and update team membership count */
+        sleep(5);
+
+        /** Get Team Count */
+        $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamUid, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals('Arsenal', $response['body']['name']);
+        $this->assertEquals(0, $response['body']['sum']);
+        $this->assertIsInt($response['body']['sum']);
+        $this->assertIsInt($response['body']['dateCreated']);        
+
     }
 }

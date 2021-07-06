@@ -1,9 +1,0 @@
-{
-  "name": "appwrite-cloud-function-demo",
-  "version": "0.1.0",
-  "license": "BSD-3-Clause",
-  "repository": "public",
-  "dependencies": {
-    "node-appwrite": "1.1.0"
-  }
-}

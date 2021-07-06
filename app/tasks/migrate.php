@@ -36,7 +36,7 @@ $cli
         $projects = [$console];
         $count = 0;
 
-        $migration = new Version\V06($register->get('db')); //TODO: remove hardcoded version and move to dynamic migration
+        $migration = new Version\V07($register->get('db')); //TODO: remove hardcoded version and move to dynamic migration
 
         while ($sum > 0) {
             foreach ($projects as $project) {

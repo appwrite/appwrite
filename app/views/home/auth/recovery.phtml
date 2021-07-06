@@ -1,3 +1,6 @@
+<?php
+$smtpEnabled = $this->getParam('smtpEnabled', false);
+?>
 <div class="zone medium">
     <h1 class="zone xl margin-bottom-large margin-top">
         Password Recovery
@@ -25,7 +28,13 @@
 
         <input name="url" type="hidden" data-ls-bind="{{env.ENDPOINT}}/auth/recovery/reset" />
 
-        <button type="submit" class="btn btn-primary"><i class="fa fa-sign-in"></i> Recover</button>
+        <?php if(!$smtpEnabled): ?>
+        <div class="box note padding-tiny warning margin-bottom text-align-center">
+            <i class="icon-warning"></i> SMTP connection is disabled. <a href="https://appwrite.io/docs/email-delivery" target="_blank" rel="noopener">Learn more <i class="icon-link-ext"></i></a>
+        </div>
+        <?php endif; ?>
+        
+        <button type="submit" class="btn btn-primary"<?php if(!$smtpEnabled): ?> disabled<?php endif; ?>><i class="fa fa-sign-in"></i> Recover</button>
     </form>
 </div>
 

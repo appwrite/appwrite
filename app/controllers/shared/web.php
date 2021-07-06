@@ -32,7 +32,7 @@ App::init(function ($utopia, $request, $response, $layout) {
             ['type' => 'developer', 'label' => 'Developer'],
             ['type' => 'admin', 'label' => 'Admin'],
         ])
-        ->setParam('environments', Config::getParam('environments'))
+        ->setParam('runtimes', Config::getParam('runtimes'))
         ->setParam('mode', App::getMode())
     ;
 

@@ -1,5 +1,5 @@
 <p>
-    Hola,
+    Hola {{name}},
 </p>
 <p>
     Te hemos enviado este correo porque <b>{{owner}}</b> quiere invitarte a formar parte del equipo <b>{{team}}</b> en {{project}}.

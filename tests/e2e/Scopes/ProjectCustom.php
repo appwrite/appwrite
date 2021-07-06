@@ -113,6 +113,14 @@ trait ProjectCustom
                 'database.documents.create',
                 'database.documents.update',
                 'database.documents.delete',
+                'functions.create',
+                'functions.update',
+                'functions.delete',
+                'functions.tags.create',
+                'functions.tags.update',
+                'functions.tags.delete',
+                'functions.executions.create',
+                'functions.executions.update',
                 'storage.files.create',
                 'storage.files.update',
                 'storage.files.delete',
@@ -145,5 +153,26 @@ trait ProjectCustom
         ];
 
         return self::$project;
+    }
+
+    public function getNewKey(array $scopes) {
+
+        $projectId = self::$project['$id'];
+
+        $key = $this->client->call(Client::METHOD_POST, '/projects/' . $projectId . '/keys', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'name' => 'Demo Project Key',
+            'scopes' => $scopes,
+        ]);
+
+        $this->assertEquals(201, $key['headers']['status-code']);
+        $this->assertNotEmpty($key['body']);
+        $this->assertNotEmpty($key['body']['secret']);
+
+        return $key['body']['secret'];
     }
 }

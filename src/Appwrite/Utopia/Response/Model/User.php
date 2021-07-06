@@ -34,6 +34,12 @@ class User extends Model
                 'default' => 0,
                 'example' => 0,
             ])
+            ->addRule('passwordUpdate', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Unix timestamp of the most recent password update',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
             ->addRule('email', [
                 'type' => self::TYPE_STRING,
                 'description' => 'User email address.',
@@ -47,7 +53,7 @@ class User extends Model
                 'example' => true,
             ])
             ->addRule('prefs', [
-                'type' => self::TYPE_JSON,
+                'type' => Response::MODEL_PREFERENCES,
                 'description' => 'User preferences as a key-value object',
                 'default' => new \stdClass,
                 'example' => ['theme' => 'pink', 'timezone' => 'UTC'],

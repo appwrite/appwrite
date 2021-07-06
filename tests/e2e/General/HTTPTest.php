@@ -94,33 +94,33 @@ class HTTPTest extends Scope
         $this->assertStringContainsString('# robotstxt.org/', $response['body']);
     }
 
-    public function testSpecSwagger2()
-    {
-        $response = $this->client->call(Client::METHOD_GET, '/specs/swagger2?platform=client', [
-            'content-type' => 'application/json',
-        ], []);
+    // public function testSpecSwagger2()
+    // {
+    //     $response = $this->client->call(Client::METHOD_GET, '/specs/swagger2?platform=client', [
+    //         'content-type' => 'application/json',
+    //     ], []);
 
-        if(!file_put_contents(__DIR__ . '/../../resources/swagger2.json', json_encode($response['body']))) {
-            throw new Exception('Failed to save spec file');
-        }
+    //     if(!file_put_contents(__DIR__ . '/../../resources/swagger2.json', json_encode($response['body']))) {
+    //         throw new Exception('Failed to save spec file');
+    //     }
 
-        $client = new Client();
-        $client->setEndpoint('https://validator.swagger.io');
+    //     $client = new Client();
+    //     $client->setEndpoint('https://validator.swagger.io');
 
-        /**
-         * Test for SUCCESS
-         */
-        $response = $client->call(Client::METHOD_POST, '/validator/debug', [
-            'content-type' => 'application/json',
-        ], json_decode(file_get_contents(realpath(__DIR__ . '/../../resources/swagger2.json')), true));
+    //     /**
+    //      * Test for SUCCESS
+    //      */
+    //     $response = $client->call(Client::METHOD_POST, '/validator/debug', [
+    //         'content-type' => 'application/json',
+    //     ], json_decode(file_get_contents(realpath(__DIR__ . '/../../resources/swagger2.json')), true));
 
-        $response['body'] = json_decode($response['body'], true);
+    //     $response['body'] = json_decode($response['body'], true);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertFalse(isset($response['body']['messages']));
+    //     $this->assertEquals(200, $response['headers']['status-code']);
+    //     $this->assertTrue(empty($response['body']));
 
-        unlink(realpath(__DIR__ . '/../../resources/swagger2.json'));
-    }
+    //     unlink(realpath(__DIR__ . '/../../resources/swagger2.json'));
+    // }
 
     public function testSpecOpenAPI3()
     {
@@ -145,7 +145,7 @@ class HTTPTest extends Scope
         $response['body'] = json_decode($response['body'], true);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertFalse(isset($response['body']['messages']));
+        $this->assertTrue(empty($response['body']));
 
         unlink(realpath(__DIR__ . '/../../resources/open-api3.json'));
     }

@@ -1,1 +1,2 @@
 Update currently logged in user account email address. After changing user address, user confirmation status is being reset and a new confirmation mail is sent. For security measures, user password is required to complete this request.
+This endpoint can also be used to convert an anonymous account to a normal one, by passing an email address and a new password.

@@ -170,6 +170,22 @@ class Redis extends Adapter
     }
 
     /**
+     * Add Unique Key.
+     *
+     * @param $key
+     *
+     * @return array
+     *
+     * @throws Exception
+     */
+    public function addUniqueKey($key)
+    {
+        $data = $this->adapter->addUniqueKey($key);
+
+        return $data;
+    }
+
+    /**
      * Create Namespace.
      *
      * @param string $namespace

@@ -89,6 +89,12 @@ class Project extends Model
                 'default' => '',
                 'example' => '131102020',
             ])
+            ->addRule('usersAuthLimit', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Max users allowed. 0 is unlimited.',
+                'default' => 0,
+                'example' => 100,
+            ])
             ->addRule('platforms', [
                 'type' => Response::MODEL_PLATFORM,
                 'description' => 'List of Platforms.',
@@ -127,6 +133,7 @@ class Project extends Model
         ;
 
         $providers = Config::getParam('providers', []);
+        $auth = Config::getParam('auth', []);
 
         foreach ($providers as $index => $provider) {
             if (!$provider['enabled']) {
@@ -147,6 +154,20 @@ class Project extends Model
                     'description' => $name.' OAuth secret ID.',
                     'example' => 'djsgudsdsewe43434343dd34...',
                     'default' => '',
+                ])
+            ;
+        }
+
+        foreach ($auth as $index => $method) {
+            $name = $method['name'] ?? '';
+            $key = $method['key'] ?? '';
+
+            $this
+                ->addRule($key, [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => $name.' auth method status',
+                    'example' => true,
+                    'default' => true,
                 ])
             ;
         }

@@ -36,9 +36,6 @@ $maxCells = 10;
     <div class="zone xl">
         <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
             <li data-state="/console/database/collection?id={{router.params.id}}&project={{router.params.project}}">
-                <a data-ls-if="{{project-collection.rules.length}} > 0" data-ls-attrs="href=/console/database/document?collection={{router.params.id}}&project={{router.params.project}}&buster={{project-collection.dateUpdated}}" class="button fly round text-align-center">
-                    <i class="icon-plus"></i>
-                </a>
 
                 <h2>Documents</h2>
 
@@ -135,7 +132,7 @@ $maxCells = 10;
                         </div>
                     </div>
 
-                    <div class="clear text-align-center paging">
+                    <div class="pull-end text-align-center paging">
                         <form
                             data-service="database.listDocuments"
                             data-event="submit"
@@ -166,6 +163,10 @@ $maxCells = 10;
                             <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-documents.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                         </form>
                     </div>
+
+                    <a data-ls-if="{{project-collection.rules.length}} > 0" data-ls-attrs="href=/console/database/document?collection={{router.params.id}}&project={{router.params.project}}&buster={{project-collection.dateUpdated}}" class="button">
+                        Add Document
+                    </a>
                 </div>
             </li>
             <li data-state="/console/database/collection/settings?id={{router.params.id}}&project={{router.params.project}}">
@@ -520,7 +521,7 @@ $maxCells = 10;
 
     <div data-ls-loop="project-collections.collections" data-ls-as="project" data-ls-key="$index2" class="tiles cell-3 margin-bottom-negative">
         <div class="margin-bottom" data-ls-if="{{project.$id}} != {{router.params.id}}">
-            <input type="radio" name="list" data-ls-attrs="value={{project.$id}},id={{project.$id}}" data-ls-bind="{{rule.list|firstElement}}" data-cast-to="array" required />
+            <input type="radio" data-ls-attrs="value={{project.$id}},id=[{{rule.$id}}].{{project.$id}},name=[{{rule.$id}}].list" data-ls-bind="{{rule.list|firstElement}}" data-cast-to="array" required />
             <label data-ls-attrs="for={{project.$id}}"data-ls-bind="{{project.name}}"></label>
         </div>
     </div>

@@ -27,6 +27,7 @@ class Database
 
     // Auth, Account and Users (private to user)
     const SYSTEM_COLLECTION_USERS = 'users';
+    const SYSTEM_COLLECTION_SESSIONS = 'sessions';
     const SYSTEM_COLLECTION_TOKENS = 'tokens';
 
     // Teams (shared among team members)
@@ -367,6 +368,18 @@ class Database
     public function deleteUniqueKey($key)
     {
         return new Document($this->adapter->deleteUniqueKey($key));
+    }
+
+    /**
+     * @param int $key
+     *
+     * @return Document|false
+     *
+     * @throws AuthorizationException
+     */
+    public function addUniqueKey($key)
+    {
+        return new Document($this->adapter->addUniqueKey($key));
     }
 
     /**

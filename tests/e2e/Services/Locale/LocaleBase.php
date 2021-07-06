@@ -123,8 +123,8 @@ trait LocaleBase
         $this->assertEquals(194, $response['body']['sum']);
         $this->assertIsArray($response['body']['phones']);
         $this->assertEquals($response['body']['phones'][0]['code'], '+1');
-        $this->assertEquals($response['body']['phones'][0]['countryName'], 'United States');
-        $this->assertEquals($response['body']['phones'][0]['countryCode'], 'US');
+        $this->assertEquals($response['body']['phones'][0]['countryName'], 'Canada');
+        $this->assertEquals($response['body']['phones'][0]['countryCode'], 'CA');
         
         /**
          * Test for FAILURE
@@ -222,7 +222,7 @@ trait LocaleBase
         return [];
     }
 
-    public function testLangaugaes(): array
+    public function testLanguages(): array
     {
         /**
          * Test for SUCCESS

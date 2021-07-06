@@ -35,7 +35,7 @@ abstract class Scope extends TestCase
     {
         sleep(10);
         
-        $emails = json_decode(file_get_contents('http://maildev/email'), true);
+        $emails = json_decode(file_get_contents('http://maildev:1080/email'), true);
 
         if ($emails && is_array($emails)) {
             return end($emails);

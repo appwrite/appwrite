@@ -26,20 +26,20 @@ class UsageV1
 
         $statsd = $register->get('statsd', true);
 
-        $projectId = $this->args['projectId'];
+        $projectId = $this->args['projectId'] ?? '';
 
-        $storage = $this->args['storage'];
+        $storage = $this->args['storage'] ?? 0;
 
-        $networkRequestSize = $this->args['networkRequestSize'];
-        $networkResponseSize = $this->args['networkResponseSize'];
+        $networkRequestSize = $this->args['networkRequestSize'] ?? 0;
+        $networkResponseSize = $this->args['networkResponseSize'] ?? 0;
         
-        $httpMethod = $this->args['httpMethod'];
-        $httpRequest = $this->args['httpRequest'];
+        $httpMethod = $this->args['httpMethod'] ?? '';
+        $httpRequest = $this->args['httpRequest'] ?? 0;
 
         $functionId = $this->args['functionId'];
-        $functionExecution = $this->args['functionExecution'];
-        $functionExecutionTime = $this->args['functionExecutionTime'];
-        $functionStatus = $this->args['functionStatus'];
+        $functionExecution = $this->args['functionExecution'] ?? 0;
+        $functionExecutionTime = $this->args['functionExecutionTime'] ?? 0;
+        $functionStatus = $this->args['functionStatus'] ?? '';
 
         $tags = ",project={$projectId},version=".App::getEnv('_APP_VERSION', 'UNKNOWN').'';
 

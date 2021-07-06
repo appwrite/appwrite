@@ -1,7 +1,0 @@
-name: appwrite_cloud_function_demo
-version: 0.1.0
-description: Demo cloud function script.
-environment:
-  sdk: '>=2.10.0 <3.0.0'
-dependencies:
-  dart_appwrite: ^0.1.0

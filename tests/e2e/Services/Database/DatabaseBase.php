@@ -40,7 +40,6 @@ trait DatabaseBase
         ]);
 
         $this->assertEquals($actors['headers']['status-code'], 201);
-        $this->assertEquals($actors['body']['$collection'], 0);
         $this->assertEquals($actors['body']['name'], 'Actors');
         $this->assertIsArray($actors['body']['$permissions']);
         $this->assertIsArray($actors['body']['$permissions']['read']);
@@ -86,7 +85,6 @@ trait DatabaseBase
         ]);
 
         $this->assertEquals($movies['headers']['status-code'], 201);
-        $this->assertEquals($movies['body']['$collection'], 0);
         $this->assertEquals($movies['body']['name'], 'Movies');
         $this->assertIsArray($movies['body']['$permissions']);
         $this->assertIsArray($movies['body']['$permissions']['read']);

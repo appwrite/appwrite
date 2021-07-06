@@ -34,8 +34,8 @@ class V06 extends Migration
                 break;
             case Database::SYSTEM_COLLECTION_KEYS:
                 if ($document->getAttribute('secret', null)) {
-                    $json = \json_decode($document->getAttribute('secret'));
-                    if ($json->{'data'} || $json->{'method'} || $json->{'iv'} || $json->{'tag'} || $json->{'version'})
+                    $json = \json_decode($document->getAttribute('secret'), true);
+                    if (is_array($json))
                     {
                         Console::log('Secret already encrypted. Skipped: ' . $document->getId());
                         break;

@@ -283,6 +283,9 @@ class MySQL extends Adapter
             if (\is_array($prop['value'])) {
                 throw new Exception('Value can\'t be an array: '.\json_encode($prop['value']));
             }
+            if (\is_bool($prop['value'])) {
+                $prop['value'] = (int) $prop['value'];
+            }
             $st2->bindValue(':documentUid', $data['$id'], PDO::PARAM_STR);
             $st2->bindValue(':documentRevision', $revision, PDO::PARAM_STR);
 
@@ -357,7 +360,7 @@ class MySQL extends Adapter
     /**
      * Delete Unique Key.
      *
-     * @param int $key
+     * @param string $key
      *
      * @return array
      *
@@ -370,6 +373,30 @@ class MySQL extends Adapter
         $st1->bindValue(':key', $key, PDO::PARAM_STR);
 
         $st1->execute();
+
+        return [];
+    }
+
+    /**
+     * Add Unique Key.
+     *
+     * @param string $key
+     *
+     * @return array
+     *
+     * @throws Exception
+     */
+    public function addUniqueKey($key)
+    {
+        $st = $this->getPDO()->prepare('INSERT INTO `'.$this->getNamespace().'.database.unique`
+        SET `key` = :key;
+        ');
+    
+        $st->bindValue(':key', $key, PDO::PARAM_STR);
+
+        if (!$st->execute()) {
+            throw new Duplicate('Duplicated Property: '.$key);
+        }
 
         return [];
     }
