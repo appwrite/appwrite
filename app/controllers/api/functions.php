@@ -83,7 +83,7 @@ App::get('/v1/functions')
     ->groups(['api', 'functions'])
     ->desc('List Functions')
     ->label('scope', 'functions.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'list')
     ->label('sdk.description', '/docs/references/functions/list-functions.md')
@@ -96,9 +96,13 @@ App::get('/v1/functions')
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
+    ->inject('user')
+    ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB, $user) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Database\Document $user */
+
+        Authorization::disable();
 
         $results = $projectDB->getCollection([
             'limit' => $limit,
@@ -110,8 +114,16 @@ App::get('/v1/functions')
             ],
         ]);
 
+        Authorization::reset();
+
+        if (!empty($user->getId())) {
+            $results = array_filter($results, function ($key) {
+                return (new Authorization($key, 'execute'))->isValid($key->getPermissions());
+            });
+        }
+
         $response->dynamic(new Document([
-            'sum' => $projectDB->getSum(),
+            'sum' => count($results),
             'functions' => $results
         ]), Response::MODEL_FUNCTION_LIST);
     });
