@@ -9,8 +9,8 @@ public void main() {
 
     Storage storage = new Storage(client);
     storage.createFile(
-        file = File("./path-to-files/image.jpg"),
-        new Continuation<Response>() {
+        File("./path-to-files/image.jpg"),
+        new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {

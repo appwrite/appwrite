@@ -9,7 +9,7 @@ public void main() {
 
     Teams teams = new Teams(client);
     teams.list(
-        new Continuation<Response>() {
+        new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {

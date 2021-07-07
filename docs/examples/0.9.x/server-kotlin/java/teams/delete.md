@@ -9,8 +9,8 @@ public void main() {
 
     Teams teams = new Teams(client);
     teams.delete(
-        teamId = "[TEAM_ID]"
-        new Continuation<Response>() {
+        "[TEAM_ID]"
+        new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {

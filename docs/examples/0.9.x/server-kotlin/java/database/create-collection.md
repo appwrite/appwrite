@@ -9,11 +9,11 @@ public void main() {
 
     Database database = new Database(client);
     database.createCollection(
-        name = "[NAME]",
-        read = listOf(),
-        write = listOf(),
-        rules = listOf()
-        new Continuation<Response>() {
+        "[NAME]",
+        listOf(),
+        listOf(),
+        listOf()
+        new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {

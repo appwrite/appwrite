@@ -8,7 +8,7 @@ public void main() {
         .setKey("919c2d18fb5d4...a2ae413da83346ad2"); // Your secret API key
 
     Locale locale = new Locale(client);
-    locale.getCountriesPhones(new Continuation<Response>() {
+    locale.getCountriesPhones(new Continuation<Object>() {
         @NotNull
         @Override
         public CoroutineContext getContext() {

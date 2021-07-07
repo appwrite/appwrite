@@ -9,8 +9,8 @@ public void main() {
 
     Account account = new Account(client);
     account.updatePassword(
-        password = "password",
-        new Continuation<Response>() {
+        "password",
+        new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {
