@@ -11,6 +11,12 @@ if (\file_exists(__DIR__.'/../vendor/autoload.php')) {
     require_once __DIR__.'/../vendor/autoload.php';
 }
 
+ini_set('memory_limit','512M');
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+ini_set('default_socket_timeout', -1);
+error_reporting(E_ALL);
+
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
@@ -20,7 +26,6 @@ use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
-use Appwrite\Extend\PDO;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\App;
 use Utopia\View;
@@ -29,7 +34,10 @@ use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
-use PDO as PDONative;
+use Swoole\Database\PDOConfig;
+use Swoole\Database\PDOPool;
+use Swoole\Database\RedisConfig;
+use Swoole\Database\RedisPool;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -39,8 +47,8 @@ const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
 const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
-const APP_CACHE_BUSTER = 148;
-const APP_VERSION_STABLE = '0.8.0';
+const APP_CACHE_BUSTER = 149;
+const APP_VERSION_STABLE = '0.9.0';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_CACHE = '/storage/cache';
@@ -145,23 +153,45 @@ Database::addFilter('encrypt',
 /*
  * Registry
  */
-$register->set('db', function () { // Register DB connection
+$register->set('dbPool', function () { // Register DB connection
     $dbHost = App::getEnv('_APP_DB_HOST', '');
+    $dbPort = App::getEnv('_APP_DB_PORT', '');
     $dbUser = App::getEnv('_APP_DB_USER', '');
     $dbPass = App::getEnv('_APP_DB_PASS', '');
     $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
 
-    $pdo = new PDO("mysql:host={$dbHost};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
-        PDONative::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
-        PDONative::ATTR_TIMEOUT => 3, // Seconds
-        PDONative::ATTR_PERSISTENT => true
-    ));
 
-    // Connection settings
-    $pdo->setAttribute(PDONative::ATTR_DEFAULT_FETCH_MODE, PDONative::FETCH_ASSOC);   // Return arrays
-    $pdo->setAttribute(PDONative::ATTR_ERRMODE, PDONative::ERRMODE_EXCEPTION);        // Handle all errors with exceptions
+    $pool = new PDOPool((new PDOConfig())
+        ->withHost($dbHost)
+        ->withPort($dbPort)
+        // ->withUnixSocket('/tmp/mysql.sock')
+        ->withDbName($dbScheme)
+        ->withCharset('utf8mb4')
+        ->withUsername($dbUser)
+        ->withPassword($dbPass)
+    );
 
-    return $pdo;
+    return $pool;
+});
+$register->set('redisPool', function () {
+    $redisHost = App::getEnv('_APP_REDIS_HOST', '');
+    $redisPort = App::getEnv('_APP_REDIS_PORT', '');
+    $redisUser = App::getEnv('_APP_REDIS_USER', '');
+    $redisPass = App::getEnv('_APP_REDIS_PASS', '');
+    $redisAuth = '';
+
+    if ($redisUser && $redisPass) {
+        $redisAuth = $redisUser.':'.$redisPass;
+    }
+
+    $pool = new RedisPool((new RedisConfig)
+        ->withHost($redisHost)
+        ->withPort($redisPort)
+        ->withAuth($redisAuth)
+        ->withDbIndex(0)
+    );
+
+    return $pool;
 });
 $register->set('influxdb', function () { // Register DB connection
     $host = App::getEnv('_APP_INFLUXDB_HOST', '');
@@ -184,25 +214,6 @@ $register->set('statsd', function () { // Register DB connection
     $statsd = new \Domnikl\Statsd\Client($connection);
 
     return $statsd;
-});
-$register->set('cache', function () { // Register cache connection
-    $redis = new Redis();
-    $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
-    $user = App::getEnv('_APP_REDIS_USER','');
-    $pass = App::getEnv('_APP_REDIS_PASS','');
-    $auth = [];
-    if(!empty($user)) {
-        $auth["user"] = $user;
-    }
-    if(!empty($pass)) {
-        $auth["pass"] = $pass;
-    }
-    if(!empty($auth)) {
-        $redis->auth($auth);
-    }
-    $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
-
-    return $redis;
 });
 $register->set('smtp', function () {
     $mail = new PHPMailer(true);
@@ -387,7 +398,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     /** @var Appwrite\Database\Document $project */
     /** @var Appwrite\Database\Database $consoleDB */
     /** @var Appwrite\Database\Database $projectDB */
-    /** @var bool $mode */
+    /** @var string $mode */
 
     Authorization::setDefaultStatus(true);
 
@@ -483,23 +494,23 @@ App::setResource('console', function($consoleDB) {
     return $consoleDB->getDocument('console');
 }, ['consoleDB']);
 
-App::setResource('consoleDB', function($register) {
+App::setResource('consoleDB', function($db, $cache) {
     $consoleDB = new Database();
-    $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+    $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
     $consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
     $consoleDB->setMocks(Config::getParam('collections', []));
 
     return $consoleDB;
-}, ['register']);
+}, ['db', 'cache']);
 
-App::setResource('projectDB', function($register, $project) {
+App::setResource('projectDB', function($db, $cache, $project) {
     $projectDB = new Database();
-    $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+    $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
     $projectDB->setNamespace('app_'.$project->getId());
     $projectDB->setMocks(Config::getParam('collections', []));
 
     return $projectDB;
-}, ['register', 'project']);
+}, ['db', 'cache', 'project']);
 
 App::setResource('mode', function($request) {
     /** @var Utopia\Swoole\Request $request */

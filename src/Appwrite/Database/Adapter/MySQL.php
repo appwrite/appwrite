@@ -2,13 +2,12 @@
 
 namespace Appwrite\Database\Adapter;
 
-use Utopia\Registry\Registry;
 use Appwrite\Database\Adapter;
 use Appwrite\Database\Exception\Duplicate;
 use Appwrite\Database\Validator\Authorization;
 use Exception;
 use PDO;
-use Redis as Client;
+use Redis;
 
 class MySQL extends Adapter
 {
@@ -22,11 +21,6 @@ class MySQL extends Adapter
     const DATA_TYPE_NULL = 'null';
 
     const OPTIONS_LIMIT_ATTRIBUTES = 1000;
-
-    /**
-     * @var Registry
-     */
-    protected $register;
 
     /**
      * Last modified.
@@ -43,15 +37,27 @@ class MySQL extends Adapter
     protected $debug = [];
 
     /**
+     * @var PDO
+     */
+    protected $pdo;
+
+    /**
+     * @var Redis
+     */
+    protected $redis;
+
+    /**
      * Constructor.
      *
      * Set connection and settings
      *
-     * @param Registry $register
+     * @param PDO $pdo
+     * @param Redis $redis
      */
-    public function __construct(Registry $register)
+    public function __construct($pdo, Redis $redis)
     {
-        $this->register = $register;
+        $this->pdo = $pdo;
+        $this->redis = $redis;
     }
 
     /**
@@ -87,8 +93,8 @@ class MySQL extends Adapter
               ORDER BY `order`
         ');
 
-        $st->bindParam(':documentUid', $document['uid'], PDO::PARAM_STR);
-        $st->bindParam(':documentRevision', $document['revision'], PDO::PARAM_STR);
+        $st->bindParam(':documentUid', $document['uid'], PDO::PARAM_STR, 32);
+        $st->bindParam(':documentRevision', $document['revision'], PDO::PARAM_STR, 32);
 
         $st->execute();
 
@@ -116,8 +122,8 @@ class MySQL extends Adapter
               ORDER BY `order`
         ');
 
-        $st->bindParam(':start', $document['uid'], PDO::PARAM_STR);
-        $st->bindParam(':revision', $document['revision'], PDO::PARAM_STR);
+        $st->bindParam(':start', $document['uid'], PDO::PARAM_STR, 32);
+        $st->bindParam(':revision', $document['revision'], PDO::PARAM_STR, 32);
 
         $st->execute();
 
@@ -511,12 +517,13 @@ class MySQL extends Adapter
      * Get Collection.
      *
      * @param array $options
+     * @param array $filterTypes
      *
      * @throws Exception
      *
      * @return array
      */
-    public function getCollection(array $options)
+    public function getCollection(array $options, array $filterTypes = [])
     {
         $start = \microtime(true);
         $orderCastMap = [
@@ -562,8 +569,14 @@ class MySQL extends Adapter
 
             //$path = implode('.', $path);
 
+            if(array_key_exists($key, $filterTypes) && $filterTypes[$key] === 'numeric') {
+                $value = (float) $value;
+            } else {
+                $value = $this->getPDO()->quote($value, PDO::PARAM_STR);
+            }
+
             $key = $this->getPDO()->quote($key, PDO::PARAM_STR);
-            $value = $this->getPDO()->quote($value, PDO::PARAM_STR);
+
             //$path               = $this->getPDO()->quote($path, PDO::PARAM_STR);
             $options['offset'] = (int) $options['offset'];
             $options['limit'] = (int) $options['limit'];
@@ -957,18 +970,18 @@ class MySQL extends Adapter
      *
      * @throws Exception
      */
-    protected function getPDO(): PDO
+    protected function getPDO()
     {
-        return $this->register->get('db');
+        return $this->pdo;
     }
 
     /**
      * @throws Exception
      *
-     * @return Client
+     * @return Redis
      */
-    protected function getRedis(): Client
+    protected function getRedis(): Redis
     {
-        return $this->register->get('cache');
+        return $this->redis;
     }
 }
