@@ -56,7 +56,7 @@ try {
 ```
 
 ### Learn more
-You can use followng resources to learn more and get help
+You can use the followng resources to learn more and get help
 - 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-server)
 - 📜 [Appwrite Docs](https://appwrite.io/docs)
 - 💬 [Discord Community](https://appwrite.io/discord)
