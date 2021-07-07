@@ -591,6 +591,29 @@ trait AccountBase
         
         $this->assertEquals($response['headers']['status-code'], 400);
 
+        // Test if we can create a new account with the old email
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' =>  $data['email'],
+            'password' =>  $data['password'],
+            'name' =>  $data['name'],
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertEquals($response['body']['email'], $data['email']);
+        $this->assertEquals($response['body']['name'], $data['name'],);
+        
+
         $data['email'] = $newEmail;
 
         return $data;
@@ -707,6 +730,18 @@ trait AccountBase
         $this->assertEquals('Account Verification', $lastEmail['subject']);
 
         $verification = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
+
+        $expireTime = strpos($lastEmail['text'], 'expire='.$response['body']['expire'], 0);
+
+        $this->assertNotFalse($expireTime);
+        
+        $secretTest = strpos($lastEmail['text'], 'secret='.$response['body']['secret'], 0);
+
+        $this->assertNotFalse($secretTest);
+
+        $userIDTest = strpos($lastEmail['text'], 'userId='.$response['body']['userId'], 0);
+
+        $this->assertNotFalse($userIDTest);
 
         /**
          * Test for FAILURE
@@ -999,6 +1034,18 @@ trait AccountBase
         $this->assertEquals('Password Reset', $lastEmail['subject']);
 
         $recovery = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
+
+        $expireTime = strpos($lastEmail['text'], 'expire='.$response['body']['expire'], 0);
+
+        $this->assertNotFalse($expireTime);
+        
+        $secretTest = strpos($lastEmail['text'], 'secret='.$response['body']['secret'], 0);
+
+        $this->assertNotFalse($secretTest);
+
+        $userIDTest = strpos($lastEmail['text'], 'userId='.$response['body']['userId'], 0);
+
+        $this->assertNotFalse($userIDTest);
 
         /**
          * Test for FAILURE

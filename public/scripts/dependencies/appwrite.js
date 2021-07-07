@@ -47,7 +47,7 @@
             };
             this.headers = {
                 'x-sdk-version': 'appwrite:web:2.0.0',
-                'X-Appwrite-Response-Format': '0.8.0',
+                'X-Appwrite-Response-Format': '0.9.0',
             };
             this.account = {
                 /**
@@ -448,9 +448,10 @@
                  *
                  * Use this endpoint to allow a new user to register an anonymous account in
                  * your project. This route will also create a new session for the user. To
-                 * allow the new user to convert an anonymous account to a normal account
-                 * account, you need to update its [email and
-                 * password](/docs/client/account#accountUpdateEmail).
+                 * allow the new user to convert an anonymous account to a normal account, you
+                 * need to update its [email and
+                 * password](/docs/client/account#accountUpdateEmail) or create an [OAuth2
+                 * session](/docs/client/account#accountCreateOAuth2Session).
                  *
                  * @throws {AppwriteException}
                  * @returns {Promise}
@@ -505,6 +506,27 @@
                         return uri;
                     }
                 },
+                /**
+                 * Get Session By ID
+                 *
+                 * Use this endpoint to get a logged in user's session using a Session ID.
+                 * Inputting 'current' will return the current session being used.
+                 *
+                 * @param {string} sessionId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getSession: (sessionId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof sessionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "sessionId"');
+                    }
+                    let path = '/account/sessions/{sessionId}'.replace('{sessionId}', sessionId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
                 /**
                  * Delete Account Session
                  *

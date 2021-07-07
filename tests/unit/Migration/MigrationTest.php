@@ -36,4 +36,17 @@ abstract class MigrationTest extends TestCase
         ]);
     }
 
+    /**
+     * Check versions array integrity.
+     */
+    public function testMigrationVersions()
+    {
+        require_once __DIR__.'/../../../app/init.php';
+
+        foreach (Migration::$versions as $version => $class) {
+            $this->assertTrue(class_exists('Appwrite\\Migration\\Version\\'.$class));
+        }
+        // Test if current version exists
+        $this->assertArrayHasKey(APP_VERSION_STABLE, Migration::$versions);
+    }
 }
