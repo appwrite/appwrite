@@ -3,7 +3,7 @@
 - Breaking - removed order type enum, now you should pass string 'ASC' or 'DESC'
 - Image Crop Gravity support in image preview service
 - New endpoint in Account getSession to get session by ID
-- Fix - issues with User-Agent  when app name consisted of non-ASCII characters
+- Fix - issues with User-Agent when app name consisted of non-ASCII characters
 - Fix - issue with null Success and Failure URL in createOAuth2Session
 - Updated underlying dependencies
 

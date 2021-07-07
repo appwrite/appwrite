@@ -5,7 +5,7 @@
 - Image Crop Gravity support in image preview service
 - New endpoint in Account getSession to get session by ID
 - New endpoint in the Users API to update user verification status 
-- Fix - issues with User-Agent  when app name consisted of non-ASCII characters
+- Fix - issues with User-Agent when app name consisted of non-ASCII characters
 
 ## 0.6.2
 
