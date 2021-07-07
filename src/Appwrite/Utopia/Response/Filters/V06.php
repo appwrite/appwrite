@@ -12,8 +12,6 @@ use Exception;
 use Utopia\Config\Config;
 use Utopia\Locale\Locale as Locale;
 
-use function PHPSTORM_META\map;
-
 class V06 extends Filter {
     
     // Convert 0.7 Data format to 0.6 format

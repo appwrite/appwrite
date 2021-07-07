@@ -358,7 +358,7 @@ class FunctionsV1 extends Worker
 
         \array_walk($vars, function (&$value, $key) {
             $key = $this->filterEnvKey($key);
-            $value = \escapeshellarg((empty($value)) ? 'null' : $value);
+            $value = \escapeshellarg((empty($value)) ? '' : $value);
             $value = "--env {$key}={$value}";
         });
 
