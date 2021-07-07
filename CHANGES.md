@@ -1,8 +1,13 @@
-# NOT PUBLISHED YET
+# Version 0.9.0
 
 ## Features
 
 - Added support for Android
+- Added a new Cloud Functions runtime for
+  - Java 16.0
+  - Java 11.0
+  - Node 16.0
+  - Dart 2.13
 - Added a new gravity option when croping storage images using the file preview endpoint (#1260)
 - Upgraded GEOIP DB file to Jun 2021 release (#1256)
 - Added file created date to file info on the console (#1183)
@@ -21,7 +26,10 @@
 - Added new environment variables to the `telegraf` service: (#1202)
   - _APP_INFLUXDB_HOST
   - _APP_INFLUXDB_PORT
+- Added `expires` parameter to Account Recovery and Email Validation URL's
 - Added new endpoint to get a session based on it's ID (#1294)
+- Added added a new version param to the migration script (#1342)
+- Improved Queue Interval for all workers from 5 seconds to 1 (#1308 Thanks to @Meldiron)
 
 ## Breaking Changes (Read before upgrading!)
 - Renamed `env` param on `/v1/functions` to `runtime` (#1314)
@@ -39,6 +47,8 @@
 - Fixed missing session object when OAuth session creation event is triggered (#1208)
 - Fixed bug where we didn't ignore the email case, converted all emails to lowercase internally (#1243)
 - Fixed a console bug where you can't click a user with no name, added a placehoder for anonyomous users (#1220)
+- Fixed unique keys not being updated when changing a user's email address (#1301)
+- Fixed a bug where decimal integers where wrongly used with database filters (#1349)
 
 ## Security
 

@@ -16,6 +16,7 @@ use Appwrite\SDK\Language\DotNet;
 use Appwrite\SDK\Language\Flutter;
 use Appwrite\SDK\Language\Go;
 use Appwrite\SDK\Language\Kotlin;
+use Appwrite\SDK\Language\Android;
 use Appwrite\SDK\Language\Swift;
 
 $cli
@@ -142,7 +143,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config = new DotNet();
                         break;
                     case 'android':
+                        $config = new Android();
+                        break;
+                    case 'kotlin':
                         $config = new Kotlin();
+                        $warning = $warning."\n\n > This is the Kotlin SDK for integrating with Appwrite from your Kotlin server-side code. If you're looking for the Android SDK you should check [appwrite/sdk-for-android](https://github.com/appwrite/sdk-for-android)";
                         break;
                     default:
                         throw new Exception('Language "'.$language['key'].'" not supported');
@@ -179,7 +184,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setTwitter(APP_SOCIAL_TWITTER_HANDLE)
                     ->setDiscord(APP_SOCIAL_DISCORD_CHANNEL, APP_SOCIAL_DISCORD)
                     ->setDefaultHeaders([
-                        'X-Appwrite-Response-Format' => '0.8.0',
+                        'X-Appwrite-Response-Format' => '0.9.0',
                     ])
                 ;
                 
@@ -218,11 +223,15 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     Console::success("Remove temp directory '{$target}' for {$language['name']} SDK");
                 }
 
-                \exec('mkdir -p '.$resultExamples.' && cp -r '.$result.'/docs/examples '.$resultExamples);
-                Console::success("Copied code examples for {$language['name']} SDK to: {$resultExamples}");
-
-                \exec('rm -rf '.$result);
-                Console::success("Removed source code directory '{$result}' for {$language['name']} SDK");
+                $docDirectories = $language['docDirectories'] ?? [''];
+                foreach ($docDirectories as $languageTitle => $path) {
+                    $languagePath = strtolower($languageTitle !== 0 ? '/'.$languageTitle : '');
+                    \exec(
+                        'mkdir -p '.$resultExamples.$languagePath.' && \
+                        cp -r '.$result.'/docs/examples'.$languagePath.' '.$resultExamples
+                    );
+                    Console::success("Copied code examples for {$language['name']} SDK to: {$resultExamples}");
+                }
             }
         }
 
