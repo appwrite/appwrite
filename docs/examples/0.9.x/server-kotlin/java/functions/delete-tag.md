@@ -9,9 +9,9 @@ public void main() {
 
     Functions functions = new Functions(client);
     functions.deleteTag(
-        functionId = "[FUNCTION_ID]",
-        tagId = "[TAG_ID]"
-        new Continuation<Response>() {
+        "[FUNCTION_ID]",
+        "[TAG_ID]"
+        new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {

@@ -9,9 +9,9 @@ public void main() {
 
     Database database = new Database(client);
     database.createDocument(
-        collectionId = "[COLLECTION_ID]",
-        data = mapOf( "a" to "b" ),
-        new Continuation<Response>() {
+        "[COLLECTION_ID]",
+        mapOf( "a" to "b" ),
+        new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {

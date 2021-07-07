@@ -8,7 +8,7 @@ public void main() {
         .setJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ..."); // Your secret JSON Web Token
 
     Account account = new Account(client);
-    account.delete(new Continuation<Response>() {
+    account.delete(new Continuation<Object>() {
         @NotNull
         @Override
         public CoroutineContext getContext() {
