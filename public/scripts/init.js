@@ -52,3 +52,10 @@ document.addEventListener("account.create", function () {
     window.location = '/auth/signup?failure=1';
   });
 });
+window.addEventListener("load", () => {
+  const realtime = window.ls.container.get('realtime');
+  window.ls.container.get('console').subscribe('project', event => {
+    realtime.set(event.payload);
+  });
+});
+

@@ -94,14 +94,17 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             }
 
             $event = [
-                'event' => 'stats.connections',
-                'channels' => ['project'],
+                'project' => 'console',
                 'permissions' => ['role:member'],
-                'timestamp' => time(),
-                'payload' => $payload
+                'data' => [
+                    'event' => 'stats.connections',
+                    'channels' => ['project'],
+                    'timestamp' => time(),
+                    'payload' => $payload
+                ]
             ];
 
-            $server->send($realtime->getReceivers($event), json_encode($event));
+            $server->send($realtime->getReceivers($event), json_encode($event['data']));
         }
     });
 

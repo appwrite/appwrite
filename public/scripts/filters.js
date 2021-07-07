@@ -255,6 +255,9 @@ window.ls.filter
 
     return '';
   })
+  .add("accessProject", function($value, router) {
+    return ($value && $value.hasOwnProperty(router.params.project)) ? $value[router.params.project] : 0;
+  })
 ;
 
 function abbreviate(number, maxPlaces, forcePlaces, forceLetter) {

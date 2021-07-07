@@ -27,6 +27,7 @@ const configApp  = {
         'public/scripts/services/sdk.js',
         'public/scripts/services/search.js',
         'public/scripts/services/timezone.js',
+        'public/scripts/services/realtime.js',
 
         'public/scripts/routes.js',
         'public/scripts/filters.js',
