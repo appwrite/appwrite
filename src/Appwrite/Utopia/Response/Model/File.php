@@ -60,6 +60,18 @@ class File extends Model
                 'default' => 0,
                 'example' => 17890,
             ])
+            ->addRule('totalChunks', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total number of chunks available',
+                'default' => 0,
+                'example' => 17890,
+            ])
+            ->addRule('uploadedChunks', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total number of chunks uploaded',
+                'default' => 0,
+                'example' => 17890,
+            ])
         ;
     }
 

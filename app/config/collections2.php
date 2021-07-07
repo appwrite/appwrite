@@ -625,6 +625,26 @@ $collections = [
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                '$id' => 'totalChunks',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'uploadedChunks',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [

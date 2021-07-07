@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "14172d7cbfa5a5b7353d3f8b24e44b81",
+    "content-hash": "8c63d8df231b87f77b8ee5b8e10242bc",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2337,17 +2337,11 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.5.0",
+            "version": "dev-feat-large-file-support",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/storage.git",
-                "reference": "92ae20c7a2ac329f573a58a82dc245134cc63408"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/92ae20c7a2ac329f573a58a82dc245134cc63408",
-                "reference": "92ae20c7a2ac329f573a58a82dc245134cc63408",
-                "shasum": ""
+                "url": "https://github.com/utopia-php/storage",
+                "reference": "2e910d935c29cef80ee71b004bcd20dc2e219501"
             },
             "require": {
                 "php": ">=7.4",
@@ -2363,7 +2357,6 @@
                     "Utopia\\Storage\\": "src/Storage"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -2381,11 +2374,7 @@
                 "upf",
                 "utopia"
             ],
-            "support": {
-                "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.5.0"
-            },
-            "time": "2021-04-15T16:43:12+00:00"
+            "time": "2021-07-07T08:29:23+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -6235,7 +6224,8 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "utopia-php/abuse": 20,
-        "utopia-php/audit": 20
+        "utopia-php/audit": 20,
+        "utopia-php/storage": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
