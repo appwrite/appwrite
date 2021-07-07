@@ -1,35 +1,38 @@
 <?php
 
-use Utopia\App;
-use Utopia\CLI\Console;
-use Utopia\Config\Config;
-use Utopia\Domains\Domain;
 use Appwrite\Database\Database;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\CNAME;
+use Appwrite\Resque\Worker;
+use Utopia\App;
+use Utopia\CLI\Console;
+use Utopia\Config\Config;
+use Utopia\Domains\Domain;
 
-require_once __DIR__.'/../init.php';
+require_once __DIR__.'/../workers.php';
 
 Console::title('Certificates V1 Worker');
-
 Console::success(APP_NAME.' certificates worker v1 has started');
 
-class CertificatesV1
+class CertificatesV1 extends Worker
 {
     public $args = [];
 
-    public function setUp(): void
+    public function init(): void
     {
     }
 
-    public function perform()
+    public function run(): void
     {
         global $register;
 
+        $db = $register->get('db');
+        $cache = $register->get('cache');
+
         $consoleDB = new Database();
-        $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+        $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
         $consoleDB->setNamespace('app_console'); // Main DB
         $consoleDB->setMocks(Config::getParam('collections', []));
 
@@ -204,8 +207,7 @@ class CertificatesV1
         Authorization::reset();
     }
 
-    public function tearDown(): void
+    public function shutdown(): void
     {
-        // ... Remove environment for this job
     }
 }

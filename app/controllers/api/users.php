@@ -8,6 +8,7 @@ use Utopia\Validator\WhiteList;
 use Appwrite\Network\Validator\Email;
 use Utopia\Validator\Text;
 use Utopia\Validator\Range;
+use Utopia\Validator\Boolean;
 use Utopia\Audit\Audit;
 use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 use Appwrite\Auth\Auth;
@@ -231,18 +232,18 @@ App::get('/v1/users/:userId/logs')
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('userId', '', new UID(), 'User unique ID.')
     ->inject('response')
-    ->inject('register')
     ->inject('project')
     ->inject('projectDB')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function ($userId, $response, $register, $project, $projectDB, $locale, $geodb) {
+    ->inject('app')
+    ->action(function ($userId, $response, $project, $projectDB, $locale, $geodb, $app) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Registry\Registry $register */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
+        /** @var Utopia\App $app */
         
         $user = $projectDB->getDocument($userId);
 
@@ -250,7 +251,7 @@ App::get('/v1/users/:userId/logs')
             throw new Exception('User not found', 404);
         }
 
-        $adapter = new AuditAdapter($register->get('db'));
+        $adapter = new AuditAdapter($app->getResource('db'));
         $adapter->setNamespace('app_'.$project->getId());
 
         $audit = new Audit($adapter);
@@ -360,6 +361,43 @@ App::patch('/v1/users/:userId/status')
 
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
             'status' => (int)$status,
+        ]));
+
+        if (false === $user) {
+            throw new Exception('Failed saving user to DB', 500);
+        }
+
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::patch('/v1/users/:userId/verification')
+    ->desc('Update Email Verification')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.update.verification')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'updateVerification')
+    ->label('sdk.description', '/docs/references/users/update-user-verification.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('emailVerification', false, new Boolean(), 'User Email Verification Status.')
+    ->inject('response')
+    ->inject('projectDB')
+    ->action(function ($userId, $emailVerification, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+
+        $user = $projectDB->getDocument($userId);
+
+        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            throw new Exception('User not found', 404);
+        }
+
+        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
+            'emailVerification' => $emailVerification,
         ]));
 
         if (false === $user) {

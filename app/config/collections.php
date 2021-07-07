@@ -781,6 +781,14 @@ $collections = [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Version',
+                'key' => 'version',
+                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
+                'default' => '',
+                'required' => true,
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Webhooks',
                 'key' => 'webhooks',
                 'type' => Database::SYSTEM_VAR_TYPE_DOCUMENT,
@@ -1481,8 +1489,8 @@ $collections = [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Env',
-                'key' => 'env',
+                'label' => 'Runtime',
+                'key' => 'runtime',
                 'type' => Database::SYSTEM_VAR_TYPE_TEXT,
                 'default' => '',
                 'required' => false,
