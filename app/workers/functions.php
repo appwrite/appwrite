@@ -6,13 +6,15 @@ use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
+use Appwrite\Resque\Worker;
+use Appwrite\Utopia\Response\Model\Execution;
 use Cron\CronExpression;
 use Swoole\Runtime;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 
-require_once __DIR__.'/../init.php';
+require_once __DIR__.'/../workers.php';
 
 Runtime::enableCoroutine(0);
 
@@ -70,9 +72,6 @@ Console::success('Finished warmup in '.$warmupTime.' seconds');
 $stdout = '';
 $stderr = '';
 
-$exitCode = Console::execute('docker ps --all --format "name={{.Names}}&status={{.Status}}&labels={{.Labels}}" --filter label=appwrite-type=function'
-    , '', $stdout, $stderr, 30);
-
 $executionStart = \microtime(true);
 
 $exitCode = Console::execute('docker ps --all --format "name={{.Names}}&status={{.Status}}&labels={{.Labels}}" --filter label=appwrite-type=function'
@@ -125,19 +124,22 @@ Console::info(count($list)." functions listed in " . ($executionEnd - $execution
 
 //TODO aviod scheduled execution if delay is bigger than X offest
 
-class FunctionsV1
+class FunctionsV1 extends Worker
 {
     public $args = [];
 
     public $allowed = [];
 
-    public function setUp(): void
+    public function init(): void
     {
     }
 
-    public function perform()
+    public function run(): void
     {
         global $register;
+
+        $db = $register->get('db');
+        $cache = $register->get('cache');
 
         $projectId = $this->args['projectId'] ?? '';
         $functionId = $this->args['functionId'] ?? '';
@@ -152,7 +154,7 @@ class FunctionsV1
         $jwt = $this->args['jwt'] ?? '';
 
         $database = new Database();
-        $database->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+        $database->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
         $database->setNamespace('app_'.$projectId);
         $database->setMocks(Config::getParam('collections', []));
 
@@ -330,12 +332,12 @@ class FunctionsV1
         
         Authorization::reset();
 
-        $runtime = (isset($runtimes[$function->getAttribute('env', '')]))
-            ? $runtimes[$function->getAttribute('env', '')]
+        $runtime = (isset($runtimes[$function->getAttribute('runtime', '')]))
+            ? $runtimes[$function->getAttribute('runtime', '')]
             : null;
 
         if(\is_null($runtime)) {
-            throw new Exception('Environment "'.$function->getAttribute('env', '').' is not supported');
+            throw new Exception('Runtime "'.$function->getAttribute('runtime', '').' is not supported');
         }
 
         $vars = \array_merge($function->getAttribute('vars', []), [
@@ -365,7 +367,7 @@ class FunctionsV1
         // Env vars for Docker CLI commands
         \array_walk($vars, function (&$value, $key) {
             $key = $this->filterEnvKey($key);
-            $value = \escapeshellarg((empty($value)) ? 'null' : $value);
+            $value = \escapeshellarg((empty($value)) ? '' : $value);
             $value = "--env {$key}={$value}";
         });
 
@@ -615,6 +617,7 @@ class FunctionsV1
             throw new Exception('Failed saving execution to DB', 500);
         }
 
+        $executionModel = new Execution();
         $executionUpdate = new Event('v1-webhooks', 'WebhooksV1');
 
         $executionUpdate
@@ -622,17 +625,7 @@ class FunctionsV1
             ->setParam('userId', $userId)
             ->setParam('webhooks', $webhooks)
             ->setParam('event', 'functions.executions.update')
-            ->setParam('eventData', [
-                '$id' => $execution['$id'],
-                'functionId' => $execution['functionId'],
-                'dateCreated' => $execution['dateCreated'],
-                'trigger' => $execution['trigger'],
-                'status' => $execution['status'],
-                'exitCode' => $execution['exitCode'],
-                'stdout' => $execution['stdout'],
-                'stderr' => $execution['stderr'],
-                'time' => $execution['time']
-            ]);
+            ->setParam('eventData', $execution->getArrayCopy(array_keys($executionModel->getRules())));
 
         $executionUpdate->trigger();
 
@@ -715,7 +708,7 @@ class FunctionsV1
         return $output;
     }
 
-    public function tearDown(): void
+    public function shutdown(): void
     {
     }
 }

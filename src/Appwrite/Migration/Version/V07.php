@@ -13,7 +13,6 @@ class V07 extends Migration
 {
     public function execute(): void
     {
-        $db = $this->db;
         $project = $this->project;
         Console::log('Migrating project: ' . $project->getAttribute('name') . ' (' . $project->getId() . ')');
 

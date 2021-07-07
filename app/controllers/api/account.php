@@ -254,9 +254,13 @@ App::post('/v1/account/sessions')
 
         $countries = $locale->getText('countries');
 
+        $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
+        ? $countries[strtoupper($session->getAttribute('countryCode'))]
+        : $locale->getText('locale.country.unknown');
+
         $session
             ->setAttribute('current', true)
-            ->setAttribute('countryName', (isset($countries[strtoupper($session->getAttribute('countryCode'))])) ? $countries[strtoupper($session->getAttribute('countryCode'))] : $locale->getText('locale.country.unknown'))
+            ->setAttribute('countryName', $countryName)
         ;
         
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -753,9 +757,13 @@ App::post('/v1/account/sessions/anonymous')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
+        $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
+        ? $countries[strtoupper($session->getAttribute('countryCode'))]
+        : $locale->getText('locale.country.unknown');
+
         $session
             ->setAttribute('current', true)
-            ->setAttribute('countryName', (isset($countries[$session->getAttribute('countryCode')])) ? $countries[$session->getAttribute('countryCode')] : $locale->getText('locale.country.unknown'))
+            ->setAttribute('countryName', $countryName)
         ;
 
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -878,9 +886,11 @@ App::get('/v1/account/sessions')
         foreach ($sessions as $key => $session) { 
             /** @var Document $session */
 
-            $session->setAttribute('countryName', (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
-                ? $countries[strtoupper($session->getAttribute('countryCode'))]
-                : $locale->getText('locale.country.unknown'));
+            $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
+            ? $countries[strtoupper($session->getAttribute('countryCode'))]
+            : $locale->getText('locale.country.unknown');
+
+            $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', ($current == $session->getId()) ? true : false);
 
             $sessions[$key] = $session;
@@ -904,19 +914,20 @@ App::get('/v1/account/logs')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->inject('response')
-    ->inject('register')
     ->inject('project')
     ->inject('user')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function ($response, $register, $project, $user, $locale, $geodb) {
+    ->inject('app')
+    ->action(function ($response, $project, $user, $locale, $geodb, $app) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
+        /** @var Utopia\App $app */
 
-        $adapter = new AuditAdapter($register->get('db'));
+        $adapter = new AuditAdapter($app->getResource('db'));
         $adapter->setNamespace('app_'.$project->getId());
 
         $audit = new Audit($adapter);
@@ -966,6 +977,47 @@ App::get('/v1/account/logs')
         }
 
         $response->dynamic(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
+    });
+
+App::get('/v1/account/sessions/:sessionId')
+    ->desc('Get Session By ID')
+    ->groups(['api', 'account'])
+    ->label('scope', 'account')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'getSession')
+    ->label('sdk.description', '/docs/references/account/get-session.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SESSION)
+    ->param('sessionId', null, new UID(), 'Session unique ID. Use the string \'current\' to get the current device session.')
+    ->inject('response')
+    ->inject('user')
+    ->inject('locale')
+    ->inject('projectDB')
+    ->action(function ($sessionId, $response, $user, $locale, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Locale\Locale $locale */
+        /** @var Appwrite\Database\Database $projectDB */
+
+        $sessionId = ($sessionId === 'current')
+        ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
+        : $sessionId;
+
+        $session = $projectDB->getDocument($sessionId); // get user by session ID
+
+        if ($session->isEmpty() || Database::SYSTEM_COLLECTION_SESSIONS != $session->getCollection()) {
+            throw new Exception('Session not found', 404);
+        };
+        
+        $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
+        ? $countries[strtoupper($session->getAttribute('countryCode'))]
+        : $locale->getText('locale.country.unknown');
+
+        $session->setAttribute('countryName', $countryName);
+
+        $response->dynamic($session, Response::MODEL_SESSION);
     });
 
 App::patch('/v1/account/name')
@@ -1438,6 +1490,8 @@ App::post('/v1/account/recovery')
             throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
         }
 
+        $expire = \time() + Auth::TOKEN_EXPIRATION_RECOVERY;
+
         $secret = Auth::tokenGenerator();
         $recovery = new Document([
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
@@ -1445,7 +1499,7 @@ App::post('/v1/account/recovery')
             'userId' => $profile->getId(),
             'type' => Auth::TOKEN_TYPE_RECOVERY,
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-            'expire' => \time() + Auth::TOKEN_EXPIRATION_RECOVERY,
+            'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
         ]);
@@ -1467,7 +1521,7 @@ App::post('/v1/account/recovery')
         }
 
         $url = Template::parseURL($url);
-        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret]);
+        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
         $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
@@ -1475,17 +1529,16 @@ App::post('/v1/account/recovery')
         $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
 
         $body
-            ->setParam('{{content}}', $content->render())
+            ->setParam('{{content}}', $content->render(false))
             ->setParam('{{cta}}', $cta->render())
             ->setParam('{{title}}', $locale->getText('account.emails.recovery.title'))
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
             ->setParam('{{name}}', $profile->getAttribute('name'))
             ->setParam('{{redirect}}', $url)
-            ->setParam('{{bg-body}}', '#f6f6f6')
+            ->setParam('{{bg-body}}', '#f7f7f7')
             ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{bg-cta}}', '#3498db')
-            ->setParam('{{bg-cta-hover}}', '#34495e')
+            ->setParam('{{bg-cta}}', '#073b4c')
             ->setParam('{{text-content}}', '#000000')
             ->setParam('{{text-cta}}', '#ffffff')
         ;
@@ -1641,6 +1694,8 @@ App::post('/v1/account/verification')
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $verificationSecret = Auth::tokenGenerator();
+
+        $expire = \time() + Auth::TOKEN_EXPIRATION_CONFIRM;
         
         $verification = new Document([
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
@@ -1648,7 +1703,7 @@ App::post('/v1/account/verification')
             'userId' => $user->getId(),
             'type' => Auth::TOKEN_TYPE_VERIFICATION,
             'secret' => Auth::hash($verificationSecret), // One way hash encryption to protect DB leak
-            'expire' => \time() + Auth::TOKEN_EXPIRATION_CONFIRM,
+            'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
         ]);
@@ -1668,9 +1723,9 @@ App::post('/v1/account/verification')
         if (false === $user) {
             throw new Exception('Failed to save user to DB', 500);
         }
-        
+
         $url = Template::parseURL($url);
-        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret]);
+        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
         $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
@@ -1678,17 +1733,16 @@ App::post('/v1/account/verification')
         $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
 
         $body
-            ->setParam('{{content}}', $content->render())
+            ->setParam('{{content}}', $content->render(false))
             ->setParam('{{cta}}', $cta->render())
             ->setParam('{{title}}', $locale->getText('account.emails.verification.title'))
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
             ->setParam('{{name}}', $user->getAttribute('name'))
             ->setParam('{{redirect}}', $url)
-            ->setParam('{{bg-body}}', '#f6f6f6')
+            ->setParam('{{bg-body}}', '#f7f7f7')
             ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{bg-cta}}', '#3498db')
-            ->setParam('{{bg-cta-hover}}', '#34495e')
+            ->setParam('{{bg-cta}}', '#073b4c')
             ->setParam('{{text-content}}', '#000000')
             ->setParam('{{text-cta}}', '#ffffff')
         ;

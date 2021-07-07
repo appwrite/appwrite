@@ -74,6 +74,7 @@ App::post('/v1/projects')
                 'legalAddress' => $legalAddress,
                 'legalTaxId' => $legalTaxId,
                 'teamId' => $team->getId(),
+                'version' => APP_VERSION_STABLE,
                 'platforms' => [],
                 'webhooks' => [],
                 'keys' => [],
