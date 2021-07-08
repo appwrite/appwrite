@@ -640,30 +640,29 @@ class FunctionsV1 extends Worker
             \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
             \curl_setopt($ch, CURLOPT_POST, 1);
 
-            $body = array(
+            $killBody = array(
                 "Cmd" => array("kill", "{$execPid}"),
                 "AttachStdout" => true,
                 "AttachStderr" => true
             );
             \curl_setopt($ch, CURLOPT_POSTFIELDS, \json_encode($body));
 
-            $headers = [
+            $killHeaders = [
                 'Content-Type: application/json',
                 'Content-Length: ' . \strlen(\json_encode($body))
             ];
-            \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            \curl_setopt($ch, CURLOPT_HTTPHEADER, $killHeaders);
 
-            $result = \curl_exec($ch);
-            $resultParsed = \json_decode($result, true);
-            $execId = $resultParsed['Id'];
+            $killResult = \curl_exec($ch);
+            $killResultParsed = \json_decode($result, true);
     
             if (\curl_errno($ch)) {
-                throw new Exception('Failed to create execution: ' . \curl_error($ch), 500);
+                throw new Exception('Failed to kill stray process: ' . \curl_error($ch), 500);
             }
 
-            $responseCode = \curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+            $killResponseCode = \curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
 
-            if ($responseCode !== 201) {
+            if ($killResponseCode !== 201) {
                 $data = json_decode($response, true);
                 if (isset($data['message'])) {
                     Console::error('Failed to kill stray process: '.$data["message"]);
@@ -671,6 +670,8 @@ class FunctionsV1 extends Worker
                     Console::error('Failed to kill stray process: Internal Docker Error');
                 }
             }
+
+            \curl_close($ch);
 
             // Execute kill process
             /*
@@ -686,11 +687,11 @@ class FunctionsV1 extends Worker
             \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
             \curl_setopt($ch, CURLOPT_TIMEOUT, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
 
-            $headers = [
+            $killHeaders = [
                 'Content-Type: application/json',
                 'Content-Length: 2',
             ];
-            \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            \curl_setopt($ch, CURLOPT_HTTPHEADER, $killHeaders);
 
             /*
              * Exec logs come back with STDOUT+STDERR multiplexed into a single stream.
@@ -707,27 +708,24 @@ class FunctionsV1 extends Worker
              *   - concat to stream
              */
 
-            $stdout = '';
-            $stderr = '';
-
-            $callback = function ($ch, $str) use (&$stdout, &$stderr) {
+            $killCallback = function ($ch, $str) use (&$killStdout, &$killStderr) {
                 $rawStream = unpack('C*', $str);
                 $stream = $rawStream[1]; // 1-based index, not 0-based
                 switch ($stream) { // only 1 or 2, as set while creating exec 
                     case 1:
                         $packed = pack('C*', ...\array_slice($rawStream, 8));
-                        $stdout .= $packed;
+                        $killStdout .= $packed;
                         break;
                     case 2:
                         $packed = pack('C*', ...\array_slice($rawStream, 8));
-                        $stderr .= $packed;
+                        $killStderr .= $packed;
                         break;
                 }
                 return strlen($str); // must return full frame from callback
             };
-            \curl_setopt($ch, CURLOPT_WRITEFUNCTION, $callback);
+            \curl_setopt($ch, CURLOPT_WRITEFUNCTION, $killCallback);
 
-            $execData = \curl_exec($ch);
+            $killExecData = \curl_exec($ch);
 
             $exitCode = 1; // 124 is Arbitrary, but borrowed from linux timeout EXIT_TIMEDOUT
         }
