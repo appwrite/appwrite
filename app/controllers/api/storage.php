@@ -287,9 +287,9 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
         $file = $request->getFiles('file');
 
-        /*
-     * Validators
-     */
+        /**
+         * Validators
+         */
         $allowedFileExtensions = $bucket->getAttribute('allowedFileExtensions', []);
         $fileExt = new FileExt($allowedFileExtensions);
 
@@ -365,7 +365,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         // Save to storage
         $size = $size ?? $device->getFileSize($fileTmpName);
         $path = $device->getPath($uploadId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
-        $path = $bucket->getId() . $path;
+        $path = str_ireplace($device->getRoot(), $device->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path);
 
         $file = $dbForInternal->getDocument('files', $uploadId);
 
@@ -395,21 +395,23 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
 
             // Compression
-            $data = $device->read($path);
-            if ($size <= APP_LIMIT_COMPRESSION) {
-                $compressor = new GZIP();
-                $data = $compressor->compress($data);
+            if($size <= APP_LIMIT_COMPRESSION || $size <= APP_LIMIT_ENCRYPTION) {
+                $data = $device->read($path);
+                if ($size <= APP_LIMIT_COMPRESSION) {
+                    $compressor = new GZIP();
+                    $data = $compressor->compress($data);
+                }
+    
+                if ($bucket->getAttribute('encryption', true) && $size <= APP_LIMIT_ENCRYPTION) {
+                    $key = App::getEnv('_APP_OPENSSL_KEY_V1');
+                    $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+                    $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
+                }
+                if (!$device->write($path, $data, $mimeType)) {
+                    throw new Exception('Failed to save file', 500);
+                }
             }
 
-            if ($bucket->getAttribute('encryption', true) && $size <= APP_LIMIT_ENCRYPTION) {
-                $key = App::getEnv('_APP_OPENSSL_KEY_V1');
-                $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-                $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
-            }
-
-            if (!$device->write($path, $data, $mimeType)) {
-                throw new Exception('Failed to save file', 500);
-            }
 
             $sizeActual = $device->getFileSize($path);
 
@@ -975,6 +977,8 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
             if (!$dbForInternal->deleteDocument('files', $fileId)) {
                 throw new Exception('Failed to remove file from DB', 500);
             }
+        } else {
+            throw new Exception('Failed to delete file from device', 500);
         }
 
         $audits
