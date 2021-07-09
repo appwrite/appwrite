@@ -128,9 +128,9 @@ Below is a list of currently supported platforms and languages. If you wish to h
 * ✅  &nbsp; [PHP](https://github.com/appwrite/sdk-for-php) (Maintained by the Appwrite Team)
 * ✅  &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart) **Beta** (Maintained by the Appwrite Team)
 * ✅  &nbsp; [Deno](https://github.com/appwrite/sdk-for-deno) - **Beta** (Maintained by the Appwrite Team)
-* ✅  &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby) - **Beta** (Maintained by the Appwrite Team)
-* ✅  &nbsp; [Python](https://github.com/appwrite/sdk-for-python) - **Beta** (Maintained by the Appwrite Team)
-* ✅  &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin) (Maintained by the Appwrite Team)
+* ✅  &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby) (Maintained by the Appwrite Team)
+* ✅  &nbsp; [Python](https://github.com/appwrite/sdk-for-python) (Maintained by the Appwrite Team)
+* ✅  &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin) - **Beta** (Maintained by the Appwrite Team)
 * ✅  &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet) - **Experimental** (Maintained by the Appwrite Team)
 
 Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
