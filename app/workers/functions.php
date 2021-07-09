@@ -32,17 +32,59 @@ Co\run(function() use ($runtimes) {  // Warmup: make sure images are ready to ru
 
     $dockerUser = App::getEnv('DOCKERHUB_PULL_USERNAME', null);
     $dockerPass = App::getEnv('DOCKERHUB_PULL_PASSWORD', null);
+    $dockerEmail = App::getEnv('DOCKERHUB_PULL_EMAIL', null);
+    $dockerToken = null;
 
     if($dockerUser) {
         $stdout = '';
         $stderr = '';
 
-        Console::execute('docker login --username '.$dockerUser.' --password-stdin', $dockerPass, $stdout, $stderr);
-        Console::log('Docker Login'. $stdout.$stderr);
+        //Console::execute('docker login --username '.$dockerUser.' --password-stdin', $dockerPass, $stdout, $stderr);
+        //Console::log('Docker Login'. $stdout.$stderr);
+
+        /**
+         * Login to Docker Hub
+         */
+
+        $ch = \curl_init();
+        \curl_setopt($ch, CURLOPT_URL, "http://localhost/auth");
+        \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        \curl_setopt($ch, CURLOPT_POST, 1);
+
+        $body = array(
+            "username" => $dockerUser,
+            "password" => $dockerPass
+        );
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, \json_encode($body));
+
+        $headers = [
+            'Content-Type: application/json',
+            'Content-Length: ' . \strlen(\json_encode($body))
+        ];
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $result = \curl_exec($ch);
+        $responseCode = \curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+
+        if ($responseCode == 204 || $responseCode == 200) {
+            Console::info("Successfully authenticated as {$dockerUser}!");
+
+            $TokenData = array(
+                "username" => $dockerUser,
+                "password" => $dockerPass,
+                "auth" => "",
+                "email" => $dockerEmail
+            );
+
+            $dockerToken = base64_encode(json_encode($TokenData));
+        } else {
+            Console::error('Failed to sign in to Docker Hub. Please check your login credentials and try again!');
+        }
     }
 
     foreach($runtimes as $runtime) {
-        go(function() use ($runtime) {        
+        go(function() use ($runtime, $dockerToken) {       
             Console::info('Warming up '.$runtime['name'].' '.$runtime['version'].' environment...');
         
             /*
@@ -59,12 +101,31 @@ Co\run(function() use ($runtimes) {  // Warmup: make sure images are ready to ru
             );
 
             \curl_setopt($ch, CURLOPT_POSTFIELDS, \http_build_query($body));
+
+            if ($dockerToken) {
+                $headers = array (
+                    "X-Registry-Auth: " . $dockerToken
+                );
+
+                \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            };
     
             $response = \curl_exec($ch);
-            var_dump($response);
+            $JSONChunks = \explode("\n", $response);
+
+            foreach($JSONChunks as $chunk) {
+                try {
+                    $ParsedChunk = \json_decode($chunk, true);
+                    if (isset($ParsedChunk['status'])) {
+                        Console::log(\strval($ParsedChunk['status']));
+                    }
+                } catch (Exception $e) {
+                    Console::error("Something went wrong processing a Docker Status Message: {$e}");
+                }
+            }
 
             if (\curl_getinfo($ch, CURLINFO_RESPONSE_CODE) !== 200) {
-                $data = json_decode($response, true);
+                $data = \json_decode($response, true);
                 if (isset($data['message'])) {
                     Console::error('Something went wrong warming up the: '.$runtime['name'].' '.$runtime['version'].' Enviroment. Error: '.$data["message"]);
                 } else {
@@ -90,7 +151,8 @@ $executionStart = \microtime(true);
  * Get containers running
  */
 $body = array(
-    "filters" => json_encode(array('label' => array('appwrite-type=function')))
+    "filters" => json_encode(array('label' => array('appwrite-type=function'))),
+    "all" => true
 );
 
 $ch = \curl_init();
@@ -99,7 +161,7 @@ $ch = \curl_init();
 \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     
 $response = \curl_exec($ch);
-$responseCode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+$responseCode = \curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
 $list = [];
 
 \array_map(function($value) use (&$list) {
@@ -645,11 +707,11 @@ class FunctionsV1 extends Worker
                 "AttachStdout" => true,
                 "AttachStderr" => true
             );
-            \curl_setopt($ch, CURLOPT_POSTFIELDS, \json_encode($body));
+            \curl_setopt($ch, CURLOPT_POSTFIELDS, \json_encode($killBody));
 
             $killHeaders = [
                 'Content-Type: application/json',
-                'Content-Length: ' . \strlen(\json_encode($body))
+                'Content-Length: ' . \strlen(\json_encode($killBody))
             ];
             \curl_setopt($ch, CURLOPT_HTTPHEADER, $killHeaders);
 
