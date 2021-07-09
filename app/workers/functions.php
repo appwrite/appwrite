@@ -36,12 +36,6 @@ Co\run(function() use ($runtimes) {  // Warmup: make sure images are ready to ru
     $dockerToken = null;
 
     if($dockerUser) {
-        $stdout = '';
-        $stderr = '';
-
-        //Console::execute('docker login --username '.$dockerUser.' --password-stdin', $dockerPass, $stdout, $stderr);
-        //Console::log('Docker Login'. $stdout.$stderr);
-
         /**
          * Login to Docker Hub
          */
@@ -694,8 +688,6 @@ class FunctionsV1 extends Worker
         $killStdout = '';
         $killStderr = '';
         if ($timedout) {
-            // $killProcess = Console::execute("docker exec {$container} kill {$execPid}",'', $killStdout, $killStderr, 900);
-
             $ch = \curl_init();
             \curl_setopt($ch, CURLOPT_URL, "http://localhost/containers/{$container}/exec");
             \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
