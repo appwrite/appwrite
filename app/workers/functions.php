@@ -513,27 +513,94 @@ class FunctionsV1 extends Worker
             $cpus = App::getEnv('_APP_FUNCTIONS_CPUS', '');
             $memory = App::getEnv('_APP_FUNCTIONS_MEMORY', '');
             $swap = App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '');
-            $exitCode = Console::execute("docker run ".
-                " -d".
-                " --entrypoint=\"\"".
-                (empty($cpus) ? "" : (" --cpus=".$cpus)).
-                (empty($memory) ? "" : (" --memory=".$memory."m")).
-                (empty($swap) ? "" : (" --memory-swap=".$swap."m")).
-                " --name={$container}".
-                " --label appwrite-type=function".
-                " --label appwrite-created={$executionTime}".
-                " --volume {$tagPathTargetDir}:/tmp:rw".
-                " --workdir /usr/local/src".
-                " ".\implode(" ", $vars).
-                " {$runtime['image']}".
-                " sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'"
-            , '', $stdout, $stderr, 30);
+            // $exitCode = Console::execute("docker run ".
+            //     " -d".
+            //     " --entrypoint=\"\"".
+            //     (empty($cpus) ? "" : (" --cpus=".$cpus)).
+            //     (empty($memory) ? "" : (" --memory=".$memory."m")).
+            //     (empty($swap) ? "" : (" --memory-swap=".$swap."m")).
+            //     " --name={$container}".
+            //     " --label appwrite-type=function".
+            //     " --label appwrite-created={$executionTime}".
+            //     " --volume {$tagPathTargetDir}:/tmp:rw".
+            //     " --workdir /usr/local/src".
+            //     " ".\implode(" ", $vars).
+            //     " {$runtime['image']}".
+            //     " sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'"
+            // , '', $stdout, $stderr, 30);
+
+            /*
+             * Create container via Docker API
+             */
+            $ch = \curl_init();
+            \curl_setopt($ch, CURLOPT_URL, "http://localhost/containers/create?name={$container}");
+            \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
+            \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            \curl_setopt($ch, CURLOPT_POST, 1);
+
+            $body = array(
+                "Entrypoint" => "",
+                "Image" => $runtime['image'],
+                "Cmd" => array(
+                    "/bin/sh",
+                    "-c",
+                    'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'
+                ),
+                "Labels" => array(
+                    "appwrite-type"=>"function",
+                    "appwrite-created"=>"{$executionTime}"
+                ),
+                "WorkingDir" => "/usr/local/src",
+                "HostConfig" => array(
+                    "Binds" => array(
+                        "{$tagPathTargetDir}:/tmp"
+                    ),
+                    "CpuQuota" => floatval($cpus) * 100000,
+                    "CpuPeriod" => 100000,
+                    "Memory" => intval($memory) * 1e+6, // Convert into bytes
+                    "MemorySwap" => intval($swap) * 1e+6 // Convert into bytes
+                ),
+            );
+
+            \curl_setopt($ch, CURLOPT_POSTFIELDS, \json_encode($body));
+
+            $headers = [
+                'Content-Type: application/json',
+                'Content-Length: ' . \strlen(\json_encode($body))
+            ];
+            \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+            $result = \curl_exec($ch);
+
+            $responseCode = \curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+
+            if ($responseCode !== 201) {
+                throw new Exception("Failed to create function environment: {$result} Response Code: {$responseCode}");
+            }
+
+            \curl_close($ch);
+
+            $parsedResponse = \json_decode($result, true);
+
+            // Run created container
+            $ch = \curl_init();
+            \curl_setopt($ch, CURLOPT_URL, "http://localhost/containers/{$parsedResponse['Id']}/start");
+            \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
+            \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            \curl_setopt($ch, CURLOPT_POST, 1);
+            \curl_setopt($ch, CURLOPT_POSTFIELDS, null);
+
+            $result = \curl_exec($ch);
+
+            $responseCode = \curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+
+            if ($responseCode !== 204 && $responseCode !== 304) {
+                throw new Exception("Failed to create function environment: {$result} Response Code: {$responseCode}");
+            }
+
+            \curl_close($ch);
 
             $executionEnd = \microtime(true);
-    
-            if($exitCode !== 0) {
-                throw new Exception('Failed to create function environment: '.$stderr);
-            }
 
             $list[$container] = [
                 'name' => $container,
@@ -545,7 +612,7 @@ class FunctionsV1 extends Worker
                 ],
             ];
 
-            Console::info("Function created in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
+            Console::info("Function created in " . ($executionEnd - $executionStart) . " seconds with response code {$responseCode}");
         }
         else {
             Console::info('Container is ready to run');
@@ -575,7 +642,15 @@ class FunctionsV1 extends Worker
         \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         $result = \curl_exec($ch);
+
+        $responseCode = \curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+
+        if ($responseCode !== 201) {
+            throw new Exception("Failed to create function environment: {$result} Response Code: {$responseCode}");
+        }
+
         $resultParsed = \json_decode($result, true);
+
         $execId = $resultParsed['Id'];
 
         if (\curl_errno($ch)) {
