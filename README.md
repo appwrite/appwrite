@@ -15,7 +15,7 @@
 [![Build Status](https://img.shields.io/travis/com/appwrite/appwrite?style=flat-square)](https://travis-ci.com/appwrite/appwrite)
 [![Twitter Account](https://img.shields.io/twitter/follow/appwrite_io?color=00acee&label=twitter&style=flat-square)](https://twitter.com/appwrite_io)
 
-[**Appwrite 0.9 has been released! Learn what's new!**](https://dev.to/appwrite/announcing-appwrite-0-8-an-open-source-self-hosted-baas-kda)
+[**Appwrite 0.9 has been released! Learn what's new!**](https://dev.to/appwrite/announcing-appwrite-0-9-the-open-source-firebase-alternative-53ho)
 
 Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker<nobr> microservices. Appwrite abstracts the complexity and repetitiveness required to build a modern backend API from scratch and allows you to build secure apps faster.
 
