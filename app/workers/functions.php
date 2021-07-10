@@ -337,7 +337,7 @@ class FunctionsV1 extends Worker
             : null;
 
         if(\is_null($runtime)) {
-            throw new Exception('Runtime "'.$function->getAttribute('runtime', '').' is not supported');
+            throw new Exception('Runtime "'.$function->getAttribute('runtime', '').'" is not supported');
         }
 
         $vars = \array_merge($function->getAttribute('vars', []), [
