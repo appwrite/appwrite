@@ -14,6 +14,9 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
 
 FROM php:8.0-cli-alpine as step1
 
+ARG TESTING=false
+ENV TESTING=$TESTING
+
 ENV PHP_REDIS_VERSION=5.3.4 \
     PHP_SWOOLE_VERSION=v4.6.7 \
     PHP_IMAGICK_VERSION=3.5.0 \
@@ -75,11 +78,25 @@ RUN \
   make && make install && \
   cd ../..
 
+## Swoole Debugger setup
+RUN if [ "$TESTING" == "true" ]; then \
+    cd /tmp && \
+    apk add boost-dev && \
+    git clone --depth 1 https://github.com/swoole/yasd && \
+    cd yasd && \
+    phpize && \
+    ./configure && \
+    make && make install && \
+    cd ..;\
+  fi
+
 FROM php:8.0-cli-alpine as final
 
 LABEL maintainer="team@appwrite.io"
 
 ARG VERSION=dev
+ARG TESTING=false
+ENV TESTING=$TESTING
 
 ENV _APP_SERVER=swoole \
     _APP_ENV=production \
@@ -160,10 +177,15 @@ RUN \
   && apk del .deps \
   && rm -rf /var/cache/apk/*
 
+RUN \
+  if [ "$TESTING" == "true" ]; then \
+    apk add boost boost-dev; \
+  fi
+
 WORKDIR /usr/src/code
 
 COPY --from=step0 /usr/local/src/vendor /usr/src/code/vendor
-COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yasd.so* /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yaml.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
@@ -218,7 +240,9 @@ RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
 RUN echo extension=imagick.so >> /usr/local/etc/php/conf.d/imagick.ini
 RUN echo extension=yaml.so >> /usr/local/etc/php/conf.d/yaml.ini
 RUN echo extension=maxminddb.so >> /usr/local/etc/php/conf.d/maxminddb.ini
+RUN if [ "$TESTING" == "true" ]; then printf 'zend_extension=yasd \nyasd.debug_mode=remote \nyasd.remote_host=192.168.1.64 \nyasd.remote_port=9005 \nyasd.log_level=0 \nyasd.breakpoints_file="yasd.log"' >> /usr/local/etc/php/conf.d/yasd.ini; fi
 
+RUN if [ "$TESTING" == "true" ]; then echo "opcache.enable=0" >> /usr/local/etc/php/conf.d/appwrite.ini; fi
 RUN echo "opcache.preload_user=www-data" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.preload=/usr/src/code/app/preload.php" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.enable_cli=1" >> /usr/local/etc/php/conf.d/appwrite.ini
