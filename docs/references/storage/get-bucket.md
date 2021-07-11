@@ -1,0 +1,1 @@
+Get a storage bucket by its unique ID. This endpoint response returns a JSON object with the storage bucket metadata.
