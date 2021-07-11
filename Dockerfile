@@ -14,8 +14,8 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
 
 FROM php:8.0-cli-alpine as step1
 
-ARG TESTING=false
-ENV TESTING=$TESTING
+ARG DEBUG=false
+ENV DEBUG=$DEBUG
 
 ENV PHP_REDIS_VERSION=5.3.4 \
     PHP_SWOOLE_VERSION=v4.6.7 \
@@ -79,7 +79,7 @@ RUN \
   cd ../..
 
 ## Swoole Debugger setup
-RUN if [ "$TESTING" == "true" ]; then \
+RUN if [ "$DEBUG" == "true" ]; then \
     cd /tmp && \
     apk add boost-dev && \
     git clone --depth 1 https://github.com/swoole/yasd && \
@@ -95,8 +95,8 @@ FROM php:8.0-cli-alpine as final
 LABEL maintainer="team@appwrite.io"
 
 ARG VERSION=dev
-ARG TESTING=false
-ENV TESTING=$TESTING
+ARG DEBUG=false
+ENV DEBUG=$DEBUG
 
 ENV _APP_SERVER=swoole \
     _APP_ENV=production \
@@ -178,7 +178,7 @@ RUN \
   && rm -rf /var/cache/apk/*
 
 RUN \
-  if [ "$TESTING" == "true" ]; then \
+  if [ "$DEBUG" == "true" ]; then \
     apk add boost boost-dev; \
   fi
 
@@ -240,9 +240,9 @@ RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
 RUN echo extension=imagick.so >> /usr/local/etc/php/conf.d/imagick.ini
 RUN echo extension=yaml.so >> /usr/local/etc/php/conf.d/yaml.ini
 RUN echo extension=maxminddb.so >> /usr/local/etc/php/conf.d/maxminddb.ini
-RUN if [ "$TESTING" == "true" ]; then printf "zend_extension=yasd \nyasd.debug_mode=remote \nyasd.init_file=/usr/local/dev/yasd_init.php \nyasd.remote_port=9005 \nyasd.log_level=-1" >> /usr/local/etc/php/conf.d/yasd.ini; fi
+RUN if [ "$DEBUG" == "true" ]; then printf "zend_extension=yasd \nyasd.debug_mode=remote \nyasd.init_file=/usr/local/dev/yasd_init.php \nyasd.remote_port=9005 \nyasd.log_level=-1" >> /usr/local/etc/php/conf.d/yasd.ini; fi
 
-RUN if [ "$TESTING" == "true" ]; then echo "opcache.enable=0" >> /usr/local/etc/php/conf.d/appwrite.ini; fi
+RUN if [ "$DEBUG" == "true" ]; then echo "opcache.enable=0" >> /usr/local/etc/php/conf.d/appwrite.ini; fi
 RUN echo "opcache.preload_user=www-data" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.preload=/usr/src/code/app/preload.php" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.enable_cli=1" >> /usr/local/etc/php/conf.d/appwrite.ini
