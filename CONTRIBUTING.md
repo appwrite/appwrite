@@ -282,6 +282,30 @@ docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7
 
 The Runtimes for all supported cloud functions (multicore builds) can be found at the [appwrite/php-runtimes](https://github.com/appwrite/php-runtimes) repository.
 
+## Debug
+
+Appwrite uses [yasd](https://github.com/swoole/yasd) debugger, which is available by default in debug build of Appwrite. You can connect to the debugger using VS Code [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension or if you are in PHP Storm you don't need any plugin. Below are the settings required for remote debugger connection.
+
+Finally you need to create an init file. Duplicate **dev/yasd_init.php.stub** file and name it **dev/yasd_init.php** and there change the IP address to your development machine's IP. Without the proper IP address debugger wont connect.
+
+### VS Code Launch Configuration
+
+```json
+{
+    "name": "Listen for Xdebug",
+    "type": "php",
+    "request": "launch",
+    "port": 9005,
+    "pathMappings": {
+        "/usr/src/code": "${workspaceRoot}"
+    },
+}
+```
+
+### PHPStorm Setup
+
+In settings, go to **Languages & Frameworks** > **PHP** > **Debug**, there under **Xdebug** set the debug port to **9005** and enable **can accept external connections** checkbox.
+
 ## Tests
 
 To run all tests manually, use the Appwrite Docker CLI from your terminal:

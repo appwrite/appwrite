@@ -240,7 +240,7 @@ RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
 RUN echo extension=imagick.so >> /usr/local/etc/php/conf.d/imagick.ini
 RUN echo extension=yaml.so >> /usr/local/etc/php/conf.d/yaml.ini
 RUN echo extension=maxminddb.so >> /usr/local/etc/php/conf.d/maxminddb.ini
-RUN if [ "$TESTING" == "true" ]; then printf 'zend_extension=yasd \nyasd.debug_mode=remote \nyasd.remote_host=192.168.1.64 \nyasd.remote_port=9005 \nyasd.log_level=0 \nyasd.breakpoints_file="yasd.log"' >> /usr/local/etc/php/conf.d/yasd.ini; fi
+RUN if [ "$TESTING" == "true" ]; then printf "zend_extension=yasd \nyasd.debug_mode=remote \nyasd.init_file=/usr/local/dev/yasd_init.php \nyasd.remote_port=9005 \nyasd.log_level=-1" >> /usr/local/etc/php/conf.d/yasd.ini; fi
 
 RUN if [ "$TESTING" == "true" ]; then echo "opcache.enable=0" >> /usr/local/etc/php/conf.d/appwrite.ini; fi
 RUN echo "opcache.preload_user=www-data" >> /usr/local/etc/php/conf.d/appwrite.ini
