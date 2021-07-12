@@ -32,31 +32,104 @@ Co\run(function() use ($runtimes) {  // Warmup: make sure images are ready to ru
 
     $dockerUser = App::getEnv('DOCKERHUB_PULL_USERNAME', null);
     $dockerPass = App::getEnv('DOCKERHUB_PULL_PASSWORD', null);
+    $dockerEmail = App::getEnv('DOCKERHUB_PULL_EMAIL', null);
+    $dockerToken = null;
 
     if($dockerUser) {
-        $stdout = '';
-        $stderr = '';
+        /**
+         * Login to Docker Hub
+         */
 
-        Console::execute('docker login --username '.$dockerUser.' --password-stdin', $dockerPass, $stdout, $stderr);
-        Console::log('Docker Login'. $stdout.$stderr);
+        $ch = \curl_init();
+        \curl_setopt($ch, CURLOPT_URL, "http://localhost/auth");
+        \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        \curl_setopt($ch, CURLOPT_POST, 1);
+
+        $body = array(
+            "username" => $dockerUser,
+            "password" => $dockerPass
+        );
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, \json_encode($body));
+
+        $headers = [
+            'Content-Type: application/json',
+            'Content-Length: ' . \strlen(\json_encode($body))
+        ];
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $result = \curl_exec($ch);
+        $responseCode = \curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+
+        if ($responseCode == 204 || $responseCode == 200) {
+            Console::info("Successfully authenticated as {$dockerUser}!");
+
+            $TokenData = array(
+                "username" => $dockerUser,
+                "password" => $dockerPass,
+                "auth" => "",
+                "email" => $dockerEmail
+            );
+
+            $dockerToken = base64_encode(json_encode($TokenData));
+        } else {
+            Console::error('Failed to sign in to Docker Hub. Please check your login credentials and try again!');
+        }
+
+        \curl_close($ch);
     }
 
     foreach($runtimes as $runtime) {
-        go(function() use ($runtime) {
-            $stdout = '';
-            $stderr = '';
-        
+        go(function() use ($runtime, $dockerToken) {       
             Console::info('Warming up '.$runtime['name'].' '.$runtime['version'].' environment...');
         
-            Console::execute('docker pull '.$runtime['image'], '', $stdout, $stderr);
-        
-            if(!empty($stdout)) {
-                Console::log($stdout);
+            /*
+             * Pull image using Docker API
+             */
+            $ch = \curl_init();
+            \curl_setopt($ch, CURLOPT_URL, "http://localhost/images/create");
+            \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
+            \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            \curl_setopt($ch, CURLOPT_POST, 1);
+            
+            $body = array(
+                "fromImage" => $runtime['image']
+            );
+
+            \curl_setopt($ch, CURLOPT_POSTFIELDS, \http_build_query($body));
+
+            if ($dockerToken) {
+                $headers = array (
+                    "X-Registry-Auth: " . $dockerToken
+                );
+
+                \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            };
+    
+            $response = \curl_exec($ch);
+            $JSONChunks = \explode("\n", $response);
+
+            foreach($JSONChunks as $chunk) {
+                try {
+                    $ParsedChunk = \json_decode($chunk, true);
+                    if (isset($ParsedChunk['status'])) {
+                        Console::log(\strval($ParsedChunk['status']));
+                    }
+                } catch (Exception $e) {
+                    Console::error("Something went wrong processing a Docker Status Message: {$e}");
+                }
             }
-        
-            if(!empty($stderr)) {
-                Console::error($stderr);
+
+            if (\curl_getinfo($ch, CURLINFO_RESPONSE_CODE) !== 200) {
+                $data = \json_decode($response, true);
+                if (isset($data['message'])) {
+                    Console::error('Something went wrong warming up the: '.$runtime['name'].' '.$runtime['version'].' Enviroment. Error: '.$data["message"]);
+                } else {
+                    Console::error('Something went wrong warming up the: '.$runtime['name'].' '.$runtime['version'].' Enviroment. Internal Docker Error.');
+                }
             }
+
+            \curl_close($ch);
         });
     }
 });
@@ -69,45 +142,54 @@ Console::success('Finished warmup in '.$warmupTime.' seconds');
 /**
  * List function servers
  */
-$stdout = '';
-$stderr = '';
 
 $executionStart = \microtime(true);
 
-$exitCode = Console::execute('docker ps --all --format "name={{.Names}}&status={{.Status}}&labels={{.Labels}}" --filter label=appwrite-type=function'
-    , '', $stdout, $stderr, 30);
+/*
+ * Get containers running
+ */
+$body = array(
+    "filters" => json_encode(array('label' => array('appwrite-type=function'))),
+    "all" => true
+);
 
-$executionEnd = \microtime(true);
-
+$ch = \curl_init();
+\curl_setopt($ch, CURLOPT_URL, "http://localhost/containers/json".'?'.\http_build_query($body));
+\curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
+\curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    
+$response = \curl_exec($ch);
+$responseCode = \curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
 $list = [];
-$stdout = \explode("\n", $stdout);
 
 \array_map(function($value) use (&$list) {
     $container = [];
 
-    \parse_str($value, $container);
+    $container = $value;
 
-    if(isset($container['name'])) {
+    if(isset($container['Names'][0])) {
         $container = [
-            'name' => $container['name'],
-            'online' => (\substr($container['status'], 0, 2) === 'Up'),
-            'status' => $container['status'],
-            'labels' => $container['labels'],
+            'name' => ltrim($container['Names'][0], '/'),
+            'online' => (\substr($container['Status'], 0, 2) === 'Up'),
+            'status' => $container['Status'],
+            'labels' => $container['Labels'],
         ];
 
-        \array_map(function($value) use (&$container) {
-            $value = \explode('=', $value);
-            
-            if(isset($value[0]) && isset($value[1])) {
-                $container[$value[0]] = $value[1];
+        \array_map(function($key) use (&$container) {
+            if(isset($key) && isset($container['labels'][$key])) {
+                $container[$key] = $container['labels'][$key];
             }
-        }, \explode(',', $container['labels']));
+        }, array_keys($container['labels']));
 
         $list[$container['name']] = $container;
     }
-}, $stdout);
+}, \json_decode($response, true));
 
-Console::info(count($list)." functions listed in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
+\curl_close($ch);
+
+$executionEnd = \microtime(true);
+
+Console::info(count($list)." functions listed in " . ($executionEnd - $executionStart) . " seconds with status code {$responseCode}");
 
 /**
  * 1. Get event args - DONE
@@ -355,6 +437,16 @@ class FunctionsV1 extends Worker
             'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
         ]);
 
+        $apiVars = $vars; // Env vars must be in different formats for API calls and CLI commands
+
+        // Env vars for API calls
+        \array_walk($apiVars, function (&$value, $key) {
+            $key = $this->filterEnvKey($key);
+            $value = \escapeshellarg((empty($value)) ? 'null' : $value);
+            $value = "{$key}={$value}";
+        });
+
+        // Env vars for Docker CLI commands
         \array_walk($vars, function (&$value, $key) {
             $key = $this->filterEnvKey($key);
             $value = \escapeshellarg((empty($value)) ? '' : $value);
@@ -384,12 +476,29 @@ class FunctionsV1 extends Worker
         }
 
         if(isset($list[$container]) && !$list[$container]['online']) { // Remove conatiner if not online
-            $stdout = '';
-            $stderr = '';
-            
-            if(Console::execute("docker rm {$container}", '', $stdout, $stderr, 30) !== 0) {
-                throw new Exception('Failed to remove offline container: '.$stderr);
+            /*
+             * Remove container using Docker API
+             */
+            $ch = \curl_init();
+            \curl_setopt($ch, CURLOPT_URL, "http://localhost/containers/".$container);
+            \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
+            \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE"); 
+    
+            $response = \curl_exec($ch);
+
+            $responseCode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+
+            if ($responseCode !== 204) {
+                $data = json_decode($response, true);
+                if (isset($data['message'])) {
+                    throw new Exception('Failed to remove offline container: '.$data["message"]);
+                } else {
+                    throw new Exception('Failed to remove offline container: Internal Docker Error');
+                }
             }
+
+            \curl_close($ch);
 
             unset($list[$container]);
         }
@@ -412,27 +521,94 @@ class FunctionsV1 extends Worker
             $cpus = App::getEnv('_APP_FUNCTIONS_CPUS', '');
             $memory = App::getEnv('_APP_FUNCTIONS_MEMORY', '');
             $swap = App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '');
-            $exitCode = Console::execute("docker run ".
-                " -d".
-                " --entrypoint=\"\"".
-                (empty($cpus) ? "" : (" --cpus=".$cpus)).
-                (empty($memory) ? "" : (" --memory=".$memory."m")).
-                (empty($swap) ? "" : (" --memory-swap=".$swap."m")).
-                " --name={$container}".
-                " --label appwrite-type=function".
-                " --label appwrite-created={$executionTime}".
-                " --volume {$tagPathTargetDir}:/tmp:rw".
-                " --workdir /usr/local/src".
-                " ".\implode(" ", $vars).
-                " {$runtime['image']}".
-                " sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'"
-            , '', $stdout, $stderr, 30);
+            // $exitCode = Console::execute("docker run ".
+            //     " -d".
+            //     " --entrypoint=\"\"".
+            //     (empty($cpus) ? "" : (" --cpus=".$cpus)).
+            //     (empty($memory) ? "" : (" --memory=".$memory."m")).
+            //     (empty($swap) ? "" : (" --memory-swap=".$swap."m")).
+            //     " --name={$container}".
+            //     " --label appwrite-type=function".
+            //     " --label appwrite-created={$executionTime}".
+            //     " --volume {$tagPathTargetDir}:/tmp:rw".
+            //     " --workdir /usr/local/src".
+            //     " ".\implode(" ", $vars).
+            //     " {$runtime['image']}".
+            //     " sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'"
+            // , '', $stdout, $stderr, 30);
+
+            /*
+             * Create container via Docker API
+             */
+            $ch = \curl_init();
+            \curl_setopt($ch, CURLOPT_URL, "http://localhost/containers/create?name={$container}");
+            \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
+            \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            \curl_setopt($ch, CURLOPT_POST, 1);
+
+            $body = array(
+                "Entrypoint" => "",
+                "Image" => $runtime['image'],
+                "Cmd" => array(
+                    "/bin/sh",
+                    "-c",
+                    'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'
+                ),
+                "Labels" => array(
+                    "appwrite-type"=>"function",
+                    "appwrite-created"=>"{$executionTime}"
+                ),
+                "WorkingDir" => "/usr/local/src",
+                "HostConfig" => array(
+                    "Binds" => array(
+                        "{$tagPathTargetDir}:/tmp"
+                    ),
+                    "CpuQuota" => floatval($cpus) * 100000,
+                    "CpuPeriod" => 100000,
+                    "Memory" => intval($memory) * 1e+6, // Convert into bytes
+                    "MemorySwap" => intval($swap) * 1e+6 // Convert into bytes
+                ),
+            );
+
+            \curl_setopt($ch, CURLOPT_POSTFIELDS, \json_encode($body));
+
+            $headers = [
+                'Content-Type: application/json',
+                'Content-Length: ' . \strlen(\json_encode($body))
+            ];
+            \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+            $result = \curl_exec($ch);
+
+            $responseCode = \curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+
+            if ($responseCode !== 201) {
+                throw new Exception("Failed to create function environment: {$result} Response Code: {$responseCode}");
+            }
+
+            \curl_close($ch);
+
+            $parsedResponse = \json_decode($result, true);
+
+            // Run created container
+            $ch = \curl_init();
+            \curl_setopt($ch, CURLOPT_URL, "http://localhost/containers/{$parsedResponse['Id']}/start");
+            \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
+            \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            \curl_setopt($ch, CURLOPT_POST, 1);
+            \curl_setopt($ch, CURLOPT_POSTFIELDS, null);
+
+            $result = \curl_exec($ch);
+
+            $responseCode = \curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+
+            if ($responseCode !== 204 && $responseCode !== 304) {
+                throw new Exception("Failed to create function environment: {$result} Response Code: {$responseCode}");
+            }
+
+            \curl_close($ch);
 
             $executionEnd = \microtime(true);
-    
-            if($exitCode !== 0) {
-                throw new Exception('Failed to create function environment: '.$stderr);
-            }
 
             $list[$container] = [
                 'name' => $container,
@@ -444,25 +620,227 @@ class FunctionsV1 extends Worker
                 ],
             ];
 
-            Console::info("Function created in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
+            Console::info("Function created in " . ($executionEnd - $executionStart) . " seconds with response code {$responseCode}");
         }
         else {
             Console::info('Container is ready to run');
         }
         
+        /*
+         * Create execution via Docker API
+         */
+        $ch = \curl_init();
+        \curl_setopt($ch, CURLOPT_URL, "http://localhost/containers/{$container}/exec");
+        \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        \curl_setopt($ch, CURLOPT_POST, 1);
+
+        $body = array(
+            "Env" => \array_values($apiVars),
+            "Cmd" => \explode(' ', $command),
+            "AttachStdout" => true,
+            "AttachStderr" => true
+        );
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, \json_encode($body));
+
+        $headers = [
+            'Content-Type: application/json',
+            'Content-Length: ' . \strlen(\json_encode($body))
+        ];
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $result = \curl_exec($ch);
+
+        $responseCode = \curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+
+        if ($responseCode !== 201) {
+            throw new Exception("Failed to create function environment: {$result} Response Code: {$responseCode}");
+        }
+
+        $resultParsed = \json_decode($result, true);
+
+        $execId = $resultParsed['Id'];
+
+        if (\curl_errno($ch)) {
+            throw new Exception('Failed to create execution: ' . \curl_error($ch), 500);
+        }
+
+        \curl_close($ch);
+
+        /*
+         * Start execution without detatching - receives stdout/stderr as stream
+         */
+
+        $executionStart = \microtime(true);
+        $ch = \curl_init();
+        $URL = "http://localhost/exec/{$execId}/start";
+        \curl_setopt($ch, CURLOPT_URL, $URL);
+        \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
+        \curl_setopt($ch, CURLOPT_POST, 1);
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, '{}'); // body is required
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
+
+        $headers = [
+            'Content-Type: application/json',
+            'Content-Length: 2',
+        ];
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        /*
+         * Exec logs come back with STDOUT+STDERR multiplexed into a single stream.
+         * Each frame of the stream has the following format: 
+         *   header := [8]byte{STREAM_TYPE, 0, 0, 0, SIZE1, SIZE2, SIZE3, SIZE4}
+         *     STREAM_TYPE is of the following: [0=>'stdin', 1=>'stdout', 2=>'stderr']
+         *     SIZE1, SIZE2, SIZE3, SIZE4 are the four bytes of the uint32 size encoded as big endian.
+         *     Following the header is the payload, which is the specified number of bytes of STREAM_TYPE.
+         *
+         * To assign the appropriate stream:
+         *   - unpack as an unsigned char ('C*')
+         *   - check the first byte of the header to assign stream
+         *   - pack up stream, omitting the 8 bytes of header
+         *   - concat to stream
+         */
+
         $stdout = '';
         $stderr = '';
 
-        $executionStart = \microtime(true);
-        
-        $exitCode = Console::execute("docker exec ".\implode(" ", $vars)." {$container} {$command}"
-            , '', $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
+        $callback = function ($ch, $str) use (&$stdout, &$stderr) {
+            $rawStream = unpack('C*', $str);
+            $stream = $rawStream[1]; // 1-based index, not 0-based
+            switch ($stream) { // only 1 or 2, as set while creating exec 
+                case 1:
+                    $packed = pack('C*', ...\array_slice($rawStream, 8));
+                    $stdout .= $packed;
+                    break;
+                case 2:
+                    $packed = pack('C*', ...\array_slice($rawStream, 8));
+                    $stderr .= $packed;
+                    break;
+            }
+            return strlen($str); // must return full frame from callback
+        };
+        \curl_setopt($ch, CURLOPT_WRITEFUNCTION, $callback);
+
+
+        $execData = \curl_exec($ch);
+
+        $timedout = false;
+
+        if (\curl_errno($ch)) {
+            if (\curl_errno($ch) == 28) {
+                $timedout = true;
+            } else {
+                throw new Exception('Failed to run execution: ' . \curl_error($ch), 500);
+            }
+        }
+
+        \curl_close($ch);
 
         $executionEnd = \microtime(true);
-        $executionTime = ($executionEnd - $executionStart);
-        $functionStatus = ($exitCode === 0) ? 'completed' : 'failed';
 
-        Console::info("Function executed in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
+        /*
+         * Get execution status code 
+         */
+        $ch = \curl_init();
+
+        $URL = "http://localhost/exec/{$execId}/json";
+        \curl_setopt($ch, CURLOPT_URL, $URL);
+        \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
+        $headers = array();
+        $headers[] = 'Content-Type: application/json';
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $result = \curl_exec($ch);
+        $resultParsed = \json_decode($result, true);
+        $exitCode = $resultParsed['ExitCode'];
+        $execRunning = $resultParsed['Running']; //bool
+        $execPid = $resultParsed['Pid'];
+
+        if (\curl_errno($ch)) {
+            throw new Exception('Failed to get execution: ' . \curl_error($ch), 500);
+        }
+
+        \curl_close($ch);
+
+        /*
+         * Kill stray exec process if still running at this point
+         */
+        $killStdout = '';
+        $killStderr = '';
+        if ($timedout) {
+            $ch = \curl_init();
+            \curl_setopt($ch, CURLOPT_URL, "http://localhost/containers/{$container}/exec");
+            \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
+            \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            \curl_setopt($ch, CURLOPT_POST, 1);
+
+            $killBody = array(
+                "Cmd" => array("kill", "{$execPid}"),
+                "AttachStdout" => true,
+                "AttachStderr" => true
+            );
+            \curl_setopt($ch, CURLOPT_POSTFIELDS, \json_encode($killBody));
+
+            $killHeaders = [
+                'Content-Type: application/json',
+                'Content-Length: ' . \strlen(\json_encode($killBody))
+            ];
+            \curl_setopt($ch, CURLOPT_HTTPHEADER, $killHeaders);
+
+            $killResult = \curl_exec($ch);
+            $killResultParsed = \json_decode($result, true);
+    
+            if (\curl_errno($ch)) {
+                throw new Exception('Failed to kill stray process: ' . \curl_error($ch), 500);
+            }
+
+            $killResponseCode = \curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+
+            if ($killResponseCode !== 201) {
+                $data = json_decode($response, true);
+                if (isset($data['message'])) {
+                    Console::error('Failed to kill stray process: '.$data["message"]);
+                } else {
+                    Console::error('Failed to kill stray process: Internal Docker Error');
+                }
+            }
+
+            \curl_close($ch);
+
+            // Execute kill process
+            /*
+             * Start execution without detatching - receives stdout/stderr as stream
+             */
+
+            $ch = \curl_init();
+            $URL = "http://localhost/exec/{$execId}/start";
+            \curl_setopt($ch, CURLOPT_URL, $URL);
+            \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
+            \curl_setopt($ch, CURLOPT_POST, 1);
+            \curl_setopt($ch, CURLOPT_POSTFIELDS, '{}'); // body is required
+            \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            \curl_setopt($ch, CURLOPT_TIMEOUT, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
+
+            $killHeaders = [
+                'Content-Type: application/json',
+                'Content-Length: 2',
+            ];
+            \curl_setopt($ch, CURLOPT_HTTPHEADER, $killHeaders);
+
+            $killExecData = \curl_exec($ch);
+
+            \curl_close($ch);
+
+            $exitCode = 1; // 124 is Arbitrary, but borrowed from linux timeout EXIT_TIMEDOUT
+        }
+
+        $functionStatus = ($exitCode === 0) ? 'completed' : 'failed';
+        $executionTime = $executionEnd - $executionStart;
+
+        Console::info("Function executed in " . ($executionTime) . " seconds with exit code {$exitCode}");
 
         Authorization::disable();
         
@@ -470,8 +848,8 @@ class FunctionsV1 extends Worker
             'tagId' => $tag->getId(),
             'status' => $functionStatus,
             'exitCode' => $exitCode,
-            'stdout' => \mb_substr($stdout, -4000), // log last 4000 chars output
-            'stderr' => \mb_substr($stderr, -4000), // log last 4000 chars output
+            'stdout' => \mb_substr($stdout, -4000) ?? '',
+            'stderr' => \mb_substr($stderr, -4000) ?? '',
             'time' => $executionTime,
         ]));
         
@@ -529,7 +907,7 @@ class FunctionsV1 extends Worker
             Console::info('Starting containers cleanup');
 
             \uasort($list, function ($item1, $item2) {
-                return (int)($item1['appwrite-created'] ?? 0) <=> (int)($item2['appwrite-created'] ?? 0);
+                return (int)($item1['Labels']['appwrite-created'] ?? 0) <=> (int)($item2['Labels']['appwrite-created'] ?? 0);
             });
 
             while(\count($list) > $max) {
@@ -537,10 +915,29 @@ class FunctionsV1 extends Worker
                 $stdout = '';
                 $stderr = '';
 
-                if(Console::execute("docker rm -f {$first['name']}", '', $stdout, $stderr, 30) !== 0) {
-                    Console::error('Failed to remove container: '.$stderr);
-                }
-                else {
+                /*
+                 * Remove container using Docker API
+                 */
+                $ch = \curl_init();
+                \curl_setopt($ch, CURLOPT_URL, "http://localhost/containers/".$first['name']."?force=true");
+                \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
+                \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+
+                $response = \curl_exec($ch);
+
+                $responseCode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+
+                \curl_close($ch);
+
+                if ($responseCode !== 204) {
+                    $data = json_decode($response, true);
+                    if (isset($data['message'])) {
+                        Console::error('Failed to remove container: '.$data["message"]);
+                    } else {
+                        Console::error('Failed to remove container: Internal Docker Error');
+                    }
+                } else {
                     Console::info('Removed container: '.$first['name']);
                 }
             }
