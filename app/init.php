@@ -164,12 +164,11 @@ $register->set('dbPool', function () { // Register DB connection
     $pool = new PDOPool((new PDOConfig())
         ->withHost($dbHost)
         ->withPort($dbPort)
-        // ->withUnixSocket('/tmp/mysql.sock')
         ->withDbName($dbScheme)
         ->withCharset('utf8mb4')
         ->withUsername($dbUser)
         ->withPassword($dbPass)
-    );
+    , 16);
 
     return $pool;
 });
@@ -189,7 +188,7 @@ $register->set('redisPool', function () {
         ->withPort($redisPort)
         ->withAuth($redisAuth)
         ->withDbIndex(0)
-    );
+    , 16);
 
     return $pool;
 });
