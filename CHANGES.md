@@ -1,3 +1,9 @@
+# Version 0.9.1
+
+## Bugs
+
+- Fix PDO Connection timeout
+- Remove unnecessary `app` resource and replace with `utopia`
 # Version 0.9.0
 
 ## Features
