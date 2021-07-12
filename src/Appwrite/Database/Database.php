@@ -41,6 +41,9 @@ class Database
     const SYSTEM_COLLECTION_FUNCTIONS = 'functions';
     const SYSTEM_COLLECTION_TAGS = 'tags';
     const SYSTEM_COLLECTION_EXECUTIONS = 'executions';
+
+    // Realtime
+    const SYSTEM_COLLECTION_CONNECTIONS = 'connections';
     
     // Var Types
     const SYSTEM_VAR_TYPE_TEXT = 'text';
