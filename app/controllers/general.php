@@ -304,6 +304,10 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     /** @var Utopia\View $layout */
     /** @var Appwrite\Database\Document $project */
 
+    if (get_class($error) == 'PDOException') {
+        throw $error;
+    }
+
     $route = $utopia->match($request);
     $template = ($route) ? $route->getLabel('error', null) : null;
 
