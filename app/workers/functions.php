@@ -75,6 +75,8 @@ Co\run(function() use ($runtimes) {  // Warmup: make sure images are ready to ru
         } else {
             Console::error('Failed to sign in to Docker Hub. Please check your login credentials and try again!');
         }
+
+        \curl_close($ch);
     }
 
     foreach($runtimes as $runtime) {
@@ -126,6 +128,8 @@ Co\run(function() use ($runtimes) {  // Warmup: make sure images are ready to ru
                     Console::error('Something went wrong warming up the: '.$runtime['name'].' '.$runtime['version'].' Enviroment. Internal Docker Error.');
                 }
             }
+
+            \curl_close($ch);
         });
     }
 });
@@ -180,6 +184,8 @@ $list = [];
         $list[$container['name']] = $container;
     }
 }, \json_decode($response, true));
+
+\curl_close($ch);
 
 $executionEnd = \microtime(true);
 
@@ -491,6 +497,8 @@ class FunctionsV1 extends Worker
                     throw new Exception('Failed to remove offline container: Internal Docker Error');
                 }
             }
+
+            \curl_close($ch);
 
             unset($list[$container]);
         }
@@ -822,39 +830,9 @@ class FunctionsV1 extends Worker
             ];
             \curl_setopt($ch, CURLOPT_HTTPHEADER, $killHeaders);
 
-            /*
-             * Exec logs come back with STDOUT+STDERR multiplexed into a single stream.
-             * Each frame of the stream has the following format: 
-             *   header := [8]byte{STREAM_TYPE, 0, 0, 0, SIZE1, SIZE2, SIZE3, SIZE4}
-             *     STREAM_TYPE is of the following: [0=>'stdin', 1=>'stdout', 2=>'stderr']
-             *     SIZE1, SIZE2, SIZE3, SIZE4 are the four bytes of the uint32 size encoded as big endian.
-             *     Following the header is the payload, which is the specified number of bytes of STREAM_TYPE.
-             *
-             * To assign the appropriate stream:
-             *   - unpack as an unsigned char ('C*')
-             *   - check the first byte of the header to assign stream
-             *   - pack up stream, omitting the 8 bytes of header
-             *   - concat to stream
-             */
-
-            $killCallback = function ($ch, $str) use (&$killStdout, &$killStderr) {
-                $rawStream = unpack('C*', $str);
-                $stream = $rawStream[1]; // 1-based index, not 0-based
-                switch ($stream) { // only 1 or 2, as set while creating exec 
-                    case 1:
-                        $packed = pack('C*', ...\array_slice($rawStream, 8));
-                        $killStdout .= $packed;
-                        break;
-                    case 2:
-                        $packed = pack('C*', ...\array_slice($rawStream, 8));
-                        $killStderr .= $packed;
-                        break;
-                }
-                return strlen($str); // must return full frame from callback
-            };
-            \curl_setopt($ch, CURLOPT_WRITEFUNCTION, $killCallback);
-
             $killExecData = \curl_exec($ch);
+
+            \curl_close($ch);
 
             $exitCode = 1; // 124 is Arbitrary, but borrowed from linux timeout EXIT_TIMEDOUT
         }
@@ -949,6 +927,8 @@ class FunctionsV1 extends Worker
                 $response = \curl_exec($ch);
 
                 $responseCode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+
+                \curl_close($ch);
 
                 if ($responseCode !== 204) {
                     $data = json_decode($response, true);
