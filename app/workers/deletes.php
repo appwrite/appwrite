@@ -2,6 +2,8 @@
 
 use Appwrite\Database\Database;
 use Utopia\Database\Database as Database2;
+use Utopia\Database\Document as Document2;
+use Utopia\Database\Query;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
@@ -50,7 +52,7 @@ class DeletesV1 extends Worker
                         $this->deleteFunction($document, $projectId);
                         break;
                     case Database::SYSTEM_COLLECTION_USERS:
-                        $this->deleteUser($document, $projectId);
+                        $this->deleteUser2($document, $projectId);
                         break;
                     case Database::SYSTEM_COLLECTION_TEAMS:
                         $this->deleteMemberships($document, $projectId);
@@ -144,6 +146,28 @@ class DeletesV1 extends Worker
         });
     }
 
+    protected function deleteUser2(Document $document, $projectId)
+    {
+        $userId = $document->getId();
+
+        // Tokens and Sessions removed with user document
+        // Delete Memberships and decrement team membership counts
+        $this->deleteByGroup2('memberships', [
+            new Query('userId', Query::TYPE_EQUAL, [$userId])
+        ], $this->getInternalDB($projectId), function(Document $document) use ($projectId, $userId) {
+
+            if ($document->getAttribute('confirm')) { // Count only confirmed members
+                $teamId = $document->getAttribute('teamId');
+                $team = $this->getInternalDB($projectId)->getDocument('teams', $teamId);
+                if(!$team->isEmpty()) {
+                    $team = $this->getInternalDB($projectId)->updateDocument('teams', $teamId, new Document2(\array_merge($team->getArrayCopy(), [
+                        'sum' => \max($team->getAttribute('sum', 0) - 1, 0), // Ensure that sum >= 0
+                    ])));
+                }
+            }
+        });
+    }
+
     protected function deleteExecutionLogs($timestamp) 
     {
         $this->deleteForProjectIds(function($projectId) use ($timestamp) {
@@ -161,7 +185,6 @@ class DeletesV1 extends Worker
 
     protected function deleteAbuseLogs($timestamp) 
     {
-        global $register;
         if($timestamp == 0) {
             throw new Exception('Failed to delete audit logs. No timestamp provided');
         }
@@ -179,11 +202,10 @@ class DeletesV1 extends Worker
 
     protected function deleteAuditLogs($timestamp)
     {
-        global $register;
         if($timestamp == 0) {
             throw new Exception('Failed to delete audit logs. No timestamp provided');
         }
-        $this->deleteForProjectIds(function($projectId) use ($register, $timestamp){
+        $this->deleteForProjectIds(function($projectId) use ($timestamp){
             $audit = new Audit($this->getInternalDB($projectId));
             $status = $audit->cleanup($timestamp);
             if (!$status) {
@@ -223,6 +245,30 @@ class DeletesV1 extends Worker
         Authorization::disable();
 
         if($database->deleteDocument($document->getId())) {
+            Console::success('Deleted document "'.$document->getId().'" successfully');
+
+            if(is_callable($callback)) {
+                $callback($document);
+            }
+
+            return true;
+        }
+        else {
+            Console::error('Failed to delete document: '.$document->getId());
+            return false;
+        }
+
+        Authorization::reset();
+    }
+
+    protected function deleteById2(Document2 $document, Database2 $database, callable $callback = null): bool
+    {
+        // TODO@kodumbeats this doesnt seem to work - getting the following error:
+        // "Write scopes ['role:all'] given, only ["user:{$userId}", "team:{$teamId}/owner"] allowed
+        Authorization::disable();
+
+        // TODO@kodumbeats is it better to pass objects or ID strings?
+        if($database->deleteDocument($document->getCollection(), $document->getId())) {
             Console::success('Deleted document "'.$document->getId().'" successfully');
 
             if(is_callable($callback)) {
@@ -311,6 +357,46 @@ class DeletesV1 extends Worker
 
             foreach ($results as $document) {
                 $this->deleteById($document, $database, $callback);
+                $count++;
+            }
+        }
+
+        $executionEnd = \microtime(true);
+
+        Console::info("Deleted {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
+    }
+
+    /**
+     * @param string $collection collectionID
+     * @param Query[] $queries
+     * @param Database2 $database
+     * @param callable $callback
+     */
+    protected function deleteByGroup2(string $collection, array $queries, Database2 $database, callable $callback = null)
+    {
+        $count = 0;
+        $chunk = 0;
+        $limit = 50;
+        $results = [];
+        $sum = $limit;
+
+        $executionStart = \microtime(true);
+
+        while($sum === $limit) {
+            $chunk++;
+
+            Authorization::disable();
+
+            $results = $database->find($collection, $queries, $limit, 0);
+
+            Authorization::reset();
+
+            $sum = count($results);
+
+            Console::info('Deleting chunk #'.$chunk.'. Found '.$sum.' documents');
+
+            foreach ($results as $document) {
+                $this->deleteById2($document, $database, $callback);
                 $count++;
             }
         }
