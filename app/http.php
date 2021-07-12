@@ -98,9 +98,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
         $app->run($request, $response);
     } catch (\Throwable $th) {
-        $type = get_class($th);
-
-        Console::error('[Error] Type: '.$type);
+        Console::error('[Error] Type: '.get_class($th));
         Console::error('[Error] Message: '.$th->getMessage());
         Console::error('[Error] File: '.$th->getFile());
         Console::error('[Error] Line: '.$th->getLine());
@@ -108,7 +106,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         /**
          * Reset Database connection if PDOException was thrown.
          */
-        if ($type === 'PDOException') {
+        if ($th instanceof PDOException) {
             $db = null;
         }
 
