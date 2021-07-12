@@ -1,5 +1,5 @@
 Create a new file. The user who creates the file will automatically be assigned to read and write access unless he has passed custom values for read and write arguments.
 
-Large file should be uploaded using multiple requests using [content-range](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Range) header to send partial request with maximum supported chunk of `2MB`. We assume that the chunk size is the chunk size used in the firs request. We assume that in `content-range` header the **range-start**, **range-end** and **size** always sent and unit is always bytes.
+Large file should be uploaded using multiple requests using [content-range](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Range) header to send partial request with maximum supported chunk of `2MB`. We assume that the chunk size is the chunk size used in the firs request (may be different for last request.). We assume that in `content-range` header the **range-start**, **range-end** and **size** always sent and unit is always bytes.
 
 When first request is sent the server sends back the **File** object, and the subsequent part request must include the file's **id** in `x-appwrite-upload-id` header for the server to know the partial upload is for existing file not a new file.

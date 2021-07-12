@@ -50,7 +50,7 @@
         "utopia-php/registry": "0.5.*",
         "utopia-php/preloader": "0.2.*",
         "utopia-php/domains": "1.1.*",
-        "utopia-php/swoole": "0.2.*",
+        "utopia-php/swoole": "dev-feat-send-chunks",
         "utopia-php/storage": "dev-feat-large-file-support",
         "utopia-php/image": "0.5.*",
         "resque/php-resque": "1.3.6",
@@ -70,6 +70,10 @@
         {
             "type": "git",
             "url": "https://github.com/lohanidamodar/audit"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/lohanidamodar/swoole"
         },
         {
             "type": "git",

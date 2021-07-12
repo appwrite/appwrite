@@ -4,6 +4,7 @@ use Appwrite\ClamAV\Network;
 use Appwrite\Database\Validator\UID;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Response;
+use Swoole\HTTP\Response as SwooleResponse;
 use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -755,9 +756,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->label('sdk.methodType', 'location')
     ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File unique ID.')
+    ->inject('request')
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($bucketId, $fileId, $response, $dbForInternal) {
+    ->action(function ($bucketId, $fileId, $request, $response, $dbForInternal) {
+        /** @var Utopia\Swoole\Request $response */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
@@ -775,36 +778,51 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
 
         $path = $file->getAttribute('path', '');
 
-        if (!\file_exists($path)) {
+        $device = Storage::getDevice('files');
+        
+        if (!$device->exists($path)) {
             throw new Exception('File not found in ' . $path, 404);
         }
 
-        $device = Storage::getDevice('files');
-
-        $source = $device->read($path);
-        if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
-            $source = OpenSSL::decrypt(
-                $source,
-                $file->getAttribute('openSSLCipher'),
-                App::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
-                0,
-                \hex2bin($file->getAttribute('openSSLIV')),
-                \hex2bin($file->getAttribute('openSSLTag'))
-            );
+        if ($device->getFileSize($path) > APP_LIMIT_COMPRESSION) {          
+            $response
+                ->setContentType($file->getAttribute('mimeType'))
+                ->addHeader('Content-Disposition', 'attachment; filename="' . $file->getAttribute('name', '') . '"')
+                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+                ->addHeader('X-Peak', \memory_get_peak_usage())
+                ->addHeader('Content-Length',$device->getFileSize($path))
+            ;
+            $handle = fopen($path, 'rb');
+            while(!feof($handle)) {
+                $response->chunk(@fread($handle,APP_CHUNK_SIZE), feof($handle));
+            }
+            fclose($handle);
+        } else {
+            $source = $device->read($path);
+            if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
+                $source = OpenSSL::decrypt(
+                    $source,
+                    $file->getAttribute('openSSLCipher'),
+                    App::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
+                    0,
+                    \hex2bin($file->getAttribute('openSSLIV')),
+                    \hex2bin($file->getAttribute('openSSLTag'))
+                );
+            }
+            if (!empty($file->getAttribute('algorithm', ''))) {
+                $compressor = new GZIP();
+                $source = $compressor->decompress($source);
+            }
+    
+            // Response
+            $response
+                ->setContentType($file->getAttribute('mimeType'))
+                ->addHeader('Content-Disposition', 'attachment; filename="' . $file->getAttribute('name', '') . '"')
+                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+                ->addHeader('X-Peak', \memory_get_peak_usage())
+                ->send($source)
+            ;
         }
-        if (!empty($file->getAttribute('algorithm', ''))) {
-            $compressor = new GZIP();
-            $source = $compressor->decompress($source);
-        }
-
-        // Response
-        $response
-            ->setContentType($file->getAttribute('mimeType'))
-            ->addHeader('Content-Disposition', 'attachment; filename="' . $file->getAttribute('name', '') . '"')
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
-            ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->send($source)
-        ;
     });
 
 App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
@@ -855,32 +873,50 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             $contentType = $file->getAttribute('mimeType');
         }
 
-        $source = $device->read($path);
-
-        if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
-            $source = OpenSSL::decrypt(
-                $source,
-                $file->getAttribute('openSSLCipher'),
-                App::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
-                0,
-                \hex2bin($file->getAttribute('openSSLIV')),
-                \hex2bin($file->getAttribute('openSSLTag'))
-            );
-        }
-
-        $output = $compressor->decompress($source);
         $fileName = $file->getAttribute('name', '');
 
-        // Response
-        $response
-            ->setContentType($contentType)
-            ->addHeader('Content-Security-Policy', 'script-src none;')
-            ->addHeader('X-Content-Type-Options', 'nosniff')
-            ->addHeader('Content-Disposition', 'inline; filename="' . $fileName . '"')
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
-            ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->send($output)
-        ;
+        if ($device->getFileSize($path) > APP_LIMIT_COMPRESSION) {          
+            $response
+                ->setContentType($contentType)
+                ->addHeader('Content-Security-Policy', 'script-src none;')
+                ->addHeader('X-Content-Type-Options', 'nosniff')
+                ->addHeader('Content-Disposition', 'inline; filename="' . $fileName . '"')
+                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+                ->addHeader('X-Peak', \memory_get_peak_usage())
+                ->addHeader('Content-Length',$device->getFileSize($path))
+            ;
+            $handle = fopen($path, 'rb');
+            while(!feof($handle)) {
+                $response->chunk(@fread($handle,APP_CHUNK_SIZE), feof($handle));
+            }
+            fclose($handle);
+        } else {
+            $source = $device->read($path);
+            
+            if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
+                $source = OpenSSL::decrypt(
+                    $source,
+                    $file->getAttribute('openSSLCipher'),
+                    App::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
+                    0,
+                    \hex2bin($file->getAttribute('openSSLIV')),
+                    \hex2bin($file->getAttribute('openSSLTag'))
+                );
+            }
+
+            $output = $compressor->decompress($source);
+
+            // Response
+            $response
+                ->setContentType($contentType)
+                ->addHeader('Content-Security-Policy', 'script-src none;')
+                ->addHeader('X-Content-Type-Options', 'nosniff')
+                ->addHeader('Content-Disposition', 'inline; filename="' . $fileName . '"')
+                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+                ->addHeader('X-Peak', \memory_get_peak_usage())
+                ->send($output)
+            ;
+        }
     });
 
 App::put('/v1/storage/buckets/:bucketId/files/:fileId')
