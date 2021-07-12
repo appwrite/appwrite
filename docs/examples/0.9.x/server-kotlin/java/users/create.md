@@ -9,9 +9,9 @@ public void main() {
 
     Users users = new Users(client);
     users.create(
-        email = "email@example.com",
-        password = "password",
-        new Continuation<Response>() {
+        "email@example.com",
+        "password",
+        new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {

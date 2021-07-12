@@ -9,11 +9,11 @@ public void main() {
 
     Account account = new Account(client);
     account.updateRecovery(
-        userId = "[USER_ID]",
-        secret = "[SECRET]",
-        password = "password",
-        passwordAgain = "password"
-        new Continuation<Response>() {
+        "[USER_ID]",
+        "[SECRET]",
+        "password",
+        "password"
+        new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {

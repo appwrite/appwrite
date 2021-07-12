@@ -9,11 +9,11 @@ public void main() {
 
     Teams teams = new Teams(client);
     teams.updateMembershipStatus(
-        teamId = "[TEAM_ID]",
-        membershipId = "[MEMBERSHIP_ID]",
-        userId = "[USER_ID]",
-        secret = "[SECRET]"
-        new Continuation<Response>() {
+        "[TEAM_ID]",
+        "[MEMBERSHIP_ID]",
+        "[USER_ID]",
+        "[SECRET]"
+        new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {

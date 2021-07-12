@@ -437,7 +437,7 @@ App::get('/v1/database/collections/:collectionId/documents')
         }
 
         $types = [];
-        foreach ($collection->getAttribute('rules') as $rule) {
+        foreach ($collection->getAttribute('rules', []) as $rule) {
             /** @var Document $rule */
             $types[$rule->getAttribute('key')] = $rule->getAttribute('type');
         }

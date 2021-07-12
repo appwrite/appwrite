@@ -123,6 +123,10 @@ Learn more at our [Technology Stack](## Technology Stack) section.
 
 Appwrite's current structure is a combination of both [Monolithic](https://en.wikipedia.org/wiki/Monolithic_application) and [Microservice](https://en.wikipedia.org/wiki/Microservices) architectures, but our final goal, as we grow, is to be using only microservices.
 
+---
+![Appwrite](docs/specs/overview.drawio.svg)
+---
+
 ### File Structure
 
 ```bash
@@ -175,10 +179,6 @@ Appwrite's current structure is a combination of both [Monolithic](https://en.wi
     ├── resources
     └── unit
 ```
-
----
-![Appwrite](docs/specs/overview.drawio.svg)
----
 
 ### The Monolithic Part
 

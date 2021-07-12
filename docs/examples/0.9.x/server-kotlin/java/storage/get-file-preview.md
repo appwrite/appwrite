@@ -9,8 +9,8 @@ public void main() {
 
     Storage storage = new Storage(client);
     storage.getFilePreview(
-        fileId = "[FILE_ID]",
-        new Continuation<Response>() {
+        "[FILE_ID]",
+        new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {

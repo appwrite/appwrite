@@ -9,10 +9,10 @@ public void main() {
 
     Database database = new Database(client);
     database.updateDocument(
-        collectionId = "[COLLECTION_ID]",
-        documentId = "[DOCUMENT_ID]",
-        data = mapOf( "a" to "b" ),
-        new Continuation<Response>() {
+        "[COLLECTION_ID]",
+        "[DOCUMENT_ID]",
+        mapOf( "a" to "b" ),
+        new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {
