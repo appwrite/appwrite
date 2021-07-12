@@ -211,12 +211,6 @@ App::delete('/v1/database/collections/:collectionId')
 
         $dbForExternal->deleteCollection($collectionId);
 
-        // TODO@kodumbeats use worker to handle this
-        // $deletes
-        //     ->setParam('type', DELETE_TYPE_DOCUMENT)
-        //     ->setParam('document', $collection)
-        // ;
-
         $events
             ->setParam('eventData', $response->output2($collection, Response::MODEL_COLLECTION))
         ;

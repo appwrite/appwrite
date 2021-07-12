@@ -52,9 +52,6 @@ class DeletesV1 extends Worker
                     case Database::SYSTEM_COLLECTION_USERS:
                         $this->deleteUser($document, $projectId);
                         break;
-                    case Database::SYSTEM_COLLECTION_COLLECTIONS:
-                        $this->deleteDocuments($document, $projectId);
-                        break;
                     case Database::SYSTEM_COLLECTION_TEAMS:
                         $this->deleteMemberships($document, $projectId);
                         break;
@@ -91,16 +88,6 @@ class DeletesV1 extends Worker
     {
     }
     
-    protected function deleteDocuments(Document $document, $projectId) 
-    {
-        $collectionId = $document->getId();
-        
-        // Delete Documents in the deleted collection 
-        $this->deleteByGroup([
-            '$collection='.$collectionId
-        ], $this->getProjectDB($projectId));   
-    }
-
     protected function deleteMemberships(Document $document, $projectId) {
         // Delete Memberships
         $this->deleteByGroup([
