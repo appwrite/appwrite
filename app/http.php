@@ -87,10 +87,6 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     App::setResource('cache', function () use (&$redis) {
         return $redis;
     });
-
-    App::setResource('app', function() use (&$app) {
-        return $app;
-    });
     
     try {
         Authorization::cleanRoles();
