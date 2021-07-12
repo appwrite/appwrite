@@ -918,16 +918,16 @@ App::get('/v1/account/logs')
     ->inject('user')
     ->inject('locale')
     ->inject('geodb')
-    ->inject('app')
-    ->action(function ($response, $project, $user, $locale, $geodb, $app) {
+    ->inject('utopia')
+    ->action(function ($response, $project, $user, $locale, $geodb, $utopia) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
-        /** @var Utopia\App $app */
+        /** @var Utopia\App $utopia */
 
-        $adapter = new AuditAdapter($app->getResource('db'));
+        $adapter = new AuditAdapter($utopia->getResource('db'));
         $adapter->setNamespace('app_'.$project->getId());
 
         $audit = new Audit($adapter);
