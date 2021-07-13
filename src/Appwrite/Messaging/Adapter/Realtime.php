@@ -234,11 +234,13 @@ class Realtime extends Adapter
             case strpos($event, 'account.recovery.') === 0:
             case strpos($event, 'account.sessions.') === 0:
             case strpos($event, 'account.verification.') === 0:
+                $channels[] = 'account';
                 $channels[] = 'account.' . $payload->getAttribute('userId');
                 $permissions = ['user:' . $payload->getAttribute('userId')];
 
                 break;
             case strpos($event, 'account.') === 0:
+                $channels[] = 'account';
                 $channels[] = 'account.' . $payload->getId();
                 $permissions = ['user:' . $payload->getId()];
 
