@@ -50,7 +50,7 @@ class DeletesV1 extends Worker
                         $this->deleteProject($document);
                         break;
                     case Database::SYSTEM_COLLECTION_FUNCTIONS:
-                        $this->deleteFunction($document, $projectId);
+                        $this->deleteFunction2($document, $projectId);
                         break;
                     case Database::SYSTEM_COLLECTION_USERS:
                         $this->deleteUser2($document, $projectId);
@@ -263,6 +263,31 @@ class DeletesV1 extends Worker
             '$collection='.Database::SYSTEM_COLLECTION_EXECUTIONS,
             'functionId='.$document->getId(),
         ], $projectDB);
+    }
+
+    // TODO@kodumbeats typehint Utopia\Database\Document $document
+    protected function deleteFunction2($document, $projectId)
+    {
+        $dbForInternal = $this->getInternalDB($projectId);
+        $device = new Local(APP_STORAGE_FUNCTIONS.'/app-'.$projectId);
+
+        // Delete Tags
+        $this->deleteByGroup2('tags', [
+            new Query('functionId', Query::TYPE_EQUAL, [$document->getId()])
+        ], $dbForInternal, function(Document2 $document) use ($device) {
+
+            if ($device->delete($document->getAttribute('path', ''))) {
+                Console::success('Delete code tag: '.$document->getAttribute('path', ''));
+            }
+            else {
+                Console::error('Failed to delete code tag: '.$document->getAttribute('path', ''));
+            }
+        });
+
+        // Delete Executions
+        $this->deleteByGroup2('executions', [
+            new Query('functionId', Query::TYPE_EQUAL, [$document->getId()])
+        ], $dbForInternal);
     }
 
     protected function deleteById(Document $document, Database $database, callable $callback = null): bool
