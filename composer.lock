@@ -2181,7 +2181,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/websocket.git",
-                "reference": "fdb82f0c2d61132dff5bd82111d64e4637fd63f1"
+                "reference": "808317ef4ea0683c2c82dee5d543b1c8378e2e1b"
             },
             "require": {
                 "php": ">=8.0"
@@ -2221,7 +2221,7 @@
                 "utopia",
                 "websocket"
             ],
-            "time": "2021-07-07T08:21:59+00:00"
+            "time": "2021-07-11T13:09:44+00:00"
         },
         {
             "name": "webmozart/assert",
