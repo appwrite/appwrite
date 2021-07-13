@@ -384,42 +384,45 @@ App::post('/v1/storage/buckets/:bucketId/files')
             throw new Exception('Failed uploading file', 500);
         }
 
+        $read = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? [];
+        $write = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? [];
         if ($chunksUploaded == $chunks) {
-            $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
-
             if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antiVirus', true) && $size <= APP_LIMIT_ANTIVIRUS) {
                 $antiVirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
-                    (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
-
+                (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
+                
                 if (!$antiVirus->fileScan($path)) {
                     $device->delete($path);
                     throw new Exception('Invalid file', 403);
                 }
             }
 
+            $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
+            $data = '';
             // Compression
-            if($size <= APP_LIMIT_COMPRESSION || $size <= APP_LIMIT_ENCRYPTION) {
+            if ($size <= APP_LIMIT_COMPRESSION) {
                 $data = $device->read($path);
-                if ($size <= APP_LIMIT_COMPRESSION) {
-                    $compressor = new GZIP();
-                    $data = $compressor->compress($data);
+                $compressor = new GZIP();
+                $data = $compressor->compress($data);
+            }
+
+            if ($bucket->getAttribute('encryption', true) && $size <= APP_LIMIT_ENCRYPTION) {
+                if(empty($data)) {
+                    $data = $device->read($path);
                 }
-    
-                if ($bucket->getAttribute('encryption', true) && $size <= APP_LIMIT_ENCRYPTION) {
-                    $key = App::getEnv('_APP_OPENSSL_KEY_V1');
-                    $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-                    $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
-                }
+                $key = App::getEnv('_APP_OPENSSL_KEY_V1');
+                $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+                $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
+            }
+
+            if(!empty($data)) {
                 if (!$device->write($path, $data, $mimeType)) {
                     throw new Exception('Failed to save file', 500);
                 }
             }
 
-
             $sizeActual = $device->getFileSize($path);
 
-            $read = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? [];
-            $write = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? [];
             $algorithm = empty($compressor) ? '' : $compressor->getName();
             $fileHash = $device->getFileHash($path);
 
@@ -469,8 +472,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
             if ($file->isEmpty()) {
                 $file = $dbForInternal->createDocument('files', new Document([
                     '$id' => $fileId,
-                    '$read' => (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? [], // By default set read permissions for user
-                    '$write' => (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? [], // By default set write permissions for user
+                    '$read' => $read,
+                    '$write' => $write,
                     'dateCreated' => \time(),
                     'bucketId' => $bucket->getId(),
                     'name' => $fileName,
