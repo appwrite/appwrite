@@ -626,7 +626,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'totalChunks',
+                '$id' => 'chunksTotal',
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
@@ -636,7 +636,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'uploadedChunks',
+                '$id' => 'chunksUploaded',
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
