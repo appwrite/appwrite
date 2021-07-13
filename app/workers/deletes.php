@@ -56,7 +56,7 @@ class DeletesV1 extends Worker
                         $this->deleteUser2($document, $projectId);
                         break;
                     case Database::SYSTEM_COLLECTION_TEAMS:
-                        $this->deleteMemberships($document, $projectId);
+                        $this->deleteMemberships2($document, $projectId);
                         break;
                     default:
                         Console::error('No lazy delete operation available for document of type: '.$document->getCollection());
@@ -97,6 +97,16 @@ class DeletesV1 extends Worker
             '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
             'teamId='.$document->getId(),
         ], $this->getProjectDB($projectId));
+    }
+
+    // TODO@kodumbeats typehint Utopia\Database\Document $document
+    protected function deleteMemberships2($document, $projectId) {
+        $teamId = $document->getAttribute('teamId', '');
+
+        // Delete Memberships
+        $this->deleteByGroup2('memberships', [
+            new Query('teamId', Query::TYPE_EQUAL, [$teamId])
+        ], $this->getInternalDB($projectId));
     }
 
     protected function deleteProject(Document $document)
