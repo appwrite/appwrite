@@ -39,6 +39,7 @@ services:
     build:
       context: .
       args:
+        - DEBUG=false
         - TESTING=true
         - VERSION=dev
     ports: 
@@ -67,11 +68,17 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./debug:/tmp
+      - ./dev:/usr/local/dev
     depends_on:
       - mariadb
       - redis
       # - clamav
       - influxdb
+    entrypoint: 
+      - php
+      - -e
+      - app/http.php
+      - -dopcache.preload=opcache.preload=/usr/src/code/app/preload.php
     environment:
       - _APP_ENV
       - _APP_LOCALE
