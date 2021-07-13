@@ -312,12 +312,12 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $size = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
         $contentRange = $request->getHeader('content-range');
-        $uploadId = \uniqid();
+        $fileId = $dbForInternal->getId();
         $chunk = 1;
         $chunks = 1;
 
         if (!empty($contentRange)) {
-            $uploadId = $request->getHeader('x-appwrite-upload-id', $uploadId);
+            $fileId = $request->getHeader('x-appwrite-file-id', $fileId);
             $contentRange = explode(" ", $contentRange);
             if (count($contentRange) != 2) {
                 throw new Exception('Invalid content-range header', 400);
@@ -341,8 +341,10 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
 
             if ($end == $size) {
+                //if it's a last chunks the chunk size might differ, so we set the $chunks and $chunk to notify it's last chunk
                 $chunks = $chunk = -1;
             } else {
+                // Calculate total number of chunks based on the chunk size i.e ($rangeEnd - $rangeStart)
                 $chunks = (int) ceil($size / ($end + 1 - $start));
                 $chunk = (int) ($start / ($end + 1 - $start));
             }
@@ -365,10 +367,10 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
         // Save to storage
         $size = $size ?? $device->getFileSize($fileTmpName);
-        $path = $device->getPath($uploadId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
+        $path = $device->getPath($fileId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
         $path = str_ireplace($device->getRoot(), $device->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path);
 
-        $file = $dbForInternal->getDocument('files', $uploadId);
+        $file = $dbForInternal->getDocument('files', $fileId);
 
         if (!$file->isEmpty()) {
             $chunks = $file->getAttribute('totalChunks', 1);
@@ -377,12 +379,12 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
         }
 
-        $uploadedChunks = $device->upload($fileTmpName, $path, $chunk, $chunks);
-        if (empty($uploadedChunks)) {
+        $chunksUploaded = $device->upload($fileTmpName, $path, $chunk, $chunks);
+        if (empty($chunksUploaded)) {
             throw new Exception('Failed uploading file', 500);
         }
 
-        if ($uploadedChunks == $chunks) {
+        if ($chunksUploaded == $chunks) {
             $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
 
             if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antiVirus', true) && $size <= APP_LIMIT_ANTIVIRUS) {
@@ -429,7 +431,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
 
             if ($file->isEmpty()) {
-                $data = [
+                $file = $dbForInternal->createDocument('files', new Document([
                     '$read' => $read,
                     '$write' => $write,
                     'dateCreated' => \time(),
@@ -442,16 +444,15 @@ App::post('/v1/storage/buckets/:bucketId/files')
                     'sizeActual' => $sizeActual,
                     'algorithm' => $algorithm,
                     'comment' => '',
-                    'totalChunks' => $chunks,
-                    'uploadedChunks' => $uploadedChunks,
+                    'chunksTotal' => $chunks,
+                    'chunksUploaded' => $chunksUploaded,
                     'openSSLVersion' => $openSSLVersion,
                     'openSSLCipher' => $openSSLCipher,
                     'openSSLTag' => $openSSLTag,
                     'openSSLIV' => $openSSLIV,
-                ];
-                $file = $dbForInternal->createDocument('files', new Document($data));
+                ]));
             } else {
-                $file = $dbForInternal->updateDocument('files', $uploadId, $file
+                $file = $dbForInternal->updateDocument('files', $fileId, $file
                         ->setAttribute('$read', $read)
                         ->setAttribute('$write', $write)
                         ->setAttribute('signature', $fileHash)
@@ -466,8 +467,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
         } else {
             if ($file->isEmpty()) {
-                $data = [
-                    '$id' => $uploadId,
+                $file = $dbForInternal->createDocument('files', new Document([
+                    '$id' => $fileId,
                     '$read' => (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? [], // By default set read permissions for user
                     '$write' => (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? [], // By default set write permissions for user
                     'dateCreated' => \time(),
@@ -480,13 +481,12 @@ App::post('/v1/storage/buckets/:bucketId/files')
                     'sizeActual' => 0,
                     'algorithm' => '',
                     'comment' => '',
-                    'totalChunks' => $chunks,
-                    'uploadedChunks' => $uploadedChunks,
-                ];
-                $file = $dbForInternal->createDocument('files', new Document($data));
+                    'chunksTotal' => $chunks,
+                    'chunksUploaded' => $chunksUploaded,
+                ]));
             } else {
-                $file = $dbForInternal->updateDocument('files', $uploadId, $file
-                        ->setAttribute('uploadedChunks', $uploadedChunks)
+                $file = $dbForInternal->updateDocument('files', $fileId, $file
+                        ->setAttribute('chunksUploaded', $chunksUploaded)
                 );
             }
         }
