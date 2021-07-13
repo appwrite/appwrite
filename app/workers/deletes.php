@@ -43,11 +43,11 @@ class DeletesV1 extends Worker
         switch (strval($type)) {
             case DELETE_TYPE_DOCUMENT:
                 $document = $this->args['document'] ?? '';
-                $document = new Document($document);
+                $document = new Document2($document);
                 
                 switch ($document->getCollection()) {
                     case Database::SYSTEM_COLLECTION_PROJECTS:
-                        $this->deleteProject($document);
+                        $this->deleteProject2($document);
                         break;
                     case Database::SYSTEM_COLLECTION_FUNCTIONS:
                         $this->deleteFunction2($document, $projectId);
@@ -77,7 +77,7 @@ class DeletesV1 extends Worker
                 break;
 
             case DELETE_TYPE_CERTIFICATES:
-                $document = new Document($this->args['document']);
+                $document = new Document2($this->args['document']);
                 $this->deleteCertificates($document);
                 break;
                         
@@ -99,8 +99,7 @@ class DeletesV1 extends Worker
         ], $this->getProjectDB($projectId));
     }
 
-    // TODO@kodumbeats typehint Utopia\Database\Document $document
-    protected function deleteMemberships2($document, $projectId) {
+    protected function deleteMemberships2(Document2 $document, $projectId) {
         $teamId = $document->getAttribute('teamId', '');
 
         // Delete Memberships
@@ -117,6 +116,21 @@ class DeletesV1 extends Worker
         $cache = new Local(APP_STORAGE_CACHE.'/app-'.$document->getId());
 
         // Delete all storage directories
+        $uploads->delete($uploads->getRoot(), true);
+        $cache->delete($cache->getRoot(), true);
+    }
+
+    protected function deleteProject2(Document2 $document)
+    {
+        $projectId = $document->getId();
+        // Delete all DBs
+        $this->getExternalDB($projectId)->delete();
+        $this->getInternalDB($projectId)->delete();
+
+        // Delete all storage directories
+        $uploads = new Local(APP_STORAGE_UPLOADS.'/app-'.$document->getId());
+        $cache = new Local(APP_STORAGE_CACHE.'/app-'.$document->getId());
+
         $uploads->delete($uploads->getRoot(), true);
         $cache->delete($cache->getRoot(), true);
     }
@@ -157,7 +171,7 @@ class DeletesV1 extends Worker
         });
     }
 
-    protected function deleteUser2(Document $document, $projectId)
+    protected function deleteUser2(Document2 $document, $projectId)
     {
         $userId = $document->getId();
 
@@ -265,8 +279,7 @@ class DeletesV1 extends Worker
         ], $projectDB);
     }
 
-    // TODO@kodumbeats typehint Utopia\Database\Document $document
-    protected function deleteFunction2($document, $projectId)
+    protected function deleteFunction2(Document2 $document, $projectId)
     {
         $dbForInternal = $this->getInternalDB($projectId);
         $device = new Local(APP_STORAGE_FUNCTIONS.'/app-'.$projectId);
@@ -313,8 +326,6 @@ class DeletesV1 extends Worker
 
     protected function deleteById2(Document2 $document, Database2 $database, callable $callback = null): bool
     {
-        // TODO@kodumbeats this doesnt seem to work - getting the following error:
-        // "Write scopes ['role:all'] given, only ["user:{$userId}", "team:{$teamId}/owner"] allowed
         Authorization2::disable();
 
         // TODO@kodumbeats is it better to pass objects or ID strings?
@@ -490,7 +501,7 @@ class DeletesV1 extends Worker
         Console::info("Deleted {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
     }
 
-    protected function deleteCertificates(Document $document)
+    protected function deleteCertificates(Document2 $document)
     {
         $domain = $document->getAttribute('domain');
         $directory = APP_STORAGE_CERTIFICATES . '/' . $domain;
@@ -555,6 +566,20 @@ class DeletesV1 extends Worker
         $dbForInternal->setNamespace('project_'.$projectId.'_internal'); // Main DB
 
         return $dbForInternal;
+    }
+
+    /**
+     * @return Database2
+     */
+    protected function getExternalDB($projectId): Database2
+    {
+        global $register;
+
+        $cache = new Cache(new RedisCache($register->get('cache')));
+        $dbForExternal = new Database2(new MariaDB($register->get('db')), $cache);
+        $dbForExternal->setNamespace('project_'.$projectId.'_external'); // Main DB
+
+        return $dbForExternal;
     }
 
     /**
