@@ -291,6 +291,10 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         //}
         $server->send([$connection], json_encode($response));
         $server->close($connection, $th->getCode());
+
+        if ($th instanceof PDOException) {
+            $db = null;
+        }
     } finally {
         /**
          * Put used PDO and Redis Connections back into their pools.
