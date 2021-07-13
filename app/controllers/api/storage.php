@@ -784,45 +784,41 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             throw new Exception('File not found in ' . $path, 404);
         }
 
+        $response
+            ->setContentType($file->getAttribute('mimeType'))
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('X-Peak', \memory_get_peak_usage())
+            ->addHeader('Content-Disposition', 'attachment; filename="' . $file->getAttribute('name', '') . '"')
+        ;
+
         if ($device->getFileSize($path) > APP_LIMIT_COMPRESSION) {          
-            $response
-                ->setContentType($file->getAttribute('mimeType'))
-                ->addHeader('Content-Disposition', 'attachment; filename="' . $file->getAttribute('name', '') . '"')
-                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
-                ->addHeader('X-Peak', \memory_get_peak_usage())
-                ->addHeader('Content-Length',$device->getFileSize($path))
-            ;
+            $response->addHeader('Content-Length',$device->getFileSize($path));
+            
             $handle = fopen($path, 'rb');
             while(!feof($handle)) {
                 $response->chunk(@fread($handle,APP_CHUNK_SIZE), feof($handle));
             }
             fclose($handle);
-        } else {
-            $source = $device->read($path);
-            if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
-                $source = OpenSSL::decrypt(
-                    $source,
-                    $file->getAttribute('openSSLCipher'),
-                    App::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
-                    0,
-                    \hex2bin($file->getAttribute('openSSLIV')),
-                    \hex2bin($file->getAttribute('openSSLTag'))
-                );
-            }
-            if (!empty($file->getAttribute('algorithm', ''))) {
-                $compressor = new GZIP();
-                $source = $compressor->decompress($source);
-            }
-    
-            // Response
-            $response
-                ->setContentType($file->getAttribute('mimeType'))
-                ->addHeader('Content-Disposition', 'attachment; filename="' . $file->getAttribute('name', '') . '"')
-                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
-                ->addHeader('X-Peak', \memory_get_peak_usage())
-                ->send($source)
-            ;
+            return;
         }
+
+        $source = $device->read($path);
+        if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
+            $source = OpenSSL::decrypt(
+                $source,
+                $file->getAttribute('openSSLCipher'),
+                App::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
+                0,
+                \hex2bin($file->getAttribute('openSSLIV')),
+                \hex2bin($file->getAttribute('openSSLTag'))
+            );
+        }
+        if (!empty($file->getAttribute('algorithm', ''))) {
+            $compressor = new GZIP();
+            $source = $compressor->decompress($source);
+        }
+
+        $response->send($source);
     });
 
 App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
@@ -873,16 +869,17 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             $contentType = $file->getAttribute('mimeType');
         }
 
-        $fileName = $file->getAttribute('name', '');
+        $response
+            ->setContentType($contentType)
+            ->addHeader('Content-Security-Policy', 'script-src none;')
+            ->addHeader('X-Content-Type-Options', 'nosniff')
+            ->addHeader('Content-Disposition', 'inline; filename="' . $file->getAttribute('name', '') . '"')
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('X-Peak', \memory_get_peak_usage())
+        ;
 
-        if ($device->getFileSize($path) > APP_LIMIT_COMPRESSION) {          
+        if ($device->getFileSize($path) > APP_LIMIT_COMPRESSION) { //Compression and chunking cannot both work together  
             $response
-                ->setContentType($contentType)
-                ->addHeader('Content-Security-Policy', 'script-src none;')
-                ->addHeader('X-Content-Type-Options', 'nosniff')
-                ->addHeader('Content-Disposition', 'inline; filename="' . $fileName . '"')
-                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
-                ->addHeader('X-Peak', \memory_get_peak_usage())
                 ->addHeader('Content-Length',$device->getFileSize($path))
             ;
             $handle = fopen($path, 'rb');
@@ -890,33 +887,29 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
                 $response->chunk(@fread($handle,APP_CHUNK_SIZE), feof($handle));
             }
             fclose($handle);
-        } else {
-            $source = $device->read($path);
-            
-            if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
-                $source = OpenSSL::decrypt(
-                    $source,
-                    $file->getAttribute('openSSLCipher'),
-                    App::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
-                    0,
-                    \hex2bin($file->getAttribute('openSSLIV')),
-                    \hex2bin($file->getAttribute('openSSLTag'))
-                );
-            }
-
-            $output = $compressor->decompress($source);
-
-            // Response
-            $response
-                ->setContentType($contentType)
-                ->addHeader('Content-Security-Policy', 'script-src none;')
-                ->addHeader('X-Content-Type-Options', 'nosniff')
-                ->addHeader('Content-Disposition', 'inline; filename="' . $fileName . '"')
-                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
-                ->addHeader('X-Peak', \memory_get_peak_usage())
-                ->send($output)
-            ;
+            return;
         }
+
+        $source = $device->read($path);
+        
+        if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
+            $source = OpenSSL::decrypt(
+                $source,
+                $file->getAttribute('openSSLCipher'),
+                App::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
+                0,
+                \hex2bin($file->getAttribute('openSSLIV')),
+                \hex2bin($file->getAttribute('openSSLTag'))
+            );
+        }
+
+        $output = $compressor->decompress($source);
+
+        // Response
+        $response
+            ->send($output)
+        ;
+        
     });
 
 App::put('/v1/storage/buckets/:bucketId/files/:fileId')
