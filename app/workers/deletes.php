@@ -9,6 +9,7 @@ use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization as Authorization2;
 use Appwrite\Resque\Worker;
 use Utopia\Storage\Device\Local;
 use Utopia\Abuse\Abuse;
@@ -154,7 +155,7 @@ class DeletesV1 extends Worker
         // Delete Memberships and decrement team membership counts
         $this->deleteByGroup2('memberships', [
             new Query('userId', Query::TYPE_EQUAL, [$userId])
-        ], $this->getInternalDB($projectId), function(Document $document) use ($projectId, $userId) {
+        ], $this->getInternalDB($projectId), function(Document2 $document) use ($projectId, $userId) {
 
             if ($document->getAttribute('confirm')) { // Count only confirmed members
                 $teamId = $document->getAttribute('teamId');
@@ -265,7 +266,7 @@ class DeletesV1 extends Worker
     {
         // TODO@kodumbeats this doesnt seem to work - getting the following error:
         // "Write scopes ['role:all'] given, only ["user:{$userId}", "team:{$teamId}/owner"] allowed
-        Authorization::disable();
+        Authorization2::disable();
 
         // TODO@kodumbeats is it better to pass objects or ID strings?
         if($database->deleteDocument($document->getCollection(), $document->getId())) {
@@ -282,7 +283,7 @@ class DeletesV1 extends Worker
             return false;
         }
 
-        Authorization::reset();
+        Authorization2::reset();
     }
 
     protected function deleteForProjectIds(callable $callback)
@@ -385,11 +386,11 @@ class DeletesV1 extends Worker
         while($sum === $limit) {
             $chunk++;
 
-            Authorization::disable();
+            Authorization2::disable();
 
             $results = $database->find($collection, $queries, $limit, 0);
 
-            Authorization::reset();
+            Authorization2::reset();
 
             $sum = count($results);
 
