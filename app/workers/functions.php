@@ -450,12 +450,12 @@ class FunctionsV1 extends Worker
         else {
             Console::info('Container is ready to run');
         }
-        
+
         $stdout = '';
         $stderr = '';
 
         $executionStart = \microtime(true);
-        
+
         $exitCode = Console::execute("docker exec ".\implode(" ", $vars)." {$container} {$command}"
             , '', $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
 
@@ -466,7 +466,7 @@ class FunctionsV1 extends Worker
         Console::info("Function executed in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
 
         Authorization::disable();
-        
+
         $execution = $database->updateDocument(array_merge($execution->getArrayCopy(), [
             'tagId' => $tag->getId(),
             'status' => $functionStatus,
@@ -475,7 +475,7 @@ class FunctionsV1 extends Worker
             'stderr' => \mb_substr($stderr, -4000), // log last 4000 chars output
             'time' => $executionTime,
         ]));
-        
+
         Authorization::reset();
 
         if (false === $function) {
@@ -501,7 +501,7 @@ class FunctionsV1 extends Worker
             $execution->getArrayCopy(), 
             'functions.executions.update', 
             $target['channels'], 
-            $target['permissions']
+            $target['roles']
         );
 
         $usage = new Event('v1-usage', 'UsageV1');
@@ -515,7 +515,7 @@ class FunctionsV1 extends Worker
             ->setParam('networkRequestSize', 0)
             ->setParam('networkResponseSize', 0)
         ;
-        
+
         if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $usage->trigger();
         }

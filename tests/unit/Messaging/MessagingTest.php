@@ -29,7 +29,7 @@ class MessagingTest extends TestCase
 
         $event = [
             'project' => '1',
-            'permissions' => ['*'],
+            'roles' => ['*'],
             'data' => [
                 'channels' => [
                     0 => 'account.123',
@@ -37,89 +37,89 @@ class MessagingTest extends TestCase
             ]
         ];
 
-        $receivers = $realtime->getReceivers($event);
+        $receivers = $realtime->getSubscribers($event);
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['permissions'] = ['role:member'];
+        $event['roles'] = ['role:member'];
 
-        $receivers = $realtime->getReceivers($event);
-
-        $this->assertCount(1, $receivers);
-        $this->assertEquals(1, $receivers[0]);
-
-        $event['permissions'] = ['user:123'];
-
-        $receivers = $realtime->getReceivers($event);
+        $receivers = $realtime->getSubscribers($event);
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['permissions'] = ['team:abc'];
+        $event['roles'] = ['user:123'];
 
-        $receivers = $realtime->getReceivers($event);
-
-        $this->assertCount(1, $receivers);
-        $this->assertEquals(1, $receivers[0]);
-
-        $event['permissions'] = ['team:abc/administrator'];
-
-        $receivers = $realtime->getReceivers($event);
+        $receivers = $realtime->getSubscribers($event);
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['permissions'] = ['team:abc/moderator'];
+        $event['roles'] = ['team:abc'];
 
-        $receivers = $realtime->getReceivers($event);
-
-        $this->assertCount(1, $receivers);
-        $this->assertEquals(1, $receivers[0]);
-
-        $event['permissions'] = ['team:def'];
-
-        $receivers = $realtime->getReceivers($event);
+        $receivers = $realtime->getSubscribers($event);
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['permissions'] = ['team:def/guest'];
+        $event['roles'] = ['team:abc/administrator'];
 
-        $receivers = $realtime->getReceivers($event);
+        $receivers = $realtime->getSubscribers($event);
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['permissions'] = ['user:456'];
+        $event['roles'] = ['team:abc/moderator'];
 
-        $receivers = $realtime->getReceivers($event);
+        $receivers = $realtime->getSubscribers($event);
+
+        $this->assertCount(1, $receivers);
+        $this->assertEquals(1, $receivers[0]);
+
+        $event['roles'] = ['team:def'];
+
+        $receivers = $realtime->getSubscribers($event);
+
+        $this->assertCount(1, $receivers);
+        $this->assertEquals(1, $receivers[0]);
+
+        $event['roles'] = ['team:def/guest'];
+
+        $receivers = $realtime->getSubscribers($event);
+
+        $this->assertCount(1, $receivers);
+        $this->assertEquals(1, $receivers[0]);
+
+        $event['roles'] = ['user:456'];
+
+        $receivers = $realtime->getSubscribers($event);
 
         $this->assertEmpty($receivers);
 
-        $event['permissions'] = ['team:def/member'];
+        $event['roles'] = ['team:def/member'];
 
-        $receivers = $realtime->getReceivers($event);
+        $receivers = $realtime->getSubscribers($event);
 
         $this->assertEmpty($receivers);
 
-        $event['permissions'] = ['*'];
+        $event['roles'] = ['*'];
         $event['data']['channels'] = ['documents.123'];
 
-        $receivers = $realtime->getReceivers($event);
+        $receivers = $realtime->getSubscribers($event);
 
         $this->assertEmpty($receivers);
 
         $event['data']['channels'] = ['documents.789'];
 
-        $receivers = $realtime->getReceivers($event);
+        $receivers = $realtime->getSubscribers($event);
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
         $event['project'] = '2';
 
-        $receivers = $realtime->getReceivers($event);
+        $receivers = $realtime->getSubscribers($event);
 
         $this->assertEmpty($receivers);
 
@@ -148,7 +148,7 @@ class MessagingTest extends TestCase
             4 => 'account.456'
         ];
 
-        $channels = Realtime::convertChannels($channels, $user);
+        $channels = Realtime::convertChannels($channels, $user->getId());
         $this->assertCount(3, $channels);
         $this->assertArrayHasKey('files', $channels);
         $this->assertArrayHasKey('documents', $channels);
@@ -185,7 +185,7 @@ class MessagingTest extends TestCase
             4 => 'account.456'
         ];
 
-        $channels = Realtime::convertChannels($channels, $user);
+        $channels = Realtime::convertChannels($channels, $user->getId());
 
         $this->assertCount(4, $channels);
         $this->assertArrayHasKey('files', $channels);

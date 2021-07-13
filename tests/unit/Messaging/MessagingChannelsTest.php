@@ -62,7 +62,7 @@ class MessagingChannelsTest extends TestCase
 
                 $roles = Auth::getRoles($user);
 
-                $parsedChannels = Realtime::convertChannels([0 => $channel], $user);
+                $parsedChannels = Realtime::convertChannels([0 => $channel], $user->getId());
 
                 $this->realtime->subscribe(
                     '1',
@@ -86,7 +86,7 @@ class MessagingChannelsTest extends TestCase
 
                 $roles = Auth::getRoles($user);
 
-                $parsedChannels = Realtime::convertChannels([0 => $channel], $user);
+                $parsedChannels = Realtime::convertChannels([0 => $channel], $user->getId());
 
                 $this->realtime->subscribe(
                     '1',
@@ -153,7 +153,7 @@ class MessagingChannelsTest extends TestCase
         foreach ($this->allChannels as $index => $channel) {
             $event = [
                 'project' => '1',
-                'permissions' => ['*'],
+                'roles' => ['*'],
                 'data' => [
                     'channels' => [
                         0 => $channel,
@@ -161,7 +161,7 @@ class MessagingChannelsTest extends TestCase
                 ]
             ];
 
-            $receivers = $this->realtime->getReceivers($event);
+            $receivers = $this->realtime->getSubscribers($event);
 
             /**
              * Every Client subscribed to the Wildcard should receive this event.
@@ -186,7 +186,7 @@ class MessagingChannelsTest extends TestCase
 
                 $event = [
                     'project' => '1',
-                    'permissions' => $permissions,
+                    'roles' => $permissions,
                     'data' => [
                         'channels' => [
                             0 => $channel,
@@ -194,7 +194,7 @@ class MessagingChannelsTest extends TestCase
                     ]
                 ];
 
-                $receivers = $this->realtime->getReceivers($event);
+                $receivers = $this->realtime->getSubscribers($event);
 
                 /**
                  * Every Role subscribed to a Channel should receive this event.
@@ -220,7 +220,7 @@ class MessagingChannelsTest extends TestCase
             }
             $event = [
                 'project' => '1',
-                'permissions' => $permissions,
+                'roles' => $permissions,
                 'data' => [
                     'channels' => [
                         0 => $channel,
@@ -228,7 +228,7 @@ class MessagingChannelsTest extends TestCase
                 ]
             ];
 
-            $receivers = $this->realtime->getReceivers($event);
+            $receivers = $this->realtime->getSubscribers($event);
 
             /**
              * Every Client subscribed to a Channel should receive this event.
@@ -254,7 +254,7 @@ class MessagingChannelsTest extends TestCase
             }
             $event = [
                 'project' => '1',
-                'permissions' => $permissions,
+                'roles' => $permissions,
                 'data' => [
                     'channels' => [
                         0 => $channel,
@@ -262,7 +262,7 @@ class MessagingChannelsTest extends TestCase
                 ]
             ];
 
-            $receivers = $this->realtime->getReceivers($event);
+            $receivers = $this->realtime->getSubscribers($event);
 
             /**
              * Every Team Member should receive this event.
@@ -280,7 +280,7 @@ class MessagingChannelsTest extends TestCase
 
             $event = [
                 'project' => '1',
-                'permissions' => $permissions,
+                'roles' => $permissions,
                 'data' => [
                     'channels' => [
                         0 => $channel,
@@ -288,7 +288,7 @@ class MessagingChannelsTest extends TestCase
                 ]
             ];
 
-            $receivers = $this->realtime->getReceivers($event);
+            $receivers = $this->realtime->getSubscribers($event);
 
             /**
              * Only 1 Team Member of a role should have access to a specific channel.
