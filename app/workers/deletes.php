@@ -65,7 +65,7 @@ class DeletesV1 extends Worker
                 break;
 
             case DELETE_TYPE_EXECUTIONS:
-                $this->deleteExecutionLogs($this->args['timestamp']);
+                $this->deleteExecutionLogs2($this->args['timestamp']);
                 break;
 
             case DELETE_TYPE_AUDIT:
@@ -194,6 +194,20 @@ class DeletesV1 extends Worker
         });
     }
 
+    protected function deleteExecutionLogs2($timestamp) 
+    {
+        $this->deleteForProjectIds2(function($projectId) use ($timestamp) {
+            if (!($dbForInternal = $this->getInternalDB($projectId))) {
+                throw new Exception('Failed to get projectDB for project '.$projectId);
+            }
+
+            // Delete Executions
+            $this->deleteByGroup2('executions', [
+                new Query('dateCreated', Query::TYPE_LESSER, [$timestamp])
+            ], $dbForInternal);
+        });
+    }
+
     protected function deleteAbuseLogs($timestamp) 
     {
         if($timestamp == 0) {
@@ -319,6 +333,40 @@ class DeletesV1 extends Worker
                 ],
             ]);
             Authorization::reset();
+
+            $projectIds = array_map (function ($project) { 
+                return $project->getId(); 
+            }, $projects);
+
+            $sum = count($projects);
+
+            Console::info('Executing delete function for chunk #'.$chunk.'. Found '.$sum.' projects');
+            foreach ($projectIds as $projectId) {
+                $callback($projectId);
+                $count++;
+            }
+        }
+
+        $executionEnd = \microtime(true);
+        Console::info("Found {$count} projects " . ($executionEnd - $executionStart) . " seconds");
+    }
+
+    protected function deleteForProjectIds2(callable $callback)
+    {
+        $count = 0;
+        $chunk = 0;
+        $limit = 50;
+        $projects = [];
+        $sum = $limit;
+
+        $executionStart = \microtime(true);
+
+        while($sum === $limit) {
+            $chunk++;
+
+            Authorization2::disable();
+            $projects = $this->getConsoleDB2()->find('projects', [], $limit);
+            Authorization2::reset();
 
             $projectIds = array_map (function ($project) { 
                 return $project->getId(); 
@@ -482,5 +530,19 @@ class DeletesV1 extends Worker
         $dbForInternal->setNamespace('project_'.$projectId.'_internal'); // Main DB
 
         return $dbForInternal;
+    }
+
+    /**
+     * @return Database2
+     */
+    protected function getConsoleDB2(): Database2
+    {
+        global $register;
+
+        $cache = new Cache(new RedisCache($register->get('cache')));
+        $dbForConsole = new Database2(new MariaDB($register->get('db')), $cache);
+        $dbForConsole->setNamespace('project_console_internal'); // Main DB
+
+        return $dbForConsole;
     }
 }
