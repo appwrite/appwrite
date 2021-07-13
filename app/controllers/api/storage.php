@@ -791,7 +791,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         ;
 
         if ($device->getFileSize($path) > APP_LIMIT_COMPRESSION) {          
-            $response->addHeader('Content-Length',$device->getFileSize($path));
+            $response->addHeader('Content-Length', $device->getFileSize($path));
             
             $handle = fopen($path, 'rb');
             while(!feof($handle)) {
