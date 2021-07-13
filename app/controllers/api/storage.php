@@ -756,10 +756,9 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->label('sdk.methodType', 'location')
     ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File unique ID.')
-    ->inject('request')
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($bucketId, $fileId, $request, $response, $dbForInternal) {
+    ->action(function ($bucketId, $fileId, $response, $dbForInternal) {
         /** @var Utopia\Swoole\Request $response */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
