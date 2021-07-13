@@ -317,7 +317,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $chunks = 1;
 
         if (!empty($contentRange)) {
-            $uploadId = empty($request->getHeader('x-appwrite-upload-id')) ? $uploadId : $request->getHeader('x-appwrite-upload-id');
+            $uploadId = $request->getHeader('x-appwrite-upload-id', $uploadId);
             $contentRange = explode(" ", $contentRange);
             if (count($contentRange) != 2) {
                 throw new Exception('Invalid content-range header', 400);
