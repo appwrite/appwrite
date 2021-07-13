@@ -119,6 +119,12 @@ Learn more at our [Technology Stack](## Technology Stack) section.
 - [Encryption](https://medium.com/searchencrypt/what-is-encryption-how-does-it-work-e8f20e340537#:~:text=Encryption%20is%20a%20process%20that,%2C%20or%20decrypt%2C%20the%20information.)
 - [Hashing](https://searchsqlserver.techtarget.com/definition/hashing#:~:text=Hashing%20is%20the%20transformation%20of,it%20using%20the%20original%20value.)
 
+Note that code hot-reloading is supported. Therefore instead of `docker-compose up -d`, you may run the following:
+
+```bash
+docker-compose -f docker-compose.yml -f docker-compose-reload.yml up
+``` 
+
 ## Architecture
 
 Appwrite's current structure is a combination of both [Monolithic](https://en.wikipedia.org/wiki/Monolithic_application) and [Microservice](https://en.wikipedia.org/wiki/Microservices) architectures, but our final goal, as we grow, is to be using only microservices.

@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+
+  appwrite:
+    container_name: appwrite
+
+  live-reloader:
+    image: apogiatzis/livereloading
+    container_name: livereloader
+    privileged: true
+      environment:
+        - RELOAD_CONTAINER=appwrite
+        - RELOAD_DELAY=20              # seconds
+        - RESTART_TIMEOUT=10         # seconds
+        - RELOAD_DIR=/usr/share/nginx/html/public
+      volumes:
+            - "/var/run/docker.sock:/var/run/docker.sock"
+
