@@ -7,13 +7,6 @@ use Appwrite\Database\Document;
 class Auth
 {
     /**
-     * User Status.
-     */
-    const USER_STATUS_UNACTIVATED = 0;
-    const USER_STATUS_ACTIVATED = 1;
-    const USER_STATUS_BLOCKED = 2;
-
-    /**
      * User Roles.
      */
     const USER_ROLE_GUEST = 'guest';

@@ -63,7 +63,7 @@ App::post('/v1/users')
                 ],
                 'email' => $email,
                 'emailVerification' => false,
-                'status' => Auth::USER_STATUS_UNACTIVATED,
+                'status' => true,
                 'password' => Auth::passwordHash($password),
                 'passwordUpdate' => \time(),
                 'registration' => \time(),
@@ -346,7 +346,7 @@ App::patch('/v1/users/:userId/status')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User unique ID.')
-    ->param('status', '', new WhiteList([Auth::USER_STATUS_ACTIVATED, Auth::USER_STATUS_BLOCKED, Auth::USER_STATUS_UNACTIVATED], true, Validator::TYPE_INTEGER), 'User Status code. To activate the user pass '.Auth::USER_STATUS_ACTIVATED.', to block the user pass '.Auth::USER_STATUS_BLOCKED.' and for disabling the user pass '.Auth::USER_STATUS_UNACTIVATED)
+    ->param('status', '', new Boolean(true), 'User Status. To activate the user pass true and to block the user pass false')
     ->inject('response')
     ->inject('projectDB')
     ->action(function ($userId, $status, $response, $projectDB) {
@@ -360,7 +360,7 @@ App::patch('/v1/users/:userId/status')
         }
 
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
-            'status' => (int)$status,
+            'status' => (bool) $status,
         ]));
 
         if (false === $user) {
