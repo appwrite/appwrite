@@ -27,7 +27,7 @@ class MigrationV09Test extends MigrationTest
         ]));
 
         $this->assertIsBool($document->getAttribute('status'));
-        $this->assertEquals(true, $document->getAttribute('env', false));
+        $this->assertEquals(true, $document->getAttribute('status', false));
 
         $document = $this->fixDocument(new Document([
             '$id' => uniqid(),
@@ -36,7 +36,7 @@ class MigrationV09Test extends MigrationTest
         ]));
 
         $this->assertIsBool($document->getAttribute('status'));
-        $this->assertEquals(true, $document->getAttribute('env', false));
+        $this->assertEquals(true, $document->getAttribute('status', false));
 
         $document = $this->fixDocument(new Document([
             '$id' => uniqid(),
@@ -45,6 +45,6 @@ class MigrationV09Test extends MigrationTest
         ]));
 
         $this->assertIsBool($document->getAttribute('status'));
-        $this->assertEquals(false, $document->getAttribute('env', false));
+        $this->assertEquals(false, $document->getAttribute('status', false));
     }
 }
