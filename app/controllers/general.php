@@ -234,7 +234,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
         if ($key && $user->isEmpty()) {
             $user = new Document([
                 '$id' => '',
-                'status' => Auth::USER_STATUS_ACTIVATED,
+                'status' => true,
                 'email' => 'app.'.$project->getId().'@service.'.$request->getHostname(),
                 'password' => '',
                 'name' => $project->getAttribute('name', 'Untitled'),
@@ -278,8 +278,8 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
         throw new Exception($user->getAttribute('email', 'User').' (role: '.\strtolower($roles[$role]['label']).') missing scope ('.$scope.')', 401);
     }
 
-    if (Auth::USER_STATUS_BLOCKED == $user->getAttribute('status')) { // Account has not been activated
-        throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
+    if (false === $user->getAttribute('status')) { // Account is blocked
+        throw new Exception('Invalid credentials. User is blocked', 401);
     }
 
     if ($user->getAttribute('reset')) {

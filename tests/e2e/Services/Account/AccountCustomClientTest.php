@@ -102,7 +102,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'status' => 2,
+            'status' => false,
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
