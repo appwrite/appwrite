@@ -7,7 +7,7 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Migration\Version\V09;
 
-class MigrationV08Test extends MigrationTest
+class MigrationV09Test extends MigrationTest
 {
     public function setUp(): void
     {
