@@ -5,16 +5,15 @@ namespace Appwrite\Tests;
 use ReflectionClass;
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
-use Appwrite\Auth\Auth;
-use Appwrite\Migration\Version\V08;
+use Appwrite\Migration\Version\V09;
 
 class MigrationV08Test extends MigrationTest
 {
     public function setUp(): void
     {
         $this->pdo = new \PDO('sqlite::memory:');
-        $this->migration = new V08($this->pdo);
-        $reflector = new ReflectionClass('Appwrite\Migration\Version\V08');
+        $this->migration = new V09($this->pdo);
+        $reflector = new ReflectionClass('Appwrite\Migration\Version\V09');
         $this->method = $reflector->getMethod('fixDocument');
         $this->method->setAccessible(true);
     }
