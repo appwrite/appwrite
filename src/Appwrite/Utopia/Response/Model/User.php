@@ -30,7 +30,7 @@ class User extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'User status. True for enabled and false for disabled.',
+                'description' => 'User status. Pass `true` for enabled and `false` for disabled.',
                 'default' => true,
                 'example' => true,
             ])

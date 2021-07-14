@@ -346,7 +346,7 @@ App::patch('/v1/users/:userId/status')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User unique ID.')
-    ->param('status', '', new Boolean(true), 'User Status. To activate the user pass true and to block the user pass false')
+    ->param('status', null, new Boolean(true), 'User Status. To activate the user pass true and to block the user pass false')
     ->inject('response')
     ->inject('projectDB')
     ->action(function ($userId, $status, $response, $projectDB) {
