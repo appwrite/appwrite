@@ -8,7 +8,7 @@ use Utopia\CLI\Console;
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 
-class V08 extends Migration
+class V09 extends Migration
 {
     public function execute(): void
     {
