@@ -42,6 +42,9 @@ class UsageV1 extends Worker
         $functionExecutionTime = $this->args['functionExecutionTime'] ?? 0;
         $functionStatus = $this->args['functionStatus'] ?? '';
 
+        $realtimeConnections = $this->args['realtimeConnections'] ?? 0;
+        $realtimeMessages = $this->args['realtimeMessages'] ?? 0;
+
         $tags = ",project={$projectId},version=".App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         // the global namespace is prepended to every key (optional)
@@ -54,6 +57,14 @@ class UsageV1 extends Worker
         if($functionExecution >= 1) {
             $statsd->increment('executions.all'.$tags.',functionId='.$functionId.',functionStatus='.$functionStatus);
             $statsd->count('executions.time'.$tags.',functionId='.$functionId, $functionExecutionTime);
+        }
+
+        if($realtimeConnections >= 1) {
+            $statsd->count('realtime.clients'.$tags, $realtimeConnections);
+        }
+
+        if($realtimeMessages >= 1) {
+            $statsd->count('realtime.messages'.$tags, $realtimeMessages);
         }
 
         $statsd->count('network.inbound'.$tags, $networkRequestSize);

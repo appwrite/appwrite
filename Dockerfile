@@ -33,6 +33,7 @@ RUN \
   git \
   zlib-dev \
   brotli-dev \
+  openssl-dev \
   yaml-dev \
   imagemagick \
   imagemagick-dev \
@@ -52,7 +53,7 @@ RUN \
   git clone --depth 1 --branch $PHP_SWOOLE_VERSION https://github.com/swoole/swoole-src.git && \
   cd swoole-src && \
   phpize && \
-  ./configure --enable-http2 && \
+  ./configure --enable-sockets --enable-http2 --enable-openssl && \
   make && make install && \
   cd .. && \
   ## Imagick Extension
@@ -217,6 +218,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/maintenance && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/migrate && \
+    chmod +x /usr/local/bin/realtime && \
     chmod +x /usr/local/bin/schedule && \
     chmod +x /usr/local/bin/sdks && \
     chmod +x /usr/local/bin/ssl && \
@@ -246,6 +248,7 @@ RUN if [ "$DEBUG" == "true" ]; then echo "opcache.enable=0" >> /usr/local/etc/ph
 RUN echo "opcache.preload_user=www-data" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.preload=/usr/src/code/app/preload.php" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.enable_cli=1" >> /usr/local/etc/php/conf.d/appwrite.ini
+RUN echo "default_socket_timeout=-1" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.jit_buffer_size=100M" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.jit=1235" >> /usr/local/etc/php/conf.d/appwrite.ini
 

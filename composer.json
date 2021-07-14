@@ -51,6 +51,7 @@
         "utopia-php/domains": "1.1.*",
         "utopia-php/swoole": "0.2.*",
         "utopia-php/storage": "0.5.*",
+        "utopia-php/websocket": "dev-main",
         "utopia-php/image": "0.5.*",
         "resque/php-resque": "1.3.6",
         "matomo/device-detector": "4.2.3",
@@ -63,10 +64,17 @@
     },
     "require-dev": {
         "appwrite/sdk-generator": "0.12.0",
+        "textalk/websocket": "1.5.2",
         "swoole/ide-helper": "4.6.7",
         "phpunit/phpunit": "9.5.6",
         "vimeo/psalm": "4.7.2"
     },
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/utopia-php/websocket.git"
+        }
+    ],
     "provide": {
         "ext-phpiredis": "*"
     },
