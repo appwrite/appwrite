@@ -266,12 +266,12 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) { // Check if permission is denied because project is missing
             throw new Exception('Project not found', 404);
         }
-        
+
         throw new Exception($user->getAttribute('email', 'User').' (role: '.\strtolower($roles[$role]['label']).') missing scope ('.$scope.')', 401);
     }
 
-    if ($user->getAttribute('status', false)) { // Account has not been activated
-        throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
+    if (!$user->getAttribute('status', false)) { // Account is blocked
+        throw new Exception('Invalid credentials. User is blocked', 401);
     }
 
     if ($user->getAttribute('reset')) {
