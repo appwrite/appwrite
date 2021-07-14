@@ -195,7 +195,7 @@ App::post('/v1/account/sessions')
             throw new Exception('Invalid credentials', 401); // Wrong password or username
         }
 
-        if (!$profile->getAttribute('status', false)) { // Account is blocked
+        if (false === $profile->getAttribute('status', null)) { // Account is blocked
             throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
         }
 
@@ -533,7 +533,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
         }
 
-        if (!$user->getAttribute('status', false)) { // Account is blocked
+        if (false === $user->getAttribute('status', null)) { // Account is blocked
             throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
         }
 
@@ -1486,7 +1486,7 @@ App::post('/v1/account/recovery')
             throw new Exception('User not found', 404); // TODO maybe hide this
         }
 
-        if (!$profile->getAttribute('status', false)) { // Account is blocked
+        if (false === $profile->getAttribute('status', null)) { // Account is blocked
             throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
         }
 

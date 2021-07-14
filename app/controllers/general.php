@@ -270,7 +270,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
         throw new Exception($user->getAttribute('email', 'User').' (role: '.\strtolower($roles[$role]['label']).') missing scope ('.$scope.')', 401);
     }
 
-    if (!$user->getAttribute('status', false)) { // Account is blocked
+    if (false === $user->getAttribute('status', null)) { // Account is blocked
         throw new Exception('Invalid credentials. User is blocked', 401);
     }
 
