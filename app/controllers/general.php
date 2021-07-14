@@ -223,7 +223,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
     if (!empty($authKey)) { // API Key authentication
         // Check if given key match project API keys
         $key = $project->search('secret', $authKey, $project->getAttribute('keys', []));
-            
+
         /*
          * Try app auth when we have project key and no user
          *  Mock user to app and grant API key scopes in addition to default app scopes
