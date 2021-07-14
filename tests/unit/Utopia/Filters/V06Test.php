@@ -47,7 +47,7 @@ class V06Test extends TestCase
         $this->assertEquals($parsedResponse['$id'], '5e5ea5c16897e');
         $this->assertEquals($parsedResponse['name'], 'John Doe');
         $this->assertEquals($parsedResponse['registration'], 1592981250);
-        $this->assertEquals($parsedResponse['status'], true);
+        $this->assertEquals($parsedResponse['status'], 0);
         $this->assertEquals($parsedResponse['email'], 'john@appwrite.io');
         $this->assertEquals($parsedResponse['emailVerification'], false);
         $this->assertEquals($parsedResponse['prefs'], ['theme' => 'pink', 'timezone' => 'UTC']);
