@@ -165,6 +165,7 @@ class DatabaseV1 extends Worker
     {
         global $register;
 
+        /** @var Database $dbForExternal */
         $dbForExternal = null;
 
         go(function() use ($register, $projectId, &$dbForExternal) {
