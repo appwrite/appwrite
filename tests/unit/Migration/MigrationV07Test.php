@@ -56,7 +56,7 @@ class MigrationV07Test extends MigrationTest
                 ]),
             ]
         ]));
-        
+
         $this->assertEquals($document->getAttribute('oauth2Github', null), null);
         $this->assertEquals($document->getAttribute('oauth2GithubAccessToken', null), null);
 
