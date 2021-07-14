@@ -1,3 +1,8 @@
+# Version 0.10.0
+
+## Breaking Changes (Read before upgrading!)
+- Changed user status attribute to boolean (#1395)
+
 # Version 0.9.1
 
 ## Bugs
