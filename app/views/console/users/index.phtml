@@ -93,7 +93,7 @@ $auth = $this->getParam('auth', []);
                                             <span class="tag">Unverified</span>
                                         </span>
 
-                                        <span data-ls-if="{{user.status}} === <?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>">
+                                        <span data-ls-if="{{user.status}} === false">
                                             <span class="tag red">Blocked</span>
                                         </span>
                                     </td>
