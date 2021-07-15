@@ -317,26 +317,13 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $chunks = 1;
 
         if (!empty($contentRange)) {
+            $start = $request->getContentRangeStart();
+            $end = $request->getContentRangeEnd();
+            $size = $request->getContentRangeSize();
+
             $fileId = $request->getHeader('x-appwrite-file-id', $fileId);
-            $contentRange = explode(" ", $contentRange);
-            if (count($contentRange) != 2) {
-                throw new Exception('Invalid content-range header', 400);
-            }
-
-            $rangeData = explode("/", $contentRange[1]);
-            if (count($rangeData) != 2) {
-                throw new Exception('Invalid content-range header', 400);
-            }
-
-            $size = (int) $rangeData[1];
-            $parts = explode("-", $rangeData[0]);
-            if (count($parts) != 2) {
-                throw new Exception('Invalid content-range header', 400);
-            }
-
-            $start = (int) $parts[0];
-            $end = (int) $parts[1];
-            if ($start > $end || $end > $size) {
+            
+            if(empty($start) || empty($end) || empty($size)) {
                 throw new Exception('Invalid content-range header', 400);
             }
 
