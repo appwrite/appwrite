@@ -41,6 +41,15 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false
     ],
+    'bitrix24' => [
+        'name' => 'Bitrix24',
+        'developers' => 'https://training.bitrix24.com/rest_help/oauth/authentication.php',
+        'icon' => 'icon-bitrix24',
+        'enabled' => true,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+    ],
     'box' => [
         'name' => 'Box',
         'developers' => 'https://developer.box.com/reference/',
