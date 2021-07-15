@@ -20,7 +20,7 @@ use Utopia\Swoole\Request;
 
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
-$payloadSize = max(4000000 /* 4mb */, App::getEnv('_APP_STORAGE_LIMIT', 10000000 /* 10mb */));
+$payloadSize = 5 * (1024 * 1024); // 5MB
 
 $http
     ->set([
