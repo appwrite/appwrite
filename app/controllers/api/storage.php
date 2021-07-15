@@ -809,7 +809,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             $response->addHeader('Content-Length', $device->getFileSize($path));
             $chunk = 2000000; // Max chunk of 2 mb
             for ($i=0; $i < ceil($size / $chunk); $i++) {
-                $response->chunk($device->read($path, ($i * $chunk), min($chunk, $size - ($i * $chunk))), ($i*$chunk) >= $size);
+                $response->chunk($device->read($path, ($i * $chunk), min($chunk, $size - ($i * $chunk))), (($i + 1) * $chunk) >= $size);
             }
         } else {
             $response->send($device->read($path));
@@ -903,7 +903,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             $response->addHeader('Content-Length', $device->getFileSize($path));
             $chunk = 2000000; // Max chunk of 2 mb
             for ($i=0; $i < ceil($size / $chunk); $i++) {
-                $response->chunk($device->read($path, ($i * $chunk), min($chunk, $size - ($i * $chunk))), ($i*$chunk) >= $size);
+                $response->chunk($device->read($path, ($i * $chunk), min($chunk, $size - ($i * $chunk))), (($i + 1) * $chunk) >= $size);
             }
         } else {
             $response->send($device->read($path));
