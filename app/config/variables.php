@@ -454,6 +454,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_FUNCTIONS_CUSTOM_RUNTIMES',
+                'description' => "This option allows you to add your own environments into Appwrite. Do you want to write functions in Emojicode? Well, now you can. Provide list of docker image names separated by comma.\nExample: c-with-crypto,emojicode-runner\n\nYou can also use versioning system in docker. If you only provide runtime name, it will default to version 'latest'. You can provide multiple versions of one runtime.\nExample: emojicode-wrapper:1.0.0,emojicode-wrapper:1.2.1,emojicode-wrapper:alpine-1.2.1",
+                // TODO: 'introduction' => '0.9.X',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_FUNCTIONS_ENVS',
                 'description' => 'Deprectated with 0.8.0, use \'_APP_FUNCTIONS_RUNTIMES\' instead!',
                 'introduction' => '0.7.0',
