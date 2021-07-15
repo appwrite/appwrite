@@ -130,6 +130,54 @@ class Project extends Model
                 'example' => new stdClass,
                 'array' => true,
             ])
+            ->addRule('statusForFunctions', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Functions service status',
+                'default' => true,
+                'example' => true,
+            ])
+            ->addRule('statusForWebhooks', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Webhooks service status',
+                'default' => true,
+                'example' => true,
+            ])
+            ->addRule('statusForTasks', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Tasks service status',
+                'default' => true,
+                'example' => true,
+            ])
+            ->addRule('statusForAvatars', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Avatars service status',
+                'default' => true,
+                'example' => true,
+            ])
+            ->addRule('statusForHealth', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Health service status',
+                'default' => true,
+                'example' => true,
+            ])
+            ->addRule('statusForLocale', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Locale service status',
+                'default' => true,
+                'example' => true,
+            ])
+            ->addRule('statusForStorage', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Storage service status',
+                'default' => true,
+                'example' => true,
+            ])
+            ->addRule('statusForTeams', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Teams service status',
+                'default' => true,
+                'example' => true,
+            ])
         ;
 
         $providers = Config::getParam('providers', []);

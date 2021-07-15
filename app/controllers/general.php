@@ -260,7 +260,12 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
         }
     }, $user->getAttribute('memberships', []));
 
-    // TDOO Check if user is root
+    $service = $route->getLabel('sdk.namespace','');
+    if(!empty($service)) {
+        if(!$project->getAttribute('statusFor' . \ucfirst($service), true) && !Auth::isPrivilegedUser(Authorization::$roles)) {
+            throw new Exception('Service is disabled', 503);
+        }
+    }
 
     if (!\in_array($scope, $scopes)) {
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) { // Check if permission is denied because project is missing
@@ -337,6 +342,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
         case 412: // Error allowed publicly
         case 429: // Error allowed publicly
         case 501: // Error allowed publicly
+        case 503: // Error allowed publicly
             $code = $error->getCode();
             $message = $error->getMessage();
             break;
