@@ -46,7 +46,7 @@ App::post('/v1/storage/buckets')
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64)), 'Allowed file extensions', true)
     ->param('enabled', true, new Boolean(), 'Is bucket enabled?', true)
     ->param('adapter', 'local', new WhiteList(['local']), 'Storage adapter.', true)
-    ->param('encryption', true, new Boolean(), 'Is encryption enabled? For file size above ' . Storage::human(APP_LIMIT_ENCRYPTION) . ' encryption is skipped even if it\'s enabled', true)
+    ->param('encryption', true, new Boolean(), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER) . ' encryption is skipped even if it\'s enabled', true)
     ->param('antiVirus', true, new Boolean(), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
     ->inject('response')
     ->inject('dbForInternal')
@@ -156,7 +156,7 @@ App::put('/v1/storage/buckets/:bucketId')
     ->param('maximumFileSize', null, new Integer(), 'Maximum file size allowed in bytes. Maximum allowed value is ' . App::getEnv('_APP_STORAGE_LIMIT', 0) . '. For self hosted version you can change the limit by changing _APP_STORAGE_LIMIT environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64)), 'Allowed file extensions', true)
     ->param('enabled', true, new Boolean(), 'Is bucket enabled?', true)
-    ->param('encryption', true, new Boolean(), 'Is encryption enabled? For file size above ' . Storage::human(APP_LIMIT_ENCRYPTION) . ' encryption is skipped even if it\'s enabled', true)
+    ->param('encryption', true, new Boolean(), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER) . ' encryption is skipped even if it\'s enabled', true)
     ->param('antiVirus', true, new Boolean(), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
     ->inject('response')
     ->inject('dbForInternal')
@@ -387,13 +387,13 @@ App::post('/v1/storage/buckets/:bucketId/files')
             $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
             $data = '';
             // Compression
-            if ($size <= APP_LIMIT_COMPRESSION) {
+            if ($size <= APP_STORAGE_READ_BUFFER) {
                 $data = $device->read($path);
                 $compressor = new GZIP();
                 $data = $compressor->compress($data);
             }
 
-            if ($bucket->getAttribute('encryption', true) && $size <= APP_LIMIT_ENCRYPTION) {
+            if ($bucket->getAttribute('encryption', true) && $size <= APP_STORAGE_READ_BUFFER) {
                 if(empty($data)) {
                     $data = $device->read($path);
                 }
@@ -413,7 +413,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             $algorithm = empty($compressor) ? '' : $compressor->getName();
             $fileHash = $device->getFileHash($path);
 
-            if ($bucket->getAttribute('encryption', true) && $size <= APP_LIMIT_ENCRYPTION) {
+            if ($bucket->getAttribute('encryption', true) && $size <= APP_STORAGE_READ_BUFFER) {
                 $openSSLVersion = '1';
                 $openSSLCipher = OpenSSL::CIPHER_AES_128_GCM;
                 $openSSLTag = \bin2hex($tag);
@@ -780,19 +780,9 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             ->addHeader('Content-Disposition', 'attachment; filename="' . $file->getAttribute('name', '') . '"')
         ;
 
-        if ($device->getFileSize($path) > APP_LIMIT_COMPRESSION) {          
-            $response->addHeader('Content-Length', $device->getFileSize($path));
-            
-            $handle = fopen($path, 'rb');
-            while(!feof($handle)) {
-                $response->chunk(@fread($handle,APP_CHUNK_SIZE), feof($handle));
-            }
-            fclose($handle);
-            return;
-        }
-
-        $source = $device->read($path);
+        $source = '';
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
+            $source = $device->read($path);
             $source = OpenSSL::decrypt(
                 $source,
                 $file->getAttribute('openSSLCipher'),
@@ -802,12 +792,29 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
                 \hex2bin($file->getAttribute('openSSLTag'))
             );
         }
+
         if (!empty($file->getAttribute('algorithm', ''))) {
+            if(empty($source)) {
+                $source = $device->read($path);
+            }
             $compressor = new GZIP();
             $source = $compressor->decompress($source);
         }
 
-        $response->send($source);
+        if(!empty($source)) {
+            $response->send($source);
+        }
+
+        $size = $device->getFileSize($path);
+        if ($size > APP_STORAGE_READ_BUFFER) {          
+            $response->addHeader('Content-Length', $device->getFileSize($path));
+            $chunk = 2000000; // Max chunk of 2 mb
+            for ($i=0; $i < ceil($size / $chunk); $i++) {
+                $response->chunk($device->read($path, ($i * $chunk), min($chunk, $size - ($i * $chunk))), ($i*$chunk) >= $size);
+            }
+        } else {
+            $response->send($device->read($path));
+        }
     });
 
 App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
@@ -867,21 +874,9 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             ->addHeader('X-Peak', \memory_get_peak_usage())
         ;
 
-        if ($device->getFileSize($path) > APP_LIMIT_COMPRESSION) { //Compression and chunking cannot both work together  
-            $response
-                ->addHeader('Content-Length',$device->getFileSize($path))
-            ;
-            $handle = fopen($path, 'rb');
-            while(!feof($handle)) {
-                $response->chunk(@fread($handle,APP_CHUNK_SIZE), feof($handle));
-            }
-            fclose($handle);
-            return;
-        }
-
-        $source = $device->read($path);
-        
+        $source = '';
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
+            $source = $device->read($path);
             $source = OpenSSL::decrypt(
                 $source,
                 $file->getAttribute('openSSLCipher'),
@@ -892,13 +887,28 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             );
         }
 
-        $output = $compressor->decompress($source);
+        if (!empty($file->getAttribute('algorithm', ''))) {
+            if(empty($source)) {
+                $source = $device->read($path);
+            }
+            $compressor = new GZIP();
+            $source = $compressor->decompress($source);
+        }
 
-        // Response
-        $response
-            ->send($output)
-        ;
-        
+        if(!empty($source)) {
+            $response->send($source);
+        }
+
+        $size = $device->getFileSize($path);
+        if ($size > APP_STORAGE_READ_BUFFER) {          
+            $response->addHeader('Content-Length', $device->getFileSize($path));
+            $chunk = 2000000; // Max chunk of 2 mb
+            for ($i=0; $i < ceil($size / $chunk); $i++) {
+                $response->chunk($device->read($path, ($i * $chunk), min($chunk, $size - ($i * $chunk))), ($i*$chunk) >= $size);
+            }
+        } else {
+            $response->send($device->read($path));
+        }
     });
 
 App::put('/v1/storage/buckets/:bucketId/files/:fileId')
