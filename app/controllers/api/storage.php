@@ -322,8 +322,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             $size = $request->getContentRangeSize();
 
             $fileId = $request->getHeader('x-appwrite-file-id', $fileId);
-            
-            if(empty($start) || empty($end) || empty($size)) {
+            if(is_null($start) || is_null($end) || is_null($size)) {
                 throw new Exception('Invalid content-range header', 400);
             }
 
@@ -360,7 +359,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $file = $dbForInternal->getDocument('files', $fileId);
 
         if (!$file->isEmpty()) {
-            $chunks = $file->getAttribute('totalChunks', 1);
+            $chunks = $file->getAttribute('chunksTotal', 1);
             if ($chunk == -1) {
                 $chunk = $chunks - 1;
             }
