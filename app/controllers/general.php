@@ -16,17 +16,19 @@ use Appwrite\Utopia\Response\Filters\V06;
 use Appwrite\Utopia\Response\Filters\V07;
 use Appwrite\Utopia\Response\Filters\V08;
 use Utopia\CLI\Console;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization as Authorization2;
 
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-App::init(function ($utopia, $request, $response, $console, $project, $consoleDB, $user, $locale, $clients) {
+App::init(function ($utopia, $request, $response, $console, $project, $dbForConsole, $user, $locale, $clients) {
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
-    /** @var Appwrite\Database\Database $consoleDB */
+    /** @var Utopia\Database\Database $dbForConsole */
     /** @var Utopia\Database\Document $console */
     /** @var Utopia\Database\Document $project */
     /** @var Utopia\Database\Document $user */
@@ -42,36 +44,29 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
             $domains[$domain->get()] = false;
             Console::warning($domain->get() . ' is not a publicly accessible domain. Skipping SSL certificate generation.');
         } else {
-            Authorization::disable();
-            $dbDomain = $consoleDB->getCollectionFirst([
-                'limit' => 1,
-                'offset' => 0,
-                'filters' => [
-                    '$collection=' . Database::SYSTEM_COLLECTION_CERTIFICATES,
-                    'domain=' . $domain->get(),
-                ],
-            ]);
+            Authorization2::disable();
 
-            if (empty($dbDomain)) {
-                $dbDomain = [
-                    '$collection' => Database::SYSTEM_COLLECTION_CERTIFICATES,
-                    '$permissions' => [
-                        'read' => [],
-                        'write' => [],
-                    ],
+            $certificate = $dbForConsole->findFirst('certificates', [
+                new Query('domain', QUERY::TYPE_EQUAL, [$domain->get()])
+            ], /*limit*/ 1);
+
+            if (empty($certificate)) {
+                $certificate = new Document([
                     'domain' => $domain->get(),
-                ];
-                $dbDomain = $consoleDB->createDocument($dbDomain);
-                Authorization::enable();
+                ]);
+                $certificate = $dbForConsole->createDocument('certificates', $certificate);
+                Authorization2::enable();
 
                 Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in a few seconds...'); // TODO move this to installation script
 
                 Resque::enqueue('v1-certificates', 'CertificatesV1', [
-                    'document' => $dbDomain,
+                    'document' => $certificate,
                     'domain' => $domain->get(),
                     'validateTarget' => false,
                     'validateCNAME' => false,
                 ]);
+            } else {
+                Authorization2::enable(); // ensure authorization is reenabled
             }
             $domains[$domain->get()] = true;
         }
