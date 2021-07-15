@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f77839d4b3a6cf859f6b48ec58c35fb0",
+    "content-hash": "d4f05050444f31ba74fbb87171ac91ab",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2079,16 +2079,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.15.1",
+            "version": "0.16.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "658c0f590b7a4a221f02cbe4e08afc1357df9216"
+                "reference": "e53db21af89e0eef0784fd153de762277da87295"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/658c0f590b7a4a221f02cbe4e08afc1357df9216",
-                "reference": "658c0f590b7a4a221f02cbe4e08afc1357df9216",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/e53db21af89e0eef0784fd153de762277da87295",
+                "reference": "e53db21af89e0eef0784fd153de762277da87295",
                 "shasum": ""
             },
             "require": {
@@ -2122,9 +2122,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.15.1"
+                "source": "https://github.com/utopia-php/framework/tree/0.16.0"
             },
-            "time": "2021-07-10T10:28:30+00:00"
+            "time": "2021-07-15T08:45:09+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2382,7 +2382,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/lohanidamodar/swoole",
-                "reference": "a278378c0274db9d04be7833b8d7810cd0c8d9fd"
+                "reference": "cd128f2ad668cc9154537959aaabe6e2e407b57b"
             },
             "require": {
                 "ext-swoole": "*",
@@ -2419,7 +2419,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2021-07-12T09:30:58+00:00"
+            "time": "2021-07-15T09:33:39+00:00"
         },
         {
             "name": "utopia-php/system",
