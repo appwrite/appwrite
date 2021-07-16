@@ -281,7 +281,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         throw new Exception('Password reset is required', 412);
     }
 
-}, ['utopia', 'request', 'response', 'console', 'project', 'consoleDB', 'user', 'locale', 'clients']);
+}, ['utopia', 'request', 'response', 'console', 'project', 'dbForConsole', 'user', 'locale', 'clients']);
 
 App::options(function ($request, $response) {
     /** @var Utopia\Swoole\Request $request */
