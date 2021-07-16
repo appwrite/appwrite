@@ -8,7 +8,13 @@ use Appwrite\Runtimes\Runtimes;
  */
 $runtimes = new Runtimes();
 
-$allowList = empty(App::getEnv('_APP_FUNCTIONS_RUNTIMES')) ? [] : \explode(',', App::getEnv('_APP_FUNCTIONS_RUNTIMES'));
+$allowString = App::getEnv('_APP_FUNCTIONS_RUNTIMES', 'node-16.0,php-8.0,python-3.9,ruby-3.0,java-16.0');
+
+$allowList = \explode(',', $allowString);;
+
+if (empty($allowString)) {
+    $allowList = \explode(',', 'node-16.0,php-8.0,python-3.9,ruby-3.0,java-16.0');
+}
 
 $runtimes = $runtimes->getAll(true, $allowList);
 
