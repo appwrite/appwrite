@@ -20,6 +20,12 @@
             "Appwrite\\Tests\\": "tests/extensions"
         }
     },
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/Meldiron/php-runtimes.git"
+        }
+    ],
     "require": {
         "php": ">=8.0.0",
         "ext-curl": "*",
@@ -36,7 +42,7 @@
         "ext-sockets": "*",
 
         "appwrite/php-clamav": "1.1.*",
-        "appwrite/php-runtimes": "0.4.*",
+        "appwrite/php-runtimes": "dev-feature-custom-runtime",
 
         "utopia-php/framework": "0.14.*",
         "utopia-php/abuse": "0.5.*",
