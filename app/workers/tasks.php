@@ -33,7 +33,7 @@ class TasksV1 extends Worker
         $db = $register->get('db');
         $cache = $register->get('cache');
 
-        $projectId = $this->args['$projectId'] ?? null;
+        $projectId = $this->args['projectId'] ?? null;
         $taskId = $this->args['$id'] ?? null;
         $updated = $this->args['updated'] ?? null;
         $next = $this->args['next'] ?? null;
