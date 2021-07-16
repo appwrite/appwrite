@@ -69,6 +69,9 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             return $app;
         });
 
+        // wait for database to be ready
+        sleep(5);
+
         $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
 
         if(!$dbForConsole->exists()) {
