@@ -57,7 +57,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
                 $certificate = $dbForConsole->createDocument('certificates', $certificate);
                 Authorization2::enable();
 
-                Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in a few seconds...'); // TODO move this to installation script
+                Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in a few seconds...');
 
                 Resque::enqueue('v1-certificates', 'CertificatesV1', [
                     'document' => $certificate,

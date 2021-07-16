@@ -143,7 +143,6 @@ App::get('/v1/functions/:functionId/usage')
     ->action(function ($functionId, $range, $response, $project, $dbForInternal, $register) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
-        /** @var Utopia\Database\Database $consoleDB */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Registry\Registry $register */
 

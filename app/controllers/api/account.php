@@ -1371,7 +1371,7 @@ App::post('/v1/account/recovery')
         $profile = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [$email])], 1); // Get user by email address
 
         if (!$profile) {
-            throw new Exception('User not found', 404); // TODO maybe hide this
+            throw new Exception('User not found', 404);
         }
 
         if (Auth::USER_STATUS_BLOCKED == $profile->getAttribute('status')) { // Account is blocked
@@ -1482,7 +1482,7 @@ App::put('/v1/account/recovery')
         $profile = $dbForInternal->getDocument('users', $userId);
 
         if ($profile->isEmpty()) {
-            throw new Exception('User not found', 404); // TODO maybe hide this
+            throw new Exception('User not found', 404);
         }
 
         $tokens = $profile->getAttribute('tokens', []);
@@ -1662,7 +1662,7 @@ App::put('/v1/account/verification')
         $profile = $dbForInternal->getDocument('users', $userId);
 
         if ($profile->isEmpty()) {
-            throw new Exception('User not found', 404); // TODO maybe hide this
+            throw new Exception('User not found', 404);
         }
 
         $tokens = $profile->getAttribute('tokens', []);
