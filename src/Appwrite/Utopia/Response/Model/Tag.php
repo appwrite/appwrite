@@ -28,6 +28,12 @@ class Tag extends Model
                 'default' => 0,
                 'example' => 1592981250,
             ])
+            ->addRule('name', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Function Name.',
+                'default' => '',
+                'example' => 'Hello World Tag',
+            ])
             ->addRule('command', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The entrypoint command in use to execute the tag code.',
