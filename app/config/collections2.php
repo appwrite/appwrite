@@ -1051,7 +1051,7 @@ $collections = [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'certificates',
         'name' => 'Certificates',
-        'attributes' => [,
+        'attributes' => [
             [
                 '$id' => 'domain',
                 'type' => Database::VAR_STRING,
