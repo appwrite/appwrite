@@ -1006,7 +1006,7 @@ App::post('/v1/projects/:projectId/tasks')
 
         $task = new Document([
             '$id' => $dbForConsole->getId(),
-            '$projectId' => $project->getId(),
+            'projectId' => $project->getId(),
             'name' => $name,
             'status' => $status,
             'schedule' => $schedule,

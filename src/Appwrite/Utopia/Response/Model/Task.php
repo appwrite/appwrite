@@ -21,7 +21,7 @@ class Task extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('$projectId', [
+            ->addRule('projectId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Project ID.',
                 'default' => '',
