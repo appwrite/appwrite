@@ -54,14 +54,6 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
     $app = new App('UTC');
 
     go(function() use ($register, $app) {
-        // Only retry connection once before throwing exception
-        try {
-            $db = $register->get('dbPool')->get();
-        } catch (\Exception $exception) {
-            Console::warning('[Setup] - Database not ready. Waiting for five seconds...');
-            sleep(5);
-        }
-
         $db = $register->get('dbPool')->get();
         $redis = $register->get('redisPool')->get();
 
@@ -76,6 +68,9 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         App::setResource('app', function() use (&$app) {
             return $app;
         });
+
+        // wait for database to be ready
+        sleep(5);
 
         $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
 

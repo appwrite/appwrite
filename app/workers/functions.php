@@ -465,10 +465,6 @@ class FunctionsV1 extends Worker
         
         Authorization::reset();
 
-        if (false === $function) {
-            throw new Exception('Failed saving execution to DB', 500);
-        }
-
         $executionModel = new Execution();
         $executionUpdate = new Event('v1-webhooks', 'WebhooksV1');
 
