@@ -192,8 +192,12 @@ App::post('/v1/account/sessions')
 
         Authorization::setRole('user:'.$profile->getId());
 
-        $profile->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
+        $session = $dbForInternal->createDocument('sessions', $session
+            ->setAttribute('$read', ['user:'.$profile->getId()])
+            ->setAttribute('$write', ['user:'.$profile->getId()])
+        );
 
+        $profile->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
         $profile = $dbForInternal->updateDocument('users', $profile->getId(), $profile);
 
         $audits
@@ -428,35 +432,33 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $current = Auth::sessionVerify($sessions, Auth::$secret);
 
         if($current) { // Delete current session of new one.
-            foreach ($sessions as $key => $session) {
+            foreach ($sessions as $key => $session) { /** @var Document $session */
                 if ($current === $session['$id']) {
                     unset($sessions[$key]);
+                    
+                    $dbForInternal->deleteDocument('sessions', $session->getId());
                     $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('sessions', $sessions));
                 }
             }
         }
 
-        $user = (empty($user->getId())) ? $dbForInternal->getCollectionFirst([ // Get user by provider id
-            'limit' => 1,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                'sessions.provider='.$provider,
-                'sessions.providerUid='.$oauth2ID
-            ],
-        ]) : $user;
+        $user = ($user->isEmpty()) ? $dbForInternal->findFirst('sessions', [ // Get user by provider id
+            new Query('provider', QUERY::TYPE_EQUAL, [$provider]),
+            new Query('providerUid', QUERY::TYPE_EQUAL, [$oauth2ID]),
+        ], 1) : $user;
 
-        if (empty($user)) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
+        if ($user === false || $user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
             $name = $oauth2->getUserName($accessToken);
             $email = $oauth2->getUserEmail($accessToken);
 
             $user = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [$email])], 1); // Get user by email address
 
-            if (!$user || empty($user->getId())) { // Last option -> create the user, generate random password
+            if ($user === false || $user->isEmpty()) { // Last option -> create the user, generate random password
                 $limit = $project->getAttribute('usersAuthLimit', 0);
         
                 if ($limit !== 0) {
                     $sum = $dbForInternal->count('users', [], APP_LIMIT_COUNT);
-        
+
                     if($sum >= $limit) {
                         throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
                     }
@@ -529,6 +531,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         ;
 
         Authorization::setRole('user:'.$user->getId());
+
+        $session = $dbForInternal->createDocument('sessions', $session
+            ->setAttribute('$read', ['user:'.$user->getId()])
+            ->setAttribute('$write', ['user:'.$user->getId()])
+        );
 
         $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
 
@@ -667,6 +674,11 @@ App::post('/v1/account/sessions/anonymous')
         ));
 
         Authorization::setRole('user:'.$user->getId());
+
+        $session = $dbForInternal->createDocument('sessions', $session
+            ->setAttribute('$read', ['user:'.$user->getId()])
+            ->setAttribute('$write', ['user:'.$user->getId()])
+        );
 
         $user = $dbForInternal->updateDocument('users', $user->getId(),
             $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND));
@@ -814,9 +826,7 @@ App::get('/v1/account/sessions')
         $countries = $locale->getText('countries');
         $current = Auth::sessionVerify($sessions, Auth::$secret);
 
-        foreach ($sessions as $key => $session) { 
-            /** @var Document $session */
-
+        foreach ($sessions as $key => $session) { /** @var Document $session */
             $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
             ? $countries[strtoupper($session->getAttribute('countryCode'))]
             : $locale->getText('locale.country.unknown');
@@ -1213,11 +1223,11 @@ App::delete('/v1/account/sessions/:sessionId')
                 
         $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($sessions as $key => $session) { 
-            /** @var Document $session */
-
+        foreach ($sessions as $key => $session) { /** @var Document $session */
             if ($sessionId == $session->getId()) {
                 unset($sessions[$key]);
+
+                $dbForInternal->deleteDocument('sessions', $session->getId());
 
                 $audits
                     ->setParam('userId', $user->getId())
@@ -1289,8 +1299,8 @@ App::delete('/v1/account/sessions')
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($sessions as $session) { 
-            /** @var Document $session */
+        foreach ($sessions as $session) { /** @var Document $session */
+            $dbForInternal->deleteDocument('sessions', $session->getId());
 
             $audits
                 ->setParam('userId', $user->getId())
@@ -1371,7 +1381,7 @@ App::post('/v1/account/recovery')
         $profile = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [$email])], 1); // Get user by email address
 
         if (!$profile) {
-            throw new Exception('User not found', 404); // TODO maybe hide this
+            throw new Exception('User not found', 404);
         }
 
         if (Auth::USER_STATUS_BLOCKED == $profile->getAttribute('status')) { // Account is blocked
@@ -1482,7 +1492,7 @@ App::put('/v1/account/recovery')
         $profile = $dbForInternal->getDocument('users', $userId);
 
         if ($profile->isEmpty()) {
-            throw new Exception('User not found', 404); // TODO maybe hide this
+            throw new Exception('User not found', 404);
         }
 
         $tokens = $profile->getAttribute('tokens', []);
@@ -1662,7 +1672,7 @@ App::put('/v1/account/verification')
         $profile = $dbForInternal->getDocument('users', $userId);
 
         if ($profile->isEmpty()) {
-            throw new Exception('User not found', 404); // TODO maybe hide this
+            throw new Exception('User not found', 404);
         }
 
         $tokens = $profile->getAttribute('tokens', []);

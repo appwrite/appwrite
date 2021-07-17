@@ -1,7 +1,9 @@
 <?php
+$development = $this->getParam('development', false);
 $code = $this->getParam('code', 500);
 $errorID = $this->getParam('errorID', 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
 $message = $this->getParam('message', '');
+$trace = $this->getParam('trace', []);
 $projectName = $this->getParam('projectName', '');
 $projectURL = $this->getParam('projectURL', '');
 ?>
@@ -18,4 +20,30 @@ $projectURL = $this->getParam('projectURL', '');
 
         <p><a href="<?php echo $this->escape($projectURL); ?>" rel="noopener">Back to <?php echo $projectName; ?></a></p>
     <?php endif; ?>
+
+    <?php if ($development): ?>
+        <div class="margin-top-xl">
+            
+            <h2 class="margin-bottom-large">Error Trace</h2>
+
+            <?php foreach($trace as $log): ?>
+                <table class="margin-bottom-xl">
+                    <?php foreach($log as $key => $value): ?>
+                        <tr>
+                            <td style="width: 120px"><?php echo $key; ?></td>
+                            <td>
+                                <?php if (is_array($value)): ?>
+                                    <?php var_dump($value); ?>
+                                <?php else: ?>
+                                    <?php echo $value; ?>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        
+                        <?php endforeach; ?>
+                </table>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+
 </section>

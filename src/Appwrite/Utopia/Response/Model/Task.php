@@ -96,7 +96,7 @@ class Task extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Task status. Possible values: play, pause', // TODO - change to enabled disabled
+                'description' => 'Task status. Possible values: play, pause',
                 'default' => '',
                 'example' => 'enabled',
             ])

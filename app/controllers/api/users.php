@@ -430,11 +430,12 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
 
         $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($sessions as $key => $session) { 
-            /** @var Document $session */
+        foreach ($sessions as $key => $session) { /** @var Document $session */
 
             if ($sessionId == $session->getId()) {
                 unset($sessions[$key]);
+
+                $dbForInternal->deleteDocument('sessions', $session->getId());
 
                 $user->setAttribute('sessions', $sessions);
                 
@@ -476,13 +477,18 @@ App::delete('/v1/users/:userId/sessions')
             throw new Exception('User not found', 404);
         }
 
+        $sessions = $user->getAttribute('sessions', []);
+
+        foreach ($sessions as $key => $session) { /** @var Document $session */
+            $dbForInternal->deleteDocument('sessions', $session->getId());
+        }
+
         $dbForInternal->updateDocument('users', $user->getId(), $user->getAttribute('sessions', []));
 
         $events
             ->setParam('eventData', $response->output2($user, Response::MODEL_USER))
         ;
 
-        // TODO : Response filter implementation
         $response->noContent();
     });
 
