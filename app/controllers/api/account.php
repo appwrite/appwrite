@@ -442,27 +442,23 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
         }
 
-        $user = (empty($user->getId())) ? $dbForInternal->getCollectionFirst([ // Get user by provider id
-            'limit' => 1,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                'sessions.provider='.$provider,
-                'sessions.providerUid='.$oauth2ID
-            ],
-        ]) : $user;
+        $user = ($user->isEmpty()) ? $dbForInternal->findFirst('sessions', [ // Get user by provider id
+            new Query('provider', QUERY::TYPE_EQUAL, [$provider]),
+            new Query('providerUid', QUERY::TYPE_EQUAL, [$oauth2ID]),
+        ], 1) : $user;
 
-        if (empty($user)) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
+        if ($user === false || $user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
             $name = $oauth2->getUserName($accessToken);
             $email = $oauth2->getUserEmail($accessToken);
 
             $user = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [$email])], 1); // Get user by email address
 
-            if (!$user || empty($user->getId())) { // Last option -> create the user, generate random password
+            if ($user === false || $user->isEmpty()) { // Last option -> create the user, generate random password
                 $limit = $project->getAttribute('usersAuthLimit', 0);
         
                 if ($limit !== 0) {
                     $sum = $dbForInternal->count('users', [], APP_LIMIT_COUNT);
-        
+
                     if($sum >= $limit) {
                         throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
                     }
@@ -529,17 +525,17 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             ;
         }
 
-        $session = $dbForInternal->createDocument('sessions', $session
-            ->setAttribute('$read', ['user:'.$user->getId()])
-            ->setAttribute('$write', ['user:'.$user->getId()])
-        );
-
         $user
             ->setAttribute('status', Auth::USER_STATUS_ACTIVATED)
             ->setAttribute('sessions', $session, Document::SET_TYPE_APPEND)
         ;
 
         Authorization::setRole('user:'.$user->getId());
+
+        $session = $dbForInternal->createDocument('sessions', $session
+            ->setAttribute('$read', ['user:'.$user->getId()])
+            ->setAttribute('$write', ['user:'.$user->getId()])
+        );
 
         $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
 
