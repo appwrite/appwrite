@@ -597,7 +597,7 @@ $collections = [
                 'filters' => []
             ],
         ],
-        // 'indexes' => [
+        'indexes' => [
         //     [
         //         '$id' => '_key_provider_providerUid',
         //         'type' => Database::INDEX_KEY,
@@ -605,7 +605,7 @@ $collections = [
         //         'lengths' => [100, 100],
         //         'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
         //     ]
-        // ],
+        ],
     ],
 
     'teams' => [
