@@ -380,7 +380,7 @@ $collections = [
                 '$id' => 'provider',
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 1024,
+                'size' => 1000,
                 'signed' => true,
                 'required' => false,
                 'default' => null,
@@ -402,7 +402,7 @@ $collections = [
                 '$id' => 'providerToken',
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 2048,
+                'size' => 16384,
                 'signed' => true,
                 'required' => false,
                 'default' => null,
@@ -435,7 +435,7 @@ $collections = [
                 '$id' => 'userAgent',
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 2048,
+                'size' => 16384,
                 'signed' => true,
                 'required' => false,
                 'default' => null,
@@ -597,15 +597,15 @@ $collections = [
                 'filters' => []
             ],
         ],
-        'indexes' => [
-            [
-                '$id' => '_key_email',
-                'type' => Database::INDEX_UNIQUE,
-                'attributes' => ['email'],
-                'lengths' => [1024],
-                'orders' => [Database::ORDER_ASC],
-            ]
-        ],
+        // 'indexes' => [
+        //     [
+        //         '$id' => '_key_provider_providerUid',
+        //         'type' => Database::INDEX_KEY,
+        //         'attributes' => ['provider', 'providerUid'],
+        //         'lengths' => [100, 100],
+        //         'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
+        //     ]
+        // ],
     ],
 
     'teams' => [

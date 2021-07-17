@@ -192,8 +192,12 @@ App::post('/v1/account/sessions')
 
         Authorization::setRole('user:'.$profile->getId());
 
-        $profile->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
+        $session = $dbForInternal->createDocument('sessions', $session
+            ->setAttribute('$read', ['user:'.$profile->getId()])
+            ->setAttribute('$write', ['user:'.$profile->getId()])
+        );
 
+        $profile->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
         $profile = $dbForInternal->updateDocument('users', $profile->getId(), $profile);
 
         $audits
@@ -428,9 +432,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $current = Auth::sessionVerify($sessions, Auth::$secret);
 
         if($current) { // Delete current session of new one.
-            foreach ($sessions as $key => $session) {
+            foreach ($sessions as $key => $session) { /** @var Document $session */
                 if ($current === $session['$id']) {
                     unset($sessions[$key]);
+                    
+                    $dbForInternal->deleteDocument('sessions', $session->getId());
                     $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('sessions', $sessions));
                 }
             }
@@ -522,6 +528,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 ->setAttribute('email', $oauth2->getUserEmail($accessToken))
             ;
         }
+
+        $session = $dbForInternal->createDocument('sessions', $session
+            ->setAttribute('$read', ['user:'.$user->getId()])
+            ->setAttribute('$write', ['user:'.$user->getId()])
+        );
 
         $user
             ->setAttribute('status', Auth::USER_STATUS_ACTIVATED)
@@ -667,6 +678,11 @@ App::post('/v1/account/sessions/anonymous')
         ));
 
         Authorization::setRole('user:'.$user->getId());
+
+        $session = $dbForInternal->createDocument('sessions', $session
+            ->setAttribute('$read', ['user:'.$user->getId()])
+            ->setAttribute('$write', ['user:'.$user->getId()])
+        );
 
         $user = $dbForInternal->updateDocument('users', $user->getId(),
             $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND));
@@ -814,9 +830,7 @@ App::get('/v1/account/sessions')
         $countries = $locale->getText('countries');
         $current = Auth::sessionVerify($sessions, Auth::$secret);
 
-        foreach ($sessions as $key => $session) { 
-            /** @var Document $session */
-
+        foreach ($sessions as $key => $session) { /** @var Document $session */
             $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
             ? $countries[strtoupper($session->getAttribute('countryCode'))]
             : $locale->getText('locale.country.unknown');
@@ -1213,11 +1227,11 @@ App::delete('/v1/account/sessions/:sessionId')
                 
         $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($sessions as $key => $session) { 
-            /** @var Document $session */
-
+        foreach ($sessions as $key => $session) { /** @var Document $session */
             if ($sessionId == $session->getId()) {
                 unset($sessions[$key]);
+
+                $dbForInternal->deleteDocument('sessions', $session->getId());
 
                 $audits
                     ->setParam('userId', $user->getId())
@@ -1289,8 +1303,8 @@ App::delete('/v1/account/sessions')
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($sessions as $session) { 
-            /** @var Document $session */
+        foreach ($sessions as $session) { /** @var Document $session */
+            $dbForInternal->deleteDocument('sessions', $session->getId());
 
             $audits
                 ->setParam('userId', $user->getId())
