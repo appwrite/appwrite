@@ -370,10 +370,12 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
         $comp = new View($template);
 
         $comp
+            ->setParam('development', App::isDevelopment())
             ->setParam('projectName', $project->getAttribute('name'))
             ->setParam('projectURL', $project->getAttribute('url'))
             ->setParam('message', $error->getMessage())
             ->setParam('code', $code)
+            ->setParam('trace', $error->getTrace())
         ;
 
         $layout
