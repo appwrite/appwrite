@@ -327,7 +327,7 @@ class V06 extends Filter {
             $content['oauth2'.ucfirst($key)] = '';
             $content['oauth2'.ucfirst($key).'AccessToken'] = '';
         }
-        $content['status'] = empty($content['status']) ? 0 : $content['status']; 
+        $content['status'] = $content['status'] ? 0 : 2; 
         $content['roles'] = Authorization::getRoles() ?? [];
         return $content;
     }

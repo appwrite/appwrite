@@ -34,7 +34,7 @@
             <li data-state="/console/users/user?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Overview</h2>
 
-                <div data-ls-if="{{user.status}} === <?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none" class="box padding-small danger margin-bottom-xxl text-align-center">
+                <div data-ls-if="{{user.status}} === false" style="display: none" class="box padding-small danger margin-bottom-xxl text-align-center">
                     This user account is blocked.
                 </div>
 
@@ -99,11 +99,11 @@
 
                         <div class="box danger margin-bottom">
                             <p>This is the area where you can delete this user.</p>
-                        
+
                             <p>By deleting this user you will lose all data associated with this user.</p>
-                        
+
                             <p>PLEASE NOTE: User deletion is irreversible.</p>
-                        
+
                             <form class="inline"
                                 data-analytics
                                 data-analytics-activity
@@ -122,7 +122,7 @@
                                 data-failure-param-alert-text="Failed to delete user"
                                 data-failure-param-alert-classname="error">
                                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-                        
+
                                 <button class="danger reverse" type="submit">Delete User</button>
                             </form>
                         </div>
@@ -137,7 +137,7 @@
                             <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
                         </ul>
 
-                        <div data-ls-if="{{user.status}} !== <?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none">
+                        <div data-ls-if="{{user.status}} === true" style="display: none">
                             <form name="users.updateStatus" class="margin-bottom"
                                 data-analytics
                                 data-analytics-activity
@@ -154,11 +154,11 @@
                                 data-failure-param-alert-text="Failed to block user"
                                 data-failure-param-alert-classname="error">
 
-                                <button name="status" type="submit" class="danger fill" value="<?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>" data-cast-to="integer">Block Account</button>
+                                <button name="status" type="submit" class="danger fill" value="false" data-cast-to="boolean">Block Account</button>
                             </form>
                         </div>
 
-                        <div data-ls-if="{{user.status}} === <?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none">
+                        <div data-ls-if="{{user.status}} === false" style="display: none">
                             <form name="users.updateStatus" class="margin-bottom"
                                 data-analytics
                                 data-analytics-activity
@@ -175,7 +175,7 @@
                                 data-failure-param-alert-text="Failed to activate user"
                                 data-failure-param-alert-classname="error">
 
-                                <button name="status" type="submit" class="fill" value="<?php echo \Appwrite\Auth\Auth::USER_STATUS_ACTIVATED; ?>" data-cast-to="integer">Activate Account</button>
+                                <button name="status" type="submit" class="fill" value="true" data-cast-to="boolean">Activate Account</button>
                             </form>
                         </div>
                     </div>
