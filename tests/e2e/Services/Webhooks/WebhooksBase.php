@@ -20,24 +20,6 @@ trait WebhooksBase
             'name' => 'Actors',
             'read' => ['role:all'],
             'write' => ['role:all'],
-            'rules' => [
-                [
-                    'label' => 'First Name',
-                    'key' => 'firstName',
-                    'type' => 'text',
-                    'default' => '',
-                    'required' => true,
-                    'array' => false
-                ],
-                [
-                    'label' => 'Last Name',
-                    'key' => 'lastName',
-                    'type' => 'text',
-                    'default' => '',
-                    'required' => true,
-                    'array' => false
-                ],
-            ],
         ]);
         
         $this->assertEquals($actors['headers']['status-code'], 201);
@@ -55,18 +37,70 @@ trait WebhooksBase
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), true);
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], 'Actors');
-        $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertIsArray($webhook['data']['$read']);
         $this->assertIsArray($webhook['data']['$write']);
         $this->assertCount(1, $webhook['data']['$read']);
         $this->assertCount(1, $webhook['data']['$write']);
-        $this->assertCount(2, $webhook['data']['rules']);
 
         return array_merge(['actorsId' => $actors['body']['$id']]);
     }
 
     /**
      * @depends testCreateCollection
+     */
+    public function testCreateAttributes(array $data): array
+    {
+        $firstName = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['actorsId'] . '/attributes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'id' => 'firstName',
+            'type' => 'string',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $lastName = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['actorsId'] . '/attributes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'id' => 'lastName',
+            'type' => 'string',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->assertEquals($firstName['headers']['status-code'], 201);
+        $this->assertEquals($firstName['body']['$collection'], $data['actorsId']);
+        $this->assertEquals($firstName['body']['$id'], 'firstName');
+        $this->assertEquals($lastName['headers']['status-code'], 201);
+        $this->assertEquals($lastName['body']['$collection'], $data['actorsId']);
+        $this->assertEquals($lastName['body']['$id'], 'lastName');
+
+        // wait for database worker to kick in
+        sleep(10);
+
+        $webhook = $this->getLastRequest();
+
+        $this->assertEquals($webhook['method'], 'POST');
+        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
+        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Event'], 'database.attributes.create');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+        $this->assertNotEmpty($webhook['data']['$id']);
+        $this->assertEquals($webhook['data']['$id'], 'lastName');
+        
+        // TODO@kodumbeats test webhook for removing attribute
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateAttributes
      */
     public function testCreateDocument(array $data): array
     {

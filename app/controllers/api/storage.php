@@ -1,30 +1,31 @@
 <?php
 
-use Utopia\App;
-use Utopia\Exception;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\WhiteList;
-use Utopia\Validator\Range;
-use Utopia\Validator\Text;
-use Utopia\Validator\Boolean;
-use Utopia\Validator\HexColor;
-use Utopia\Cache\Cache;
-use Utopia\Cache\Adapter\Filesystem;
 use Appwrite\ClamAV\Network;
-use Utopia\Database\Document;
 use Appwrite\Database\Validator\UID;
-use Utopia\Storage\Storage;
-use Utopia\Storage\Validator\File;
-use Utopia\Storage\Validator\FileSize;
-use Utopia\Storage\Validator\Upload;
-use Utopia\Storage\Compression\Algorithms\GZIP;
-use Utopia\Image\Image;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Response;
+use Swoole\HTTP\Response as SwooleResponse;
+use Utopia\App;
+use Utopia\Cache\Adapter\Filesystem;
+use Utopia\Cache\Cache;
 use Utopia\Config\Config;
-use Utopia\Validator\Integer;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Exception;
+use Utopia\Image\Image;
+use Utopia\Storage\Compression\Algorithms\GZIP;
+use Utopia\Storage\Storage;
+use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileExt;
+use Utopia\Storage\Validator\FileSize;
+use Utopia\Storage\Validator\Upload;
+use Utopia\Validator\ArrayList;
+use Utopia\Validator\Boolean;
+use Utopia\Validator\HexColor;
+use Utopia\Validator\Integer;
+use Utopia\Validator\Range;
+use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 App::post('/v1/storage/buckets')
     ->desc('Create storage bucket')
@@ -41,11 +42,11 @@ App::post('/v1/storage/buckets')
     ->param('name', '', new Text(128), 'Bucket name', false)
     ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
-    ->param('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0) , new Integer(), 'Maximum file size allowed in bytes. Maximum allowed value is ' . App::getEnv('_APP_STORAGE_LIMIT', 0) . '. For self-hosted setups you can change the max limit by changing the `_APP_STORAGE_LIMIT` environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
+    ->param('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0), new Integer(), 'Maximum file size allowed in bytes. Maximum allowed value is ' . App::getEnv('_APP_STORAGE_LIMIT', 0) . '. For self-hosted setups you can change the max limit by changing the `_APP_STORAGE_LIMIT` environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64)), 'Allowed file extensions', true)
     ->param('enabled', true, new Boolean(), 'Is bucket enabled?', true)
     ->param('adapter', 'local', new WhiteList(['local']), 'Storage adapter.', true)
-    ->param('encryption', true, new Boolean(), 'Is encryption enabled? For file size above ' . Storage::human(APP_LIMIT_ENCRYPTION) . ' encryption is skipped even if it\'s enabled', true)
+    ->param('encryption', true, new Boolean(), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER) . ' encryption is skipped even if it\'s enabled', true)
     ->param('antiVirus', true, new Boolean(), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
     ->inject('response')
     ->inject('dbForInternal')
@@ -155,7 +156,7 @@ App::put('/v1/storage/buckets/:bucketId')
     ->param('maximumFileSize', null, new Integer(), 'Maximum file size allowed in bytes. Maximum allowed value is ' . App::getEnv('_APP_STORAGE_LIMIT', 0) . '. For self hosted version you can change the limit by changing _APP_STORAGE_LIMIT environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64)), 'Allowed file extensions', true)
     ->param('enabled', true, new Boolean(), 'Is bucket enabled?', true)
-    ->param('encryption', true, new Boolean(), 'Is encryption enabled? For file size above ' . Storage::human(APP_LIMIT_ENCRYPTION) . ' encryption is skipped even if it\'s enabled', true)
+    ->param('encryption', true, new Boolean(), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER) . ' encryption is skipped even if it\'s enabled', true)
     ->param('antiVirus', true, new Boolean(), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
     ->inject('response')
     ->inject('dbForInternal')
@@ -171,18 +172,18 @@ App::put('/v1/storage/buckets/:bucketId')
             throw new Exception('Bucket not found', 404);
         }
 
-        $read ??= $bucket->getAttribute('$read', []); // By default inherit read permissions
-        $write ??= $bucket->getAttribute('$write',[]); // By default inherit write permissions
+        $read??=$bucket->getAttribute('$read', []); // By default inherit read permissions
+        $write??=$bucket->getAttribute('$write', []); // By default inherit write permissions
 
         $bucket = $dbForInternal->updateDocument('buckets', $bucket->getId(), $bucket
-                ->setAttribute('name',$name)
-                ->setAttribute('$read',$read)
-                ->setAttribute('$write',$write)
-                ->setAttribute('maximumFileSize',$maximumFileSize)
-                ->setAttribute('allowedFileExtensions',$allowedFileExtensions)
-                ->setAttribute('enabled',$enabled)
-                ->setAttribute('encryption',$encryption)
-                ->setAttribute('antiVirus',$antiVirus)
+                ->setAttribute('name', $name)
+                ->setAttribute('$read', $read)
+                ->setAttribute('$write', $write)
+                ->setAttribute('maximumFileSize', $maximumFileSize)
+                ->setAttribute('allowedFileExtensions', $allowedFileExtensions)
+                ->setAttribute('enabled', $enabled)
+                ->setAttribute('encryption', $encryption)
+                ->setAttribute('antiVirus', $antiVirus)
         );
 
         $audits
@@ -229,7 +230,7 @@ App::delete('/v1/storage/buckets/:bucketId')
             ->setParam('document', $bucket)
         ;
 
-        if(!$dbForInternal->deleteDocument('buckets', $bucketId)) {
+        if (!$dbForInternal->deleteDocument('buckets', $bucketId)) {
             throw new Exception('Failed to remove project from DB', 500);
         }
 
@@ -247,7 +248,7 @@ App::delete('/v1/storage/buckets/:bucketId')
     });
 
 App::post('/v1/storage/buckets/:bucketId/files')
-    ->alias('/v1/storage/files',['bucketId' => 'default'])
+    ->alias('/v1/storage/files', ['bucketId' => 'default'])
     ->desc('Create File')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
@@ -281,20 +282,20 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if($bucket->isEmpty()) {
+        if ($bucket->isEmpty()) {
             throw new Exception('Bucket not found', 404);
         }
 
         $file = $request->getFiles('file');
 
-        /*
+        /**
          * Validators
          */
         $allowedFileExtensions = $bucket->getAttribute('allowedFileExtensions', []);
         $fileExt = new FileExt($allowedFileExtensions);
 
         $maximumFileSize = $bucket->getAttribute('maximumFileSize', 0);
-        if($maximumFileSize > (int) App::getEnv('_APP_STORAGE_LIMIT',0)) {
+        if ($maximumFileSize > (int) App::getEnv('_APP_STORAGE_LIMIT', 0)) {
             throw new Exception('Error bucket maximum file size is larger than _APP_STORAGE_LIMIT', 500);
         }
 
@@ -306,97 +307,189 @@ App::post('/v1/storage/buckets/:bucketId/files')
         }
 
         // Make sure we handle a single file and multiple files the same way
-        $file['name'] = (\is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
-        $file['tmp_name'] = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
-        $file['size'] = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+        $fileName = (\is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
+        $fileTmpName = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
+        $size = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+
+        $contentRange = $request->getHeader('content-range');
+        $fileId = $dbForInternal->getId();
+        $chunk = 1;
+        $chunks = 1;
+
+        if (!empty($contentRange)) {
+            $start = $request->getContentRangeStart();
+            $end = $request->getContentRangeEnd();
+            $size = $request->getContentRangeSize();
+
+            $fileId = $request->getHeader('x-appwrite-file-id', $fileId);
+            if(is_null($start) || is_null($end) || is_null($size)) {
+                throw new Exception('Invalid content-range header', 400);
+            }
+
+            if ($end == $size) {
+                //if it's a last chunks the chunk size might differ, so we set the $chunks and $chunk to notify it's last chunk
+                $chunks = $chunk = -1;
+            } else {
+                // Calculate total number of chunks based on the chunk size i.e ($rangeEnd - $rangeStart)
+                $chunks = (int) ceil($size / ($end + 1 - $start));
+                $chunk = (int) ($start / ($end + 1 - $start));
+            }
+        }
 
         // Check if file type is allowed (feature for project settings?)
-        if (!empty($allowedFileExtensions) && !$fileExt->isValid($file['name'])) {
+        if (!empty($allowedFileExtensions) && !$fileExt->isValid($fileName)) {
             throw new Exception('File extension not allowed', 400);
         }
 
-        if (!$fileSize->isValid($file['size'])) { // Check if file size is exceeding allowed limit
+        if (!$fileSize->isValid($size)) { // Check if file size is exceeding allowed limit
             throw new Exception('File size not allowed', 400);
         }
 
         $device = Storage::getDevice('files');
 
-        if (!$upload->isValid($file['tmp_name'])) {
+        if (!$upload->isValid($fileTmpName)) {
             throw new Exception('Invalid file', 403);
         }
 
         // Save to storage
-        $size = $device->getFileSize($file['tmp_name']);
-        $path = $device->getPath(\uniqid().'.'.\pathinfo($file['name'], PATHINFO_EXTENSION));
-        $path = $bucket->getId() . '/' . $path;
-        
-        if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
-            throw new Exception('Failed moving file', 500);
-        }
+        $size = $size ?? $device->getFileSize($fileTmpName);
+        $path = $device->getPath($fileId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
+        $path = str_ireplace($device->getRoot(), $device->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path);
 
-        $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
+        $file = $dbForInternal->getDocument('files', $fileId);
 
-        if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antiVirus', true) && $size <= APP_LIMIT_ANTIVIRUS) {
-            $antiVirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
-                (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
-
-            if (!$antiVirus->fileScan($path)) {
-                $device->delete($path);
-                throw new Exception('Invalid file', 403);
+        if (!$file->isEmpty()) {
+            $chunks = $file->getAttribute('chunksTotal', 1);
+            if ($chunk == -1) {
+                $chunk = $chunks - 1;
             }
         }
 
-        // Compression
-        $data = $device->read($path);
-        if($size <= APP_LIMIT_COMPRESSION) {
-            $compressor = new GZIP();
-            $data = $compressor->compress($data);
-        }
-        
-        if($bucket->getAttribute('encryption', true) && $size <= APP_LIMIT_ENCRYPTION) {
-            $key = App::getEnv('_APP_OPENSSL_KEY_V1');
-            $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-            $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
+        $chunksUploaded = $device->upload($fileTmpName, $path, $chunk, $chunks);
+        if (empty($chunksUploaded)) {
+            throw new Exception('Failed uploading file', 500);
         }
 
-        if (!$device->write($path, $data, $mimeType)) {
-            throw new Exception('Failed to save file', 500);
+        $read = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? [];
+        $write = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? [];
+        if ($chunksUploaded == $chunks) {
+            if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antiVirus', true) && $size <= APP_LIMIT_ANTIVIRUS) {
+                $antiVirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
+                (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
+                
+                if (!$antiVirus->fileScan($path)) {
+                    $device->delete($path);
+                    throw new Exception('Invalid file', 403);
+                }
+            }
+
+            $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
+            $data = '';
+            // Compression
+            if ($size <= APP_STORAGE_READ_BUFFER) {
+                $data = $device->read($path);
+                $compressor = new GZIP();
+                $data = $compressor->compress($data);
+            }
+
+            if ($bucket->getAttribute('encryption', true) && $size <= APP_STORAGE_READ_BUFFER) {
+                if(empty($data)) {
+                    $data = $device->read($path);
+                }
+                $key = App::getEnv('_APP_OPENSSL_KEY_V1');
+                $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+                $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
+            }
+
+            if(!empty($data)) {
+                if (!$device->write($path, $data, $mimeType)) {
+                    throw new Exception('Failed to save file', 500);
+                }
+            }
+
+            $sizeActual = $device->getFileSize($path);
+
+            $algorithm = empty($compressor) ? '' : $compressor->getName();
+            $fileHash = $device->getFileHash($path);
+
+            if ($bucket->getAttribute('encryption', true) && $size <= APP_STORAGE_READ_BUFFER) {
+                $openSSLVersion = '1';
+                $openSSLCipher = OpenSSL::CIPHER_AES_128_GCM;
+                $openSSLTag = \bin2hex($tag);
+                $openSSLIV = \bin2hex($iv);
+            }
+
+            if ($file->isEmpty()) {
+                $file = $dbForInternal->createDocument('files', new Document([
+                    '$read' => $read,
+                    '$write' => $write,
+                    'dateCreated' => \time(),
+                    'bucketId' => $bucket->getId(),
+                    'name' => $fileName,
+                    'path' => $path,
+                    'signature' => $fileHash,
+                    'mimeType' => $mimeType,
+                    'sizeOriginal' => $size,
+                    'sizeActual' => $sizeActual,
+                    'algorithm' => $algorithm,
+                    'comment' => '',
+                    'chunksTotal' => $chunks,
+                    'chunksUploaded' => $chunksUploaded,
+                    'openSSLVersion' => $openSSLVersion,
+                    'openSSLCipher' => $openSSLCipher,
+                    'openSSLTag' => $openSSLTag,
+                    'openSSLIV' => $openSSLIV,
+                ]));
+            } else {
+                $file = $dbForInternal->updateDocument('files', $fileId, $file
+                        ->setAttribute('$read', $read)
+                        ->setAttribute('$write', $write)
+                        ->setAttribute('signature', $fileHash)
+                        ->setAttribute('mimeType', $mimeType)
+                        ->setAttribute('sizeActual', $sizeActual)
+                        ->setAttribute('algorithm', $algorithm)
+                        ->setAttribute('openSSLVersion', $openSSLVersion)
+                        ->setAttribute('openSSLCipher', $openSSLCipher)
+                        ->setAttribute('openSSLTag', $openSSLTag)
+                        ->setAttribute('openSSLIV', $openSSLIV)
+                );
+            }
+        } else {
+            if ($file->isEmpty()) {
+                $file = $dbForInternal->createDocument('files', new Document([
+                    '$id' => $fileId,
+                    '$read' => $read,
+                    '$write' => $write,
+                    'dateCreated' => \time(),
+                    'bucketId' => $bucket->getId(),
+                    'name' => $fileName,
+                    'path' => $path,
+                    'signature' => '',
+                    'mimeType' => '',
+                    'sizeOriginal' => $size,
+                    'sizeActual' => 0,
+                    'algorithm' => '',
+                    'comment' => '',
+                    'chunksTotal' => $chunks,
+                    'chunksUploaded' => $chunksUploaded,
+                ]));
+            } else {
+                $file = $dbForInternal->updateDocument('files', $fileId, $file
+                        ->setAttribute('chunksUploaded', $chunksUploaded)
+                );
+            }
         }
-
-        $sizeActual = $device->getFileSize($path);
-        
-        $data = [
-            '$read' => (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? [], // By default set read permissions for user
-            '$write' => (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? [], // By default set write permissions for user
-            'dateCreated' => \time(),
-            'bucketId' => $bucket->getId(),
-            'name' => $file['name'],
-            'path' => $path,
-            'signature' => $device->getFileHash($path),
-            'mimeType' => $mimeType,
-            'sizeOriginal' => $size,
-            'sizeActual' => $sizeActual,
-            'algorithm' => empty($compressor) ? '' : $compressor->getName(),
-            'comment' => '',
-        ];
-
-        if($bucket->getAttribute('encryption', true) && $size <= APP_LIMIT_ENCRYPTION) {
-            $data['openSSLVersion'] = '1';
-            $data['openSSLCipher'] = OpenSSL::CIPHER_AES_128_GCM;
-            $data['openSSLTag'] = \bin2hex($tag);
-            $data['openSSLIV'] = \bin2hex($iv);
-        }
-
-        $file = $dbForInternal->createDocument('files', new Document($data));
 
         $audits
             ->setParam('event', 'storage.files.create')
-            ->setParam('resource', 'storage/files/'.$file->getId())
+            ->setParam('resource', 'storage/files/' . $file->getId())
         ;
 
-        $usage
-            ->setParam('storage', $sizeActual)
-        ;
+        if (!empty($sizeActual)) {
+            $usage
+                ->setParam('storage', $sizeActual)
+            ;
+        }
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic2($file, Response::MODEL_FILE);
@@ -427,13 +520,13 @@ App::get('/v1/storage/buckets/:bucketId/files')
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if($bucket->isEmpty()) {
+        if ($bucket->isEmpty()) {
             throw new Exception('Bucket not found', 404);
         }
 
         $queries = [new Query('bucketId', Query::TYPE_EQUAL, [$bucketId])];
 
-        if($search) {
+        if ($search) {
             $queries[] = [new Query('name', Query::TYPE_SEARCH, [$search])];
         }
 
@@ -465,13 +558,13 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if($bucket->isEmpty()) {
+        if ($bucket->isEmpty()) {
             throw new Exception('Bucket not found', 404);
         }
 
         $file = $dbForInternal->getDocument('files', $fileId);
 
-        if ($file->isEmpty() || $file->getAttribute('bucketId') != $bucketId)  {
+        if ($file->isEmpty() || $file->getAttribute('bucketId') != $bucketId) {
             throw new Exception('File not found', 404);
         }
 
@@ -499,8 +592,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->param('borderWidth', 0, new Range(0, 100), 'Preview image border in pixels. Pass an integer between 0 to 100. Defaults to 0.', true)
     ->param('borderColor', '', new HexColor(), 'Preview image border color. Use a valid HEX color, no # is needed for prefix.', true)
     ->param('borderRadius', 0, new Range(0, 4000), 'Preview image border radius in pixels. Pass an integer between 0 to 4000.', true)
-    ->param('opacity', 1, new Range(0,1, Range::TYPE_FLOAT), 'Preview image opacity. Only works with images having an alpha channel (like png). Pass a number between 0 to 1.', true)
-    ->param('rotation', 0, new Range(0,360), 'Preview image rotation in degrees. Pass an integer between 0 and 360.', true)
+    ->param('opacity', 1, new Range(0, 1, Range::TYPE_FLOAT), 'Preview image opacity. Only works with images having an alpha channel (like png). Pass a number between 0 to 1.', true)
+    ->param('rotation', 0, new Range(0, 360), 'Preview image rotation in degrees. Pass an integer between 0 and 360.', true)
     ->param('background', '', new HexColor(), 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
     ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
     ->inject('request')
@@ -524,7 +617,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         }
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if($bucket->isEmpty()) {
+        if ($bucket->isEmpty()) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -536,8 +629,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $outputs = Config::getParam('storage-outputs');
         $fileLogos = Config::getParam('storage-logos');
 
-        $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
-        $key = \md5($fileId.$width.$height.$quality.$borderWidth.$borderColor.$borderRadius.$opacity.$rotation.$background.$storage.$output);
+        $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT'; // 45 days cache
+        $key = \md5($fileId . $width . $height . $quality . $borderWidth . $borderColor . $borderRadius . $opacity . $rotation . $background . $storage . $output);
 
         $file = $dbForInternal->getDocument('files', $fileId);
 
@@ -557,7 +650,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             $cipher = null;
             $background = (empty($background)) ? 'eceff1' : $background;
             $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
-            $key = \md5($path.$width.$height.$quality.$borderWidth.$borderColor.$borderRadius.$opacity.$rotation.$background.$storage.$output);
+            $key = \md5($path . $width . $height . $quality . $borderWidth . $borderColor . $borderRadius . $opacity . $rotation . $background . $storage . $output);
         }
 
         $compressor = new GZIP();
@@ -567,8 +660,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             throw new Exception('File not found', 404);
         }
 
-        $cache = new Cache(new Filesystem(APP_STORAGE_CACHE.'/app-'.$project->getId())); // Limit file number or size
-        $data = $cache->load($key, 60 * 60 * 24 * 30 * 3 /* 3 months */);
+        $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . '/app-' . $project->getId())); // Limit file number or size
+        $data = $cache->load($key, 60 * 60 * 24 * 30 * 3/* 3 months */);
 
         if ($data) {
             $output = (empty($output)) ? $type : $output;
@@ -587,7 +680,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             $source = OpenSSL::decrypt(
                 $source,
                 $file->getAttribute('openSSLCipher'),
-                App::getEnv('_APP_OPENSSL_KEY_V'.$file->getAttribute('openSSLVersion')),
+                App::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
                 0,
                 \hex2bin($file->getAttribute('openSSLIV')),
                 \hex2bin($file->getAttribute('openSSLTag'))
@@ -601,17 +694,17 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $image = new Image($source);
 
         $image->crop((int) $width, (int) $height, $gravity);
-        
-        if (!empty($opacity) || $opacity==0) {
+
+        if (!empty($opacity) || $opacity == 0) {
             $image->setOpacity($opacity);
         }
 
         if (!empty($background)) {
-            $image->setBackground('#'.$background);
+            $image->setBackground('#' . $background);
         }
-        
-        if (!empty($borderWidth) ) {
-            $image->setBorder($borderWidth, '#'.$borderColor);
+
+        if (!empty($borderWidth)) {
+            $image->setBorder($borderWidth, '#' . $borderColor);
         }
 
         if (!empty($borderRadius)) {
@@ -655,12 +748,13 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->inject('response')
     ->inject('dbForInternal')
     ->action(function ($bucketId, $fileId, $response, $dbForInternal) {
+        /** @var Utopia\Swoole\Request $response */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if($bucket->isEmpty()) {
+        if ($bucket->isEmpty()) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -672,36 +766,54 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
 
         $path = $file->getAttribute('path', '');
 
-        if (!\file_exists($path)) {
-            throw new Exception('File not found in '.$path, 404);
+        $device = Storage::getDevice('files');
+        
+        if (!$device->exists($path)) {
+            throw new Exception('File not found in ' . $path, 404);
         }
 
-        $device = Storage::getDevice('files');
+        $response
+            ->setContentType($file->getAttribute('mimeType'))
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('X-Peak', \memory_get_peak_usage())
+            ->addHeader('Content-Disposition', 'attachment; filename="' . $file->getAttribute('name', '') . '"')
+        ;
 
-        $source = $device->read($path);
+        $source = '';
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
+            $source = $device->read($path);
             $source = OpenSSL::decrypt(
                 $source,
                 $file->getAttribute('openSSLCipher'),
-                App::getEnv('_APP_OPENSSL_KEY_V'.$file->getAttribute('openSSLVersion')),
+                App::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
                 0,
                 \hex2bin($file->getAttribute('openSSLIV')),
                 \hex2bin($file->getAttribute('openSSLTag'))
             );
         }
-        if(!empty($file->getAttribute('algorithm', ''))) {
+
+        if (!empty($file->getAttribute('algorithm', ''))) {
+            if(empty($source)) {
+                $source = $device->read($path);
+            }
             $compressor = new GZIP();
             $source = $compressor->decompress($source);
         }
 
-        // Response
-        $response
-            ->setContentType($file->getAttribute('mimeType'))
-            ->addHeader('Content-Disposition', 'attachment; filename="'.$file->getAttribute('name', '').'"')
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
-            ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->send($source)
-        ;
+        if(!empty($source)) {
+            $response->send($source);
+        }
+
+        $size = $device->getFileSize($path);
+        if ($size > APP_STORAGE_READ_BUFFER) {          
+            $response->addHeader('Content-Length', $device->getFileSize($path));
+            $chunk = 2000000; // Max chunk of 2 mb
+            for ($i=0; $i < ceil($size / $chunk); $i++) {
+                $response->chunk($device->read($path, ($i * $chunk), min($chunk, $size - ($i * $chunk))), (($i + 1) * $chunk) >= $size);
+            }
+        } else {
+            $response->send($device->read($path));
+        }
     });
 
 App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
@@ -726,11 +838,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if($bucket->isEmpty()) {
+        if ($bucket->isEmpty()) {
             throw new Exception('Bucket not found', 404);
         }
 
-        $file  = $dbForInternal->getDocument('files', $fileId);
+        $file = $dbForInternal->getDocument('files', $fileId);
         $mimes = Config::getParam('storage-mimes');
 
         if ($file->isEmpty() || $file->getAttribute('bucketId') != $bucketId) {
@@ -740,7 +852,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         $path = $file->getAttribute('path', '');
 
         if (!\file_exists($path)) {
-            throw new Exception('File not found in '.$path, 404);
+            throw new Exception('File not found in ' . $path, 404);
         }
 
         $compressor = new GZIP();
@@ -752,32 +864,50 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             $contentType = $file->getAttribute('mimeType');
         }
 
-        $source = $device->read($path);
+        $response
+            ->setContentType($contentType)
+            ->addHeader('Content-Security-Policy', 'script-src none;')
+            ->addHeader('X-Content-Type-Options', 'nosniff')
+            ->addHeader('Content-Disposition', 'inline; filename="' . $file->getAttribute('name', '') . '"')
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('X-Peak', \memory_get_peak_usage())
+        ;
 
+        $source = '';
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
+            $source = $device->read($path);
             $source = OpenSSL::decrypt(
                 $source,
                 $file->getAttribute('openSSLCipher'),
-                App::getEnv('_APP_OPENSSL_KEY_V'.$file->getAttribute('openSSLVersion')),
+                App::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
                 0,
                 \hex2bin($file->getAttribute('openSSLIV')),
                 \hex2bin($file->getAttribute('openSSLTag'))
             );
         }
 
-        $output = $compressor->decompress($source);
-        $fileName = $file->getAttribute('name', '');
+        if (!empty($file->getAttribute('algorithm', ''))) {
+            if(empty($source)) {
+                $source = $device->read($path);
+            }
+            $compressor = new GZIP();
+            $source = $compressor->decompress($source);
+        }
 
-        // Response
-        $response
-            ->setContentType($contentType)
-            ->addHeader('Content-Security-Policy', 'script-src none;')
-            ->addHeader('X-Content-Type-Options', 'nosniff')
-            ->addHeader('Content-Disposition', 'inline; filename="'.$fileName.'"')
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
-            ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->send($output)
-        ;
+        if(!empty($source)) {
+            $response->send($source);
+        }
+
+        $size = $device->getFileSize($path);
+        if ($size > APP_STORAGE_READ_BUFFER) {          
+            $response->addHeader('Content-Length', $device->getFileSize($path));
+            $chunk = 2000000; // Max chunk of 2 mb
+            for ($i=0; $i < ceil($size / $chunk); $i++) {
+                $response->chunk($device->read($path, ($i * $chunk), min($chunk, $size - ($i * $chunk))), (($i + 1) * $chunk) >= $size);
+            }
+        } else {
+            $response->send($device->read($path));
+        }
     });
 
 App::put('/v1/storage/buckets/:bucketId/files/:fileId')
@@ -807,7 +937,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if($bucket->isEmpty()) {
+        if ($bucket->isEmpty()) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -824,7 +954,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $audits
             ->setParam('event', 'storage.files.update')
-            ->setParam('resource', 'storage/files/'.$file->getId())
+            ->setParam('resource', 'storage/files/' . $file->getId())
         ;
 
         $response->dynamic2($file, Response::MODEL_FILE);
@@ -855,10 +985,10 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $usage */
-        
+
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
-        if($bucket->isEmpty()) {
+        if ($bucket->isEmpty()) {
             throw new Exception('Bucket not found', 404);
         }
 
@@ -874,11 +1004,13 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
             if (!$dbForInternal->deleteDocument('files', $fileId)) {
                 throw new Exception('Failed to remove file from DB', 500);
             }
+        } else {
+            throw new Exception('Failed to delete file from device', 500);
         }
-        
+
         $audits
             ->setParam('event', 'storage.files.delete')
-            ->setParam('resource', 'storage/files/'.$file->getId())
+            ->setParam('resource', 'storage/files/' . $file->getId())
         ;
 
         $usage

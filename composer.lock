@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "14172d7cbfa5a5b7353d3f8b24e44b81",
+    "content-hash": "d4f05050444f31ba74fbb87171ac91ab",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2079,16 +2079,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.15.0",
+            "version": "0.16.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "3916871b173d6bc509c4e1bb236349382b8a84ab"
+                "reference": "e53db21af89e0eef0784fd153de762277da87295"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/3916871b173d6bc509c4e1bb236349382b8a84ab",
-                "reference": "3916871b173d6bc509c4e1bb236349382b8a84ab",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/e53db21af89e0eef0784fd153de762277da87295",
+                "reference": "e53db21af89e0eef0784fd153de762277da87295",
                 "shasum": ""
             },
             "require": {
@@ -2122,9 +2122,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.15.0"
+                "source": "https://github.com/utopia-php/framework/tree/0.16.0"
             },
-            "time": "2021-07-04T12:55:46+00:00"
+            "time": "2021-07-15T08:45:09+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2337,17 +2337,11 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.5.0",
+            "version": "dev-feat-large-file-support",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/storage.git",
-                "reference": "92ae20c7a2ac329f573a58a82dc245134cc63408"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/92ae20c7a2ac329f573a58a82dc245134cc63408",
-                "reference": "92ae20c7a2ac329f573a58a82dc245134cc63408",
-                "shasum": ""
+                "url": "https://github.com/utopia-php/storage",
+                "reference": "956ee3dcd523f68f4b13251bd5e21bc88d507be4"
             },
             "require": {
                 "php": ">=7.4",
@@ -2363,7 +2357,6 @@
                     "Utopia\\Storage\\": "src/Storage"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -2381,25 +2374,15 @@
                 "upf",
                 "utopia"
             ],
-            "support": {
-                "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.5.0"
-            },
-            "time": "2021-04-15T16:43:12+00:00"
+            "time": "2021-07-12T09:43:08+00:00"
         },
         {
             "name": "utopia-php/swoole",
-            "version": "0.2.4",
+            "version": "dev-feat-send-chunks",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/swoole.git",
-                "reference": "37d8c64b536d6bc7da4f0f5a934a0ec44885abf4"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/37d8c64b536d6bc7da4f0f5a934a0ec44885abf4",
-                "reference": "37d8c64b536d6bc7da4f0f5a934a0ec44885abf4",
-                "shasum": ""
+                "url": "https://github.com/lohanidamodar/swoole",
+                "reference": "59d85e0e42325220ea50e3aa3fac6e5a36826eca"
             },
             "require": {
                 "ext-swoole": "*",
@@ -2417,7 +2400,6 @@
                     "Utopia\\Swoole\\": "src/Swoole"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -2437,11 +2419,7 @@
                 "upf",
                 "utopia"
             ],
-            "support": {
-                "issues": "https://github.com/utopia-php/swoole/issues",
-                "source": "https://github.com/utopia-php/swoole/tree/0.2.4"
-            },
-            "time": "2021-06-22T10:49:24+00:00"
+            "time": "2021-07-18T05:39:38+00:00"
         },
         {
             "name": "utopia-php/system",
@@ -2560,27 +2538,27 @@
     "packages-dev": [
         {
             "name": "amphp/amp",
-            "version": "v2.5.2",
+            "version": "v2.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/amphp/amp.git",
-                "reference": "efca2b32a7580087adb8aabbff6be1dc1bb924a9"
+                "reference": "caa95edeb1ca1bf7532e9118ede4a3c3126408cc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/amphp/amp/zipball/efca2b32a7580087adb8aabbff6be1dc1bb924a9",
-                "reference": "efca2b32a7580087adb8aabbff6be1dc1bb924a9",
+                "url": "https://api.github.com/repos/amphp/amp/zipball/caa95edeb1ca1bf7532e9118ede4a3c3126408cc",
+                "reference": "caa95edeb1ca1bf7532e9118ede4a3c3126408cc",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7"
+                "php": ">=7.1"
             },
             "require-dev": {
                 "amphp/php-cs-fixer-config": "dev-master",
                 "amphp/phpunit-util": "^1",
                 "ext-json": "*",
                 "jetbrains/phpstorm-stubs": "^2019.3",
-                "phpunit/phpunit": "^6.0.9 | ^7",
+                "phpunit/phpunit": "^7 | ^8 | ^9",
                 "psalm/phar": "^3.11@dev",
                 "react/promise": "^2"
             },
@@ -2637,7 +2615,7 @@
             "support": {
                 "irc": "irc://irc.freenode.org/amphp",
                 "issues": "https://github.com/amphp/amp/issues",
-                "source": "https://github.com/amphp/amp/tree/v2.5.2"
+                "source": "https://github.com/amphp/amp/tree/v2.6.0"
             },
             "funding": [
                 {
@@ -2645,7 +2623,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-01-10T17:06:37+00:00"
+            "time": "2021-07-16T20:06:06+00:00"
         },
         {
             "name": "amphp/byte-stream",
@@ -6235,7 +6213,9 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "utopia-php/abuse": 20,
-        "utopia-php/audit": 20
+        "utopia-php/audit": 20,
+        "utopia-php/swoole": 20,
+        "utopia-php/storage": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

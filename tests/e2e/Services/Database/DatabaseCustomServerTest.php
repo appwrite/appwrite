@@ -27,34 +27,49 @@ class DatabaseCustomServerTest extends Scope
         ]), [
             'name' => 'Actors',
             'read' => ['role:all'],
-            'write' => ['role:member', 'role:admin'],
-            'rules' => [
-                [
-                    'label' => 'First Name',
-                    'key' => 'firstName',
-                    'type' => 'text',
-                    'default' => '',
-                    'required' => true,
-                    'array' => false
-                ],
-                [
-                    'label' => 'Last Name',
-                    'key' => 'lastName',
-                    'type' => 'text',
-                    'default' => '',
-                    'required' => true,
-                    'array' => false
-                ],
-            ],
+            'write' => ['role:all'],
         ]);
 
         $this->assertEquals($actors['headers']['status-code'], 201);
         $this->assertEquals($actors['body']['name'], 'Actors');
-        $this->assertIsArray($actors['body']['$permissions']);
-        $this->assertIsArray($actors['body']['$permissions']['read']);
-        $this->assertIsArray($actors['body']['$permissions']['write']);
-        $this->assertCount(1, $actors['body']['$permissions']['read']);
-        $this->assertCount(2, $actors['body']['$permissions']['write']);
+
+        $firstName = $this->client->call(Client::METHOD_POST, '/database/collections/' . $actors['body']['$id'] . '/attributes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'id' => 'firstName',
+            'type' => 'string',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $lastName = $this->client->call(Client::METHOD_POST, '/database/collections/' . $actors['body']['$id'] . '/attributes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'id' => 'lastName',
+            'type' => 'string',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        // wait for database worker to finish creating attributes
+        sleep(5);
+
+        $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $actors['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), []); 
+
+        $this->assertEquals($collection['body']['$id'], $firstName['body']['$collection']);
+        $this->assertEquals($collection['body']['$id'], $lastName['body']['$collection']);
+        $this->assertIsArray($collection['body']['attributes']);
+        $this->assertCount(2, $collection['body']['attributes']);
+        $this->assertEquals($collection['body']['attributes'][0]['$id'], $firstName['body']['$id']);
+        $this->assertEquals($collection['body']['attributes'][1]['$id'], $lastName['body']['$id']);
 
         // Add Documents to the collection
         $document1 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $actors['body']['$id'] . '/documents', array_merge([
@@ -80,24 +95,22 @@ class DatabaseCustomServerTest extends Scope
             'read' => ['user:'.$this->getUser()['$id']],
             'write' => ['user:'.$this->getUser()['$id']],
         ]);
-       
+
         $this->assertEquals($document1['headers']['status-code'], 201);
         $this->assertEquals($document1['body']['$collection'], $actors['body']['$id']);
-        $this->assertIsArray($document1['body']['$permissions']);
-        $this->assertIsArray($document1['body']['$permissions']['read']);
-        $this->assertIsArray($document1['body']['$permissions']['write']);
-        $this->assertCount(1, $document1['body']['$permissions']['read']);
-        $this->assertCount(1, $document1['body']['$permissions']['write']);
+        $this->assertIsArray($document1['body']['$read']);
+        $this->assertIsArray($document1['body']['$write']);
+        $this->assertCount(1, $document1['body']['$read']);
+        $this->assertCount(1, $document1['body']['$write']);
         $this->assertEquals($document1['body']['firstName'], 'Tom');
         $this->assertEquals($document1['body']['lastName'], 'Holland');
 
         $this->assertEquals($document2['headers']['status-code'], 201);
         $this->assertEquals($document2['body']['$collection'], $actors['body']['$id']);
-        $this->assertIsArray($document2['body']['$permissions']);
-        $this->assertIsArray($document2['body']['$permissions']['read']);
-        $this->assertIsArray($document2['body']['$permissions']['write']);
-        $this->assertCount(1, $document2['body']['$permissions']['read']);
-        $this->assertCount(1, $document2['body']['$permissions']['write']);
+        $this->assertIsArray($document2['body']['$read']);
+        $this->assertIsArray($document2['body']['$write']);
+        $this->assertCount(1, $document2['body']['$read']);
+        $this->assertCount(1, $document2['body']['$write']);
         $this->assertEquals($document2['body']['firstName'], 'Samuel');
         $this->assertEquals($document2['body']['lastName'], 'Jackson');
 

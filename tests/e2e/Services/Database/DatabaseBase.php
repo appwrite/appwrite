@@ -11,42 +11,6 @@ trait DatabaseBase
         /**
          * Test for SUCCESS
          */
-        $actors = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'name' => 'Actors',
-            'read' => ['role:all'],
-            'write' => ['role:member', 'role:admin'],
-            'rules' => [
-                [
-                    'label' => 'First Name',
-                    'key' => 'firstName',
-                    'type' => 'text',
-                    'default' => '',
-                    'required' => true,
-                    'array' => false
-                ],
-                [
-                    'label' => 'Last Name',
-                    'key' => 'lastName',
-                    'type' => 'text',
-                    'default' => '',
-                    'required' => true,
-                    'array' => false
-                ],
-            ],
-        ]);
-
-        $this->assertEquals($actors['headers']['status-code'], 201);
-        $this->assertEquals($actors['body']['name'], 'Actors');
-        $this->assertIsArray($actors['body']['$permissions']);
-        $this->assertIsArray($actors['body']['$permissions']['read']);
-        $this->assertIsArray($actors['body']['$permissions']['write']);
-        $this->assertCount(1, $actors['body']['$permissions']['read']);
-        $this->assertCount(2, $actors['body']['$permissions']['write']);
-
         $movies = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -54,49 +18,141 @@ trait DatabaseBase
         ]), [
             'name' => 'Movies',
             'read' => ['role:all'],
-            'write' => ['role:member', 'role:admin'],
-            'rules' => [
-                [
-                    'label' => 'Name',
-                    'key' => 'name',
-                    'type' => 'text',
-                    'default' => '',
-                    'required' => true,
-                    'array' => false
-                ],
-                [
-                    'label' => 'Release Year',
-                    'key' => 'releaseYear',
-                    'type' => 'numeric',
-                    'default' => 0,
-                    'required' => false,
-                    'array' => false
-                ],
-                [
-                    'label' => 'Actors',
-                    'key' => 'actors',
-                    'type' => 'document',
-                    'default' => [],
-                    'required' => false,
-                    'array' => true,
-                    'list' => [$actors['body']['$id']],
-                ],
-            ],
+            'write' => ['role:all'],
         ]);
 
         $this->assertEquals($movies['headers']['status-code'], 201);
         $this->assertEquals($movies['body']['name'], 'Movies');
-        $this->assertIsArray($movies['body']['$permissions']);
-        $this->assertIsArray($movies['body']['$permissions']['read']);
-        $this->assertIsArray($movies['body']['$permissions']['write']);
-        $this->assertCount(1, $movies['body']['$permissions']['read']);
-        $this->assertCount(2, $movies['body']['$permissions']['write']);
 
-        return array_merge(['moviesId' => $movies['body']['$id'], 'actorsId' => $actors['body']['$id']]);
+        return ['moviesId' => $movies['body']['$id']];
     }
 
     /**
      * @depends testCreateCollection
+     */
+    public function testCreateAttributes(array $data): array
+    {
+        $title = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/attributes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'id' => 'title',
+            'type' => 'string',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $releaseYear = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/attributes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'id' => 'releaseYear',
+            'type' => 'integer',
+            'size' => 0,
+            'required' => true,
+        ]);
+
+        $actors = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/attributes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'id' => 'actors',
+            'type' => 'string',
+            'size' => 256,
+            'required' => false,
+            'default' => null,
+            'array' => true,
+        ]);
+
+        $this->assertEquals($title['headers']['status-code'], 201);
+        $this->assertEquals($title['body']['$collection'], $data['moviesId']);
+        $this->assertEquals($title['body']['$id'], 'title');
+        $this->assertEquals($title['body']['type'], 'string');
+        $this->assertEquals($title['body']['size'], 256);
+        $this->assertEquals($title['body']['required'], true);
+
+        $this->assertEquals($releaseYear['headers']['status-code'], 201);
+        $this->assertEquals($releaseYear['body']['$collection'], $data['moviesId']);
+        $this->assertEquals($releaseYear['body']['$id'], 'releaseYear');
+        $this->assertEquals($releaseYear['body']['type'], 'integer');
+        $this->assertEquals($releaseYear['body']['size'], 0);
+        $this->assertEquals($releaseYear['body']['required'], true);
+
+        $this->assertEquals($actors['headers']['status-code'], 201);
+        $this->assertEquals($actors['body']['$collection'], $data['moviesId']);
+        $this->assertEquals($actors['body']['$id'], 'actors');
+        $this->assertEquals($actors['body']['type'], 'string');
+        $this->assertEquals($actors['body']['size'], 256);
+        $this->assertEquals($actors['body']['required'], false);
+        $this->assertEquals($actors['body']['array'], true);
+
+        // wait for database worker to create attributes
+        sleep(10);
+
+        $movies = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), []); 
+
+        $this->assertEquals($movies['body']['$id'], $title['body']['$collection']);
+        $this->assertEquals($movies['body']['$id'], $releaseYear['body']['$collection']);
+        $this->assertEquals($movies['body']['$id'], $actors['body']['$collection']);
+        $this->assertIsArray($movies['body']['attributesInQueue']);
+        $this->assertCount(0, $movies['body']['attributesInQueue']);
+        $this->assertIsArray($movies['body']['attributes']);
+        $this->assertCount(3, $movies['body']['attributes']);
+        $this->assertEquals($movies['body']['attributes'][0]['$id'], $title['body']['$id']);
+        $this->assertEquals($movies['body']['attributes'][1]['$id'], $releaseYear['body']['$id']);
+        $this->assertEquals($movies['body']['attributes'][2]['$id'], $actors['body']['$id']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateAttributes
+     */
+    public function testCreateIndexes(array $data): array
+    {
+        $titleIndex = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'id' => 'titleIndex',
+            'type' => 'fulltext',
+            'attributes' => ['title'],
+        ]);
+
+        $this->assertEquals($titleIndex['headers']['status-code'], 201);
+        $this->assertEquals($titleIndex['body']['$collection'], $data['moviesId']);
+        $this->assertEquals($titleIndex['body']['$id'], 'titleIndex');
+        $this->assertEquals($titleIndex['body']['type'], 'fulltext');
+        $this->assertCount(1, $titleIndex['body']['attributes']);
+        $this->assertEquals($titleIndex['body']['attributes'][0], 'title');
+
+        // wait for database worker to create index
+        sleep(5);
+
+        $movies = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), []); 
+
+        $this->assertEquals($movies['body']['$id'], $titleIndex['body']['$collection']);
+        $this->assertIsArray($movies['body']['indexes']);
+        $this->assertCount(1, $movies['body']['indexes']);
+        $this->assertEquals($movies['body']['indexes'][0]['$id'], $titleIndex['body']['$id']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateIndexes
      */
     public function testCreateDocument(array $data):array
     {
@@ -105,21 +161,11 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'name' => 'Captain America',
+                'title' => 'Captain America',
                 'releaseYear' => 1944,
                 'actors' => [
-                    [
-                        '$collection' => $data['actorsId'],
-                        '$permissions' => ['read' => [], 'write' => []],
-                        'firstName' => 'Chris',
-                        'lastName' => 'Evans',
-                    ],
-                    [
-                        '$collection' => $data['actorsId'],
-                        '$permissions' => ['read' => [], 'write' => []],
-                        'firstName' => 'Samuel',
-                        'lastName' => 'Jackson',
-                    ],
+                    'Chris Evans',
+                    'Samuel Jackson',
                 ]
             ],
             'read' => ['user:'.$this->getUser()['$id']],
@@ -131,27 +177,12 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'name' => 'Spider-Man: Far From Home',
+                'title' => 'Spider-Man: Far From Home',
                 'releaseYear' => 2019,
                 'actors' => [
-                    [
-                        '$collection' => $data['actorsId'],
-                        '$permissions' => ['read' => [], 'write' => []],
-                        'firstName' => 'Tom',
-                        'lastName' => 'Holland',
-                    ],
-                    [
-                        '$collection' => $data['actorsId'],
-                        '$permissions' => ['read' => [], 'write' => []],
-                        'firstName' => 'Zendaya',
-                        'lastName' => 'Maree Stoermer',
-                    ],
-                    [
-                        '$collection' => $data['actorsId'],
-                        '$permissions' => ['read' => [], 'write' => []],
-                        'firstName' => 'Samuel',
-                        'lastName' => 'Jackson',
-                    ],
+                    'Tom Holland',
+                    'Zendaya Maree Stoermer',
+                    'Samuel Jackson',
                 ]
             ],
             'read' => ['user:'.$this->getUser()['$id']],
@@ -163,21 +194,11 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'name' => 'Spider-Man: Homecoming',
+                'title' => 'Spider-Man: Homecoming',
                 'releaseYear' => 2017,
                 'actors' => [
-                    [
-                        '$collection' => $data['actorsId'],
-                        '$permissions' => ['read' => [], 'write' => []],
-                        'firstName' => 'Tom',
-                        'lastName' => 'Holland',
-                    ],
-                    [
-                        '$collection' => $data['actorsId'],
-                        '$permissions' => ['read' => [], 'write' => []],
-                        'firstName' => 'Zendaya',
-                        'lastName' => 'Maree Stoermer',
-                    ],
+                    'Tom Holland',
+                    'Zendaya Maree Stoermer',
                 ],
             ],
             'read' => ['user:'.$this->getUser()['$id']],
@@ -197,46 +218,40 @@ trait DatabaseBase
 
         $this->assertEquals($document1['headers']['status-code'], 201);
         $this->assertEquals($document1['body']['$collection'], $data['moviesId']);
-        $this->assertEquals($document1['body']['name'], 'Captain America');
+        $this->assertEquals($document1['body']['title'], 'Captain America');
         $this->assertEquals($document1['body']['releaseYear'], 1944);
-        $this->assertIsArray($document1['body']['$permissions']);
-        $this->assertIsArray($document1['body']['$permissions']['read']);
-        $this->assertIsArray($document1['body']['$permissions']['write']);
-        $this->assertCount(1, $document1['body']['$permissions']['read']);
-        $this->assertCount(1, $document1['body']['$permissions']['write']);
+        $this->assertIsArray($document1['body']['$read']);
+        $this->assertIsArray($document1['body']['$write']);
+        $this->assertCount(1, $document1['body']['$read']);
+        $this->assertCount(1, $document1['body']['$write']);
         $this->assertCount(2, $document1['body']['actors']);
+        $this->assertEquals($document1['body']['actors'][0], 'Chris Evans');
+        $this->assertEquals($document1['body']['actors'][1], 'Samuel Jackson');
 
         $this->assertEquals($document2['headers']['status-code'], 201);
         $this->assertEquals($document2['body']['$collection'], $data['moviesId']);
-        $this->assertEquals($document2['body']['name'], 'Spider-Man: Far From Home');
+        $this->assertEquals($document2['body']['title'], 'Spider-Man: Far From Home');
         $this->assertEquals($document2['body']['releaseYear'], 2019);
-        $this->assertIsArray($document2['body']['$permissions']);
-        $this->assertIsArray($document2['body']['$permissions']['read']);
-        $this->assertIsArray($document2['body']['$permissions']['write']);
-        $this->assertCount(1, $document2['body']['$permissions']['read']);
-        $this->assertCount(1, $document2['body']['$permissions']['write']);
+        $this->assertIsArray($document2['body']['$read']);
+        $this->assertIsArray($document2['body']['$write']);
+        $this->assertCount(1, $document2['body']['$read']);
+        $this->assertCount(1, $document2['body']['$write']);
         $this->assertCount(3, $document2['body']['actors']);
-        $this->assertEquals($document2['body']['actors'][0]['firstName'], 'Tom');
-        $this->assertEquals($document2['body']['actors'][0]['lastName'], 'Holland');
-        $this->assertEquals($document2['body']['actors'][1]['firstName'], 'Zendaya');
-        $this->assertEquals($document2['body']['actors'][1]['lastName'], 'Maree Stoermer');
-        $this->assertEquals($document2['body']['actors'][2]['firstName'], 'Samuel');
-        $this->assertEquals($document2['body']['actors'][2]['lastName'], 'Jackson');
+        $this->assertEquals($document2['body']['actors'][0], 'Tom Holland');
+        $this->assertEquals($document2['body']['actors'][1], 'Zendaya Maree Stoermer');
+        $this->assertEquals($document2['body']['actors'][2], 'Samuel Jackson');
 
         $this->assertEquals($document3['headers']['status-code'], 201);
         $this->assertEquals($document3['body']['$collection'], $data['moviesId']);
-        $this->assertEquals($document3['body']['name'], 'Spider-Man: Homecoming');
+        $this->assertEquals($document3['body']['title'], 'Spider-Man: Homecoming');
         $this->assertEquals($document3['body']['releaseYear'], 2017);
-        $this->assertIsArray($document3['body']['$permissions']);
-        $this->assertIsArray($document3['body']['$permissions']['read']);
-        $this->assertIsArray($document3['body']['$permissions']['write']);
-        $this->assertCount(1, $document3['body']['$permissions']['read']);
-        $this->assertCount(1, $document3['body']['$permissions']['write']);
+        $this->assertIsArray($document3['body']['$read']);
+        $this->assertIsArray($document3['body']['$write']);
+        $this->assertCount(1, $document3['body']['$read']);
+        $this->assertCount(1, $document3['body']['$write']);
         $this->assertCount(2, $document3['body']['actors']);
-        $this->assertEquals($document3['body']['actors'][0]['firstName'], 'Tom');
-        $this->assertEquals($document3['body']['actors'][0]['lastName'], 'Holland');
-        $this->assertEquals($document3['body']['actors'][1]['firstName'], 'Zendaya');
-        $this->assertEquals($document3['body']['actors'][1]['lastName'], 'Maree Stoermer');
+        $this->assertEquals($document2['body']['actors'][0], 'Tom Holland');
+        $this->assertEquals($document2['body']['actors'][1], 'Zendaya Maree Stoermer');
 
         $this->assertEquals($document4['headers']['status-code'], 400);
 
@@ -252,9 +267,8 @@ trait DatabaseBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'orderField' => 'releaseYear',
-            'orderType' => 'ASC',
-            'orderCast' => 'int',
+            'orderAttributes' => ['releaseYear'],
+            'orderTypes' => ['ASC'],
         ]);
 
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
@@ -266,9 +280,8 @@ trait DatabaseBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'orderField' => 'releaseYear',
-            'orderType' => 'DESC',
-            'orderCast' => 'int',
+            'orderAttributes' => ['releaseYear'],
+            'orderTypes' => ['DESC'],
         ]);
 
         $this->assertEquals(1944, $documents['body']['documents'][2]['releaseYear']);
@@ -289,9 +302,8 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'limit' => 1,
-            'orderField' => 'releaseYear',
-            'orderType' => 'ASC',
-            'orderCast' => 'int',
+            'orderAttributes' => ['releaseYear'],
+            'orderTypes' => ['ASC'],
         ]);
 
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
@@ -303,9 +315,8 @@ trait DatabaseBase
         ], $this->getHeaders()), [
             'limit' => 2,
             'offset' => 1,
-            'orderField' => 'releaseYear',
-            'orderType' => 'ASC',
-            'orderCast' => 'int',
+            'orderAttributes' => ['releaseYear'],
+            'orderTypes' => ['ASC'],
         ]);
 
         $this->assertEquals(2017, $documents['body']['documents'][0]['releaseYear']);
@@ -324,7 +335,7 @@ trait DatabaseBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'search' => 'Captain America',
+            'queries' => ['title.search("Captain America")'],
         ]);
 
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
@@ -334,7 +345,7 @@ trait DatabaseBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'search' => 'Homecoming',
+            'queries' => ['title.search("Homecoming")'],
         ]);
 
         $this->assertEquals(2017, $documents['body']['documents'][0]['releaseYear']);
@@ -344,7 +355,7 @@ trait DatabaseBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'search' => 'spider',
+            'queries' => ['title.search("spider")'],
         ]);
 
         $this->assertEquals(2019, $documents['body']['documents'][0]['releaseYear']);
@@ -353,52 +364,53 @@ trait DatabaseBase
 
         return [];
     }
+    // TODO@kodumbeats test for empty searches and misformatted queries
 
     /**
      * @depends testCreateDocument
      */
-    public function testListDocumentsFilters(array $data):array
-    {
-        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'filters' => [
-                'actors.firstName=Tom'
-            ],
-        ]);
+    // public function testListDocumentsFilters(array $data):array
+    // {
+    //     $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id'],
+    //     ], $this->getHeaders()), [
+    //         'filters' => [
+    //             'actors.firstName=Tom'
+    //         ],
+    //     ]);
 
-        $this->assertCount(2, $documents['body']['documents']);
-        $this->assertEquals('Spider-Man: Far From Home', $documents['body']['documents'][0]['name']);
-        $this->assertEquals('Spider-Man: Homecoming', $documents['body']['documents'][1]['name']);
+    //     $this->assertCount(2, $documents['body']['documents']);
+    //     $this->assertEquals('Spider-Man: Far From Home', $documents['body']['documents'][0]['name']);
+    //     $this->assertEquals('Spider-Man: Homecoming', $documents['body']['documents'][1]['name']);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'filters' => [
-                'releaseYear=1944'
-            ],
-        ]);
+    //     $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id'],
+    //     ], $this->getHeaders()), [
+    //         'filters' => [
+    //             'releaseYear=1944'
+    //         ],
+    //     ]);
 
-        $this->assertCount(1, $documents['body']['documents']);
-        $this->assertEquals('Captain America', $documents['body']['documents'][0]['name']);
+    //     $this->assertCount(1, $documents['body']['documents']);
+    //     $this->assertEquals('Captain America', $documents['body']['documents'][0]['name']);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'filters' => [
-                'releaseYear!=1944'
-            ],
-        ]);
+    //     $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id'],
+    //     ], $this->getHeaders()), [
+    //         'filters' => [
+    //             'releaseYear!=1944'
+    //         ],
+    //     ]);
 
-        $this->assertCount(2, $documents['body']['documents']);
-        $this->assertEquals('Spider-Man: Far From Home', $documents['body']['documents'][0]['name']);
-        $this->assertEquals('Spider-Man: Homecoming', $documents['body']['documents'][1]['name']);
+    //     $this->assertCount(2, $documents['body']['documents']);
+    //     $this->assertEquals('Spider-Man: Far From Home', $documents['body']['documents'][0]['name']);
+    //     $this->assertEquals('Spider-Man: Homecoming', $documents['body']['documents'][1]['name']);
 
-        return [];
-    }
+    //     return [];
+    // }
 
     /**
      * @depends testCreateDocument
@@ -410,35 +422,34 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'name' => 'Thor: Ragnaroc',
+                'title' => 'Thor: Ragnaroc',
                 'releaseYear' => 2017,
+                'actors' => [],
             ],
-            'read' => ['user:'.$this->getUser()['$id'], 'testx'],
-            'write' => ['user:'.$this->getUser()['$id'], 'testy'],
+            'read' => ['user:'.$this->getUser()['$id'], 'user:testx'],
+            'write' => ['user:'.$this->getUser()['$id'], 'user:testy'],
         ]);
 
         $id = $document['body']['$id'];
         $collection = $document['body']['$collection'];
 
         $this->assertEquals($document['headers']['status-code'], 201);
-        $this->assertEquals($document['body']['name'], 'Thor: Ragnaroc');
+        $this->assertEquals($document['body']['title'], 'Thor: Ragnaroc');
         $this->assertEquals($document['body']['releaseYear'], 2017);
-        $this->assertEquals($document['body']['$permissions']['read'][1], 'testx');
-        $this->assertEquals($document['body']['$permissions']['write'][1], 'testy');
+        $this->assertEquals($document['body']['$read'][1], 'user:testx');
+        $this->assertEquals($document['body']['$write'][1], 'user:testy');
 
         $document = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $collection . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'name' => 'Thor: Ragnarok'
+                'title' => 'Thor: Ragnarok',
             ],
-            'read' => ['user:'.$this->getUser()['$id']],
-            'write' => ['user:'.$this->getUser()['$id']],
         ]);
 
         $this->assertEquals($document['headers']['status-code'], 200);
-        $this->assertEquals($document['body']['name'], 'Thor: Ragnarok');
+        $this->assertEquals($document['body']['title'], 'Thor: Ragnarok');
         $this->assertEquals($document['body']['releaseYear'], 2017);
 
         $document = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collection . '/documents/' . $id, array_merge([
@@ -450,7 +461,7 @@ trait DatabaseBase
         $collection = $document['body']['$collection'];
 
         $this->assertEquals($document['headers']['status-code'], 200);
-        $this->assertEquals($document['body']['name'], 'Thor: Ragnarok');
+        $this->assertEquals($document['body']['title'], 'Thor: Ragnarok');
         $this->assertEquals($document['body']['releaseYear'], 2017);
 
         return [];
@@ -466,8 +477,9 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'name' => 'Thor: Ragnarok',
+                'title' => 'Thor: Ragnarok',
                 'releaseYear' => 2017,
+                'actors' => [],
             ],
             'read' => ['user:'.$this->getUser()['$id']],
             'write' => ['user:'.$this->getUser()['$id']],
@@ -512,7 +524,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'name' => 'Captain America',
+                'title' => 'Captain America',
                 'releaseYear' => 1944,
                 'actors' => [],
             ],
@@ -522,24 +534,23 @@ trait DatabaseBase
 
         $this->assertEquals($document['headers']['status-code'], 201);
         $this->assertEquals($document['body']['$collection'], $data['moviesId']);
-        $this->assertEquals($document['body']['name'], 'Captain America');
+        $this->assertEquals($document['body']['title'], 'Captain America');
         $this->assertEquals($document['body']['releaseYear'], 1944);
-        $this->assertIsArray($document['body']['$permissions']);
-        $this->assertIsArray($document['body']['$permissions']['read']);
-        $this->assertIsArray($document['body']['$permissions']['write']);
+        $this->assertIsArray($document['body']['$read']);
+        $this->assertIsArray($document['body']['$write']);
 
         if($this->getSide() == 'client') {
-            $this->assertCount(1, $document['body']['$permissions']['read']);
-            $this->assertCount(1, $document['body']['$permissions']['write']);
-            $this->assertEquals(['user:'.$this->getUser()['$id']], $document['body']['$permissions']['read']);
-            $this->assertEquals(['user:'.$this->getUser()['$id']], $document['body']['$permissions']['write']);    
+            $this->assertCount(1, $document['body']['$read']);
+            $this->assertCount(1, $document['body']['$write']);
+            $this->assertEquals(['user:'.$this->getUser()['$id']], $document['body']['$read']);
+            $this->assertEquals(['user:'.$this->getUser()['$id']], $document['body']['$write']);    
         }
 
         if($this->getSide() == 'server') {
-            $this->assertCount(0, $document['body']['$permissions']['read']);
-            $this->assertCount(0, $document['body']['$permissions']['write']);
-            $this->assertEquals([], $document['body']['$permissions']['read']);
-            $this->assertEquals([], $document['body']['$permissions']['write']);    
+            $this->assertCount(0, $document['body']['$read']);
+            $this->assertCount(0, $document['body']['$write']);
+            $this->assertEquals([], $document['body']['$read']);
+            $this->assertEquals([], $document['body']['$write']);    
         }
 
         // Updated and Inherit Permissions
@@ -549,7 +560,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'name' => 'Captain America 2',
+                'title' => 'Captain America 2',
                 'releaseYear' => 1945,
                 'actors' => [],
             ],
@@ -557,21 +568,21 @@ trait DatabaseBase
         ]);
 
         $this->assertEquals($document['headers']['status-code'], 200);
-        $this->assertEquals($document['body']['name'], 'Captain America 2');
+        $this->assertEquals($document['body']['title'], 'Captain America 2');
         $this->assertEquals($document['body']['releaseYear'], 1945);
 
         if($this->getSide() == 'client') {
-            $this->assertCount(1, $document['body']['$permissions']['read']);
-            $this->assertCount(1, $document['body']['$permissions']['write']);
-            $this->assertEquals(['role:all'], $document['body']['$permissions']['read']);
-            $this->assertEquals(['user:'.$this->getUser()['$id']], $document['body']['$permissions']['write']);    
+            $this->assertCount(1, $document['body']['$read']);
+            $this->assertCount(1, $document['body']['$write']);
+            $this->assertEquals(['role:all'], $document['body']['$read']);
+            $this->assertEquals(['user:'.$this->getUser()['$id']], $document['body']['$write']);    
         }
 
         if($this->getSide() == 'server') {
-            $this->assertCount(1, $document['body']['$permissions']['read']);
-            $this->assertCount(0, $document['body']['$permissions']['write']);
-            $this->assertEquals(['role:all'], $document['body']['$permissions']['read']);
-            $this->assertEquals([], $document['body']['$permissions']['write']);    
+            $this->assertCount(1, $document['body']['$read']);
+            $this->assertCount(0, $document['body']['$write']);
+            $this->assertEquals(['role:all'], $document['body']['$read']);
+            $this->assertEquals([], $document['body']['$write']);    
         }
 
         $document = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
@@ -580,21 +591,21 @@ trait DatabaseBase
         ], $this->getHeaders()));
 
         $this->assertEquals($document['headers']['status-code'], 200);
-        $this->assertEquals($document['body']['name'], 'Captain America 2');
+        $this->assertEquals($document['body']['title'], 'Captain America 2');
         $this->assertEquals($document['body']['releaseYear'], 1945);
 
         if($this->getSide() == 'client') {
-            $this->assertCount(1, $document['body']['$permissions']['read']);
-            $this->assertCount(1, $document['body']['$permissions']['write']);
-            $this->assertEquals(['role:all'], $document['body']['$permissions']['read']);
-            $this->assertEquals(['user:'.$this->getUser()['$id']], $document['body']['$permissions']['write']);    
+            $this->assertCount(1, $document['body']['$read']);
+            $this->assertCount(1, $document['body']['$write']);
+            $this->assertEquals(['role:all'], $document['body']['$read']);
+            $this->assertEquals(['user:'.$this->getUser()['$id']], $document['body']['$write']);    
         }
 
         if($this->getSide() == 'server') {
-            $this->assertCount(1, $document['body']['$permissions']['read']);
-            $this->assertCount(0, $document['body']['$permissions']['write']);
-            $this->assertEquals(['role:all'], $document['body']['$permissions']['read']);
-            $this->assertEquals([], $document['body']['$permissions']['write']);    
+            $this->assertCount(1, $document['body']['$read']);
+            $this->assertCount(0, $document['body']['$write']);
+            $this->assertEquals(['role:all'], $document['body']['$read']);
+            $this->assertEquals([], $document['body']['$write']);    
         }
 
         // Reset Permissions
@@ -604,7 +615,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'name' => 'Captain America 3',
+                'title' => 'Captain America 3',
                 'releaseYear' => 1946,
                 'actors' => [],
             ],
@@ -618,12 +629,12 @@ trait DatabaseBase
 
         if($this->getSide() == 'server') {
             $this->assertEquals($document['headers']['status-code'], 200);
-            $this->assertEquals($document['body']['name'], 'Captain America 3');
+            $this->assertEquals($document['body']['title'], 'Captain America 3');
             $this->assertEquals($document['body']['releaseYear'], 1946);
-            $this->assertCount(0, $document['body']['$permissions']['read']);
-            $this->assertCount(0, $document['body']['$permissions']['write']);
-            $this->assertEquals([], $document['body']['$permissions']['read']);
-            $this->assertEquals([], $document['body']['$permissions']['write']);    
+            $this->assertCount(0, $document['body']['$read']);
+            $this->assertCount(0, $document['body']['$write']);
+            $this->assertEquals([], $document['body']['$read']);
+            $this->assertEquals([], $document['body']['$write']);    
         }
 
         return $data;
