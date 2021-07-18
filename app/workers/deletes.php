@@ -76,7 +76,12 @@ class DeletesV1 extends Worker
                 $document = new Document($this->args['document']);
                 $this->deleteCertificates($document);
                 break;
-                        
+
+            case DELETE_TYPE_BUCKETS:
+                $bucket = new Document($this->args['document']);
+                $this->deleteBucket($bucket, $projectId);
+                break;
+
             default:
                 Console::error('No delete operation for type: '.$type);
                 break;
@@ -350,6 +355,11 @@ class DeletesV1 extends Worker
         } else {
             Console::info("No certificate files found for {$domain}");
         }
+    }
+
+    protected function deleteBucket(Document $document, string $projectId)
+    {
+        
     }
     
     /**
