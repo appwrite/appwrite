@@ -1,14 +1,14 @@
 <?php
 
-use Appwrite\Database\Database;
-use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
-use Appwrite\Database\Adapter\Redis as RedisAdapter;
-use Appwrite\Database\Validator\Authorization;
 use Appwrite\Resque\Worker;
 use Cron\CronExpression;
 use Utopia\App;
+use Utopia\Cache\Adapter\Redis;
+use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
-use Utopia\Config\Config;
+use Utopia\Database\Database;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Validator\Authorization;
 
 require_once __DIR__.'/../workers.php';
 
@@ -33,10 +33,20 @@ class TasksV1 extends Worker
         $db = $register->get('db');
         $cache = $register->get('cache');
 
-        $consoleDB = new Database();
-        $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
-        $consoleDB->setNamespace('app_console'); // Main DB
-        $consoleDB->setMocks(Config::getParam('collections', []));
+        $projectId = $this->args['projectId'] ?? null;
+        $taskId = $this->args['$id'] ?? null;
+        $updated = $this->args['updated'] ?? null;
+        $next = $this->args['next'] ?? null;
+        $delay = \time() - $next;
+        $errors = [];
+        $timeout = 60 * 5; // 5 minutes
+        $errorLimit = 5;
+        $logLimit = 5;
+        $alert = '';
+
+        $cache = new Cache(new Redis($cache));
+        $dbForConsole = new Database(new MariaDB($db), $cache);
+        $dbForConsole->setNamespace('project_console_internal');
 
         /*
          * 1. Get Original Task
@@ -51,29 +61,24 @@ class TasksV1 extends Worker
          *      If error count bigger than allowed change status to pause
          */
 
-        $taskId = $this->args['$id'] ?? null;
-        $updated = $this->args['updated'] ?? null;
-        $next = $this->args['next'] ?? null;
-        $delay = \time() - $next;
-        $errors = [];
-        $timeout = 60 * 5; // 5 minutes
-        $errorLimit = 5;
-        $logLimit = 5;
-        $alert = '';
-
         if (empty($taskId)) {
             throw new Exception('Missing task $id');
         }
 
         Authorization::disable();
 
-        $task = $consoleDB->getDocument($taskId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         Authorization::reset();
 
-        if (\is_null($task->getId()) || Database::SYSTEM_COLLECTION_TASKS !== $task->getCollection()) {
+        // Find the task in the $project->getAttribute('tasks') array 
+        $taskIndex = array_search($taskId, array_column($project->getAttributes()['tasks'], '$id'));
+
+        if ($taskIndex === false) {
             throw new Exception('Task Not Found');
         }
+
+        $task = $project->getAttribute('tasks')[$taskIndex];
 
         if ($task->getAttribute('updated') !== $updated) { // Task have already been rescheduled by owner
             return;
@@ -193,9 +198,11 @@ class TasksV1 extends Worker
             ->setAttribute('delay', $delay)
         ;
 
-        Authorization::disable();
+        $project->findAndReplace('$id', $task->getId(), $task);
 
-        if (false === $consoleDB->updateDocument($task->getArrayCopy())) {
+        Authorization::disable();
+        
+        if (false === $dbForConsole->updateDocument('projects', $project->getId(), $project)) {
             throw new Exception('Failed saving tasks to DB');
         }
 

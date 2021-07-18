@@ -82,6 +82,26 @@ return [
         'model' => Response::MODEL_COLLECTION,
         'note' => '',
     ],
+    'database.attributes.create' => [
+        'description' => 'This event triggers when a collection attribute is created.',
+        'model' => Response::MODEL_ATTRIBUTE,
+        'note' => '',
+    ],
+    'database.attributes.delete' => [
+        'description' => 'This event triggers when a collection attribute is deleted.',
+        'model' => Response::MODEL_ATTRIBUTE,
+        'note' => '',
+    ],
+    'database.indexes.create' => [
+        'description' => 'This event triggers when a collection index is created.',
+        'model' => Response::MODEL_INDEX,
+        'note' => '',
+    ],
+    'database.indexes.delete' => [
+        'description' => 'This event triggers when a collection index is deleted.',
+        'model' => Response::MODEL_INDEX,
+        'note' => '',
+    ],
     'database.documents.create' => [
         'description' => 'This event triggers when a database document is created.',
         'model' => Response::MODEL_DOCUMENT,

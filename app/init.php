@@ -75,7 +75,12 @@ const APP_SOCIAL_DISCORD = 'https://appwrite.io/discord';
 const APP_SOCIAL_DISCORD_CHANNEL = '564160730845151244';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite'; 
+// Creation Types
+const CREATE_TYPE_ATTRIBUTE = 'newAttribute';
+const CREATE_TYPE_INDEX = 'newIndex';
 // Deletion Types
+const DELETE_TYPE_ATTRIBUTE = 'attribute';
+const DELETE_TYPE_INDEX = 'index';
 const DELETE_TYPE_DOCUMENT = 'document';
 const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_AUDIT = 'audit';
@@ -387,6 +392,10 @@ App::setResource('mails', function($register) {
 
 App::setResource('deletes', function($register) {
     return new Event(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME);
+}, ['register']);
+
+App::setResource('database', function($register) {
+    return new Event(Event::DATABASE_QUEUE_NAME, Event::DATABASE_CLASS_NAME);
 }, ['register']);
 
 // Test Mock
