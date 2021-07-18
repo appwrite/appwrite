@@ -165,10 +165,6 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     App::setResource('cache', function () use (&$redis) {
         return $redis;
     });
-
-    App::setResource('app', function() use (&$app) {
-        return $app;
-    });
     
     try {
         Authorization::cleanRoles();
@@ -183,6 +179,13 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         Console::error('[Error] Message: '.$th->getMessage());
         Console::error('[Error] File: '.$th->getFile());
         Console::error('[Error] Line: '.$th->getLine());
+
+        /**
+         * Reset Database connection if PDOException was thrown.
+         */
+        if ($th instanceof PDOException) {
+            $db = null;
+        }
 
         if(App::isDevelopment()) {
             $swooleResponse->end('error: '.$th->getMessage());

@@ -130,10 +130,11 @@ abstract class Adapter
      * Filter data sets using chosen queries
      *
      * @param array $options
+     * @param array $filterTypes
      *
      * @return array
      */
-    abstract public function getCollection(array $options);
+    abstract public function getCollection(array $options, array $filterTypes = []);
 
     /**
      * @param array $options
