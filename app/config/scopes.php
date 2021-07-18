@@ -19,6 +19,18 @@ return [ // List of publicly visible scopes
     'collections.write' => [
         'description' => 'Access to create, update, and delete your project\'s database collections',
     ],
+    'attributes.read' => [
+        'description' => 'Access to read your project\'s database collection\'s attributes',
+    ],
+    'attributes.write' => [
+        'description' => 'Access to create, update, and delete your project\'s database collection\'s attributes',
+    ],
+    'indexes.read' => [
+        'description' => 'Access to read your project\'s database collection\'s indexes',
+    ],
+    'indexes.write' => [
+        'description' => 'Access to create, update, and delete your project\'s database collection\'s indexes',
+    ],
     'documents.read'  => [
         'description' => 'Access to read your project\'s database documents',
     ],

@@ -858,7 +858,6 @@ App::get('/v1/account/logs')
         /** @var Utopia\Database\Database $dbForInternal */
 
         $audit = new Audit($dbForInternal);
-
         $countries = $locale->getText('countries');
 
         $logs = $audit->getLogsByUserAndEvents($user->getId(), [
