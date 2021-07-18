@@ -32,6 +32,13 @@ class V08 extends Migration
                 }
 
                 break;
+            /**
+             * Add version reference to database.
+             */
+            case Database::SYSTEM_COLLECTION_PROJECTS:
+                    $document->setAttribute('version', '0.9.0');
+
+                break;
         }
 
         foreach ($document as &$attr) {

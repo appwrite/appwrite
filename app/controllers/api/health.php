@@ -42,11 +42,11 @@ App::get('/v1/health/db')
     ->label('sdk.method', 'getDB')
     ->label('sdk.description', '/docs/references/health/get-db.md')
     ->inject('response')
-    ->inject('app')
-    ->action(function ($response, $app) {
+    ->inject('utopia')
+    ->action(function ($response, $utopia) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\App $app */
-        $app->getResource('db');
+        /** @var Utopia\App $utopia */
+        $utopia->getResource('db');
 
         $response->json(['status' => 'OK']);
     });
@@ -60,11 +60,11 @@ App::get('/v1/health/cache')
     ->label('sdk.method', 'getCache')
     ->label('sdk.description', '/docs/references/health/get-cache.md')
     ->inject('response')
-    ->inject('app')
-    ->action(function ($response, $app) {
+    ->inject('utopia')
+    ->action(function ($response, $utopia) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\App $register */
-        $app->getResource('cache');
+        /** @var Utopia\App $utopia */
+        $utopia->getResource('cache');
 
         $response->json(['status' => 'OK']);
     });

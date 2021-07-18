@@ -210,14 +210,15 @@ class Redis extends Adapter
 
     /**
      * @param array $options
+     * @param array $filterTypes
      *
      * @return array
      *
      * @throws Exception
      */
-    public function getCollection(array $options)
+    public function getCollection(array $options, array $filterTypes = [])
     {
-        $data = $this->adapter->getCollection($options);
+        $data = $this->adapter->getCollection($options, $filterTypes);
         $keys = [];
 
         foreach ($data as $node) {

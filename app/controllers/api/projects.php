@@ -63,20 +63,20 @@ App::post('/v1/projects')
         }
 
         $project = $dbForConsole->createDocument('projects', new Document([
-            '$collection' => 'projects',
             '$read' => ['team:' . $teamId],
             '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
+            'teamId' => $team->getId(),
             'name' => $name,
             'description' => $description,
             'logo' => $logo,
             'url' => $url,
+            'version' => APP_VERSION_STABLE,
             'legalName' => $legalName,
             'legalCountry' => $legalCountry,
             'legalState' => $legalState,
             'legalCity' => $legalCity,
             'legalAddress' => $legalAddress,
             'legalTaxId' => $legalTaxId,
-            'teamId' => $team->getId(),
             'platforms' => [],
             'webhooks' => [],
             'keys' => [],

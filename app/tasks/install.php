@@ -129,7 +129,7 @@ $cli
             $httpsPort = Console::confirm('Choose your server HTTPS port: (default: '.$defaultHTTPSPort.')');
             $httpsPort = ($httpsPort) ? $httpsPort : $defaultHTTPSPort;
         }
-    
+
         $input = [];
 
         foreach($vars as $key => $var) {
@@ -196,7 +196,7 @@ $cli
 
         foreach ($input as $key => $value) {
             if($value) {
-                $env .= $key.'='.$value.' ';
+                $env .= $key.'='.\escapeshellarg($value).' ';
             }
         }
 

@@ -29,5 +29,12 @@ class MigrationV08Test extends MigrationTest
         
         $this->assertEquals($document->getAttribute('env', null), null);
         $this->assertEquals($document->getAttribute('runtime', null), 'node-16');
+
+        $document = $this->fixDocument(new Document([
+            '$id' => 'project',
+            '$collection' => Database::SYSTEM_COLLECTION_PROJECTS
+        ]));
+
+        $this->assertEquals($document->getAttribute('version', null), '0.9.0');
     }
 }
