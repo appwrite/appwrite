@@ -67,6 +67,32 @@ trait TeamsBaseServer
         $userUid = $response['body']['userId'];
         $membershipUid = $response['body']['$id'];
 
+        /**
+         * Test for Custom ID
+         */
+        $membershipId = \uniqid();
+        $email2 = uniqid().'friend@localhost.test';
+        $response = $this->client->call(Client::METHOD_POST, '/teams/'.$teamUid.'/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'membershipId' => $membershipId,
+            'email' => $email2,
+            'name' => 'Friend User',
+            'roles' => ['admin', 'editor'],
+            'url' => 'http://localhost:5000/join-us#title'
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($membershipId, $response['body']['$id']);
+        $this->assertNotEmpty($response['body']['userId']);
+        $this->assertNotEmpty($response['body']['teamId']);
+        $this->assertCount(2, $response['body']['roles']);
+        $this->assertIsInt($response['body']['joined']);
+        $this->assertGreaterThan(0, $response['body']['joined']);
+        $this->assertEquals(true, $response['body']['confirm']);
+
         // $response = $this->client->call(Client::METHOD_GET, '/users/'.$userUid, array_merge([
         //     'content-type' => 'application/json',
         //     'x-appwrite-project' => $this->getProject()['$id'],
@@ -85,6 +111,7 @@ trait TeamsBaseServer
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'membershipId' => 'unique()',
             'email' => $email,
             'name' => 'Friend User',
             'roles' => ['admin', 'editor'],
@@ -97,6 +124,7 @@ trait TeamsBaseServer
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'membershipId' => 'unique()',
             'email' => 'dasdkaskdjaskdjasjkd',
             'name' => 'Friend User',
             'roles' => ['admin', 'editor'],
@@ -109,6 +137,7 @@ trait TeamsBaseServer
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'membershipId' => 'unique()',
             'email' => $email,
             'name' => 'Friend User',
             'roles' => 'bad string',
@@ -121,6 +150,7 @@ trait TeamsBaseServer
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'membershipId' => 'unique()',
             'email' => $email,
             'name' => 'Friend User',
             'roles' => ['admin', 'editor'],
@@ -202,7 +232,7 @@ trait TeamsBaseServer
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals('Arsenal', $response['body']['name']);
-        $this->assertEquals(1, $response['body']['sum']);
+        $this->assertEquals(2, $response['body']['sum']);
         $this->assertIsInt($response['body']['sum']);
         $this->assertIsInt($response['body']['dateCreated']);
 
@@ -228,7 +258,7 @@ trait TeamsBaseServer
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals('Arsenal', $response['body']['name']);
-        $this->assertEquals(0, $response['body']['sum']);
+        $this->assertEquals(1, $response['body']['sum']);
         $this->assertIsInt($response['body']['sum']);
         $this->assertIsInt($response['body']['dateCreated']);        
 
