@@ -224,8 +224,7 @@ App::get('/v1/users/:userId/logs')
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
-        /** @var Utopia\App $app */
-        
+
         $user = $dbForInternal->getDocument('users', $userId);
 
         if ($user->isEmpty()) {

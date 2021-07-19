@@ -1,12 +1,10 @@
 <?php
 
-use Appwrite\Database\Database;
-use Utopia\Database\Database as Database2;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Cache\Adapter\Redis as RedisCache;
-use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
-use Appwrite\Database\Adapter\Redis as RedisAdapter;
-use Appwrite\Database\Document;
-use Appwrite\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization;
 use Appwrite\Resque\Worker;
 use Utopia\Storage\Device\Local;
 use Utopia\Abuse\Abuse;
@@ -43,19 +41,17 @@ class DeletesV1 extends Worker
                 $document = new Document($document);
                 
                 switch ($document->getCollection()) {
-                    case Database::SYSTEM_COLLECTION_PROJECTS:
+                    // TODO@kodumbeats define these as constants somewhere
+                    case 'projects':
                         $this->deleteProject($document);
                         break;
-                    case Database::SYSTEM_COLLECTION_FUNCTIONS:
+                    case 'functions':
                         $this->deleteFunction($document, $projectId);
                         break;
-                    case Database::SYSTEM_COLLECTION_USERS:
+                    case 'users':
                         $this->deleteUser($document, $projectId);
                         break;
-                    case Database::SYSTEM_COLLECTION_COLLECTIONS:
-                        $this->deleteDocuments($document, $projectId);
-                        break;
-                    case Database::SYSTEM_COLLECTION_TEAMS:
+                    case 'teams':
                         $this->deleteMemberships($document, $projectId);
                         break;
                     default:
@@ -91,97 +87,91 @@ class DeletesV1 extends Worker
     {
     }
     
-    protected function deleteDocuments(Document $document, $projectId) 
-    {
-        $collectionId = $document->getId();
-        
-        // Delete Documents in the deleted collection 
-        $this->deleteByGroup([
-            '$collection='.$collectionId
-        ], $this->getProjectDB($projectId));   
-    }
-
+    /**
+     * @param Document $document teams document
+     * @param string $projectId
+     */
     protected function deleteMemberships(Document $document, $projectId) {
+        $teamId = $document->getAttribute('teamId', '');
+
         // Delete Memberships
-        $this->deleteByGroup([
-            '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
-            'teamId='.$document->getId(),
-        ], $this->getProjectDB($projectId));
+        $this->deleteByGroup('memberships', [
+            new Query('teamId', Query::TYPE_EQUAL, [$teamId])
+        ], $this->getInternalDB($projectId));
     }
 
+    /**
+     * @param Document $document project document
+     */
     protected function deleteProject(Document $document)
     {
+        $projectId = $document->getId();
         // Delete all DBs
-        $this->getConsoleDB()->deleteNamespace($document->getId());
+        $this->getExternalDB($projectId)->delete();
+        $this->getInternalDB($projectId)->delete();
+
+        // Delete all storage directories
         $uploads = new Local(APP_STORAGE_UPLOADS.'/app-'.$document->getId());
         $cache = new Local(APP_STORAGE_CACHE.'/app-'.$document->getId());
 
-        // Delete all storage directories
         $uploads->delete($uploads->getRoot(), true);
         $cache->delete($cache->getRoot(), true);
     }
 
+    /**
+     * @param Document $document user document
+     * @param string $projectId
+     */
     protected function deleteUser(Document $document, $projectId)
     {
-        $tokens = $document->getAttribute('tokens', []);
-        
-        foreach ($tokens as $token) {
-            if (!$this->getProjectDB($projectId)->deleteDocument($token->getId())) {
-                throw new Exception('Failed to remove token from DB');
-            }
-        }
+        $userId = $document->getId();
 
-        $sessions = $document->getAttribute('sessions', []);
-
-        foreach ($sessions as $session) {
-            if (!$this->getProjectDB($projectId)->deleteDocument($session->getId())) {
-                throw new Exception('Failed to remove session from DB');
-            }
-        }
-
+        // Tokens and Sessions removed with user document
         // Delete Memberships and decrement team membership counts
-        $this->deleteByGroup([
-            '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
-            'userId='.$document->getId(),
-        ], $this->getProjectDB($projectId), function(Document $document) use ($projectId) {
+        $this->deleteByGroup('memberships', [
+            new Query('userId', Query::TYPE_EQUAL, [$userId])
+        ], $this->getInternalDB($projectId), function(Document $document) use ($projectId, $userId) {
 
             if ($document->getAttribute('confirm')) { // Count only confirmed members
                 $teamId = $document->getAttribute('teamId');
-                $team = $this->getProjectDB($projectId)->getDocument($teamId);
+                $team = $this->getInternalDB($projectId)->getDocument('teams', $teamId);
                 if(!$team->isEmpty()) {
-                    $team = $this->getProjectDB($projectId)->updateDocument(\array_merge($team->getArrayCopy(), [
+                    $team = $this->getInternalDB($projectId)->updateDocument('teams', $teamId, new Document(\array_merge($team->getArrayCopy(), [
                         'sum' => \max($team->getAttribute('sum', 0) - 1, 0), // Ensure that sum >= 0
-                    ]));
+                    ])));
                 }
             }
         });
     }
 
+    /**
+     * @param int $timestamp
+     */
     protected function deleteExecutionLogs($timestamp) 
     {
         $this->deleteForProjectIds(function($projectId) use ($timestamp) {
-            if (!($projectDB = $this->getProjectDB($projectId))) {
+            if (!($dbForInternal = $this->getInternalDB($projectId))) {
                 throw new Exception('Failed to get projectDB for project '.$projectId);
             }
 
             // Delete Executions
-            $this->deleteByGroup([
-                '$collection='.Database::SYSTEM_COLLECTION_EXECUTIONS,
-                'dateCreated<'.$timestamp
-            ], $projectDB);
+            $this->deleteByGroup('executions', [
+                new Query('dateCreated', Query::TYPE_LESSER, [$timestamp])
+            ], $dbForInternal);
         });
     }
 
+    /**
+     * @param int $timestamp
+     */
     protected function deleteAbuseLogs($timestamp) 
     {
-        global $register;
         if($timestamp == 0) {
             throw new Exception('Failed to delete audit logs. No timestamp provided');
         }
 
         $this->deleteForProjectIds(function($projectId) use ($timestamp){
             $timeLimit = new TimeLimit("", 0, 1, $this->getInternalDB($projectId));
-
             $abuse = new Abuse($timeLimit); 
 
             $status = $abuse->cleanup($timestamp);
@@ -191,13 +181,15 @@ class DeletesV1 extends Worker
         });
     }
 
+    /**
+     * @param int $timestamp
+     */
     protected function deleteAuditLogs($timestamp)
     {
-        global $register;
         if($timestamp == 0) {
             throw new Exception('Failed to delete audit logs. No timestamp provided');
         }
-        $this->deleteForProjectIds(function($projectId) use ($register, $timestamp){
+        $this->deleteForProjectIds(function($projectId) use ($timestamp){
             $audit = new Audit($this->getInternalDB($projectId));
             $status = $audit->cleanup($timestamp);
             if (!$status) {
@@ -206,16 +198,19 @@ class DeletesV1 extends Worker
         });
     }
 
+    /**
+     * @param Document $document function document
+     * @param string $projectId
+     */
     protected function deleteFunction(Document $document, $projectId)
     {
-        $projectDB = $this->getProjectDB($projectId);
+        $dbForInternal = $this->getInternalDB($projectId);
         $device = new Local(APP_STORAGE_FUNCTIONS.'/app-'.$projectId);
 
         // Delete Tags
-        $this->deleteByGroup([
-            '$collection='.Database::SYSTEM_COLLECTION_TAGS,
-            'functionId='.$document->getId(),
-        ], $projectDB, function(Document $document) use ($device) {
+        $this->deleteByGroup('tags', [
+            new Query('functionId', Query::TYPE_EQUAL, [$document->getId()])
+        ], $dbForInternal, function(Document $document) use ($device) {
 
             if ($device->delete($document->getAttribute('path', ''))) {
                 Console::success('Delete code tag: '.$document->getAttribute('path', ''));
@@ -226,17 +221,25 @@ class DeletesV1 extends Worker
         });
 
         // Delete Executions
-        $this->deleteByGroup([
-            '$collection='.Database::SYSTEM_COLLECTION_EXECUTIONS,
-            'functionId='.$document->getId(),
-        ], $projectDB);
+        $this->deleteByGroup('executions', [
+            new Query('functionId', Query::TYPE_EQUAL, [$document->getId()])
+        ], $dbForInternal);
     }
 
+
+    /**
+     * @param Document $document to be deleted
+     * @param Database $database to delete it from
+     * @param callable $callback to perform after document is deleted
+     *
+     * @return bool
+     */
     protected function deleteById(Document $document, Database $database, callable $callback = null): bool
     {
         Authorization::disable();
 
-        if($database->deleteDocument($document->getId())) {
+        // TODO@kodumbeats is it better to pass objects or ID strings?
+        if($database->deleteDocument($document->getCollection(), $document->getId())) {
             Console::success('Deleted document "'.$document->getId().'" successfully');
 
             if(is_callable($callback)) {
@@ -253,6 +256,9 @@ class DeletesV1 extends Worker
         Authorization::reset();
     }
 
+    /**
+     * @param callable $callback
+     */
     protected function deleteForProjectIds(callable $callback)
     {
         $count = 0;
@@ -262,19 +268,12 @@ class DeletesV1 extends Worker
         $sum = $limit;
 
         $executionStart = \microtime(true);
-        
+
         while($sum === $limit) {
             $chunk++;
 
             Authorization::disable();
-            $projects = $this->getConsoleDB()->getCollection([
-                'limit' => $limit,
-                'orderType' => 'ASC',
-                'orderCast' => 'string',
-                'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_PROJECTS,
-                ],
-            ]);
+            $projects = $this->getConsoleDB()->find('projects', [], $limit);
             Authorization::reset();
 
             $projectIds = array_map (function ($project) { 
@@ -294,7 +293,13 @@ class DeletesV1 extends Worker
         Console::info("Found {$count} projects " . ($executionEnd - $executionStart) . " seconds");
     }
 
-    protected function deleteByGroup(array $filters, Database $database, callable $callback = null)
+    /**
+     * @param string $collection collectionID
+     * @param Query[] $queries
+     * @param Database $database
+     * @param callable $callback
+     */
+    protected function deleteByGroup(string $collection, array $queries, Database $database, callable $callback = null)
     {
         $count = 0;
         $chunk = 0;
@@ -303,19 +308,13 @@ class DeletesV1 extends Worker
         $sum = $limit;
 
         $executionStart = \microtime(true);
-        
+
         while($sum === $limit) {
             $chunk++;
 
             Authorization::disable();
 
-            $results = $database->getCollection([
-                'limit' => $limit,
-                'orderField' => '$id',
-                'orderType' => 'ASC',
-                'orderCast' => 'string',
-                'filters' => $filters,
-            ]);
+            $results = $database->find($collection, $queries, $limit, 0);
 
             Authorization::reset();
 
@@ -334,6 +333,10 @@ class DeletesV1 extends Worker
         Console::info("Deleted {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
     }
 
+    /**
+     * @param Document $document certificates document 
+     * @return Database
+     */
     protected function deleteCertificates(Document $document)
     {
         $domain = $document->getAttribute('domain');
@@ -348,56 +351,48 @@ class DeletesV1 extends Worker
             Console::info("No certificate files found for {$domain}");
         }
     }
+    
+    /**
+     * @param string $projectId
+     * @return Database
+     */
+    protected function getInternalDB($projectId): Database
+    {
+        global $register;
+        
+        $cache = new Cache(new RedisCache($register->get('cache')));
+        $dbForInternal = new Database(new MariaDB($register->get('db')), $cache);
+        $dbForInternal->setNamespace('project_'.$projectId.'_internal'); // Main DB
+
+        return $dbForInternal;
+    }
 
     /**
-     * @return Database;
+     * @param string $projectId
+     * @return Database
+     */
+    protected function getExternalDB($projectId): Database
+    {
+        global $register;
+
+        $cache = new Cache(new RedisCache($register->get('cache')));
+        $dbForExternal = new Database(new MariaDB($register->get('db')), $cache);
+        $dbForExternal->setNamespace('project_'.$projectId.'_external'); // Main DB
+
+        return $dbForExternal;
+    }
+
+    /**
+     * @return Database
      */
     protected function getConsoleDB(): Database
     {
         global $register;
 
-        $db = $register->get('db');
-        $cache = $register->get('cache');
-
-        if($this->consoleDB === null) {
-            $this->consoleDB = new Database();
-            $this->consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));;
-            $this->consoleDB->setNamespace('app_console'); // Main DB
-            $this->consoleDB->setMocks(Config::getParam('collections', []));
-        }
-
-        return $this->consoleDB;
-    }
-
-    /**
-     * @return Database;
-     */
-    protected function getProjectDB($projectId): Database
-    {
-        global $register;
-
-        $db = $register->get('db');
-        $cache = $register->get('cache');
-
-        $projectDB = new Database();
-        $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
-        $projectDB->setNamespace('app_'.$projectId); // Main DB
-        $projectDB->setMocks(Config::getParam('collections', []));
-
-        return $projectDB;
-    }
-    
-    /**
-     * @return Database2
-     */
-    protected function getInternalDB($projectId): Database2
-    {
-        global $register;
-        
         $cache = new Cache(new RedisCache($register->get('cache')));
-        $dbForInternal = new Database2(new MariaDB($register->get('db')), $cache);
-        $dbForInternal->setNamespace('project_'.$projectId.'_internal'); // Main DB
+        $dbForConsole = new Database(new MariaDB($register->get('db')), $cache);
+        $dbForConsole->setNamespace('project_console_internal'); // Main DB
 
-        return $dbForInternal;
+        return $dbForConsole;
     }
 }

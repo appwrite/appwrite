@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use stdClass;
 
 class Collection extends Model
 {
@@ -16,36 +17,53 @@ class Collection extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('$permissions', [
-                'type' => Response::MODEL_PERMISSIONS,
-                'description' => 'Collection permissions.',
-                'default' => new \stdClass,
-                'example' => new \stdClass,
-                'array' => false,
+            ->addRule('$read', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Collection read permissions.',
+                'default' => '',
+                'example' => 'role:all',
+                'array' => true
+            ])
+            ->addRule('$write', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Collection write permissions.',
+                'default' => '',
+                'example' => 'user:608f9da25e7e1',
+                'array' => true
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Collection name.',
                 'default' => '',
-                'example' => 'Movies',
+                'example' => '',
             ])
-            ->addRule('dateCreated', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Collection creation date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
-            ])
-            ->addRule('dateUpdated', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Collection creation date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981550,
-            ])
-            ->addRule('rules', [
-                'type' => Response::MODEL_RULE,
-                'description' => 'Collection rules.',
+            ->addRule('attributes', [
+                'type' => Response::MODEL_ATTRIBUTE,
+                'description' => 'Collection attributes.',
                 'default' => [],
-                'array' => true,
+                'example' => new stdClass,
+                'array' => true
+            ])
+            ->addRule('indexes', [
+                'type' => Response::MODEL_INDEX,
+                'description' => 'Collection indexes.',
+                'default' => [],
+                'example' => new stdClass,
+                'array' => true
+            ])
+            ->addRule('attributesInQueue', [
+                'type' => Response::MODEL_ATTRIBUTE,
+                'description' => 'Collection attributes in creation queue.',
+                'default' => [],
+                'example' => new stdClass,
+                'array' => true
+            ])
+            ->addRule('indexesInQueue', [
+                'type' => Response::MODEL_INDEX,
+                'description' => 'Collection indexes in creation queue.',
+                'default' => [],
+                'example' => new stdClass,
+                'array' => true
             ])
         ;
     }
