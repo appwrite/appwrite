@@ -23,7 +23,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'projectId' => 'unique()',
+            'teamId' => 'unique()',
             'name' => 'Project Test',
         ]);
 
