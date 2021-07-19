@@ -2,6 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
+use Appwrite\Database\Validator\CustomId;
 use Appwrite\Database\Validator\UID;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Validator\File;
@@ -38,6 +39,7 @@ App::post('/v1/functions')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
+    ->param('functionId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
     ->param('execute', [], new ArrayList(new Text(64)), 'An array of strings with execution permissions. By default no user is granted with any execute permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
@@ -47,11 +49,12 @@ App::post('/v1/functions')
     ->param('timeout', 15, new Range(1, 900), 'Function maximum execution time in seconds.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($name, $execute, $runtime, $vars, $events, $schedule, $timeout, $response, $dbForInternal) {
+    ->action(function ($functionId, $name, $execute, $runtime, $vars, $events, $schedule, $timeout, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
         $function = $dbForInternal->createDocument('functions', new Document([
+            '$id' => $functionId == 'unique()' ? $dbForInternal->getId() : $functionId,
             'execute' => $execute,
             'dateCreated' => time(),
             'dateUpdated' => time(),
@@ -416,6 +419,7 @@ App::post('/v1/functions/:functionId/tags')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TAG)
+    ->param('tagId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('command', '', new Text('1028'), 'Code execution command.')
     ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', false)
@@ -423,7 +427,7 @@ App::post('/v1/functions/:functionId/tags')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($functionId, $command, $file, $request, $response, $dbForInternal, $usage) {
+    ->action(function ($tagId, $functionId, $command, $file, $request, $response, $dbForInternal, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
@@ -471,6 +475,7 @@ App::post('/v1/functions/:functionId/tags')
         }
         
         $tag = $dbForInternal->createDocument('tags', new Document([
+            '$id' => $tagId == 'unique()' ? $dbForInternal->getId() : $tagId,
             '$read' => [],
             '$write' => [],
             'functionId' => $function->getId(),
