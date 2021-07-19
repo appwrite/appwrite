@@ -15,6 +15,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'teamId' => 'unique()',
             'name' => 'Arsenal'
         ]);
 
@@ -32,11 +33,13 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'teamId' => 'manchester2',
             'name' => 'Manchester United'
         ]);
 
         $this->assertEquals(201, $response2['headers']['status-code']);
         $this->assertNotEmpty($response2['body']['$id']);
+        $this->assertEquals('manchester2', $response2['body']['$id']);
         $this->assertEquals('Manchester United', $response2['body']['name']);
         $this->assertGreaterThan(-1, $response2['body']['sum']);
         $this->assertIsInt($response2['body']['sum']);
@@ -46,6 +49,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'teamId' => 'unique()',
             'name' => 'Newcastle'
         ]);
 
@@ -183,6 +187,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'teamId' => 'unique()',
             'name' => 'Demo'
         ]);
 
@@ -197,6 +202,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'teamId' => 'unique()',
             'name' => 'Demo New'
         ]);
 
@@ -230,6 +236,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'teamId' => 'unique()',
             'name' => 'Demo'
         ]);
 
