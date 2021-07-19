@@ -72,7 +72,13 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         // wait for database to be ready
         sleep(5);
 
-        $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
+        try {
+            $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
+        } catch(\Exception $e) {
+            Console::warning('Database not ready. Retrying connection...');
+            sleep(5);
+            $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
+        }
 
         if(!$dbForConsole->exists()) {
             Console::success('[Setup] - Server database init started...');
