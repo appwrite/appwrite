@@ -39,6 +39,7 @@ trait ProjectCustom
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
+            'projectId' => 'unique()',
             'name' => 'Demo Project',
             'teamId' => $team['body']['$id'],
             'description' => 'Demo Project Description',
@@ -173,6 +174,7 @@ trait ProjectCustom
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
+            'keyId' => 'unique()',
             'name' => 'Demo Project Key',
             'scopes' => $scopes,
         ]);

@@ -23,6 +23,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'projectId' => 'unique()',
             'name' => 'Project Test',
         ]);
 
@@ -34,6 +35,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'projectId' => 'unique()',
             'name' => 'Project Test',
             'teamId' => $team['body']['$id'],
         ]);
@@ -56,6 +58,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'projectId' => 'unique()',
             'name' => '',
             'teamId' => $team['body']['$id'],
         ]);
@@ -66,6 +69,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'projectId' => 'unique()',
             'name' => 'Project Test',
         ]);
 
@@ -215,6 +219,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'projectId' => 'unique()',
             'name' => 'Project Test 2',
         ]);
 
@@ -236,6 +241,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'projectId' => 'unique()',
             'name' => '',
         ]);
 
@@ -383,6 +389,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
             'cookie' => 'a_session_'.$id.'='.$session,
         ]), [
+            'teamId' => 'unique()',
             'name' => 'Arsenal'
         ]);
 
@@ -395,6 +402,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
             'cookie' => 'a_session_'.$id.'=' . $session,
         ]), [
+            'membershipId' => 'unique()',
             'email' => $email,
             'name' => 'Friend User',
             'roles' => ['admin', 'editor'],
@@ -522,6 +530,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'webhookId' => 'unique()',
             'name' => 'Webhook Test',
             'events' => ['account.create', 'account.update.email'],
             'url' => 'https://appwrite.io',
@@ -549,6 +558,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'webhookId' => 'unique()',
             'name' => 'Webhook Test',
             'events' => ['account.unknown', 'account.update.email'],
             'url' => 'https://appwrite.io',
@@ -756,6 +766,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'keyId' => 'unique()',
             'name' => 'Key Test',
             'scopes' => ['teams.read', 'teams.write'],
         ]);
@@ -776,6 +787,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'keyId' => 'unique()',
             'name' => 'Key Test',
             'scopes' => ['unknown'],
         ]);
@@ -946,6 +958,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'taskId' => 'unique()',
             'name' => 'Task Test',
             'status' => 'play',
             'schedule' => '* * * * *',
@@ -979,6 +992,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'taskId' => 'unique()',
             'name' => 'Task Test',
             'status' => 'unknown',
             'schedule' => '* * * * *',
@@ -996,6 +1010,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'taskId' => 'unique()',
             'name' => 'Task Test',
             'status' => 'play',
             'schedule' => 'unknown',
@@ -1013,6 +1028,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'taskId' => 'unique()',
             'name' => 'Task Test',
             'status' => 'play',
             'schedule' => '* * * * *',
@@ -1030,6 +1046,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'taskId' => 'unique()',
             'name' => 'Task Test',
             'status' => 'play',
             'schedule' => '* * * * *',
@@ -1047,6 +1064,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'taskId' => 'unique()',
             'name' => 'Task Test',
             'status' => 'play',
             'schedule' => '* * * * *',
@@ -1340,6 +1358,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'platformId' => 'unique()',
             'type' => 'web',
             'name' => 'Web App',
             'key' => '',
@@ -1361,6 +1380,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'platformId' => 'unique()',
             'type' => 'flutter-ios',
             'name' => 'Flutter App (iOS)',
             'key' => 'com.example.ios',
@@ -1382,6 +1402,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'platformId' => 'unique()',
             'type' => 'flutter-android',
             'name' => 'Flutter App (Android)',
             'key' => 'com.example.android',
@@ -1406,6 +1427,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'platformId' => 'unique()',
             'type' => 'unknown',
             'name' => 'Web App',
             'key' => '',
@@ -1682,6 +1704,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'domainId' => 'unique()',
             'domain' => 'sub.example.com',
         ]);
 
@@ -1702,6 +1725,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'domainId' => 'unique()',
             'domain' => '123',
         ]);
         
