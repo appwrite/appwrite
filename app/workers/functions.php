@@ -325,7 +325,7 @@ class FunctionsV1 extends Worker
             : null;
 
         if(\is_null($runtime)) {
-            throw new Exception('Runtime "'.$function->getAttribute('runtime', '').' is not supported');
+            throw new Exception('Runtime "'.$function->getAttribute('runtime', '').'" is not supported');
         }
 
         $vars = \array_merge($function->getAttribute('vars', []), [
@@ -345,7 +345,7 @@ class FunctionsV1 extends Worker
 
         \array_walk($vars, function (&$value, $key) {
             $key = $this->filterEnvKey($key);
-            $value = \escapeshellarg((empty($value)) ? 'null' : $value);
+            $value = \escapeshellarg((empty($value)) ? '' : $value);
             $value = "--env {$key}={$value}";
         });
 

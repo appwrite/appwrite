@@ -858,6 +858,7 @@ App::get('/v1/account/logs')
         /** @var Utopia\Database\Database $dbForInternal */
 
         $audit = new Audit($dbForInternal);
+
         $countries = $locale->getText('countries');
 
         $logs = $audit->getLogsByUserAndEvents($user->getId(), [
@@ -1378,13 +1379,15 @@ App::post('/v1/account/recovery')
             throw new Exception('Invalid credentials. User is blocked', 401);
         }
 
+        $expire = \time() + Auth::TOKEN_EXPIRATION_RECOVERY;
+
         $secret = Auth::tokenGenerator();
         $recovery = new Document([
             '$id' => $dbForInternal->getId(),
             'userId' => $profile->getId(),
             'type' => Auth::TOKEN_TYPE_RECOVERY,
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-            'expire' => \time() + Auth::TOKEN_EXPIRATION_RECOVERY,
+            'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
         ]);
@@ -1396,7 +1399,7 @@ App::post('/v1/account/recovery')
         $profile = $dbForInternal->updateDocument('users', $profile->getId(), $profile);
 
         $url = Template::parseURL($url);
-        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret]);
+        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
         $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
@@ -1562,13 +1565,15 @@ App::post('/v1/account/verification')
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $verificationSecret = Auth::tokenGenerator();
+
+        $expire = \time() + Auth::TOKEN_EXPIRATION_CONFIRM;
         
         $verification = new Document([
             '$id' => $dbForInternal->getId(),
             'userId' => $user->getId(),
             'type' => Auth::TOKEN_TYPE_VERIFICATION,
             'secret' => Auth::hash($verificationSecret), // One way hash encryption to protect DB leak
-            'expire' => \time() + Auth::TOKEN_EXPIRATION_CONFIRM,
+            'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
         ]);
@@ -1578,9 +1583,9 @@ App::post('/v1/account/verification')
         $user->setAttribute('tokens', $verification, Document::SET_TYPE_APPEND);
 
         $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
-        
+
         $url = Template::parseURL($url);
-        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret]);
+        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
         $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
