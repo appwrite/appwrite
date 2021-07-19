@@ -14,6 +14,9 @@ class AccountCustomClientTest extends Scope
     use ProjectCustom;
     use SideClient;
 
+    /**
+     * @depends testCreateAccountSession
+     */
     public function testCreateOAuth2AccountSession():array
     {
         $provider = 'mock';
@@ -384,6 +387,17 @@ class AccountCustomClientTest extends Scope
         /**
          * Test for SUCCESS
          */
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
+        ]));
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+
+        $userId = $response['body']['$id'] ?? '';
+        
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/'.$this->getProject()['$id'].'/oauth2', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -406,6 +420,8 @@ class AccountCustomClientTest extends Scope
             'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
             'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
         ]);
+        
+        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('success', $response['body']['result']);
@@ -418,6 +434,7 @@ class AccountCustomClientTest extends Scope
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($response['body']['$id'], $userId);
         $this->assertEquals($response['body']['name'], 'User Name');
         $this->assertEquals($response['body']['email'], 'user@localhost.test');
 

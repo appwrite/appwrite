@@ -123,7 +123,7 @@ Console::info(count($list)." functions listed in " . ($executionEnd - $execution
  * 7. Trigger usage log - DONE
  */
 
-//TODO aviod scheduled execution if delay is bigger than X offest
+//TODO avoid scheduled execution if delay is bigger than X offest
 
 class FunctionsV1 extends Worker
 {
