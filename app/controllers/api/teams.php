@@ -297,7 +297,7 @@ App::post('/v1/teams/:teamId/memberships')
                     '$write' => ['user:'.$userId],
                     'email' => $email,
                     'emailVerification' => false,
-                    'status' => Auth::USER_STATUS_UNACTIVATED,
+                    'status' => true,
                     'password' => Auth::passwordHash(Auth::passwordGenerator()),
                     /** 
                      * Set the password update time to 0 for users created using 

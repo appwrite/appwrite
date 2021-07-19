@@ -251,7 +251,7 @@ $collections = [
             ],
             [
                 '$id' => 'status',
-                'type' => Database::VAR_INTEGER,
+                'type' => Database::VAR_BOOLEAN,
                 'format' => '',
                 'size' => 0,
                 'signed' => true,
