@@ -3,14 +3,13 @@
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Adapter\Redis;
 use Utopia\Database\Validator\Authorization;
 use Appwrite\Resque\Worker;
 use Utopia\Storage\Device\Local;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\CLI\Console;
-use Utopia\Config\Config;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MariaDB;
@@ -360,7 +359,7 @@ class DeletesV1 extends Worker
     {
         global $register;
         
-        $cache = new Cache(new RedisCache($register->get('cache')));
+        $cache = new Cache(new Redis($register->get('cache')));
         $dbForInternal = new Database(new MariaDB($register->get('db')), $cache);
         $dbForInternal->setNamespace('project_'.$projectId.'_internal'); // Main DB
 
@@ -375,7 +374,7 @@ class DeletesV1 extends Worker
     {
         global $register;
 
-        $cache = new Cache(new RedisCache($register->get('cache')));
+        $cache = new Cache(new Redis($register->get('cache')));
         $dbForExternal = new Database(new MariaDB($register->get('db')), $cache);
         $dbForExternal->setNamespace('project_'.$projectId.'_external'); // Main DB
 
@@ -389,7 +388,7 @@ class DeletesV1 extends Worker
     {
         global $register;
 
-        $cache = new Cache(new RedisCache($register->get('cache')));
+        $cache = new Cache(new Redis($register->get('cache')));
         $dbForConsole = new Database(new MariaDB($register->get('db')), $cache);
         $dbForConsole->setNamespace('project_console_internal'); // Main DB
 

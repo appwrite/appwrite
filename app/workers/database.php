@@ -2,7 +2,7 @@
 
 use Appwrite\Resque\Worker;
 use Utopia\Cache\Cache;
-use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Adapter\Redis;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -141,17 +141,9 @@ class DatabaseV1 extends Worker
     {
         global $register;
 
-        $dbForInternal = null;
-
-        go(function() use ($register, $projectId, &$dbForInternal) {
-            $db = $register->get('dbPool')->get();
-            $redis = $register->get('redisPool')->get();
-
-            $cache = new Cache(new RedisCache($redis));
-            $dbForInternal = new Database(new MariaDB($db), $cache);
-            $dbForInternal->setNamespace('project_'.$projectId.'_internal'); // Main DB
-
-        });
+        $cache = new Cache(new Redis($register->get('cache')));
+        $dbForInternal = new Database(new MariaDB($register->get('db')), $cache);
+        $dbForInternal->setNamespace('project_'.$projectId.'_internal'); // Main DB
 
         return $dbForInternal;
     }
@@ -165,18 +157,9 @@ class DatabaseV1 extends Worker
     {
         global $register;
 
-        /** @var Database $dbForExternal */
-        $dbForExternal = null;
-
-        go(function() use ($register, $projectId, &$dbForExternal) {
-            $db = $register->get('dbPool')->get();
-            $redis = $register->get('redisPool')->get();
-
-            $cache = new Cache(new RedisCache($redis));
-            $dbForExternal = new Database(new MariaDB($db), $cache);
-            $dbForExternal->setNamespace('project_'.$projectId.'_external'); // Main DB
-
-        });
+        $cache = new Cache(new Redis($register->get('cache')));
+        $dbForExternal = new Database(new MariaDB($register->get('db')), $cache);
+        $dbForExternal->setNamespace('project_'.$projectId.'_external'); // Main DB
 
         return $dbForExternal;
     }
