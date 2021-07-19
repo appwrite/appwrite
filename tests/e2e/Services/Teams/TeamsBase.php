@@ -29,17 +29,18 @@ trait TeamsBase
         $teamUid = $response1['body']['$id'];
         $teamName = $response1['body']['name'];
 
+        $membershipId = \uniqid();
         $response2 = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => 'manchester2',
+            'teamId' => $membershipId,
             'name' => 'Manchester United'
         ]);
 
         $this->assertEquals(201, $response2['headers']['status-code']);
         $this->assertNotEmpty($response2['body']['$id']);
-        $this->assertEquals('manchester2', $response2['body']['$id']);
+        $this->assertEquals($membershipId, $response2['body']['$id']);
         $this->assertEquals('Manchester United', $response2['body']['name']);
         $this->assertGreaterThan(-1, $response2['body']['sum']);
         $this->assertIsInt($response2['body']['sum']);
