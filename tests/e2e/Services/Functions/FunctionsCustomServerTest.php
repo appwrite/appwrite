@@ -23,6 +23,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'functionId' => 'unique()',
             'name' => 'Test',
             'runtime' => 'php-8.0',
             'vars' => [
@@ -182,6 +183,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'tagId' => 'unique()',
             'command' => 'php index.php',
             'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
         ]);
@@ -291,6 +293,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'executionId' => 'unique()',
             'async' => 1,
         ]);
 
@@ -539,6 +542,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'functionId' => 'unique()',
             'name' => 'Test '.$name,
             'runtime' => $name,
             'vars' => [],
@@ -555,6 +559,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'tagId' => 'unique()',
             'command' => $command,
             'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
         ]);
@@ -575,6 +580,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'tagId' => 'unique()',
             'data' => 'foobar',
         ]);
 
