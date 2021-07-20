@@ -85,15 +85,15 @@ $auth = $this->getParam('auth', []);
                                         <small data-ls-bind="{{user.email}}"></span>
                                     </td>
                                     <td data-title="Status: ">
-                                        <span data-ls-if="{{user.emailVerification}} === true">
+                                        <span data-ls-if="{{user.emailVerification}} === true && {{user.status}} === true">
                                             <span class="tag green">Verified</span>
                                         </span>
 
-                                        <span data-ls-if="{{user.emailVerification}} !== true">
+                                        <span data-ls-if="{{user.emailVerification}} !== true && {{user.status}} === true">
                                             <span class="tag">Unverified</span>
                                         </span>
 
-                                        <span data-ls-if="{{user.status}} === <?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>">
+                                        <span data-ls-if="{{user.status}} === false">
                                             <span class="tag red">Blocked</span>
                                         </span>
                                     </td>
