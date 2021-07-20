@@ -46,7 +46,7 @@
                 mode: '',
             };
             this.headers = {
-                'x-sdk-version': 'appwrite:web:2.0.0',
+                'x-sdk-version': 'appwrite:web:2.1.0',
                 'X-Appwrite-Response-Format': '0.9.0',
             };
             this.account = {
