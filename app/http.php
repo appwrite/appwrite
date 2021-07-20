@@ -54,8 +54,23 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
     $app = new App('UTC');
 
     go(function() use ($register, $app) {
-        $db = $register->get('dbPool')->get();
-        $redis = $register->get('redisPool')->get();
+        // wait for database to be ready
+        $attempts = 0;
+        do {
+            try {
+                $attempts++;
+                $db = $register->get('dbPool')->get();
+                $redis = $register->get('redisPool')->get();
+                break; // leave the do-while if successful
+            } catch(\Exception $e) {
+                Console::warning("Database not ready. Retrying connection ({$attempts})...");
+                if ($attempts >= 10) {
+                    throw new \Exception('Failed to connect to database: '. $e->getMessage());
+                }
+                sleep(1);
+                continue;
+            }
+        } while ($attempts < 10);
 
         App::setResource('db', function () use (&$db) {
             return $db;
@@ -69,21 +84,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             return $app;
         });
 
-        // wait for database to be ready
-        $attempts = 0;
-        do {
-            try {
-                $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
-                break; // leave the do-while if successful
-            } catch(\Exception $e) {
-                $attempts++;
-                Console::warning("Database not ready. Retrying connection ({$attempts})...");
-                if ($attempts >= 5) {
-                    throw new \Exception('Failed to connect to database: '. $e->getMessage());
-                }
-                sleep(5);
-            }
-        } while (!$dbForConsole || $attempts < 5);
+        $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
 
         if(!$dbForConsole->exists()) {
             Console::success('[Setup] - Server database init started...');
