@@ -70,15 +70,20 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         });
 
         // wait for database to be ready
-        sleep(5);
-
-        try {
-            $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
-        } catch(\Exception $e) {
-            Console::warning('Database not ready. Retrying connection...');
-            sleep(5);
-            $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
-        }
+        $attempts = 0;
+        do {
+            try {
+                $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
+                break; // leave the do-while if successful
+            } catch(\Exception $e) {
+                $attempts++;
+                Console::warning("Database not ready. Retrying connection ({$attempts})...");
+                if ($attempts >= 5) {
+                    throw new \Exception('Failed to connect to database: '. $e->getMessage());
+                }
+                sleep(5);
+            }
+        } while (!$dbForConsole || $attempts < 5);
 
         if(!$dbForConsole->exists()) {
             Console::success('[Setup] - Server database init started...');
