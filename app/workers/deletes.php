@@ -389,9 +389,27 @@ class DeletesV1 extends Worker
     {
         global $register;
 
-        $cache = new Cache(new RedisCache($register->get('cache')));
-        $dbForConsole = new Database(new MariaDB($register->get('db')), $cache);
-        $dbForConsole->setNamespace('project_console_internal'); // Main DB
+        // wait for database to be ready
+        $attempts = 0;
+        $max = 5;
+        $sleep = 5;
+
+        do {
+            try {
+                $attempts++;
+                $cache = new Cache(new RedisCache($register->get('cache')));
+                $dbForConsole = new Database(new MariaDB($register->get('db')), $cache);
+                $dbForConsole->setNamespace('project_console_internal'); // Main DB
+                break; // leave the do-while if successful
+            } catch(\Exception $e) {
+                Console::warning("Database not ready. Retrying connection ({$attempts})...");
+                if ($attempts >= $max) {
+                    throw new \Exception('Failed to connect to database: '. $e->getMessage());
+                }
+                sleep($sleep);
+                continue;
+            }
+        } while ($attempts < $max);
 
         return $dbForConsole;
     }
