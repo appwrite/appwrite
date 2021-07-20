@@ -58,8 +58,8 @@ const APP_LIMIT_USERS = 10000;
 const APP_LIMIT_ANTIVIRUS = 20971520; //20MB
 const APP_LIMIT_ENCRYPTION = 20971520; //20MB
 const APP_LIMIT_COMPRESSION = 20971520; //20MB
-const APP_CACHE_BUSTER = 148;
-const APP_VERSION_STABLE = '0.9.0';
+const APP_CACHE_BUSTER = 149;
+const APP_VERSION_STABLE = '0.9.1';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_CACHE = '/storage/cache';
@@ -202,12 +202,11 @@ $register->set('dbPool', function () { // Register DB connection
     $pool = new PDOPool((new PDOConfig())
         ->withHost($dbHost)
         ->withPort($dbPort)
-        // ->withUnixSocket('/tmp/mysql.sock')
         ->withDbName($dbScheme)
         ->withCharset('utf8mb4')
         ->withUsername($dbUser)
         ->withPassword($dbPass)
-    );
+    , 16);
 
     return $pool;
 });
@@ -227,7 +226,7 @@ $register->set('redisPool', function () {
         ->withPort($redisPort)
         ->withAuth($redisAuth)
         ->withDbIndex(0)
-    );
+    , 16);
 
     return $pool;
 });

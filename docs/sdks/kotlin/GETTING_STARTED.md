@@ -77,7 +77,7 @@ suspend fun main() {
 
 ### Learn more
 
-You can use following resources to learn more and get help
+You can use the following resources to learn more and get help
 
 - 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-server)
 - 📜 [Appwrite Docs](https://appwrite.io/docs)
