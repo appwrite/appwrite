@@ -11,6 +11,11 @@ use Appwrite\Runtimes\Runtime;
 $runtimes = new Runtimes();
 
 /**
+ * Load default runtimes supported by Appwrite by default
+ */
+$allowList = empty(App::getEnv('_APP_FUNCTIONS_RUNTIMES')) ? [] : \explode(',', App::getEnv('_APP_FUNCTIONS_RUNTIMES'));
+
+/**
  * Load custom runtimes
  */ 
 $customRuntimes = empty(App::getEnv('_APP_FUNCTIONS_CUSTOM_RUNTIMES')) ? [] : \explode(',', App::getEnv('_APP_FUNCTIONS_CUSTOM_RUNTIMES'));
@@ -50,12 +55,8 @@ foreach($uniqueRuntimeNames as $runtimeImageName => $runtimeImageVersions) {
     }
 
     $runtimes->add($customRuntime);
+    array_push($allowList, $runtimeImageName . '-' . $runtimeImageVersion);
 }
-
-/**
- * Load default runtimes supported by Appwrite by default
- */
-$allowList = empty(App::getEnv('_APP_FUNCTIONS_RUNTIMES')) ? [] : \explode(',', App::getEnv('_APP_FUNCTIONS_RUNTIMES'));
 
 $runtimes = $runtimes->getAll(true, $allowList);
 
