@@ -509,7 +509,7 @@ services:
       - appwrite
 
   swagger-validator:
-    image: 'swaggerapi/swagger-validator-v2:v2.0.5'
+    image: 'kodumbeats/swagger-validator-v2:v2.0.5'
     container_name: appwrite-swagger-validator
     ports:
       - '9506:8080'
