@@ -5,7 +5,7 @@ function rejected(value){try{step(generator["throw"](value));}catch(e){reject(e)
 function step(result){result.done?resolve(result.value):adopt(result.value).then(fulfilled,rejected);}
 step((generator=generator.apply(thisArg,_arguments||[])).next());});}
 class AppwriteException extends Error{constructor(message,code=0,response=''){super(message);this.name='AppwriteException';this.message=message;this.code=code;this.response=response;}}
-class Appwrite{constructor(){this.config={endpoint:'https://appwrite.io/v1',project:'',key:'',jwt:'',locale:'',mode:'',};this.headers={'x-sdk-version':'appwrite:web:2.1.0','X-Appwrite-Response-Format':'0.9.0',};this.account={get:()=>__awaiter(this,void 0,void 0,function*(){let path='/account';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),create:(email,password,name)=>__awaiter(this,void 0,void 0,function*(){if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
+class Appwrite{constructor(){this.config={endpoint:'https://appwrite.io/v1',project:'',jwt:'',locale:'',};this.headers={'x-sdk-version':'appwrite:web:2.1.0','X-Appwrite-Response-Format':'0.9.0',};this.account={get:()=>__awaiter(this,void 0,void 0,function*(){let path='/account';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),create:(email,password,name)=>__awaiter(this,void 0,void 0,function*(){if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
 if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
 let path='/account';let payload={};if(typeof email!=='undefined'){payload['email']=email;}
 if(typeof password!=='undefined'){payload['password']=password;}
@@ -86,42 +86,35 @@ if(typeof size!=='undefined'){payload['size']=size;}
 if(typeof margin!=='undefined'){payload['margin']=margin;}
 if(typeof download!=='undefined'){payload['download']=download;}
 const uri=new URL(this.config.endpoint+path);payload['project']=this.config.project;for(const[key,value]of Object.entries(this.flatten(payload))){uri.searchParams.append(key,value);}
-return uri;}};this.database={listCollections:(search,limit,offset,orderType)=>__awaiter(this,void 0,void 0,function*(){let path='/database/collections';let payload={};if(typeof search!=='undefined'){payload['search']=search;}
+return uri;}};this.database={listAttributes:(collectionId)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
+let path='/database/collections/{collectionId}/attributes'.replace('{collectionId}',collectionId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),createAttribute:(collectionId,id,type,size,required,xdefault,array)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
+if(typeof id==='undefined'){throw new AppwriteException('Missing required parameter: "id"');}
+if(typeof type==='undefined'){throw new AppwriteException('Missing required parameter: "type"');}
+if(typeof size==='undefined'){throw new AppwriteException('Missing required parameter: "size"');}
+if(typeof required==='undefined'){throw new AppwriteException('Missing required parameter: "required"');}
+let path='/database/collections/{collectionId}/attributes'.replace('{collectionId}',collectionId);let payload={};if(typeof id!=='undefined'){payload['id']=id;}
+if(typeof type!=='undefined'){payload['type']=type;}
+if(typeof size!=='undefined'){payload['size']=size;}
+if(typeof required!=='undefined'){payload['required']=required;}
+if(typeof xdefault!=='undefined'){payload['xdefault']=xdefault;}
+if(typeof array!=='undefined'){payload['array']=array;}
+const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),getAttribute:(collectionId,attributeId)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
+if(typeof attributeId==='undefined'){throw new AppwriteException('Missing required parameter: "attributeId"');}
+let path='/database/collections/{collectionId}/attributes/{attributeId}'.replace('{collectionId}',collectionId).replace('{attributeId}',attributeId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),deleteAttribute:(collectionId,attributeId)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
+if(typeof attributeId==='undefined'){throw new AppwriteException('Missing required parameter: "attributeId"');}
+let path='/database/collections/{collectionId}/attributes/{attributeId}'.replace('{collectionId}',collectionId).replace('{attributeId}',attributeId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);}),listDocuments:(collectionId,queries,limit,offset,orderAttributes,orderTypes)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
+let path='/database/collections/{collectionId}/documents'.replace('{collectionId}',collectionId);let payload={};if(typeof queries!=='undefined'){payload['queries']=queries;}
 if(typeof limit!=='undefined'){payload['limit']=limit;}
 if(typeof offset!=='undefined'){payload['offset']=offset;}
-if(typeof orderType!=='undefined'){payload['orderType']=orderType;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),createCollection:(name,read,write,rules)=>__awaiter(this,void 0,void 0,function*(){if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
-if(typeof read==='undefined'){throw new AppwriteException('Missing required parameter: "read"');}
-if(typeof write==='undefined'){throw new AppwriteException('Missing required parameter: "write"');}
-if(typeof rules==='undefined'){throw new AppwriteException('Missing required parameter: "rules"');}
-let path='/database/collections';let payload={};if(typeof name!=='undefined'){payload['name']=name;}
-if(typeof read!=='undefined'){payload['read']=read;}
-if(typeof write!=='undefined'){payload['write']=write;}
-if(typeof rules!=='undefined'){payload['rules']=rules;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),getCollection:(collectionId)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
-let path='/database/collections/{collectionId}'.replace('{collectionId}',collectionId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),updateCollection:(collectionId,name,read,write,rules)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
-if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
-let path='/database/collections/{collectionId}'.replace('{collectionId}',collectionId);let payload={};if(typeof name!=='undefined'){payload['name']=name;}
-if(typeof read!=='undefined'){payload['read']=read;}
-if(typeof write!=='undefined'){payload['write']=write;}
-if(typeof rules!=='undefined'){payload['rules']=rules;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('put',uri,{'content-type':'application/json',},payload);}),deleteCollection:(collectionId)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
-let path='/database/collections/{collectionId}'.replace('{collectionId}',collectionId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);}),listDocuments:(collectionId,filters,limit,offset,orderField,orderType,orderCast,search)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
-let path='/database/collections/{collectionId}/documents'.replace('{collectionId}',collectionId);let payload={};if(typeof filters!=='undefined'){payload['filters']=filters;}
-if(typeof limit!=='undefined'){payload['limit']=limit;}
-if(typeof offset!=='undefined'){payload['offset']=offset;}
-if(typeof orderField!=='undefined'){payload['orderField']=orderField;}
-if(typeof orderType!=='undefined'){payload['orderType']=orderType;}
-if(typeof orderCast!=='undefined'){payload['orderCast']=orderCast;}
-if(typeof search!=='undefined'){payload['search']=search;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),createDocument:(collectionId,data,read,write,parentDocument,parentProperty,parentPropertyType)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
+if(typeof orderAttributes!=='undefined'){payload['orderAttributes']=orderAttributes;}
+if(typeof orderTypes!=='undefined'){payload['orderTypes']=orderTypes;}
+const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),createDocument:(collectionId,documentId,data,read,write)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
+if(typeof documentId==='undefined'){throw new AppwriteException('Missing required parameter: "documentId"');}
 if(typeof data==='undefined'){throw new AppwriteException('Missing required parameter: "data"');}
-let path='/database/collections/{collectionId}/documents'.replace('{collectionId}',collectionId);let payload={};if(typeof data!=='undefined'){payload['data']=data;}
+let path='/database/collections/{collectionId}/documents'.replace('{collectionId}',collectionId);let payload={};if(typeof documentId!=='undefined'){payload['documentId']=documentId;}
+if(typeof data!=='undefined'){payload['data']=data;}
 if(typeof read!=='undefined'){payload['read']=read;}
 if(typeof write!=='undefined'){payload['write']=write;}
-if(typeof parentDocument!=='undefined'){payload['parentDocument']=parentDocument;}
-if(typeof parentProperty!=='undefined'){payload['parentProperty']=parentProperty;}
-if(typeof parentPropertyType!=='undefined'){payload['parentPropertyType']=parentPropertyType;}
 const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),getDocument:(collectionId,documentId)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
 if(typeof documentId==='undefined'){throw new AppwriteException('Missing required parameter: "documentId"');}
 let path='/database/collections/{collectionId}/documents/{documentId}'.replace('{collectionId}',collectionId).replace('{documentId}',documentId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),updateDocument:(collectionId,documentId,data,read,write)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
@@ -132,219 +125,29 @@ if(typeof read!=='undefined'){payload['read']=read;}
 if(typeof write!=='undefined'){payload['write']=write;}
 const uri=new URL(this.config.endpoint+path);return yield this.call('patch',uri,{'content-type':'application/json',},payload);}),deleteDocument:(collectionId,documentId)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
 if(typeof documentId==='undefined'){throw new AppwriteException('Missing required parameter: "documentId"');}
-let path='/database/collections/{collectionId}/documents/{documentId}'.replace('{collectionId}',collectionId).replace('{documentId}',documentId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);})};this.functions={list:(search,limit,offset,orderType)=>__awaiter(this,void 0,void 0,function*(){let path='/functions';let payload={};if(typeof search!=='undefined'){payload['search']=search;}
-if(typeof limit!=='undefined'){payload['limit']=limit;}
+let path='/database/collections/{collectionId}/documents/{documentId}'.replace('{collectionId}',collectionId).replace('{documentId}',documentId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);}),listIndexes:(collectionId)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
+let path='/database/collections/{collectionId}/indexes'.replace('{collectionId}',collectionId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),createIndex:(collectionId,id,type,attributes,orders)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
+if(typeof id==='undefined'){throw new AppwriteException('Missing required parameter: "id"');}
+if(typeof type==='undefined'){throw new AppwriteException('Missing required parameter: "type"');}
+if(typeof attributes==='undefined'){throw new AppwriteException('Missing required parameter: "attributes"');}
+let path='/database/collections/{collectionId}/indexes'.replace('{collectionId}',collectionId);let payload={};if(typeof id!=='undefined'){payload['id']=id;}
+if(typeof type!=='undefined'){payload['type']=type;}
+if(typeof attributes!=='undefined'){payload['attributes']=attributes;}
+if(typeof orders!=='undefined'){payload['orders']=orders;}
+const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),getIndex:(collectionId,indexId)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
+if(typeof indexId==='undefined'){throw new AppwriteException('Missing required parameter: "indexId"');}
+let path='/database/collections/{collectionId}/indexes/{indexId}'.replace('{collectionId}',collectionId).replace('{indexId}',indexId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),deleteIndex:(collectionId,indexId)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
+if(typeof indexId==='undefined'){throw new AppwriteException('Missing required parameter: "indexId"');}
+let path='/database/collections/{collectionId}/indexes/{indexId}'.replace('{collectionId}',collectionId).replace('{indexId}',indexId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);})};this.functions={listExecutions:(functionId,limit,offset)=>__awaiter(this,void 0,void 0,function*(){if(typeof functionId==='undefined'){throw new AppwriteException('Missing required parameter: "functionId"');}
+let path='/functions/{functionId}/executions'.replace('{functionId}',functionId);let payload={};if(typeof limit!=='undefined'){payload['limit']=limit;}
 if(typeof offset!=='undefined'){payload['offset']=offset;}
-if(typeof orderType!=='undefined'){payload['orderType']=orderType;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),create:(name,execute,runtime,vars,events,schedule,timeout)=>__awaiter(this,void 0,void 0,function*(){if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
-if(typeof execute==='undefined'){throw new AppwriteException('Missing required parameter: "execute"');}
-if(typeof runtime==='undefined'){throw new AppwriteException('Missing required parameter: "runtime"');}
-let path='/functions';let payload={};if(typeof name!=='undefined'){payload['name']=name;}
-if(typeof execute!=='undefined'){payload['execute']=execute;}
-if(typeof runtime!=='undefined'){payload['runtime']=runtime;}
-if(typeof vars!=='undefined'){payload['vars']=vars;}
-if(typeof events!=='undefined'){payload['events']=events;}
-if(typeof schedule!=='undefined'){payload['schedule']=schedule;}
-if(typeof timeout!=='undefined'){payload['timeout']=timeout;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),get:(functionId)=>__awaiter(this,void 0,void 0,function*(){if(typeof functionId==='undefined'){throw new AppwriteException('Missing required parameter: "functionId"');}
-let path='/functions/{functionId}'.replace('{functionId}',functionId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),update:(functionId,name,execute,vars,events,schedule,timeout)=>__awaiter(this,void 0,void 0,function*(){if(typeof functionId==='undefined'){throw new AppwriteException('Missing required parameter: "functionId"');}
-if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
-if(typeof execute==='undefined'){throw new AppwriteException('Missing required parameter: "execute"');}
-let path='/functions/{functionId}'.replace('{functionId}',functionId);let payload={};if(typeof name!=='undefined'){payload['name']=name;}
-if(typeof execute!=='undefined'){payload['execute']=execute;}
-if(typeof vars!=='undefined'){payload['vars']=vars;}
-if(typeof events!=='undefined'){payload['events']=events;}
-if(typeof schedule!=='undefined'){payload['schedule']=schedule;}
-if(typeof timeout!=='undefined'){payload['timeout']=timeout;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('put',uri,{'content-type':'application/json',},payload);}),delete:(functionId)=>__awaiter(this,void 0,void 0,function*(){if(typeof functionId==='undefined'){throw new AppwriteException('Missing required parameter: "functionId"');}
-let path='/functions/{functionId}'.replace('{functionId}',functionId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);}),listExecutions:(functionId,search,limit,offset,orderType)=>__awaiter(this,void 0,void 0,function*(){if(typeof functionId==='undefined'){throw new AppwriteException('Missing required parameter: "functionId"');}
-let path='/functions/{functionId}/executions'.replace('{functionId}',functionId);let payload={};if(typeof search!=='undefined'){payload['search']=search;}
-if(typeof limit!=='undefined'){payload['limit']=limit;}
-if(typeof offset!=='undefined'){payload['offset']=offset;}
-if(typeof orderType!=='undefined'){payload['orderType']=orderType;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),createExecution:(functionId,data)=>__awaiter(this,void 0,void 0,function*(){if(typeof functionId==='undefined'){throw new AppwriteException('Missing required parameter: "functionId"');}
-let path='/functions/{functionId}/executions'.replace('{functionId}',functionId);let payload={};if(typeof data!=='undefined'){payload['data']=data;}
+const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),createExecution:(functionId,executionId,data)=>__awaiter(this,void 0,void 0,function*(){if(typeof functionId==='undefined'){throw new AppwriteException('Missing required parameter: "functionId"');}
+if(typeof executionId==='undefined'){throw new AppwriteException('Missing required parameter: "executionId"');}
+let path='/functions/{functionId}/executions'.replace('{functionId}',functionId);let payload={};if(typeof executionId!=='undefined'){payload['executionId']=executionId;}
+if(typeof data!=='undefined'){payload['data']=data;}
 const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),getExecution:(functionId,executionId)=>__awaiter(this,void 0,void 0,function*(){if(typeof functionId==='undefined'){throw new AppwriteException('Missing required parameter: "functionId"');}
 if(typeof executionId==='undefined'){throw new AppwriteException('Missing required parameter: "executionId"');}
-let path='/functions/{functionId}/executions/{executionId}'.replace('{functionId}',functionId).replace('{executionId}',executionId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),updateTag:(functionId,tag)=>__awaiter(this,void 0,void 0,function*(){if(typeof functionId==='undefined'){throw new AppwriteException('Missing required parameter: "functionId"');}
-if(typeof tag==='undefined'){throw new AppwriteException('Missing required parameter: "tag"');}
-let path='/functions/{functionId}/tag'.replace('{functionId}',functionId);let payload={};if(typeof tag!=='undefined'){payload['tag']=tag;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('patch',uri,{'content-type':'application/json',},payload);}),listTags:(functionId,search,limit,offset,orderType)=>__awaiter(this,void 0,void 0,function*(){if(typeof functionId==='undefined'){throw new AppwriteException('Missing required parameter: "functionId"');}
-let path='/functions/{functionId}/tags'.replace('{functionId}',functionId);let payload={};if(typeof search!=='undefined'){payload['search']=search;}
-if(typeof limit!=='undefined'){payload['limit']=limit;}
-if(typeof offset!=='undefined'){payload['offset']=offset;}
-if(typeof orderType!=='undefined'){payload['orderType']=orderType;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),createTag:(functionId,command,code)=>__awaiter(this,void 0,void 0,function*(){if(typeof functionId==='undefined'){throw new AppwriteException('Missing required parameter: "functionId"');}
-if(typeof command==='undefined'){throw new AppwriteException('Missing required parameter: "command"');}
-if(typeof code==='undefined'){throw new AppwriteException('Missing required parameter: "code"');}
-let path='/functions/{functionId}/tags'.replace('{functionId}',functionId);let payload={};if(typeof command!=='undefined'){payload['command']=command;}
-if(typeof code!=='undefined'){payload['code']=code;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'multipart/form-data',},payload);}),getTag:(functionId,tagId)=>__awaiter(this,void 0,void 0,function*(){if(typeof functionId==='undefined'){throw new AppwriteException('Missing required parameter: "functionId"');}
-if(typeof tagId==='undefined'){throw new AppwriteException('Missing required parameter: "tagId"');}
-let path='/functions/{functionId}/tags/{tagId}'.replace('{functionId}',functionId).replace('{tagId}',tagId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),deleteTag:(functionId,tagId)=>__awaiter(this,void 0,void 0,function*(){if(typeof functionId==='undefined'){throw new AppwriteException('Missing required parameter: "functionId"');}
-if(typeof tagId==='undefined'){throw new AppwriteException('Missing required parameter: "tagId"');}
-let path='/functions/{functionId}/tags/{tagId}'.replace('{functionId}',functionId).replace('{tagId}',tagId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);}),getUsage:(functionId,range)=>__awaiter(this,void 0,void 0,function*(){if(typeof functionId==='undefined'){throw new AppwriteException('Missing required parameter: "functionId"');}
-let path='/functions/{functionId}/usage'.replace('{functionId}',functionId);let payload={};if(typeof range!=='undefined'){payload['range']=range;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);})};this.health={get:()=>__awaiter(this,void 0,void 0,function*(){let path='/health';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getAntiVirus:()=>__awaiter(this,void 0,void 0,function*(){let path='/health/anti-virus';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getCache:()=>__awaiter(this,void 0,void 0,function*(){let path='/health/cache';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getDB:()=>__awaiter(this,void 0,void 0,function*(){let path='/health/db';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getQueueCertificates:()=>__awaiter(this,void 0,void 0,function*(){let path='/health/queue/certificates';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getQueueFunctions:()=>__awaiter(this,void 0,void 0,function*(){let path='/health/queue/functions';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getQueueLogs:()=>__awaiter(this,void 0,void 0,function*(){let path='/health/queue/logs';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getQueueTasks:()=>__awaiter(this,void 0,void 0,function*(){let path='/health/queue/tasks';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getQueueUsage:()=>__awaiter(this,void 0,void 0,function*(){let path='/health/queue/usage';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getQueueWebhooks:()=>__awaiter(this,void 0,void 0,function*(){let path='/health/queue/webhooks';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getStorageLocal:()=>__awaiter(this,void 0,void 0,function*(){let path='/health/storage/local';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getTime:()=>__awaiter(this,void 0,void 0,function*(){let path='/health/time';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);})};this.locale={get:()=>__awaiter(this,void 0,void 0,function*(){let path='/locale';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getContinents:()=>__awaiter(this,void 0,void 0,function*(){let path='/locale/continents';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getCountries:()=>__awaiter(this,void 0,void 0,function*(){let path='/locale/countries';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getCountriesEU:()=>__awaiter(this,void 0,void 0,function*(){let path='/locale/countries/eu';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getCountriesPhones:()=>__awaiter(this,void 0,void 0,function*(){let path='/locale/countries/phones';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getCurrencies:()=>__awaiter(this,void 0,void 0,function*(){let path='/locale/currencies';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getLanguages:()=>__awaiter(this,void 0,void 0,function*(){let path='/locale/languages';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);})};this.projects={list:(search,limit,offset,orderType)=>__awaiter(this,void 0,void 0,function*(){let path='/projects';let payload={};if(typeof search!=='undefined'){payload['search']=search;}
-if(typeof limit!=='undefined'){payload['limit']=limit;}
-if(typeof offset!=='undefined'){payload['offset']=offset;}
-if(typeof orderType!=='undefined'){payload['orderType']=orderType;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),create:(name,teamId,description,logo,url,legalName,legalCountry,legalState,legalCity,legalAddress,legalTaxId)=>__awaiter(this,void 0,void 0,function*(){if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
-if(typeof teamId==='undefined'){throw new AppwriteException('Missing required parameter: "teamId"');}
-let path='/projects';let payload={};if(typeof name!=='undefined'){payload['name']=name;}
-if(typeof teamId!=='undefined'){payload['teamId']=teamId;}
-if(typeof description!=='undefined'){payload['description']=description;}
-if(typeof logo!=='undefined'){payload['logo']=logo;}
-if(typeof url!=='undefined'){payload['url']=url;}
-if(typeof legalName!=='undefined'){payload['legalName']=legalName;}
-if(typeof legalCountry!=='undefined'){payload['legalCountry']=legalCountry;}
-if(typeof legalState!=='undefined'){payload['legalState']=legalState;}
-if(typeof legalCity!=='undefined'){payload['legalCity']=legalCity;}
-if(typeof legalAddress!=='undefined'){payload['legalAddress']=legalAddress;}
-if(typeof legalTaxId!=='undefined'){payload['legalTaxId']=legalTaxId;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),get:(projectId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-let path='/projects/{projectId}'.replace('{projectId}',projectId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),update:(projectId,name,description,logo,url,legalName,legalCountry,legalState,legalCity,legalAddress,legalTaxId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
-let path='/projects/{projectId}'.replace('{projectId}',projectId);let payload={};if(typeof name!=='undefined'){payload['name']=name;}
-if(typeof description!=='undefined'){payload['description']=description;}
-if(typeof logo!=='undefined'){payload['logo']=logo;}
-if(typeof url!=='undefined'){payload['url']=url;}
-if(typeof legalName!=='undefined'){payload['legalName']=legalName;}
-if(typeof legalCountry!=='undefined'){payload['legalCountry']=legalCountry;}
-if(typeof legalState!=='undefined'){payload['legalState']=legalState;}
-if(typeof legalCity!=='undefined'){payload['legalCity']=legalCity;}
-if(typeof legalAddress!=='undefined'){payload['legalAddress']=legalAddress;}
-if(typeof legalTaxId!=='undefined'){payload['legalTaxId']=legalTaxId;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('patch',uri,{'content-type':'application/json',},payload);}),delete:(projectId,password)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
-let path='/projects/{projectId}'.replace('{projectId}',projectId);let payload={};if(typeof password!=='undefined'){payload['password']=password;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);}),updateAuthLimit:(projectId,limit)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-if(typeof limit==='undefined'){throw new AppwriteException('Missing required parameter: "limit"');}
-let path='/projects/{projectId}/auth/limit'.replace('{projectId}',projectId);let payload={};if(typeof limit!=='undefined'){payload['limit']=limit;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('patch',uri,{'content-type':'application/json',},payload);}),updateAuthStatus:(projectId,method,status)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-if(typeof method==='undefined'){throw new AppwriteException('Missing required parameter: "method"');}
-if(typeof status==='undefined'){throw new AppwriteException('Missing required parameter: "status"');}
-let path='/projects/{projectId}/auth/{method}'.replace('{projectId}',projectId).replace('{method}',method);let payload={};if(typeof status!=='undefined'){payload['status']=status;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('patch',uri,{'content-type':'application/json',},payload);}),listDomains:(projectId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-let path='/projects/{projectId}/domains'.replace('{projectId}',projectId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),createDomain:(projectId,domain)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-if(typeof domain==='undefined'){throw new AppwriteException('Missing required parameter: "domain"');}
-let path='/projects/{projectId}/domains'.replace('{projectId}',projectId);let payload={};if(typeof domain!=='undefined'){payload['domain']=domain;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),getDomain:(projectId,domainId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-if(typeof domainId==='undefined'){throw new AppwriteException('Missing required parameter: "domainId"');}
-let path='/projects/{projectId}/domains/{domainId}'.replace('{projectId}',projectId).replace('{domainId}',domainId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),deleteDomain:(projectId,domainId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-if(typeof domainId==='undefined'){throw new AppwriteException('Missing required parameter: "domainId"');}
-let path='/projects/{projectId}/domains/{domainId}'.replace('{projectId}',projectId).replace('{domainId}',domainId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);}),updateDomainVerification:(projectId,domainId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-if(typeof domainId==='undefined'){throw new AppwriteException('Missing required parameter: "domainId"');}
-let path='/projects/{projectId}/domains/{domainId}/verification'.replace('{projectId}',projectId).replace('{domainId}',domainId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('patch',uri,{'content-type':'application/json',},payload);}),listKeys:(projectId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-let path='/projects/{projectId}/keys'.replace('{projectId}',projectId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),createKey:(projectId,name,scopes)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
-if(typeof scopes==='undefined'){throw new AppwriteException('Missing required parameter: "scopes"');}
-let path='/projects/{projectId}/keys'.replace('{projectId}',projectId);let payload={};if(typeof name!=='undefined'){payload['name']=name;}
-if(typeof scopes!=='undefined'){payload['scopes']=scopes;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),getKey:(projectId,keyId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-if(typeof keyId==='undefined'){throw new AppwriteException('Missing required parameter: "keyId"');}
-let path='/projects/{projectId}/keys/{keyId}'.replace('{projectId}',projectId).replace('{keyId}',keyId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),updateKey:(projectId,keyId,name,scopes)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-if(typeof keyId==='undefined'){throw new AppwriteException('Missing required parameter: "keyId"');}
-if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
-if(typeof scopes==='undefined'){throw new AppwriteException('Missing required parameter: "scopes"');}
-let path='/projects/{projectId}/keys/{keyId}'.replace('{projectId}',projectId).replace('{keyId}',keyId);let payload={};if(typeof name!=='undefined'){payload['name']=name;}
-if(typeof scopes!=='undefined'){payload['scopes']=scopes;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('put',uri,{'content-type':'application/json',},payload);}),deleteKey:(projectId,keyId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-if(typeof keyId==='undefined'){throw new AppwriteException('Missing required parameter: "keyId"');}
-let path='/projects/{projectId}/keys/{keyId}'.replace('{projectId}',projectId).replace('{keyId}',keyId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);}),updateOAuth2:(projectId,provider,appId,secret)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-if(typeof provider==='undefined'){throw new AppwriteException('Missing required parameter: "provider"');}
-let path='/projects/{projectId}/oauth2'.replace('{projectId}',projectId);let payload={};if(typeof provider!=='undefined'){payload['provider']=provider;}
-if(typeof appId!=='undefined'){payload['appId']=appId;}
-if(typeof secret!=='undefined'){payload['secret']=secret;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('patch',uri,{'content-type':'application/json',},payload);}),listPlatforms:(projectId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-let path='/projects/{projectId}/platforms'.replace('{projectId}',projectId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),createPlatform:(projectId,type,name,key,store,hostname)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-if(typeof type==='undefined'){throw new AppwriteException('Missing required parameter: "type"');}
-if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
-let path='/projects/{projectId}/platforms'.replace('{projectId}',projectId);let payload={};if(typeof type!=='undefined'){payload['type']=type;}
-if(typeof name!=='undefined'){payload['name']=name;}
-if(typeof key!=='undefined'){payload['key']=key;}
-if(typeof store!=='undefined'){payload['store']=store;}
-if(typeof hostname!=='undefined'){payload['hostname']=hostname;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),getPlatform:(projectId,platformId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-if(typeof platformId==='undefined'){throw new AppwriteException('Missing required parameter: "platformId"');}
-let path='/projects/{projectId}/platforms/{platformId}'.replace('{projectId}',projectId).replace('{platformId}',platformId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),updatePlatform:(projectId,platformId,name,key,store,hostname)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-if(typeof platformId==='undefined'){throw new AppwriteException('Missing required parameter: "platformId"');}
-if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
-let path='/projects/{projectId}/platforms/{platformId}'.replace('{projectId}',projectId).replace('{platformId}',platformId);let payload={};if(typeof name!=='undefined'){payload['name']=name;}
-if(typeof key!=='undefined'){payload['key']=key;}
-if(typeof store!=='undefined'){payload['store']=store;}
-if(typeof hostname!=='undefined'){payload['hostname']=hostname;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('put',uri,{'content-type':'application/json',},payload);}),deletePlatform:(projectId,platformId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-if(typeof platformId==='undefined'){throw new AppwriteException('Missing required parameter: "platformId"');}
-let path='/projects/{projectId}/platforms/{platformId}'.replace('{projectId}',projectId).replace('{platformId}',platformId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);}),listTasks:(projectId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-let path='/projects/{projectId}/tasks'.replace('{projectId}',projectId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),createTask:(projectId,name,status,schedule,security,httpMethod,httpUrl,httpHeaders,httpUser,httpPass)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
-if(typeof status==='undefined'){throw new AppwriteException('Missing required parameter: "status"');}
-if(typeof schedule==='undefined'){throw new AppwriteException('Missing required parameter: "schedule"');}
-if(typeof security==='undefined'){throw new AppwriteException('Missing required parameter: "security"');}
-if(typeof httpMethod==='undefined'){throw new AppwriteException('Missing required parameter: "httpMethod"');}
-if(typeof httpUrl==='undefined'){throw new AppwriteException('Missing required parameter: "httpUrl"');}
-let path='/projects/{projectId}/tasks'.replace('{projectId}',projectId);let payload={};if(typeof name!=='undefined'){payload['name']=name;}
-if(typeof status!=='undefined'){payload['status']=status;}
-if(typeof schedule!=='undefined'){payload['schedule']=schedule;}
-if(typeof security!=='undefined'){payload['security']=security;}
-if(typeof httpMethod!=='undefined'){payload['httpMethod']=httpMethod;}
-if(typeof httpUrl!=='undefined'){payload['httpUrl']=httpUrl;}
-if(typeof httpHeaders!=='undefined'){payload['httpHeaders']=httpHeaders;}
-if(typeof httpUser!=='undefined'){payload['httpUser']=httpUser;}
-if(typeof httpPass!=='undefined'){payload['httpPass']=httpPass;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),getTask:(projectId,taskId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-if(typeof taskId==='undefined'){throw new AppwriteException('Missing required parameter: "taskId"');}
-let path='/projects/{projectId}/tasks/{taskId}'.replace('{projectId}',projectId).replace('{taskId}',taskId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),updateTask:(projectId,taskId,name,status,schedule,security,httpMethod,httpUrl,httpHeaders,httpUser,httpPass)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-if(typeof taskId==='undefined'){throw new AppwriteException('Missing required parameter: "taskId"');}
-if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
-if(typeof status==='undefined'){throw new AppwriteException('Missing required parameter: "status"');}
-if(typeof schedule==='undefined'){throw new AppwriteException('Missing required parameter: "schedule"');}
-if(typeof security==='undefined'){throw new AppwriteException('Missing required parameter: "security"');}
-if(typeof httpMethod==='undefined'){throw new AppwriteException('Missing required parameter: "httpMethod"');}
-if(typeof httpUrl==='undefined'){throw new AppwriteException('Missing required parameter: "httpUrl"');}
-let path='/projects/{projectId}/tasks/{taskId}'.replace('{projectId}',projectId).replace('{taskId}',taskId);let payload={};if(typeof name!=='undefined'){payload['name']=name;}
-if(typeof status!=='undefined'){payload['status']=status;}
-if(typeof schedule!=='undefined'){payload['schedule']=schedule;}
-if(typeof security!=='undefined'){payload['security']=security;}
-if(typeof httpMethod!=='undefined'){payload['httpMethod']=httpMethod;}
-if(typeof httpUrl!=='undefined'){payload['httpUrl']=httpUrl;}
-if(typeof httpHeaders!=='undefined'){payload['httpHeaders']=httpHeaders;}
-if(typeof httpUser!=='undefined'){payload['httpUser']=httpUser;}
-if(typeof httpPass!=='undefined'){payload['httpPass']=httpPass;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('put',uri,{'content-type':'application/json',},payload);}),deleteTask:(projectId,taskId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-if(typeof taskId==='undefined'){throw new AppwriteException('Missing required parameter: "taskId"');}
-let path='/projects/{projectId}/tasks/{taskId}'.replace('{projectId}',projectId).replace('{taskId}',taskId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);}),getUsage:(projectId,range)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-let path='/projects/{projectId}/usage'.replace('{projectId}',projectId);let payload={};if(typeof range!=='undefined'){payload['range']=range;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),listWebhooks:(projectId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-let path='/projects/{projectId}/webhooks'.replace('{projectId}',projectId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),createWebhook:(projectId,name,events,url,security,httpUser,httpPass)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
-if(typeof events==='undefined'){throw new AppwriteException('Missing required parameter: "events"');}
-if(typeof url==='undefined'){throw new AppwriteException('Missing required parameter: "url"');}
-if(typeof security==='undefined'){throw new AppwriteException('Missing required parameter: "security"');}
-let path='/projects/{projectId}/webhooks'.replace('{projectId}',projectId);let payload={};if(typeof name!=='undefined'){payload['name']=name;}
-if(typeof events!=='undefined'){payload['events']=events;}
-if(typeof url!=='undefined'){payload['url']=url;}
-if(typeof security!=='undefined'){payload['security']=security;}
-if(typeof httpUser!=='undefined'){payload['httpUser']=httpUser;}
-if(typeof httpPass!=='undefined'){payload['httpPass']=httpPass;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),getWebhook:(projectId,webhookId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-if(typeof webhookId==='undefined'){throw new AppwriteException('Missing required parameter: "webhookId"');}
-let path='/projects/{projectId}/webhooks/{webhookId}'.replace('{projectId}',projectId).replace('{webhookId}',webhookId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),updateWebhook:(projectId,webhookId,name,events,url,security,httpUser,httpPass)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-if(typeof webhookId==='undefined'){throw new AppwriteException('Missing required parameter: "webhookId"');}
-if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
-if(typeof events==='undefined'){throw new AppwriteException('Missing required parameter: "events"');}
-if(typeof url==='undefined'){throw new AppwriteException('Missing required parameter: "url"');}
-if(typeof security==='undefined'){throw new AppwriteException('Missing required parameter: "security"');}
-let path='/projects/{projectId}/webhooks/{webhookId}'.replace('{projectId}',projectId).replace('{webhookId}',webhookId);let payload={};if(typeof name!=='undefined'){payload['name']=name;}
-if(typeof events!=='undefined'){payload['events']=events;}
-if(typeof url!=='undefined'){payload['url']=url;}
-if(typeof security!=='undefined'){payload['security']=security;}
-if(typeof httpUser!=='undefined'){payload['httpUser']=httpUser;}
-if(typeof httpPass!=='undefined'){payload['httpPass']=httpPass;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('put',uri,{'content-type':'application/json',},payload);}),deleteWebhook:(projectId,webhookId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
-if(typeof webhookId==='undefined'){throw new AppwriteException('Missing required parameter: "webhookId"');}
-let path='/projects/{projectId}/webhooks/{webhookId}'.replace('{projectId}',projectId).replace('{webhookId}',webhookId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);})};this.storage={listFiles:(search,limit,offset,orderType)=>__awaiter(this,void 0,void 0,function*(){let path='/storage/files';let payload={};if(typeof search!=='undefined'){payload['search']=search;}
+let path='/functions/{functionId}/executions/{executionId}'.replace('{functionId}',functionId).replace('{executionId}',executionId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);})};this.locale={get:()=>__awaiter(this,void 0,void 0,function*(){let path='/locale';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getContinents:()=>__awaiter(this,void 0,void 0,function*(){let path='/locale/continents';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getCountries:()=>__awaiter(this,void 0,void 0,function*(){let path='/locale/countries';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getCountriesEU:()=>__awaiter(this,void 0,void 0,function*(){let path='/locale/countries/eu';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getCountriesPhones:()=>__awaiter(this,void 0,void 0,function*(){let path='/locale/countries/phones';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getCurrencies:()=>__awaiter(this,void 0,void 0,function*(){let path='/locale/currencies';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getLanguages:()=>__awaiter(this,void 0,void 0,function*(){let path='/locale/languages';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);})};this.storage={listFiles:(search,limit,offset,orderType)=>__awaiter(this,void 0,void 0,function*(){let path='/storage/files';let payload={};if(typeof search!=='undefined'){payload['search']=search;}
 if(typeof limit!=='undefined'){payload['limit']=limit;}
 if(typeof offset!=='undefined'){payload['offset']=offset;}
 if(typeof orderType!=='undefined'){payload['orderType']=orderType;}
@@ -380,8 +183,10 @@ return uri;}};this.teams={list:(search,limit,offset,orderType)=>__awaiter(this,v
 if(typeof limit!=='undefined'){payload['limit']=limit;}
 if(typeof offset!=='undefined'){payload['offset']=offset;}
 if(typeof orderType!=='undefined'){payload['orderType']=orderType;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),create:(name,roles)=>__awaiter(this,void 0,void 0,function*(){if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
-let path='/teams';let payload={};if(typeof name!=='undefined'){payload['name']=name;}
+const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),create:(teamId,name,roles)=>__awaiter(this,void 0,void 0,function*(){if(typeof teamId==='undefined'){throw new AppwriteException('Missing required parameter: "teamId"');}
+if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
+let path='/teams';let payload={};if(typeof teamId!=='undefined'){payload['teamId']=teamId;}
+if(typeof name!=='undefined'){payload['name']=name;}
 if(typeof roles!=='undefined'){payload['roles']=roles;}
 const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),get:(teamId)=>__awaiter(this,void 0,void 0,function*(){if(typeof teamId==='undefined'){throw new AppwriteException('Missing required parameter: "teamId"');}
 let path='/teams/{teamId}'.replace('{teamId}',teamId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),update:(teamId,name)=>__awaiter(this,void 0,void 0,function*(){if(typeof teamId==='undefined'){throw new AppwriteException('Missing required parameter: "teamId"');}
@@ -393,11 +198,13 @@ let path='/teams/{teamId}/memberships'.replace('{teamId}',teamId);let payload={}
 if(typeof limit!=='undefined'){payload['limit']=limit;}
 if(typeof offset!=='undefined'){payload['offset']=offset;}
 if(typeof orderType!=='undefined'){payload['orderType']=orderType;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),createMembership:(teamId,email,roles,url,name)=>__awaiter(this,void 0,void 0,function*(){if(typeof teamId==='undefined'){throw new AppwriteException('Missing required parameter: "teamId"');}
+const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),createMembership:(teamId,membershipId,email,roles,url,name)=>__awaiter(this,void 0,void 0,function*(){if(typeof teamId==='undefined'){throw new AppwriteException('Missing required parameter: "teamId"');}
+if(typeof membershipId==='undefined'){throw new AppwriteException('Missing required parameter: "membershipId"');}
 if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
 if(typeof roles==='undefined'){throw new AppwriteException('Missing required parameter: "roles"');}
 if(typeof url==='undefined'){throw new AppwriteException('Missing required parameter: "url"');}
-let path='/teams/{teamId}/memberships'.replace('{teamId}',teamId);let payload={};if(typeof email!=='undefined'){payload['email']=email;}
+let path='/teams/{teamId}/memberships'.replace('{teamId}',teamId);let payload={};if(typeof membershipId!=='undefined'){payload['membershipId']=membershipId;}
+if(typeof email!=='undefined'){payload['email']=email;}
 if(typeof name!=='undefined'){payload['name']=name;}
 if(typeof roles!=='undefined'){payload['roles']=roles;}
 if(typeof url!=='undefined'){payload['url']=url;}
@@ -413,39 +220,11 @@ if(typeof userId==='undefined'){throw new AppwriteException('Missing required pa
 if(typeof secret==='undefined'){throw new AppwriteException('Missing required parameter: "secret"');}
 let path='/teams/{teamId}/memberships/{membershipId}/status'.replace('{teamId}',teamId).replace('{membershipId}',membershipId);let payload={};if(typeof userId!=='undefined'){payload['userId']=userId;}
 if(typeof secret!=='undefined'){payload['secret']=secret;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('patch',uri,{'content-type':'application/json',},payload);})};this.users={list:(search,limit,offset,orderType)=>__awaiter(this,void 0,void 0,function*(){let path='/users';let payload={};if(typeof search!=='undefined'){payload['search']=search;}
-if(typeof limit!=='undefined'){payload['limit']=limit;}
-if(typeof offset!=='undefined'){payload['offset']=offset;}
-if(typeof orderType!=='undefined'){payload['orderType']=orderType;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),create:(email,password,name)=>__awaiter(this,void 0,void 0,function*(){if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
-if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
-let path='/users';let payload={};if(typeof email!=='undefined'){payload['email']=email;}
-if(typeof password!=='undefined'){payload['password']=password;}
-if(typeof name!=='undefined'){payload['name']=name;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),get:(userId)=>__awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
-let path='/users/{userId}'.replace('{userId}',userId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),delete:(userId)=>__awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
-let path='/users/{userId}'.replace('{userId}',userId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);}),getLogs:(userId)=>__awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
-let path='/users/{userId}/logs'.replace('{userId}',userId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getPrefs:(userId)=>__awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
-let path='/users/{userId}/prefs'.replace('{userId}',userId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),updatePrefs:(userId,prefs)=>__awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
-if(typeof prefs==='undefined'){throw new AppwriteException('Missing required parameter: "prefs"');}
-let path='/users/{userId}/prefs'.replace('{userId}',userId);let payload={};if(typeof prefs!=='undefined'){payload['prefs']=prefs;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('patch',uri,{'content-type':'application/json',},payload);}),getSessions:(userId)=>__awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
-let path='/users/{userId}/sessions'.replace('{userId}',userId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),deleteSessions:(userId)=>__awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
-let path='/users/{userId}/sessions'.replace('{userId}',userId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);}),deleteSession:(userId,sessionId)=>__awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
-if(typeof sessionId==='undefined'){throw new AppwriteException('Missing required parameter: "sessionId"');}
-let path='/users/{userId}/sessions/{sessionId}'.replace('{userId}',userId).replace('{sessionId}',sessionId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);}),updateStatus:(userId,status)=>__awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
-if(typeof status==='undefined'){throw new AppwriteException('Missing required parameter: "status"');}
-let path='/users/{userId}/status'.replace('{userId}',userId);let payload={};if(typeof status!=='undefined'){payload['status']=status;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('patch',uri,{'content-type':'application/json',},payload);}),updateVerification:(userId,emailVerification)=>__awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
-if(typeof emailVerification==='undefined'){throw new AppwriteException('Missing required parameter: "emailVerification"');}
-let path='/users/{userId}/verification'.replace('{userId}',userId);let payload={};if(typeof emailVerification!=='undefined'){payload['emailVerification']=emailVerification;}
 const uri=new URL(this.config.endpoint+path);return yield this.call('patch',uri,{'content-type':'application/json',},payload);})};}
 setEndpoint(endpoint){this.config.endpoint=endpoint;return this;}
 setProject(value){this.headers['X-Appwrite-Project']=value;this.config.project=value;return this;}
-setKey(value){this.headers['X-Appwrite-Key']=value;this.config.key=value;return this;}
 setJWT(value){this.headers['X-Appwrite-JWT']=value;this.config.jwt=value;return this;}
 setLocale(value){this.headers['X-Appwrite-Locale']=value;this.config.locale=value;return this;}
-setMode(value){this.headers['X-Appwrite-Mode']=value;this.config.mode=value;return this;}
 call(method,url,headers={},params={}){var _a,_b;return __awaiter(this,void 0,void 0,function*(){method=method.toUpperCase();headers=Object.assign(Object.assign({},headers),this.headers);let options={method,headers,credentials:'include'};if(typeof window!=='undefined'&&window.localStorage){headers['X-Fallback-Cookies']=(_a=window.localStorage.getItem('cookieFallback'))!==null&&_a!==void 0?_a:"";}
 if(method==='GET'){for(const[key,value]of Object.entries(this.flatten(params))){url.searchParams.append(key,value);}}
 else{switch(headers['content-type']){case'application/json':options.body=JSON.stringify(params);break;case'multipart/form-data':let formData=new FormData();for(const key in params){if(Array.isArray(params[key])){formData.append(key+'[]',params[key].join(','));}
@@ -2363,7 +2142,7 @@ element.classList.add('scroll-to-bottom')}
 else{element.classList.remove('scroll-to-bottom')
 element.classList.add('scroll-to-top')}
 position=direction;let current=Math.ceil(direction/window.innerHeight);element.setAttribute('data-views-total',Math.ceil(element.scrollHeight/window.innerHeight));element.setAttribute('data-views-current',current);if(element.scrollHeight<=(direction+element.offsetHeight+300)&&direction>0){element.classList.add('scroll-end')}
-else{element.classList.remove('scroll-end')}};window.addEventListener('scroll',check,false);window.addEventListener('resize',check,false);check();}});})(window);(function(window){window.ls.container.get("view").add({selector:"data-setup",controller:function(element,console,form,alerts,router){element.addEventListener("submit",function(event){event.preventDefault();let loaderId=alerts.add({text:'Creating new project...',class:""},0);let formData=form.toJson(element);formData["name"]=formData["name"]||(element.dataset["defaultName"]||"");console.teams.create(formData["name"]||"").then(function(data){let team=data["$id"];formData=JSON.parse(JSON.stringify(formData).replace(new RegExp("{{teamId}}","g"),team));console.projects.create(formData["name"],team).then(function(project){alerts.remove(loaderId);window.location.href="/console/home?project="+project["$id"];},function(){throw new Error("Failed to setup project");});},function(){throw new Error("Setup failed creating project team");});});}});})(window);(function(window){window.ls.container.get("view").add({selector:"data-switch",controller:function(element,router,document){let check=function(c){if(!element.value){return;}
+else{element.classList.remove('scroll-end')}};window.addEventListener('scroll',check,false);window.addEventListener('resize',check,false);check();}});})(window);(function(window){window.ls.container.get("view").add({selector:"data-setup",controller:function(element,console,form,alerts,router){element.addEventListener("submit",function(event){event.preventDefault();let loaderId=alerts.add({text:'Creating new project...',class:""},0);let formData=form.toJson(element);formData["name"]=formData["name"]||(element.dataset["defaultName"]||"");console.teams.create('unique()',formData["name"]||"").then(function(data){let team=data["$id"];formData=JSON.parse(JSON.stringify(formData).replace(new RegExp("{{teamId}}","g"),team));console.projects.create(formData["name"],team).then(function(project){alerts.remove(loaderId);window.location.href="/console/home?project="+project["$id"];},function(){throw new Error("Failed to setup project");});},function(){throw new Error("Setup failed creating project team");});});}});})(window);(function(window){window.ls.container.get("view").add({selector:"data-switch",controller:function(element,router,document){let check=function(c){if(!element.value){return;}
 if(element.value===router.params.project){return;}
 return router.change("/console/home?project="+element.value);};element.addEventListener("change",function(){check();});}});})(window);(function(window){window.ls.container.get("view").add({selector:"data-general-theme",controller:function(element,router,document){let toggle=function(c){if(document.body.classList.contains('theme-light')){document.body.classList.remove('theme-light');document.body.classList.add('theme-dark');window.localStorage.setItem('user-theme','theme-dark')}
 else{document.body.classList.remove('theme-dark');document.body.classList.add('theme-light');window.localStorage.setItem('user-theme','theme-light')}};element.addEventListener("click",function(){toggle();});}});})(window);(function(window){window.ls.container.get("view").add({selector:"data-version",controller:function(alerts,env,cookie){let cookieName="version-update-"+env.VERSION.replace(/\./g,"_");if(!cookie.get(cookieName)){var xhr=new XMLHttpRequest();xhr.open('GET','/console/version',true);xhr.onload=function(){if(this.readyState==4&&this.status==200){let data=JSON.parse(this.responseText);let text='Appwrite version '+data.version+' is avaliable, check the';if(isNewerVersion(env.VERSION,data.version)){alerts.add({text:text,class:"success",link:"https://github.com/appwrite/appwrite/releases",label:'release notes',callback:function(){cookie.set(cookieName,"true",365*10);}},0);}}};xhr.send(null);function isNewerVersion(oldVer,newVer){const oldParts=oldVer.split('.')

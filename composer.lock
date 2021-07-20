@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "17c1c46d283e4745df9915d082c22078",
+    "content-hash": "0246a4d33ab36b0a2f2a93be15cb0bef",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2726,16 +2726,16 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.12.0",
+            "version": "dev-fix-new-defaults",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "ca8e34f091b3a66f94a8972cb94b0b8e1161dada"
+                "reference": "87ae24ee9d79d38a0fb198e24189efe0ca74b8dc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/ca8e34f091b3a66f94a8972cb94b0b8e1161dada",
-                "reference": "ca8e34f091b3a66f94a8972cb94b0b8e1161dada",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/87ae24ee9d79d38a0fb198e24189efe0ca74b8dc",
+                "reference": "87ae24ee9d79d38a0fb198e24189efe0ca74b8dc",
                 "shasum": ""
             },
             "require": {
@@ -2769,9 +2769,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.12.0"
+                "source": "https://github.com/appwrite/sdk-generator/tree/fix-new-defaults"
             },
-            "time": "2021-07-06T16:20:51+00:00"
+            "time": "2021-07-20T09:42:41+00:00"
         },
         {
             "name": "composer/semver",
@@ -6235,7 +6235,8 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "utopia-php/abuse": 20,
-        "utopia-php/audit": 20
+        "utopia-php/audit": 20,
+        "appwrite/sdk-generator": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

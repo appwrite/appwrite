@@ -12,7 +12,7 @@
         formData["name"] =
           formData["name"] || (element.dataset["defaultName"] || "");
 
-        console.teams.create(formData["name"] || "").then(
+        console.teams.create('unique()', formData["name"] || "").then(
           function(data) {
             let team = data["$id"];
 
