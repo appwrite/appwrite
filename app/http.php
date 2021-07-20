@@ -56,6 +56,9 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
     go(function() use ($register, $app) {
         // wait for database to be ready
         $attempts = 0;
+        $max = 10;
+        $sleep = 1;
+
         do {
             try {
                 $attempts++;
@@ -64,13 +67,13 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 break; // leave the do-while if successful
             } catch(\Exception $e) {
                 Console::warning("Database not ready. Retrying connection ({$attempts})...");
-                if ($attempts >= 10) {
+                if ($attempts >= $max) {
                     throw new \Exception('Failed to connect to database: '. $e->getMessage());
                 }
-                sleep(1);
+                sleep($sleep);
                 continue;
             }
-        } while ($attempts < 10);
+        } while ($attempts < $max);
 
         App::setResource('db', function () use (&$db) {
             return $db;
