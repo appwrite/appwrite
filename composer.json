@@ -38,7 +38,7 @@
         "appwrite/php-clamav": "1.1.*",
         "appwrite/php-runtimes": "0.4.*",
 
-        "utopia-php/framework": "0.14.*",
+        "utopia-php/framework": "0.16.*",
         "utopia-php/abuse": "dev-feat-utopia-db-integration",
         "utopia-php/analytics": "0.2.*",
         "utopia-php/audit": "dev-feat-utopia-db-integration",
@@ -73,7 +73,7 @@
         }
     ],
     "require-dev": {
-        "appwrite/sdk-generator": "0.11.1",
+        "appwrite/sdk-generator": "0.12.0",
         "swoole/ide-helper": "4.6.7",
         "phpunit/phpunit": "9.5.6",
         "vimeo/psalm": "4.7.2"

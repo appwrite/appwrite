@@ -301,7 +301,7 @@ App::post('/v1/database/collections/:collectionId/attributes')
         $response->dynamic2($attribute, Response::MODEL_ATTRIBUTE);
     });
 
-App::get('v1/database/collections/:collectionId/attributes')
+App::get('/v1/database/collections/:collectionId/attributes')
     ->desc('List Attributes')
     ->groups(['api', 'database'])
     ->label('scope', 'attributes.read')
@@ -339,13 +339,13 @@ App::get('v1/database/collections/:collectionId/attributes')
         ]), Response::MODEL_ATTRIBUTE_LIST);
     });
 
-App::get('v1/database/collections/:collectionId/attributes/:attributeId')
+App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
     ->desc('Get Attribute')
     ->groups(['api', 'database'])
     ->label('scope', 'attributes.read')
     ->label('sdk.namespace', 'database')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
-    ->label('sdk.method', 'listAttributes')
+    ->label('sdk.method', 'getAttribute')
     ->label('sdk.description', '/docs/references/database/get-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -532,7 +532,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
        
     });
 
-App::get('v1/database/collections/:collectionId/indexes')
+App::get('/v1/database/collections/:collectionId/indexes')
     ->desc('List Indexes')
     ->groups(['api', 'database'])
     ->label('scope', 'indexes.read')
@@ -570,13 +570,13 @@ App::get('v1/database/collections/:collectionId/indexes')
         ]), Response::MODEL_INDEX_LIST);
     });
 
-App::get('v1/database/collections/:collectionId/indexes/:indexId')
+App::get('/v1/database/collections/:collectionId/indexes/:indexId')
     ->desc('Get Index')
     ->groups(['api', 'database'])
     ->label('scope', 'indexes.read')
     ->label('sdk.namespace', 'database')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
-    ->label('sdk.method', 'listIndexes')
+    ->label('sdk.method', 'getIndex')
     ->label('sdk.description', '/docs/references/database/get-index.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -742,7 +742,8 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
     ->label('sdk.namespace', 'database')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT]) ->label('sdk.method', 'listDocuments')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.method', 'listDocuments')
     ->label('sdk.description', '/docs/references/database/list-documents.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)

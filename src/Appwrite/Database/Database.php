@@ -145,10 +145,11 @@ class Database
 
     /**
      * @param array $options
+     * @param array $filterTypes
      *
      * @return Document[]
      */
-    public function getCollection(array $options)
+    public function getCollection(array $options, array $filterTypes = [])
     {
         $options = \array_merge([
             'offset' => 0,
@@ -161,7 +162,7 @@ class Database
             'filters' => [],
         ], $options);
 
-        $results = $this->adapter->getCollection($options);
+        $results = $this->adapter->getCollection($options, $filterTypes);
 
         foreach ($results as &$node) {
             $node = $this->decode(new Document($node));

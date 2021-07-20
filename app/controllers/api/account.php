@@ -91,7 +91,7 @@ App::post('/v1/account')
                 '$write' => ['user:'.$userId],
                 'email' => $email,
                 'emailVerification' => false,
-                'status' => Auth::USER_STATUS_UNACTIVATED,
+                'status' => true,
                 'password' => Auth::passwordHash($password),
                 'passwordUpdate' => \time(),
                 'registration' => \time(),
@@ -168,7 +168,7 @@ App::post('/v1/account/sessions')
             throw new Exception('Invalid credentials', 401); // Wrong password or username
         }
 
-        if (Auth::USER_STATUS_BLOCKED == $profile->getAttribute('status')) { // Account is blocked
+        if (false === $profile->getAttribute('status')) { // Account is blocked
             throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
         }
 
@@ -192,8 +192,12 @@ App::post('/v1/account/sessions')
 
         Authorization::setRole('user:'.$profile->getId());
 
-        $profile->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
+        $session = $dbForInternal->createDocument('sessions', $session
+            ->setAttribute('$read', ['user:'.$profile->getId()])
+            ->setAttribute('$write', ['user:'.$profile->getId()])
+        );
 
+        $profile->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
         $profile = $dbForInternal->updateDocument('users', $profile->getId(), $profile);
 
         $audits
@@ -428,35 +432,33 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $current = Auth::sessionVerify($sessions, Auth::$secret);
 
         if($current) { // Delete current session of new one.
-            foreach ($sessions as $key => $session) {
+            foreach ($sessions as $key => $session) { /** @var Document $session */
                 if ($current === $session['$id']) {
                     unset($sessions[$key]);
+                    
+                    $dbForInternal->deleteDocument('sessions', $session->getId());
                     $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('sessions', $sessions));
                 }
             }
         }
 
-        $user = (empty($user->getId())) ? $dbForInternal->getCollectionFirst([ // Get user by provider id
-            'limit' => 1,
-            'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                'sessions.provider='.$provider,
-                'sessions.providerUid='.$oauth2ID
-            ],
-        ]) : $user;
+        $user = ($user->isEmpty()) ? $dbForInternal->findFirst('sessions', [ // Get user by provider id
+            new Query('provider', QUERY::TYPE_EQUAL, [$provider]),
+            new Query('providerUid', QUERY::TYPE_EQUAL, [$oauth2ID]),
+        ], 1) : $user;
 
-        if (empty($user)) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
+        if ($user === false || $user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
             $name = $oauth2->getUserName($accessToken);
             $email = $oauth2->getUserEmail($accessToken);
 
             $user = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [$email])], 1); // Get user by email address
 
-            if (!$user || empty($user->getId())) { // Last option -> create the user, generate random password
+            if ($user === false || $user->isEmpty()) { // Last option -> create the user, generate random password
                 $limit = $project->getAttribute('usersAuthLimit', 0);
         
                 if ($limit !== 0) {
                     $sum = $dbForInternal->count('users', [], APP_LIMIT_COUNT);
-        
+
                     if($sum >= $limit) {
                         throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
                     }
@@ -472,7 +474,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         '$write' => ['user:'.$userId],
                         'email' => $email,
                         'emailVerification' => true,
-                        'status' => Auth::USER_STATUS_ACTIVATED, // Email should already be authenticated by OAuth2 provider
+                        'status' => true, // Email should already be authenticated by OAuth2 provider
                         'password' => Auth::passwordHash(Auth::passwordGenerator()),
                         'passwordUpdate' => 0,
                         'registration' => \time(),
@@ -491,7 +493,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
         }
 
-        if (Auth::USER_STATUS_BLOCKED == $user->getAttribute('status')) { // Account is blocked
+        if (false === $user->getAttribute('status')) { // Account is blocked
             throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
         }
 
@@ -524,11 +526,16 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         $user
-            ->setAttribute('status', Auth::USER_STATUS_ACTIVATED)
+            ->setAttribute('status', true)
             ->setAttribute('sessions', $session, Document::SET_TYPE_APPEND)
         ;
 
         Authorization::setRole('user:'.$user->getId());
+
+        $session = $dbForInternal->createDocument('sessions', $session
+            ->setAttribute('$read', ['user:'.$user->getId()])
+            ->setAttribute('$write', ['user:'.$user->getId()])
+        );
 
         $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
 
@@ -630,7 +637,7 @@ App::post('/v1/account/sessions/anonymous')
             '$write' => ['user:'.$userId],
             'email' => null,
             'emailVerification' => false,
-            'status' => Auth::USER_STATUS_UNACTIVATED,
+            'status' => true,
             'password' => null,
             'passwordUpdate' => \time(),
             'registration' => \time(),
@@ -667,6 +674,11 @@ App::post('/v1/account/sessions/anonymous')
         ));
 
         Authorization::setRole('user:'.$user->getId());
+
+        $session = $dbForInternal->createDocument('sessions', $session
+            ->setAttribute('$read', ['user:'.$user->getId()])
+            ->setAttribute('$write', ['user:'.$user->getId()])
+        );
 
         $user = $dbForInternal->updateDocument('users', $user->getId(),
             $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND));
@@ -814,9 +826,7 @@ App::get('/v1/account/sessions')
         $countries = $locale->getText('countries');
         $current = Auth::sessionVerify($sessions, Auth::$secret);
 
-        foreach ($sessions as $key => $session) { 
-            /** @var Document $session */
-
+        foreach ($sessions as $key => $session) { /** @var Document $session */
             $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
             ? $countries[strtoupper($session->getAttribute('countryCode'))]
             : $locale->getText('locale.country.unknown');
@@ -858,6 +868,7 @@ App::get('/v1/account/logs')
         /** @var Utopia\Database\Database $dbForInternal */
 
         $audit = new Audit($dbForInternal);
+
         $countries = $locale->getText('countries');
 
         $logs = $audit->getLogsByUserAndEvents($user->getId(), [
@@ -1143,7 +1154,7 @@ App::delete('/v1/account')
         /** @var Appwrite\Event\Event $events */
 
         $protocol = $request->getProtocol();
-        $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('status', Auth::USER_STATUS_BLOCKED));
+        $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('status', false));
 
         //TODO delete all tokens or only current session?
         //TODO delete all user data according to GDPR. Make sure everything is backed up and backups are deleted later
@@ -1213,11 +1224,11 @@ App::delete('/v1/account/sessions/:sessionId')
                 
         $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($sessions as $key => $session) { 
-            /** @var Document $session */
-
+        foreach ($sessions as $key => $session) { /** @var Document $session */
             if ($sessionId == $session->getId()) {
                 unset($sessions[$key]);
+
+                $dbForInternal->deleteDocument('sessions', $session->getId());
 
                 $audits
                     ->setParam('userId', $user->getId())
@@ -1289,8 +1300,8 @@ App::delete('/v1/account/sessions')
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($sessions as $session) { 
-            /** @var Document $session */
+        foreach ($sessions as $session) { /** @var Document $session */
+            $dbForInternal->deleteDocument('sessions', $session->getId());
 
             $audits
                 ->setParam('userId', $user->getId())
@@ -1371,12 +1382,14 @@ App::post('/v1/account/recovery')
         $profile = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [$email])], 1); // Get user by email address
 
         if (!$profile) {
-            throw new Exception('User not found', 404); // TODO maybe hide this
+            throw new Exception('User not found', 404);
         }
 
-        if (Auth::USER_STATUS_BLOCKED == $profile->getAttribute('status')) { // Account is blocked
-            throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
+        if (false === $profile->getAttribute('status')) { // Account is blocked
+            throw new Exception('Invalid credentials. User is blocked', 401);
         }
+
+        $expire = \time() + Auth::TOKEN_EXPIRATION_RECOVERY;
 
         $secret = Auth::tokenGenerator();
         $recovery = new Document([
@@ -1384,7 +1397,7 @@ App::post('/v1/account/recovery')
             'userId' => $profile->getId(),
             'type' => Auth::TOKEN_TYPE_RECOVERY,
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-            'expire' => \time() + Auth::TOKEN_EXPIRATION_RECOVERY,
+            'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
         ]);
@@ -1396,7 +1409,7 @@ App::post('/v1/account/recovery')
         $profile = $dbForInternal->updateDocument('users', $profile->getId(), $profile);
 
         $url = Template::parseURL($url);
-        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret]);
+        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
         $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
@@ -1482,7 +1495,7 @@ App::put('/v1/account/recovery')
         $profile = $dbForInternal->getDocument('users', $userId);
 
         if ($profile->isEmpty()) {
-            throw new Exception('User not found', 404); // TODO maybe hide this
+            throw new Exception('User not found', 404);
         }
 
         $tokens = $profile->getAttribute('tokens', []);
@@ -1562,13 +1575,15 @@ App::post('/v1/account/verification')
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $verificationSecret = Auth::tokenGenerator();
+
+        $expire = \time() + Auth::TOKEN_EXPIRATION_CONFIRM;
         
         $verification = new Document([
             '$id' => $dbForInternal->getId(),
             'userId' => $user->getId(),
             'type' => Auth::TOKEN_TYPE_VERIFICATION,
             'secret' => Auth::hash($verificationSecret), // One way hash encryption to protect DB leak
-            'expire' => \time() + Auth::TOKEN_EXPIRATION_CONFIRM,
+            'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
         ]);
@@ -1578,9 +1593,9 @@ App::post('/v1/account/verification')
         $user->setAttribute('tokens', $verification, Document::SET_TYPE_APPEND);
 
         $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
-        
+
         $url = Template::parseURL($url);
-        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret]);
+        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
         $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
@@ -1662,7 +1677,7 @@ App::put('/v1/account/verification')
         $profile = $dbForInternal->getDocument('users', $userId);
 
         if ($profile->isEmpty()) {
-            throw new Exception('User not found', 404); // TODO maybe hide this
+            throw new Exception('User not found', 404);
         }
 
         $tokens = $profile->getAttribute('tokens', []);

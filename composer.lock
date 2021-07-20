@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ca8cf356c884e8d332b04bebf9d3b11b",
+    "content-hash": "17c1c46d283e4745df9915d082c22078",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2079,16 +2079,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.14.1",
+            "version": "0.16.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "632113288bebe41cbef79f0d355bd91609767b8c"
+                "reference": "e7440b91077ccf2f4f3908fde4f31d177f8ea692"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/632113288bebe41cbef79f0d355bd91609767b8c",
-                "reference": "632113288bebe41cbef79f0d355bd91609767b8c",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/e7440b91077ccf2f4f3908fde4f31d177f8ea692",
+                "reference": "e7440b91077ccf2f4f3908fde4f31d177f8ea692",
                 "shasum": ""
             },
             "require": {
@@ -2122,9 +2122,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.14.1"
+                "source": "https://github.com/utopia-php/framework/tree/0.16.1"
             },
-            "time": "2021-05-21T06:41:45+00:00"
+            "time": "2021-07-18T10:59:00+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2560,27 +2560,27 @@
     "packages-dev": [
         {
             "name": "amphp/amp",
-            "version": "v2.5.2",
+            "version": "v2.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/amphp/amp.git",
-                "reference": "efca2b32a7580087adb8aabbff6be1dc1bb924a9"
+                "reference": "caa95edeb1ca1bf7532e9118ede4a3c3126408cc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/amphp/amp/zipball/efca2b32a7580087adb8aabbff6be1dc1bb924a9",
-                "reference": "efca2b32a7580087adb8aabbff6be1dc1bb924a9",
+                "url": "https://api.github.com/repos/amphp/amp/zipball/caa95edeb1ca1bf7532e9118ede4a3c3126408cc",
+                "reference": "caa95edeb1ca1bf7532e9118ede4a3c3126408cc",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7"
+                "php": ">=7.1"
             },
             "require-dev": {
                 "amphp/php-cs-fixer-config": "dev-master",
                 "amphp/phpunit-util": "^1",
                 "ext-json": "*",
                 "jetbrains/phpstorm-stubs": "^2019.3",
-                "phpunit/phpunit": "^6.0.9 | ^7",
+                "phpunit/phpunit": "^7 | ^8 | ^9",
                 "psalm/phar": "^3.11@dev",
                 "react/promise": "^2"
             },
@@ -2637,7 +2637,7 @@
             "support": {
                 "irc": "irc://irc.freenode.org/amphp",
                 "issues": "https://github.com/amphp/amp/issues",
-                "source": "https://github.com/amphp/amp/tree/v2.5.2"
+                "source": "https://github.com/amphp/amp/tree/v2.6.0"
             },
             "funding": [
                 {
@@ -2645,7 +2645,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-01-10T17:06:37+00:00"
+            "time": "2021-07-16T20:06:06+00:00"
         },
         {
             "name": "amphp/byte-stream",
@@ -2726,16 +2726,16 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.11.1",
+            "version": "0.12.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "9809c31f27037d088fb832cdec0e8fbc93d1d388"
+                "reference": "ca8e34f091b3a66f94a8972cb94b0b8e1161dada"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/9809c31f27037d088fb832cdec0e8fbc93d1d388",
-                "reference": "9809c31f27037d088fb832cdec0e8fbc93d1d388",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/ca8e34f091b3a66f94a8972cb94b0b8e1161dada",
+                "reference": "ca8e34f091b3a66f94a8972cb94b0b8e1161dada",
                 "shasum": ""
             },
             "require": {
@@ -2769,9 +2769,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.11.1"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.12.0"
             },
-            "time": "2021-07-02T10:15:53+00:00"
+            "time": "2021-07-06T16:20:51+00:00"
         },
         {
             "name": "composer/semver",

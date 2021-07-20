@@ -57,7 +57,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
                 $certificate = $dbForConsole->createDocument('certificates', $certificate);
                 Authorization2::enable();
 
-                Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in a few seconds...'); // TODO move this to installation script
+                Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in a few seconds...');
 
                 Resque::enqueue('v1-certificates', 'CertificatesV1', [
                     'document' => $certificate,
@@ -229,7 +229,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         if ($key && $user->isEmpty()) {
             $user = new Document([
                 '$id' => '',
-                'status' => Auth::USER_STATUS_ACTIVATED,
+                'status' => true,
                 'email' => 'app.'.$project->getId().'@service.'.$request->getHostname(),
                 'password' => '',
                 'name' => $project->getAttribute('name', 'Untitled'),
@@ -273,8 +273,8 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         throw new Exception($user->getAttribute('email', 'User').' (role: '.\strtolower($roles[$role]['label']).') missing scope ('.$scope.')', 401);
     }
 
-    if (Auth::USER_STATUS_BLOCKED == $user->getAttribute('status')) { // Account has not been activated
-        throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
+    if (false === $user->getAttribute('status')) { // Account is blocked
+        throw new Exception('Invalid credentials. User is blocked', 401);
     }
 
     if ($user->getAttribute('reset')) {
@@ -306,6 +306,10 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\View $layout */
     /** @var Appwrite\Database\Document $project */
+
+    if ($error instanceof PDOException) {
+        throw $error;
+    }
 
     $route = $utopia->match($request);
     $template = ($route) ? $route->getLabel('error', null) : null;
@@ -370,10 +374,12 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
         $comp = new View($template);
 
         $comp
+            ->setParam('development', App::isDevelopment())
             ->setParam('projectName', $project->getAttribute('name'))
             ->setParam('projectURL', $project->getAttribute('url'))
             ->setParam('message', $error->getMessage())
             ->setParam('code', $code)
+            ->setParam('trace', $error->getTrace())
         ;
 
         $layout

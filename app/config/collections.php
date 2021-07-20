@@ -212,7 +212,7 @@ $collections = [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Status',
                 'key' => 'status',
-                'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,
+                'type' => Database::SYSTEM_VAR_TYPE_BOOLEAN,
                 'default' => '',
                 'required' => true,
                 'array' => false,
@@ -778,6 +778,14 @@ $collections = [
                 'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,
                 'default' => 0,
                 'required' => false,
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Version',
+                'key' => 'version',
+                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
+                'default' => '',
+                'required' => true,
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
