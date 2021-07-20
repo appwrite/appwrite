@@ -297,7 +297,7 @@ App::post('/v1/teams/:teamId/memberships')
                     '$write' => ['user:'.$userId],
                     'email' => $email,
                     'emailVerification' => false,
-                    'status' => Auth::USER_STATUS_UNACTIVATED,
+                    'status' => true,
                     'password' => Auth::passwordHash(Auth::passwordGenerator()),
                     /** 
                      * Set the password update time to 0 for users created using 
@@ -608,6 +608,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         // Log user in
 
+        Authorization::setRole('user:'.$user->getId());
+
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
@@ -624,6 +626,11 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
         ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
+        $session = $dbForInternal->createDocument('sessions', $session
+            ->setAttribute('$read', ['user:'.$user->getId()])
+            ->setAttribute('$write', ['user:'.$user->getId()])
+        );
+        
         $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
 
         Authorization::setRole('user:'.$userId);

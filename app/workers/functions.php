@@ -123,7 +123,7 @@ Console::info(count($list)." functions listed in " . ($executionEnd - $execution
  * 7. Trigger usage log - DONE
  */
 
-//TODO aviod scheduled execution if delay is bigger than X offest
+//TODO avoid scheduled execution if delay is bigger than X offest
 
 class FunctionsV1 extends Worker
 {
@@ -325,7 +325,7 @@ class FunctionsV1 extends Worker
             : null;
 
         if(\is_null($runtime)) {
-            throw new Exception('Runtime "'.$function->getAttribute('runtime', '').' is not supported');
+            throw new Exception('Runtime "'.$function->getAttribute('runtime', '').'" is not supported');
         }
 
         $vars = \array_merge($function->getAttribute('vars', []), [
@@ -345,7 +345,7 @@ class FunctionsV1 extends Worker
 
         \array_walk($vars, function (&$value, $key) {
             $key = $this->filterEnvKey($key);
-            $value = \escapeshellarg((empty($value)) ? 'null' : $value);
+            $value = \escapeshellarg((empty($value)) ? '' : $value);
             $value = "--env {$key}={$value}";
         });
 
