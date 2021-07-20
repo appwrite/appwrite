@@ -226,17 +226,17 @@ App::get('/console/database/collection')
     ->param('id', '', new UID(), 'Collection unique ID.')
     ->inject('response')
     ->inject('layout')
-    ->inject('projectDB')
-    ->action(function ($id, $response, $layout, $projectDB) {
+    ->inject('dbForExternal')
+    ->action(function ($id, $response, $layout, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\View $layout */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForExternal */
 
         Authorization::disable();
-        $collection = $projectDB->getDocument($id, false);
+        $collection = $dbForExternal->getCollection($id);
         Authorization::reset();
 
-        if ($collection->isEmpty() || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+        if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
         }
 
