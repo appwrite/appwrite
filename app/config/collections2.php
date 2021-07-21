@@ -24,17 +24,6 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'name',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 128,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
                 '$id' => 'description',
                 'type' => Database::VAR_STRING,
                 'format' => '',

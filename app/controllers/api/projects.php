@@ -35,7 +35,6 @@ App::post('/v1/projects')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
-    ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
     ->param('teamId', '', new UID(), 'Team unique ID.')
     ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
     ->param('logo', '', new Text(1024), 'Project logo.', true)
@@ -51,7 +50,7 @@ App::post('/v1/projects')
     ->inject('dbForInternal')
     ->inject('dbForExternal')
     ->inject('consoleDB')
-    ->action(function ($projectId, $name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $dbForConsole, $dbForInternal, $dbForExternal, $consoleDB) {
+    ->action(function ($projectId, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $dbForConsole, $dbForInternal, $dbForExternal, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
         /** @var Utopia\Database\Database $dbForInternal */
@@ -70,7 +69,6 @@ App::post('/v1/projects')
             '$read' => ['team:' . $teamId],
             '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
             'teamId' => $team->getId(),
-            'name' => $name,
             'description' => $description,
             'logo' => $logo,
             'url' => $url,

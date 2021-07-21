@@ -543,7 +543,6 @@ App::setResource('console', function() {
     return new Document2([
         '$id' => 'console',
         '$collection' => 'projects',
-        'name' => 'Appwrite',
         'description' => 'Appwrite core engine',
         'logo' => '',
         'teamId' => -1,
