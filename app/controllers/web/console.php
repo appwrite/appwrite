@@ -4,7 +4,7 @@ use Utopia\App;
 use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
-use Appwrite\Database\Database;
+use Utopia\Database\Database;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Validator\UID;
 use Utopia\Storage\Storage;
