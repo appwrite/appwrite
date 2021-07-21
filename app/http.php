@@ -71,7 +71,6 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                     throw new \Exception('Failed to connect to database: '. $e->getMessage());
                 }
                 sleep($sleep);
-                continue;
             }
         } while ($attempts < $max);
 

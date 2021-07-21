@@ -407,7 +407,6 @@ class DeletesV1 extends Worker
                     throw new \Exception('Failed to connect to database: '. $e->getMessage());
                 }
                 sleep($sleep);
-                continue;
             }
         } while ($attempts < $max);
 
