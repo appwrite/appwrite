@@ -23,12 +23,6 @@ class Func extends Model
                 'example' => new \stdClass,
                 'array' => false,
             ])
-            ->addRule('name', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Function name.',
-                'default' => '',
-                'example' => 'My Function',
-            ])
             ->addRule('dateCreated', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Function creation date in Unix timestamp.',
