@@ -264,16 +264,16 @@ App::get('/console/database/document')
     ->label('scope', 'console')
     ->param('collection', '', new UID(), 'Collection unique ID.')
     ->inject('layout')
-    ->inject('projectDB')
-    ->action(function ($collection, $layout, $projectDB) {
+    ->inject('dbForExternal')
+    ->action(function ($collection, $layout, $dbForExternal) {
         /** @var Utopia\View $layout */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForExternal */
 
         Authorization::disable();
-        $collection = $projectDB->getDocument($collection, false);
+        $collection = $dbForExternal->getCollection($collection);
         Authorization::reset();
 
-        if ($collection->isEmpty() || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+        if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
         }
 
@@ -282,7 +282,7 @@ App::get('/console/database/document')
         $searchDocuments = new View(__DIR__.'/../../views/console/database/search/documents.phtml');
 
         $page
-            ->setParam('db', $projectDB)
+            ->setParam('db', $dbForExternal)
             ->setParam('collection', $collection)
             ->setParam('searchFiles', $searchFiles)
             ->setParam('searchDocuments', $searchDocuments)
