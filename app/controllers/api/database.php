@@ -3,7 +3,7 @@
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\FloatValidator as Float;
+use Utopia\Validator\FloatValidator;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Numeric;
 use Utopia\Validator\Range;
@@ -392,7 +392,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('attributeId', '', new Key(), 'Attribute ID.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new Float(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
+    ->param('default', null, new FloatValidator(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForExternal')
