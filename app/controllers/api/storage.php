@@ -10,6 +10,7 @@ use Utopia\Validator\HexColor;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Filesystem;
 use Appwrite\ClamAV\Network;
+use Appwrite\Database\Validator\CustomId;
 use Utopia\Database\Document;
 use Appwrite\Database\Validator\UID;
 use Utopia\Storage\Storage;
@@ -37,6 +38,7 @@ App::post('/v1/storage/files')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FILE)
+    ->param('fileId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
     ->param('file', [], new File(), 'Binary file.', false)
     ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
@@ -46,7 +48,7 @@ App::post('/v1/storage/files')
     ->inject('user')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($file, $read, $write, $request, $response, $dbForInternal, $user, $audits, $usage) {
+    ->action(function ($fileId, $file, $read, $write, $request, $response, $dbForInternal, $user, $audits, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
@@ -122,6 +124,7 @@ App::post('/v1/storage/files')
         $sizeActual = $device->getFileSize($path);
         
         $file = $dbForInternal->createDocument('files', new Document([
+            '$id' => $fileId == 'unique()' ? $dbForInternal->getId() : $fileId,
             '$read' => (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? [], // By default set read permissions for user
             '$write' => (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? [], // By default set write permissions for user
             'dateCreated' => \time(),
