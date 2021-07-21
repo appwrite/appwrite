@@ -154,6 +154,9 @@ $auth = $this->getParam('auth', []);
                         data-failure-param-alert-text="Failed to create user"
                         data-failure-param-alert-classname="error">
 
+                        <label for="userId">Id</label>
+                        <input type="text" class="full-width" id="userId" name="userId" required autocomplete="off" maxlength="128" />
+
                         <label for="user-name">Name</label>
                         <input type="text" class="full-width" id="user-name" name="name" required autocomplete="off" maxlength="128" />
 
@@ -289,6 +292,9 @@ $auth = $this->getParam('auth', []);
                         data-failure="alert"
                         data-failure-param-alert-text="Failed to create team"
                         data-failure-param-alert-classname="error">
+
+                        <label for="teamId">Id</label>
+                        <input type="text" class="full-width" id="teamId" name="teamId" required autocomplete="off" maxlength="128" />
 
                         <label for="team-name">Name</label>
                         <input type="text" class="full-width" id="team-name" name="name" required autocomplete="off" maxlength="128" />
