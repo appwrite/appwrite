@@ -263,7 +263,7 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
         // TODO@kodumbeats how to depend on $size for Text validator length
         // Ensure attribute default is within required size
         $validator = new Text($size);
-        if (!$validator->isValid($default)) {
+        if (!\is_null($default) && !$validator->isValid($default)) {
             throw new Exception('Length of default attribute exceeds attribute size', 400);
         }
 
