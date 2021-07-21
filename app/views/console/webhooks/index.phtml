@@ -177,6 +177,9 @@ $events = array_keys($this->getParam('events', []));
 
                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
 
+                <label for="webhookId">Id</label>
+                <input type="text" class="full-width" id="webhookId" name="webhookId" required autocomplete="off" maxlength="128" />
+
                 <label for="name">Name</label>
                 <input type="text" class="full-width" id="name" name="name" required autocomplete="off" maxlength="128" />
 
