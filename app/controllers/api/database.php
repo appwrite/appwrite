@@ -3,11 +3,11 @@
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\FloatValidator as Float;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Numeric;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
-use Utopia\Validator\Wildcard;
 use Utopia\Validator\Text;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
@@ -224,37 +224,114 @@ App::delete('/v1/database/collections/:collectionId')
         $response->noContent();
     });
 
-App::post('/v1/database/collections/:collectionId/attributes')
-    ->desc('Create Attribute')
+App::post('/v1/database/collections/:collectionId/attributes/string')
+    ->desc('Create String Attribute')
     ->groups(['api', 'database'])
     ->label('event', 'database.attributes.create')
     ->label('scope', 'attributes.write')
     ->label('sdk.namespace', 'database')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
-    ->label('sdk.method', 'createAttribute')
-    ->label('sdk.description', '/docs/references/database/create-attribute.md')
+    ->label('sdk.method', 'createStringAttribute')
+    ->label('sdk.description', '/docs/references/database/create-attribute-string.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE)
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
-    // TODO@kodumbeats attributeId
-    ->param('id', '', new Key(), 'Attribute ID.')
-    // TODO@kodumbeats whitelist (allowlist)
-    ->param('type', null, new Text(8), 'Attribute type.')
-    // TODO@kodumbeats hide size for ints/floats/bools
-    ->param('size', null, new Integer(), 'Attribute size for text attributes, in number of characters. For integers, floats, or bools, use 0.')
+    ->param('attributeId', '', new Key(), 'Attribute ID.')
+    ->param('size', null, new Integer(), 'Attribute size for text attributes, in number of characters.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new Wildcard(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
+    ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $id, $type, $size, $required, $default, $array, $response, $dbForExternal, $database, $audits) {
+    ->action(function ($collectionId, $attributeId, $size, $required, $default, $array, $response, $dbForExternal, $database, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
+
+        $type = Database::VAR_STRING;
+
+        $collection = $dbForExternal->getCollection($collectionId);
+
+        if ($collection->isEmpty()) {
+            throw new Exception('Collection not found', 404);
+        }
+
+        // TODO@kodumbeats how to depend on $size for Text validator length
+        // Ensure attribute default is within required size
+        $validator = new Text($size);
+        if (!$validator->isValid($default)) {
+            throw new Exception('Length of default attribute exceeds attribute size', 400);
+        }
+
+        // integers are signed by default, and filters are hidden from the endpoint.
+        $signed = true;
+        $filters = [];
+
+        $success = $dbForExternal->addAttributeInQueue($collectionId, $attributeId, $type, $size, $required, $default, $signed, $array, $filters);
+
+        // Database->addAttributeInQueue() does not return a document
+        // So we need to create one for the response
+        //
+        // TODO@kodumbeats should $signed and $filters be part of the response model?
+        $attribute = new Document([
+            '$collection' => $collectionId,
+            '$id' => $attributeId,
+            'type' => $type,
+            'size' => $size,
+            'required' => $required,
+            'default' => $default,
+            'signed' => $signed,
+            'array' => $array,
+            'filters' => $filters
+        ]);
+
+        $database
+            ->setParam('type', CREATE_TYPE_ATTRIBUTE)
+            ->setParam('document', $attribute)
+        ;
+
+        $audits
+            ->setParam('event', 'database.attributes.create')
+            ->setParam('resource', 'database/attributes/'.$attribute->getId())
+            ->setParam('data', $attribute)
+        ;
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($attribute, Response::MODEL_ATTRIBUTE);
+    });
+
+App::post('/v1/database/collections/:collectionId/attributes/integer')
+    ->desc('Create Integer Attribute')
+    ->groups(['api', 'database'])
+    ->label('event', 'database.attributes.create')
+    ->label('scope', 'attributes.write')
+    ->label('sdk.namespace', 'database')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.method', 'createIntegerAttribute')
+    ->label('sdk.description', '/docs/references/database/create-attribute-integer.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE)
+    ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
+    ->param('attributeId', '', new Key(), 'Attribute ID.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('default', null, new Integer(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
+    ->param('array', false, new Boolean(), 'Is attribute an array?', true)
+    ->inject('response')
+    ->inject('dbForExternal')
+    ->inject('database')
+    ->inject('audits')
+    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForExternal, $database, $audits) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForExternal*/
+        /** @var Appwrite\Event\Event $database */
+        /** @var Appwrite\Event\Event $audits */
+
+        $type = Database::VAR_INTEGER;
 
         $collection = $dbForExternal->getCollection($collectionId);
 
@@ -264,9 +341,10 @@ App::post('/v1/database/collections/:collectionId/attributes')
 
         // integers are signed by default, and filters are hidden from the endpoint.
         $signed = true;
+        $size = 0;
         $filters = [];
 
-        $success = $dbForExternal->addAttributeInQueue($collectionId, $id, $type, $size, $required, $default, $signed, $array, $filters);
+        $success = $dbForExternal->addAttributeInQueue($collectionId, $attributeId, $type, $size, $required, $default, $signed, $array, $filters);
 
         // Database->addAttributeInQueue() does not return a document
         // So we need to create one for the response
@@ -274,7 +352,153 @@ App::post('/v1/database/collections/:collectionId/attributes')
         // TODO@kodumbeats should $signed and $filters be part of the response model?
         $attribute = new Document([
             '$collection' => $collectionId,
-            '$id' => $id,
+            '$id' => $attributeId,
+            'type' => $type,
+            'size' => $size,
+            'required' => $required,
+            'default' => $default,
+            'signed' => $signed,
+            'array' => $array,
+            'filters' => $filters
+        ]);
+
+        $database
+            ->setParam('type', CREATE_TYPE_ATTRIBUTE)
+            ->setParam('document', $attribute)
+        ;
+
+        $audits
+            ->setParam('event', 'database.attributes.create')
+            ->setParam('resource', 'database/attributes/'.$attribute->getId())
+            ->setParam('data', $attribute)
+        ;
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($attribute, Response::MODEL_ATTRIBUTE);
+    });
+
+App::post('/v1/database/collections/:collectionId/attributes/float')
+    ->desc('Create Float Attribute')
+    ->groups(['api', 'database'])
+    ->label('event', 'database.attributes.create')
+    ->label('scope', 'attributes.write')
+    ->label('sdk.namespace', 'database')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.method', 'createFloatAttribute')
+    ->label('sdk.description', '/docs/references/database/create-attribute-integer.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE)
+    ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
+    ->param('attributeId', '', new Key(), 'Attribute ID.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('default', null, new Float(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
+    ->param('array', false, new Boolean(), 'Is attribute an array?', true)
+    ->inject('response')
+    ->inject('dbForExternal')
+    ->inject('database')
+    ->inject('audits')
+    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForExternal, $database, $audits) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForExternal*/
+        /** @var Appwrite\Event\Event $database */
+        /** @var Appwrite\Event\Event $audits */
+
+        $type = Database::VAR_FLOAT;
+
+        $collection = $dbForExternal->getCollection($collectionId);
+
+        if ($collection->isEmpty()) {
+            throw new Exception('Collection not found', 404);
+        }
+
+        // integers are signed by default, and filters are hidden from the endpoint.
+        $signed = true;
+        $size = 0;
+        $filters = [];
+
+        $success = $dbForExternal->addAttributeInQueue($collectionId, $attributeId, $type, $size, $required, $default, $signed, $array, $filters);
+
+        // Database->addAttributeInQueue() does not return a document
+        // So we need to create one for the response
+        //
+        // TODO@kodumbeats should $signed and $filters be part of the response model?
+        $attribute = new Document([
+            '$collection' => $collectionId,
+            '$id' => $attributeId,
+            'type' => $type,
+            'size' => $size,
+            'required' => $required,
+            'default' => $default,
+            'signed' => $signed,
+            'array' => $array,
+            'filters' => $filters
+        ]);
+
+        $database
+            ->setParam('type', CREATE_TYPE_ATTRIBUTE)
+            ->setParam('document', $attribute)
+        ;
+
+        $audits
+            ->setParam('event', 'database.attributes.create')
+            ->setParam('resource', 'database/attributes/'.$attribute->getId())
+            ->setParam('data', $attribute)
+        ;
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic2($attribute, Response::MODEL_ATTRIBUTE);
+    });
+
+App::post('/v1/database/collections/:collectionId/attributes/boolean')
+    ->desc('Create Boolean Attribute')
+    ->groups(['api', 'database'])
+    ->label('event', 'database.attributes.create')
+    ->label('scope', 'attributes.write')
+    ->label('sdk.namespace', 'database')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.method', 'createBooleanAttribute')
+    ->label('sdk.description', '/docs/references/database/create-attribute-boolean.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE)
+    ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
+    ->param('attributeId', '', new Key(), 'Attribute ID.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('default', null, new Boolean(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
+    ->param('array', false, new Boolean(), 'Is attribute an array?', true)
+    ->inject('response')
+    ->inject('dbForExternal')
+    ->inject('database')
+    ->inject('audits')
+    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForExternal, $database, $audits) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForExternal*/
+        /** @var Appwrite\Event\Event $database */
+        /** @var Appwrite\Event\Event $audits */
+
+        $type = Database::VAR_BOOLEAN;
+
+        $collection = $dbForExternal->getCollection($collectionId);
+
+        if ($collection->isEmpty()) {
+            throw new Exception('Collection not found', 404);
+        }
+
+        // integers are signed by default, and filters are hidden from the endpoint.
+        $signed = true;
+        $size = 0;
+        $filters = [];
+
+        $success = $dbForExternal->addAttributeInQueue($collectionId, $attributeId, $type, $size, $required, $default, $signed, $array, $filters);
+
+        // Database->addAttributeInQueue() does not return a document
+        // So we need to create one for the response
+        //
+        // TODO@kodumbeats should $signed and $filters be part of the response model?
+        $attribute = new Document([
+            '$collection' => $collectionId,
+            '$id' => $attributeId,
             'type' => $type,
             'size' => $size,
             'required' => $required,
