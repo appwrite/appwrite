@@ -748,20 +748,20 @@ App::post('/v1/functions/:functionId/executions')
         $jwt = ''; // initialize
         if (!empty($user->getId())) { // If userId exists, generate a JWT for function
             
-            $tokens = $user->getAttribute('tokens', []);
-            $session = new Document();
+            $sessions = $user->getAttribute('sessions', []);
+            $current = new Document();
 
-            foreach ($tokens as $token) { /** @var Appwrite\Database\Document $token */
-                if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
-                    $session = $token;
+            foreach ($sessions as $session) { /** @var Appwrite\Database\Document $session */
+                if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                    $current = $session;
                 }
             }
 
-            if(!$session->isEmpty()) {
+            if(!$current->isEmpty()) {
                 $jwtObj = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
                 $jwt = $jwtObj->encode([
                     'userId' => $user->getId(),
-                    'sessionId' => $session->getId(),
+                    'sessionId' => $current->getId(),
                 ]);
             }
         }
