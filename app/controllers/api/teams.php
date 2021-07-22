@@ -34,12 +34,11 @@ App::post('/v1/teams')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TEAM)
     ->param('teamId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
-    ->param('name', null, new Text(128), 'Team name. Max length: 128 chars.')
     ->param('roles', ['owner'], new ArrayList(new Key()), 'Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.', true)
     ->inject('response')
     ->inject('user')
     ->inject('dbForInternal')
-    ->action(function ($teamId, $name, $roles, $response, $user, $dbForInternal) {
+    ->action(function ($teamId, $roles, $response, $user, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForInternal */
@@ -54,7 +53,6 @@ App::post('/v1/teams')
             '$id' => $teamId ,
             '$read' => ['team:'.$teamId],
             '$write' => ['team:'.$teamId .'/owner'],
-            'name' => $name,
             'sum' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
             'dateCreated' => \time(),
         ]));

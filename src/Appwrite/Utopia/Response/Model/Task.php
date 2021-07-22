@@ -27,12 +27,6 @@ class Task extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('name', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Task name.',
-                'default' => '',
-                'example' => 'My Task',
-            ])
             ->addRule('security', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Indicated if SSL / TLS Certificate verification is enabled.',

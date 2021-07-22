@@ -10,7 +10,6 @@ $collections = [
     'projects' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'projects',
-        'name' => 'Projects',
         'attributes' => [
             [
                 '$id' => 'teamId',
@@ -214,7 +213,6 @@ $collections = [
     'users' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'users',
-        'name' => 'Users',
         'attributes' => [
             [
                 '$id' => 'name',
@@ -363,7 +361,6 @@ $collections = [
     'sessions' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'sessions',
-        'name' => 'Sessions',
         'attributes' => [
             [
                 '$id' => 'userId',
@@ -611,19 +608,7 @@ $collections = [
     'teams' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'teams',
-        'name' => 'Teams',
         'attributes' => [
-            [
-                '$id' => 'name',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 128,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
             [
                 '$id' => 'dateCreated',
                 'type' => Database::VAR_INTEGER,
@@ -661,7 +646,6 @@ $collections = [
     'memberships' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'memberships',
-        'name' => 'Memberships',
         'attributes' => [
             [
                 '$id' => 'teamId',
@@ -769,7 +753,6 @@ $collections = [
     'files' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'files',
-        'name' => 'Files',
         'attributes' => [
             [
                 '$id' => 'dateCreated',
@@ -948,7 +931,6 @@ $collections = [
     'functions' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'functions',
-        'name' => 'Functions',
         'attributes' => [
             [
                 '$id' => 'execute',
@@ -1090,7 +1072,6 @@ $collections = [
     'tags' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'tags',
-        'name' => 'Tags',
         'attributes' => [
             [
                 '$id' => 'dateCreated',
@@ -1163,7 +1144,6 @@ $collections = [
     'executions' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'executions',
-        'name' => 'Executions',
         'attributes' => [
             [
                 '$id' => 'dateCreated',
@@ -1280,7 +1260,6 @@ $collections = [
     'certificates' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'certificates',
-        'name' => 'Certificates',
         'attributes' => [
             [
                 '$id' => 'domain',
