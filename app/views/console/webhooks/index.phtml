@@ -55,9 +55,6 @@ $events = array_keys($this->getParam('events', []));
                         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                         <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$id}}" />
 
-                        <label data-ls-attrs="for=name-{{webhook.$id}}">Name</label>
-                        <input type="text" class="full-width" data-ls-attrs="id=name-{{webhook.$id}}" name="name" required autocomplete="off" data-ls-bind="{{webhook.name}}" maxlength="128" />
-
                         <section data-forms-select-all>
                             <label data-ls-attrs="for=events-{{webhook.$id}}">Events</label>
                             <div class="row responsive thin">
@@ -142,7 +139,7 @@ $events = array_keys($this->getParam('events', []));
                     <button class="danger reverse">Delete</button>
                 </form>
 
-                <span data-ls-bind="{{webhook.name}}"></span> &nbsp; (<span data-ls-bind="{{webhook.events.length}}"></span> events)
+                <span data-ls-bind="{{webhook.$id}}"></span> &nbsp; (<span data-ls-bind="{{webhook.events.length}}"></span> events)
                 <span data-ls-if="false === {{webhook.security}}">
                     &nbsp; <small class="text-danger">(SSL/TLS Disabled)</small>
                 </span>
@@ -179,9 +176,6 @@ $events = array_keys($this->getParam('events', []));
 
                 <label for="webhookId">Id</label>
                 <input type="text" class="full-width" id="webhookId" name="webhookId" required autocomplete="off" maxlength="128" />
-
-                <label for="name">Name</label>
-                <input type="text" class="full-width" id="name" name="name" required autocomplete="off" maxlength="128" />
 
                 <section data-forms-select-all>
                     <label for="events">Events</label>
