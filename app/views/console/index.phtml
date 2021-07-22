@@ -38,7 +38,7 @@ $home = $this->getParam('home', '');
         <ul data-ls-loop="console-projects.projects" data-ls-as="project" data-ls-append="" class="tiles cell-3">
             <li class="margin-bottom">
                 <a data-ls-attrs="href=/console/home?project={{project.$id}}" class="box">
-                    <div data-ls-bind="{{project.name}}" class="text-one-liner margin-bottom-tiny text-bold">&nbsp;</div>
+                    <div data-ls-bind="{{project.$id}}" class="text-one-liner margin-bottom-tiny text-bold">&nbsp;</div>
                     
                     <p data-ls-if="({{project.platforms.length}})" class="text-fade text-size-small" data-ls-bind="{{project.platforms.length}} apps"></p>
                     <p data-ls-if="(!{{project.platforms.length}})" class="text-fade text-size-small">&nbsp;</p>
