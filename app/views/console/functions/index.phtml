@@ -45,7 +45,7 @@ $runtimes = $this->getParam('runtimes', []);
 
                                 <a data-ls-attrs="href=/console/functions/function?id={{function.$id}}&project={{router.params.project}}" class="button pull-end">Settings</a>
 
-                                <span data-ls-bind="{{function.name}}"></span>
+                                <span data-ls-bind="{{function.$id}}"></span>
 
                                 <p class="text-fade margin-bottom-no" data-ls-bind="{{function.runtime|runtimeName}} {{function.runtime|runtimeVersion}}"></p>
                             </li>
