@@ -511,6 +511,104 @@ trait DatabaseBase
         return $data;
     }
 
+    public function testInvalidDocumentStructure()
+    {
+        $collection = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'name' => 'invalidDocumentStructure',
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+        ]);
+
+        $this->assertEquals($collection['headers']['status-code'], 201);
+        $this->assertEquals($collection['body']['name'], 'invalidDocumentStructure');
+
+        $collectionId = $collection['body']['$id'];
+
+        $email = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'email',
+            'size' => 256,
+            'required' => false,
+            'format' => 'email',
+        ]);
+
+        $ip = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'ip',
+            'size' => 64,
+            'required' => false,
+            'format' => 'ip',
+        ]);
+
+        $url = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'url',
+            'size' => 256,
+            'required' => false,
+            'format' => 'url',
+        ]);
+
+        $this->assertEquals($email['headers']['status-code'], 201);
+        $this->assertEquals($ip['headers']['status-code'], 201);
+        $this->assertEquals($url['headers']['status-code'], 201);
+
+        // wait for worker to add attributes
+        sleep(10);
+
+        $badEmail = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'email' => 'user@@example.com',
+            ],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
+        ]);
+
+        $badIp = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'ip' => '1.1.1.1.1',
+            ],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
+        ]);
+
+        $badUrl = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'url' => 'example...com',
+            ],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
+        ]);
+
+        $this->assertEquals(400, $badEmail['headers']['status-code']);
+        $this->assertEquals(400, $badIp['headers']['status-code']);
+        $this->assertEquals(400, $badUrl['headers']['status-code']);
+        $this->assertEquals('Invalid document structure: Attribute "email" has invalid format. Value must be a valid email address', $badEmail['body']['message']);
+        $this->assertEquals('Invalid document structure: Attribute "ip" has invalid format. Value must be a valid IP address', $badIp['body']['message']);
+        $this->assertEquals('Invalid document structure: Attribute "url" has invalid format. Value must be a valid URL', $badUrl['body']['message']);
+    }
+
     /**
      * @depends testDeleteDocument
      */
