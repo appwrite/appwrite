@@ -1,3 +1,9 @@
+# Version 0.9.2
+
+## Bugs
+
+- Fixed JWT session validation (#1408)
+
 # Version 0.9.1
 
 ## Bugs
