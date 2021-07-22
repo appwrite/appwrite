@@ -18,6 +18,9 @@ use Utopia\Database\Validator\Queries as QueriesValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Appwrite\Network\Validator\Email;
+use Appwrite\Network\Validator\IP;
+use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -241,12 +244,13 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
     ->param('size', null, new Integer(), 'Attribute size for text attributes, in number of characters.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
+    ->param('format', null, new Whitelist(['email', 'ip', 'url']), 'Optional format validation of attribute. Must be one of (email, ip, url).', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $attributeId, $size, $required, $default, $array, $response, $dbForExternal, $database, $audits) {
+    ->action(function ($collectionId, $attributeId, $size, $required, $default, $format, $array, $response, $dbForExternal, $database, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
@@ -271,7 +275,7 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
         $signed = true;
         $filters = [];
 
-        $success = $dbForExternal->addAttributeInQueue($collectionId, $attributeId, $type, $size, $required, $default, $signed, $array, $filters);
+        $success = $dbForExternal->addAttributeInQueue($collectionId, $attributeId, $type, $size, $required, $default, $signed, $array, $format, $filters);
 
         // Database->addAttributeInQueue() does not return a document
         // So we need to create one for the response
@@ -286,6 +290,7 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
             'default' => $default,
             'signed' => $signed,
             'array' => $array,
+            'format' => $format,
             'filters' => $filters
         ]);
 
@@ -344,7 +349,7 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
         $size = 0;
         $filters = [];
 
-        $success = $dbForExternal->addAttributeInQueue($collectionId, $attributeId, $type, $size, $required, $default, $signed, $array, $filters);
+        $success = $dbForExternal->addAttributeInQueue($collectionId, $attributeId, $type, $size, $required, $default, $signed, $array, /*format*/ null, $filters);
 
         // Database->addAttributeInQueue() does not return a document
         // So we need to create one for the response
@@ -417,7 +422,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
         $size = 0;
         $filters = [];
 
-        $success = $dbForExternal->addAttributeInQueue($collectionId, $attributeId, $type, $size, $required, $default, $signed, $array, $filters);
+        $success = $dbForExternal->addAttributeInQueue($collectionId, $attributeId, $type, $size, $required, $default, $signed, $array, /*$format*/ null, $filters);
 
         // Database->addAttributeInQueue() does not return a document
         // So we need to create one for the response
@@ -490,7 +495,7 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
         $size = 0;
         $filters = [];
 
-        $success = $dbForExternal->addAttributeInQueue($collectionId, $attributeId, $type, $size, $required, $default, $signed, $array, $filters);
+        $success = $dbForExternal->addAttributeInQueue($collectionId, $attributeId, $type, $size, $required, $default, $signed, $array, /*$format*/ null, $filters);
 
         // Database->addAttributeInQueue() does not return a document
         // So we need to create one for the response
@@ -940,8 +945,38 @@ App::post('/v1/database/collections/:collectionId/documents')
         $data['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; //  By default set read permissions for user
         $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; //  By default set write permissions for user
 
+        /** @var string[] $formats */
+        $formats = [];
+        \array_walk($collection->getAttributes()['attributes'], function ($attribute) use (&$formats) {
+            switch ($attribute['format']) {
+                case 'email':
+                    $formats[] = [
+                        'name' => 'email',
+                        'validator' => new Email(),
+                        'type' => Database::VAR_STRING,
+                    ];
+                    break;
+                case 'ip':
+                    $formats[] = [
+                        'name' => 'ip',
+                        'validator' => new IP(),
+                        'type' => Database::VAR_STRING,
+                    ];
+                    break;
+                case 'url':
+                    $formats[] = [
+                        'name' => 'url',
+                        'validator' => new URL(),
+                        'type' => Database::VAR_STRING,
+                    ];
+                    break;
+                default:
+                    break;
+            }
+        }); 
+
         try {
-            $document = $dbForExternal->createDocument($collectionId, new Document($data));
+            $document = $dbForExternal->createDocument($collectionId, new Document($data), $formats);
         } catch (StructureException $exception) {
             throw new Exception($exception->getMessage(), 400);
         }
@@ -1098,8 +1133,38 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         $data['$read'] = (is_null($read)) ? ($document->getRead() ?? []) : $read; // By default inherit read permissions
         $data['$write'] = (is_null($write)) ? ($document->getWrite() ?? []) : $write; // By default inherit write permissions
 
+        /** @var string[] $formats */
+        $formats = [];
+        \array_walk($collection->getAttribute('attributes', []), function (Document $attribute) {
+            switch ($attribute->getAttribute('format', '')) {
+                case 'email':
+                    $formats[] = [
+                        'name' => 'email',
+                        'validator' => new Email(),
+                        'type' => Database::VAR_STRING,
+                    ];
+                    break;
+                case 'ip':
+                    $formats[] = [
+                        'name' => 'ip',
+                        'validator' => new IP(),
+                        'type' => Database::VAR_STRING,
+                    ];
+                    break;
+                case 'url':
+                    $formats[] = [
+                        'name' => 'url',
+                        'validator' => new URL(),
+                        'type' => Database::VAR_STRING,
+                    ];
+                    break;
+                default:
+                    break;
+            }
+        }); 
+
         try {
-            $document = $dbForExternal->updateDocument($collection->getId(), $document->getId(), new Document($data));
+            $document = $dbForExternal->updateDocument($collection->getId(), $document->getId(), new Document($data), $formats);
         } catch (AuthorizationException $exception) {
             throw new Exception('Unauthorized permissions', 401);
         } catch (StructureException $exception) {
