@@ -582,7 +582,30 @@ class FunctionsCustomServerTest extends Scope
         
         $this->assertEquals(201, $execution['headers']['status-code']);
 
+        $executionId = $execution['body']['$id'] ?? '';
+        
         sleep(10);
+
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions/'.$executionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $output = json_decode($executions['body']['stdout'], true);
+
+        $this->assertEquals(200, $executions['headers']['status-code']);
+        $this->assertEquals('completed', $executions['body']['status']);
+        $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
+        $this->assertEquals('Test '.$name, $output['APPWRITE_FUNCTION_NAME']);
+        $this->assertEquals($tagId, $output['APPWRITE_FUNCTION_TAG']);
+        $this->assertEquals('http', $output['APPWRITE_FUNCTION_TRIGGER']);
+        $this->assertEquals('PHP', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
+        $this->assertEquals('8.0', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
+        $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT']);
+        $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT_DATA']);
+        $this->assertEquals('foobar', $output['APPWRITE_FUNCTION_DATA']);
+        $this->assertEquals('', $output['APPWRITE_FUNCTION_USER_ID']);
+        $this->assertEmpty($output['APPWRITE_FUNCTION_JWT']);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
             'content-type' => 'application/json',
