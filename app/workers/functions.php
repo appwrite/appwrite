@@ -433,9 +433,9 @@ class FunctionsV1 extends Worker
             }
 
             $exitCodeUntar = Console::execute("docker exec ".
-            $container.
-            " sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz'"
-            , '', $stdout, $stderr, 60);
+                $container.
+                " sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz'"
+                , '', $stdout, $stderr, 60);
 
             if($exitCodeUntar !== 0) {
                 throw new Exception('Failed to extract tar: '.$stderr);
