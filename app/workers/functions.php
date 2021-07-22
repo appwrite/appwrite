@@ -13,6 +13,10 @@ use Swoole\Runtime;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Orchestration\Orchestration;
+use Utopia\Orchestration\Adapter\DockerAPI;
+use Utopia\Orchestration\Container;
+use Utopia\Orchestration\Exceptions\TimeoutException;
 
 require_once __DIR__.'/../workers.php';
 
@@ -23,39 +27,24 @@ Console::success(APP_NAME.' functions worker v1 has started');
 
 $runtimes = Config::getParam('runtimes');
 
+$dockerUser = App::getEnv('DOCKERHUB_PULL_USERNAME', null);
+$dockerPass = App::getEnv('DOCKERHUB_PULL_PASSWORD', null);
+$orchestration = new Orchestration(new DockerAPI($dockerUser, $dockerPass));
+
 /**
  * Warmup Docker Images
  */
 $warmupStart = \microtime(true);
 
-Co\run(function() use ($runtimes) {  // Warmup: make sure images are ready to run fast 🚀
-
-    $dockerUser = App::getEnv('DOCKERHUB_PULL_USERNAME', null);
-    $dockerPass = App::getEnv('DOCKERHUB_PULL_PASSWORD', null);
-
-    if($dockerUser) {
-        $stdout = '';
-        $stderr = '';
-
-        Console::execute('docker login --username '.$dockerUser.' --password-stdin', $dockerPass, $stdout, $stderr);
-        Console::log('Docker Login'. $stdout.$stderr);
-    }
-
+Co\run(function() use ($runtimes, $orchestration) {  // Warmup: make sure images are ready to run fast 🚀
     foreach($runtimes as $runtime) {
-        go(function() use ($runtime) {
-            $stdout = '';
-            $stderr = '';
-        
+        go(function() use ($runtime, $orchestration) {
             Console::info('Warming up '.$runtime['name'].' '.$runtime['version'].' environment...');
-        
-            Console::execute('docker pull '.$runtime['image'], '', $stdout, $stderr);
-        
-            if(!empty($stdout)) {
-                Console::log($stdout);
-            }
-        
-            if(!empty($stderr)) {
-                Console::error($stderr);
+            try {
+                $orchestration->pull($runtime['image']);
+                Console::success("Successfully Warmed up {$runtime['name']} {$runtime['version']}!");
+            } catch (Exception $e) {
+                Console::error($e);
             }
         });
     }
@@ -74,40 +63,21 @@ $stderr = '';
 
 $executionStart = \microtime(true);
 
-$exitCode = Console::execute('docker ps --all --format "name={{.Names}}&status={{.Status}}&labels={{.Labels}}" --filter label=appwrite-type=function'
-    , '', $stdout, $stderr, 30);
+$response = $orchestration->list();
+
+$list = [];
+
+array_map(function($value) use (&$list) {
+    if (!empty($value->labels["appwrite-type"])) {
+        if ($value->labels["appwrite-type"] == "function") {
+            $list[$value->name] = $value;
+        }
+    }
+}, $response);
 
 $executionEnd = \microtime(true);
 
-$list = [];
-$stdout = \explode("\n", $stdout);
-
-\array_map(function($value) use (&$list) {
-    $container = [];
-
-    \parse_str($value, $container);
-
-    if(isset($container['name'])) {
-        $container = [
-            'name' => $container['name'],
-            'online' => (\substr($container['status'], 0, 2) === 'Up'),
-            'status' => $container['status'],
-            'labels' => $container['labels'],
-        ];
-
-        \array_map(function($value) use (&$container) {
-            $value = \explode('=', $value);
-            
-            if(isset($value[0]) && isset($value[1])) {
-                $container[$value[0]] = $value[1];
-            }
-        }, \explode(',', $container['labels']));
-
-        $list[$container['name']] = $container;
-    }
-}, $stdout);
-
-Console::info(count($list)." functions listed in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
+Console::info(count($list)." functions listed in " . ($executionEnd - $executionStart) . " seconds");
 
 /**
  * 1. Get event args - DONE
@@ -297,6 +267,7 @@ class FunctionsV1 extends Worker
     public function execute(string $trigger, string $projectId, string $executionId, Database $database, Document $function, string $event = '', string $eventData = '', string $data = '', array $webhooks = [], string $userId = '', string $jwt = ''): void
     {
         global $list;
+        global $orchestration;
 
         $runtimes = Config::getParam('runtimes');
 
@@ -355,12 +326,6 @@ class FunctionsV1 extends Worker
             'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
         ]);
 
-        \array_walk($vars, function (&$value, $key) {
-            $key = $this->filterEnvKey($key);
-            $value = \escapeshellarg((empty($value)) ? '' : $value);
-            $value = "--env {$key}={$value}";
-        });
-
         $tagPath = $tag->getAttribute('path', '');
         $tagPathTarget = '/tmp/project-'.$projectId.'/'.$tag->getId().'/code.tar.gz';
         $tagPathTargetDir = \pathinfo($tagPathTarget, PATHINFO_DIRNAME);
@@ -383,13 +348,11 @@ class FunctionsV1 extends Worker
             }
         }
 
-        if(isset($list[$container]) && !$list[$container]['online']) { // Remove conatiner if not online
+        if(isset($list[$container]) &&  !(\substr($list[$container]->status, 0, 2) === 'Up')) { // Remove conatiner if not online
             $stdout = '';
             $stderr = '';
-            
-            if(Console::execute("docker rm {$container}", '', $stdout, $stderr, 30) !== 0) {
-                throw new Exception('Failed to remove offline container: '.$stderr);
-            }
+
+            $orchestration->remove($container);
 
             unset($list[$container]);
         }
@@ -412,39 +375,45 @@ class FunctionsV1 extends Worker
             $cpus = App::getEnv('_APP_FUNCTIONS_CPUS', '');
             $memory = App::getEnv('_APP_FUNCTIONS_MEMORY', '');
             $swap = App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '');
-            $exitCode = Console::execute("docker run ".
-                " -d".
-                " --entrypoint=\"\"".
-                (empty($cpus) ? "" : (" --cpus=".$cpus)).
-                (empty($memory) ? "" : (" --memory=".$memory."m")).
-                (empty($swap) ? "" : (" --memory-swap=".$swap."m")).
-                " --name={$container}".
-                " --label appwrite-type=function".
-                " --label appwrite-created={$executionTime}".
-                " --volume {$tagPathTargetDir}:/tmp:rw".
-                " --workdir /usr/local/src".
-                " ".\implode(" ", $vars).
-                " {$runtime['image']}".
-                " sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'"
-            , '', $stdout, $stderr, 30);
+
+            $orchestration->setCpus($cpus);
+            $orchestration->setMemory($memory);
+            $orchestration->setSwap($swap);
+
+            \array_walk($vars, function (string &$value, string $key) {
+                $value = strval($value);
+            });
+
+            $response = $orchestration->run(
+                $runtime['image'],
+                $container,
+                "",
+                array(
+                    'sh',
+                    '-c',
+                    'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'
+                ),
+                "/usr/local/src",
+                array(),
+                array(),
+                $tagPathTargetDir,
+                array(
+                    "appwrite-type" => "function",
+                    "appwrite-created" => "{$executionTime}"
+                ));
 
             $executionEnd = \microtime(true);
-    
-            if($exitCode !== 0) {
-                throw new Exception('Failed to create function environment: '.$stderr);
-            }
 
-            $list[$container] = [
-                'name' => $container,
-                'online' => true,
-                'status' => 'Up',
-                'labels' => [
-                    'appwrite-type' => 'function',
-                    'appwrite-created' => $executionTime,
-                ],
-            ];
+            $list[$container] = new Container();
+            
+            $list[$container]->name = $container;
+            $list[$container]->status = "Up";
+            $list[$container]->labels = array(
+                'appwrite-type' => 'function',
+                'appwrite-created' => "{$executionTime}",
+            );
 
-            Console::info("Function created in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
+            Console::info("Function created in " . ($executionEnd - $executionStart) . " seconds");
         }
         else {
             Console::info('Container is ready to run');
@@ -454,25 +423,30 @@ class FunctionsV1 extends Worker
         $stderr = '';
 
         $executionStart = \microtime(true);
-        
-        $exitCode = Console::execute("docker exec ".\implode(" ", $vars)." {$container} {$command}"
-            , '', $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
+
+        $exitCode = 0;
+
+        try {
+            $exitCode = $orchestration->execute($container, $orchestration->parseCommandString($command), $stdout, $stderr, $vars, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
+        } catch (TimeoutException $e) {
+            $exitCode = 0;
+        }
 
         $executionEnd = \microtime(true);
         $executionTime = ($executionEnd - $executionStart);
-        $functionStatus = ($exitCode === 0) ? 'completed' : 'failed';
+        $functionStatus = $exitCode ? 'completed' : 'failed';
 
-        Console::info("Function executed in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
+        Console::info("Function executed in " . ($executionEnd - $executionStart) . " seconds, status: {$functionStatus} ");
 
         Authorization::disable();
         
         $execution = $database->updateDocument(array_merge($execution->getArrayCopy(), [
             'tagId' => $tag->getId(),
             'status' => $functionStatus,
-            'exitCode' => $exitCode,
+            'exitCode' => ($exitCode ? 0 : 1),
             'stdout' => \mb_substr($stdout, -4000), // log last 4000 chars output
             'stderr' => \mb_substr($stderr, -4000), // log last 4000 chars output
-            'time' => $executionTime,
+            'time' => $executionTime
         ]));
         
         Authorization::reset();
@@ -520,6 +494,7 @@ class FunctionsV1 extends Worker
     public function cleanup(): void
     {
         global $list;
+        global $orchestration;
 
         Console::success(count($list).' running containers counted');
 
@@ -529,19 +504,17 @@ class FunctionsV1 extends Worker
             Console::info('Starting containers cleanup');
 
             \uasort($list, function ($item1, $item2) {
-                return (int)($item1['appwrite-created'] ?? 0) <=> (int)($item2['appwrite-created'] ?? 0);
+                return (int)($item1->labels['appwrite-created'] ?? 0) <=> (int)($item2->labels['appwrite-created'] ?? 0);
             });
 
             while(\count($list) > $max) {
                 $first = \array_shift($list);
-                $stdout = '';
-                $stderr = '';
 
-                if(Console::execute("docker rm -f {$first['name']}", '', $stdout, $stderr, 30) !== 0) {
-                    Console::error('Failed to remove container: '.$stderr);
-                }
-                else {
-                    Console::info('Removed container: '.$first['name']);
+                try {
+                    $orchestration->remove($first->name, true);
+                    Console::info('Removed container: '.$first->name);
+                } catch (Exception $e) {
+                    Console::error('Failed to remove container: '.$e);
                 }
             }
         }
