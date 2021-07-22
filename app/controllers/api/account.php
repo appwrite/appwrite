@@ -252,11 +252,7 @@ App::post('/v1/account/sessions')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
-        $countries = $locale->getText('countries');
-
-        $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
-        ? $countries[strtoupper($session->getAttribute('countryCode'))]
-        : $locale->getText('locale.country.unknown');
+        $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
@@ -880,16 +876,12 @@ App::get('/v1/account/sessions')
         /** @var Utopia\Locale\Locale $locale */
 
         $sessions = $user->getAttribute('sessions', []);
-        $countries = $locale->getText('countries');
         $current = Auth::sessionVerify($sessions, Auth::$secret);
 
         foreach ($sessions as $key => $session) { 
             /** @var Document $session */
 
-            $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
-            ? $countries[strtoupper($session->getAttribute('countryCode'))]
-            : $locale->getText('locale.country.unknown');
-
+            $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
             $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', ($current == $session->getId()) ? true : false);
 
@@ -931,7 +923,6 @@ App::get('/v1/account/logs')
         $adapter->setNamespace('app_'.$project->getId());
 
         $audit = new Audit($adapter);
-        $countries = $locale->getText('countries');
 
         $logs = $audit->getLogsByUserAndActions($user->getId(), [
             'account.create',
@@ -967,8 +958,8 @@ App::get('/v1/account/logs')
             $record = $geodb->get($log['ip']);
 
             if ($record) {
-                $output[$i]['countryCode'] = (isset($countries[$record['country']['iso_code']])) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
+                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), '--');
+                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));        
             } else {
                 $output[$i]['countryCode'] = '--';
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');

@@ -1,0 +1,1274 @@
+[
+    {
+        "term": "settings.inspire",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "settings.locale",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "settings.direction",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "account.emails.team",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "account.emails.verification.title",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "account.emails.verification.body",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "account.emails.recovery.title",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "account.emails.recovery.body",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "account.emails.invitation.title",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "account.emails.invitation.body",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "locale.country.unknown",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.af",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ao",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.al",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ad",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ae",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ar",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.am",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ag",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.au",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.at",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.az",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.bi",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.be",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.bj",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.bf",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.bd",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.bg",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.bh",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.bs",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ba",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.by",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.bz",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.bo",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.br",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.bb",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.bn",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.bt",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.bw",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.cf",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ca",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ch",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.cl",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.cn",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ci",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.cm",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.cd",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.cg",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.co",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.km",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.cv",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.cr",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.cu",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.cy",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.cz",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.de",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.dj",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.dm",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.dk",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.do",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.dz",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ec",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.eg",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.er",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.es",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ee",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.et",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.fi",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.fj",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.fr",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.fm",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ga",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.gb",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ge",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.gh",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.gn",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.gm",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.gw",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.gq",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.gr",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.gd",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.gt",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.gy",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.hn",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.hr",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ht",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.hu",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.id",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.in",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ie",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ir",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.iq",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.is",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.il",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.it",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.jm",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.jo",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.jp",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.kz",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ke",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.kg",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.kh",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ki",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.kn",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.kr",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.kw",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.la",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.lb",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.lr",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ly",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.lc",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.li",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.lk",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ls",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.lt",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.lu",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.lv",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ma",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.mc",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.md",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.mg",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.mv",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.mx",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.mh",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.mk",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ml",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.mt",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.mm",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.me",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.mn",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.mz",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.mr",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.mu",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.mw",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.my",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.na",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ne",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ng",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ni",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.nl",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.no",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.np",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.nr",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.nz",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.om",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.pk",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.pa",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.pe",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ph",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.pw",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.pg",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.pl",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.kp",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.pt",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.py",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.qa",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ro",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ru",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.rw",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.sa",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.sd",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.sn",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.sg",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.sb",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.sl",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.sv",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.sm",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.so",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.rs",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ss",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.st",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.sr",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.sk",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.si",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.se",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.sz",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.sc",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.sy",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.td",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.tg",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.th",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.tj",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.tm",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.tl",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.to",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.tt",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.tn",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.tr",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.tv",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.tz",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ug",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ua",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.uy",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.us",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.uz",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.va",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.vc",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ve",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.vn",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.vu",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ws",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.ye",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.za",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.zm",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "countries.zw",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "continents.af",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "continents.an",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "continents.as",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "continents.eu",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "continents.na",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "continents.oc",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    },
+    {
+        "term": "continents.sa",
+        "context": "",
+        "comment": "",
+        "reference": ""
+    }
+]

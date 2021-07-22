@@ -200,14 +200,12 @@ App::get('/v1/users/:userId/sessions')
         }
 
         $sessions = $user->getAttribute('sessions', []);
-        $countries = $locale->getText('countries');
 
         foreach ($sessions as $key => $session) { 
             /** @var Document $session */
 
-            $session->setAttribute('countryName', (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
-                ? $countries[strtoupper($session->getAttribute('countryCode'))]
-                : $locale->getText('locale.country.unknown'));
+            $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+            $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', false);
 
             $sessions[$key] = $session;
@@ -255,8 +253,6 @@ App::get('/v1/users/:userId/logs')
         $adapter->setNamespace('app_'.$project->getId());
 
         $audit = new Audit($adapter);
-        
-        $countries = $locale->getText('countries');
 
         $logs = $audit->getLogsByUserAndActions($user->getId(), [
             'account.create',
@@ -322,8 +318,8 @@ App::get('/v1/users/:userId/logs')
             $record = $geodb->get($log['ip']);
 
             if ($record) {
-                $output[$i]['countryCode'] = (isset($countries[$record['country']['iso_code']])) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
+                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), '--');
+                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
             } else {
                 $output[$i]['countryCode'] = '--';
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');

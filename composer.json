@@ -45,7 +45,7 @@
         "utopia-php/cache": "0.2.*",
         "utopia-php/cli": "0.11.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/locale": "0.3.*",
+        "utopia-php/locale": "dev-feat-accept-file-path",
         "utopia-php/registry": "0.5.*",
         "utopia-php/preloader": "0.2.*",
         "utopia-php/domains": "1.1.*",
@@ -61,6 +61,13 @@
         "adhocore/jwt": "1.1.2",
         "slickdeals/statsd": "3.1.0"
     },
+    "repositories": [
+        {
+            "url": "https://github.com/christyjacob4/locale.git",
+            "type": "git"
+        }
+    ],
+
     "require-dev": {
         "appwrite/sdk-generator": "0.12.0",
         "swoole/ide-helper": "4.6.7",
