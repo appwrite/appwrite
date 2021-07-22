@@ -31,42 +31,10 @@
     <div class="zone xl">
         <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
             <li data-state="/console/users/teams/team?id={{router.params.id}}&project={{router.params.project}}">
-                <h2>Overview</h2>
+                <h2>Members</h2>
                 
                 <div class="row responsive margin-top-negative">
                     <div class="col span-8 margin-bottom-large">
-                        <label>&nbsp;</label>
-
-                        <div class="box margin-bottom-large">
-                            <form
-                                data-analytics
-                                data-analytics-activity
-                                data-analytics-event="submit"
-                                data-analytics-category="console"
-                                data-analytics-label="Update Team"
-                                data-service="teams.update"
-                                data-scope="sdk"
-                                data-event="submit"
-                                data-success="alert,trigger"
-                                data-success-param-alert-text="Updated team successfully"
-                                data-success-param-trigger-events="teams.update"
-                                data-failure="alert"
-                                data-failure-param-alert-text="Failed to update team"
-                                data-failure-param-alert-classname="error">
-
-                                <input data-ls-attrs="id=team-id-{{team.$id}}" name="teamId" type="hidden" disabled data-ls-bind="{{team.$id}}" />
-
-                                <label for="name">Name</label>
-                                <input data-ls-attrs="id=team-name-{{team.$id}}" name="name" type="text" autocomplete="off" data-ls-bind="{{team.name}}" maxlength="128" />
-
-                                <hr />
-
-                                <button>Update</button>
-                            </form>
-                        </div>
-
-                        <h3 class="margin-bottom">Members</h3>
-
                         <div
                             data-service="teams.getMemberships"
                             data-event="load,teams.create,teams.update,teams.delete,teams.deleteMembership,teams.createMembership"
@@ -146,6 +114,9 @@
 
                                     <input name="teamId" id="team-teamId" type="hidden" data-ls-bind="{{team.$id}}">
                                     <input name="url" type="hidden" data-ls-bind="{{env.ENDPOINT}}" />
+                                    
+                                    <label for="membershipId">ID</label>
+                                    <input name="membershipId" id="membershipId" type="text" required>
                                     
                                     <label for="email">Email</label>
                                     <input name="email" id="email" type="email" autocomplete="email" required>

@@ -25,7 +25,7 @@
         <table class="full vertical">
             <thead>
                 <tr>
-                    <th>Name</th>
+                    <th>ID</th>
                     <th width="140">Status</th>
                     <th width="180">Schedule</th>
                     <th width="140"></th>
@@ -35,7 +35,7 @@
                 <tr>
                     <td>
                         <div class="margin-bottom-tiny text-one-liner">
-                            <span data-ls-attrs="title={{task.name}} ({{task.failures}} errors)" data-ls-bind="{{task.name}}"></span>
+                            <span data-ls-attrs="title={{task.$id}} ({{task.failures}} errors)" data-ls-bind="{{task.$id}}"></span>
 
                             <span data-ls-if="false === {{task.security}}">
                                 &nbsp; <span class="text-danger">SSL/TLS Disabled</span>
@@ -95,9 +95,6 @@
 
                                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                                 <input type="hidden" name="taskId" data-ls-bind="{{task.$id}}" />
-
-                                <label data-ls-attrs="for=name-{{task.$id}}">Name</label>
-                                <input type="text" class="full-width" data-ls-attrs="id=name-{{task.$id}}" name="name" required autocomplete="off" data-ls-bind="{{task.name}}" maxlength="128" />
 
                                 <label data-ls-attrs="for=status-{{task.$id}}" class="margin-bottom">Status
                                     <div class="margin-top-small">
@@ -261,9 +258,6 @@
 
                 <label for="taskId">Id</label>
                 <input type="text" class="full-width" id="taskId" name="taskId" required autocomplete="off" maxlength="128" />
-
-                <label for="name">Name</label>
-                <input type="text" class="full-width" id="name" name="name" required autocomplete="off" maxlength="128" />
 
                 <label data-ls-attrs="for=status" class="margin-bottom">Status
                     <div class="margin-top-small">

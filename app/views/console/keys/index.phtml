@@ -51,9 +51,6 @@ $scopes = $this->getParam('scopes', []);
                         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                         <input type="hidden" name="keyId" data-ls-bind="{{key.$id}}" />
 
-                        <label data-ls-attrs="for=name-{{key.$id}}">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different API keys."><i class="icon-question"></i></span></label>
-                        <input type="text" class="full-width" data-ls-attrs="id=name-{{key.$id}}" name="name" required autocomplete="off" data-ls-bind="{{key.name}}" maxlength="128" />
-
                         <section data-forms-select-all>
                             <label data-ls-attrs="for=scopes-{{key.$id}}">Scopes (<a data-ls-attrs="href={{env.HOME}}/docs/keys" target="_blank" rel="noopener">Learn more</a>)</label>
                             <div class="row responsive thin">
@@ -102,7 +99,7 @@ $scopes = $this->getParam('scopes', []);
                 <button class="pull-end desktops-only margin-start-small" data-ls-ui-trigger="key-update-{{key.$id}}">Update</button>
                 <button class="pull-end reverse desktops-only margin-small" data-ls-ui-trigger="key-delete-{{key.$id}}">Delete</button>
 
-                <div class="margin-bottom-tiny"><span data-ls-bind="{{key.name}}"></span> <small>(<span data-ls-bind="{{key.scopes.length}}"></span> scopes granted)</small></div>
+                <div class="margin-bottom-tiny"><span data-ls-bind="{{key.$id}}"></span> <small>(<span data-ls-bind="{{key.scopes.length}}"></span> scopes granted)</small></div>
 
                 <div class="clear">
                     <div data-ui-modal class="modal box close" data-button-text="Show Secret" data-button-class="link pull-start margin-end-small margin-top-tiny">
@@ -156,9 +153,6 @@ $scopes = $this->getParam('scopes', []);
 
                 <label for="keyId">Id <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different API keys."><i class="icon-question"></i></span></label>
                 <input type="text" class="full-width" id="keyId" name="keyId" required autocomplete="off" maxlength="128" />
-
-                <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different API keys."><i class="icon-question"></i></span></label>
-                <input type="text" class="full-width" id="name" name="name" required autocomplete="off" maxlength="128" />
 
                 <section data-forms-select-all>
                     <label for="scopes">Scopes (<a data-ls-attrs="href={{env.HOME}}/docs/keys" target="_blank" rel="noopener">Learn more</a>)</label>

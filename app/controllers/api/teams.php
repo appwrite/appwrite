@@ -142,37 +142,6 @@ App::get('/v1/teams/:teamId')
         $response->dynamic2($team, Response::MODEL_TEAM);
     });
 
-App::put('/v1/teams/:teamId')
-    ->desc('Update Team')
-    ->groups(['api', 'teams'])
-    ->label('event', 'teams.update')
-    ->label('scope', 'teams.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'update')
-    ->label('sdk.description', '/docs/references/teams/update-team.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TEAM)
-    ->param('teamId', '', new UID(), 'Team unique ID.')
-    ->param('name', null, new Text(128), 'Team name. Max length: 128 chars.')
-    ->inject('response')
-    ->inject('dbForInternal')
-    ->action(function ($teamId, $name, $response, $dbForInternal) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
-
-        $team = $dbForInternal->getDocument('teams', $teamId);
-
-        if ($team->isEmpty()) {
-            throw new Exception('Team not found', 404);
-        }
-
-        $team = $dbForInternal->updateDocument('teams', $team->getId(), $team->setAttribute('name', $name));
-
-        $response->dynamic2($team, Response::MODEL_TEAM);
-    });
-
 App::delete('/v1/teams/:teamId')
     ->desc('Delete Team')
     ->groups(['api', 'teams'])
