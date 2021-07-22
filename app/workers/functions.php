@@ -384,7 +384,7 @@ class FunctionsV1 extends Worker
                 $value = strval($value);
             });
 
-            $response = $orchestration->run(
+            $id = $orchestration->run(
                 $runtime['image'],
                 $container,
                 "",
@@ -404,14 +404,13 @@ class FunctionsV1 extends Worker
 
             $executionEnd = \microtime(true);
 
-            $list[$container] = new Container();
-            
-            $list[$container]->name = $container;
-            $list[$container]->status = "Up";
-            $list[$container]->labels = array(
-                'appwrite-type' => 'function',
-                'appwrite-created' => "{$executionTime}",
-            );
+            $list[$container] = new Container($container, 
+                $id, 
+                "Up", 
+                array(
+                    'appwrite-type' => 'function',
+                    'appwrite-created' => "{$executionTime}",
+                ));
 
             Console::info("Function created in " . ($executionEnd - $executionStart) . " seconds");
         }
