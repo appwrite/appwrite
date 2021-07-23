@@ -63,16 +63,12 @@ $stderr = '';
 
 $executionStart = \microtime(true);
 
-$response = $orchestration->list();
+$response = $orchestration->list(['labels' => 'appwrite-type=function']);
 
 $list = [];
 
 array_map(function($value) use (&$list) {
-    if (!empty($value->labels["appwrite-type"])) {
-        if ($value->labels["appwrite-type"] == "function") {
-            $list[$value->name] = $value;
-        }
-    }
+    $list[$value->getName()] = $value;
 }, $response);
 
 $executionEnd = \microtime(true);
