@@ -987,24 +987,17 @@
                  * Update a collection by its unique ID.
                  *
                  * @param {string} collectionId
-                 * @param {string} name
                  * @param {string} read
                  * @param {string} write
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateCollection: (collectionId, name, read, write) => __awaiter(this, void 0, void 0, function* () {
+                updateCollection: (collectionId, read, write) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
-                    if (typeof name === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "name"');
-                    }
                     let path = '/database/collections/{collectionId}'.replace('{collectionId}', collectionId);
                     let payload = {};
-                    if (typeof name !== 'undefined') {
-                        payload['name'] = name;
-                    }
                     if (typeof read !== 'undefined') {
                         payload['read'] = read;
                     }
@@ -1561,7 +1554,6 @@
                  * Update function by its unique ID.
                  *
                  * @param {string} functionId
-                 * @param {string} name
                  * @param {string[]} execute
                  * @param {object} vars
                  * @param {string[]} events
@@ -1570,21 +1562,15 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                update: (functionId, name, execute, vars, events, schedule, timeout) => __awaiter(this, void 0, void 0, function* () {
+                update: (functionId, execute, vars, events, schedule, timeout) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
-                    }
-                    if (typeof name === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "name"');
                     }
                     if (typeof execute === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "execute"');
                     }
                     let path = '/functions/{functionId}'.replace('{functionId}', functionId);
                     let payload = {};
-                    if (typeof name !== 'undefined') {
-                        payload['name'] = name;
-                    }
                     if (typeof execute !== 'undefined') {
                         payload['execute'] = execute;
                     }
@@ -2696,29 +2682,22 @@
                  *
                  * @param {string} projectId
                  * @param {string} keyId
-                 * @param {string} name
                  * @param {string[]} scopes
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateKey: (projectId, keyId, name, scopes) => __awaiter(this, void 0, void 0, function* () {
+                updateKey: (projectId, keyId, scopes) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
                     if (typeof keyId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "keyId"');
                     }
-                    if (typeof name === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "name"');
-                    }
                     if (typeof scopes === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "scopes"');
                     }
                     let path = '/projects/{projectId}/keys/{keyId}'.replace('{projectId}', projectId).replace('{keyId}', keyId);
                     let payload = {};
-                    if (typeof name !== 'undefined') {
-                        payload['name'] = name;
-                    }
                     if (typeof scopes !== 'undefined') {
                         payload['scopes'] = scopes;
                     }
@@ -2877,28 +2856,21 @@
                  *
                  * @param {string} projectId
                  * @param {string} platformId
-                 * @param {string} name
                  * @param {string} key
                  * @param {string} store
                  * @param {string} hostname
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updatePlatform: (projectId, platformId, name, key, store, hostname) => __awaiter(this, void 0, void 0, function* () {
+                updatePlatform: (projectId, platformId, key, store, hostname) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
                     if (typeof platformId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "platformId"');
                     }
-                    if (typeof name === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "name"');
-                    }
                     let path = '/projects/{projectId}/platforms/{platformId}'.replace('{projectId}', projectId).replace('{platformId}', platformId);
                     let payload = {};
-                    if (typeof name !== 'undefined') {
-                        payload['name'] = name;
-                    }
                     if (typeof key !== 'undefined') {
                         payload['key'] = key;
                     }
@@ -3057,7 +3029,6 @@
                  *
                  * @param {string} projectId
                  * @param {string} taskId
-                 * @param {string} name
                  * @param {string} status
                  * @param {string} schedule
                  * @param {boolean} security
@@ -3069,15 +3040,12 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateTask: (projectId, taskId, name, status, schedule, security, httpMethod, httpUrl, httpHeaders, httpUser, httpPass) => __awaiter(this, void 0, void 0, function* () {
+                updateTask: (projectId, taskId, status, schedule, security, httpMethod, httpUrl, httpHeaders, httpUser, httpPass) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
                     if (typeof taskId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "taskId"');
-                    }
-                    if (typeof name === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "name"');
                     }
                     if (typeof status === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "status"');
@@ -3096,9 +3064,6 @@
                     }
                     let path = '/projects/{projectId}/tasks/{taskId}'.replace('{projectId}', projectId).replace('{taskId}', taskId);
                     let payload = {};
-                    if (typeof name !== 'undefined') {
-                        payload['name'] = name;
-                    }
                     if (typeof status !== 'undefined') {
                         payload['status'] = status;
                     }
@@ -3277,7 +3242,6 @@
                  *
                  * @param {string} projectId
                  * @param {string} webhookId
-                 * @param {string} name
                  * @param {string[]} events
                  * @param {string} url
                  * @param {boolean} security
@@ -3286,15 +3250,12 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateWebhook: (projectId, webhookId, name, events, url, security, httpUser, httpPass) => __awaiter(this, void 0, void 0, function* () {
+                updateWebhook: (projectId, webhookId, events, url, security, httpUser, httpPass) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
                     if (typeof webhookId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "webhookId"');
-                    }
-                    if (typeof name === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "name"');
                     }
                     if (typeof events === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "events"');
@@ -3307,9 +3268,6 @@
                     }
                     let path = '/projects/{projectId}/webhooks/{webhookId}'.replace('{projectId}', projectId).replace('{webhookId}', webhookId);
                     let payload = {};
-                    if (typeof name !== 'undefined') {
-                        payload['name'] = name;
-                    }
                     if (typeof events !== 'undefined') {
                         payload['events'] = events;
                     }
@@ -3708,34 +3666,6 @@
                     let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
-                 * Update Team
-                 *
-                 * Update a team by its unique ID. Only team owners have write access for this
-                 * resource.
-                 *
-                 * @param {string} teamId
-                 * @param {string} name
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                update: (teamId, name) => __awaiter(this, void 0, void 0, function* () {
-                    if (typeof teamId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "teamId"');
-                    }
-                    if (typeof name === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "name"');
-                    }
-                    let path = '/teams/{teamId}'.replace('{teamId}', teamId);
-                    let payload = {};
-                    if (typeof name !== 'undefined') {
-                        payload['name'] = name;
-                    }
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('put', uri, {
                         'content-type': 'application/json',
                     }, payload);
                 }),
