@@ -212,6 +212,20 @@ App::delete('/v1/database/collections/:collectionId')
 
         $dbForExternal->deleteCollection($collectionId);
 
+        // Remove any float validators from Structure object
+        $attributes = $collection->getAttribute('attributes', []);
+        array_walk($attributes, function (Document $attribute) {
+            $type = $attribute->getAttribute('type', '');
+            $format = $attribute->getAttribute('format', '');
+
+            // Remove the range filter from ints/floats
+            if ($type === Database::VAR_INTEGER || $type === Database::VAR_FLOAT) {
+                if ($format) {
+                    Structure::removeFormat($format);
+                }
+            }
+        });
+
         $events
             ->setParam('eventData', $response->output2($collection, Response::MODEL_COLLECTION))
         ;
@@ -269,7 +283,7 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
             throw new Exception('Length of default attribute exceeds attribute size', 400);
         }
 
-        if (!Structure::hasFormat($format, $type)) {
+        if (!\is_null($format) && !Structure::hasFormat($format, $type)) {
             throw new Exception("Format {$format} not available for {$type} attributes.", 400);
         }
 
@@ -326,13 +340,15 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('attributeId', '', new Key(), 'Attribute ID.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('min', null, new Integer(), 'Minimum value to enforce on new documents', true)
+    ->param('max', null, new Integer(), 'Maximum value to enforce on new documents', true)
     ->param('default', null, new Integer(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForExternal, $database, $audits) {
+    ->action(function ($collectionId, $attributeId, $required, $min, $max, $default, $array, $response, $dbForExternal, $database, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
@@ -346,12 +362,28 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
             throw new Exception('Collection not found', 404);
         }
 
+        /** @var string $format Name for custom range validation */
+        $format = null;
+
+        if (!is_null($min) || !is_null($max)) {
+            $min = (is_null($min)) ? -INF : \intval($min);
+            $max = (is_null($max)) ? INF : \intval($max);
+
+            // TODO@kodumbeats troubleshoot
+            // if ($min > $max) {
+            //     throw new Exception('Minimum value must be lesser than maximum value', 400);
+            // }
+
+            $format = strval($min) . '_to_' . strval($max);
+            Structure::addFormat($format, new Range($min, $max, $type), $type);
+        }
+
         // integers are signed by default, and filters are hidden from the endpoint.
         $signed = true;
         $size = 0;
         $filters = [];
 
-        $success = $dbForExternal->addAttributeInQueue($collectionId, $attributeId, $type, $size, $required, $default, $signed, $array, /*format*/ null, $filters);
+        $success = $dbForExternal->addAttributeInQueue($collectionId, $attributeId, $type, $size, $required, $default, $signed, $array, $format, $filters);
 
         // Database->addAttributeInQueue() does not return a document
         // So we need to create one for the response
@@ -365,6 +397,7 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
             'required' => $required,
             'default' => $default,
             'signed' => $signed,
+            'format' => $format,
             'array' => $array,
             'filters' => $filters
         ]);
@@ -399,13 +432,15 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('attributeId', '', new Key(), 'Attribute ID.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('min', null, new FloatValidator(), 'Minimum value to enforce on new documents', true)
+    ->param('max', null, new FloatValidator(), 'Maximum value to enforce on new documents', true)
     ->param('default', null, new FloatValidator(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForExternal, $database, $audits) {
+    ->action(function ($collectionId, $attributeId, $required, $min, $max, $default, $array, $response, $dbForExternal, $database, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
@@ -419,12 +454,27 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
             throw new Exception('Collection not found', 404);
         }
 
+        /** @var string $format Name for custom range validation */
+        $format = null;
+
+        if (!is_null($min) || !is_null($max)) {
+            $min = (is_null($min)) ? -INF : \floatval($min);
+            $max = (is_null($max)) ? INF : \floatval($max);
+
+            if ($min > $max) {
+                throw new Exception('Minimum value must be lesser than maximum value', 400);
+            }
+
+            $format = strval($min) . '_to_' . strval($max);
+            Structure::addFormat($format, new Range($min, $max, $type), $type);
+        }
+
         // integers are signed by default, and filters are hidden from the endpoint.
         $signed = true;
         $size = 0;
         $filters = [];
 
-        $success = $dbForExternal->addAttributeInQueue($collectionId, $attributeId, $type, $size, $required, $default, $signed, $array, /*$format*/ null, $filters);
+        $success = $dbForExternal->addAttributeInQueue($collectionId, $attributeId, $type, $size, $required, $default, $signed, $array, $format, $filters);
 
         // Database->addAttributeInQueue() does not return a document
         // So we need to create one for the response
@@ -439,6 +489,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
             'default' => $default,
             'signed' => $signed,
             'array' => $array,
+            'format' => $format,
             'filters' => $filters
         ]);
 
@@ -652,6 +703,16 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
         $attribute = new Document([\array_merge($attributes[$attributeIndex], [
             'collectionId' => $collectionId,
         ])]);
+
+        $type = $attribute->getAttribute('type', '');
+        $format = $attribute->getAttribute('format', '');
+
+        // Remove the range filter from ints/floats, if given
+        if ($type === Database::VAR_INTEGER || $type === Database::VAR_FLOAT) {
+            if ($format) {
+                Structure::removeFormat($format);
+            }
+        }
 
         $database
             ->setParam('type', DELETE_TYPE_ATTRIBUTE)
@@ -947,6 +1008,34 @@ App::post('/v1/database/collections/:collectionId/documents')
         $data['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; //  By default set read permissions for user
         $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; //  By default set write permissions for user
 
+        // Add any missing range validators not present on numeric attributes
+        $attributes = $collection->getAttribute('attributes', []);
+        array_walk($attributes, function (Document $attribute) {
+            $type = $attribute->getAttribute('type', '');
+            $format = $attribute->getAttribute('format', '');
+
+            if ($format || !Structure::hasFormat($format, $type)) {
+                switch ($type) {
+                    case Database::VAR_INTEGER:
+                        // format is stored as "{$min}_to_{$max}"
+                        [$min, /*_to_*/, $max] = \explode('_', $format);
+                        $min = ($min === "-INF") ? -INF : \intval($min);
+                        $max = ($max === "INF") ? INF : \intval($max);
+                        Structure::addFormat($format, new Range($min, $max, $type), $type);
+                        break;
+                    case Database::VAR_FLOAT:
+                        // format is stored as "{$min}_to_{$max}"
+                        [$min, /*_to_*/, $max] = \explode('_', $format);
+                        $min = ($min === "-INF") ? -INF :\floatval($min);
+                        $max = ($max === "INF") ? INF :\floatval($max);
+                        Structure::addFormat($format, new Range($min, $max, $type), $type);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+
         try {
             $document = $dbForExternal->createDocument($collectionId, new Document($data));
         } catch (StructureException $exception) {
@@ -1104,6 +1193,34 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         $data['$id'] = $document->getId(); // Make sure user don't switch document unique ID
         $data['$read'] = (is_null($read)) ? ($document->getRead() ?? []) : $read; // By default inherit read permissions
         $data['$write'] = (is_null($write)) ? ($document->getWrite() ?? []) : $write; // By default inherit write permissions
+
+        // Add any missing range validators not present on numeric attributes
+        $attributes = $collection->getAttribute('attributes', []);
+        array_walk($attributes, function (Document $attribute) {
+            $type = $attribute->getAttribute('type', '');
+            $format = $attribute->getAttribute('format', '');
+
+            if ($format || !Structure::hasFormat($format, $type)) {
+                switch ($type) {
+                    case Database::VAR_INTEGER:
+                        // format is stored as "{$min}_to_{$max}"
+                        [$min, /*_to_*/, $max] = \explode('_', $format);
+                        $min = ($min === "-INF") ? -INF :\intval($min);
+                        $max = ($max === "INF") ? INF :\intval($max);
+                        Structure::addFormat($format, new Range($min, $max, $type), $type);
+                        break;
+                    case Database::VAR_FLOAT:
+                        // format is stored as "{$min}_to_{$max}"
+                        [$min, /*_to_*/, $max] = \explode('_', $format);
+                        $min = ($min === "-INF") ? -INF :\floatval($min);
+                        $max = ($max === "INF") ? INF :\floatval($max);
+                        Structure::addFormat($format, new Range($min, $max, $type), $type);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
 
         try {
             $document = $dbForExternal->updateDocument($collection->getId(), $document->getId(), new Document($data));

@@ -38,14 +38,14 @@
         "appwrite/php-clamav": "1.1.*",
         "appwrite/php-runtimes": "0.4.*",
 
-        "utopia-php/framework": "0.16.*",
+        "utopia-php/framework": "dev-feat-range-validator-infinity as 0.16.2",
         "utopia-php/abuse": "dev-feat-utopia-db-integration",
         "utopia-php/analytics": "0.2.*",
         "utopia-php/audit": "dev-feat-utopia-db-integration",
         "utopia-php/cache": "0.4.*",
         "utopia-php/cli": "0.11.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "0.5.*",
+        "utopia-php/database": "dev-feat-attribute-format-validators as 0.5.1",
         "utopia-php/locale": "0.3.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/preloader": "0.2.*",
@@ -70,6 +70,14 @@
         {
             "type": "git",
             "url": "https://github.com/lohanidamodar/audit"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/utopia-php/database"
+        },
+        {
+            "type": "git",
+            "url": "https://github.com/utopia-php/framework"
         }
     ],
     "require-dev": {
