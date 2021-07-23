@@ -63,7 +63,7 @@ $stderr = '';
 
 $executionStart = \microtime(true);
 
-$response = $orchestration->list(['labels' => 'appwrite-type=function']);
+$response = $orchestration->list(['label' => 'appwrite-type=function']);
 
 $list = [];
 
@@ -499,15 +499,15 @@ class FunctionsV1 extends Worker
             Console::info('Starting containers cleanup');
 
             \uasort($list, function ($item1, $item2) {
-                return (int)($item1->labels['appwrite-created'] ?? 0) <=> (int)($item2->labels['appwrite-created'] ?? 0);
+                return (int)($item1->getLabels['appwrite-created'] ?? 0) <=> (int)($item2->getLabels['appwrite-created'] ?? 0);
             });
 
             while(\count($list) > $max) {
                 $first = \array_shift($list);
 
                 try {
-                    $orchestration->remove($first->name, true);
-                    Console::info('Removed container: '.$first->name);
+                    $orchestration->remove($first->getName(), true);
+                    Console::info('Removed container: '.$first->getName());
                 } catch (Exception $e) {
                     Console::error('Failed to remove container: '.$e);
                 }
