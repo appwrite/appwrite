@@ -22,7 +22,7 @@ class Template extends View
      */
     public static function fromFile(string $path): self
     {
-        if (\is_readable($path)) {
+        if (!\is_readable($path)) {
             throw new Exception("$path view template is not readable.");
         }
 
@@ -51,7 +51,7 @@ class Template extends View
         if (empty($html)) {
             throw new Exception('Empty HTML string');
         }
-        
+
         $template = new Template();
         return $template->setHtml($html);
     }
