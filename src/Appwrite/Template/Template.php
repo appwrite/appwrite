@@ -7,6 +7,31 @@ use Utopia\View;
 
 class Template extends View
 {
+
+    /**
+     * @var string
+     */
+    protected string $html = ''; 
+
+    /**
+     * fromHtmlString
+     *
+     * Creates a new Template() using raw HTML.
+     * 
+     * @param string $html 
+     *
+     * @return self
+     * 
+     */
+    public static function fromHtmlString(string $html): self
+    {
+        if (empty($html)) {
+            throw new Exception('Empty HTML string');
+        }
+        $template = new Template();
+        return $template->setHtml($html);
+    }
+
     /**
      * Render.
      *
@@ -25,6 +50,8 @@ class Template extends View
 
         if (\is_readable($this->path)) {
             $template = \file_get_contents($this->path); // Include template file
+        } else if (!empty($this->html)) {
+            $template = $this->print($this->html);
         } else {
             throw new Exception('"'.$this->path.'" template is not readable or not found');
         }
@@ -125,4 +152,36 @@ class Template extends View
     {
         return \str_replace([' ', '_'], '-', \strtolower(\preg_replace('/([a-zA-Z])(?=[A-Z])/', '$1-', $input)));
     }
+
+    /**
+     * setHtml
+     *
+     * Set the Raw html used by this template  
+     *
+     * @return string
+     * 
+     */
+    public function setHtml(string $html): self 
+    {
+        $this->html = $html;
+        return $this;
+    }
+
+     /**
+     * getHtml
+     *
+     * Get the Raw html that this template holds.  
+     *
+     * @return string
+     * 
+     */
+    public function getHtml(): string 
+    {
+        if (\is_readable($this->path)) {
+            return \file_get_contents($this->path);
+        }
+
+        return $this->html;
+    }
+
 }

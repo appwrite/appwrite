@@ -89,8 +89,6 @@ App::get('/v1/locale/countries')
         $list = Config::getParam('locale-countries'); /* @var $list array */
         $output = [];
 
-        \asort($list); // sort by abc per locale
-
         foreach ($list as $value) {
             $output[] = new Document([
                 'name' => $locale->getText('countries.'.strtolower($value)),
@@ -121,8 +119,6 @@ App::get('/v1/locale/countries/eu')
         $list = Config::getParam('locale-countries'); /* @var $countries array */
         $eu = Config::getParam('locale-eu');
         $output = [];
-
-        \asort($list);
 
         foreach ($eu as $code) {
             if ($locale->getText('countries.'.strtolower($code), false) !== false) {
@@ -189,13 +185,11 @@ App::get('/v1/locale/continents')
         /** @var Utopia\Locale\Locale $locale */
 
         $list = Config::getParam('locale-continents'); /* @var $list array */
-
-        \asort($list);
         
         foreach ($list as $key => $value) {
             $output[] = new Document([
                 'name' => $locale->getText('continents.'.strtolower($value)),
-                'code' => $key,
+                'code' => $value,
             ]);
         }
 

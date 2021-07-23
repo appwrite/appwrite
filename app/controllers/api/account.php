@@ -1516,7 +1516,7 @@ App::post('/v1/account/recovery')
         $url = Template::unParseURL($url);
 
         $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
-        $content = new Template(__DIR__.'/../../config/locale/translations/templates/'.$locale->getText('account.emails.recovery.body'));
+        $content = Template::fromHtmlString($locale->getText('account.emails.recovery.body'));
         $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
 
         $body
@@ -1720,7 +1720,7 @@ App::post('/v1/account/verification')
         $url = Template::unParseURL($url);
 
         $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
-        $content = new Template(__DIR__.'/../../config/locale/translations/templates/'.$locale->getText('account.emails.verification.body'));
+        $content = Template::fromHtmlString($locale->getText('account.emails.verification.body'));
         $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
 
         $body

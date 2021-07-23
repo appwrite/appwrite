@@ -159,8 +159,8 @@ trait LocaleBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertEquals(7, $response['body']['sum']);
         $this->assertIsArray($response['body']['continents']);
-        $this->assertEquals($response['body']['continents'][0]['code'], 'NA');
-        $this->assertEquals($response['body']['continents'][0]['name'], 'América del Norte');
+        $this->assertEquals($response['body']['continents'][4]['code'], 'NA');
+        $this->assertEquals($response['body']['continents'][4]['name'], 'América del Norte');
 
         
         /**
@@ -228,8 +228,8 @@ trait LocaleBase
          * Test for SUCCESS
          */
         $languages           = require('app/config/locale/codes.php');
-        $defaultCountries    = require('app/config/locale/translations/en.countries.php');
-        $defaultContinents   = require('app/config/locale/translations/en.continents.php');
+        $defaultCountries    = require('app/config/locale/countries.php');
+        $defaultContinents   = require('app/config/locale/continents.php');
 
         foreach ($languages as $lang) {
             $response = $this->client->call(Client::METHOD_GET, '/locale/countries', [
@@ -239,11 +239,11 @@ trait LocaleBase
             ]);
 
             if(!\is_array($response['body']['countries'])) {
-                throw new Exception('Failed to itterate locale: '.$lang);
+                throw new Exception('Failed to iterate locale: '.$lang);
             }
 
             foreach ($response['body']['countries'] as $i => $code) {
-                $this->assertArrayHasKey($code['code'], $defaultCountries, $code['code'] . ' country should be removed from ' . $lang);
+                $this->assertContains($code['code'], $defaultCountries, $code['code'] . ' country should be removed from ' . $lang);
             }
 
             // foreach (array_keys($defaultCountries) as $i => $code) {
@@ -260,7 +260,7 @@ trait LocaleBase
             ]);
             
             foreach ($response['body']['continents'] as $i => $code) {
-                $this->assertArrayHasKey($code['code'], $defaultContinents, $code['code'] . ' continent should be removed from ' . $lang);
+                $this->assertContains($code['code'], $defaultContinents, $code['code'] . ' continent should be removed from ' . $lang);
             }
 
             // foreach (array_keys($defaultContinents) as $i => $code) {

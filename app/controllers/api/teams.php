@@ -420,7 +420,7 @@ App::post('/v1/teams/:teamId/memberships')
         $url = Template::unParseURL($url);
 
         $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
-        $content = new Template(__DIR__.'/../../config/locale/translations/templates/'.$locale->getText('account.emails.invitation.body'));
+        $content = Template::fromHtmlString($locale->getText('account.emails.invitation.body'));
         $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
         $title = \sprintf($locale->getText('account.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]']));
         
