@@ -48,7 +48,7 @@ const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
 const APP_CACHE_BUSTER = 149;
-const APP_VERSION_STABLE = '0.9.0';
+const APP_VERSION_STABLE = '0.9.1';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_CACHE = '/storage/cache';
@@ -164,12 +164,11 @@ $register->set('dbPool', function () { // Register DB connection
     $pool = new PDOPool((new PDOConfig())
         ->withHost($dbHost)
         ->withPort($dbPort)
-        // ->withUnixSocket('/tmp/mysql.sock')
         ->withDbName($dbScheme)
         ->withCharset('utf8mb4')
         ->withUsername($dbUser)
         ->withPassword($dbPass)
-    );
+    , 16);
 
     return $pool;
 });
@@ -189,7 +188,7 @@ $register->set('redisPool', function () {
         ->withPort($redisPort)
         ->withAuth($redisAuth)
         ->withDbIndex(0)
-    );
+    , 16);
 
     return $pool;
 });
@@ -468,7 +467,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
             $user = $projectDB->getDocument($jwtUserId);
         }
 
-        if (empty($user->search('$id', $jwtSessionId, $user->getAttribute('tokens')))) { // Match JWT to active token
+        if (empty($user->search('$id', $jwtSessionId, $user->getAttribute('sessions')))) { // Match JWT to active token
             $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
         }
     }

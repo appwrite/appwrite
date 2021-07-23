@@ -236,14 +236,14 @@ App::get('/v1/users/:userId/logs')
     ->inject('projectDB')
     ->inject('locale')
     ->inject('geodb')
-    ->inject('app')
-    ->action(function ($userId, $response, $project, $projectDB, $locale, $geodb, $app) {
+    ->inject('utopia')
+    ->action(function ($userId, $response, $project, $projectDB, $locale, $geodb, $utopia) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
-        /** @var Utopia\App $app */
+        /** @var Utopia\App $utopia */
         
         $user = $projectDB->getDocument($userId);
 
@@ -251,7 +251,7 @@ App::get('/v1/users/:userId/logs')
             throw new Exception('User not found', 404);
         }
 
-        $adapter = new AuditAdapter($app->getResource('db'));
+        $adapter = new AuditAdapter($utopia->getResource('db'));
         $adapter->setNamespace('app_'.$project->getId());
 
         $audit = new Audit($adapter);

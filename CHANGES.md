@@ -1,3 +1,11 @@
+# Version 0.9.1
+
+## Bugs
+
+- Fixed PDO Connection timeout (#1385)
+- Removed unnecessary `app` resource and replace with `utopia` (#1384)
+- Fixed missing quote in Functions Worker logs (#1375)
+
 # Version 0.9.0
 
 ## Features
