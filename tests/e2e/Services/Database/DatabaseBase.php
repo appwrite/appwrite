@@ -523,8 +523,8 @@ trait DatabaseBase
             'write' => ['role:all'],
         ]);
 
-        $this->assertEquals($collection['headers']['status-code'], 201);
-        $this->assertEquals($collection['body']['name'], 'invalidDocumentStructure');
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $this->assertEquals('invalidDocumentStructure', $collection['body']['name']);
 
         $collectionId = $collection['body']['$id'];
 
@@ -561,9 +561,21 @@ trait DatabaseBase
             'format' => 'url',
         ]);
 
-        $this->assertEquals($email['headers']['status-code'], 201);
-        $this->assertEquals($ip['headers']['status-code'], 201);
-        $this->assertEquals($url['headers']['status-code'], 201);
+        $unsupported = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json', 'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'unsupported',
+            'size' => 256,
+            'required' => false,
+            'format' => 'unsupported',
+        ]);
+
+        $this->assertEquals(201, $email['headers']['status-code']);
+        $this->assertEquals(201, $ip['headers']['status-code']);
+        $this->assertEquals(201, $url['headers']['status-code']);
+        $this->assertEquals(400, $unsupported['headers']['status-code']);
+        $this->assertEquals('Invalid format: Value must be one of (email, ip, url)', $unsupported['body']['message']);
 
         // wait for worker to add attributes
         sleep(10);
