@@ -1,3 +1,11 @@
+# Version 0.9.2
+
+## Bugs
+
+- Fixed JWT session validation (#1408)
+- Fixed passing valid JWT session to Cloud Functions (#1421)
+- Fixed race condition when uploading and extracting bigger Cloud Functions (#1419)
+
 # Version 0.9.1
 
 ## Bugs

@@ -376,7 +376,7 @@ class FunctionsV1 extends Worker
             $orchestration->setMemory($memory);
             $orchestration->setSwap($swap);
 
-            \array_walk($vars, function (string &$value, string $key) {
+            \array_walk($vars, function (string &$value) {
                 $value = strval($value);
             });
 
@@ -385,18 +385,35 @@ class FunctionsV1 extends Worker
                 $container,
                 "",
                 array(
-                    'sh',
-                    '-c',
-                    'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'
+                    'tail',
+                    '-f',
+                    '/dev/null'
                 ),
                 "/usr/local/src",
                 array(),
-                array(),
+                $vars,
                 $tagPathTargetDir,
                 array(
                     "appwrite-type" => "function",
                     "appwrite-created" => "{$executionTime}"
                 ));
+
+            $tarStdout = '';
+            $tarStderr = '';
+
+            $untarSuccess = $orchestration->execute($container, 
+                array(
+                    'sh',
+                    '-c',
+                    'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz'), 
+                $tarStdout, 
+                $tarStderr,
+                $vars,
+                60);
+
+            if (!$untarSuccess) {
+                throw new Exception('Error untarring code');
+            }
 
             $executionEnd = \microtime(true);
 
@@ -405,7 +422,7 @@ class FunctionsV1 extends Worker
                 "Up", 
                 array(
                     'appwrite-type' => 'function',
-                    'appwrite-created' => "{$executionTime}",
+                    'appwrite-created' => "{$executionTime}"
                 ));
 
             Console::info("Function created in " . ($executionEnd - $executionStart) . " seconds");
