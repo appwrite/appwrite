@@ -15,12 +15,10 @@ use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\QueryValidator;
 use Utopia\Database\Validator\Queries as QueriesValidator;
+use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\UID;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Structure as StructureException;
-use Appwrite\Network\Validator\Email;
-use Appwrite\Network\Validator\IP;
-use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -244,7 +242,7 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
     ->param('size', null, new Integer(), 'Attribute size for text attributes, in number of characters.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
-    ->param('format', null, new Whitelist(['email', 'ip', 'url']), 'Optional format validation of attribute. Must be one of (email, ip, url).', true)
+    ->param('format', null, new Whitelist(['email', 'ip', 'url']), 'Optional format validation of attribute. Must be one of: email, ip, url', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForExternal')
@@ -269,6 +267,10 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
         $validator = new Text($size);
         if (!\is_null($default) && !$validator->isValid($default)) {
             throw new Exception('Length of default attribute exceeds attribute size', 400);
+        }
+
+        if (!Structure::hasFormat($format, $type)) {
+            throw new Exception("Format {$format} not available for {$type} attributes.", 400);
         }
 
         // integers are signed by default, and filters are hidden from the endpoint.
@@ -945,38 +947,8 @@ App::post('/v1/database/collections/:collectionId/documents')
         $data['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; //  By default set read permissions for user
         $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; //  By default set write permissions for user
 
-        /** @var string[] $formats */
-        $formats = [];
-        \array_walk($collection->getAttributes()['attributes'], function ($attribute) use (&$formats) {
-            switch ($attribute['format']) {
-                case 'email':
-                    $formats[] = [
-                        'name' => 'email',
-                        'validator' => new Email(),
-                        'type' => Database::VAR_STRING,
-                    ];
-                    break;
-                case 'ip':
-                    $formats[] = [
-                        'name' => 'ip',
-                        'validator' => new IP(),
-                        'type' => Database::VAR_STRING,
-                    ];
-                    break;
-                case 'url':
-                    $formats[] = [
-                        'name' => 'url',
-                        'validator' => new URL(),
-                        'type' => Database::VAR_STRING,
-                    ];
-                    break;
-                default:
-                    break;
-            }
-        }); 
-
         try {
-            $document = $dbForExternal->createDocument($collectionId, new Document($data), $formats);
+            $document = $dbForExternal->createDocument($collectionId, new Document($data));
         } catch (StructureException $exception) {
             throw new Exception($exception->getMessage(), 400);
         }
@@ -1133,38 +1105,8 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         $data['$read'] = (is_null($read)) ? ($document->getRead() ?? []) : $read; // By default inherit read permissions
         $data['$write'] = (is_null($write)) ? ($document->getWrite() ?? []) : $write; // By default inherit write permissions
 
-        /** @var string[] $formats */
-        $formats = [];
-        \array_walk($collection->getAttribute('attributes', []), function (Document $attribute) {
-            switch ($attribute->getAttribute('format', '')) {
-                case 'email':
-                    $formats[] = [
-                        'name' => 'email',
-                        'validator' => new Email(),
-                        'type' => Database::VAR_STRING,
-                    ];
-                    break;
-                case 'ip':
-                    $formats[] = [
-                        'name' => 'ip',
-                        'validator' => new IP(),
-                        'type' => Database::VAR_STRING,
-                    ];
-                    break;
-                case 'url':
-                    $formats[] = [
-                        'name' => 'url',
-                        'validator' => new URL(),
-                        'type' => Database::VAR_STRING,
-                    ];
-                    break;
-                default:
-                    break;
-            }
-        }); 
-
         try {
-            $document = $dbForExternal->updateDocument($collection->getId(), $document->getId(), new Document($data), $formats);
+            $document = $dbForExternal->updateDocument($collection->getId(), $document->getId(), new Document($data));
         } catch (AuthorizationException $exception) {
             throw new Exception('Unauthorized permissions', 401);
         } catch (StructureException $exception) {

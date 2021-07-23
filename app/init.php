@@ -26,6 +26,9 @@ use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
+use Appwrite\Network\Validator\Email;
+use Appwrite\Network\Validator\IP;
+use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\App;
 use Utopia\View;
@@ -40,6 +43,7 @@ use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Document as Document2;
 use Utopia\Database\Database as Database2;
 use Utopia\Database\Validator\Authorization as Authorization2;
+use Utopia\Database\Validator\Structure;
 use Swoole\Database\PDOConfig;
 use Swoole\Database\PDOPool;
 use Swoole\Database\RedisConfig;
@@ -184,6 +188,10 @@ Database2::addFilter('encrypt',
         return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
     }
 );
+
+Structure::addFormat('email', new Email(), Database2::VAR_STRING);
+Structure::addFormat('ip', new IP(), Database2::VAR_STRING);
+Structure::addFormat('url', new URL(), Database2::VAR_STRING);
 
 /*
  * Registry
