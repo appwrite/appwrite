@@ -1515,9 +1515,9 @@ App::post('/v1/account/recovery')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
-        $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
+        $body = Template::fromFile(__DIR__.'/../../config/locale/templates/email-base.tpl');
         $content = Template::fromHtmlString($locale->getText('account.emails.recovery.body'));
-        $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
+        $cta = Template::fromFile(__DIR__.'/../../config/locale/templates/email-cta.tpl');
 
         $body
             ->setParam('{{content}}', $content->render(false))
@@ -1719,9 +1719,9 @@ App::post('/v1/account/verification')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
-        $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
+        $body = Template::fromFile(__DIR__.'/../../config/locale/templates/email-base.tpl');
         $content = Template::fromHtmlString($locale->getText('account.emails.verification.body'));
-        $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
+        $cta = Template::fromFile(__DIR__.'/../../config/locale/templates/email-cta.tpl');
 
         $body
             ->setParam('{{content}}', $content->render(false))

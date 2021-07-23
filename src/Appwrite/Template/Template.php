@@ -5,8 +5,31 @@ namespace Appwrite\Template;
 use Exception;
 use Utopia\View;
 
+use function PHPUnit\Framework\isReadable;
+
 class Template extends View
 {
+
+    /**
+     * fromFile
+     *
+     * Creates a new Template() from the file at $path
+     * 
+     * @param string $path
+     *
+     * @return self
+     * 
+     */
+    public static function fromFile(string $path): self
+    {
+        if (\is_readable($path)) {
+            throw new Exception("$path view template is not readable.");
+        }
+
+        $template = new Template();
+        return $template->setPath($path);
+    }
+
 
     /**
      * @var string
@@ -28,6 +51,7 @@ class Template extends View
         if (empty($html)) {
             throw new Exception('Empty HTML string');
         }
+        
         $template = new Template();
         return $template->setHtml($html);
     }
