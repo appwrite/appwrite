@@ -1,7 +1,13 @@
 <?php
 
 use Appwrite\Extend\PDO;
+use Redis;
 use Utopia\App;
+use Utopia\Cache\Cache;
+use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\CLI\Console;
+use Utopia\Database\Database;
+use Utopia\Database\Adapter\MariaDB;
 
 /** @var Utopia\Registry\Registry $register */
 
@@ -23,6 +29,7 @@ $register->set('db', function () {
 
     return $pdo;
 });
+
 $register->set('cache', function () { // Register cache connection
     $redis = new Redis();
     $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
@@ -30,3 +37,98 @@ $register->set('cache', function () { // Register cache connection
 
     return $redis;
 });
+
+/**
+ * Get internal project database
+ * @param string $projectId
+ * @return Database
+ */
+function getInternalDB(string $projectId): Database
+{
+    global $register;
+
+    $attempts = 0;
+    $max = 10;
+    $sleep = 2;
+
+    do {
+        try {
+            $attempts++;
+            $cache = new Cache(new RedisCache($register->get('cache')));
+            $dbForInternal = new Database(new MariaDB($register->get('db')), $cache);
+            $dbForInternal->setNamespace("project_{$projectId}_internal"); // Main DB
+            break; // leave loop if successful
+        } catch(\Exception $e) {
+            Console::warning("Database not ready. Retrying connection ({$attempts})...");
+            if ($attempts >= $max) {
+                throw new \Exception('Failed to connect to database: '. $e->getMessage());
+            }
+            sleep($sleep);
+        }
+    } while ($attempts < $max);
+
+    return $dbForInternal;
+}
+
+/**
+ * Get external project database
+ * @param string $projectId
+ * @return Database
+ */
+function getExternalDB(string $projectId): Database
+{
+    global $register;
+
+    $attempts = 0;
+    $max = 10;
+    $sleep = 2;
+
+    do {
+        try {
+            $attempts++;
+            $cache = new Cache(new RedisCache($register->get('cache')));
+            $dbForExternal = new Database(new MariaDB($register->get('db')), $cache);
+            $dbForExternal->setNamespace("project_{$projectId}_external"); // Main DB
+            break; // leave loop if successful
+        } catch(\Exception $e) {
+            Console::warning("Database not ready. Retrying connection ({$attempts})...");
+            if ($attempts >= $max) {
+                throw new \Exception('Failed to connect to database: '. $e->getMessage());
+            }
+            sleep($sleep);
+        }
+    } while ($attempts < $max);
+
+    return $dbForExternal;
+}
+
+/**
+ * Get console database
+ * @return Database
+ */
+function getConsoleDB(): Database
+{
+    global $register;
+
+    $attempts = 0;
+    $max = 5;
+    $sleep = 5;
+
+    do {
+        try {
+            $attempts++;
+            $cache = new Cache(new RedisCache($register->get('cache')));
+            $dbForConsole = new Database(new MariaDB($register->get('db')), $cache);
+            $dbForConsole->setNamespace('project_console_internal'); // Main DB
+            break; // leave loop if successful
+        } catch(\Exception $e) {
+            Console::warning("Database not ready. Retrying connection ({$attempts})...");
+            if ($attempts >= $max) {
+                throw new \Exception('Failed to connect to database: '. $e->getMessage());
+            }
+            sleep($sleep);
+        }
+    } while ($attempts < $max);
+
+    return $dbForConsole;
+}

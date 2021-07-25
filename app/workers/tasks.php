@@ -28,11 +28,6 @@ class TasksV1 extends Worker
 
     public function run(): void
     {
-        global $register;
-
-        $db = $register->get('db');
-        $cache = $register->get('cache');
-
         $projectId = $this->args['projectId'] ?? null;
         $taskId = $this->args['$id'] ?? null;
         $updated = $this->args['updated'] ?? null;
@@ -44,9 +39,7 @@ class TasksV1 extends Worker
         $logLimit = 5;
         $alert = '';
 
-        $cache = new Cache(new Redis($cache));
-        $dbForConsole = new Database(new MariaDB($db), $cache);
-        $dbForConsole->setNamespace('project_console_internal');
+        $dbForConsole = getConsoleDB();
 
         /*
          * 1. Get Original Task

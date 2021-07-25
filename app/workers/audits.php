@@ -23,8 +23,6 @@ class AuditsV1 extends Worker
 
     public function run(): void
     {
-        global $register;
-
         $projectId = $this->args['projectId'];
         $userId = $this->args['userId'];
         $event = $this->args['event'];
@@ -32,12 +30,8 @@ class AuditsV1 extends Worker
         $userAgent = $this->args['userAgent'];
         $ip = $this->args['ip'];
         $data = $this->args['data'];
-        $db = $register->get('db', true);
         
-        $cache = new Cache(new Redis($register->get('cache')));
-        $dbForInternal = new Database(new MariaDB($db), $cache);
-        $dbForInternal->setNamespace('project_'.$projectId.'_internal');
-
+        $dbForInternal = getInternalDB($projectId);
         $audit = new Audit($dbForInternal);
 
         $audit->log($userId, $event, $resource, $userAgent, $ip, '', $data);

@@ -3,17 +3,13 @@
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Database\Validator\Authorization;
 use Appwrite\Resque\Worker;
 use Utopia\Storage\Device\Local;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\CLI\Console;
-use Utopia\Config\Config;
 use Utopia\Audit\Audit;
-use Utopia\Cache\Cache;
-use Utopia\Database\Adapter\MariaDB;
 
 require_once __DIR__.'/../workers.php';
 
@@ -97,7 +93,7 @@ class DeletesV1 extends Worker
         // Delete Memberships
         $this->deleteByGroup('memberships', [
             new Query('teamId', Query::TYPE_EQUAL, [$teamId])
-        ], $this->getInternalDB($projectId));
+        ], getInternalDB($projectId));
     }
 
     /**
@@ -107,8 +103,8 @@ class DeletesV1 extends Worker
     {
         $projectId = $document->getId();
         // Delete all DBs
-        $this->getExternalDB($projectId)->delete();
-        $this->getInternalDB($projectId)->delete();
+        getExternalDB($projectId)->delete();
+        getInternalDB($projectId)->delete();
 
         // Delete all storage directories
         $uploads = new Local(APP_STORAGE_UPLOADS.'/app-'.$document->getId());
@@ -130,13 +126,13 @@ class DeletesV1 extends Worker
         // Delete Memberships and decrement team membership counts
         $this->deleteByGroup('memberships', [
             new Query('userId', Query::TYPE_EQUAL, [$userId])
-        ], $this->getInternalDB($projectId), function(Document $document) use ($projectId, $userId) {
+        ], getInternalDB($projectId), function(Document $document) use ($projectId, $userId) {
 
             if ($document->getAttribute('confirm')) { // Count only confirmed members
                 $teamId = $document->getAttribute('teamId');
-                $team = $this->getInternalDB($projectId)->getDocument('teams', $teamId);
+                $team = getInternalDB($projectId)->getDocument('teams', $teamId);
                 if(!$team->isEmpty()) {
-                    $team = $this->getInternalDB($projectId)->updateDocument('teams', $teamId, new Document(\array_merge($team->getArrayCopy(), [
+                    $team = getInternalDB($projectId)->updateDocument('teams', $teamId, new Document(\array_merge($team->getArrayCopy(), [
                         'sum' => \max($team->getAttribute('sum', 0) - 1, 0), // Ensure that sum >= 0
                     ])));
                 }
@@ -150,7 +146,7 @@ class DeletesV1 extends Worker
     protected function deleteExecutionLogs($timestamp) 
     {
         $this->deleteForProjectIds(function($projectId) use ($timestamp) {
-            if (!($dbForInternal = $this->getInternalDB($projectId))) {
+            if (!($dbForInternal = getInternalDB($projectId))) {
                 throw new Exception('Failed to get projectDB for project '.$projectId);
             }
 
@@ -171,7 +167,7 @@ class DeletesV1 extends Worker
         }
 
         $this->deleteForProjectIds(function($projectId) use ($timestamp){
-            $timeLimit = new TimeLimit("", 0, 1, $this->getInternalDB($projectId));
+            $timeLimit = new TimeLimit("", 0, 1, getInternalDB($projectId));
             $abuse = new Abuse($timeLimit); 
 
             $status = $abuse->cleanup($timestamp);
@@ -190,7 +186,7 @@ class DeletesV1 extends Worker
             throw new Exception('Failed to delete audit logs. No timestamp provided');
         }
         $this->deleteForProjectIds(function($projectId) use ($timestamp){
-            $audit = new Audit($this->getInternalDB($projectId));
+            $audit = new Audit(getInternalDB($projectId));
             $status = $audit->cleanup($timestamp);
             if (!$status) {
                 throw new Exception('Failed to delete Audit logs for project'.$projectId);
@@ -204,7 +200,7 @@ class DeletesV1 extends Worker
      */
     protected function deleteFunction(Document $document, $projectId)
     {
-        $dbForInternal = $this->getInternalDB($projectId);
+        $dbForInternal = getInternalDB($projectId);
         $device = new Local(APP_STORAGE_FUNCTIONS.'/app-'.$projectId);
 
         // Delete Tags
@@ -273,7 +269,7 @@ class DeletesV1 extends Worker
             $chunk++;
 
             Authorization::disable();
-            $projects = $this->getConsoleDB()->find('projects', [], $limit);
+            $projects = getConsoleDB()->find('projects', [], $limit);
             Authorization::reset();
 
             $projectIds = array_map (function ($project) { 
@@ -350,66 +346,5 @@ class DeletesV1 extends Worker
         } else {
             Console::info("No certificate files found for {$domain}");
         }
-    }
-    
-    /**
-     * @param string $projectId
-     * @return Database
-     */
-    protected function getInternalDB($projectId): Database
-    {
-        global $register;
-        
-        $cache = new Cache(new RedisCache($register->get('cache')));
-        $dbForInternal = new Database(new MariaDB($register->get('db')), $cache);
-        $dbForInternal->setNamespace('project_'.$projectId.'_internal'); // Main DB
-
-        return $dbForInternal;
-    }
-
-    /**
-     * @param string $projectId
-     * @return Database
-     */
-    protected function getExternalDB($projectId): Database
-    {
-        global $register;
-
-        $cache = new Cache(new RedisCache($register->get('cache')));
-        $dbForExternal = new Database(new MariaDB($register->get('db')), $cache);
-        $dbForExternal->setNamespace('project_'.$projectId.'_external'); // Main DB
-
-        return $dbForExternal;
-    }
-
-    /**
-     * @return Database
-     */
-    protected function getConsoleDB(): Database
-    {
-        global $register;
-
-        // wait for database to be ready
-        $attempts = 0;
-        $max = 5;
-        $sleep = 5;
-
-        do {
-            try {
-                $attempts++;
-                $cache = new Cache(new RedisCache($register->get('cache')));
-                $dbForConsole = new Database(new MariaDB($register->get('db')), $cache);
-                $dbForConsole->setNamespace('project_console_internal'); // Main DB
-                break; // leave the do-while if successful
-            } catch(\Exception $e) {
-                Console::warning("Database not ready. Retrying connection ({$attempts})...");
-                if ($attempts >= $max) {
-                    throw new \Exception('Failed to connect to database: '. $e->getMessage());
-                }
-                sleep($sleep);
-            }
-        } while ($attempts < $max);
-
-        return $dbForConsole;
     }
 }
