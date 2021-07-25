@@ -55,8 +55,8 @@ const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
 const APP_LIMIT_COUNT = 5000;
 const APP_LIMIT_USERS = 10000;
-const APP_CACHE_BUSTER = 149;
-const APP_VERSION_STABLE = '0.9.1';
+const APP_CACHE_BUSTER = 150;
+const APP_VERSION_STABLE = '0.9.2';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_CACHE = '/storage/cache';
@@ -508,8 +508,13 @@ App::setResource('user', function($mode, $project, $console, $request, $response
             $user = $dbForInternal->getDocument('users', $jwtUserId);
         }
 
+<<<<<<< HEAD
         if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
             $user = new Document2(['$id' => '', '$collection' => 'users']);
+=======
+        if (empty($user->search('$id', $jwtSessionId, $user->getAttribute('sessions')))) { // Match JWT to active token
+            $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+>>>>>>> 7fb7f1073fb00964bb64c45408a052524d6a9584
         }
     }
 
