@@ -508,13 +508,8 @@ App::setResource('user', function($mode, $project, $console, $request, $response
             $user = $dbForInternal->getDocument('users', $jwtUserId);
         }
 
-<<<<<<< HEAD
         if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
             $user = new Document2(['$id' => '', '$collection' => 'users']);
-=======
-        if (empty($user->search('$id', $jwtSessionId, $user->getAttribute('sessions')))) { // Match JWT to active token
-            $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
->>>>>>> 7fb7f1073fb00964bb64c45408a052524d6a9584
         }
     }
 
