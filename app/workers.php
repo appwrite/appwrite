@@ -57,6 +57,9 @@ function getInternalDB(string $projectId): Database
             $cache = new Cache(new RedisCache($register->get('cache')));
             $dbForInternal = new Database(new MariaDB($register->get('db')), $cache);
             $dbForInternal->setNamespace("project_{$projectId}_internal"); // Main DB
+            if (!$dbForInternal->exists()) {
+                throw new Exception("Table does not exist: {$dbForInternal->getNamespace()}");
+            }
             break; // leave loop if successful
         } catch(\Exception $e) {
             Console::warning("Database not ready. Retrying connection ({$attempts})...");
@@ -89,6 +92,9 @@ function getExternalDB(string $projectId): Database
             $cache = new Cache(new RedisCache($register->get('cache')));
             $dbForExternal = new Database(new MariaDB($register->get('db')), $cache);
             $dbForExternal->setNamespace("project_{$projectId}_external"); // Main DB
+            if (!$dbForExternal->exists()) {
+                throw new Exception("Table does not exist: {$dbForExternal->getNamespace()}");
+            }
             break; // leave loop if successful
         } catch(\Exception $e) {
             Console::warning("Database not ready. Retrying connection ({$attempts})...");
@@ -120,6 +126,9 @@ function getConsoleDB(): Database
             $cache = new Cache(new RedisCache($register->get('cache')));
             $dbForConsole = new Database(new MariaDB($register->get('db')), $cache);
             $dbForConsole->setNamespace('project_console_internal'); // Main DB
+            if (!$dbForConsole->exists()) {
+                throw new Exception("Table does not exist: {$dbForConsole->getNamespace()}");
+            }
             break; // leave loop if successful
         } catch(\Exception $e) {
             Console::warning("Database not ready. Retrying connection ({$attempts})...");
