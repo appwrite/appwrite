@@ -10,7 +10,7 @@ use Swoole\Http\Response as SwooleResponse;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Validator\Authorization as Authorization2;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Audit\Audit;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Database\Document;
@@ -166,8 +166,8 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     });
     
     try {
-        Authorization2::cleanRoles();
-        Authorization2::setRole('role:all');
+        Authorization::cleanRoles();
+        Authorization::setRole('role:all');
 
         $app->run($request, $response);
     } catch (\Throwable $th) {
