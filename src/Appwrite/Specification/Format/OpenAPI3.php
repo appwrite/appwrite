@@ -238,7 +238,7 @@ class OpenAPI3 extends Format
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = false;
                         break;
-                    case 'Appwrite\Database\Validator\UID':
+                    case 'Utopia\Database\Validator\UID':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                         break;

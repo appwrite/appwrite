@@ -1,7 +1,7 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization;
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Abuse\Abuse;
@@ -120,8 +120,8 @@ App::init(function ($utopia, $request, $response, $project, $user) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
-    /** @var Appwrite\Database\Document $project */
-    /** @var Appwrite\Database\Document $user */
+    /** @var Utopia\Database\Document $project */
+    /** @var Utopia\Database\Document $user */
     /** @var Utopia\Registry\Registry $register */
     /** @var Appwrite\Event\Event $events */
     /** @var Appwrite\Event\Event $audits */
@@ -174,7 +174,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
-    /** @var Appwrite\Database\Document $project */
+    /** @var Utopia\Database\Document $project */
     /** @var Appwrite\Event\Event $events */
     /** @var Appwrite\Event\Event $audits */
     /** @var Appwrite\Event\Event $usage */

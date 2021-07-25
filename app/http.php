@@ -2,7 +2,6 @@
 
 require_once __DIR__.'/../vendor/autoload.php';
 
-use Appwrite\Database\Validator\Authorization;
 use Appwrite\Utopia\Response;
 use Swoole\Process;
 use Swoole\Http\Server;
@@ -167,9 +166,6 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     });
     
     try {
-        Authorization::cleanRoles();
-        Authorization::setRole('role:all');
-
         Authorization2::cleanRoles();
         Authorization2::setRole('role:all');
 

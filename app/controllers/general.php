@@ -10,7 +10,6 @@ use Utopia\Exception;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Response\Filters\V06;
 use Appwrite\Utopia\Response\Filters\V07;
@@ -238,26 +237,21 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
             $role = Auth::USER_ROLE_APP;
             $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
 
-            Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
             Authorization2::setDefaultStatus(false);  // Cancel security segmentation for API keys.
         }
     }
 
     if ($user->getId()) {
-        Authorization::setRole('user:'.$user->getId());
         Authorization2::setRole('user:'.$user->getId());
     }
 
-    Authorization::setRole('role:'.$role);
     Authorization2::setRole('role:'.$role);
 
     \array_map(function ($node) {
         if (isset($node['teamId']) && isset($node['roles'])) {
-            Authorization::setRole('team:'.$node['teamId']);
             Authorization2::setRole('team:'.$node['teamId']);
 
             foreach ($node['roles'] as $nodeRole) { // Set all team roles
-                Authorization::setRole('team:'.$node['teamId'].'/'.$nodeRole);
                 Authorization2::setRole('team:'.$node['teamId'].'/'.$nodeRole);
             }
         }
@@ -305,7 +299,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\View $layout */
-    /** @var Appwrite\Database\Document $project */
+    /** @var Utopia\Database\Document $project */
 
     if ($error instanceof PDOException) {
         throw $error;
@@ -393,7 +387,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
         $response->html($layout->render());
     }
 
-    $response->dynamic2(new Document($output),
+    $response->dynamic(new Document($output),
         $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR);
 }, ['error', 'utopia', 'request', 'response', 'layout', 'project']);
 
