@@ -458,7 +458,6 @@ App::get('/v1/avatars/initials')
             }
         }
 
-        $length = \count($words);
         $rand = \substr($code, -1);
         $background = (!empty($background)) ? '#' . $background : $themes[$rand]['background'];
         $color = (!empty($color)) ? '#' . $color : $themes[$rand]['color'];
