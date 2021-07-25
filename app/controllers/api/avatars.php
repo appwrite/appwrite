@@ -443,6 +443,9 @@ App::get('/v1/avatars/initials')
 
         $name = (!empty($name)) ? $name : $user->getAttribute('name', $user->getAttribute('email', ''));
         $words = \explode(' ', \strtoupper($name));
+        // if there is no space, try to split by `_` underscore
+        $words = (count($words) == 1 ) ? \explode('_', \strtoupper($name)) : $words;
+        
         $initials = null;
         $code = 0;
 
