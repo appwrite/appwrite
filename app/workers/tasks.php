@@ -39,7 +39,7 @@ class TasksV1 extends Worker
         $logLimit = 5;
         $alert = '';
 
-        $dbForConsole = getConsoleDB();
+        $dbForConsole = $this->getConsoleDB();
 
         /*
          * 1. Get Original Task

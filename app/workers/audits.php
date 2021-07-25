@@ -2,11 +2,7 @@
 
 use Appwrite\Resque\Worker;
 use Utopia\Audit\Audit;
-use Utopia\Cache\Adapter\Redis;
-use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
-use Utopia\Database\Adapter\MariaDB;
-use Utopia\Database\Database;
 
 require_once __DIR__.'/../workers.php';
 
@@ -31,7 +27,7 @@ class AuditsV1 extends Worker
         $ip = $this->args['ip'];
         $data = $this->args['data'];
         
-        $dbForInternal = getInternalDB($projectId);
+        $dbForInternal = $this->getInternalDB($projectId);
         $audit = new Audit($dbForInternal);
 
         $audit->log($userId, $event, $resource, $userAgent, $ip, '', $data);

@@ -4,7 +4,7 @@ use Appwrite\Resque\Worker;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
 
-require_once __DIR__.'/../init.php';
+require_once __DIR__.'/../workers.php';
 
 Console::title('Database V1 Worker');
 Console::success(APP_NAME.' database worker v1 has started'."\n");
@@ -61,7 +61,7 @@ class DatabaseV1 extends Worker
      */
     protected function createAttribute($attribute, $projectId): void
     {
-        $dbForExternal = getExternalDB($projectId);
+        $dbForExternal = $this->getExternalDB($projectId);
 
         $collectionId = $attribute->getCollection();
         $id = $attribute->getAttribute('$id', '');
@@ -85,7 +85,7 @@ class DatabaseV1 extends Worker
      */
     protected function deleteAttribute($attribute, $projectId): void
     {
-        $dbForExternal = getExternalDB($projectId);
+        $dbForExternal = $this->getExternalDB($projectId);
 
         $collectionId = $attribute->getCollection();
         $id = $attribute->getAttribute('$id');
@@ -99,7 +99,7 @@ class DatabaseV1 extends Worker
      */
     protected function createIndex($index, $projectId): void
     {
-        $dbForExternal = getExternalDB($projectId);
+        $dbForExternal = $this->getExternalDB($projectId);
 
         $collectionId = $index->getCollection();
         $id = $index->getAttribute('$id', '');
@@ -120,7 +120,7 @@ class DatabaseV1 extends Worker
      */
     protected function deleteIndex($index, $projectId): void
     {
-        $dbForExternal = getExternalDB($projectId);
+        $dbForExternal = $this->getExternalDB($projectId);
 
         $collectionId = $index->getCollection();
         $id = $index->getAttribute('$id');

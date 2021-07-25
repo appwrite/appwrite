@@ -93,7 +93,7 @@ class DeletesV1 extends Worker
         // Delete Memberships
         $this->deleteByGroup('memberships', [
             new Query('teamId', Query::TYPE_EQUAL, [$teamId])
-        ], getInternalDB($projectId));
+        ], $this->getInternalDB($projectId));
     }
 
     /**
@@ -103,8 +103,8 @@ class DeletesV1 extends Worker
     {
         $projectId = $document->getId();
         // Delete all DBs
-        getExternalDB($projectId)->delete();
-        getInternalDB($projectId)->delete();
+        $this->getExternalDB($projectId)->delete();
+        $this->getInternalDB($projectId)->delete();
 
         // Delete all storage directories
         $uploads = new Local(APP_STORAGE_UPLOADS.'/app-'.$document->getId());
@@ -126,13 +126,13 @@ class DeletesV1 extends Worker
         // Delete Memberships and decrement team membership counts
         $this->deleteByGroup('memberships', [
             new Query('userId', Query::TYPE_EQUAL, [$userId])
-        ], getInternalDB($projectId), function(Document $document) use ($projectId, $userId) {
+        ], $this->getInternalDB($projectId), function(Document $document) use ($projectId, $userId) {
 
             if ($document->getAttribute('confirm')) { // Count only confirmed members
                 $teamId = $document->getAttribute('teamId');
-                $team = getInternalDB($projectId)->getDocument('teams', $teamId);
+                $team = $this->getInternalDB($projectId)->getDocument('teams', $teamId);
                 if(!$team->isEmpty()) {
-                    $team = getInternalDB($projectId)->updateDocument('teams', $teamId, new Document(\array_merge($team->getArrayCopy(), [
+                    $team = $this->getInternalDB($projectId)->updateDocument('teams', $teamId, new Document(\array_merge($team->getArrayCopy(), [
                         'sum' => \max($team->getAttribute('sum', 0) - 1, 0), // Ensure that sum >= 0
                     ])));
                 }
@@ -146,7 +146,7 @@ class DeletesV1 extends Worker
     protected function deleteExecutionLogs($timestamp) 
     {
         $this->deleteForProjectIds(function($projectId) use ($timestamp) {
-            if (!($dbForInternal = getInternalDB($projectId))) {
+            if (!($dbForInternal = $this->getInternalDB($projectId))) {
                 throw new Exception('Failed to get projectDB for project '.$projectId);
             }
 
@@ -167,7 +167,7 @@ class DeletesV1 extends Worker
         }
 
         $this->deleteForProjectIds(function($projectId) use ($timestamp){
-            $timeLimit = new TimeLimit("", 0, 1, getInternalDB($projectId));
+            $timeLimit = new TimeLimit("", 0, 1, $this->getInternalDB($projectId));
             $abuse = new Abuse($timeLimit); 
 
             $status = $abuse->cleanup($timestamp);
@@ -186,7 +186,7 @@ class DeletesV1 extends Worker
             throw new Exception('Failed to delete audit logs. No timestamp provided');
         }
         $this->deleteForProjectIds(function($projectId) use ($timestamp){
-            $audit = new Audit(getInternalDB($projectId));
+            $audit = new Audit($this->getInternalDB($projectId));
             $status = $audit->cleanup($timestamp);
             if (!$status) {
                 throw new Exception('Failed to delete Audit logs for project'.$projectId);
@@ -200,7 +200,7 @@ class DeletesV1 extends Worker
      */
     protected function deleteFunction(Document $document, $projectId)
     {
-        $dbForInternal = getInternalDB($projectId);
+        $dbForInternal = $this->getInternalDB($projectId);
         $device = new Local(APP_STORAGE_FUNCTIONS.'/app-'.$projectId);
 
         // Delete Tags
@@ -269,7 +269,7 @@ class DeletesV1 extends Worker
             $chunk++;
 
             Authorization::disable();
-            $projects = getConsoleDB()->find('projects', [], $limit);
+            $projects = $this->getConsoleDB()->find('projects', [], $limit);
             Authorization::reset();
 
             $projectIds = array_map (function ($project) { 
