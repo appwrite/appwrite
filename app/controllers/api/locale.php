@@ -96,6 +96,10 @@ App::get('/v1/locale/countries')
             ]);
         }
 
+        usort($output, function ($a, $b) {
+            return strcmp($a->getAttribute('name'), $b->getAttribute('name'));
+        });
+
         $response->dynamic(new Document(['countries' => $output, 'sum' => \count($output)]), Response::MODEL_COUNTRY_LIST);
     });
 
@@ -116,7 +120,6 @@ App::get('/v1/locale/countries/eu')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
 
-        $list = Config::getParam('locale-countries'); /* @var $countries array */
         $eu = Config::getParam('locale-eu');
         $output = [];
 
@@ -128,6 +131,10 @@ App::get('/v1/locale/countries/eu')
                 ]);
             }
         }
+
+        usort($output, function ($a, $b) {
+            return strcmp($a->getAttribute('name'), $b->getAttribute('name'));
+        });
 
         $response->dynamic(new Document(['countries' => $output, 'sum' => \count($output)]), Response::MODEL_COUNTRY_LIST);
     });
@@ -192,6 +199,10 @@ App::get('/v1/locale/continents')
                 'code' => $value,
             ]);
         }
+
+        usort($output, function ($a, $b) {
+            return strcmp($a->getAttribute('name'), $b->getAttribute('name'));
+        });
 
         $response->dynamic(new Document(['continents' => $output, 'sum' => \count($output)]), Response::MODEL_CONTINENT_LIST);
     });

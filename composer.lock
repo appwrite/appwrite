@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "17590fc8cbf177a0c8e337ece9ca85b5",
+    "content-hash": "e0473ee4a24cd6e305347d69675c2332",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1858,11 +1858,17 @@
         },
         {
             "name": "utopia-php/locale",
-            "version": "dev-feat-accept-file-path",
+            "version": "0.4.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/christyjacob4/locale.git",
-                "reference": "0cc5b8f2771db7a0fd1e872705dd22450da7a975"
+                "url": "https://github.com/utopia-php/locale.git",
+                "reference": "c2d9358d0fe2f6b6ed5448369f9d1e430c615447"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/locale/zipball/c2d9358d0fe2f6b6ed5448369f9d1e430c615447",
+                "reference": "c2d9358d0fe2f6b6ed5448369f9d1e430c615447",
+                "shasum": ""
             },
             "require": {
                 "php": ">=7.4"
@@ -1877,6 +1883,7 @@
                     "Utopia\\Locale\\": "src/Locale"
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -1894,7 +1901,11 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2021-07-22T18:54:44+00:00"
+            "support": {
+                "issues": "https://github.com/utopia-php/locale/issues",
+                "source": "https://github.com/utopia-php/locale/tree/0.4.0"
+            },
+            "time": "2021-07-24T11:35:55+00:00"
         },
         {
             "name": "utopia-php/preloader",
@@ -6056,9 +6067,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/locale": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

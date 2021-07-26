@@ -97,8 +97,8 @@ trait LocaleBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertEquals(27, $response['body']['sum']);
         $this->assertIsArray($response['body']['countries']);
-        $this->assertEquals($response['body']['countries'][0]['name'], 'Austria');
-        $this->assertEquals($response['body']['countries'][0]['code'], 'AT');
+        $this->assertEquals($response['body']['countries'][0]['name'], 'Alemania');
+        $this->assertEquals($response['body']['countries'][0]['code'], 'DE');
 
         
         /**
@@ -159,8 +159,8 @@ trait LocaleBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertEquals(7, $response['body']['sum']);
         $this->assertIsArray($response['body']['continents']);
-        $this->assertEquals($response['body']['continents'][4]['code'], 'NA');
-        $this->assertEquals($response['body']['continents'][4]['name'], 'América del Norte');
+        $this->assertEquals($response['body']['continents'][0]['code'], 'NA');
+        $this->assertEquals($response['body']['continents'][0]['name'], 'América del Norte');
 
         
         /**

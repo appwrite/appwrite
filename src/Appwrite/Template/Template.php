@@ -5,10 +5,14 @@ namespace Appwrite\Template;
 use Exception;
 use Utopia\View;
 
-use function PHPUnit\Framework\isReadable;
 
 class Template extends View
 {
+
+    /**
+     * @var string
+     */
+    protected string $content = ''; 
 
     /**
      * fromFile
@@ -30,30 +34,25 @@ class Template extends View
         return $template->setPath($path);
     }
 
-
     /**
-     * @var string
-     */
-    protected string $html = ''; 
-
-    /**
-     * fromHtmlString
+     * fromString
      *
-     * Creates a new Template() using raw HTML.
+     * Creates a new Template() using a raw string
      * 
-     * @param string $html 
+     * @param string $content
      *
      * @return self
      * 
      */
-    public static function fromHtmlString(string $html): self
+    public static function fromString(string $content): self
     {
-        if (empty($html)) {
-            throw new Exception('Empty HTML string');
+        if (empty($content)) {
+            throw new Exception('Empty string');
         }
 
         $template = new Template();
-        return $template->setHtml($html);
+        $template->content = $content;
+        return $template;
     }
 
     /**
@@ -74,8 +73,8 @@ class Template extends View
 
         if (\is_readable($this->path)) {
             $template = \file_get_contents($this->path); // Include template file
-        } else if (!empty($this->html)) {
-            $template = $this->print($this->html);
+        } else if (!empty($this->content)) {
+            $template = $this->print($this->content);
         } else {
             throw new Exception('"'.$this->path.'" template is not readable or not found');
         }
@@ -175,37 +174,6 @@ class Template extends View
     public static function fromCamelCaseToDash($input): string
     {
         return \str_replace([' ', '_'], '-', \strtolower(\preg_replace('/([a-zA-Z])(?=[A-Z])/', '$1-', $input)));
-    }
-
-    /**
-     * setHtml
-     *
-     * Set the Raw html used by this template  
-     *
-     * @return string
-     * 
-     */
-    public function setHtml(string $html): self 
-    {
-        $this->html = $html;
-        return $this;
-    }
-
-     /**
-     * getHtml
-     *
-     * Get the Raw html that this template holds.  
-     *
-     * @return string
-     * 
-     */
-    public function getHtml(): string 
-    {
-        if (\is_readable($this->path)) {
-            return \file_get_contents($this->path);
-        }
-
-        return $this->html;
     }
 
 }

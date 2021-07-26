@@ -958,7 +958,7 @@ App::get('/v1/account/logs')
             $record = $geodb->get($log['ip']);
 
             if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), '--');
+                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
                 $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));        
             } else {
                 $output[$i]['countryCode'] = '--';
@@ -1516,7 +1516,7 @@ App::post('/v1/account/recovery')
         $url = Template::unParseURL($url);
 
         $body = Template::fromFile(__DIR__.'/../../config/locale/templates/email-base.tpl');
-        $content = Template::fromHtmlString($locale->getText('account.emails.recovery.body'));
+        $content = Template::fromString($locale->getText('account.emails.recovery.body'));
         $cta = Template::fromFile(__DIR__.'/../../config/locale/templates/email-cta.tpl');
 
         $body
@@ -1720,7 +1720,7 @@ App::post('/v1/account/verification')
         $url = Template::unParseURL($url);
 
         $body = Template::fromFile(__DIR__.'/../../config/locale/templates/email-base.tpl');
-        $content = Template::fromHtmlString($locale->getText('account.emails.verification.body'));
+        $content = Template::fromString($locale->getText('account.emails.verification.body'));
         $cta = Template::fromFile(__DIR__.'/../../config/locale/templates/email-cta.tpl');
 
         $body
