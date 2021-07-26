@@ -313,9 +313,13 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
         data-failure="alert"
         data-failure-param-alert-text="Failed to update platform"
         data-failure-param-alert-classname="error">
-
+        
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-        <input type="hidden" name="platformId" data-ls-bind="{{platform.$id}}" />
+
+        <label for="platformId">Platform ID</label>
+        <div class="input-copy">
+            <input data-forms-copy type="text" data-ls-attrs="id=platform-id-{{platform.$id}}" name="platformId" disabled data-ls-bind="{{platform.$id}}" />
+        </div>
 
         <label for="hostname">Hostname <span class="tooltip large" data-tooltip="The hostname that your website will use to interact with the <?php echo APP_NAME; ?> APIs in production or development environments. No port number required."><i class="icon-question"></i></span></label>
         <input name="hostname" type="text" class="margin-bottom" autocomplete="off" placeholder="localhost" data-ls-bind="{{platform.hostname}}" required />
@@ -555,7 +559,11 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
         data-failure-param-alert-classname="error">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-        <input type="hidden" name="platformId" data-ls-bind="{{platform.$id}}" />
+
+        <label for="platformId">Platform ID</label>
+        <div class="input-copy">
+            <input data-forms-copy type="text" data-ls-attrs="id=platform-id-{{platform.$id}}" name="platformId" disabled data-ls-bind="{{platform.$id}}" />
+        </div>
 
         <label data-ls-attrs="for=key-{{platform.$id}}">Bundle ID <span class="tooltip large" data-tooltip="You can find your Bundle Identifier in the General tab for your app's primary target in Xcode."><i class="icon-question"></i></span></label>
         <input name="key" type="text" class="margin-bottom" autocomplete="off" placeholder="com.cpmpany.appname" data-ls-bind="{{platform.key}}" required />
@@ -583,7 +591,11 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
         data-failure-param-alert-classname="error">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-        <input type="hidden" name="platformId" data-ls-bind="{{platform.$id}}" />
+
+        <label for="platformId">Platform ID</label>
+        <div class="input-copy">
+            <input data-forms-copy type="text" data-ls-attrs="id=platform-id-{{platform.$id}}" name="platformId" disabled data-ls-bind="{{platform.$id}}" />
+        </div>
 
         <label data-ls-attrs="for=key-{{platform.$id}}">Package Name <span class="tooltip large" data-tooltip="Your package name is generally the applicationId in your app-level build.gradle file."><i class="icon-question"></i></span></label>
         <input name="key" type="text" class="margin-bottom" autocomplete="off" placeholder="com.cpmpany.appname" data-ls-bind="{{platform.key}}" required />
@@ -611,7 +623,11 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
         data-failure-param-alert-classname="error">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-        <input type="hidden" name="platformId" data-ls-bind="{{platform.$id}}" />
+
+        <label for="platformId">Platform ID</label>
+        <div class="input-copy">
+            <input data-forms-copy type="text" data-ls-attrs="id=platform-id-{{platform.$id}}" name="platformId" disabled data-ls-bind="{{platform.$id}}" />
+        </div>
 
         <label data-ls-attrs="for=key-{{platform.$id}}">App Name <span class="tooltip large" data-tooltip="Your application name"><i class="icon-question"></i></span></label>
         <input name="key" type="text" class="margin-bottom" autocomplete="off" placeholder="appname" data-ls-bind="{{platform.key}}" required />
