@@ -308,7 +308,7 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($attribute, Response::MODEL_ATTRIBUTE);
+        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE);
     });
 
 App::post('/v1/database/collections/:collectionId/attributes/integer')
@@ -341,6 +341,7 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
         /** @var Appwrite\Event\Event $audits */
 
         $type = Database::VAR_INTEGER;
+
 
         $collection = $dbForExternal->getCollection($collectionId);
 
@@ -395,7 +396,7 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($attribute, Response::MODEL_ATTRIBUTE);
+        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE);
     });
 
 App::post('/v1/database/collections/:collectionId/attributes/float')
@@ -482,7 +483,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($attribute, Response::MODEL_ATTRIBUTE);
+        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE);
     });
 
 App::post('/v1/database/collections/:collectionId/attributes/boolean')
