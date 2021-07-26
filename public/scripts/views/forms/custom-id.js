@@ -55,8 +55,12 @@
           }
         }
 
-        sync();
+        var syncE = function(event) {
+          element.value = writer.value;
+        }
 
+        sync();
+        writer.addEventListener("change", syncE);
         button.addEventListener("click", switchType);
 
       }
