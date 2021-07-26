@@ -6,11 +6,8 @@ use Appwrite\Utopia\Response\Model\Execution;
 use Cron\CronExpression;
 use Swoole\Runtime;
 use Utopia\App;
-use Utopia\Cache\Adapter\Redis;
-use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -139,9 +136,6 @@ class FunctionsV1 extends Worker
     {
         global $register;
 
-        $db = $register->get('db');
-        $cache = $register->get('cache');
-
         $projectId = $this->args['projectId'] ?? '';
         $functionId = $this->args['functionId'] ?? '';
         $webhooks = $this->args['webhooks'] ?? [];
@@ -154,9 +148,7 @@ class FunctionsV1 extends Worker
         $userId = $this->args['userId'] ?? '';
         $jwt = $this->args['jwt'] ?? '';
 
-        $cache = new Cache(new Redis($cache));
-        $database = new Database(new MariaDB($db), $cache);
-        $database->setNamespace('project_'.$projectId.'_internal');
+        $database = $this->getInternalDB($projectId);
 
         switch ($trigger) {
             case 'event':
