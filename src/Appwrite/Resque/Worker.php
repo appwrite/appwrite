@@ -2,7 +2,6 @@
 
 namespace Appwrite\Resque;
 
-use Exception;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\CLI\Console;
@@ -18,6 +17,13 @@ abstract class Worker
     abstract public function run(): void;
 
     abstract public function shutdown(): void;
+
+    const MAX_ATTEMPTS = 10;
+    const SLEEP_TIME = 2;
+
+    const DATABASE_INTERNAL = 'internal';
+    const DATABASE_EXTERNAL = 'external';
+    const DATABASE_CONSOLE = 'console';
 
     public function setUp(): void
     {
@@ -40,32 +46,7 @@ abstract class Worker
      */
     protected function getInternalDB(string $projectId): Database
     {
-        global $register;
-
-        $attempts = 0;
-        $max = 10;
-        $sleep = 2;
-
-        do {
-            try {
-                $attempts++;
-                $cache = new Cache(new RedisCache($register->get('cache')));
-                $dbForInternal = new Database(new MariaDB($register->get('db')), $cache);
-                $dbForInternal->setNamespace("project_{$projectId}_internal"); // Main DB
-                if (!$dbForInternal->exists()) {
-                    throw new Exception("Table does not exist: {$dbForInternal->getNamespace()}");
-                }
-                break; // leave loop if successful
-            } catch(\Exception $e) {
-                Console::warning("Database not ready. Retrying connection ({$attempts})...");
-                if ($attempts >= $max) {
-                    throw new \Exception('Failed to connect to database: '. $e->getMessage());
-                }
-                sleep($sleep);
-            }
-        } while ($attempts < $max);
-
-        return $dbForInternal;
+        return $this->getDB(self::DATABASE_INTERNAL, $projectId);
     }
 
     /**
@@ -75,32 +56,7 @@ abstract class Worker
      */
     protected function getExternalDB(string $projectId): Database
     {
-        global $register;
-
-        $attempts = 0;
-        $max = 10;
-        $sleep = 2;
-
-        do {
-            try {
-                $attempts++;
-                $cache = new Cache(new RedisCache($register->get('cache')));
-                $dbForExternal = new Database(new MariaDB($register->get('db')), $cache);
-                $dbForExternal->setNamespace("project_{$projectId}_external"); // Main DB
-                if (!$dbForExternal->exists()) {
-                    throw new Exception("Table does not exist: {$dbForExternal->getNamespace()}");
-                }
-                break; // leave loop if successful
-            } catch(\Exception $e) {
-                Console::warning("Database not ready. Retrying connection ({$attempts})...");
-                if ($attempts >= $max) {
-                    throw new \Exception('Failed to connect to database: '. $e->getMessage());
-                }
-                sleep($sleep);
-            }
-        } while ($attempts < $max);
-
-        return $dbForExternal;
+        return $this->getDB(self::DATABASE_EXTERNAL, $projectId);
     }
 
     /**
@@ -109,31 +65,65 @@ abstract class Worker
      */
     protected function getConsoleDB(): Database
     {
+        return $this->getDB(self::DATABASE_CONSOLE);
+    }
+
+    /**
+     * Get console database
+     * @param string $type One of (internal, external, console)
+     * @param string $projectId of internal or external DB
+     * @return Database
+     */
+    private function getDB($type, $projectId = ''): Database
+    {
         global $register;
 
+        $namespace = '';
+        $sleep = self::SLEEP_TIME; // overwritten when necessary
+
+        switch ($type) {
+            case self::DATABASE_INTERNAL:
+                if (!$projectId) {
+                    throw new \Exception('ProjectID not provided - cannot get database');
+                }
+                $namespace = "project_{$projectId}_internal";
+                break;
+            case self::DATABASE_EXTERNAL:
+                if (!$projectId) {
+                    throw new \Exception('ProjectID not provided - cannot get database');
+                }
+                $namespace = "project_{$projectId}_external";
+                break;
+            case self::DATABASE_CONSOLE:
+                $namespace = "project_console_internal";
+                $sleep = 5; // ConsoleDB needs extra sleep time to ensure tables are created
+                break;
+            default:
+                throw new \Exception('Unknown database type: ' . $type);
+                break;
+        }
+
         $attempts = 0;
-        $max = 5;
-        $sleep = 5;
 
         do {
             try {
                 $attempts++;
                 $cache = new Cache(new RedisCache($register->get('cache')));
-                $dbForConsole = new Database(new MariaDB($register->get('db')), $cache);
-                $dbForConsole->setNamespace('project_console_internal'); // Main DB
-                if (!$dbForConsole->exists()) {
-                    throw new Exception("Table does not exist: {$dbForConsole->getNamespace()}");
+                $database = new Database(new MariaDB($register->get('db')), $cache);
+                $database->setNamespace($namespace); // Main DB
+                if (!$database->exists()) {
+                    throw new \Exception("Table does not exist: {$database->getNamespace()}");
                 }
                 break; // leave loop if successful
             } catch(\Exception $e) {
                 Console::warning("Database not ready. Retrying connection ({$attempts})...");
-                if ($attempts >= $max) {
+                if ($attempts >= self::MAX_ATTEMPTS) {
                     throw new \Exception('Failed to connect to database: '. $e->getMessage());
                 }
                 sleep($sleep);
             }
-        } while ($attempts < $max);
+        } while ($attempts < self::MAX_ATTEMPTS);
 
-        return $dbForConsole;
+        return $database;
     }
 }
