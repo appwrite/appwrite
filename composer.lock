@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2e33531f9d9a4f1e6de2e09471e28608",
+    "content-hash": "e928f83c29a3236f70d13767aa5a45b0",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2079,11 +2079,17 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "dev-feat-chunk-response",
+            "version": "0.17.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/lohanidamodar/framework",
-                "reference": "d90ef991c78473d662f830d4a8c085600190a868"
+                "url": "https://github.com/utopia-php/framework.git",
+                "reference": "2952f6a21c2229f7a63ecb955bda676158174aec"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/2952f6a21c2229f7a63ecb955bda676158174aec",
+                "reference": "2952f6a21c2229f7a63ecb955bda676158174aec",
+                "shasum": ""
             },
             "require": {
                 "php": ">=7.3.0"
@@ -2098,6 +2104,7 @@
                     "Utopia\\": "src/"
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -2113,7 +2120,11 @@
                 "php",
                 "upf"
             ],
-            "time": "2021-07-19T10:03:06+00:00"
+            "support": {
+                "issues": "https://github.com/utopia-php/framework/issues",
+                "source": "https://github.com/utopia-php/framework/tree/0.17.0"
+            },
+            "time": "2021-07-26T05:56:11+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2367,16 +2378,22 @@
         },
         {
             "name": "utopia-php/swoole",
-            "version": "dev-feat-send-chunks",
+            "version": "0.3.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/lohanidamodar/swoole",
-                "reference": "0efbd9e4cee74def127a7f06a1cda78a479b311b"
+                "url": "https://github.com/utopia-php/swoole.git",
+                "reference": "44ec4eb2ccb75aaffe9cbb8b1acade4fc316cd7a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/44ec4eb2ccb75aaffe9cbb8b1acade4fc316cd7a",
+                "reference": "44ec4eb2ccb75aaffe9cbb8b1acade4fc316cd7a",
+                "shasum": ""
             },
             "require": {
                 "ext-swoole": "*",
                 "php": ">=7.4",
-                "utopia-php/framework": "dev-feat-chunk-response"
+                "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -2389,6 +2406,7 @@
                     "Utopia\\Swoole\\": "src/Swoole"
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -2408,7 +2426,11 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2021-07-18T09:01:17+00:00"
+            "support": {
+                "issues": "https://github.com/utopia-php/swoole/issues",
+                "source": "https://github.com/utopia-php/swoole/tree/0.3.0"
+            },
+            "time": "2021-07-26T06:41:59+00:00"
         },
         {
             "name": "utopia-php/system",
@@ -3334,16 +3356,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v4.11.0",
+            "version": "v4.12.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "fe14cf3672a149364fb66dfe11bf6549af899f94"
+                "reference": "6608f01670c3cc5079e18c1dab1104e002579143"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/fe14cf3672a149364fb66dfe11bf6549af899f94",
-                "reference": "fe14cf3672a149364fb66dfe11bf6549af899f94",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/6608f01670c3cc5079e18c1dab1104e002579143",
+                "reference": "6608f01670c3cc5079e18c1dab1104e002579143",
                 "shasum": ""
             },
             "require": {
@@ -3384,9 +3406,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v4.11.0"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v4.12.0"
             },
-            "time": "2021-07-03T13:36:55+00:00"
+            "time": "2021-07-21T10:44:31+00:00"
         },
         {
             "name": "openlss/lib-array2xml",
@@ -3443,16 +3465,16 @@
         },
         {
             "name": "phar-io/manifest",
-            "version": "2.0.1",
+            "version": "2.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phar-io/manifest.git",
-                "reference": "85265efd3af7ba3ca4b2a2c34dbfc5788dd29133"
+                "reference": "97803eca37d319dfa7826cc2437fc020857acb53"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phar-io/manifest/zipball/85265efd3af7ba3ca4b2a2c34dbfc5788dd29133",
-                "reference": "85265efd3af7ba3ca4b2a2c34dbfc5788dd29133",
+                "url": "https://api.github.com/repos/phar-io/manifest/zipball/97803eca37d319dfa7826cc2437fc020857acb53",
+                "reference": "97803eca37d319dfa7826cc2437fc020857acb53",
                 "shasum": ""
             },
             "require": {
@@ -3497,9 +3519,9 @@
             "description": "Component for reading phar.io manifest information from a PHP Archive (PHAR)",
             "support": {
                 "issues": "https://github.com/phar-io/manifest/issues",
-                "source": "https://github.com/phar-io/manifest/tree/master"
+                "source": "https://github.com/phar-io/manifest/tree/2.0.3"
             },
-            "time": "2020-06-27T14:33:11+00:00"
+            "time": "2021-07-20T11:28:43+00:00"
         },
         {
             "name": "phar-io/version",
@@ -5099,6 +5121,7 @@
                     "type": "github"
                 }
             ],
+            "abandoned": true,
             "time": "2020-09-28T06:45:17+00:00"
         },
         {
@@ -6198,20 +6221,11 @@
             "time": "2015-12-17T08:42:14+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/framework",
-            "version": "dev-feat-chunk-response",
-            "alias": "0.16.1",
-            "alias_normalized": "0.16.1.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/framework": 20,
         "utopia-php/abuse": 20,
         "utopia-php/audit": 20,
-        "utopia-php/swoole": 20,
         "utopia-php/storage": 20
     },
     "prefer-stable": false,

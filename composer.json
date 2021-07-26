@@ -38,7 +38,7 @@
         "appwrite/php-clamav": "1.1.*",
         "appwrite/php-runtimes": "0.4.*",
 
-        "utopia-php/framework": "dev-feat-chunk-response as 0.16.1",
+        "utopia-php/framework": "0.17.*",
         "utopia-php/abuse": "dev-feat-utopia-db-integration",
         "utopia-php/analytics": "0.2.*",
         "utopia-php/audit": "dev-feat-utopia-db-integration",
@@ -50,7 +50,7 @@
         "utopia-php/registry": "0.5.*",
         "utopia-php/preloader": "0.2.*",
         "utopia-php/domains": "1.1.*",
-        "utopia-php/swoole": "dev-feat-send-chunks",
+        "utopia-php/swoole": "0.3.*",
         "utopia-php/storage": "dev-feat-large-file-support",
         "utopia-php/image": "0.5.*",
         "resque/php-resque": "1.3.6",
@@ -73,15 +73,7 @@
         },
         {
             "type": "git",
-            "url": "https://github.com/lohanidamodar/swoole"
-        },
-        {
-            "type": "git",
             "url": "https://github.com/utopia-php/storage"
-        },
-        {
-            "type": "git",
-            "url": "https://github.com/lohanidamodar/framework"
         }
     ],
     "require-dev": {
