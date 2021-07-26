@@ -230,7 +230,7 @@ $auth = $this->getParam('auth', []);
                             <tbody data-ls-loop="project-teams.teams" data-ls-as="team">
                                 <tr>
                                     <td class="hide">
-                                        <img src="" data-ls-attrs="src={{team.name|avatar}}" data-size="45" alt="Collection Avatar" class="avatar margin-end pull-start" loading="lazy" width="30" height="30" />
+                                        <img src="" data-ls-attrs="src={{team.$id|avatar}}" data-size="45" alt="Collection Avatar" class="avatar margin-end pull-start" loading="lazy" width="30" height="30" />
                                     </td>
                                     <td data-title="ID: ">
                                         <a data-ls-attrs="href=/console/users/teams/team?id={{team.$id}}&project={{router.params.project}}" data-ls-bind="{{team.$id}}"></a>

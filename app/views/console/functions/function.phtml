@@ -18,7 +18,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
             <a data-ls-attrs="href=/console/functions?project={{router.params.project}}" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> Functions</a>
             <br />
 
-            <span data-ls-bind="{{project-function.name}}&nbsp;">&nbsp;</span>
+            <span data-ls-bind="{{project-function.$id}}&nbsp;">&nbsp;</span>
         </h1>
     </div>
 
@@ -448,9 +448,6 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
                             <div class="box">
                                 <section class="margin-bottom-large">
-                                    <label for="name">Name</label>
-                                    <input name="name" id="function-name" type="text" autocomplete="off" data-ls-bind="{{project-function.name}}" data-forms-text-direction required placeholder="Function Name" maxlength="128" />
-
                                     <label for="execute">Execute Access <span class="tooltip small" data-tooltip="Choose who can execute this function using the client API."><i class="icon-info-circled"></i></span> <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
                                     <input type="hidden" id="execute" name="execute" data-forms-tags data-cast-to="json" data-ls-bind="{{project-function.$permissions.execute}}" placeholder="User ID, Team ID or Role" />
                                     <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
