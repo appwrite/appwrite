@@ -65,7 +65,7 @@ App::post('/v1/users')
         }
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($user, Response::MODEL_USER);
+        $response->dynamic($user, Response::MODEL_USER);
     });
 
 App::get('/v1/users')
@@ -92,7 +92,7 @@ App::get('/v1/users')
         $results = $dbForInternal->find('users', [], $limit, $offset, ['_id'], [$orderType]);
         $sum = $dbForInternal->count('users', [], APP_LIMIT_COUNT);
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'users' => $results,
             'sum' => $sum,
         ]), Response::MODEL_USER_LIST);
@@ -122,7 +122,7 @@ App::get('/v1/users/:userId')
             throw new Exception('User not found', 404);
         }
 
-        $response->dynamic2($user, Response::MODEL_USER);
+        $response->dynamic($user, Response::MODEL_USER);
     });
 
 App::get('/v1/users/:userId/prefs')
@@ -151,7 +151,7 @@ App::get('/v1/users/:userId/prefs')
 
         $prefs = $user->getAttribute('prefs', new \stdClass());
 
-        $response->dynamic2(new Document($prefs), Response::MODEL_PREFERENCES);
+        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
 App::get('/v1/users/:userId/sessions')
@@ -194,7 +194,7 @@ App::get('/v1/users/:userId/sessions')
             $sessions[$key] = $session;
         }
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'sessions' => $sessions,
             'sum' => count($sessions),
         ]), Response::MODEL_SESSION_LIST);
@@ -218,7 +218,7 @@ App::get('/v1/users/:userId/logs')
     ->inject('geodb')
     ->action(function ($userId, $response, $dbForInternal, $locale, $geodb) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $project */
+        /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
@@ -305,7 +305,7 @@ App::get('/v1/users/:userId/logs')
             }
         }
 
-        $response->dynamic2(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
+        $response->dynamic(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
     });
 
 App::patch('/v1/users/:userId/status')
@@ -336,7 +336,7 @@ App::patch('/v1/users/:userId/status')
 
         $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('status', (bool) $status));
 
-        $response->dynamic2($user, Response::MODEL_USER);
+        $response->dynamic($user, Response::MODEL_USER);
     });
 
 App::patch('/v1/users/:userId/verification')
@@ -367,7 +367,7 @@ App::patch('/v1/users/:userId/verification')
 
         $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', $emailVerification));
 
-        $response->dynamic2($user, Response::MODEL_USER);
+        $response->dynamic($user, Response::MODEL_USER);
     });
 
 App::patch('/v1/users/:userId/prefs')
@@ -398,7 +398,7 @@ App::patch('/v1/users/:userId/prefs')
 
         $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
 
-        $response->dynamic2(new Document($prefs), Response::MODEL_PREFERENCES);
+        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
 App::delete('/v1/users/:userId/sessions/:sessionId')
@@ -440,7 +440,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
                 $user->setAttribute('sessions', $sessions);
                 
                 $events
-                    ->setParam('eventData', $response->output2($user, Response::MODEL_USER))
+                    ->setParam('eventData', $response->output($user, Response::MODEL_USER))
                 ;
 
                 $dbForInternal->updateDocument('users', $user->getId(), $user);
@@ -486,7 +486,7 @@ App::delete('/v1/users/:userId/sessions')
         $dbForInternal->updateDocument('users', $user->getId(), $user->getAttribute('sessions', []));
 
         $events
-            ->setParam('eventData', $response->output2($user, Response::MODEL_USER))
+            ->setParam('eventData', $response->output($user, Response::MODEL_USER))
         ;
 
         $response->noContent();
@@ -535,7 +535,7 @@ App::delete('/v1/users/:userId')
         ;
 
         $events
-            ->setParam('eventData', $response->output2($user, Response::MODEL_USER))
+            ->setParam('eventData', $response->output($user, Response::MODEL_USER))
         ;
 
         // TODO : Response filter implementation

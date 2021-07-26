@@ -11,7 +11,7 @@ use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Filesystem;
 use Appwrite\ClamAV\Network;
 use Utopia\Database\Document;
-use Appwrite\Database\Validator\UID;
+use Utopia\Database\Validator\UID;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileSize;
@@ -50,7 +50,7 @@ App::post('/v1/storage/files')
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
-        /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $usage */
 
@@ -150,7 +150,7 @@ App::post('/v1/storage/files')
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($file, Response::MODEL_FILE);
+        $response->dynamic($file, Response::MODEL_FILE);
         ;
     });
 
@@ -177,7 +177,7 @@ App::get('/v1/storage/files')
 
         $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, $search)] : [];
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'files' => $dbForInternal->find('files', $queries, $limit, $offset, ['_id'], [$orderType]),
             'sum' => $dbForInternal->count('files', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_FILE_LIST);
@@ -207,7 +207,7 @@ App::get('/v1/storage/files/:fileId')
             throw new Exception('File not found', 404);
         }
 
-        $response->dynamic2($file, Response::MODEL_FILE);
+        $response->dynamic($file, Response::MODEL_FILE);
     });
 
 App::get('/v1/storage/files/:fileId/preview')
@@ -530,7 +530,7 @@ App::put('/v1/storage/files/:fileId')
             ->setParam('resource', 'storage/files/'.$file->getId())
         ;
 
-        $response->dynamic2($file, Response::MODEL_FILE);
+        $response->dynamic($file, Response::MODEL_FILE);
     });
 
 App::delete('/v1/storage/files/:fileId')
@@ -581,7 +581,7 @@ App::delete('/v1/storage/files/:fileId')
         ;
 
         $events
-            ->setParam('eventData', $response->output2($file, Response::MODEL_FILE))
+            ->setParam('eventData', $response->output($file, Response::MODEL_FILE))
         ;
 
         $response->noContent();

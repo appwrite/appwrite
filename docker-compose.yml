@@ -508,17 +508,6 @@ services:
     networks:
       - appwrite
 
-  swagger-validator:
-    image: 'kodumbeats/swagger-validator-v2:v2.0.5'
-    container_name: appwrite-swagger-validator
-    ports:
-      - '9506:8080'
-    environment:
-      - REJECT_LOCAL=false
-      - REJECT_REDIRECT=false
-    networks:
-      - appwrite
-
   # redis-commander:
   #   image: rediscommander/redis-commander:latest
   #   restart: unless-stopped

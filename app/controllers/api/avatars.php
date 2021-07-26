@@ -424,7 +424,7 @@ App::get('/v1/avatars/initials')
     ->inject('user')
     ->action(function ($name, $width, $height, $color, $background, $response, $user) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Database\Document $user */
 
         $themes = [
             ['color' => '#27005e', 'background' => '#e1d2f6'], // VIOLET
