@@ -1,14 +1,14 @@
 [
     {
         "term": "settings.inspire",
-        "context": "These strings are used to configure Appwrite's settings.",
-        "comment": "",
+        "context": "This string is used as an easter egg in the Appwrite dashboard's raw html",
+        "comment": "https://github.com/appwrite/appwrite/blob/master/app/views/layouts/default.phtml#L34",
         "reference": ""
     },
     {
         "term": "settings.locale",
-        "context": "These strings are used to configure Appwrite's settings.",
-        "comment": "",
+        "context": "This string is used to configure the Appwrite Dashboard's language",
+        "comment": "https://github.com/appwrite/appwrite/blob/master/app/views/layouts/default.phtml#L36",
         "reference": ""
     },
     {
