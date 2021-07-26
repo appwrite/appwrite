@@ -3,13 +3,9 @@
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Resque\Worker;
 use Utopia\App;
-use Utopia\Cache\Adapter\Redis;
-use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
 
@@ -28,11 +24,7 @@ class CertificatesV1 extends Worker
 
     public function run(): void
     {
-        global $register;
-
-        $cache = new Cache(new Redis($register->get('cache')));
-        $dbForConsole = new Database(new MariaDB($register->get('db')), $cache);
-        $dbForConsole->setNamespace('project_console_internal'); // Main DB
+        $dbForConsole = $this->getConsoleDB();
 
         /**
          * 1. Get new domain document - DONE
