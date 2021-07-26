@@ -43,6 +43,7 @@ use Utopia\Database\Document as Document2;
 use Utopia\Database\Database as Database2;
 use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Validator\Range;
 use Swoole\Database\PDOConfig;
 use Swoole\Database\PDOPool;
 use Swoole\Database\RedisConfig;
@@ -188,9 +189,25 @@ Database2::addFilter('encrypt',
     }
 );
 
-Structure::addFormat('email', new Email(), Database2::VAR_STRING);
-Structure::addFormat('ip', new IP(), Database2::VAR_STRING);
-Structure::addFormat('url', new URL(), Database2::VAR_STRING);
+Structure::addFormat('email', function() {
+    return new Email();
+}, Database2::VAR_STRING);
+
+Structure::addFormat('ip', function() {
+    return new IP();
+}, Database2::VAR_STRING);
+
+Structure::addFormat('url', function() {
+    return new URL();
+}, Database2::VAR_STRING);
+
+Structure::addFormat('int-range', function($min, $max, $type) {
+    return new Range($min, $max, $type);
+}, Database2::VAR_INTEGER, ['min', 'max', 'type']);
+
+Structure::addFormat('float-range', function($min, $max, $type) {
+    return new Range($min, $max, $type);
+}, Database2::VAR_FLOAT, ['min', 'max', 'type']);
 
 /*
  * Registry

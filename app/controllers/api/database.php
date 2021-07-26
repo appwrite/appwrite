@@ -212,20 +212,6 @@ App::delete('/v1/database/collections/:collectionId')
 
         $dbForExternal->deleteCollection($collectionId);
 
-        // Remove any float validators from Structure object
-        $attributes = $collection->getAttribute('attributes', []);
-        array_walk($attributes, function (Document $attribute) {
-            $type = $attribute->getAttribute('type', '');
-            $format = $attribute->getAttribute('format', '');
-
-            // Remove the range filter from ints/floats
-            if ($type === Database::VAR_INTEGER || $type === Database::VAR_FLOAT) {
-                if ($format) {
-                    Structure::removeFormat($format);
-                }
-            }
-        });
-
         $events
             ->setParam('eventData', $response->output($collection, Response::MODEL_COLLECTION))
         ;
@@ -362,20 +348,14 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
             throw new Exception('Collection not found', 404);
         }
 
-        /** @var string $format Name for custom range validation */
+        /** @var string $format */
         $format = null;
 
+        // Add range validator if either $min or $max is provided
         if (!is_null($min) || !is_null($max)) {
             $min = (is_null($min)) ? -INF : \intval($min);
             $max = (is_null($max)) ? INF : \intval($max);
-
-            // TODO@kodumbeats troubleshoot
-            // if ($min > $max) {
-            //     throw new Exception('Minimum value must be lesser than maximum value', 400);
-            // }
-
-            $format = strval($min) . '_to_' . strval($max);
-            Structure::addFormat($format, new Range($min, $max, $type), $type);
+            $format = 'int-range';
         }
 
         // integers are signed by default, and filters are hidden from the endpoint.
@@ -397,7 +377,8 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
             'required' => $required,
             'default' => $default,
             'signed' => $signed,
-            'format' => $format,
+            'min' => $min,
+            'max' => $max,
             'array' => $array,
             'filters' => $filters
         ]);
@@ -457,16 +438,11 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
         /** @var string $format Name for custom range validation */
         $format = null;
 
+        // Add range validator if either $min or $max is provided
         if (!is_null($min) || !is_null($max)) {
-            $min = (is_null($min)) ? -INF : \floatval($min);
-            $max = (is_null($max)) ? INF : \floatval($max);
-
-            if ($min > $max) {
-                throw new Exception('Minimum value must be lesser than maximum value', 400);
-            }
-
-            $format = strval($min) . '_to_' . strval($max);
-            Structure::addFormat($format, new Range($min, $max, $type), $type);
+            $min = (is_null($min)) ? -INF : \intval($min);
+            $max = (is_null($max)) ? INF : \intval($max);
+            $format = 'int-range';
         }
 
         // integers are signed by default, and filters are hidden from the endpoint.
@@ -489,7 +465,8 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
             'default' => $default,
             'signed' => $signed,
             'array' => $array,
-            'format' => $format,
+            'min' => $min,
+            'max' => $max,
             'filters' => $filters
         ]);
 
@@ -1008,34 +985,6 @@ App::post('/v1/database/collections/:collectionId/documents')
         $data['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; //  By default set read permissions for user
         $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; //  By default set write permissions for user
 
-        // Add any missing range validators not present on numeric attributes
-        $attributes = $collection->getAttribute('attributes', []);
-        array_walk($attributes, function (Document $attribute) {
-            $type = $attribute->getAttribute('type', '');
-            $format = $attribute->getAttribute('format', '');
-
-            if ($format || !Structure::hasFormat($format, $type)) {
-                switch ($type) {
-                    case Database::VAR_INTEGER:
-                        // format is stored as "{$min}_to_{$max}"
-                        [$min, /*_to_*/, $max] = \explode('_', $format);
-                        $min = ($min === "-INF") ? -INF : \intval($min);
-                        $max = ($max === "INF") ? INF : \intval($max);
-                        Structure::addFormat($format, new Range($min, $max, $type), $type);
-                        break;
-                    case Database::VAR_FLOAT:
-                        // format is stored as "{$min}_to_{$max}"
-                        [$min, /*_to_*/, $max] = \explode('_', $format);
-                        $min = ($min === "-INF") ? -INF :\floatval($min);
-                        $max = ($max === "INF") ? INF :\floatval($max);
-                        Structure::addFormat($format, new Range($min, $max, $type), $type);
-                        break;
-                    default:
-                        break;
-                }
-            }
-        });
-
         try {
             $document = $dbForExternal->createDocument($collectionId, new Document($data));
         } catch (StructureException $exception) {
@@ -1193,34 +1142,6 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         $data['$id'] = $document->getId(); // Make sure user don't switch document unique ID
         $data['$read'] = (is_null($read)) ? ($document->getRead() ?? []) : $read; // By default inherit read permissions
         $data['$write'] = (is_null($write)) ? ($document->getWrite() ?? []) : $write; // By default inherit write permissions
-
-        // Add any missing range validators not present on numeric attributes
-        $attributes = $collection->getAttribute('attributes', []);
-        array_walk($attributes, function (Document $attribute) {
-            $type = $attribute->getAttribute('type', '');
-            $format = $attribute->getAttribute('format', '');
-
-            if ($format || !Structure::hasFormat($format, $type)) {
-                switch ($type) {
-                    case Database::VAR_INTEGER:
-                        // format is stored as "{$min}_to_{$max}"
-                        [$min, /*_to_*/, $max] = \explode('_', $format);
-                        $min = ($min === "-INF") ? -INF :\intval($min);
-                        $max = ($max === "INF") ? INF :\intval($max);
-                        Structure::addFormat($format, new Range($min, $max, $type), $type);
-                        break;
-                    case Database::VAR_FLOAT:
-                        // format is stored as "{$min}_to_{$max}"
-                        [$min, /*_to_*/, $max] = \explode('_', $format);
-                        $min = ($min === "-INF") ? -INF :\floatval($min);
-                        $max = ($max === "INF") ? INF :\floatval($max);
-                        Structure::addFormat($format, new Range($min, $max, $type), $type);
-                        break;
-                    default:
-                        break;
-                }
-            }
-        });
 
         try {
             $document = $dbForExternal->updateDocument($collection->getId(), $document->getId(), new Document($data));
