@@ -213,7 +213,12 @@
         <p>Appwrite projects are containers for your resources and apps across different platforms.</p>
 
         <label>ID</label>
-        <input type="text" class="full-width margin-bottom-xl" name="projectId" required autocomplete="off" maxlength="128" />
+        <input
+            type="hidden"
+            data-custom-id
+            id-type="custom"
+            name="projectId"
+            class="" required maxlength="36" />
 
         <footer>
             <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
