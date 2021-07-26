@@ -23,6 +23,7 @@ $register->set('db', function () {
 
     return $pdo;
 });
+
 $register->set('cache', function () { // Register cache connection
     $redis = new Redis();
     $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
@@ -30,3 +31,4 @@ $register->set('cache', function () { // Register cache connection
 
     return $redis;
 });
+
