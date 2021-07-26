@@ -129,7 +129,7 @@ class Realtime extends Adapter
      */
     public static function send(string $project, array $payload, string $event, array $channels, array $roles, array $options = []): void
     {
-        if (empty($channels) || empty($permissions) || empty($project)) return;
+        if (empty($channels) || empty($roles) || empty($project)) return;
 
         $permissionsChanged = array_key_exists('permissionsChanged', $options) && $options['permissionsChanged'];
         $userId = array_key_exists('userId', $options) ? $options['userId'] : null;
