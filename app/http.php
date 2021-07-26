@@ -54,8 +54,25 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
     $app = new App('UTC');
 
     go(function() use ($register, $app) {
-        $db = $register->get('dbPool')->get();
-        $redis = $register->get('redisPool')->get();
+        // wait for database to be ready
+        $attempts = 0;
+        $max = 10;
+        $sleep = 1;
+
+        do {
+            try {
+                $attempts++;
+                $db = $register->get('dbPool')->get();
+                $redis = $register->get('redisPool')->get();
+                break; // leave the do-while if successful
+            } catch(\Exception $e) {
+                Console::warning("Database not ready. Retrying connection ({$attempts})...");
+                if ($attempts >= $max) {
+                    throw new \Exception('Failed to connect to database: '. $e->getMessage());
+                }
+                sleep($sleep);
+            }
+        } while ($attempts < $max);
 
         App::setResource('db', function () use (&$db) {
             return $db;
@@ -68,9 +85,6 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         App::setResource('app', function() use (&$app) {
             return $app;
         });
-
-        // wait for database to be ready
-        sleep(5);
 
         $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
 
@@ -165,10 +179,6 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     App::setResource('cache', function () use (&$redis) {
         return $redis;
     });
-
-    App::setResource('app', function() use (&$app) {
-        return $app;
-    });
     
     try {
         Authorization::cleanRoles();
@@ -183,6 +193,13 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         Console::error('[Error] Message: '.$th->getMessage());
         Console::error('[Error] File: '.$th->getFile());
         Console::error('[Error] Line: '.$th->getLine());
+
+        /**
+         * Reset Database connection if PDOException was thrown.
+         */
+        if ($th instanceof PDOException) {
+            $db = null;
+        }
 
         if(App::isDevelopment()) {
             $swooleResponse->end('error: '.$th->getMessage());

@@ -6,11 +6,8 @@ use Appwrite\Utopia\Response\Model\Execution;
 use Cron\CronExpression;
 use Swoole\Runtime;
 use Utopia\App;
-use Utopia\Cache\Adapter\Redis;
-use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -123,7 +120,7 @@ Console::info(count($list)." functions listed in " . ($executionEnd - $execution
  * 7. Trigger usage log - DONE
  */
 
-//TODO aviod scheduled execution if delay is bigger than X offest
+//TODO avoid scheduled execution if delay is bigger than X offest
 
 class FunctionsV1 extends Worker
 {
@@ -139,9 +136,6 @@ class FunctionsV1 extends Worker
     {
         global $register;
 
-        $db = $register->get('db');
-        $cache = $register->get('cache');
-
         $projectId = $this->args['projectId'] ?? '';
         $functionId = $this->args['functionId'] ?? '';
         $webhooks = $this->args['webhooks'] ?? [];
@@ -154,9 +148,7 @@ class FunctionsV1 extends Worker
         $userId = $this->args['userId'] ?? '';
         $jwt = $this->args['jwt'] ?? '';
 
-        $cache = new Cache(new Redis($cache));
-        $database = new Database(new MariaDB($db), $cache);
-        $database->setNamespace('project_'.$projectId.'_internal');
+        $database = $this->getInternalDB($projectId);
 
         switch ($trigger) {
             case 'event':
@@ -325,7 +317,7 @@ class FunctionsV1 extends Worker
             : null;
 
         if(\is_null($runtime)) {
-            throw new Exception('Runtime "'.$function->getAttribute('runtime', '').' is not supported');
+            throw new Exception('Runtime "'.$function->getAttribute('runtime', '').'" is not supported');
         }
 
         $vars = \array_merge($function->getAttribute('vars', []), [
@@ -345,7 +337,7 @@ class FunctionsV1 extends Worker
 
         \array_walk($vars, function (&$value, $key) {
             $key = $this->filterEnvKey($key);
-            $value = \escapeshellarg((empty($value)) ? 'null' : $value);
+            $value = \escapeshellarg((empty($value)) ? '' : $value);
             $value = "--env {$key}={$value}";
         });
 
@@ -413,14 +405,23 @@ class FunctionsV1 extends Worker
                 " --workdir /usr/local/src".
                 " ".\implode(" ", $vars).
                 " {$runtime['image']}".
-                " sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'"
+                " tail -f /dev/null"
             , '', $stdout, $stderr, 30);
 
-            $executionEnd = \microtime(true);
-    
             if($exitCode !== 0) {
                 throw new Exception('Failed to create function environment: '.$stderr);
             }
+
+            $exitCodeUntar = Console::execute("docker exec ".
+                $container.
+                " sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz'"
+                , '', $stdout, $stderr, 60);
+
+            if($exitCodeUntar !== 0) {
+                throw new Exception('Failed to extract tar: '.$stderr);
+            }
+
+            $executionEnd = \microtime(true);
 
             $list[$container] = [
                 'name' => $container,

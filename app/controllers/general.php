@@ -57,7 +57,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
                 $certificate = $dbForConsole->createDocument('certificates', $certificate);
                 Authorization2::enable();
 
-                Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in a few seconds...'); // TODO move this to installation script
+                Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in a few seconds...');
 
                 Resque::enqueue('v1-certificates', 'CertificatesV1', [
                     'document' => $certificate,
@@ -307,6 +307,10 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     /** @var Utopia\View $layout */
     /** @var Appwrite\Database\Document $project */
 
+    if ($error instanceof PDOException) {
+        throw $error;
+    }
+
     $route = $utopia->match($request);
     $template = ($route) ? $route->getLabel('error', null) : null;
 
@@ -370,10 +374,12 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
         $comp = new View($template);
 
         $comp
+            ->setParam('development', App::isDevelopment())
             ->setParam('projectName', $project->getAttribute('name'))
             ->setParam('projectURL', $project->getAttribute('url'))
             ->setParam('message', $error->getMessage())
             ->setParam('code', $code)
+            ->setParam('trace', $error->getTrace())
         ;
 
         $layout

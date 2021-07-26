@@ -1,12 +1,8 @@
 <?php
 
 use Appwrite\Resque\Worker;
-use Utopia\Cache\Cache;
-use Utopia\Cache\Adapter\Redis;
 use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Adapter\MariaDB;
 
 require_once __DIR__.'/../workers.php';
 
@@ -130,37 +126,5 @@ class DatabaseV1 extends Worker
         $id = $index->getAttribute('$id');
 
         $success = $dbForExternal->deleteIndex($collectionId, $id);
-    }
-
-    /**
-     * @param string $projectId
-     *
-     * @return Database
-     */
-    protected function getInternalDB($projectId): Database
-    {
-        global $register;
-
-        $cache = new Cache(new Redis($register->get('cache')));
-        $dbForInternal = new Database(new MariaDB($register->get('db')), $cache);
-        $dbForInternal->setNamespace('project_'.$projectId.'_internal'); // Main DB
-
-        return $dbForInternal;
-    }
-
-    /**
-     * @param string $projectId
-     *
-     * @return Database
-     */
-    protected function getExternalDB($projectId): Database
-    {
-        global $register;
-
-        $cache = new Cache(new Redis($register->get('cache')));
-        $dbForExternal = new Database(new MariaDB($register->get('db')), $cache);
-        $dbForExternal->setNamespace('project_'.$projectId.'_external'); // Main DB
-
-        return $dbForExternal;
     }
 }

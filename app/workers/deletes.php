@@ -3,7 +3,6 @@
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Cache\Adapter\Redis;
 use Utopia\Database\Validator\Authorization;
 use Appwrite\Resque\Worker;
 use Utopia\Storage\Device\Local;
@@ -11,8 +10,6 @@ use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\CLI\Console;
 use Utopia\Audit\Audit;
-use Utopia\Cache\Cache;
-use Utopia\Database\Adapter\MariaDB;
 
 require_once __DIR__.'/../workers.php';
 
@@ -349,49 +346,5 @@ class DeletesV1 extends Worker
         } else {
             Console::info("No certificate files found for {$domain}");
         }
-    }
-    
-    /**
-     * @param string $projectId
-     * @return Database
-     */
-    protected function getInternalDB($projectId): Database
-    {
-        global $register;
-        
-        $cache = new Cache(new Redis($register->get('cache')));
-        $dbForInternal = new Database(new MariaDB($register->get('db')), $cache);
-        $dbForInternal->setNamespace('project_'.$projectId.'_internal'); // Main DB
-
-        return $dbForInternal;
-    }
-
-    /**
-     * @param string $projectId
-     * @return Database
-     */
-    protected function getExternalDB($projectId): Database
-    {
-        global $register;
-
-        $cache = new Cache(new Redis($register->get('cache')));
-        $dbForExternal = new Database(new MariaDB($register->get('db')), $cache);
-        $dbForExternal->setNamespace('project_'.$projectId.'_external'); // Main DB
-
-        return $dbForExternal;
-    }
-
-    /**
-     * @return Database
-     */
-    protected function getConsoleDB(): Database
-    {
-        global $register;
-
-        $cache = new Cache(new Redis($register->get('cache')));
-        $dbForConsole = new Database(new MariaDB($register->get('db')), $cache);
-        $dbForConsole->setNamespace('project_console_internal'); // Main DB
-
-        return $dbForConsole;
     }
 }

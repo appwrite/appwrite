@@ -147,6 +147,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         break;
                     case 'kotlin':
                         $config = new Kotlin();
+                        $warning = $warning."\n\n > This is the Kotlin SDK for integrating with Appwrite from your Kotlin server-side code. If you're looking for the Android SDK you should check [appwrite/sdk-for-android](https://github.com/appwrite/sdk-for-android)";
                         break;
                     default:
                         throw new Exception('Language "'.$language['key'].'" not supported');
@@ -222,9 +223,15 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     Console::success("Remove temp directory '{$target}' for {$language['name']} SDK");
                 }
 
-                \exec('mkdir -p '.$resultExamples.' && cp -r '.$result.'/docs/examples '.$resultExamples);
-                Console::success("Copied code examples for {$language['name']} SDK to: {$resultExamples}");
-
+                $docDirectories = $language['docDirectories'] ?? [''];
+                foreach ($docDirectories as $languageTitle => $path) {
+                    $languagePath = strtolower($languageTitle !== 0 ? '/'.$languageTitle : '');
+                    \exec(
+                        'mkdir -p '.$resultExamples.$languagePath.' && \
+                        cp -r '.$result.'/docs/examples'.$languagePath.' '.$resultExamples
+                    );
+                    Console::success("Copied code examples for {$language['name']} SDK to: {$resultExamples}");
+                }
             }
         }
 

@@ -2726,16 +2726,16 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.11.1",
+            "version": "0.12.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "9809c31f27037d088fb832cdec0e8fbc93d1d388"
+                "reference": "ca8e34f091b3a66f94a8972cb94b0b8e1161dada"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/9809c31f27037d088fb832cdec0e8fbc93d1d388",
-                "reference": "9809c31f27037d088fb832cdec0e8fbc93d1d388",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/ca8e34f091b3a66f94a8972cb94b0b8e1161dada",
+                "reference": "ca8e34f091b3a66f94a8972cb94b0b8e1161dada",
                 "shasum": ""
             },
             "require": {
@@ -2769,9 +2769,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.11.1"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.12.0"
             },
-            "time": "2021-07-02T10:15:53+00:00"
+            "time": "2021-07-06T16:20:51+00:00"
         },
         {
             "name": "composer/semver",
