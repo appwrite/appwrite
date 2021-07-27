@@ -1516,15 +1516,18 @@ App::post('/v1/account/recovery')
         $url = Template::unParseURL($url);
 
         $body = Template::fromFile(__DIR__.'/../../config/locale/templates/email-base.tpl');
-        $content = Template::fromString($locale->getText('account.emails.recovery.body'));
 
         $body
-            ->setParam('{{content}}', $content->render(false))
-            ->setParam('{{title}}', $locale->getText('account.emails.recovery.title'))
+            ->setParam('{{subject}}', $locale->getText('emails.recovery.subject'))
+            ->setParam('{{hello}}', $locale->getText('emails.recovery.hello'))
+            ->setParam('{{body}}', $locale->getText('emails.recovery.body'))
+            ->setParam('{{redirect}}', $url)
+            ->setParam('{{footer}}', $locale->getText('emails.recovery.footer'))
+            ->setParam('{{thanks}}', $locale->getText('emails.recovery.thanks'))
+            ->setParam('{{signature}}', $locale->getText('emails.recovery.signature'))
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
             ->setParam('{{name}}', $profile->getAttribute('name'))
-            ->setParam('{{redirect}}', $url)
             ->setParam('{{bg-body}}', '#f7f7f7')
             ->setParam('{{bg-content}}', '#ffffff')
             ->setParam('{{text-content}}', '#000000')
@@ -1532,10 +1535,10 @@ App::post('/v1/account/recovery')
 
         $mails
             ->setParam('event', 'account.recovery.create')
-            ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name')))
+            ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('emails.sender'), $project->getAttribute('name')))
             ->setParam('recipient', $profile->getAttribute('email', ''))
             ->setParam('name', $profile->getAttribute('name', ''))
-            ->setParam('subject', $locale->getText('account.emails.recovery.title'))
+            ->setParam('subject', $locale->getText('emails.recovery.subject'))
             ->setParam('body', $body->render())
             ->trigger();
         ;
@@ -1716,15 +1719,18 @@ App::post('/v1/account/verification')
         $url = Template::unParseURL($url);
 
         $body = Template::fromFile(__DIR__.'/../../config/locale/templates/email-base.tpl');
-        $content = Template::fromString($locale->getText('account.emails.verification.body'));
 
         $body
-            ->setParam('{{content}}', $content->render(false))
-            ->setParam('{{title}}', $locale->getText('account.emails.verification.title'))
+            ->setParam('{{subject}}', $locale->getText('emails.verification.subject'))
+            ->setParam('{{hello}}', $locale->getText('emails.verification.hello'))
+            ->setParam('{{body}}', $locale->getText('emails.verification.body'))
+            ->setParam('{{redirect}}', $url)
+            ->setParam('{{footer}}', $locale->getText('emails.verification.footer'))
+            ->setParam('{{thanks}}', $locale->getText('emails.verification.thanks'))
+            ->setParam('{{signature}}', $locale->getText('emails.verification.signature'))
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
             ->setParam('{{name}}', $user->getAttribute('name'))
-            ->setParam('{{redirect}}', $url)
             ->setParam('{{bg-body}}', '#f7f7f7')
             ->setParam('{{bg-content}}', '#ffffff')
             ->setParam('{{text-content}}', '#000000')
@@ -1732,10 +1738,10 @@ App::post('/v1/account/verification')
 
         $mails
             ->setParam('event', 'account.verification.create')
-            ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name')))
+            ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('emails.sender'), $project->getAttribute('name')))
             ->setParam('recipient', $user->getAttribute('email'))
             ->setParam('name', $user->getAttribute('name'))
-            ->setParam('subject', $locale->getText('account.emails.verification.title'))
+            ->setParam('subject', $locale->getText('emails.verification.subject'))
             ->setParam('body', $body->render())
             ->trigger()
         ;

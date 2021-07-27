@@ -4,7 +4,7 @@
 <head>
   <meta name="viewport" content="width=device-width" />
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-  <title>{{title}}</title>
+  <title>{{subject}}</title>
   <style>
     body {
       background-color: {{bg-body}};
@@ -136,7 +136,16 @@
               <td class="wrapper">
                 <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                   <tr>
-                    <td>{{content}}</td>
+                    <td>
+                      <p>{{hello}}</p>
+                      <p>{{body}}</p>
+                      <a href="{{redirect}}" target="_blank">{{redirect}}</a>
+                      <p></br>{{footer}}</p>
+                      <p>{{thanks}}
+                      </br>
+                      {{signature}}
+                      </p>
+                    </td>
                   </tr>
                 </table>
               </td>
