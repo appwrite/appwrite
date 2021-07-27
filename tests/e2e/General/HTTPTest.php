@@ -133,7 +133,7 @@ class HTTPTest extends Scope
         }
 
         $client = new Client();
-        $client->setEndpoint('http://appwrite-swagger-validator:8080');
+        $client->setEndpoint('https://validator.swagger.io');
 
         /**
          * Test for SUCCESS
