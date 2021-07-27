@@ -418,36 +418,21 @@ App::post('/v1/teams/:teamId/memberships')
         $url = Template::parseURL($url);
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'teamId' => $team->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
         $url = Template::unParseURL($url);
-
-        $body = Template::fromFile(__DIR__.'/../../config/locale/templates/email-base.tpl');
-        $content = Template::fromString($locale->getText('account.emails.invitation.body'));
-        $cta = Template::fromFile(__DIR__.'/../../config/locale/templates/email-cta.tpl');
-        $title = \sprintf($locale->getText('account.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]']));
-        
-        $body
-            ->setParam('{{content}}', $content->render(false))
-            ->setParam('{{cta}}', $cta->render())
-            ->setParam('{{title}}', $title)
-            ->setParam('{{direction}}', $locale->getText('settings.direction'))
-            ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
-            ->setParam('{{team}}', $team->getAttribute('name', '[TEAM-NAME]'))
-            ->setParam('{{owner}}', $user->getAttribute('name', ''))
-            ->setParam('{{redirect}}', $url)
-            ->setParam('{{bg-body}}', '#f7f7f7')
-            ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{bg-cta}}', '#073b4c')
-            ->setParam('{{text-content}}', '#000000')
-            ->setParam('{{text-cta}}', '#ffffff')
-        ;
+        $subject = \sprintf($locale->getText('emails.invitation.subject'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]']));
 
         if (!$isPrivilegedUser && !$isAppUser) { // No need of confirmation when in admin or app mode
             $mails
                 ->setParam('event', 'teams.memberships.create')
-                ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name')))
+                ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('emails.sender'), $project->getAttribute('name')))
                 ->setParam('recipient', $email)
                 ->setParam('name', $name)
-                ->setParam('subject', $title)
-                ->setParam('body', $body->render())
+                ->setParam('subject', $subject)
+                ->setParam('url', $url)
+                ->setParam('locale', $locale->default)
+                ->setParam('project', $project->getAttribute('name', ['[APP-NAME]']))
+                ->setParam('owner', $user->getAttribute('name', ''))
+                ->setParam('team', $team->getAttribute('name', '[TEAM-NAME]'))
+                ->setParam('type', MAIL_TYPE_INVITATION)
                 ->trigger()
             ;
         }

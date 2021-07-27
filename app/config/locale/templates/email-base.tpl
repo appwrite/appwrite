@@ -4,7 +4,7 @@
 <head>
   <meta name="viewport" content="width=device-width" />
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-  <title>{{title}}</title>
+  <title>{{subject}}</title>
   <style>
     body {
       background-color: {{bg-body}};
@@ -82,58 +82,10 @@
       word-break: break-all;
     }
 
-    .btn {
-      box-sizing: border-box;
-      width: 100%;
-    }
-
-    .btn>tbody>tr>td {
-      padding-bottom: 15px;
-      padding-top: 15px;
-    }
-
-    .btn table {
-      width: auto;
-    }
-
-    .btn table td {
-      background-color: {{bg-content}};
-      border-radius: 20px;
-      text-align: center;
-    }
-
-    .btn a {
-      background-color: {{bg-content}};
-      border-radius: 20px;
-      box-sizing: border-box;
-      color: #577590;
-      cursor: pointer;
-      display: inline-block;
-      font-size: 14px;
-      font-weight: bold;
-      margin: 0;
-      padding: 12px 25px;
-      text-decoration: none;
-      text-transform: capitalize;
-    }
-
-    .btn-primary table td {
-      background-color: {{bg-cta}};
-    }
-
-    .btn-primary a {
-      background-color: {{bg-cta}};
-      color: {{text-cta}};
-    }
-
     @media only screen and (max-width: 620px) {
       .container {
         padding: 0;
         width: 100%;
-      }
-
-      .btn-primary a {
-        font-size: 13px;
       }
     }
 
@@ -169,13 +121,6 @@
         line-height: inherit;
       }
 
-      .btn-primary table td:hover {
-        opacity: 0.7 !important;
-      }
-
-      .btn-primary a:hover {
-        opacity: 0.7 !important;
-      }
     }
   </style>
 </head>
@@ -191,7 +136,16 @@
               <td class="wrapper">
                 <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                   <tr>
-                    <td>{{content}}</td>
+                    <td>
+                      <p>{{hello}}</p>
+                      <p>{{body}}</p>
+                      <a href="{{redirect}}" target="_blank">{{redirect}}</a>
+                      <p></br>{{footer}}</p>
+                      <p>{{thanks}}
+                      </br>
+                      {{signature}}
+                      </p>
+                    </td>
                   </tr>
                 </table>
               </td>
