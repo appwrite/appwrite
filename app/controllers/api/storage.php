@@ -77,7 +77,7 @@ App::post('/v1/storage/buckets')
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($data, Response::MODEL_BUCKET);
+        $response->dynamic($data, Response::MODEL_BUCKET);
     });
 
 App::get('/v1/storage/buckets')
@@ -103,7 +103,7 @@ App::get('/v1/storage/buckets')
 
         $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, $search)] : [];
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'buckets' => $dbForInternal->find('buckets', $queries, $limit, $offset, ['_id'], [$orderType]),
             'sum' => $dbForInternal->count('buckets', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_BUCKET_LIST);
@@ -133,7 +133,7 @@ App::get('/v1/storage/buckets/:bucketId')
             throw new Exception('Bucket not found', 404);
         }
 
-        $response->dynamic2($bucket, Response::MODEL_BUCKET);
+        $response->dynamic($bucket, Response::MODEL_BUCKET);
     });
 
 App::put('/v1/storage/buckets/:bucketId')
@@ -191,7 +191,7 @@ App::put('/v1/storage/buckets/:bucketId')
             ->setParam('data', $bucket->getArrayCopy())
         ;
 
-        $response->dynamic2($bucket, Response::MODEL_BUCKET);
+        $response->dynamic($bucket, Response::MODEL_BUCKET);
     });
 
 App::delete('/v1/storage/buckets/:bucketId')
@@ -234,7 +234,7 @@ App::delete('/v1/storage/buckets/:bucketId')
         }
 
         $events
-            ->setParam('eventData', $response->output2($bucket, Response::MODEL_BUCKET))
+            ->setParam('eventData', $response->output($bucket, Response::MODEL_BUCKET))
         ;
 
         $audits
