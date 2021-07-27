@@ -67,17 +67,19 @@ $attributesCallback = function ($attribute, $response, $dbForExternal, $database
     }
 
     if (!is_null($min) || !is_null($max)) { // Add range validator if either $min or $max is provided
-        $min = (is_null($min)) ? -INF : \intval($min);
-        $max = (is_null($max)) ? INF : \intval($max);
         switch ($type) {
-        case Database::VAR_INTEGER:
-            $format = 'int-range';
-            break;
-        case Database::VAR_FLOAT:
-            $format = 'float-range';
-            break;
-        default:
-            throw new Exception("Format range not available for {$type} attributes.", 400);
+            case Database::VAR_INTEGER:
+                $min = (is_null($min)) ? -INF : \intval($min);
+                $max = (is_null($max)) ? INF : \intval($max);
+                $format = 'int-range';
+                break;
+            case Database::VAR_FLOAT:
+                $min = (is_null($min)) ? -INF : \floatval($min);
+                $max = (is_null($max)) ? INF : \floatval($max);
+                $format = 'float-range';
+                break;
+            default:
+                throw new Exception("Format range not available for {$type} attributes.", 400);
         }
     }
 
@@ -728,13 +730,6 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
 
         $type = $attribute->getAttribute('type', '');
         $format = $attribute->getAttribute('format', '');
-
-        // Remove the range filter from ints/floats, if given
-        if ($type === Database::VAR_INTEGER || $type === Database::VAR_FLOAT) {
-            if ($format) {
-                Structure::removeFormat($format);
-            }
-        }
 
         $database
             ->setParam('type', DELETE_TYPE_ATTRIBUTE)
