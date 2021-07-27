@@ -67,7 +67,7 @@ App::post('/v1/database/collections')
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($collection, Response::MODEL_COLLECTION);
+        $response->dynamic($collection, Response::MODEL_COLLECTION);
     });
 
 App::get('/v1/database/collections')
@@ -93,7 +93,7 @@ App::get('/v1/database/collections')
 
         $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'collections' => $dbForExternal->find(Database::COLLECTIONS, $queries, $limit, $offset, ['_id'], [$orderType]),
             'sum' => $dbForExternal->count(Database::COLLECTIONS, $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_COLLECTION_LIST);
@@ -123,7 +123,7 @@ App::get('/v1/database/collections/:collectionId')
             throw new Exception('Collection not found', 404);
         }
 
-        $response->dynamic2($collection, Response::MODEL_COLLECTION);
+        $response->dynamic($collection, Response::MODEL_COLLECTION);
     });
 
 App::put('/v1/database/collections/:collectionId')
@@ -177,7 +177,7 @@ App::put('/v1/database/collections/:collectionId')
             ->setParam('data', $collection->getArrayCopy())
         ;
 
-        $response->dynamic2($collection, Response::MODEL_COLLECTION);
+        $response->dynamic($collection, Response::MODEL_COLLECTION);
     });
 
 App::delete('/v1/database/collections/:collectionId')
@@ -212,7 +212,7 @@ App::delete('/v1/database/collections/:collectionId')
         $dbForExternal->deleteCollection($collectionId);
 
         $events
-            ->setParam('eventData', $response->output2($collection, Response::MODEL_COLLECTION))
+            ->setParam('eventData', $response->output($collection, Response::MODEL_COLLECTION))
         ;
 
         $audits
@@ -296,7 +296,7 @@ App::post('/v1/database/collections/:collectionId/attributes')
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($attribute, Response::MODEL_ATTRIBUTE);
+        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE);
     });
 
 App::get('/v1/database/collections/:collectionId/attributes')
@@ -331,7 +331,7 @@ App::get('/v1/database/collections/:collectionId/attributes')
             ])]);
         }, $attributes);
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'sum' => \count($attributes),
             'attributes' => $attributes
         ]), Response::MODEL_ATTRIBUTE_LIST);
@@ -375,7 +375,7 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
             'collectionId' => $collectionId,
         ])]);
         
-        $response->dynamic2($attribute, Response::MODEL_ATTRIBUTE);
+        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE);
     });
 
 App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
@@ -428,7 +428,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
         ;
 
         $events
-            ->setParam('payload', $response->output2($attribute, Response::MODEL_ATTRIBUTE))
+            ->setParam('payload', $response->output($attribute, Response::MODEL_ATTRIBUTE))
         ;
 
         $audits
@@ -526,7 +526,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($index, Response::MODEL_INDEX);
+        $response->dynamic($index, Response::MODEL_INDEX);
        
     });
 
@@ -562,7 +562,7 @@ App::get('/v1/database/collections/:collectionId/indexes')
             ])]);
         }, $indexes);
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'sum' => \count($indexes),
             'attributes' => $indexes,
         ]), Response::MODEL_INDEX_LIST);
@@ -606,7 +606,7 @@ App::get('/v1/database/collections/:collectionId/indexes/:indexId')
             'collectionId' => $collectionId,
         ])]);
         
-        $response->dynamic2($index, Response::MODEL_INDEX);
+        $response->dynamic($index, Response::MODEL_INDEX);
     });
 
 App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
@@ -659,7 +659,7 @@ App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
         ;
 
         $events
-            ->setParam('payload', $response->output2($index, Response::MODEL_INDEX))
+            ->setParam('payload', $response->output($index, Response::MODEL_INDEX))
         ;
 
         $audits
@@ -731,7 +731,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($document, Response::MODEL_DOCUMENT);
+        $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
 App::get('/v1/database/collections/:collectionId/documents')
@@ -782,7 +782,7 @@ App::get('/v1/database/collections/:collectionId/documents')
 
         $documents = $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes);
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'sum' => \count($documents),
             'documents' => $documents,
         ]), Response::MODEL_DOCUMENT_LIST);
@@ -819,7 +819,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
             throw new Exception('No document found', 404);
         }
 
-        $response->dynamic2($document, Response::MODEL_DOCUMENT);
+        $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
 App::patch('/v1/database/collections/:collectionId/documents/:documentId')
@@ -890,7 +890,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
             ->setParam('data', $document->getArrayCopy())
         ;
 
-        $response->dynamic2($document, Response::MODEL_DOCUMENT);
+        $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
 App::delete('/v1/database/collections/:collectionId/documents/:documentId')
@@ -931,7 +931,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         $success = $dbForExternal->deleteDocument($collectionId, $documentId);
 
         $events
-            ->setParam('eventData', $response->output2($document, Response::MODEL_DOCUMENT))
+            ->setParam('eventData', $response->output($document, Response::MODEL_DOCUMENT))
         ;
 
         $audits

@@ -2,7 +2,7 @@
 
 global $utopia, $request, $response;
 
-use Appwrite\Database\Document;
+use Utopia\Database\Document;
 use Appwrite\Network\Validator\Host;
 use Appwrite\Utopia\Response;
 use Utopia\App;

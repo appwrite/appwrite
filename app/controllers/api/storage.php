@@ -1,7 +1,6 @@
 <?php
 
 use Appwrite\ClamAV\Network;
-use Appwrite\Database\Validator\UID;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Response;
 use Swoole\HTTP\Response as SwooleResponse;
@@ -14,6 +13,7 @@ use Utopia\Database\Query;
 use Utopia\Exception;
 use Utopia\Image\Image;
 use Utopia\Storage\Compression\Algorithms\GZIP;
+use Utopia\Database\Validator\UID;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileExt;
@@ -78,7 +78,7 @@ App::post('/v1/storage/buckets')
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($data, Response::MODEL_BUCKET);
+        $response->dynamic($data, Response::MODEL_BUCKET);
     });
 
 App::get('/v1/storage/buckets')
@@ -104,7 +104,7 @@ App::get('/v1/storage/buckets')
 
         $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, $search)] : [];
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'buckets' => $dbForInternal->find('buckets', $queries, $limit, $offset, ['_id'], [$orderType]),
             'sum' => $dbForInternal->count('buckets', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_BUCKET_LIST);
@@ -134,7 +134,7 @@ App::get('/v1/storage/buckets/:bucketId')
             throw new Exception('Bucket not found', 404);
         }
 
-        $response->dynamic2($bucket, Response::MODEL_BUCKET);
+        $response->dynamic($bucket, Response::MODEL_BUCKET);
     });
 
 App::put('/v1/storage/buckets/:bucketId')
@@ -192,7 +192,7 @@ App::put('/v1/storage/buckets/:bucketId')
             ->setParam('data', $bucket->getArrayCopy())
         ;
 
-        $response->dynamic2($bucket, Response::MODEL_BUCKET);
+        $response->dynamic($bucket, Response::MODEL_BUCKET);
     });
 
 App::delete('/v1/storage/buckets/:bucketId')
@@ -235,7 +235,7 @@ App::delete('/v1/storage/buckets/:bucketId')
         }
 
         $events
-            ->setParam('eventData', $response->output2($bucket, Response::MODEL_BUCKET))
+            ->setParam('eventData', $response->output($bucket, Response::MODEL_BUCKET))
         ;
 
         $audits
@@ -276,7 +276,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
-        /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $usage */
 
@@ -492,7 +492,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
         }
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($file, Response::MODEL_FILE);
+        $response->dynamic($file, Response::MODEL_FILE);
+        ;
     });
 
 App::get('/v1/storage/buckets/:bucketId/files')
@@ -530,7 +531,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
             $queries[] = [new Query('name', Query::TYPE_SEARCH, [$search])];
         }
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'files' => $dbForInternal->find('files', $queries, $limit, $offset, ['_id'], [$orderType]),
             'sum' => $dbForInternal->count('files', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_FILE_LIST);
@@ -568,7 +569,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
             throw new Exception('File not found', 404);
         }
 
-        $response->dynamic2($file, Response::MODEL_FILE);
+        $response->dynamic($file, Response::MODEL_FILE);
     });
 
 App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
@@ -957,7 +958,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
             ->setParam('resource', 'storage/files/' . $file->getId())
         ;
 
-        $response->dynamic2($file, Response::MODEL_FILE);
+        $response->dynamic($file, Response::MODEL_FILE);
     });
 
 App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
@@ -1018,7 +1019,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         ;
 
         $events
-            ->setParam('eventData', $response->output2($file, Response::MODEL_FILE))
+            ->setParam('eventData', $response->output($file, Response::MODEL_FILE))
         ;
 
         $response->noContent();
