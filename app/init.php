@@ -201,13 +201,25 @@ Structure::addFormat('url', function() {
     return new URL();
 }, Database2::VAR_STRING);
 
-Structure::addFormat('int-range', function($min, $max, $type) {
+Structure::addFormat('int-range', function($attribute) {
+    // Format encoded as json string containing name and relevant options
+    // E.g. Range: $format = json_encode(['name'=>$name, 'min'=>$min, 'max'=>$max]);
+    $format = json_decode($attribute['format'], true);
+    $min = $format['min'] ?? -INF;
+    $max = $format['max'] ?? INF;
+    $type = $attribute['type'];
     return new Range($min, $max, $type);
-}, Database2::VAR_INTEGER, ['min', 'max', 'type']);
+}, Database2::VAR_INTEGER);
 
-Structure::addFormat('float-range', function($min, $max, $type) {
+Structure::addFormat('float-range', function($attribute) {
+    // Format encoded as json string containing name and relevant options
+    // E.g. Range: $format = json_encode(['name'=>$name, 'min'=>$min, 'max'=>$max]);
+    $format = json_decode($attribute['format'], true);
+    $min = $format['min'] ?? -INF;
+    $max = $format['max'] ?? INF;
+    $type = $attribute['type'] ?? '';
     return new Range($min, $max, $type);
-}, Database2::VAR_FLOAT, ['min', 'max', 'type']);
+}, Database2::VAR_FLOAT);
 
 /*
  * Registry

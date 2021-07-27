@@ -59,8 +59,11 @@ $attributesCallback = function ($attribute, $response, $dbForExternal, $database
         }
     } 
 
-    if (!\is_null($format) && !Structure::hasFormat($format, $type)) {
-        throw new Exception("Format {$format} not available for {$type} attributes.", 400);
+    if (!\is_null($format)) {
+        $name = \json_decode($format, true)['name'];
+        if (!Structure::hasFormat($name, $type)) {
+            throw new Exception("Format {$name} not available for {$type} attributes.", 400);
+        }
     }
 
     if (!is_null($min) || !is_null($max)) { // Add range validator if either $min or $max is provided
@@ -389,7 +392,7 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
             'required' => $required,
             'default' => $default,
             'array' => $array,
-            'format' => 'email',
+            'format' => \json_encode(['name'=>'email']),
         ]), $response, $dbForExternal, $database, $audits);
     });
 
@@ -428,7 +431,7 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
             'required' => $required,
             'default' => $default,
             'array' => $array,
-            'format' => 'ip',
+            'format' => \json_encode(['name'=>'ip']),
         ]), $response, $dbForExternal, $database, $audits);
     });
 
@@ -468,7 +471,7 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
             'required' => $required,
             'default' => $default,
             'array' => $array,
-            'format' => 'url',
+            'format' => \json_encode(['name'=>'url']),
         ]), $response, $dbForExternal, $database, $audits);
     });
 
@@ -508,11 +511,13 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
             'size' => 0,
             'required' => $required,
             'default' => $default,
-            'min' => $min,
-            'max' => $max,
             'array' => $array,
+            'format' => \json_encode([
+                'name'=>'int-range',
+                'min' => $min,
+                'max' => $max,
+            ]),
         ]), $response, $dbForExternal, $database, $audits);
-
     });
 
 App::post('/v1/database/collections/:collectionId/attributes/float')
@@ -551,9 +556,12 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
             'required' => $required,
             'size' => 0,
             'default' => $default,
-            'min' => $min,
-            'max' => $max,
             'array' => $array,
+            'format' => \json_encode([
+                'name'=>'float-range',
+                'min' => $min,
+                'max' => $max,
+            ]),
         ]), $response, $dbForExternal, $database, $audits);
     });
 

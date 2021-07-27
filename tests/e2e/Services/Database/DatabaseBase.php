@@ -568,6 +568,7 @@ trait DatabaseBase
         ]);
 
         // TODO@kodumbeats float validator rejects 0.0 and 1.0 as floats
+        // TODO@kodumbeats min and max are rounded in error message
         $floatRange = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/float', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
