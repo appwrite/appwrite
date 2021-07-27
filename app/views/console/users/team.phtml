@@ -115,8 +115,15 @@
                                     <input name="teamId" id="team-teamId" type="hidden" data-ls-bind="{{team.$id}}">
                                     <input name="url" type="hidden" data-ls-bind="{{env.ENDPOINT}}" />
                                     
-                                    <label for="membershipId">ID</label>
-                                    <input name="membershipId" id="membershipId" type="text" required>
+                                    <label for="membershipId">Membership ID</label>
+                                    <input
+                                        type="hidden"
+                                        data-custom-id
+                                        id-type="auto"
+                                        required
+                                        maxlength="36"
+                                        name="membershipId"
+                                        id="membershipId" />
                                     
                                     <label for="email">Email</label>
                                     <input name="email" id="email" type="email" autocomplete="email" required>

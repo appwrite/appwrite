@@ -237,8 +237,15 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                         data-failure-param-alert-classname="error">
                         <input type="hidden" name="folderId" id="files-folderId" data-cast-to="integer" value="1">
 
-                        <label for="fileId">ID</label>
-                        <input type="text" name="fileId" id="fileId" value="unique()" size="1" required>
+                        <label for="fileId">File ID</label>
+                        <input
+                            type="hidden"
+                            data-custom-id
+                            id-type="auto"
+                            required
+                            maxlength="36"
+                            name="fileId"
+                            id="fileId" />
 
                         <label for="file-read">File</label>
                         <input type="file" name="file" id="file-file" size="1" required>

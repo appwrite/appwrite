@@ -106,8 +106,14 @@ $runtimes = $this->getParam('runtimes', []);
                             data-failure-param-alert-text="Failed to create function"
                             data-failure-param-alert-classname="error">
 
-                            <label for="functionId">Id</label>
-                            <input type="text" id="functionId" name="functionId" required autocomplete="off" class="margin-bottom" maxlength="128" />
+                            <label for="functionId">Function ID</label>
+                            <input 
+                                type="hidden"
+                                data-custom-id
+                                id-type="custom"
+                                required
+                                maxlength="36"
+                                name="functionId" />
                             
                             <label for="runtime">Runtimes</label>
                             <select name="runtime" id="runtime" required class="margin-bottom-xl">

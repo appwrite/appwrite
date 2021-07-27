@@ -154,8 +154,15 @@ $auth = $this->getParam('auth', []);
                         data-failure-param-alert-text="Failed to create user"
                         data-failure-param-alert-classname="error">
 
-                        <label for="userId">ID</label>
-                        <input type="text" class="full-width" id="userId" name="userId" value="unique()" required autocomplete="off" maxlength="128" />
+                        <label for="userId">User ID</label>
+                        <input
+                            type="hidden"
+                            data-custom-id
+                            id-type="auto"
+                            required
+                            maxlength="36"
+                            id="userId"
+                            name="userId" />
 
                         <label for="user-name">Name</label>
                         <input type="text" class="full-width" id="user-name" name="name" required autocomplete="off" maxlength="128" />

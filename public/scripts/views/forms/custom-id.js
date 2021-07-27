@@ -16,13 +16,17 @@
         var button = window.document.createElement("i");
         
         button.type = "button";
-        button.className = idType == "custom" ? "icon-cog copy" : "icon-edit copy";
         button.style.cursor = "pointer";
         
         
         var writer = document.createElement("input");
         writer.type = "text";
         writer.className = "";
+        var placeholder = element.getAttribute(placeholder);
+        if(placeholder) {
+          writer.setAttribute("placeholder", placeholder);
+        }
+          
         
 
         div.appendChild(writer);
@@ -33,18 +37,26 @@
         var switchType = function(event) {
           if(idType == "custom") {
             idType = "auto";
-            element.setAttribute('id-type', idType);
-            prevData = writer.value;
-            writer.disabled = true;
-            writer.value = 'auto-generated';
-            element.value = 'unique()';
+            setIdType(idType);
           } else {
             idType = "custom";
+            setIdType(idType);
+          }
+        }
+        
+        var setIdType = function(idType) {
+          if(idType == "custom") {
             element.setAttribute('id-type', idType);
             writer.value = prevData;
             writer.disabled = false;
             element.value = prevData;
             writer.focus();
+          } else {
+            element.setAttribute('id-type', idType);
+            prevData = writer.value;
+            writer.disabled = true;
+            writer.value = 'auto-generated';
+            element.value = 'unique()';
           }
           button.className = idType == "custom" ? "icon-cog copy" : "icon-edit copy";
         }
@@ -60,6 +72,7 @@
         }
 
         sync();
+        setIdType(idType);
         writer.addEventListener("change", syncE);
         button.addEventListener("click", switchType);
 
