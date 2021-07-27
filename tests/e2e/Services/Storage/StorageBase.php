@@ -60,23 +60,6 @@ trait StorageBase
         ]);
         $this->assertEquals(201, $bucket2['headers']['status-code']);
         $this->assertNotEmpty($bucket2['body']['$id']);
-
-        $file2 = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket2['body']['$id'] . '/files', array_merge([
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4'), 'video/mp4', 'large-file.mp4'),
-            'read' => ['role:all'],
-            'write' => ['role:all'],
-        ]);
-
-        $this->assertEquals(201, $file2['headers']['status-code']);
-        $this->assertNotEmpty($file2['body']['$id']);
-        $this->assertIsInt($file2['body']['dateCreated']);
-        $this->assertEquals('large-file.mp4', $file2['body']['name']);
-        $this->assertEquals('video/mp4', $file2['body']['mimeType']);
-        $this->assertEquals(23660615, $file2['body']['sizeOriginal']);
-        $this->assertEquals(md5_file(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4')), $file2['body']['signature']); // should validate that the file is not encrypted
         
         /**
          * Chunked Upload
@@ -85,32 +68,28 @@ trait StorageBase
         $source = __DIR__ . "/../../../resources/disk-a/large-file.mp4";
         $totalSize = \filesize($source);
         $chunkSize = 5000000;
-        $start = 0;
         $handle = @fopen($source, "rb");
-        $uploadId = '';
-        $op = __DIR__ . '/chunk.part';
-        while ($start < $totalSize) {
-            $contents = fread($handle, $chunkSize);
-            $cc = fopen($op, 'wb');
-            fwrite($cc, $contents);
-            fclose($cc);
-            $curlFile = new CURLFile($op, 'video/mp4', 'large-file.mp4');
-            $contentRanges = 'bytes ' . $start . '-' . min((($start + $chunkSize) - 1), $totalSize) . '/' . $totalSize;
+        $fileId = null;
+        $mimeType = mime_content_type($source);
+        $counter = 0;
+        $size = filesize($source);
+
+        while (!feof($handle)) {
+            $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'large-file.mp4');
+            $contentRanges = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size) . '/' . $size;
             $largeFile = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket2['body']['$id'] . '/files', array_merge([
                 'content-type' => 'multipart/form-data',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'content-range' => $contentRanges,
-                'x-appwrite-upload-id' => $uploadId,
+                'x-appwrite-file-id' => $fileId,
             ], $this->getHeaders()), [
                 'file' => $curlFile,
                 'read' => ['role:all'],
                 'write' => ['role:all'],
             ]);
-            $uploadId = $largeFile['body']['$id'];
-            $start += strlen($contents);
-            fseek($handle, $start);
+            $counter++;
+            $fileId = $largeFile['body']['$id'];
         }
-        \unlink($op);
         @fclose($handle);
         
         $this->assertEquals(201, $largeFile['headers']['status-code']);
@@ -167,7 +146,7 @@ trait StorageBase
         $this->assertEquals(400, $res['headers']['status-code']);
         $this->assertEquals('File extension not allowed', $res['body']['message']);
 
-        return ['bucketId' => $bucketId, 'fileId' => $file['body']['$id'],  'largeFileId' => $file2['body']['$id'], 'largeBucketId' => $bucket2['body']['$id']];
+        return ['bucketId' => $bucketId, 'fileId' => $file['body']['$id'],  'largeFileId' => $largeFile['body']['$id'], 'largeBucketId' => $bucket2['body']['$id']];
     }
 
     /**
