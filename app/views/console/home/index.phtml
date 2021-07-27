@@ -18,7 +18,6 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
             <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/settings?project={{router.params.project}}" class="link-animation-enabled"><i class="icon-cog"></i> &nbsp;Settings</a> &nbsp;&nbsp;</li>
             <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/keys?project={{router.params.project}}" class="link-animation-enabled"><i class="icon-key-inv"></i> &nbsp;API Keys</a> &nbsp;&nbsp;</li>
             <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/webhooks?project={{router.params.project}}" class="link-animation-enabled"><i class="icon-link"></i> &nbsp;Webhooks</a> &nbsp;&nbsp;</li>
-            <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/tasks?project={{router.params.project}}" class="link-animation-enabled"><i class="icon-clock"></i> &nbsp;Tasks</a> &nbsp;&nbsp;</li>
         </ul>
 
         <div class="margin-bottom phones-only">&nbsp;</div>
@@ -115,24 +114,20 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
         <div class="box dashboard">
             <div class="row responsive">
-                <div class="col span-3">
+                <div class="col span-4">
                     <div class="value"><span class="sum" data-ls-bind="{{usage.documents.total|statsTotal}}" data-default="0">0</span></div>
                     <div class="margin-top-small"><b class="text-size-small unit">Documents</b></div>
                 </div>
-                <div class="col span-3">
+                <div class="col span-4">
                     <div class="value">
                         <span class="sum" data-ls-bind="{{usage.storage.total|humanFileSize}}" data-default="0">0</span>
                         <span data-ls-bind="{{usage.storage.total|humanFileUnit}}" class="text-size-small unit"></span>
                     </div>
                     <div class="margin-top-small"><b class="text-size-small unit">Storage</b></div>
                 </div>
-                <div class="col span-3">
+                <div class="col span-4">
                     <div class="value"><span class="sum" data-ls-bind="{{usage.users.total}}" data-default="0">0</span></div>
                     <div class="margin-top-small"><b class="text-size-small unit">Users</b></div>
-                </div>
-                <div class="col span-3">
-                    <div class="value"><span class="sum" data-ls-bind="{{usage.tasks.total}}" data-default="0">0</span></div>
-                    <div class="margin-top-small"><b class="text-size-small unit">Tasks</b></div>
                 </div>
             </div>
         </div>

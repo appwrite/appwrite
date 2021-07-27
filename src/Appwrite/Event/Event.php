@@ -28,7 +28,6 @@ class Event
     const WEBHOOK_QUEUE_NAME = 'v1-webhooks';
     const WEBHOOK_CLASS_NAME = 'WebhooksV1';
 
-    const TASK_QUEUE_NAME = 'v1-tasks';
     const TASK_CLASS_NAME = 'TasksV1';
 
     const CERTIFICATES_QUEUE_NAME = 'v1-certificates';

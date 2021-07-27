@@ -123,13 +123,6 @@ class Project extends Model
                 'example' => new stdClass,
                 'array' => true,
             ])
-            ->addRule('tasks', [
-                'type' => Response::MODEL_TASK,
-                'description' => 'List of Tasks.',
-                'default' => [],
-                'example' => new stdClass,
-                'array' => true,
-            ])
         ;
 
         $providers = Config::getParam('providers', []);

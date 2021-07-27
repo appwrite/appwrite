@@ -189,17 +189,6 @@ $collections = [
                 'filters' => ['json'],
             ],
             [
-                '$id' => 'tasks',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 16384,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => true,
-                'filters' => ['json'],
-            ],
-            [
                 '$id' => 'domains',
                 'type' => Database::VAR_STRING,
                 'format' => '',

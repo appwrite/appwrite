@@ -189,21 +189,6 @@ App::get('/console/keys')
             ->setParam('body', $page);
     });
 
-App::get('/console/tasks')
-    ->groups(['web', 'console'])
-    ->label('permission', 'public')
-    ->label('scope', 'console')
-    ->inject('layout')
-    ->action(function ($layout) {
-        /** @var Utopia\View $layout */
-
-        $page = new View(__DIR__.'/../../views/console/tasks/index.phtml');
-
-        $layout
-            ->setParam('title', APP_NAME.' - Tasks')
-            ->setParam('body', $page);
-    });
-
 App::get('/console/database')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
