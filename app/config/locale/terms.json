@@ -61,7 +61,7 @@
     },
     {
         "term": "locale.country.unknown",
-        "context": "🤑",
+        "context": "This string is used as the country name in case of a missing [ country_code => country_name ] mapping.",
         "comment": "",
         "reference": ""
     },
