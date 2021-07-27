@@ -528,29 +528,25 @@ trait DatabaseBase
 
         $collectionId = $collection['body']['$id'];
 
-        $email = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/string', array_merge([
+        $email = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/email', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'attributeId' => 'email',
-            'size' => 256,
             'required' => false,
-            'format' => 'email',
         ]);
 
-        $ip = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/string', array_merge([
+        $ip = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/ip', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'attributeId' => 'ip',
-            'size' => 64,
             'required' => false,
-            'format' => 'ip',
         ]);
 
-        $url = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/string', array_merge([
+        $url = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/url', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -558,11 +554,11 @@ trait DatabaseBase
             'attributeId' => 'url',
             'size' => 256,
             'required' => false,
-            'format' => 'url',
         ]);
 
         $range = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
-            'content-type' => 'application/json', 'x-appwrite-project' => $this->getProject()['$id'],
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'attributeId' => 'range',
@@ -573,7 +569,8 @@ trait DatabaseBase
 
         // TODO@kodumbeats float validator rejects 0.0 and 1.0 as floats
         $floatRange = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/float', array_merge([
-            'content-type' => 'application/json', 'x-appwrite-project' => $this->getProject()['$id'],
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'attributeId' => 'floatRange',
@@ -583,7 +580,8 @@ trait DatabaseBase
         ]);
 
         $upperBound = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
-            'content-type' => 'application/json', 'x-appwrite-project' => $this->getProject()['$id'],
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'attributeId' => 'upperBound',
@@ -592,7 +590,8 @@ trait DatabaseBase
         ]);
 
         $lowerBound = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
-            'content-type' => 'application/json', 'x-appwrite-project' => $this->getProject()['$id'],
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'attributeId' => 'lowerBound',
@@ -603,16 +602,6 @@ trait DatabaseBase
         /**
          * Test for failure
          */
-
-        $unsupported = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/string', array_merge([
-            'content-type' => 'application/json', 'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'attributeId' => 'unsupported',
-            'size' => 256,
-            'required' => false,
-            'format' => 'unsupported',
-        ]);
 
         // TODO@kodumbeats troubleshoot
         // $invalidRange = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
@@ -632,13 +621,11 @@ trait DatabaseBase
         $this->assertEquals(201, $floatRange['headers']['status-code']);
         $this->assertEquals(201, $upperBound['headers']['status-code']);
         $this->assertEquals(201, $lowerBound['headers']['status-code']);
-        $this->assertEquals(400, $unsupported['headers']['status-code']);
         // $this->assertEquals(400, $invalidRange['headers']['status-code']);
-        $this->assertEquals('Invalid format: Value must be one of (email, ip, url)', $unsupported['body']['message']);
         // $this->assertEquals('Minimum value must be lesser than maximum value', $invalidRange['body']['message']);
 
         // wait for worker to add attributes
-        sleep(10);
+        sleep(15);
 
         $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
@@ -646,7 +633,7 @@ trait DatabaseBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), []); 
 
-        // var_dump($collection);
+        var_dump($collection);
 
         $this->assertCount(7, $collection['body']['attributes']);
         $this->assertCount(0, $collection['body']['attributesInQueue']);
