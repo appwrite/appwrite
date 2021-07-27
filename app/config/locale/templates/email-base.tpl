@@ -89,6 +89,7 @@
 
     .btn>tbody>tr>td {
       padding-bottom: 15px;
+      padding-top: 15px;
     }
 
     .btn table {
