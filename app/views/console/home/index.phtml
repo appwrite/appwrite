@@ -101,12 +101,6 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                             <span data-ls-bind="{{usage.network.total|humanFileUnit}}" class="text-size-small unit"></span>
                         </div>
                         <div class="metric margin-bottom-small">Bandwidth</div>
-
-                        <div class="margin-top-large value small">
-                            <b class="text-size-small sum small" data-ls-bind="{{usage.functions.total|statsTotal}}" data-default="0"></b>
-                            <br />
-                            <b>Func. Executions</b>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -114,20 +108,24 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
         <div class="box dashboard">
             <div class="row responsive">
-                <div class="col span-4">
+                <div class="col span-3">
                     <div class="value"><span class="sum" data-ls-bind="{{usage.documents.total|statsTotal}}" data-default="0">0</span></div>
                     <div class="margin-top-small"><b class="text-size-small unit">Documents</b></div>
                 </div>
-                <div class="col span-4">
+                <div class="col span-3">
                     <div class="value">
                         <span class="sum" data-ls-bind="{{usage.storage.total|humanFileSize}}" data-default="0">0</span>
                         <span data-ls-bind="{{usage.storage.total|humanFileUnit}}" class="text-size-small unit"></span>
                     </div>
                     <div class="margin-top-small"><b class="text-size-small unit">Storage</b></div>
                 </div>
-                <div class="col span-4">
+                <div class="col span-3">
                     <div class="value"><span class="sum" data-ls-bind="{{usage.users.total}}" data-default="0">0</span></div>
                     <div class="margin-top-small"><b class="text-size-small unit">Users</b></div>
+                </div>
+                <div class="col span-3">
+                    <div class="value"><span class="sum" data-ls-bind="{{usage.functions.total|statsTotal}}" data-default="0">0</span></div>
+                    <div class="margin-top-small"><b class="text-size-small unit">Func. Executions</b></div>
                 </div>
             </div>
         </div>
