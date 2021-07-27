@@ -3,7 +3,7 @@
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\Database\Validator\CustomId;
-use Appwrite\Database\Validator\UID;
+use Utopia\Database\Validator\UID;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileExt;
@@ -69,7 +69,7 @@ App::post('/v1/functions')
         ]));
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($function, Response::MODEL_FUNCTION);
+        $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
 App::get('/v1/functions')
@@ -95,7 +95,7 @@ App::get('/v1/functions')
 
         $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'functions' => $dbForInternal->find('functions', $queries, $limit, $offset, ['_id'], [$orderType]),
             'sum' => $dbForInternal->count('functions', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_FUNCTION_LIST);
@@ -125,7 +125,7 @@ App::get('/v1/functions/:functionId')
             throw new Exception('Function not found', 404);
         }
 
-        $response->dynamic2($function, Response::MODEL_FUNCTION);
+        $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
 App::get('/v1/functions/:functionId/usage')
@@ -143,7 +143,7 @@ App::get('/v1/functions/:functionId/usage')
     ->inject('register')
     ->action(function ($functionId, $range, $response, $project, $dbForInternal, $register) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $project */
+        /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Registry\Registry $register */
 
@@ -272,7 +272,7 @@ App::put('/v1/functions/:functionId')
     ->action(function ($functionId, $execute, $vars, $events, $schedule, $timeout, $response, $dbForInternal, $project) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
-        /** @var Appwrite\Database\Document $project */
+        /** @var Utopia\Database\Document $project */
 
         $function = $dbForInternal->getDocument('functions', $functionId);
 
@@ -304,7 +304,7 @@ App::put('/v1/functions/:functionId')
             ]);  // Async task rescheduale
         }
 
-        $response->dynamic2($function, Response::MODEL_FUNCTION);
+        $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
 App::patch('/v1/functions/:functionId/tag')
@@ -327,7 +327,7 @@ App::patch('/v1/functions/:functionId/tag')
     ->action(function ($functionId, $tag, $response, $dbForInternal, $project) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
-        /** @var Appwrite\Database\Document $project */
+        /** @var Utopia\Database\Document $project */
 
         $function = $dbForInternal->getDocument('functions', $functionId);
         $tag = $dbForInternal->getDocument('tags', $tag);
@@ -359,7 +359,7 @@ App::patch('/v1/functions/:functionId/tag')
             ]);  // Async task rescheduale
         }
 
-        $response->dynamic2($function, Response::MODEL_FUNCTION);
+        $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
 App::delete('/v1/functions/:functionId')
@@ -485,7 +485,7 @@ App::post('/v1/functions/:functionId/tags')
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($tag, Response::MODEL_TAG);
+        $response->dynamic($tag, Response::MODEL_TAG);
     });
 
 App::get('/v1/functions/:functionId/tags')
@@ -521,7 +521,7 @@ App::get('/v1/functions/:functionId/tags')
         $results = $dbForInternal->find('tags', $queries, $limit, $offset, ['_id'], [$orderType]);
         $sum = $dbForInternal->count('tags', $queries, APP_LIMIT_COUNT);
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'tags' => $results,
             'sum' => $sum,
         ]), Response::MODEL_TAG_LIST);
@@ -562,7 +562,7 @@ App::get('/v1/functions/:functionId/tags/:tagId')
             throw new Exception('Tag not found', 404);
         }
 
-        $response->dynamic2($tag, Response::MODEL_TAG);
+        $response->dynamic($tag, Response::MODEL_TAG);
     });
 
 App::delete('/v1/functions/:functionId/tags/:tagId')
@@ -647,9 +647,9 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('user')
     ->action(function ($executionId, $functionId, $data, /*$async,*/ $response, $project, $dbForInternal, $user) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $project */
+        /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForInternal */
-        /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Database\Document $user */
 
         Authorization::disable();
 
@@ -702,7 +702,7 @@ App::post('/v1/functions/:functionId/executions')
             $sessions = $user->getAttribute('sessions', []);
             $current = new Document();
 
-            foreach ($sessions as $session) { /** @var Appwrite\Database\Document $session */
+            foreach ($sessions as $session) { /** @var Utopia\Database\Document $session */
                 if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
                     $current = $session;
                 }
@@ -729,7 +729,7 @@ App::post('/v1/functions/:functionId/executions')
         ]);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($execution, Response::MODEL_EXECUTION);
+        $response->dynamic($execution, Response::MODEL_EXECUTION);
     });
 
 App::get('/v1/functions/:functionId/executions')
@@ -768,7 +768,7 @@ App::get('/v1/functions/:functionId/executions')
             new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]),
         ], APP_LIMIT_COUNT);
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'executions' => $results,
             'sum' => $sum,
         ]), Response::MODEL_EXECUTION_LIST);
@@ -811,5 +811,5 @@ App::get('/v1/functions/:functionId/executions/:executionId')
             throw new Exception('Execution not found', 404);
         }
 
-        $response->dynamic2($execution, Response::MODEL_EXECUTION);
+        $response->dynamic($execution, Response::MODEL_EXECUTION);
     });

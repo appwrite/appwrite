@@ -136,7 +136,7 @@ App::post('/v1/projects')
         $consoleDB->createNamespace($project->getId());
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($project, Response::MODEL_PROJECT);
+        $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
 App::get('/v1/projects')
@@ -164,7 +164,7 @@ App::get('/v1/projects')
         $results = $dbForConsole->find('projects', $queries, $limit, $offset, ['_id'], [$orderType]);
         $sum = $dbForConsole->count('projects', $queries, APP_LIMIT_COUNT);
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'projects' => $results,
             'sum' => $sum,
         ]), Response::MODEL_PROJECT_LIST);
@@ -193,7 +193,7 @@ App::get('/v1/projects/:projectId')
             throw new Exception('Project not found', 404);
         }
 
-        $response->dynamic2($project, Response::MODEL_PROJECT);
+        $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
 App::get('/v1/projects/:projectId/usage')
@@ -442,7 +442,7 @@ App::patch('/v1/projects/:projectId')
                 ->setAttribute('legalTaxId', $legalTaxId)
         );
 
-        $response->dynamic2($project, Response::MODEL_PROJECT);
+        $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
 App::patch('/v1/projects/:projectId/oauth2')
@@ -476,7 +476,7 @@ App::patch('/v1/projects/:projectId/oauth2')
                 ->setAttribute('usersOauth2' . \ucfirst($provider) . 'Secret', $secret)
         );
 
-        $response->dynamic2($project, Response::MODEL_PROJECT);
+        $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
 App::patch('/v1/projects/:projectId/auth/limit')
@@ -507,7 +507,7 @@ App::patch('/v1/projects/:projectId/auth/limit')
                 ->setAttribute('usersAuthLimit', $limit)
         );
 
-        $response->dynamic2($project, Response::MODEL_PROJECT);
+        $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
 App::patch('/v1/projects/:projectId/auth/:method')
@@ -542,7 +542,7 @@ App::patch('/v1/projects/:projectId/auth/:method')
                 ->setAttribute($authKey, $status)
         );
 
-        $response->dynamic2($project, Response::MODEL_PROJECT);
+        $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
 App::delete('/v1/projects/:projectId')
@@ -639,7 +639,7 @@ App::post('/v1/projects/:projectId/webhooks')
         );
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($webhook, Response::MODEL_WEBHOOK);
+        $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
 App::get('/v1/projects/:projectId/webhooks')
@@ -667,7 +667,7 @@ App::get('/v1/projects/:projectId/webhooks')
 
         $webhooks = $project->getAttribute('webhooks', []);
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'webhooks' => $webhooks,
             'sum' => count($webhooks),
         ]), Response::MODEL_WEBHOOK_LIST);
@@ -703,7 +703,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
             throw new Exception('Webhook not found', 404);
         }
 
-        $response->dynamic2($webhook, Response::MODEL_WEBHOOK);
+        $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
 App::put('/v1/projects/:projectId/webhooks/:webhookId')
@@ -753,7 +753,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project);
 
-        $response->dynamic2($webhook, Response::MODEL_WEBHOOK);
+        $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
 App::delete('/v1/projects/:projectId/webhooks/:webhookId')
@@ -826,7 +826,7 @@ App::post('/v1/projects/:projectId/keys')
         );
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($key, Response::MODEL_KEY);
+        $response->dynamic($key, Response::MODEL_KEY);
     });
 
 App::get('/v1/projects/:projectId/keys')
@@ -854,7 +854,7 @@ App::get('/v1/projects/:projectId/keys')
 
         $keys = $project->getAttribute('keys', []);
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'keys' => $keys,
             'sum' => count($keys),
         ]), Response::MODEL_KEY_LIST);
@@ -887,7 +887,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
             throw new Exception('Key not found', 404);
         }
 
-        $response->dynamic2($key, Response::MODEL_KEY);
+        $response->dynamic($key, Response::MODEL_KEY);
     });
 
 App::put('/v1/projects/:projectId/keys/:keyId')
@@ -928,7 +928,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project);
 
-        $response->dynamic2($key, Response::MODEL_KEY);
+        $response->dynamic($key, Response::MODEL_KEY);
     });
 
 App::delete('/v1/projects/:projectId/keys/:keyId')
@@ -1028,7 +1028,7 @@ App::post('/v1/projects/:projectId/tasks')
         }
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($task, Response::MODEL_TASK);
+        $response->dynamic($task, Response::MODEL_TASK);
     });
 
 App::get('/v1/projects/:projectId/tasks')
@@ -1056,7 +1056,7 @@ App::get('/v1/projects/:projectId/tasks')
 
         $tasks = $project->getAttribute('tasks', []);
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'tasks' => $tasks,
             'sum' => count($tasks),
         ]), Response::MODEL_TASK_LIST);
@@ -1093,7 +1093,7 @@ App::get('/v1/projects/:projectId/tasks/:taskId')
             throw new Exception('Task not found', 404);
         }
 
-        $response->dynamic2($task, Response::MODEL_TASK);
+        $response->dynamic($task, Response::MODEL_TASK);
     });
 
 App::put('/v1/projects/:projectId/tasks/:taskId')
@@ -1157,7 +1157,7 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
             ResqueScheduler::enqueueAt($next, 'v1-tasks', 'TasksV1', $task->getArrayCopy());
         }
 
-        $response->dynamic2($task, Response::MODEL_TASK);
+        $response->dynamic($task, Response::MODEL_TASK);
     });
 
 App::delete('/v1/projects/:projectId/tasks/:taskId')
@@ -1237,7 +1237,7 @@ App::post('/v1/projects/:projectId/platforms')
         );
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($platform, Response::MODEL_PLATFORM);
+        $response->dynamic($platform, Response::MODEL_PLATFORM);
     });
 
 App::get('/v1/projects/:projectId/platforms')
@@ -1265,7 +1265,7 @@ App::get('/v1/projects/:projectId/platforms')
 
         $platforms = $project->getAttribute('platforms', []);
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'platforms' => $platforms,
             'sum' => count($platforms),
         ]), Response::MODEL_PLATFORM_LIST);
@@ -1301,7 +1301,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
             throw new Exception('Platform not found', 404);
         }
 
-        $response->dynamic2($platform, Response::MODEL_PLATFORM);
+        $response->dynamic($platform, Response::MODEL_PLATFORM);
     });
 
 App::put('/v1/projects/:projectId/platforms/:platformId')
@@ -1353,7 +1353,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project);
 
-        $response->dynamic2($platform, Response::MODEL_PLATFORM);
+        $response->dynamic($platform, Response::MODEL_PLATFORM);
     });
 
 App::delete('/v1/projects/:projectId/platforms/:platformId')
@@ -1444,7 +1444,7 @@ App::post('/v1/projects/:projectId/domains')
         );
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($domain, Response::MODEL_DOMAIN);
+        $response->dynamic($domain, Response::MODEL_DOMAIN);
     });
 
 App::get('/v1/projects/:projectId/domains')
@@ -1472,7 +1472,7 @@ App::get('/v1/projects/:projectId/domains')
 
         $domains = $project->getAttribute('domains', []);
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'domains' => $domains,
             'sum' => count($domains),
         ]), Response::MODEL_DOMAIN_LIST);
@@ -1508,7 +1508,7 @@ App::get('/v1/projects/:projectId/domains/:domainId')
             throw new Exception('Domain not found', 404);
         }
 
-        $response->dynamic2($domain, Response::MODEL_DOMAIN);
+        $response->dynamic($domain, Response::MODEL_DOMAIN);
     });
 
 App::patch('/v1/projects/:projectId/domains/:domainId/verification')
@@ -1548,7 +1548,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         }
 
         if ($domain->getAttribute('verification') === true) {
-            return $response->dynamic2($domain, Response::MODEL_DOMAIN);
+            return $response->dynamic($domain, Response::MODEL_DOMAIN);
         }
 
         $validator = new CNAME($target->get()); // Verify Domain with DNS records
@@ -1569,7 +1569,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
             'domain' => $domain->getAttribute('domain'),
         ]);
 
-        $response->dynamic2($domain, Response::MODEL_DOMAIN);
+        $response->dynamic($domain, Response::MODEL_DOMAIN);
     });
 
 App::delete('/v1/projects/:projectId/domains/:domainId')
