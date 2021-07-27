@@ -1517,11 +1517,10 @@ App::post('/v1/account/recovery')
 
         $body = Template::fromFile(__DIR__.'/../../config/locale/templates/email-base.tpl');
         $content = Template::fromString($locale->getText('account.emails.recovery.body'));
-        $cta = Template::fromFile(__DIR__.'/../../config/locale/templates/email-cta.tpl');
+        // $cta = Template::fromFile(__DIR__.'/../../config/locale/templates/email-cta.tpl');
 
         $body
             ->setParam('{{content}}', $content->render(false))
-            ->setParam('{{cta}}', $cta->render())
             ->setParam('{{title}}', $locale->getText('account.emails.recovery.title'))
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
@@ -1721,11 +1720,10 @@ App::post('/v1/account/verification')
 
         $body = Template::fromFile(__DIR__.'/../../config/locale/templates/email-base.tpl');
         $content = Template::fromString($locale->getText('account.emails.verification.body'));
-        $cta = Template::fromFile(__DIR__.'/../../config/locale/templates/email-cta.tpl');
+        // $cta = Template::fromFile(__DIR__.'/../../config/locale/templates/email-cta.tpl');
 
         $body
             ->setParam('{{content}}', $content->render(false))
-            ->setParam('{{cta}}', $cta->render())
             ->setParam('{{title}}', $locale->getText('account.emails.verification.title'))
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))

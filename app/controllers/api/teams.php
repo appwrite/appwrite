@@ -421,12 +421,11 @@ App::post('/v1/teams/:teamId/memberships')
 
         $body = Template::fromFile(__DIR__.'/../../config/locale/templates/email-base.tpl');
         $content = Template::fromString($locale->getText('account.emails.invitation.body'));
-        $cta = Template::fromFile(__DIR__.'/../../config/locale/templates/email-cta.tpl');
+        // $cta = Template::fromFile(__DIR__.'/../../config/locale/templates/email-cta.tpl');
         $title = \sprintf($locale->getText('account.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]']));
         
         $body
             ->setParam('{{content}}', $content->render(false))
-            ->setParam('{{cta}}', $cta->render())
             ->setParam('{{title}}', $title)
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
