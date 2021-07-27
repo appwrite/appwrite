@@ -1,8 +1,10 @@
 <?php
 
 use Appwrite\Resque\Worker;
+use Appwrite\Template\Template;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Locale\Locale;
 
 require_once __DIR__.'/../workers.php';
 
@@ -33,7 +35,47 @@ class MailsV1 extends Worker
         $recipient = $this->args['recipient'];
         $name = $this->args['name'];
         $subject = $this->args['subject'];
-        $body = $this->args['body'];
+        $url = $this->args['url'];
+        $project = $this->args['project'];
+        $locale = new Locale($this->args['locale']);
+        
+        $type = $this->args['type'];
+        $prefix = '';
+        $body = Template::fromFile(__DIR__.'/../config/locale/templates/email-base.tpl');
+
+        switch($type) {
+            case MAIL_TYPE_RECOVERY: 
+                $prefix = 'emails.recovery';
+                break;
+            case MAIL_TYPE_INVITATION:
+                $prefix = 'emails.invitation';
+                $body->setParam('{{owner}}', $this->args['owner']);
+                $body->setParam('{{team}}', $this->args['team']);
+                break;
+            case MAIL_TYPE_VERIFICATION:
+                $prefix = 'emails.verification';
+                break;
+            default:
+                throw new Exception('Undefined Mail Type : ' . $type, 500);
+        }
+
+        $body
+            ->setParam('{{subject}}', $subject)
+            ->setParam('{{hello}}', $locale->getText("$prefix.hello"))
+            ->setParam('{{name}}', $name)
+            ->setParam('{{body}}', $locale->getText("$prefix.body"))
+            ->setParam('{{redirect}}', $url)
+            ->setParam('{{footer}}', $locale->getText("$prefix.footer"))
+            ->setParam('{{thanks}}', $locale->getText("$prefix.thanks"))
+            ->setParam('{{signature}}', $locale->getText("$prefix.signature"))
+            ->setParam('{{project}}', $project)
+            ->setParam('{{direction}}', $locale->getText('settings.direction'))
+            ->setParam('{{bg-body}}', '#f7f7f7')
+            ->setParam('{{bg-content}}', '#ffffff')
+            ->setParam('{{text-content}}', '#000000')
+        ;
+
+        $body = $body->render();
         
         /** @var \PHPMailer\PHPMailer\PHPMailer $mail */
         $mail = $register->get('smtp');

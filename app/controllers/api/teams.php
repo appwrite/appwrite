@@ -418,26 +418,7 @@ App::post('/v1/teams/:teamId/memberships')
         $url = Template::parseURL($url);
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'teamId' => $team->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
         $url = Template::unParseURL($url);
-
-        $body = Template::fromFile(__DIR__.'/../../config/locale/templates/email-base.tpl');
         $subject = \sprintf($locale->getText('emails.invitation.subject'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]']));
-        
-        $body
-            ->setParam('{{subject}}', $subject)
-            ->setParam('{{hello}}', $locale->getText('emails.invitation.hello'))
-            ->setParam('{{body}}', $locale->getText('emails.invitation.body'))
-            ->setParam('{{redirect}}', $url)
-            ->setParam('{{footer}}', $locale->getText('emails.invitation.footer'))
-            ->setParam('{{thanks}}', $locale->getText('emails.invitation.thanks'))
-            ->setParam('{{signature}}', $locale->getText('emails.invitation.signature'))
-            ->setParam('{{direction}}', $locale->getText('settings.direction'))
-            ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
-            ->setParam('{{team}}', $team->getAttribute('name', '[TEAM-NAME]'))
-            ->setParam('{{owner}}', $user->getAttribute('name', ''))
-            ->setParam('{{bg-body}}', '#f7f7f7')
-            ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{text-content}}', '#000000')
-        ;
 
         if (!$isPrivilegedUser && !$isAppUser) { // No need of confirmation when in admin or app mode
             $mails
@@ -446,7 +427,12 @@ App::post('/v1/teams/:teamId/memberships')
                 ->setParam('recipient', $email)
                 ->setParam('name', $name)
                 ->setParam('subject', $subject)
-                ->setParam('body', $body->render())
+                ->setParam('url', $url)
+                ->setParam('locale', $locale->default)
+                ->setParam('project', $project->getAttribute('name', ['[APP-NAME]']))
+                ->setParam('owner', $user->getAttribute('name', ''))
+                ->setParam('team', $team->getAttribute('name', '[TEAM-NAME]'))
+                ->setParam('type', MAIL_TYPE_INVITATION)
                 ->trigger()
             ;
         }

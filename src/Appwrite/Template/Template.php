@@ -79,6 +79,8 @@ class Template extends View
             throw new Exception('"'.$this->path.'" template is not readable or not found');
         }
 
+        // First replace the variables inside the params. Then replace the variables in the template
+        $this->params = array_merge($this->params, \str_replace(\array_keys($this->params), \array_values($this->params), $this->params));
         $template = \str_replace(\array_keys($this->params), \array_values($this->params), $template);
 
         return $template;

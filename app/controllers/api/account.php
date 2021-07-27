@@ -1515,31 +1515,16 @@ App::post('/v1/account/recovery')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
-        $body = Template::fromFile(__DIR__.'/../../config/locale/templates/email-base.tpl');
-
-        $body
-            ->setParam('{{subject}}', $locale->getText('emails.recovery.subject'))
-            ->setParam('{{hello}}', $locale->getText('emails.recovery.hello'))
-            ->setParam('{{body}}', $locale->getText('emails.recovery.body'))
-            ->setParam('{{redirect}}', $url)
-            ->setParam('{{footer}}', $locale->getText('emails.recovery.footer'))
-            ->setParam('{{thanks}}', $locale->getText('emails.recovery.thanks'))
-            ->setParam('{{signature}}', $locale->getText('emails.recovery.signature'))
-            ->setParam('{{direction}}', $locale->getText('settings.direction'))
-            ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
-            ->setParam('{{name}}', $profile->getAttribute('name'))
-            ->setParam('{{bg-body}}', '#f7f7f7')
-            ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{text-content}}', '#000000')
-        ;
-
         $mails
             ->setParam('event', 'account.recovery.create')
             ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('emails.sender'), $project->getAttribute('name')))
             ->setParam('recipient', $profile->getAttribute('email', ''))
             ->setParam('name', $profile->getAttribute('name', ''))
             ->setParam('subject', $locale->getText('emails.recovery.subject'))
-            ->setParam('body', $body->render())
+            ->setParam('url', $url)
+            ->setParam('locale', $locale->default)
+            ->setParam('project', $project->getAttribute('name', ['[APP-NAME]']))
+            ->setParam('type', MAIL_TYPE_RECOVERY)
             ->trigger();
         ;
 
@@ -1718,31 +1703,16 @@ App::post('/v1/account/verification')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
-        $body = Template::fromFile(__DIR__.'/../../config/locale/templates/email-base.tpl');
-
-        $body
-            ->setParam('{{subject}}', $locale->getText('emails.verification.subject'))
-            ->setParam('{{hello}}', $locale->getText('emails.verification.hello'))
-            ->setParam('{{body}}', $locale->getText('emails.verification.body'))
-            ->setParam('{{redirect}}', $url)
-            ->setParam('{{footer}}', $locale->getText('emails.verification.footer'))
-            ->setParam('{{thanks}}', $locale->getText('emails.verification.thanks'))
-            ->setParam('{{signature}}', $locale->getText('emails.verification.signature'))
-            ->setParam('{{direction}}', $locale->getText('settings.direction'))
-            ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
-            ->setParam('{{name}}', $user->getAttribute('name'))
-            ->setParam('{{bg-body}}', '#f7f7f7')
-            ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{text-content}}', '#000000')
-        ;
-
         $mails
             ->setParam('event', 'account.verification.create')
             ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('emails.sender'), $project->getAttribute('name')))
             ->setParam('recipient', $user->getAttribute('email'))
             ->setParam('name', $user->getAttribute('name'))
             ->setParam('subject', $locale->getText('emails.verification.subject'))
-            ->setParam('body', $body->render())
+            ->setParam('url', $url)
+            ->setParam('locale', $locale->default)
+            ->setParam('project', $project->getAttribute('name', ['[APP-NAME]']))
+            ->setParam('type', MAIL_TYPE_VERIFICATION)
             ->trigger()
         ;
 
