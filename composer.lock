@@ -2079,16 +2079,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.17.0",
+            "version": "0.17.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "2952f6a21c2229f7a63ecb955bda676158174aec"
+                "reference": "3b942511eae94823642e2403bf27fa8798d1d855"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/2952f6a21c2229f7a63ecb955bda676158174aec",
-                "reference": "2952f6a21c2229f7a63ecb955bda676158174aec",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/3b942511eae94823642e2403bf27fa8798d1d855",
+                "reference": "3b942511eae94823642e2403bf27fa8798d1d855",
                 "shasum": ""
             },
             "require": {
@@ -2122,9 +2122,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.17.0"
+                "source": "https://github.com/utopia-php/framework/tree/0.17.1"
             },
-            "time": "2021-07-26T05:56:11+00:00"
+            "time": "2021-07-27T09:12:27+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2378,16 +2378,16 @@
         },
         {
             "name": "utopia-php/swoole",
-            "version": "0.3.0",
+            "version": "0.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/swoole.git",
-                "reference": "44ec4eb2ccb75aaffe9cbb8b1acade4fc316cd7a"
+                "reference": "b564dacb13472845f06df158ae5382e8098dfd7a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/44ec4eb2ccb75aaffe9cbb8b1acade4fc316cd7a",
-                "reference": "44ec4eb2ccb75aaffe9cbb8b1acade4fc316cd7a",
+                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/b564dacb13472845f06df158ae5382e8098dfd7a",
+                "reference": "b564dacb13472845f06df158ae5382e8098dfd7a",
                 "shasum": ""
             },
             "require": {
@@ -2428,9 +2428,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/swoole/issues",
-                "source": "https://github.com/utopia-php/swoole/tree/0.3.0"
+                "source": "https://github.com/utopia-php/swoole/tree/0.3.1"
             },
-            "time": "2021-07-26T06:41:59+00:00"
+            "time": "2021-07-27T09:28:10+00:00"
         },
         {
             "name": "utopia-php/system",
