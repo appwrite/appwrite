@@ -421,7 +421,6 @@ App::post('/v1/teams/:teamId/memberships')
 
         $body = Template::fromFile(__DIR__.'/../../config/locale/templates/email-base.tpl');
         $content = Template::fromString($locale->getText('account.emails.invitation.body'));
-        // $cta = Template::fromFile(__DIR__.'/../../config/locale/templates/email-cta.tpl');
         $title = \sprintf($locale->getText('account.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]']));
         
         $body
@@ -434,9 +433,7 @@ App::post('/v1/teams/:teamId/memberships')
             ->setParam('{{redirect}}', $url)
             ->setParam('{{bg-body}}', '#f7f7f7')
             ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{bg-cta}}', '#073b4c')
             ->setParam('{{text-content}}', '#000000')
-            ->setParam('{{text-cta}}', '#ffffff')
         ;
 
         if (!$isPrivilegedUser && !$isAppUser) { // No need of confirmation when in admin or app mode

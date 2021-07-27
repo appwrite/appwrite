@@ -82,58 +82,10 @@
       word-break: break-all;
     }
 
-    .btn {
-      box-sizing: border-box;
-      width: 100%;
-    }
-
-    .btn>tbody>tr>td {
-      padding-bottom: 15px;
-      padding-top: 15px;
-    }
-
-    .btn table {
-      width: auto;
-    }
-
-    .btn table td {
-      background-color: {{bg-content}};
-      border-radius: 20px;
-      text-align: center;
-    }
-
-    .btn a {
-      background-color: {{bg-content}};
-      border-radius: 20px;
-      box-sizing: border-box;
-      color: #577590;
-      cursor: pointer;
-      display: inline-block;
-      font-size: 14px;
-      font-weight: bold;
-      margin: 0;
-      padding: 12px 25px;
-      text-decoration: none;
-      text-transform: capitalize;
-    }
-
-    .btn-primary table td {
-      background-color: {{bg-cta}};
-    }
-
-    .btn-primary a {
-      background-color: {{bg-cta}};
-      color: {{text-cta}};
-    }
-
     @media only screen and (max-width: 620px) {
       .container {
         padding: 0;
         width: 100%;
-      }
-
-      .btn-primary a {
-        font-size: 13px;
       }
     }
 
@@ -169,13 +121,6 @@
         line-height: inherit;
       }
 
-      .btn-primary table td:hover {
-        opacity: 0.7 !important;
-      }
-
-      .btn-primary a:hover {
-        opacity: 0.7 !important;
-      }
     }
   </style>
 </head>

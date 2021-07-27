@@ -1517,7 +1517,6 @@ App::post('/v1/account/recovery')
 
         $body = Template::fromFile(__DIR__.'/../../config/locale/templates/email-base.tpl');
         $content = Template::fromString($locale->getText('account.emails.recovery.body'));
-        // $cta = Template::fromFile(__DIR__.'/../../config/locale/templates/email-cta.tpl');
 
         $body
             ->setParam('{{content}}', $content->render(false))
@@ -1528,9 +1527,7 @@ App::post('/v1/account/recovery')
             ->setParam('{{redirect}}', $url)
             ->setParam('{{bg-body}}', '#f7f7f7')
             ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{bg-cta}}', '#073b4c')
             ->setParam('{{text-content}}', '#000000')
-            ->setParam('{{text-cta}}', '#ffffff')
         ;
 
         $mails
@@ -1720,7 +1717,6 @@ App::post('/v1/account/verification')
 
         $body = Template::fromFile(__DIR__.'/../../config/locale/templates/email-base.tpl');
         $content = Template::fromString($locale->getText('account.emails.verification.body'));
-        // $cta = Template::fromFile(__DIR__.'/../../config/locale/templates/email-cta.tpl');
 
         $body
             ->setParam('{{content}}', $content->render(false))
@@ -1731,9 +1727,7 @@ App::post('/v1/account/verification')
             ->setParam('{{redirect}}', $url)
             ->setParam('{{bg-body}}', '#f7f7f7')
             ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{bg-cta}}', '#073b4c')
             ->setParam('{{text-content}}', '#000000')
-            ->setParam('{{text-cta}}', '#ffffff')
         ;
 
         $mails
