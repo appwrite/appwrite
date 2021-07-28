@@ -24,7 +24,6 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
-use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\App;
@@ -39,7 +38,7 @@ use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Document as Document2;
 use Utopia\Database\Database as Database2;
-use Utopia\Database\Validator\Authorization as Authorization2;
+use Utopia\Database\Validator\Authorization;
 use Swoole\Database\PDOConfig;
 use Swoole\Database\PDOPool;
 use Swoole\Database\RedisConfig;
@@ -58,8 +57,8 @@ const APP_LIMIT_USERS = 10000;
 const APP_LIMIT_ANTIVIRUS = 20971520; //20MB
 const APP_LIMIT_ENCRYPTION = 20971520; //20MB
 const APP_LIMIT_COMPRESSION = 20971520; //20MB
-const APP_CACHE_BUSTER = 149;
-const APP_VERSION_STABLE = '0.9.1';
+const APP_CACHE_BUSTER = 150;
+const APP_VERSION_STABLE = '0.9.2';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_CACHE = '/storage/cache';
@@ -443,7 +442,6 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     /** @var string $mode */
 
     Authorization::setDefaultStatus(true);
-    Authorization2::setDefaultStatus(true);
 
     Auth::setCookieName('a_session_'.$project->getId());
 
@@ -488,7 +486,6 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     if (APP_MODE_ADMIN === $mode) {
         if ($user->find('teamId', $project->getAttribute('teamId'), 'memberships')) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
-            Authorization2::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         } else {
             $user = new Document2(['$id' => '', '$collection' => 'users']);
         }
@@ -533,12 +530,10 @@ App::setResource('project', function($dbForConsole, $request, $console) {
     }
 
     Authorization::disable();
-    Authorization2::disable();
 
     $project = $dbForConsole->getDocument('projects', $projectId);
 
     Authorization::reset();
-    Authorization2::reset();
 
     return $project;
 }, ['dbForConsole', 'request', 'console']);

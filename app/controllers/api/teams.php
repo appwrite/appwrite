@@ -1,7 +1,6 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Validator\UID;
 use Appwrite\Detector\Detector;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response;
@@ -19,6 +18,7 @@ use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
+use Utopia\Database\Validator\UID;
 
 App::post('/v1/teams')
     ->desc('Create Team')
@@ -80,7 +80,7 @@ App::post('/v1/teams')
         }
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($team, Response::MODEL_TEAM);
+        $response->dynamic($team, Response::MODEL_TEAM);
     });
 
 App::get('/v1/teams')
@@ -109,7 +109,7 @@ App::get('/v1/teams')
         $results = $dbForInternal->find('teams', $queries, $limit, $offset, ['_id'], [$orderType]);
         $sum = $dbForInternal->count('teams', $queries, APP_LIMIT_COUNT);
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'teams' => $results,
             'sum' => $sum,
         ]), Response::MODEL_TEAM_LIST);
@@ -139,7 +139,7 @@ App::get('/v1/teams/:teamId')
             throw new Exception('Team not found', 404);
         }
 
-        $response->dynamic2($team, Response::MODEL_TEAM);
+        $response->dynamic($team, Response::MODEL_TEAM);
     });
 
 App::put('/v1/teams/:teamId')
@@ -170,7 +170,7 @@ App::put('/v1/teams/:teamId')
 
         $team = $dbForInternal->updateDocument('teams', $team->getId(), $team->setAttribute('name', $name));
 
-        $response->dynamic2($team, Response::MODEL_TEAM);
+        $response->dynamic($team, Response::MODEL_TEAM);
     });
 
 App::delete('/v1/teams/:teamId')
@@ -222,7 +222,7 @@ App::delete('/v1/teams/:teamId')
         ;
 
         $events
-            ->setParam('eventData', $response->output2($team, Response::MODEL_TEAM))
+            ->setParam('eventData', $response->output($team, Response::MODEL_TEAM))
         ;
 
         $response->noContent();
@@ -256,8 +256,8 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('mails')
     ->action(function ($teamId, $email, $name, $roles, $url, $response, $project, $user, $dbForInternal, $locale, $audits, $mails) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $project */
-        /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Database\Document $project */
+        /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $mails */
@@ -409,7 +409,7 @@ App::post('/v1/teams/:teamId/memberships')
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($membership
+        $response->dynamic($membership
             ->setAttribute('email', $email)
             ->setAttribute('name', $name)
         , Response::MODEL_MEMBERSHIP);
@@ -457,7 +457,7 @@ App::get('/v1/teams/:teamId/memberships')
             $users[] = new Document(\array_merge($temp, $membership->getArrayCopy()));
         }
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'memberships' => $users,
             'sum' => $sum,
         ]), Response::MODEL_MEMBERSHIP_LIST);
@@ -486,7 +486,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->action(function ($teamId, $membershipId, $roles, $request, $response, $user, $dbForInternal, $audits) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
 
@@ -525,7 +525,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
             ->setParam('resource', 'teams/'.$teamId)
         ;
 
-        $response->dynamic2($membership, Response::MODEL_MEMBERSHIP);
+        $response->dynamic($membership, Response::MODEL_MEMBERSHIP);
     });
 
 App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
@@ -553,7 +553,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->action(function ($teamId, $membershipId, $userId, $secret, $request, $response, $user, $dbForInternal, $geodb, $audits) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
@@ -661,7 +661,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
         ;
 
-        $response->dynamic2($membership
+        $response->dynamic($membership
             ->setAttribute('email', $user->getAttribute('email'))
             ->setAttribute('name', $user->getAttribute('name'))
         , Response::MODEL_MEMBERSHIP);
@@ -744,7 +744,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         ;
 
         $events
-            ->setParam('eventData', $response->output2($membership, Response::MODEL_MEMBERSHIP))
+            ->setParam('eventData', $response->output($membership, Response::MODEL_MEMBERSHIP))
         ;
 
         $response->noContent();

@@ -2,7 +2,6 @@
 
 require_once __DIR__.'/../vendor/autoload.php';
 
-use Appwrite\Database\Validator\Authorization;
 use Appwrite\Utopia\Response;
 use Swoole\Process;
 use Swoole\Http\Server;
@@ -11,7 +10,7 @@ use Swoole\Http\Response as SwooleResponse;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Validator\Authorization as Authorization2;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Audit\Audit;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Database\Document;
@@ -54,8 +53,25 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
     $app = new App('UTC');
 
     go(function() use ($register, $app) {
-        $db = $register->get('dbPool')->get();
-        $redis = $register->get('redisPool')->get();
+        // wait for database to be ready
+        $attempts = 0;
+        $max = 10;
+        $sleep = 1;
+
+        do {
+            try {
+                $attempts++;
+                $db = $register->get('dbPool')->get();
+                $redis = $register->get('redisPool')->get();
+                break; // leave the do-while if successful
+            } catch(\Exception $e) {
+                Console::warning("Database not ready. Retrying connection ({$attempts})...");
+                if ($attempts >= $max) {
+                    throw new \Exception('Failed to connect to database: '. $e->getMessage());
+                }
+                sleep($sleep);
+            }
+        } while ($attempts < $max);
 
         App::setResource('db', function () use (&$db) {
             return $db;
@@ -68,9 +84,6 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         App::setResource('app', function() use (&$app) {
             return $app;
         });
-
-        // wait for database to be ready
-        sleep(5);
 
         $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
 
@@ -169,9 +182,6 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     try {
         Authorization::cleanRoles();
         Authorization::setRole('role:all');
-
-        Authorization2::cleanRoles();
-        Authorization2::setRole('role:all');
 
         $app->run($request, $response);
     } catch (\Throwable $th) {
