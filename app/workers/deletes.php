@@ -53,6 +53,9 @@ class DeletesV1 extends Worker
                     case 'teams':
                         $this->deleteMemberships($document, $projectId);
                         break;
+                    case 'buckets':
+                        $this->deleteBucket($document, $projectId);
+                        break;
                     default:
                         Console::error('No lazy delete operation available for document of type: '.$document->getCollection());
                         break;
@@ -74,11 +77,6 @@ class DeletesV1 extends Worker
             case DELETE_TYPE_CERTIFICATES:
                 $document = new Document($this->args['document']);
                 $this->deleteCertificates($document);
-                break;
-
-            case DELETE_TYPE_BUCKETS:
-                $bucket = new Document($this->args['document']);
-                $this->deleteBucket($bucket, $projectId);
                 break;
 
             default:
