@@ -3,10 +3,10 @@
 return [
     'af', // Afrikaans
     'ar', // Arabic
-    'ba', //Bosnian
     'be', // Belarusian
     'bg', // Bulgarian
     'bn', // Bengali
+    'bs', //Bosnian
     'ca', // Catalan
     'cs', // Czech
     'de', // German
