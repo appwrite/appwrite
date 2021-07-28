@@ -361,7 +361,6 @@ class DeletesV1 extends Worker
         /** @var Utopia\Database\Database $db */
         $db = $this->getInternalDB($projectId);
         $bucketId = $document->getId();
-
         
         $this->deleteByGroup('files',[
             new Query('bucketId', Query::TYPE_EQUAL, [$bucketId])
@@ -369,7 +368,7 @@ class DeletesV1 extends Worker
             $device = new Local(APP_STORAGE_UPLOADS.'/app-'.$projectId);
             $device->deletePath($device->getRoot() . DIRECTORY_SEPARATOR . $bucketId);
         });
-        $db->deleteDocument('buckets', $bucketId);
+        $this->deleteById($document, $db);
     }
     
     /**
