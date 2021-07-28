@@ -1,4 +1,4 @@
-# Add your language support to Appwrite 
+# Help translate Appwrite to your language ✍️
 
 This document is part of the Appwrite contributors' guide. Before you continue reading this document make sure you have read the [Code of Conduct](https://github.com/appwrite/appwrite/blob/master/CODE_OF_CONDUCT.md) and the [Contributing Guide](https://github.com/appwrite/appwrite/blob/master/CONTRIBUTING.md).
 
@@ -13,7 +13,7 @@ You can help in three distinct ways
 * Helping us with existing incomplete translations. 
 * Reviewing existing translations for correctness.
 
-You can choose to contribute either directly on Github or using PO Editor if you prefer a GUI.
+You can choose to contribute either directly on [**Github**](https://github.com/appwrite/appwrite) or using [**POEditor**](https://poeditor.com/) if you prefer a GUI.
 
 ### Contributing with Github
 
