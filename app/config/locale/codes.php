@@ -37,7 +37,7 @@ return [
     'nl', // Dutch
     'no', // Norwegian
     'ne', // Nepali
-    'od', // Odia
+    'or', // Odia
     'ph', // Filipino
     'pl', // Polish
     'pt-br', // Portuguese - Brazil	
