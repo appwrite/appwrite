@@ -360,10 +360,10 @@ class DeletesV1 extends Worker
         
         $this->deleteByGroup('files',[
             new Query('bucketId', Query::TYPE_EQUAL, [$bucketId])
-        ], $this->getInternalDB($projectId), function () use ($projectId, $bucketId) {
-            $device = new Local(APP_STORAGE_UPLOADS.'/app-'.$projectId);
-            $device->deletePath($device->getRoot() . DIRECTORY_SEPARATOR . $bucketId);
-        });
+        ], $this->getInternalDB($projectId));
+
+        $device = new Local(APP_STORAGE_UPLOADS.'/app-'.$projectId);
+        $device->deletePath($device->getRoot() . DIRECTORY_SEPARATOR . $bucketId);
     }
     
     /**
