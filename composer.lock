@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "17c1c46d283e4745df9915d082c22078",
+    "content-hash": "ab60fcd2b30e9c0ddcb490cd67a758c3",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2337,16 +2337,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.5.0",
+            "version": "dev-feat-large-file-support",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "92ae20c7a2ac329f573a58a82dc245134cc63408"
+                "reference": "0d031ffb159efa78b52db547b3471f228472a1a1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/92ae20c7a2ac329f573a58a82dc245134cc63408",
-                "reference": "92ae20c7a2ac329f573a58a82dc245134cc63408",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/0d031ffb159efa78b52db547b3471f228472a1a1",
+                "reference": "0d031ffb159efa78b52db547b3471f228472a1a1",
                 "shasum": ""
             },
             "require": {
@@ -2383,9 +2383,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.5.0"
+                "source": "https://github.com/utopia-php/storage/tree/feat-large-file-support"
             },
-            "time": "2021-04-15T16:43:12+00:00"
+            "time": "2021-07-19T05:38:11+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -6237,7 +6237,8 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "utopia-php/abuse": 20,
-        "utopia-php/audit": 20
+        "utopia-php/audit": 20,
+        "utopia-php/storage": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

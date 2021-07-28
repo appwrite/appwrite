@@ -358,7 +358,18 @@ class DeletesV1 extends Worker
 
     protected function deleteBucket(Document $document, string $projectId)
     {
+        /** @var Utopia\Database\Database $db */
+        $db = $this->getInternalDB($projectId);
+        $bucketId = $document->getId();
+
         
+        $this->deleteByGroup('files',[
+            new Query('bucketId', Query::TYPE_EQUAL, [$bucketId])
+        ], $db, function () use ($projectId, $bucketId) {
+            $device = new Local(APP_STORAGE_UPLOADS.'/app-'.$projectId);
+            $device->deletePath($device->getRoot() . DIRECTORY_SEPARATOR . $bucketId);
+        });
+        $db->deleteDocument('buckets', $bucketId);
     }
     
     /**
