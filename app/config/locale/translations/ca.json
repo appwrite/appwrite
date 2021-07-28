@@ -1,6 +1,6 @@
 {
     "settings.inspire": "\"L'art de ser savi és l'art de saber què passar per alt\"",
-    "settings.locale": "cat",
+    "settings.locale": "ca",
     "settings.direction": "ltr",
     "emails.sender": "%s Equip",
     "emails.verification.subject": "",

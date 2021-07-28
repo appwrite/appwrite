@@ -262,8 +262,8 @@ Locale::setLanguageFromJSON('ba', __DIR__.'/config/locale/translations/ba.json')
 Locale::setLanguageFromJSON('be', __DIR__.'/config/locale/translations/be.json');
 Locale::setLanguageFromJSON('bg', __DIR__.'/config/locale/translations/bg.json');
 Locale::setLanguageFromJSON('bn', __DIR__.'/config/locale/translations/bn.json');
-Locale::setLanguageFromJSON('cat', __DIR__.'/config/locale/translations/cat.json');
-Locale::setLanguageFromJSON('cz', __DIR__.'/config/locale/translations/cz.json');
+Locale::setLanguageFromJSON('ca', __DIR__.'/config/locale/translations/ca.json');
+Locale::setLanguageFromJSON('cs', __DIR__.'/config/locale/translations/cs.json');
 Locale::setLanguageFromJSON('de', __DIR__.'/config/locale/translations/de.json');
 Locale::setLanguageFromJSON('en', __DIR__.'/config/locale/translations/en.json');
 Locale::setLanguageFromJSON('es', __DIR__.'/config/locale/translations/es.json');
