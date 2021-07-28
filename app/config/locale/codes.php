@@ -38,7 +38,7 @@ return [
     'no', // Norwegian
     'ne', // Nepali
     'or', // Oriya
-    'ph', // Filipino
+    'tl', // Filipino
     'pl', // Polish
     'pt-br', // Portuguese - Brazil	
     'pt-pt', // Portuguese - Portugal
