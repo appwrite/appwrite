@@ -245,6 +245,8 @@ trait WebhooksBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Test Bucket',
+            'read' => ['role:all'],
+            'write' => ['role:all']
         ]);
         
         $this->assertEquals($bucket['headers']['status-code'], 201);
@@ -311,7 +313,7 @@ trait WebhooksBase
     /**
      * @depends testCreateStorageBucket
      */
-    public function testCreateFile(array $data): array
+    public function testCreateBucketFile(array $data): array
     {
         /**
          * Test for SUCCESS
@@ -356,9 +358,9 @@ trait WebhooksBase
     }
     
     /**
-     * @depends testCreateFile
+     * @depends testCreateBucketFile
      */
-    public function testUpdateFile(array $data): array
+    public function testUpdateBucketFile(array $data): array
     {
         /**
          * Test for SUCCESS
@@ -397,9 +399,9 @@ trait WebhooksBase
     }
     
     /**
-     * @depends testUpdateFile
+     * @depends testUpdateBucketFile
      */
-    public function testDeleteFile(array $data): array
+    public function testDeleteBucketFile(array $data): array
     {
         /**
          * Test for SUCCESS
@@ -435,7 +437,7 @@ trait WebhooksBase
     }
 
      /**
-     * @depends testCreateStorageBucket
+     * @depends testDeleteBucketFile
      */
     public function testDeleteStorageBucket(array $data)
     {
