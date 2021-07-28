@@ -13,7 +13,7 @@ You can help in three distinct ways
 * Helping us with existing incomplete translations. 
 * Reviewing existing translations for correctness.
 
-You can choose to contribute either directly on [**Github**](https://github.com/appwrite/appwrite) or using [**POEditor**](https://poeditor.com/) if you prefer a GUI.
+You can choose to contribute either directly on [**Github**](###contributing-with-github) or using [**POEditor**](###contributing-with-po-editor) if you prefer a GUI.
 
 ### Contributing with Github
 
