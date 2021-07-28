@@ -291,7 +291,7 @@ Locale::setLanguageFromJSON('mr', __DIR__.'/config/locale/translations/mr.json')
 Locale::setLanguageFromJSON('ms', __DIR__.'/config/locale/translations/ms.json');
 Locale::setLanguageFromJSON('nl', __DIR__.'/config/locale/translations/nl.json');
 Locale::setLanguageFromJSON('no', __DIR__.'/config/locale/translations/no.json');
-Locale::setLanguageFromJSON('np', __DIR__.'/config/locale/translations/np.json');
+Locale::setLanguageFromJSON('ne', __DIR__.'/config/locale/translations/ne.json');
 Locale::setLanguageFromJSON('od', __DIR__.'/config/locale/translations/od.json');
 Locale::setLanguageFromJSON('ph', __DIR__.'/config/locale/translations/ph.json');
 Locale::setLanguageFromJSON('pl', __DIR__.'/config/locale/translations/pl.json');

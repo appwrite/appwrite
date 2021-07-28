@@ -36,7 +36,7 @@ return [
     'ms', // Malay
     'nl', // Dutch
     'no', // Norwegian
-    'np', // Nepali
+    'ne', // Nepali
     'od', // Odia
     'ph', // Filipino
     'pl', // Polish
