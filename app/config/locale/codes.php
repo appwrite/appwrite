@@ -7,8 +7,8 @@ return [
     'be', // Belarusian
     'bg', // Bulgarian
     'bn', // Bengali
-    'cat', // Catalan
-    'cz', // Czech
+    'ca', // Catalan
+    'cs', // Czech
     'de', // German
     'en', // English
     'es', // Spanish
