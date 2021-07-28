@@ -52,7 +52,7 @@ return [
     'ta', // Tamil
     'th', // Thai
     'tr', // Turkish
-    'ua', // Ukrainian
+    'uk', // Ukrainian
     'ur', //Urdu
     'vi', // Vietnamese
     'zh-cn', // Chinese - China
