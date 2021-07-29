@@ -47,13 +47,13 @@ $cli
         $count = 0;
 
         $class = 'Appwrite\\Migration\\Version\\'.Migration::$versions[$version];
-        $migration = new $class($register->get('db'));
+        $migration = new $class($register->get('db'), $register->get('cache'));
 
         while ($sum > 0) {
             foreach ($projects as $project) {
                 try {
                     $migration
-                        ->setProject($project, $projectDB)
+                        ->setProject($project, $projectDB, $consoleDB)
                         ->execute();
                 } catch (\Throwable $th) {
                     throw $th;
@@ -72,7 +72,7 @@ $cli
             $sum = \count($projects);
             $offset = $offset + $limit;
             $count = $count + $sum;
-            
+
             if ($sum > 0) {
                 Console::log('Fetched '.$count.'/'.$consoleDB->getSum().' projects...');
             }

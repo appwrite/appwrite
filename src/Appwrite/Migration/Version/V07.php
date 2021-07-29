@@ -2,12 +2,12 @@
 
 namespace Appwrite\Migration\Version;
 
-use Appwrite\Migration\Migration;
-use Utopia\Config\Config;
-use Utopia\CLI\Console;
 use Appwrite\Auth\Auth;
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
+use Appwrite\Migration\Migration;
+use Utopia\Config\Config;
+use Utopia\CLI\Console;
 
 class V07 extends Migration
 {

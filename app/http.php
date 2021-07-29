@@ -65,10 +65,6 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             return $redis;
         });
 
-        App::setResource('app', function() use (&$app) {
-            return $app;
-        });
-
         // wait for database to be ready
         sleep(5);
 
@@ -118,7 +114,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 }
 
                 $dbForConsole->createCollection($key, $attributes, $indexes);
-                
+
             }
 
             Console::success('[Setup] - Server database init completed...');
@@ -165,7 +161,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     App::setResource('cache', function () use (&$redis) {
         return $redis;
     });
-    
+
     try {
         Authorization::cleanRoles();
         Authorization::setRole('role:all');

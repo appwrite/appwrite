@@ -2,11 +2,11 @@
 
 namespace Appwrite\Migration\Version;
 
-use Appwrite\Migration\Migration;
 use Utopia\Config\Config;
 use Utopia\CLI\Console;
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
+use Appwrite\Migration\Migration;
 
 class V05 extends Migration
 {

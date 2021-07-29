@@ -367,7 +367,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
-        
+
         $protocol = $request->getProtocol();
         $callback = $protocol.'://'.$request->getHostname().'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
@@ -1577,7 +1577,7 @@ App::post('/v1/account/verification')
         $verificationSecret = Auth::tokenGenerator();
 
         $expire = \time() + Auth::TOKEN_EXPIRATION_CONFIRM;
-        
+
         $verification = new Document([
             '$id' => $dbForInternal->getId(),
             'userId' => $user->getId(),

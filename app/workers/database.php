@@ -25,7 +25,7 @@ class DatabaseV1 extends Worker
     {
         $projectId = $this->args['projectId'] ?? '';
         $type = $this->args['type'] ?? '';
-        
+
         switch (strval($type)) {
             case CREATE_TYPE_ATTRIBUTE:
                 $attribute = $this->args['document'] ?? '';
