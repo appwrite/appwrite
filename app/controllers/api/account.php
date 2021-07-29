@@ -1517,10 +1517,9 @@ App::post('/v1/account/recovery')
 
         $mails
             ->setParam('event', 'account.recovery.create')
-            ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('emails.sender'), $project->getAttribute('name')))
+            ->setParam('from', $project->getId())
             ->setParam('recipient', $profile->getAttribute('email', ''))
             ->setParam('name', $profile->getAttribute('name', ''))
-            ->setParam('subject', $locale->getText('emails.recovery.subject'))
             ->setParam('url', $url)
             ->setParam('locale', $locale->default)
             ->setParam('project', $project->getAttribute('name', ['[APP-NAME]']))
@@ -1705,10 +1704,9 @@ App::post('/v1/account/verification')
 
         $mails
             ->setParam('event', 'account.verification.create')
-            ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('emails.sender'), $project->getAttribute('name')))
+            ->setParam('from', $project->getId())
             ->setParam('recipient', $user->getAttribute('email'))
             ->setParam('name', $user->getAttribute('name'))
-            ->setParam('subject', $locale->getText('emails.verification.subject'))
             ->setParam('url', $url)
             ->setParam('locale', $locale->default)
             ->setParam('project', $project->getAttribute('name', ['[APP-NAME]']))

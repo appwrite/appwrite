@@ -6,10 +6,10 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Locale\Locale;
 
-require_once __DIR__.'/../workers.php';
+require_once __DIR__ . '/../workers.php';
 
 Console::title('Mails V1 Worker');
-Console::success(APP_NAME.' mails worker v1 has started'."\n");
+Console::success(APP_NAME . ' mails worker v1 has started' . "\n");
 
 class MailsV1 extends Worker
 {
@@ -26,34 +26,37 @@ class MailsV1 extends Worker
     {
         global $register;
 
-        if(empty(App::getEnv('_APP_SMTP_HOST'))) {
+        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             Console::info('Skipped mail processing. No SMTP server hostname has been set.');
             return;
         }
 
-        $from = $this->args['from'];
         $recipient = $this->args['recipient'];
         $name = $this->args['name'];
-        $subject = $this->args['subject'];
         $url = $this->args['url'];
         $project = $this->args['project'];
-        $locale = new Locale($this->args['locale']);
-        
         $type = $this->args['type'];
-        $prefix = '';
-        $body = Template::fromFile(__DIR__.'/../config/locale/templates/email-base.tpl');
+        $prefix = $this->getPrefix($type);
+        $locale = new Locale($this->args['locale']);
 
-        switch($type) {
-            case MAIL_TYPE_RECOVERY: 
-                $prefix = 'emails.recovery';
+        if (!$this->doesLocaleExist($locale, $prefix)) {
+            $locale->setDefault('en');
+        }
+
+        $from = $this->args['from'] === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $project);
+        $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
+        $subject = '';
+        switch ($type) {
+            case MAIL_TYPE_RECOVERY:
+                $subject = $locale->getText("$prefix.subject");
                 break;
             case MAIL_TYPE_INVITATION:
-                $prefix = 'emails.invitation';
+                $subject = \sprintf($locale->getText("$prefix.subject"), $this->args['team'], $project);
                 $body->setParam('{{owner}}', $this->args['owner']);
                 $body->setParam('{{team}}', $this->args['team']);
                 break;
             case MAIL_TYPE_VERIFICATION:
-                $prefix = 'emails.verification';
+                $subject = $locale->getText("$prefix.subject");
                 break;
             default:
                 throw new Exception('Undefined Mail Type : ' . $type, 500);
@@ -72,11 +75,10 @@ class MailsV1 extends Worker
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{bg-body}}', '#f7f7f7')
             ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{text-content}}', '#000000')
-        ;
+            ->setParam('{{text-content}}', '#000000');
 
         $body = $body->render();
-        
+
         /** @var \PHPMailer\PHPMailer\PHPMailer $mail */
         $mail = $register->get('smtp');
 
@@ -97,7 +99,7 @@ class MailsV1 extends Worker
         $mail->clearBCCs();
         $mail->clearCCs();
 
-        $mail->setFrom(App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), (empty($from) ? \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server')) : $from));
+        $mail->setFrom(App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), (empty($from) ? \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server')) : $from));
         $mail->addAddress($recipient, $name);
         $mail->Subject = $subject;
         $mail->Body = $body;
@@ -112,5 +114,44 @@ class MailsV1 extends Worker
 
     public function shutdown(): void
     {
+    }
+
+    /**
+     * Returns a prefix from a mail type
+     * 
+     * @param $type
+     * 
+     * @return string
+     */
+    protected function getPrefix(string $type): string
+    {
+        switch ($type) {
+            case MAIL_TYPE_RECOVERY:
+                return 'emails.recovery';
+            case MAIL_TYPE_INVITATION:
+                return 'emails.invitation';
+            case MAIL_TYPE_VERIFICATION:
+                return 'emails.verification';
+            default:
+                throw new Exception('Undefined Mail Type : ' . $type, 500);
+        }
+    }
+
+    /**
+     * Returns true if all the required terms in a locale exist. False otherwise
+     * 
+     * @param $locale
+     * @param $prefix
+     * 
+     * @return bool
+     */
+    protected function doesLocaleExist(Locale $locale, string $prefix): bool
+    {
+
+        if (!$locale->getText('emails.sender') || !$locale->getText("$prefix.hello") || !$locale->getText("$prefix.subject") || !$locale->getText("$prefix.body") || !$locale->getText("$prefix.footer") || !$locale->getText("$prefix.thanks") || !$locale->getText("$prefix.signature")) {
+            return false;
+        }
+
+        return true;
     }
 }

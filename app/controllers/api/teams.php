@@ -418,15 +418,13 @@ App::post('/v1/teams/:teamId/memberships')
         $url = Template::parseURL($url);
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'teamId' => $team->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
         $url = Template::unParseURL($url);
-        $subject = \sprintf($locale->getText('emails.invitation.subject'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]']));
 
         if (!$isPrivilegedUser && !$isAppUser) { // No need of confirmation when in admin or app mode
             $mails
                 ->setParam('event', 'teams.memberships.create')
-                ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('emails.sender'), $project->getAttribute('name')))
+                ->setParam('from', $project->getId())
                 ->setParam('recipient', $email)
                 ->setParam('name', $name)
-                ->setParam('subject', $subject)
                 ->setParam('url', $url)
                 ->setParam('locale', $locale->default)
                 ->setParam('project', $project->getAttribute('name', ['[APP-NAME]']))
