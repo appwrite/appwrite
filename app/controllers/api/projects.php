@@ -464,16 +464,16 @@ App::patch('/v1/projects/:projectId/service')
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
-        if (empty($project->getId())) {
+        if ($project->isEmpty()) {
             throw new Exception('Project not found', 404);
         }
 
-        $services = $project->getAttribute('services', []);
+        $services = $project->getAttribute('statusForServices', []);
         $services = array_merge($services, [
             $service => $status
         ]);
 
-        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('services', $services));
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('statusForServices', $services));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
