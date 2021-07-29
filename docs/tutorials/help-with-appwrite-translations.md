@@ -67,7 +67,14 @@ Next, choose a reference language. If English is your reference language, copy t
     ... ...
 }
 ```
-Add your language code to [codes.php](https://github.com/appwrite/appwrite/blob/locale/app/config/locale/codes.php#L14). Finally, load your translation file in `init.php` by following a pattern similar to the [existing languages](https://github.com/appwrite/appwrite/blob/locale/app/init.php#L269).
+Add your language code to [codes.php](https://github.com/appwrite/appwrite/blob/locale/app/config/locale/codes.php#L14) in the following format
+```php
+    ...
+    'es', // Spanish
+    ...
+```
+
+Finally, load your translation file in `init.php` by following a pattern similar to the [existing languages](https://github.com/appwrite/appwrite/blob/locale/app/init.php#L269).
 
 ### Contributing with PO Editor
 
