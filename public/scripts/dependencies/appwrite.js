@@ -1575,6 +1575,7 @@
                  * Update function by its unique ID.
                  *
                  * @param {string} functionId
+                 * @param {string} name
                  * @param {string[]} execute
                  * @param {object} vars
                  * @param {string[]} events
@@ -1583,15 +1584,21 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                update: (functionId, execute, vars, events, schedule, timeout) => __awaiter(this, void 0, void 0, function* () {
+                update: (functionId, name, execute, vars, events, schedule, timeout) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
+                    }
+                    if (typeof name === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "name"');
                     }
                     if (typeof execute === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "execute"');
                     }
                     let path = '/functions/{functionId}'.replace('{functionId}', functionId);
                     let payload = {};
+                    if (typeof name !== 'undefined') {
+                        payload['name'] = name;
+                    }
                     if (typeof execute !== 'undefined') {
                         payload['execute'] = execute;
                     }
