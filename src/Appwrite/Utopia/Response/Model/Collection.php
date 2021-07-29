@@ -31,6 +31,12 @@ class Collection extends Model
                 'example' => 'user:608f9da25e7e1',
                 'array' => true
             ])
+            ->addRule('name', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Collection name.',
+                'default' => '',
+                'example' => '',
+            ])
             ->addRule('attributes', [
                 'type' => Response::MODEL_ATTRIBUTE,
                 'description' => 'Collection attributes.',

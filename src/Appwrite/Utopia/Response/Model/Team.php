@@ -16,6 +16,12 @@ class Team extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('name', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Team name.',
+                'default' => '',
+                'example' => 'VIP',
+            ])
             ->addRule('dateCreated', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Team creation date in Unix timestamp.',

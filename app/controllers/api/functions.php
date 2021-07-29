@@ -263,6 +263,7 @@ App::put('/v1/functions/:functionId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new UID(), 'Function unique ID.')
+    ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
     ->param('execute', [], new ArrayList(new Text(64)), 'An array of strings with execution permissions. By default no user is granted with any execute permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('vars', [], new Assoc(), 'Key-value JSON object.', true)
     ->param('events', [], new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)), 'Events list.', true)
@@ -271,7 +272,7 @@ App::put('/v1/functions/:functionId')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('project')
-    ->action(function ($functionId, $execute, $vars, $events, $schedule, $timeout, $response, $dbForInternal, $project) {
+    ->action(function ($functionId, $name, $execute, $vars, $events, $schedule, $timeout, $response, $dbForInternal, $project) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Document $project */
@@ -289,6 +290,7 @@ App::put('/v1/functions/:functionId')
         $function = $dbForInternal->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,
             'dateUpdated' => time(),
+            'name' => $name,
             'vars' => $vars,
             'events' => $events,
             'schedule' => $schedule,
