@@ -44,7 +44,7 @@ trait UsersBase
         $this->assertEquals($res['body']['$id'], 'user1');
         $this->assertEquals($res['body']['name'], 'Project User');
         $this->assertEquals($res['body']['email'], 'users.service1@example.com');
-        $this->assertEquals($res['body']['status'], 0);
+        $this->assertEquals(true, $res['body']['status']);
         $this->assertGreaterThan(0, $res['body']['registration']);
 
         return ['userId' => $user['body']['$id']];
