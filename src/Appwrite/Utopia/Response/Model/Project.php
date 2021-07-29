@@ -23,6 +23,12 @@ class Project extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('name', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Project name.',
+                'default' => '',
+                'example' => 'New Project',
+            ])
             ->addRule('description', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Project description.',

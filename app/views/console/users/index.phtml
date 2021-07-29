@@ -229,7 +229,7 @@ $auth = $this->getParam('auth', []);
                             <thead>
                                 <tr>
                                     <th width="40"></th>
-                                    <th>ID</th>
+                                    <th>Name</th>
                                     <th width="150">Members</th>
                                     <th width="150">Created</th>
                                 </tr>
@@ -237,10 +237,10 @@ $auth = $this->getParam('auth', []);
                             <tbody data-ls-loop="project-teams.teams" data-ls-as="team">
                                 <tr>
                                     <td class="hide">
-                                        <img src="" data-ls-attrs="src={{team.$id|avatar}}" data-size="45" alt="Collection Avatar" class="avatar margin-end pull-start" loading="lazy" width="30" height="30" />
+                                        <img src="" data-ls-attrs="src={{team.name|avatar}}" data-size="45" alt="Collection Avatar" class="avatar margin-end pull-start" loading="lazy" width="30" height="30" />
                                     </td>
-                                    <td data-title="ID: ">
-                                        <a data-ls-attrs="href=/console/users/teams/team?id={{team.$id}}&project={{router.params.project}}" data-ls-bind="{{team.$id}}"></a>
+                                    <td data-title="Name: ">
+                                        <a data-ls-attrs="href=/console/users/teams/team?id={{team.$id}}&project={{router.params.project}}" data-ls-bind="{{team.name}}"></a>
                                     </td>
                                     <td data-title="Members: "><span data-ls-bind="{{team.sum}} members"></span></td>
                                     <td data-title="Date Created: "><small data-ls-bind="{{team.dateCreated|dateText}}"></small></td>
@@ -301,7 +301,17 @@ $auth = $this->getParam('auth', []);
                         data-failure-param-alert-classname="error">
 
                         <label for="teamId">ID</label>
-                        <input type="text" class="full-width" id="teamId" name="teamId" required autocomplete="off" maxlength="128" />
+                        <input
+                            type="hidden"
+                            data-custom-id
+                            id-type="auto"
+                            required
+                            maxlength="36"
+                            id="teamId"
+                            name="teamId" />
+
+                        <label for="team-name">Name</label>
+                        <input type="text" class="full-width" id="team-name" name="name" required autocomplete="off" maxlength="128" />
                         
                         <hr />
 

@@ -37,12 +37,13 @@ App::post('/v1/database/collections')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_COLLECTION)
     ->param('collectionId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
+    ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->inject('response')
     ->inject('dbForExternal')
     ->inject('audits')
-    ->action(function ($collectionId, $read, $write, $response, $dbForExternal, $audits) {
+    ->action(function ($collectionId, $name, $read, $write, $response, $dbForExternal, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $audits */
@@ -55,6 +56,7 @@ App::post('/v1/database/collections')
         $read = (is_null($read)) ? ($collection->getRead() ?? []) : $read; // By default inherit read permissions
         $write = (is_null($write)) ? ($collection->getWrite() ?? []) : $write; // By default inherit write permissions
 
+        $collection->setAttribute('name', $name);
         $collection->setAttribute('$read', $read);
         $collection->setAttribute('$write', $write);
 
@@ -139,12 +141,13 @@ App::put('/v1/database/collections/:collectionId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_COLLECTION)
     ->param('collectionId', '', new UID(), 'Collection unique ID.')
+    ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default inherits the existing read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default inherits the existing write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
     ->inject('dbForExternal')
     ->inject('audits')
-    ->action(function ($collectionId, $read, $write, $response, $dbForExternal, $audits) {
+    ->action(function ($collectionId, $name, $read, $write, $response, $dbForExternal, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Event\Event $audits */
@@ -160,6 +163,7 @@ App::put('/v1/database/collections/:collectionId')
 
         try {
             $collection = $dbForExternal->updateDocument(Database::COLLECTIONS, $collection->getId(), new Document(\array_merge($collection->getArrayCopy(), [
+                'name' => $name,
                 '$read' => $read,
                 '$write' => $write
             ])));

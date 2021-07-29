@@ -10,12 +10,24 @@ $collections = [
     'projects' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'projects',
+        'name' => 'Projects',
         'attributes' => [
             [
                 '$id' => 'teamId',
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'name',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 128,
                 'signed' => true,
                 'required' => false,
                 'default' => null,
@@ -199,12 +211,21 @@ $collections = [
                 'filters' => ['json'],
             ],
         ],
-        'indexes' => [],
+        'indexes' => [
+            [
+                '$id' => '_fulltext_name',
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => ['name'],
+                'lengths' => [1024],
+                'orders' => [Database::ORDER_ASC],
+            ]
+        ],
     ],
 
     'users' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'users',
+        'name' => 'Users',
         'attributes' => [
             [
                 '$id' => 'name',
@@ -353,6 +374,7 @@ $collections = [
     'sessions' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'sessions',
+        'name' => 'Sessions',
         'attributes' => [
             [
                 '$id' => 'userId',
@@ -600,7 +622,19 @@ $collections = [
     'teams' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'teams',
+        'name' => 'Teams',
         'attributes' => [
+            [
+                '$id' => 'name',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 128,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
             [
                 '$id' => 'dateCreated',
                 'type' => Database::VAR_INTEGER,
@@ -624,12 +658,21 @@ $collections = [
                 'filters' => [],
             ],
         ],
-        'indexes' => [],
+        'indexes' => [
+            [
+                '$id' => '_fulltext_name',
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => ['name'],
+                'lengths' => [1024],
+                'orders' => [Database::ORDER_ASC],
+            ]
+        ],
     ],
 
     'memberships' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'memberships',
+        'name' => 'Memberships',
         'attributes' => [
             [
                 '$id' => 'teamId',
@@ -737,6 +780,7 @@ $collections = [
     'files' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'files',
+        'name' => 'Files',
         'attributes' => [
             [
                 '$id' => 'dateCreated',
@@ -915,6 +959,7 @@ $collections = [
     'functions' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'functions',
+        'name' => 'Functions',
         'attributes' => [
             [
                 '$id' => 'execute',
@@ -925,6 +970,17 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => true,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'name',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 2048,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
                 'filters' => [],
             ],
             [
@@ -1050,12 +1106,21 @@ $collections = [
                 'filters' => [],
             ],
         ],
-        'indexes' => [],
+        'indexes' => [
+            [
+                '$id' => '_fulltext_name',
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => ['name'],
+                'lengths' => [1024],
+                'orders' => [Database::ORDER_ASC],
+            ]
+        ],
     ],
     
     'tags' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'tags',
+        'name' => 'Tags',
         'attributes' => [
             [
                 '$id' => 'dateCreated',
@@ -1128,6 +1193,7 @@ $collections = [
     'executions' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'executions',
+        'name' => 'Executions',
         'attributes' => [
             [
                 '$id' => 'dateCreated',
@@ -1244,6 +1310,7 @@ $collections = [
     'certificates' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'certificates',
+        'name' => 'Certificates',
         'attributes' => [
             [
                 '$id' => 'domain',

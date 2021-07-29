@@ -35,6 +35,7 @@ App::post('/v1/projects')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
+    ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
     ->param('teamId', '', new UID(), 'Team unique ID.')
     ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
     ->param('logo', '', new Text(1024), 'Project logo.', true)
@@ -50,7 +51,7 @@ App::post('/v1/projects')
     ->inject('dbForInternal')
     ->inject('dbForExternal')
     ->inject('consoleDB')
-    ->action(function ($projectId, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $dbForConsole, $dbForInternal, $dbForExternal, $consoleDB) {
+    ->action(function ($projectId, $name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $dbForConsole, $dbForInternal, $dbForExternal, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
         /** @var Utopia\Database\Database $dbForInternal */
@@ -68,6 +69,7 @@ App::post('/v1/projects')
             '$collection' => 'projects',
             '$read' => ['team:' . $teamId],
             '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
+            'name' => $name,
             'teamId' => $team->getId(),
             'description' => $description,
             'logo' => $logo,
@@ -606,6 +608,7 @@ App::post('/v1/projects/:projectId/webhooks')
     ->label('sdk.response.model', Response::MODEL_WEBHOOK)
     ->param('webhookId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
     ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
     ->param('events', null, new ArrayList(new WhiteList(array_keys(Config::getParam('events'), true), true)), 'Events list.')
     ->param('url', null, new URL(), 'Webhook URL.')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
@@ -613,7 +616,7 @@ App::post('/v1/projects/:projectId/webhooks')
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($webhookId, $projectId, $events, $url, $security, $httpUser, $httpPass, $response, $dbForConsole) {
+    ->action(function ($webhookId, $projectId, $name, $events, $url, $security, $httpUser, $httpPass, $response, $dbForConsole) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
 
@@ -627,6 +630,7 @@ App::post('/v1/projects/:projectId/webhooks')
 
         $webhook = new Document([
             '$id' => $webhookId == 'unique()' ? $dbForConsole->getId() : $webhookId,
+            'name' => $name,
             'events' => $events,
             'url' => $url,
             'security' => $security,
@@ -718,6 +722,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->label('sdk.response.model', Response::MODEL_WEBHOOK)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('webhookId', null, new UID(), 'Webhook unique ID.')
+    ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
     ->param('events', null, new ArrayList(new WhiteList(array_keys(Config::getParam('events'), true), true)), 'Events list.')
     ->param('url', null, new URL(), 'Webhook URL.')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
@@ -725,7 +730,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $webhookId, $events, $url, $security, $httpUser, $httpPass, $response, $dbForConsole) {
+    ->action(function ($projectId, $webhookId, $name, $events, $url, $security, $httpUser, $httpPass, $response, $dbForConsole) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
 
@@ -744,6 +749,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
         }
 
         $project->findAndReplace('$id', $webhook->getId(), $webhook
+                ->setAttribute('name', $name)
                 ->setAttribute('events', $events)
                 ->setAttribute('url', $url)
                 ->setAttribute('security', $security)
@@ -802,10 +808,11 @@ App::post('/v1/projects/:projectId/keys')
     ->label('sdk.response.model', Response::MODEL_KEY)
     ->param('keyId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
     ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
     ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true)), 'Key scopes list.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($keyId, $projectId, $scopes, $response, $dbForConsole) {
+    ->action(function ($keyId, $projectId, $name, $scopes, $response, $dbForConsole) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
 
@@ -817,6 +824,7 @@ App::post('/v1/projects/:projectId/keys')
 
         $key = new Document([
             '$id' => $keyId == 'unique()' ? $dbForConsole->getId() : $keyId,
+            'name' => $name,
             'scopes' => $scopes,
             'secret' => \bin2hex(\random_bytes(128)),
         ]);
@@ -902,6 +910,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->label('sdk.response.model', Response::MODEL_KEY)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('keyId', null, new UID(), 'Key unique ID.')
+    ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
     ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true)), 'Key scopes list')
     ->inject('response')
     ->inject('dbForConsole')
@@ -977,6 +986,7 @@ App::post('/v1/projects/:projectId/tasks')
     ->label('sdk.response.model', Response::MODEL_TASK)
     ->param('taskId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
     ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('name', null, new Text(128), 'Task name. Max length: 128 chars.')
     ->param('status', null, new WhiteList(['play', 'pause'], true), 'Task status.')
     ->param('schedule', null, new Cron(), 'Task schedule CRON syntax.')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
@@ -987,7 +997,7 @@ App::post('/v1/projects/:projectId/tasks')
     ->param('httpPass', '', new Text(256), 'Task HTTP password. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($taskId, $projectId, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass, $response, $dbForConsole) {
+    ->action(function ($taskId, $projectId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass, $response, $dbForConsole) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
 
@@ -1004,6 +1014,7 @@ App::post('/v1/projects/:projectId/tasks')
         $task = new Document([
             '$id' => $taskId == 'unique()' ? $dbForConsole->getId() : $taskId,
             'projectId' => $project->getId(),
+            'name' => $name,
             'status' => $status,
             'schedule' => $schedule,
             'updated' => \time(),
@@ -1108,6 +1119,7 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
     ->label('sdk.response.model', Response::MODEL_TASK)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('taskId', null, new UID(), 'Task unique ID.')
+    ->param('name', null, new Text(128), 'Task name. Max length: 128 chars.')
     ->param('status', null, new WhiteList(['play', 'pause'], true), 'Task status.')
     ->param('schedule', null, new Cron(), 'Task schedule CRON syntax.')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
@@ -1118,7 +1130,7 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
     ->param('httpPass', '', new Text(256), 'Task HTTP password. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $taskId, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass, $response, $dbForConsole) {
+    ->action(function ($projectId, $taskId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass, $response, $dbForConsole) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
 
@@ -1139,6 +1151,7 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
 
         $project->findAndReplace('$id', $task->getId(), $task
+                ->setAttribute('name', $name)
                 ->setAttribute('status', $status)
                 ->setAttribute('schedule', $schedule)
                 ->setAttribute('updated', \time())
@@ -1207,12 +1220,13 @@ App::post('/v1/projects/:projectId/platforms')
     ->param('platformId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('type', null, new WhiteList(['web', 'flutter-ios', 'flutter-android', 'flutter-linux', 'flutter-macos', 'flutter-windows', 'ios', 'android', 'unity'], true), 'Platform type.')
+    ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
     ->param('key', '', new Text(256), 'Package name for android or bundle ID for iOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
     ->param('hostname', '', new Text(256), 'Platform client hostname. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($platformId, $projectId, $type, $key, $store, $hostname, $response, $dbForConsole) {
+    ->action(function ($platformId, $projectId, $type, $name, $key, $store, $hostname, $response, $dbForConsole) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
 
@@ -1225,6 +1239,7 @@ App::post('/v1/projects/:projectId/platforms')
         $platform = new Document([
             '$id' => $platformId == 'unique()' ? $dbForConsole->getId() : $platformId,
             'type' => $type,
+            'name' => $name,
             'key' => $key,
             'store' => $store,
             'hostname' => $hostname,
@@ -1316,12 +1331,13 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
     ->label('sdk.response.model', Response::MODEL_PLATFORM)
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('platformId', null, new UID(), 'Platform unique ID.')
+    ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
     ->param('key', '', new Text(256), 'Package name for android or bundle ID for iOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
     ->param('hostname', '', new Text(256), 'Platform client URL. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $platformId, $key, $store, $hostname, $response, $dbForConsole) {
+    ->action(function ($projectId, $platformId, $name, $key, $store, $hostname, $response, $dbForConsole) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
 
@@ -1338,6 +1354,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
         }
 
         $platform
+            ->setAttribute('name', $name)
             ->setAttribute('dateUpdated', \time())
             ->setAttribute('key', $key)
             ->setAttribute('store', $store)
@@ -1345,6 +1362,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
         ;
 
         $project->findAndReplace('$id', $platform->getId(), $platform
+                ->setAttribute('name', $name)
                 ->setAttribute('dateUpdated', \time())
                 ->setAttribute('key', $key)
                 ->setAttribute('store', $store)

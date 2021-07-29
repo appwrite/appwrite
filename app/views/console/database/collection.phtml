@@ -17,7 +17,7 @@ $maxCells = 10;
 
             <br />
 
-            <span data-ls-bind="{{project-collection.$id}}">&nbsp;&nbsp;</span>
+            <span data-ls-bind="{{project-collection.name}}">&nbsp;&nbsp;</span>
         </h1>
     </div>
 
@@ -195,6 +195,9 @@ $maxCells = 10;
                             <label>&nbsp;</label>
 
                             <div class="box">
+                                <label for="collection-name">Name</label>
+                                <input name="name" id="collection-name" type="text" autocomplete="off" data-ls-bind="{{project-collection.name}}" data-forms-text-direction required placeholder="Collection Name" maxlength="128" />
+
                                 <h3 class="margin-bottom-small">Rules</h3>
 
                                 <div data-ls-if="(!{{project-collection.rules.length}})">
@@ -508,7 +511,7 @@ $maxCells = 10;
 
     <div data-ls-loop="project-collections.collections" data-ls-as="project" data-ls-key="$index2" class="tiles cell-3 margin-bottom-negative">
         <div class="margin-bottom" data-ls-if="{{project.$id}} != {{router.params.id}}">
-            <input type="checkbox" name="list" data-ls-attrs="value={{project.$id}},id={{project.$id}}" data-ls-bind="{{rule.list}}" /> <label data-ls-attrs="for={{project.$id}}" data-ls-bind="{{project.$id}}"></label>
+            <input type="checkbox" name="list" data-ls-attrs="value={{project.$id}},id={{project.$id}}" data-ls-bind="{{rule.list}}" /> <label data-ls-attrs="for={{project.$id}}" data-ls-bind="{{project.name}}"></label>
         </div>
     </div>
 </script>
@@ -519,7 +522,7 @@ $maxCells = 10;
     <div data-ls-loop="project-collections.collections" data-ls-as="project" data-ls-key="$index2" class="tiles cell-3 margin-bottom-negative">
         <div class="margin-bottom" data-ls-if="{{project.$id}} != {{router.params.id}}">
             <input type="radio" data-ls-attrs="value={{project.$id}},id=[{{rule.$id}}].{{project.$id}},name=[{{rule.$id}}].list" data-ls-bind="{{rule.list|firstElement}}" data-cast-to="array" required />
-            <label data-ls-attrs="for={{project.$id}}"data-ls-bind="{{project.$id}}"></label>
+            <label data-ls-attrs="for={{project.$id}}"data-ls-bind="{{project.name}}"></label>
         </div>
     </div>
 </script>
