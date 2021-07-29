@@ -147,6 +147,7 @@ class V09 extends Migration
             ], [
                 '$collection=' . OldDatabase::SYSTEM_COLLECTION_COLLECTIONS
             ]);
+            var_dump($databaseCollections);
             $sum = \count($databaseCollections);
 
 
@@ -193,6 +194,7 @@ class V09 extends Migration
                     });
                 }
             });
+            $offset += $this->limit;
         }
 
         $sum = $this->limit;
@@ -207,6 +209,7 @@ class V09 extends Migration
             ], [
                 '$collection!=' . OldDatabase::SYSTEM_COLLECTION_COLLECTIONS
             ]);
+            var_dump($all);
 
             $sum = \count($all);
 
