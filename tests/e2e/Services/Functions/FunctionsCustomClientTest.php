@@ -113,8 +113,6 @@ class FunctionsCustomClientTest extends Scope
             'async' => 1,
         ]);
 
-        $executionId = $execution['body']['$id'] ?? '';
-
         $this->assertEquals(201, $execution['headers']['status-code']);
        
         $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$function['body']['$id'].'/executions', array_merge([
