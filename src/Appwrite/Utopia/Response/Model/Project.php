@@ -95,6 +95,13 @@ class Project extends Model
                 'default' => 0,
                 'example' => 100,
             ])
+            ->addRule('statusForServices', [
+                'type' => Response::MODEL_PLATFORM,
+                'description' => 'List of Platforms.',
+                'default' => [],
+                'example' => new stdClass,
+                'array' => true,
+            ])
             ->addRule('platforms', [
                 'type' => Response::MODEL_PLATFORM,
                 'description' => 'List of Platforms.',
@@ -103,8 +110,8 @@ class Project extends Model
                 'array' => true,
             ])
             ->addRule('webhooks', [
-                'type' => Response::MODEL_WEBHOOK,
-                'description' => 'List of Webhooks.',
+                'type' => Response::MODEL_ANY,
+                'description' => 'List of service status.',
                 'default' => [],
                 'example' => new stdClass,
                 'array' => true,

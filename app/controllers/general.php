@@ -256,7 +256,14 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         }
     }, $user->getAttribute('memberships', []));
 
-    // TDOO Check if user is root
+    $service = $route->getLabel('sdk.namespace','');
+    if(!empty($service)) {
+        if(array_key_exists($service,$project->getAttribute('statusForServices',[]))
+            && !$project->getAttribute('statusForServices',[])[$service]
+            && !Auth::isPrivilegedUser(Authorization::$roles)) {
+            throw new Exception('Service is disabled', 503);
+        }
+    }
 
     if (!\in_array($scope, $scopes)) {
         if ($project->isEmpty()) { // Check if permission is denied because project is missing
