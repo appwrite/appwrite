@@ -17,6 +17,7 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
+            'collectionId' => 'unique()',
             'name' => 'Actors',
             'read' => ['role:all'],
             'write' => ['role:all'],
@@ -108,6 +109,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'documentId' => 'unique()',
             'data' => [
                 'firstName' => 'Chris',
                 'lastName' => 'Evans',
@@ -193,6 +195,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'documentId' => 'unique()',
             'data' => [
                 'firstName' => 'Bradly',
                 'lastName' => 'Cooper',
@@ -242,6 +245,7 @@ trait WebhooksBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'fileId' => 'unique()',
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'read' => ['role:all'],
             'write' => ['role:all'],
@@ -364,6 +368,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'teamId' => 'unique()',
             'name' => 'Arsenal'
         ]);
 
@@ -441,6 +446,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'teamId' => 'unique()',
             'name' => 'Chelsea'
         ]);
 
@@ -489,6 +495,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'membershipId' => 'unique()',
             'email' => $email,
             'name' => 'Friend User',
             'roles' => ['admin', 'editor'],
@@ -547,6 +554,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'membershipId' => 'unique()',
             'email' => $email,
             'name' => 'Friend User',
             'roles' => ['admin', 'editor'],
