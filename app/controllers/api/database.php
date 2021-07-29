@@ -22,6 +22,7 @@ use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\UID;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Appwrite\Utopia\Response;
 use Appwrite\Database\Validator\CustomId;
@@ -910,7 +911,6 @@ App::post('/v1/database/collections/:collectionId/indexes')
             $lengths[$key] = ($attributeType === Database::VAR_STRING) ? $attributeSize : null;
         }
 
-        // TODO@kodumbeats should $lengths be a part of the response model?
         try {
             $index = $dbForInternal->createDocument('indexes', new Document([
                 '$id' => $collectionId.'_'.$indexId,
