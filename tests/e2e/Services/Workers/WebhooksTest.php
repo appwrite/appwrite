@@ -23,7 +23,7 @@ class WebhooksTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'projectId' => 'unique()',
+            'teamId' => 'unique()',
             'name' => 'Project Test',
         ]);
 
@@ -35,6 +35,7 @@ class WebhooksTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'projectId' => 'unique()',
             'name' => 'Project Test',
             'teamId' => $team['body']['$id'],
         ]);
@@ -57,6 +58,7 @@ class WebhooksTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'projectId' => 'unique()',
             'name' => '',
             'teamId' => $team['body']['$id'],
         ]);
@@ -86,6 +88,7 @@ class WebhooksTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'webhookId' => 'unique()',
             'name' => 'Webhook Worker Test',
             'events' => ['account.create', 'account.update.email'],
             'url' => 'http://request-catcher:5000/webhook',
