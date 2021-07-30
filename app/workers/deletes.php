@@ -365,48 +365,4 @@ class DeletesV1 extends Worker
         $device = new Local(APP_STORAGE_UPLOADS.'/app-'.$projectId);
         $device->deletePath($device->getRoot() . DIRECTORY_SEPARATOR . $bucketId);
     }
-    
-    /**
-     * @param string $projectId
-     * @return Database
-     */
-    protected function getInternalDB($projectId): Database
-    {
-        global $register;
-        
-        $cache = new Cache(new RedisCache($register->get('cache')));
-        $dbForInternal = new Database(new MariaDB($register->get('db')), $cache);
-        $dbForInternal->setNamespace('project_'.$projectId.'_internal'); // Main DB
-
-        return $dbForInternal;
-    }
-
-    /**
-     * @param string $projectId
-     * @return Database
-     */
-    protected function getExternalDB($projectId): Database
-    {
-        global $register;
-
-        $cache = new Cache(new RedisCache($register->get('cache')));
-        $dbForExternal = new Database(new MariaDB($register->get('db')), $cache);
-        $dbForExternal->setNamespace('project_'.$projectId.'_external'); // Main DB
-
-        return $dbForExternal;
-    }
-
-    /**
-     * @return Database
-     */
-    protected function getConsoleDB(): Database
-    {
-        global $register;
-
-        $cache = new Cache(new RedisCache($register->get('cache')));
-        $dbForConsole = new Database(new MariaDB($register->get('db')), $cache);
-        $dbForConsole->setNamespace('project_console_internal'); // Main DB
-
-        return $dbForConsole;
-    }
 }
