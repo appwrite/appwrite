@@ -583,7 +583,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'tagId' => 'unique()',
+            'executionId' => 'unique()',
             'data' => 'foobar',
         ]);
 
