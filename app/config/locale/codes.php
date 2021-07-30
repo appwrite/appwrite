@@ -16,7 +16,7 @@ return [
     'fi', // Finnish
     'fo', // Faroese
     'fr', // French
-    'gr', // Greek
+    'el', // Greek
     'gu', //Gujrati
     'he', // Hebrew
     'hi', // Hindi
@@ -27,7 +27,7 @@ return [
     'it', // Italian
     'ja', // Japanese
     'jv', // Javanese
-    'ka', // Kannada
+    'kn', // Kannada
     'km', // Khmer
     'ko', // Korean
     'lt', // Lithuanian
