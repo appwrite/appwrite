@@ -3,12 +3,12 @@
 return [
     'af', // Afrikaans
     'ar', // Arabic
-    'ba', //Bosnian
     'be', // Belarusian
     'bg', // Bulgarian
     'bn', // Bengali
-    'cat', // Catalan
-    'cz', // Czech
+    'bs', //Bosnian
+    'ca', // Catalan
+    'cs', // Czech
     'de', // German
     'en', // English
     'es', // Spanish
@@ -36,9 +36,9 @@ return [
     'ms', // Malay
     'nl', // Dutch
     'no', // Norwegian
-    'np', // Nepali
-    'od', // Odia
-    'ph', // Filipino
+    'ne', // Nepali
+    'or', // Oriya
+    'tl', // Filipino
     'pl', // Polish
     'pt-br', // Portuguese - Brazil	
     'pt-pt', // Portuguese - Portugal
@@ -52,7 +52,7 @@ return [
     'ta', // Tamil
     'th', // Thai
     'tr', // Turkish
-    'ua', // Ukrainian
+    'uk', // Ukrainian
     'ur', //Urdu
     'vi', // Vietnamese
     'zh-cn', // Chinese - China

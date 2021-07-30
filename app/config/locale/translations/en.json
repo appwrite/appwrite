@@ -3,28 +3,24 @@
     "settings.locale": "en",
     "settings.direction": "ltr",
     "emails.sender": "%s Team",
-    
     "emails.verification.subject": "Account Verification",
     "emails.verification.hello": "Hey {{name}}",
     "emails.verification.body": "Follow this link to verify your email address.",
     "emails.verification.footer": "If you didn’t ask to verify this address, you can ignore this message.",
     "emails.verification.thanks": "Thanks",
     "emails.verification.signature": "{{project}} team",
-
     "emails.recovery.subject": "Password Reset",
     "emails.recovery.hello": "Hello {{name}}",
     "emails.recovery.body": "Follow this link to reset your {{project}} password.",
     "emails.recovery.footer": "If you didn’t ask to reset your password, you can ignore this message.",
     "emails.recovery.thanks": "Thanks",
     "emails.recovery.signature": "{{project}} team",
-
     "emails.invitation.subject": "Invitation to %s Team at %s",
     "emails.invitation.hello": "Hello",
     "emails.invitation.body": "This mail was sent to you because {{owner}} wanted to invite you to become a member of the {{team}} team at {{project}}.",
     "emails.invitation.footer": "If you are not interested, you can ignore this message.",
     "emails.invitation.thanks": "Thanks",
     "emails.invitation.signature": "{{project}} team",
-
     "locale.country.unknown": "Unknown",
     "countries.af": "Afghanistan",
     "countries.ao": "Angola",
