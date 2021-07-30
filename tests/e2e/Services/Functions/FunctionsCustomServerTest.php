@@ -464,6 +464,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'functionId' => 'unique()',
             'name' => 'Test '.$name,
             'runtime' => $name,
             'vars' => [],

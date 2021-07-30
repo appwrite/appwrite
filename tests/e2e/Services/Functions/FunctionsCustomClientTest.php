@@ -53,7 +53,7 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'executionId' => 'unique()',
+            'functionId' => 'unique()',
             'name' => 'Test',
             'execute' => ['user:'.$this->getUser()['$id']],
             'runtime' => 'php-8.0',
