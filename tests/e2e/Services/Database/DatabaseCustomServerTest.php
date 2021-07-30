@@ -341,7 +341,24 @@ class DatabaseCustomServerTest extends Scope
             $this->assertEquals($attribute['headers']['status-code'], 201);
         }
 
-        sleep(2);
+        sleep(5);
+
+        $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals($collection['headers']['status-code'], 200);
+        $this->assertEquals($collection['body']['name'], 'testLimitException');
+        $this->assertIsArray($collection['body']['attributes']);
+        $this->assertIsArray($collection['body']['indexes']);
+        $this->assertIsArray($collection['body']['attributesInQueue']);
+        $this->assertIsArray($collection['body']['indexesInQueue']);
+        $this->assertCount(64, $collection['body']['attributes']);
+        $this->assertCount(0, $collection['body']['indexes']);
+        $this->assertCount(0, $collection['body']['attributesInQueue']);
+        $this->assertCount(0, $collection['body']['indexesInQueue']);
 
         // testing for indexLimit = 64
         // MariaDB, MySQL, and MongoDB create 3 indexes per new collection
@@ -354,12 +371,15 @@ class DatabaseCustomServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]), [
                 'id' => "key_attribute{$i}",
-                'type' => 'fulltext',
+                'type' => 'key',
                 'attributes' => ["attribute{$i}"],
             ]);
+
+            $this->assertEquals(201, $index['headers']['status-code']);
+            $this->assertEquals("key_attribute{$i}", $index['body']['$id']);
         }
 
-        sleep(2);
+        sleep(5);
 
         $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
@@ -367,13 +387,24 @@ class DatabaseCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
+        $this->assertEquals($collection['headers']['status-code'], 200);
+        $this->assertEquals($collection['body']['name'], 'testLimitException');
+        $this->assertIsArray($collection['body']['attributes']);
+        $this->assertIsArray($collection['body']['indexes']);
+        $this->assertIsArray($collection['body']['attributesInQueue']);
+        $this->assertIsArray($collection['body']['indexesInQueue']);
+        $this->assertCount(0, $collection['body']['attributesInQueue']);
+        $this->assertCount(0, $collection['body']['indexesInQueue']);
+        $this->assertCount(64, $collection['body']['attributes']);
+        $this->assertCount(61, $collection['body']['indexes']);
+
         $tooMany = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'id' => 'titleIndex',
-            'type' => 'fulltext',
+            'id' => 'tooMany',
+            'type' => 'key',
             'attributes' => ['attribute62'],
         ]);
 
