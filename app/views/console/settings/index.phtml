@@ -1,5 +1,5 @@
 <?php
-
+$services = $this->getParam('services', []);
 $customDomainsEnabled = $this->getParam('customDomainsEnabled', false);
 $customDomainsTarget = $this->getParam('customDomainsTarget', false);
 $smtpEnabled = $this->getParam('smtpEnabled', false);
@@ -18,7 +18,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
     data-service="projects.get"
     data-scope="console"
     data-name="console-project"
-    data-event="load"
+    data-event="load,projects.update"
     data-param-project-id="{{router.params.project}}"
     data-success="trigger"
     data-success-param-trigger-events="projects.get">
@@ -198,8 +198,59 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
             </li> -->
             <li data-state="/console/settings/services?project={{router.params.project}}">
                 <h2>Services</h2>
-                
-                
+
+                <p class="text-fade margin-bottom">Choose services you wish to enable or disable.</p>
+                <ul class="tiles cell-3 margin-bottom-small">
+                    <?php foreach($services as $index => $service):
+                        $key = $service['key'] ?? '';
+                        $name = $service['name'] ?? '';
+                        $icon = $service['icon'] ?? '';
+                        $docs = $service['docsUrl'] ?? '';
+                        ?>
+                    <li class="">
+                        <div class="box padding-small margin-bottom clear">
+                            <div class="clear">
+                                <form
+                                    data-analytics
+                                    data-analytics-activity
+                                    data-analytics-event="submit"
+                                    data-analytics-category="console"
+                                    data-analytics-label="Update Project service Status (<?php echo $this->escape($name); ?>)"
+                                    data-service="projects.updateServiceStatus"
+                                    data-scope="console"
+                                    data-event="change"
+                                    data-confirm="Are you sure you want to change the status of the <?php echo $this->escape($name); ?> service?"
+                                    data-param-project-id="{{router.params.project}}"
+                                    data-success="alert,trigger"
+                                    data-success-param-alert-text="Updated project service status successfully"
+                                    data-success-param-trigger-events="projects.update"
+                                    data-failure="alert"
+                                    data-failure-param-alert-text="Failed to update project service status settings"
+                                    data-failure-param-alert-classname="error">
+                                    <input name="service" id="<?php echo $this->escape($key); ?>" type="hidden" autocomplete="off" value="<?php echo $this->escape($key); ?>">
+
+                                    <input name="status" type="hidden" data-forms-switch data-ls-bind="{{console-project.serviceStatusFor<?php echo ucFirst($this->escape($key)); ?>}}" data-cast-to="boolean" class="pull-end" />
+                                </form>
+
+                                <img src="<?php echo $this->escape($icon); ?>?buster=<?php echo APP_CACHE_BUSTER; ?>" alt="" class="pull-start provider margin-end" />
+                                        
+                                <span class="text-size-small text-bold"><?php echo $this->escape($name); ?></span>
+
+                                <?php if($docs): ?>
+                                <p class="margin-bottom-no text-one-liner text-size-small">
+                                    <a href="<?php echo $this->escape($docs); ?>" target="_blank" rel="noopener">Docs<i class="icon-link-ext"></i></a>
+                                </p>
+                                <?php endif; ?>
+                            </div>
+                            
+                            <hr />
+
+                            <div class="text-align-center text-size-small text-bold text-success" data-ls-if="!!({{console-project.serviceStatusFor<?php echo ucFirst($this->escape($key)); ?>}})">Online</div>
+                            <div class="text-align-center text-size-small text-bold text-danger" data-ls-if="(!{{console-project.serviceStatusFor<?php echo ucFirst($this->escape($key)); ?>}})">Offline</div>
+                        </div>
+                    </li>
+                    <?php endforeach; ?>
+                </ul>
             </li>
             <li data-state="/console/settings/domains?project={{router.params.project}}">
                 
