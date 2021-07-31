@@ -115,7 +115,6 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     ;
 }, ['utopia', 'request', 'response', 'project', 'user', 'register', 'events', 'audits', 'usage', 'deletes', 'database', 'dbForInternal'], 'api');
 
-
 App::init(function ($utopia, $request, $response, $project, $user) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */

@@ -2918,7 +2918,7 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                serviceStatus: (projectId, service, status) => __awaiter(this, void 0, void 0, function* () {
+                updateServiceStatus: (projectId, service, status) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }

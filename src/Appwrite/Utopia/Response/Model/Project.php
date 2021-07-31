@@ -229,7 +229,7 @@ class Project extends Model
             }
             $key = $service['key'] ?? '';
             $value = $values[$key] ?? true;
-            $document->setAttribute('serviceStatusFor'.$key, $value);
+            $document->setAttribute('serviceStatusFor'.ucfirst($key), $value);
         }
 
         return $document;

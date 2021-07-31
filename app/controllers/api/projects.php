@@ -23,6 +23,14 @@ use Utopia\Validator\WhiteList;
 use Utopia\Audit\Audit;
 use Utopia\Abuse\Adapters\TimeLimit;
 
+App::init(function ($project) {
+    /** @var Utopia\Database\Document $project */
+
+    if($project->getId() !== 'console') {
+        throw new Exception('Access to this API is forbidden.', 401);
+    }
+}, ['project'], 'projects');
+
 App::post('/v1/projects')
     ->desc('Create Project')
     ->groups(['api', 'projects'])
@@ -77,6 +85,7 @@ App::post('/v1/projects')
             'legalCity' => $legalCity,
             'legalAddress' => $legalAddress,
             'legalTaxId' => $legalTaxId,
+            'services' => [],
             'platforms' => [],
             'webhooks' => [],
             'keys' => [],
@@ -455,7 +464,7 @@ App::patch('/v1/projects/:projectId/service')
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), function($element) {return $element['optional'];})), true), 'Service name.')
-    ->param('status', '', new Boolean(), 'Service status.', true)
+    ->param('status', null, new Boolean(), 'Service status.')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function ($projectId, $service, $status, $response, $dbForConsole) {
