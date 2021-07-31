@@ -2,9 +2,9 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use stdClass;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
-use stdClass;
 use Utopia\Config\Config;
 
 class Project extends Model
@@ -95,13 +95,6 @@ class Project extends Model
                 'default' => 0,
                 'example' => 100,
             ])
-            ->addRule('statusForServices', [
-                'type' => Response::MODEL_PLATFORM,
-                'description' => 'List of Platforms.',
-                'default' => [],
-                'example' => new stdClass,
-                'array' => true,
-            ])
             ->addRule('platforms', [
                 'type' => Response::MODEL_PLATFORM,
                 'description' => 'List of Platforms.',
@@ -110,8 +103,8 @@ class Project extends Model
                 'array' => true,
             ])
             ->addRule('webhooks', [
-                'type' => Response::MODEL_ANY,
-                'description' => 'List of service status.',
+                'type' => Response::MODEL_WEBHOOK,
+                'description' => 'List of Webhooks.',
                 'default' => [],
                 'example' => new stdClass,
                 'array' => true,
@@ -139,6 +132,7 @@ class Project extends Model
             ])
         ;
 
+        $services = Config::getParam('services', []);
         $providers = Config::getParam('providers', []);
         $auth = Config::getParam('auth', []);
 
@@ -166,6 +160,20 @@ class Project extends Model
         }
 
         foreach ($auth as $index => $method) {
+            $name = $method['name'] ?? '';
+            $key = $method['key'] ?? '';
+
+            $this
+                ->addRule($key, [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => $name.' auth method status',
+                    'example' => true,
+                    'default' => true,
+                ])
+            ;
+        }
+
+        foreach ($services as $index => $service) {
             $name = $method['name'] ?? '';
             $key = $method['key'] ?? '';
 

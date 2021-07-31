@@ -10,7 +10,7 @@ return [
         'docs' => false,
         'tests' => false,
     ],
-    'console/' => [
+    'console' => [
         'key' => 'console',
         'name' => 'Console',
         'controller' => 'web/console.php',
@@ -18,7 +18,7 @@ return [
         'docs' => false,
         'tests' => false,
     ],
-    'v1/account' => [
+    'account' => [
         'key' => 'account',
         'name' => 'Account',
         'subtitle' => 'The Account service allows you to authenticate and manage a user account.',
@@ -28,7 +28,7 @@ return [
         'docs' => true,
         'tests' => false,
     ],
-    'v1/avatars' => [
+    'avatars' => [
         'key' => 'avatars',
         'name' => 'Avatars',
         'subtitle'=> 'The Avatars service aims to help you complete everyday tasks related to your app image, icons, and avatars.',
@@ -38,7 +38,7 @@ return [
         'docs' => true,
         'tests' => false,
     ],
-    'v1/database' => [
+    'database' => [
         'key' => 'database',
         'name' => 'Database',
         'subtitle' => 'The Database service allows you to create structured collections of documents, query and filter lists of documents',
@@ -48,7 +48,7 @@ return [
         'docs' => true,
         'tests' => false,
     ],
-    'v1/locale' => [
+    'locale' => [
         'key' => 'locale',
         'name' => 'Locale',
         'subtitle' => 'The Locale service allows you to customize your app based on your users\' location.',
@@ -58,7 +58,7 @@ return [
         'docs' => true,
         'tests' => false,
     ],
-    'v1/health' => [
+    'health' => [
         'key' => 'health',
         'name' => 'Health',
         'subtitle' => 'The Health service allows you to both validate and monitor your Appwrite server\'s health.',
@@ -68,7 +68,7 @@ return [
         'docs' => true,
         'tests' => false,
     ],
-    'v1/projects' => [
+    'projects' => [
         'key' => 'projects',
         'name' => 'Projects',
         'subtitle' => 'The Project service allows you to manage all the projects in your Appwrite server.',
@@ -77,7 +77,7 @@ return [
         'docs' => true,
         'tests' => false,
     ],
-    'v1/storage' => [
+    'storage' => [
         'key' => 'storage',
         'name' => 'Storage',
         'subtitle' => 'The Storage service allows you to manage your project files.',
@@ -87,7 +87,7 @@ return [
         'docs' => true,
         'tests' => false,
     ],
-    'v1/teams' => [
+    'teams' => [
         'key' => 'teams',
         'name' => 'Teams',
         'subtitle' => 'The Teams service allows you to group users of your project and to enable them to share read and write access to your project resources',
@@ -97,7 +97,7 @@ return [
         'docs' => true,
         'tests' => false,
     ],
-    'v1/users' => [
+    'users' => [
         'key' => 'users',
         'name' => 'Users',
         'subtitle' => 'The Users service allows you to manage your project users.',
@@ -107,7 +107,7 @@ return [
         'docs' => true,
         'tests' => false,
     ],
-    'v1/functions' => [
+    'functions' => [
         'key' => 'functions',
         'name' => 'Functions',
         'subtitle' => 'The Functions Service allows you view, create and manage your Cloud Functions.',
@@ -117,7 +117,7 @@ return [
         'docs' => true,
         'tests' => false,
     ],
-    'v1/mock' => [
+    'mock' => [
         'key' => 'mock',
         'name' => 'Mock',
         'subtitle' => '',
@@ -127,7 +127,7 @@ return [
         'docs' => false,
         'tests' => true,
     ],
-    'v1/graphql' => [
+    'graphql' => [
         'key' => 'graphql',
         'name' => 'GraphQL',
         'subtitle' => 'Appwrite\'s GraphQL Endpoint',
