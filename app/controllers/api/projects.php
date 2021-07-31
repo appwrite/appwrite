@@ -449,13 +449,13 @@ App::patch('/v1/projects/:projectId/service')
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'serviceStatus')
+    ->label('sdk.method', 'updateServiceStatus')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('service', '', new WhiteList(['functions','webhooks', 'avatars','health','locale','storage','teams'],true), 'Service name.')
-    ->param('status', '', new Boolean(), 'Status of the service', true)
+    ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), function($element) {return $element['optional'];})), true), 'Service name.')
+    ->param('status', '', new Boolean(), 'Service status.', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function ($projectId, $service, $status, $response, $dbForConsole) {
@@ -468,12 +468,10 @@ App::patch('/v1/projects/:projectId/service')
             throw new Exception('Project not found', 404);
         }
 
-        $services = $project->getAttribute('statusForServices', []);
-        $services = array_merge($services, [
-            $service => $status
-        ]);
+        $services = $project->getAttribute('services', []);
+        $services[$service] = $status;
 
-        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('statusForServices', $services));
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('services', $services));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });

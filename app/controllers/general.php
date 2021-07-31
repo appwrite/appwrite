@@ -258,8 +258,8 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
 
     $service = $route->getLabel('sdk.namespace','');
     if(!empty($service)) {
-        if(array_key_exists($service,$project->getAttribute('statusForServices',[]))
-            && !$project->getAttribute('statusForServices',[])[$service]
+        if(array_key_exists($service, $project->getAttribute('services',[]))
+            && !$project->getAttribute('services',[])[$service]
             && !Auth::isPrivilegedUser(Authorization::$roles)) {
             throw new Exception('Service is disabled', 503);
         }

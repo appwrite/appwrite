@@ -563,7 +563,7 @@ class ProjectsConsoleClientTest extends Scope
 
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertNotEmpty($response['body']['$id']);
-            $this->assertEquals(false, $response['body']['statusForServices'][$service]);
+            $this->assertEquals(false, $response['body']['serviceStatusFor'.ucfirst($service)][$service]);
         }
         
         /**
@@ -625,7 +625,7 @@ class ProjectsConsoleClientTest extends Scope
 
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertNotEmpty($response['body']['$id']);
-            $this->assertEquals(false, $response['body']['statusForServices'][$service]);
+            $this->assertEquals(false, $response['body']['serviceStatusFor'.ucfirst($service)][$service]);
         }
 
         /**
