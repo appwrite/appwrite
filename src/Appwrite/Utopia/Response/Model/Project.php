@@ -6,6 +6,7 @@ use stdClass;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Config\Config;
+use Utopia\Database\Document;
 
 class Project extends Model
 {
@@ -173,14 +174,18 @@ class Project extends Model
             ;
         }
 
-        foreach ($services as $index => $service) {
-            $name = $method['name'] ?? '';
-            $key = $method['key'] ?? '';
+        foreach ($services as $service) {
+            if(!$service['optional']) {
+                continue;
+            }
+
+            $name = $service['name'] ?? '';
+            $key = $service['key'] ?? '';
 
             $this
-                ->addRule($key, [
+                ->addRule('serviceStatusFor'.ucfirst($key), [
                     'type' => self::TYPE_BOOLEAN,
-                    'description' => $name.' auth method status',
+                    'description' => $name.' service status',
                     'example' => true,
                     'default' => true,
                 ])
@@ -206,5 +211,27 @@ class Project extends Model
     public function getType():string
     {
         return Response::MODEL_PROJECT;
+    }
+
+    /**
+     * Get Collection
+     * 
+     * @return string
+     */
+    public function filter(Document $document): Document
+    {
+        $values = $document->getAttribute('services', []);
+        $services = Config::getParam('services', []);
+
+        foreach($services as $service) {
+            if(!$service['optional']) {
+                continue;
+            }
+            $key = $service['key'] ?? '';
+            $value = $values[$key] ?? true;
+            $document->setAttribute('serviceStatusFor'.$key, $value);
+        }
+
+        return $document;
     }
 }

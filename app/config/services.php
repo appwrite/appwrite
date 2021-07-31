@@ -9,6 +9,7 @@ return [
         'sdk' => false,
         'docs' => false,
         'tests' => false,
+        'optional' => false,
     ],
     'console' => [
         'key' => 'console',
@@ -17,6 +18,7 @@ return [
         'sdk' => false,
         'docs' => false,
         'tests' => false,
+        'optional' => false,
     ],
     'account' => [
         'key' => 'account',
@@ -27,6 +29,7 @@ return [
         'sdk' => true,
         'docs' => true,
         'tests' => false,
+        'optional' => true,
     ],
     'avatars' => [
         'key' => 'avatars',
@@ -37,6 +40,7 @@ return [
         'sdk' => true,
         'docs' => true,
         'tests' => false,
+        'optional' => true,
     ],
     'database' => [
         'key' => 'database',
@@ -47,6 +51,7 @@ return [
         'sdk' => true,
         'docs' => true,
         'tests' => false,
+        'optional' => true,
     ],
     'locale' => [
         'key' => 'locale',
@@ -57,6 +62,7 @@ return [
         'sdk' => true,
         'docs' => true,
         'tests' => false,
+        'optional' => true,
     ],
     'health' => [
         'key' => 'health',
@@ -67,6 +73,7 @@ return [
         'sdk' => true,
         'docs' => true,
         'tests' => false,
+        'optional' => true,
     ],
     'projects' => [
         'key' => 'projects',
@@ -76,6 +83,7 @@ return [
         'sdk' => true,
         'docs' => true,
         'tests' => false,
+        'optional' => false,
     ],
     'storage' => [
         'key' => 'storage',
@@ -86,6 +94,7 @@ return [
         'sdk' => true,
         'docs' => true,
         'tests' => false,
+        'optional' => true,
     ],
     'teams' => [
         'key' => 'teams',
@@ -96,6 +105,7 @@ return [
         'sdk' => true,
         'docs' => true,
         'tests' => false,
+        'optional' => true,
     ],
     'users' => [
         'key' => 'users',
@@ -106,6 +116,7 @@ return [
         'sdk' => true,
         'docs' => true,
         'tests' => false,
+        'optional' => true,
     ],
     'functions' => [
         'key' => 'functions',
@@ -116,6 +127,7 @@ return [
         'sdk' => true,
         'docs' => true,
         'tests' => false,
+        'optional' => true,
     ],
     'mock' => [
         'key' => 'mock',
@@ -126,6 +138,7 @@ return [
         'sdk' => false,
         'docs' => false,
         'tests' => true,
+        'optional' => false,
     ],
     'graphql' => [
         'key' => 'graphql',
@@ -135,6 +148,7 @@ return [
         'controller' => 'api/graphql.php',
         'sdk' => false,
         'docs' => false,
-        'tests' => false,
+        'tests' => true,
+        'optional' => false,
     ],
 ];
