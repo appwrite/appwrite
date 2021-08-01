@@ -5,7 +5,6 @@ use Appwrite\Auth\Validator\Password;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Exception;
-use Utopia\Validator;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\WhiteList;
 use Appwrite\Network\Validator\Email;

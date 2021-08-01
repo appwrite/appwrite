@@ -377,9 +377,9 @@ $auth = $this->getParam('auth', []);
                             </form>
                         <?php endif; ?>
 
-                        <img src="<?php echo $this->escape($icon); ?>?buster=<?php echo APP_CACHE_BUSTER; ?>" alt="Email/Password Logo" class="pull-start provider margin-end" />
+                        <img src="<?php echo $this->escape($icon); ?>?buster=<?php echo APP_CACHE_BUSTER; ?>" alt="<?php echo $this->escape($name); ?> Logo" class="pull-start provider margin-end" />
                                 
-                        <span class="text-size-small"><?php echo $this->escape($name); ?><?php if(!$enabled): ?> <spann class="text-fade text-size-xs">soon</span><?php endif; ?></span>
+                        <span class="text-size-small"><?php echo $this->escape($name); ?><?php if(!$enabled): ?> <span class="text-fade text-size-xs">soon</span><?php endif; ?></span>
 
                         <?php if($docs): ?>
                         <p class="margin-bottom-no text-one-liner text-size-small">

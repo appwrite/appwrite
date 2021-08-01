@@ -536,19 +536,24 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertNotEmpty($project['body']['$id']);
 
         $id = $project['body']['$id'];
-
-        $services = ['functions', 'webhooks', 'avatars', 'health', 'locale', 'storage', 'teams'];
+        $services = require('app/config/services.php');
 
         /**
          * Test for Disabled
          */
         foreach ($services as $service) {
+            if(!$service['optional']) {
+                continue;
+            }
+
+            $key = $service['key'] ?? '';
+            
             $response = $this->client->call(Client::METHOD_PATCH, '/projects/'.$id.'/service', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             ]), [
-                'service' => $service,
+                'service' => $key,
                 'status' => false,
             ]);
 
@@ -563,7 +568,7 @@ class ProjectsConsoleClientTest extends Scope
 
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertNotEmpty($response['body']['$id']);
-            $this->assertEquals(false, $response['body']['statusForServices'][$service]);
+            $this->assertEquals(false, $response['body']['serviceStatusFor'.ucfirst($key)]);
         }
         
         /**
@@ -582,11 +587,17 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
 
         foreach ($services as $service) {
+            if(!$service['optional']) {
+                continue;
+            }
+
+            $key = $service['key'] ?? '';
+
             $response = $this->client->call(Client::METHOD_PATCH, '/projects/'.$id.'/service/', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
-                'service' => $service,
+                'service' => $key,
                 'status' => true,
             ]);
         }
@@ -599,18 +610,24 @@ class ProjectsConsoleClientTest extends Scope
     {
         $id = $data['projectId'];
 
-        $services = ['functions', 'webhooks', 'avatars', 'health', 'locale', 'storage', 'teams'];
+        $services = require('app/config/services.php');
 
         /**
          * Test for Disabled
          */
         foreach ($services as $service) {
+            if(!$service['optional']) {
+                continue;
+            }
+
+            $key = $service['key'] ?? '';
+
             $response = $this->client->call(Client::METHOD_PATCH, '/projects/'.$id.'/service', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             ]), [
-                'service' => $service,
+                'service' => $key,
                 'status' => false,
             ]);
 
@@ -625,7 +642,7 @@ class ProjectsConsoleClientTest extends Scope
 
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertNotEmpty($response['body']['$id']);
-            $this->assertEquals(false, $response['body']['statusForServices'][$service]);
+            $this->assertEquals(false, $response['body']['serviceStatusFor'.ucfirst($key)]);
         }
 
         /**

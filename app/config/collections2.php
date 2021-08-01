@@ -156,7 +156,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'statusForServices',
+                '$id' => 'services',
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
