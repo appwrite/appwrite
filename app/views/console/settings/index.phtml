@@ -245,8 +245,8 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                             
                             <hr />
 
-                            <div class="text-align-center text-size-small text-bold text-success" data-ls-if="!!({{console-project.serviceStatusFor<?php echo ucFirst($this->escape($key)); ?>}})">Online</div>
-                            <div class="text-align-center text-size-small text-bold text-danger" data-ls-if="(!{{console-project.serviceStatusFor<?php echo ucFirst($this->escape($key)); ?>}})">Offline</div>
+                            <div class="text-align-center text-size-small text-bold text-success" data-ls-if="!!({{console-project.serviceStatusFor<?php echo ucFirst($this->escape($key)); ?>}})">Enabled</div>
+                            <div class="text-align-center text-size-small text-bold text-danger" data-ls-if="(!{{console-project.serviceStatusFor<?php echo ucFirst($this->escape($key)); ?>}})">Disabled</div>
                         </div>
                     </li>
                     <?php endforeach; ?>
