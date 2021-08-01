@@ -11,6 +11,7 @@ return [
         'docsUrl' => '',
         'tests' => false,
         'optional' => false,
+        'icon' => '',
     ],
     'console' => [
         'key' => 'console',
@@ -21,6 +22,7 @@ return [
         'docsUrl' => '',
         'tests' => false,
         'optional' => false,
+        'icon' => '',
     ],
     'account' => [
         'key' => 'account',
@@ -33,6 +35,7 @@ return [
         'docsUrl' => 'https://appwrite.io/docs/client/account',
         'tests' => false,
         'optional' => true,
+        'icon' => '/images/services/account.png',
     ],
     'avatars' => [
         'key' => 'avatars',
@@ -45,6 +48,7 @@ return [
         'docsUrl' => 'https://appwrite.io/docs/client/avatars',
         'tests' => false,
         'optional' => true,
+        'icon' => '/images/services/avatars.png',
     ],
     'database' => [
         'key' => 'database',
@@ -57,6 +61,7 @@ return [
         'docsUrl' => 'https://appwrite.io/docs/client/database',
         'tests' => false,
         'optional' => true,
+        'icon' => '/images/services/database.png',
     ],
     'locale' => [
         'key' => 'locale',
@@ -69,6 +74,7 @@ return [
         'docsUrl' => 'https://appwrite.io/docs/client/locale',
         'tests' => false,
         'optional' => true,
+        'icon' => '/images/services/locale.png',
     ],
     'health' => [
         'key' => 'health',
@@ -81,6 +87,7 @@ return [
         'docsUrl' => 'https://appwrite.io/docs/server/health',
         'tests' => false,
         'optional' => true,
+        'icon' => '/images/services/health.png',
     ],
     'projects' => [
         'key' => 'projects',
@@ -92,6 +99,7 @@ return [
         'docsUrl' => '',
         'tests' => false,
         'optional' => false,
+        'icon' => '',
     ],
     'storage' => [
         'key' => 'storage',
@@ -104,6 +112,7 @@ return [
         'docsUrl' => 'https://appwrite.io/docs/client/storage',
         'tests' => false,
         'optional' => true,
+        'icon' => '/images/services/storage.png',
     ],
     'teams' => [
         'key' => 'teams',
@@ -116,6 +125,7 @@ return [
         'docsUrl' => 'https://appwrite.io/docs/client/teams',
         'tests' => false,
         'optional' => true,
+        'icon' => '/images/services/teams.png',
     ],
     'users' => [
         'key' => 'users',
@@ -128,6 +138,7 @@ return [
         'docsUrl' => 'https://appwrite.io/docs/server/users',
         'tests' => false,
         'optional' => true,
+        'icon' => '/images/services/users.png',
     ],
     'functions' => [
         'key' => 'functions',
@@ -140,6 +151,7 @@ return [
         'docsUrl' => 'https://appwrite.io/docs/functions',
         'tests' => false,
         'optional' => true,
+        'icon' => '/images/services/functions.png',
     ],
     'mock' => [
         'key' => 'mock',
@@ -152,6 +164,7 @@ return [
         'docsUrl' => '',
         'tests' => true,
         'optional' => false,
+        'icon' => '',
     ],
     'graphql' => [
         'key' => 'graphql',
@@ -164,5 +177,6 @@ return [
         'docsUrl' => '',
         'tests' => true,
         'optional' => false,
+        'icon' => '',
     ],
 ];
