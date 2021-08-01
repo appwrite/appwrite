@@ -156,6 +156,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => 'services',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
                 '$id' => 'platforms',
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -218,7 +229,7 @@ $collections = [
                 'attributes' => ['name'],
                 'lengths' => [1024],
                 'orders' => [Database::ORDER_ASC],
-            ]
+            ],
         ],
     ],
 
@@ -291,7 +302,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => ['json']
+                'filters' => ['json'],
             ],
             [
                 '$id' => 'registration',
@@ -367,7 +378,7 @@ $collections = [
                 'attributes' => ['email'],
                 'lengths' => [1024],
                 'orders' => [Database::ORDER_ASC],
-            ]
+            ],
         ],
     ],
 
@@ -473,7 +484,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => 'osCode',
@@ -484,7 +495,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => 'osName',
@@ -495,7 +506,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => 'osVersion',
@@ -506,7 +517,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => 'clientType',
@@ -517,7 +528,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => 'clientCode',
@@ -528,7 +539,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => 'clientName',
@@ -539,7 +550,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => 'clientVersion',
@@ -550,7 +561,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => 'clientEngine',
@@ -561,7 +572,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => 'clientEngineVersion',
@@ -572,7 +583,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => 'deviceName',
@@ -583,7 +594,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => 'deviceBrand',
@@ -594,7 +605,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => 'deviceModel',
@@ -605,7 +616,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
         ],
         'indexes' => [
@@ -615,7 +626,7 @@ $collections = [
                 'attributes' => ['provider', 'providerUid'],
                 'lengths' => [100, 100],
                 'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
-            ]
+            ],
         ],
     ],
 
@@ -665,7 +676,7 @@ $collections = [
                 'attributes' => ['name'],
                 'lengths' => [1024],
                 'orders' => [Database::ORDER_ASC],
-            ]
+            ],
         ],
     ],
 
@@ -773,10 +784,10 @@ $collections = [
                 'attributes' => ['userId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
-            ]
+            ],
         ],
     ],
-    
+
     'files' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'files',
@@ -952,10 +963,10 @@ $collections = [
                 'attributes' => ['name'],
                 'lengths' => [1024],
                 'orders' => [Database::ORDER_ASC],
-            ]
+            ],
         ],
     ],
-    
+
     'functions' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'functions',
@@ -1113,10 +1124,10 @@ $collections = [
                 'attributes' => ['name'],
                 'lengths' => [1024],
                 'orders' => [Database::ORDER_ASC],
-            ]
+            ],
         ],
     ],
-    
+
     'tags' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'tags',
@@ -1186,7 +1197,7 @@ $collections = [
                 'attributes' => ['functionId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
-            ]
+            ],
         ],
     ],
 
@@ -1303,10 +1314,10 @@ $collections = [
                 'attributes' => ['functionId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
-            ]
+            ],
         ],
     ],
-    
+
     'certificates' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'certificates',
@@ -1403,7 +1414,7 @@ foreach ($providers as $index => $provider) {
     }
 
     $collections['projects']['attributes'][] = [
-        '$id' => 'usersOauth2'.\ucfirst($index).'Appid',
+        '$id' => 'usersOauth2' . \ucfirst($index) . 'Appid',
         'type' => Database::VAR_STRING,
         'format' => '',
         'size' => 16384,
@@ -1415,7 +1426,7 @@ foreach ($providers as $index => $provider) {
     ];
 
     $collections['projects']['attributes'][] = [
-        '$id' => 'usersOauth2'.\ucfirst($index).'Secret',
+        '$id' => 'usersOauth2' . \ucfirst($index) . 'Secret',
         'type' => Database::VAR_STRING,
         'format' => '',
         'size' => 16384,

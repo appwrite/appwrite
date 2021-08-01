@@ -142,6 +142,7 @@ App::get('/console/settings')
         $page = new View(__DIR__.'/../../views/console/settings/index.phtml');
 
         $page
+            ->setParam('services', array_filter(Config::getParam('services'), function($element) {return $element['optional'];}))
             ->setParam('customDomainsEnabled', ($target->isKnown() && !$target->isTest()))
             ->setParam('customDomainsTarget', $target->get())
             ->setParam('smtpEnabled', (!empty(App::getEnv('_APP_SMTP_HOST'))))

@@ -23,6 +23,14 @@ use Utopia\Validator\WhiteList;
 use Utopia\Audit\Audit;
 use Utopia\Abuse\Adapters\TimeLimit;
 
+App::init(function ($project) {
+    /** @var Utopia\Database\Document $project */
+
+    if($project->getId() !== 'console') {
+        throw new Exception('Access to this API is forbidden.', 401);
+    }
+}, ['project'], 'projects');
+
 App::post('/v1/projects')
     ->desc('Create Project')
     ->groups(['api', 'projects'])
@@ -77,6 +85,7 @@ App::post('/v1/projects')
             'legalCity' => $legalCity,
             'legalAddress' => $legalAddress,
             'legalTaxId' => $legalTaxId,
+            'services' => new stdClass(),
             'platforms' => [],
             'webhooks' => [],
             'keys' => [],
@@ -439,6 +448,39 @@ App::patch('/v1/projects/:projectId')
                 ->setAttribute('legalAddress', $legalAddress)
                 ->setAttribute('legalTaxId', $legalTaxId)
         );
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+App::patch('/v1/projects/:projectId/service')
+    ->desc('Update service status')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateServiceStatus')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), function($element) {return $element['optional'];})), true), 'Service name.')
+    ->param('status', null, new Boolean(), 'Service status.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function ($projectId, $service, $status, $response, $dbForConsole) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForConsole */
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception('Project not found', 404);
+        }
+
+        $services = $project->getAttribute('services', []);
+        $services[$service] = $status;
+
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('services', $services));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });

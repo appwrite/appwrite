@@ -304,6 +304,8 @@ class Response extends SwooleResponse
             return $this->payload;
         }
 
+        $document = $model->filter($document);
+
         foreach ($model->getRules() as $key => $rule) {
             if (!$document->isSet($key)) {
                 if (!is_null($rule['default'])) {
