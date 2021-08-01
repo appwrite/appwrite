@@ -68,9 +68,9 @@ class V05 extends Migration
                 $document->setAttribute('security', $document->getAttribute('security') ? true : false);
                 break;
 
-            // case Database::SYSTEM_COLLECTION_TASKS:
-            //     $document->setAttribute('security', $document->getAttribute('security') ? true : false);
-            //     break;
+            case Database::SYSTEM_COLLECTION_TASKS:
+                $document->setAttribute('security', $document->getAttribute('security') ? true : false);
+                break;
 
             case Database::SYSTEM_COLLECTION_USERS:
                 foreach ($providers as $key => $provider) {

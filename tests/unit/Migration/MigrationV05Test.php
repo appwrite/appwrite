@@ -43,7 +43,7 @@ class MigrationV05Test extends MigrationTest
 
         $document = $this->fixDocument(new Document([
             '$uid' => 'unique',
-            '$collection' => Database::SYSTEM_COLLECTION_WEBHOOKS
+            '$collection' => Database::SYSTEM_COLLECTION_TASKS
         ]));
 
         $this->assertEquals($document->getAttribute('$uid', null), null);

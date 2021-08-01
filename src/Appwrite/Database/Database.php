@@ -18,6 +18,7 @@ class Database
     const SYSTEM_COLLECTION_PROJECTS = 'projects';
     const SYSTEM_COLLECTION_WEBHOOKS = 'webhooks';
     const SYSTEM_COLLECTION_KEYS = 'keys';
+    const SYSTEM_COLLECTION_TASKS = 'tasks';
     const SYSTEM_COLLECTION_PLATFORMS = 'platforms';
     const SYSTEM_COLLECTION_USAGES = 'usages'; // TODO add structure
     const SYSTEM_COLLECTION_DOMAINS = 'domains';
