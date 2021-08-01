@@ -10,9 +10,6 @@ use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\CLI\Console;
 use Utopia\Audit\Audit;
-use Utopia\Cache\Adapter\Redis as RedisCache;
-use Utopia\Cache\Cache;
-use Utopia\Database\Adapter\MariaDB;
 
 require_once __DIR__.'/../workers.php';
 
