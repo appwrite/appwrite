@@ -122,28 +122,6 @@ services:
       - _APP_FUNCTIONS_MEMORY_SWAP
       - _APP_FUNCTIONS_RUNTIMES
 
-  appwrite-worker-usage:
-    entrypoint: worker-usage
-    container_name: appwrite-worker-usage
-    build:
-      context: .
-    networks:
-      - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-    depends_on:
-      - redis
-      - telegraf
-    environment:
-      - _APP_ENV
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_STATSD_HOST
-      - _APP_STATSD_PORT
-
   appwrite-worker-audits:
     entrypoint: worker-audits
     container_name: appwrite-worker-audits
