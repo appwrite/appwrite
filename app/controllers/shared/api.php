@@ -44,7 +44,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
         ->setParam('{url}', $request->getHostname().$route->getURL())
     ;
 
-    //TODO make sure we get array here
+    // TODO make sure we get array here
 
     foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
         if(!empty($value)) {
@@ -114,7 +114,6 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
         ->setParam('projectId', $project->getId())
     ;
 }, ['utopia', 'request', 'response', 'project', 'user', 'register', 'events', 'audits', 'usage', 'deletes', 'database', 'dbForInternal'], 'api');
-
 
 App::init(function ($utopia, $request, $response, $project, $user) {
     /** @var Utopia\App $utopia */
@@ -217,7 +216,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
     $route = $utopia->match($request);
     if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled' 
         && $project->getId()
-        && $mode !== APP_MODE_ADMIN //TODO: add check to make sure user is admin
+        && $mode !== APP_MODE_ADMIN // TODO: add check to make sure user is admin
         && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage on admin mode
         
         $usage

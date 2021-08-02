@@ -39,9 +39,9 @@
         "appwrite/php-runtimes": "0.4.*",
 
         "utopia-php/framework": "dev-feat-range-validator-infinity as 0.16.2",
-        "utopia-php/abuse": "dev-feat-utopia-db-integration",
+        "utopia-php/abuse": "0.6.*",
         "utopia-php/analytics": "0.2.*",
-        "utopia-php/audit": "dev-feat-utopia-db-integration",
+        "utopia-php/audit": "0.6.*",
         "utopia-php/cache": "0.4.*",
         "utopia-php/cli": "0.11.*",
         "utopia-php/config": "0.2.*",
@@ -65,14 +65,6 @@
     "repositories": [
         {
             "type": "git",
-            "url": "https://github.com/lohanidamodar/abuse"
-        },
-        {
-            "type": "git",
-            "url": "https://github.com/lohanidamodar/audit"
-        },
-        {
-            "type": "git",
             "url": "https://github.com/utopia-php/database"
         },
         {
@@ -81,7 +73,7 @@
         }
     ],
     "require-dev": {
-        "appwrite/sdk-generator": "0.12.0",
+        "appwrite/sdk-generator": "0.13.0",
         "swoole/ide-helper": "4.6.7",
         "phpunit/phpunit": "9.5.6",
         "vimeo/psalm": "4.7.2"

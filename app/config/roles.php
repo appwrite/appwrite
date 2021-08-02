@@ -40,8 +40,6 @@ $admins = [
     'platforms.write',
     'keys.read',
     'keys.write',
-    'tasks.read',
-    'tasks.write',
     'webhooks.read',
     'webhooks.write',
     'locale.read',

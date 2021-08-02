@@ -5,7 +5,6 @@ use Appwrite\Auth\Validator\Password;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Exception;
-use Utopia\Validator;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\WhiteList;
 use Appwrite\Network\Validator\Email;
@@ -447,7 +446,6 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
             }
         }
 
-        // TODO : Response filter implementation
         $response->noContent();
     });
 
@@ -538,6 +536,5 @@ App::delete('/v1/users/:userId')
             ->setParam('eventData', $response->output($user, Response::MODEL_USER))
         ;
 
-        // TODO : Response filter implementation
         $response->noContent();
     });

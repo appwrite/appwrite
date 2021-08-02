@@ -120,8 +120,6 @@ class Response extends SwooleResponse
     const MODEL_WEBHOOK_LIST = 'webhookList';
     const MODEL_KEY = 'key';
     const MODEL_KEY_LIST = 'keyList';
-    const MODEL_TASK = 'task';
-    const MODEL_TASK_LIST = 'taskList';
     const MODEL_PLATFORM = 'platform';
     const MODEL_PLATFORM_LIST = 'platformList';
     const MODEL_DOMAIN = 'domain';
@@ -170,7 +168,6 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Projects List', self::MODEL_PROJECT_LIST, 'projects', self::MODEL_PROJECT, true, false))
             ->setModel(new BaseList('Webhooks List', self::MODEL_WEBHOOK_LIST, 'webhooks', self::MODEL_WEBHOOK, true, false))
             ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY, true, false))
-            ->setModel(new BaseList('Tasks List', self::MODEL_TASK_LIST, 'tasks', self::MODEL_TASK, true, false))
             ->setModel(new BaseList('Platforms List', self::MODEL_PLATFORM_LIST, 'platforms', self::MODEL_PLATFORM, true, false))
             ->setModel(new BaseList('Domains List', self::MODEL_DOMAIN_LIST, 'domains', self::MODEL_DOMAIN, true, false))
             ->setModel(new BaseList('Countries List', self::MODEL_COUNTRY_LIST, 'countries', self::MODEL_COUNTRY))
@@ -201,7 +198,6 @@ class Response extends SwooleResponse
             ->setModel(new Project())
             ->setModel(new Webhook())
             ->setModel(new Key())
-            ->setModel(new Task())
             ->setModel(new Domain())
             ->setModel(new Platform())
             ->setModel(new Country())
@@ -303,6 +299,8 @@ class Response extends SwooleResponse
             $this->payload = $document->getArrayCopy();
             return $this->payload;
         }
+
+        $document = $model->filter($document);
 
         foreach ($model->getRules() as $key => $rule) {
             if (!$document->isSet($key)) {
