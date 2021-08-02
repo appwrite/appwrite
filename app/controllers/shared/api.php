@@ -169,7 +169,7 @@ App::init(function ($utopia, $request, $response, $project, $user) {
 
 }, ['utopia', 'request', 'response', 'project', 'user'], 'auth');
 
-App::shutdown(function ($utopia, $request, $response, $project, $events, $audits, $usage, $deletes, $database, $mode) {
+App::shutdown(function ($utopia, $request, $response, $project, $events, $audits, $statsd, $usage, $deletes, $database, $mode) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
@@ -221,9 +221,53 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
         
         $usage
             ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
-            ->setParam('networkResponseSize', $response->getSize())
-            ->trigger()
-        ;
+            ->setParam('networkResponseSize', $response->getSize());
+
+        statsdUpdate($statsd, $usage);
+
+
     }
 
-}, ['utopia', 'request', 'response', 'project', 'events', 'audits', 'usage', 'deletes', 'database', 'mode'], 'api');
+}, ['utopia', 'request', 'response', 'project', 'events', 'audits', 'statsd', 'usage', 'deletes', 'database', 'mode'], 'api');
+
+function statsdUpdate($statsd, $usage): void
+{
+    /** @var Appwrite\Event\Event $usage */
+
+    $projectId = $usage->getParam('projectId') ?? '';
+
+    $storage = $usage->getParam('storage') ?? 0;
+
+    $networkRequestSize = $usage->getParam('networkRequestSize') ?? 0;
+    $networkResponseSize = $usage->getParam('networkResponseSize') ?? 0;
+    
+    $httpMethod = $usage->getParam('httpMethod') ?? '';
+    $httpRequest = $usage->getParam('httpRequest') ?? 0;
+
+    $functionId = $usage->getParam('functionId') ?? '';
+    $functionExecution = $usage->getParam('functionExecution') ?? 0;
+    $functionExecutionTime = $usage->getParam('functionExecutionTime') ?? 0;
+    $functionStatus = $usage->getParam('functionStatus') ?? '';
+
+    $tags = ",project={$projectId},version=".App::getEnv('_APP_VERSION', 'UNKNOWN');
+
+    // the global namespace is prepended to every key (optional)
+    $statsd->setNamespace('appwrite.usage');
+
+    if($httpRequest >= 1) {
+        $statsd->increment('requests.all'.$tags.',method='.\strtolower($httpMethod));
+    }
+    
+    if($functionExecution >= 1) {
+        $statsd->increment('executions.all'.$tags.',functionId='.$functionId.',functionStatus='.$functionStatus);
+        $statsd->count('executions.time'.$tags.',functionId='.$functionId, $functionExecutionTime);
+    }
+
+    $statsd->count('network.inbound'.$tags, $networkRequestSize);
+    $statsd->count('network.outbound'.$tags, $networkResponseSize);
+    $statsd->count('network.all'.$tags, $networkRequestSize + $networkResponseSize);
+
+    if($storage >= 1) {
+        $statsd->count('storage.all'.$tags, $storage);
+    }
+}
