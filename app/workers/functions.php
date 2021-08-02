@@ -479,8 +479,6 @@ class FunctionsV1 extends Worker
         if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $statsd = $register->get('statsd');
 
-            $storage = 0;
-
             $functionExecutionTime = $executionTime * 1000;
 
             $tags = ",project={$projectId},version=".App::getEnv('_APP_VERSION', 'UNKNOWN');
@@ -490,11 +488,6 @@ class FunctionsV1 extends Worker
 
             $statsd->increment('executions.all'.$tags.',functionId='.$function->getId().',functionStatus='.$functionStatus);
             $statsd->count('executions.time'.$tags.',functionId='.$function->getId(), $functionExecutionTime);
-
-            if($storage >= 1) {
-                $statsd->count('storage.all'.$tags, $storage);
-            }
-
         }
 
         $this->cleanup();
