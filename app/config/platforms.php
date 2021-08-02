@@ -152,7 +152,7 @@ return [
         'name' => 'Console',
         'enabled' => false,
         'beta' => false,
-        'languages' => [ // TODO change key to 'sdks'
+        'languages' => [
             [
                 'key' => 'web',
                 'name' => 'Console',
@@ -179,7 +179,7 @@ return [
         'description' => 'Libraries for integrating with Appwrite to build server side integrations. Read the [getting started for server](/docs/getting-started-for-server) tutorial to start building your first server integration.',
         'enabled' => true,
         'beta' => false,
-        'languages' => [ // TODO change key to 'sdks'
+        'languages' => [
             [
                 'key' => 'nodejs',
                 'name' => 'Node.js',
