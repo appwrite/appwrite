@@ -121,6 +121,8 @@ services:
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
       - _APP_FUNCTIONS_RUNTIMES
+      - _APP_STATSD_HOST
+      - _APP_STATSD_PORT
 
   appwrite-worker-audits:
     entrypoint: worker-audits
