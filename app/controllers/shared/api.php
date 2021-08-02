@@ -169,7 +169,7 @@ App::init(function ($utopia, $request, $response, $project, $user) {
 
 }, ['utopia', 'request', 'response', 'project', 'user'], 'auth');
 
-App::shutdown(function ($utopia, $request, $response, $project, $events, $audits, $statsd, $usage, $deletes, $database, $mode) {
+App::shutdown(function ($utopia, $request, $response, $project, $register, $events, $audits, $usage, $deletes, $database, $mode) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
@@ -228,7 +228,8 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
         $httpRequest = $usage->getParam('httpRequest') ?? 0;
 
         $tags = ",project={$project->getId()},version=".App::getEnv('_APP_VERSION', 'UNKNOWN');
-
+        
+        $statsd = $register->get('statsd');
         // the global namespace is prepended to every key (optional)
         $statsd->setNamespace('appwrite.usage');
 
@@ -245,4 +246,4 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
         }
     }
 
-}, ['utopia', 'request', 'response', 'project', 'events', 'audits', 'statsd', 'usage', 'deletes', 'database', 'mode'], 'api');
+}, ['utopia', 'request', 'response', 'project', 'register', 'events', 'audits', 'usage', 'deletes', 'database', 'mode'], 'api');
