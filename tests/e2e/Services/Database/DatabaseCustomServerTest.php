@@ -379,7 +379,7 @@ class DatabaseCustomServerTest extends Scope
             $this->assertEquals("key_attribute{$i}", $index['body']['$id']);
         }
 
-        sleep(10);
+        sleep(20);
 
         $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
