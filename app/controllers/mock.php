@@ -116,7 +116,7 @@ App::get('/v1/mock/tests/bar')
     ->param('required', '', new Text(100), 'Sample string param')
     ->param('default', '', new Integer(true), 'Sample numeric param')
     ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
-    ->action(function ($x, $y, $z) {
+    ->action(function ($required, $default, $z) {
     });
 
 App::post('/v1/mock/tests/bar')
@@ -134,7 +134,7 @@ App::post('/v1/mock/tests/bar')
     ->param('required', '', new Text(100), 'Sample string param')
     ->param('default', '', new Integer(true), 'Sample numeric param')
     ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
-    ->action(function ($x, $y, $z) {
+    ->action(function ($required, $default, $z) {
     });
 
 App::patch('/v1/mock/tests/bar')
@@ -152,7 +152,7 @@ App::patch('/v1/mock/tests/bar')
     ->param('required', '', new Text(100), 'Sample string param')
     ->param('default', '', new Integer(true), 'Sample numeric param')
     ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
-    ->action(function ($x, $y, $z) {
+    ->action(function ($required, $default, $z) {
     });
 
 App::put('/v1/mock/tests/bar')
@@ -170,7 +170,7 @@ App::put('/v1/mock/tests/bar')
     ->param('required', '', new Text(100), 'Sample string param')
     ->param('default', '', new Integer(true), 'Sample numeric param')
     ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
-    ->action(function ($x, $y, $z) {
+    ->action(function ($required, $default, $z) {
     });
 
 App::delete('/v1/mock/tests/bar')
@@ -188,7 +188,7 @@ App::delete('/v1/mock/tests/bar')
     ->param('required', '', new Text(100), 'Sample string param')
     ->param('default', '', new Integer(true), 'Sample numeric param')
     ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
-    ->action(function ($x, $y, $z) {
+    ->action(function ($required, $default, $z) {
     });
 
 App::get('/v1/mock/tests/general/download')
