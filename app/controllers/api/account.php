@@ -53,7 +53,7 @@ App::post('/v1/account')
     ->action(function ($email, $password, $name, $request, $response, $project, $dbForInternal, $audits) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $project */
+        /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
 
@@ -119,7 +119,7 @@ App::post('/v1/account')
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($user, Response::MODEL_USER);
+        $response->dynamic($user, Response::MODEL_USER);
     });
 
 App::post('/v1/account/sessions')
@@ -229,7 +229,7 @@ App::post('/v1/account/sessions')
             ->setAttribute('countryName', $countryName)
         ;
         
-        $response->dynamic2($session, Response::MODEL_SESSION);
+        $response->dynamic($session, Response::MODEL_SESSION);
     });
 
 App::get('/v1/account/sessions/oauth2/:provider')
@@ -256,7 +256,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->action(function ($provider, $success, $failure, $scopes, $request, $response, $project) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $project */
+        /** @var Utopia\Database\Document $project */
 
         $protocol = $request->getProtocol();
         $callback = $protocol.'://'.$request->getHostname().'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
@@ -362,7 +362,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->action(function ($provider, $code, $state, $request, $response, $project, $user, $dbForInternal, $geodb, $audits, $events) use ($oauthDefaultSuccess) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $project */
+        /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var MaxMind\Db\Reader $geodb */
@@ -546,7 +546,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             ->setParam('data', ['provider' => $provider])
         ;
 
-        $events->setParam('eventData', $response->output2($session, Response::MODEL_SESSION));
+        $events->setParam('eventData', $response->output($session, Response::MODEL_SESSION));
 
         if (!Config::getParam('domainVerification')) {
             $response
@@ -603,7 +603,7 @@ App::post('/v1/account/sessions/anonymous')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
         /** @var Utopia\Database\Document $user */
-        /** @var Appwrite\Database\Document $project */
+        /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
@@ -710,7 +710,7 @@ App::post('/v1/account/sessions/anonymous')
             ->setAttribute('countryName', $countryName)
         ;
 
-        $response->dynamic2($session, Response::MODEL_SESSION);
+        $response->dynamic($session, Response::MODEL_SESSION);
     });
 
 App::post('/v1/account/jwt')
@@ -737,7 +737,7 @@ App::post('/v1/account/jwt')
         $current = new Document();
 
         foreach ($sessions as $session) { 
-            /** @var Appwrite\Database\Document $session */
+            /** @var Utopia\Database\Document $session */
 
             if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
                 $current = $session;
@@ -751,7 +751,7 @@ App::post('/v1/account/jwt')
         $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2(new Document(['jwt' => $jwt->encode([
+        $response->dynamic(new Document(['jwt' => $jwt->encode([
             // 'uid'    => 1,
             // 'aud'    => 'http://site.com',
             // 'scopes' => ['user'],
@@ -778,7 +778,7 @@ App::get('/v1/account')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
 
-        $response->dynamic2($user, Response::MODEL_USER);
+        $response->dynamic($user, Response::MODEL_USER);
     });
 
 App::get('/v1/account/prefs')
@@ -800,7 +800,7 @@ App::get('/v1/account/prefs')
 
         $prefs = $user->getAttribute('prefs', new \stdClass());
 
-        $response->dynamic2(new Document($prefs), Response::MODEL_PREFERENCES);
+        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
 App::get('/v1/account/sessions')
@@ -837,7 +837,7 @@ App::get('/v1/account/sessions')
             $sessions[$key] = $session;
         }
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'sessions' => $sessions,
             'sum' => count($sessions),
         ]), Response::MODEL_SESSION_LIST);
@@ -861,7 +861,7 @@ App::get('/v1/account/logs')
     ->inject('dbForInternal')
     ->action(function ($response, $user, $locale, $geodb, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $project */
+        /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
@@ -914,7 +914,7 @@ App::get('/v1/account/logs')
 
         }
 
-        $response->dynamic2(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
+        $response->dynamic(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
     });
 
 App::get('/v1/account/sessions/:sessionId')
@@ -935,7 +935,7 @@ App::get('/v1/account/sessions/:sessionId')
     ->inject('dbForInternal')
     ->action(function ($sessionId, $response, $user, $locale, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
         /** @var Utopia\Database\Database $dbForInternal */
 
@@ -956,7 +956,7 @@ App::get('/v1/account/sessions/:sessionId')
                     ->setAttribute('countryName', $countryName)
                 ;
                     
-                return $response->dynamic2($session, Response::MODEL_SESSION);
+                return $response->dynamic($session, Response::MODEL_SESSION);
             }
         }
 
@@ -994,7 +994,7 @@ App::patch('/v1/account/name')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 
-        $response->dynamic2($user, Response::MODEL_USER);
+        $response->dynamic($user, Response::MODEL_USER);
     });
 
 App::patch('/v1/account/password')
@@ -1037,7 +1037,7 @@ App::patch('/v1/account/password')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 
-        $response->dynamic2($user, Response::MODEL_USER);
+        $response->dynamic($user, Response::MODEL_USER);
     });
 
 App::patch('/v1/account/email')
@@ -1092,7 +1092,7 @@ App::patch('/v1/account/email')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 
-        $response->dynamic2($user, Response::MODEL_USER);
+        $response->dynamic($user, Response::MODEL_USER);
     });
 
 App::patch('/v1/account/prefs')
@@ -1125,7 +1125,7 @@ App::patch('/v1/account/prefs')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 
-        $response->dynamic2($user, Response::MODEL_USER);
+        $response->dynamic($user, Response::MODEL_USER);
     });
 
 App::delete('/v1/account')
@@ -1156,8 +1156,8 @@ App::delete('/v1/account')
         $protocol = $request->getProtocol();
         $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('status', false));
 
-        //TODO delete all tokens or only current session?
-        //TODO delete all user data according to GDPR. Make sure everything is backed up and backups are deleted later
+        // TODO delete all tokens or only current session?
+        // TODO delete all user data according to GDPR. Make sure everything is backed up and backups are deleted later
         /*
          * Data to delete
          * * Tokens
@@ -1172,7 +1172,7 @@ App::delete('/v1/account')
         ;
 
         $events
-            ->setParam('eventData', $response->output2($user, Response::MODEL_USER))
+            ->setParam('eventData', $response->output($user, Response::MODEL_USER))
         ;
 
         if (!Config::getParam('domainVerification')) {
@@ -1259,7 +1259,7 @@ App::delete('/v1/account/sessions/:sessionId')
                 $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('sessions', $sessions));
 
                 $events
-                    ->setParam('eventData', $response->output2($session, Response::MODEL_SESSION))
+                    ->setParam('eventData', $response->output($session, Response::MODEL_SESSION))
                 ;
 
                 return $response->noContent();
@@ -1332,7 +1332,7 @@ App::delete('/v1/account/sessions')
         $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('sessions', []));
                     
         $events
-            ->setParam('eventData', $response->output2(new Document([
+            ->setParam('eventData', $response->output(new Document([
                 'sessions' => $sessions,
                 'sum' => count($sessions),
             ]), Response::MODEL_SESSION_LIST))
@@ -1369,7 +1369,7 @@ App::post('/v1/account/recovery')
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
-        /** @var Appwrite\Database\Document $project */
+        /** @var Utopia\Database\Document $project */
         /** @var Utopia\Locale\Locale $locale */
         /** @var Appwrite\Event\Event $mails */
         /** @var Appwrite\Event\Event $audits */
@@ -1443,7 +1443,7 @@ App::post('/v1/account/recovery')
 
         $events
             ->setParam('eventData',
-                $response->output2($recovery->setAttribute('secret', $secret),
+                $response->output($recovery->setAttribute('secret', $secret),
                 Response::MODEL_TOKEN
             ))
         ;
@@ -1459,7 +1459,7 @@ App::post('/v1/account/recovery')
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($recovery, Response::MODEL_TOKEN);
+        $response->dynamic($recovery, Response::MODEL_TOKEN);
     });
 
 App::put('/v1/account/recovery')
@@ -1533,7 +1533,7 @@ App::put('/v1/account/recovery')
             ->setParam('resource', 'users/'.$profile->getId())
         ;
 
-        $response->dynamic2($recovery, Response::MODEL_TOKEN);
+        $response->dynamic($recovery, Response::MODEL_TOKEN);
     });
 
 App::post('/v1/account/verification')
@@ -1550,7 +1550,7 @@ App::post('/v1/account/verification')
     ->label('sdk.response.model', Response::MODEL_TOKEN)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
-    ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add built-in confirm page
+    ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients'])
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -1563,7 +1563,7 @@ App::post('/v1/account/verification')
     ->action(function ($url, $request, $response, $project, $user, $dbForInternal, $locale, $audits, $events, $mails) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Database\Document $project */
+        /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Locale\Locale $locale */
@@ -1629,7 +1629,7 @@ App::post('/v1/account/verification')
 
         $events
             ->setParam('eventData',
-                $response->output2($verification->setAttribute('secret', $verificationSecret),
+                $response->output($verification->setAttribute('secret', $verificationSecret),
                 Response::MODEL_TOKEN
             ))
         ;
@@ -1645,7 +1645,7 @@ App::post('/v1/account/verification')
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($verification, Response::MODEL_TOKEN);
+        $response->dynamic($verification, Response::MODEL_TOKEN);
     });
 
 App::put('/v1/account/verification')
@@ -1710,5 +1710,5 @@ App::put('/v1/account/verification')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 
-        $response->dynamic2($verification, Response::MODEL_TOKEN);
+        $response->dynamic($verification, Response::MODEL_TOKEN);
     });

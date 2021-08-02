@@ -28,8 +28,8 @@ App::post('/v1/database/collections')
     ->groups(['api', 'database'])
     ->label('event', 'database.collections.create')
     ->label('scope', 'collections.write')
-    ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'createCollection')
     ->label('sdk.description', '/docs/references/database/create-collection.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
@@ -67,15 +67,15 @@ App::post('/v1/database/collections')
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($collection, Response::MODEL_COLLECTION);
+        $response->dynamic($collection, Response::MODEL_COLLECTION);
     });
 
 App::get('/v1/database/collections')
     ->desc('List Collections')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
-    ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'listCollections')
     ->label('sdk.description', '/docs/references/database/list-collections.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -93,7 +93,7 @@ App::get('/v1/database/collections')
 
         $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'collections' => $dbForExternal->find(Database::COLLECTIONS, $queries, $limit, $offset, ['_id'], [$orderType]),
             'sum' => $dbForExternal->count(Database::COLLECTIONS, $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_COLLECTION_LIST);
@@ -103,8 +103,8 @@ App::get('/v1/database/collections/:collectionId')
     ->desc('Get Collection')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
-    ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'getCollection')
     ->label('sdk.description', '/docs/references/database/get-collection.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -123,7 +123,7 @@ App::get('/v1/database/collections/:collectionId')
             throw new Exception('Collection not found', 404);
         }
 
-        $response->dynamic2($collection, Response::MODEL_COLLECTION);
+        $response->dynamic($collection, Response::MODEL_COLLECTION);
     });
 
 App::put('/v1/database/collections/:collectionId')
@@ -131,8 +131,8 @@ App::put('/v1/database/collections/:collectionId')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
     ->label('event', 'database.collections.update')
-    ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'updateCollection')
     ->label('sdk.description', '/docs/references/database/update-collection.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -177,7 +177,7 @@ App::put('/v1/database/collections/:collectionId')
             ->setParam('data', $collection->getArrayCopy())
         ;
 
-        $response->dynamic2($collection, Response::MODEL_COLLECTION);
+        $response->dynamic($collection, Response::MODEL_COLLECTION);
     });
 
 App::delete('/v1/database/collections/:collectionId')
@@ -185,8 +185,8 @@ App::delete('/v1/database/collections/:collectionId')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
     ->label('event', 'database.collections.delete')
-    ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'deleteCollection')
     ->label('sdk.description', '/docs/references/database/delete-collection.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
@@ -212,7 +212,7 @@ App::delete('/v1/database/collections/:collectionId')
         $dbForExternal->deleteCollection($collectionId);
 
         $events
-            ->setParam('eventData', $response->output2($collection, Response::MODEL_COLLECTION))
+            ->setParam('eventData', $response->output($collection, Response::MODEL_COLLECTION))
         ;
 
         $audits
@@ -229,8 +229,8 @@ App::post('/v1/database/collections/:collectionId/attributes')
     ->groups(['api', 'database'])
     ->label('event', 'database.attributes.create')
     ->label('scope', 'attributes.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'database')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.method', 'createAttribute')
     ->label('sdk.description', '/docs/references/database/create-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
@@ -296,15 +296,15 @@ App::post('/v1/database/collections/:collectionId/attributes')
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($attribute, Response::MODEL_ATTRIBUTE);
+        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE);
     });
 
 App::get('/v1/database/collections/:collectionId/attributes')
     ->desc('List Attributes')
     ->groups(['api', 'database'])
     ->label('scope', 'attributes.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'database')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.method', 'listAttributes')
     ->label('sdk.description', '/docs/references/database/list-attributes.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -331,7 +331,7 @@ App::get('/v1/database/collections/:collectionId/attributes')
             ])]);
         }, $attributes);
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'sum' => \count($attributes),
             'attributes' => $attributes
         ]), Response::MODEL_ATTRIBUTE_LIST);
@@ -341,8 +341,8 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
     ->desc('Get Attribute')
     ->groups(['api', 'database'])
     ->label('scope', 'attributes.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'database')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.method', 'getAttribute')
     ->label('sdk.description', '/docs/references/database/get-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -375,7 +375,7 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
             'collectionId' => $collectionId,
         ])]);
         
-        $response->dynamic2($attribute, Response::MODEL_ATTRIBUTE);
+        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE);
     });
 
 App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
@@ -383,8 +383,8 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
     ->groups(['api', 'database'])
     ->label('scope', 'attributes.write')
     ->label('event', 'database.attributes.delete')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'database')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.method', 'deleteAttribute')
     ->label('sdk.description', '/docs/references/database/delete-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
@@ -428,7 +428,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
         ;
 
         $events
-            ->setParam('payload', $response->output2($attribute, Response::MODEL_ATTRIBUTE))
+            ->setParam('payload', $response->output($attribute, Response::MODEL_ATTRIBUTE))
         ;
 
         $audits
@@ -445,8 +445,8 @@ App::post('/v1/database/collections/:collectionId/indexes')
     ->groups(['api', 'database'])
     ->label('event', 'database.indexes.create')
     ->label('scope', 'indexes.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'database')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.method', 'createIndex')
     ->label('sdk.description', '/docs/references/database/create-index.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
@@ -526,7 +526,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($index, Response::MODEL_INDEX);
+        $response->dynamic($index, Response::MODEL_INDEX);
        
     });
 
@@ -534,8 +534,8 @@ App::get('/v1/database/collections/:collectionId/indexes')
     ->desc('List Indexes')
     ->groups(['api', 'database'])
     ->label('scope', 'indexes.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'database')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.method', 'listIndexes')
     ->label('sdk.description', '/docs/references/database/list-indexes.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -562,7 +562,7 @@ App::get('/v1/database/collections/:collectionId/indexes')
             ])]);
         }, $indexes);
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'sum' => \count($indexes),
             'attributes' => $indexes,
         ]), Response::MODEL_INDEX_LIST);
@@ -572,8 +572,8 @@ App::get('/v1/database/collections/:collectionId/indexes/:indexId')
     ->desc('Get Index')
     ->groups(['api', 'database'])
     ->label('scope', 'indexes.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'database')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.method', 'getIndex')
     ->label('sdk.description', '/docs/references/database/get-index.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -606,7 +606,7 @@ App::get('/v1/database/collections/:collectionId/indexes/:indexId')
             'collectionId' => $collectionId,
         ])]);
         
-        $response->dynamic2($index, Response::MODEL_INDEX);
+        $response->dynamic($index, Response::MODEL_INDEX);
     });
 
 App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
@@ -614,8 +614,8 @@ App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
     ->groups(['api', 'database'])
     ->label('scope', 'indexes.write')
     ->label('event', 'database.indexes.delete')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'database')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.method', 'deleteIndex')
     ->label('sdk.description', '/docs/references/database/delete-index.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
@@ -659,7 +659,7 @@ App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
         ;
 
         $events
-            ->setParam('payload', $response->output2($index, Response::MODEL_INDEX))
+            ->setParam('payload', $response->output($index, Response::MODEL_INDEX))
         ;
 
         $audits
@@ -676,8 +676,8 @@ App::post('/v1/database/collections/:collectionId/documents')
     ->groups(['api', 'database'])
     ->label('event', 'database.documents.create')
     ->label('scope', 'documents.write')
-    ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'createDocument')
     ->label('sdk.description', '/docs/references/database/create-document.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
@@ -731,15 +731,15 @@ App::post('/v1/database/collections/:collectionId/documents')
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic2($document, Response::MODEL_DOCUMENT);
+        $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
 App::get('/v1/database/collections/:collectionId/documents')
     ->desc('List Documents')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
-    ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'listDocuments')
     ->label('sdk.description', '/docs/references/database/list-documents.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -782,7 +782,7 @@ App::get('/v1/database/collections/:collectionId/documents')
 
         $documents = $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes);
 
-        $response->dynamic2(new Document([
+        $response->dynamic(new Document([
             'sum' => \count($documents),
             'documents' => $documents,
         ]), Response::MODEL_DOCUMENT_LIST);
@@ -792,8 +792,8 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Get Document')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
-    ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'getDocument')
     ->label('sdk.description', '/docs/references/database/get-document.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -819,7 +819,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
             throw new Exception('No document found', 404);
         }
 
-        $response->dynamic2($document, Response::MODEL_DOCUMENT);
+        $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
 App::patch('/v1/database/collections/:collectionId/documents/:documentId')
@@ -827,8 +827,8 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->groups(['api', 'database'])
     ->label('event', 'database.documents.update')
     ->label('scope', 'documents.write')
-    ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'updateDocument')
     ->label('sdk.description', '/docs/references/database/update-document.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -890,7 +890,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
             ->setParam('data', $document->getArrayCopy())
         ;
 
-        $response->dynamic2($document, Response::MODEL_DOCUMENT);
+        $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
 App::delete('/v1/database/collections/:collectionId/documents/:documentId')
@@ -898,8 +898,8 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.write')
     ->label('event', 'database.documents.delete')
-    ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'deleteDocument')
     ->label('sdk.description', '/docs/references/database/delete-document.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
@@ -931,7 +931,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         $success = $dbForExternal->deleteDocument($collectionId, $documentId);
 
         $events
-            ->setParam('eventData', $response->output2($document, Response::MODEL_DOCUMENT))
+            ->setParam('eventData', $response->output($document, Response::MODEL_DOCUMENT))
         ;
 
         $audits

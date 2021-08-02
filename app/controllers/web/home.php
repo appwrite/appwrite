@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Database\Database;
 use Appwrite\Specification\Format\OpenAPI3;
 use Appwrite\Specification\Format\Swagger2;
 use Appwrite\Specification\Specification;
@@ -8,7 +7,6 @@ use Utopia\App;
 use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Exception;
-use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 
@@ -397,7 +395,7 @@ App::get('/specs/:format')
             }
         }
 
-        foreach (Config::getParam('services', []) as $key => $service) {
+        foreach (Config::getParam('services', []) as $service) {
             if(!isset($service['docs']) // Skip service if not part of the public API
                 || !isset($service['sdk'])
                 || !$service['docs']

@@ -1,14 +1,10 @@
 <?php
 
 use Appwrite\Resque\Worker;
-use Utopia\Cache\Cache;
-use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Adapter\MariaDB;
 
-require_once __DIR__.'/../init.php';
+require_once __DIR__.'/../workers.php';
 
 Console::title('Database V1 Worker');
 Console::success(APP_NAME.' database worker v1 has started'."\n");
@@ -130,54 +126,5 @@ class DatabaseV1 extends Worker
         $id = $index->getAttribute('$id');
 
         $success = $dbForExternal->deleteIndex($collectionId, $id);
-    }
-
-    /**
-     * @param string $projectId
-     *
-     * @return Database
-     */
-    protected function getInternalDB($projectId): Database
-    {
-        global $register;
-
-        $dbForInternal = null;
-
-        go(function() use ($register, $projectId, &$dbForInternal) {
-            $db = $register->get('dbPool')->get();
-            $redis = $register->get('redisPool')->get();
-
-            $cache = new Cache(new RedisCache($redis));
-            $dbForInternal = new Database(new MariaDB($db), $cache);
-            $dbForInternal->setNamespace('project_'.$projectId.'_internal'); // Main DB
-
-        });
-
-        return $dbForInternal;
-    }
-
-    /**
-     * @param string $projectId
-     *
-     * @return Database
-     */
-    protected function getExternalDB($projectId): Database
-    {
-        global $register;
-
-        /** @var Database $dbForExternal */
-        $dbForExternal = null;
-
-        go(function() use ($register, $projectId, &$dbForExternal) {
-            $db = $register->get('dbPool')->get();
-            $redis = $register->get('redisPool')->get();
-
-            $cache = new Cache(new RedisCache($redis));
-            $dbForExternal = new Database(new MariaDB($db), $cache);
-            $dbForExternal->setNamespace('project_'.$projectId.'_external'); // Main DB
-
-        });
-
-        return $dbForExternal;
     }
 }

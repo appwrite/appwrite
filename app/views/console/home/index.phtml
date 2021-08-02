@@ -18,7 +18,6 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
             <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/settings?project={{router.params.project}}" class="link-animation-enabled"><i class="icon-cog"></i> &nbsp;Settings</a> &nbsp;&nbsp;</li>
             <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/keys?project={{router.params.project}}" class="link-animation-enabled"><i class="icon-key-inv"></i> &nbsp;API Keys</a> &nbsp;&nbsp;</li>
             <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/webhooks?project={{router.params.project}}" class="link-animation-enabled"><i class="icon-link"></i> &nbsp;Webhooks</a> &nbsp;&nbsp;</li>
-            <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/tasks?project={{router.params.project}}" class="link-animation-enabled"><i class="icon-clock"></i> &nbsp;Tasks</a> &nbsp;&nbsp;</li>
         </ul>
 
         <div class="margin-bottom phones-only">&nbsp;</div>
@@ -79,6 +78,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
     <div
         data-service="projects.getUsage"
         data-event="load"
+        data-scope="console"
         data-name="usage"
         data-param-project-id="{{router.params.project}}"
         data-param-range="30d">
@@ -102,12 +102,6 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                             <span data-ls-bind="{{usage.network.total|humanFileUnit}}" class="text-size-small unit"></span>
                         </div>
                         <div class="metric margin-bottom-small">Bandwidth</div>
-
-                        <div class="margin-top-large value small">
-                            <b class="text-size-small sum small" data-ls-bind="{{usage.functions.total|statsTotal}}" data-default="0"></b>
-                            <br />
-                            <b>Func. Executions</b>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -131,8 +125,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                     <div class="margin-top-small"><b class="text-size-small unit">Users</b></div>
                 </div>
                 <div class="col span-3">
-                    <div class="value"><span class="sum" data-ls-bind="{{usage.tasks.total}}" data-default="0">0</span></div>
-                    <div class="margin-top-small"><b class="text-size-small unit">Tasks</b></div>
+                    <div class="value"><span class="sum" data-ls-bind="{{usage.functions.total|statsTotal}}" data-default="0">0</span></div>
+                    <div class="margin-top-small"><b class="text-size-small unit">Func. Executions</b></div>
                 </div>
             </div>
         </div>

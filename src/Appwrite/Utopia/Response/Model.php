@@ -2,6 +2,8 @@
 
 namespace Appwrite\Utopia\Response;
 
+use Utopia\Database\Document;
+
 abstract class Model
 {
     const TYPE_STRING = 'string';
@@ -31,18 +33,28 @@ abstract class Model
     protected $rules = [];
 
     /**
+     * Filter Document Structure
+     * 
+     * @return string
+     */
+    public function filter(Document $document): Document
+    {
+        return $document;
+    }
+
+    /**
      * Get Name
      * 
      * @return string
      */
-    abstract public function getName():string;
+    abstract public function getName(): string;
 
     /**
      * Get Collection
      * 
      * @return string
      */
-    abstract public function getType():string;
+    abstract public function getType(): string;
 
     /**
      * Get Rules

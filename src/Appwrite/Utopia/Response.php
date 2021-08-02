@@ -5,7 +5,7 @@ namespace Appwrite\Utopia;
 use Exception;
 use Utopia\Swoole\Response as SwooleResponse;
 use Swoole\Http\Response as SwooleHTTPResponse;
-use Appwrite\Database\Document;
+use Utopia\Database\Document;
 use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\None;
@@ -45,7 +45,6 @@ use Appwrite\Utopia\Response\Model\Webhook;
 use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\Mock; // Keep last
 use stdClass;
-use Utopia\Database\Document as DatabaseDocument;
 
 /**
  * @method Response public function setStatusCode(int $code = 200)
@@ -121,8 +120,6 @@ class Response extends SwooleResponse
     const MODEL_WEBHOOK_LIST = 'webhookList';
     const MODEL_KEY = 'key';
     const MODEL_KEY_LIST = 'keyList';
-    const MODEL_TASK = 'task';
-    const MODEL_TASK_LIST = 'taskList';
     const MODEL_PLATFORM = 'platform';
     const MODEL_PLATFORM_LIST = 'platformList';
     const MODEL_DOMAIN = 'domain';
@@ -171,7 +168,6 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Projects List', self::MODEL_PROJECT_LIST, 'projects', self::MODEL_PROJECT, true, false))
             ->setModel(new BaseList('Webhooks List', self::MODEL_WEBHOOK_LIST, 'webhooks', self::MODEL_WEBHOOK, true, false))
             ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY, true, false))
-            ->setModel(new BaseList('Tasks List', self::MODEL_TASK_LIST, 'tasks', self::MODEL_TASK, true, false))
             ->setModel(new BaseList('Platforms List', self::MODEL_PLATFORM_LIST, 'platforms', self::MODEL_PLATFORM, true, false))
             ->setModel(new BaseList('Domains List', self::MODEL_DOMAIN_LIST, 'domains', self::MODEL_DOMAIN, true, false))
             ->setModel(new BaseList('Countries List', self::MODEL_COUNTRY_LIST, 'countries', self::MODEL_COUNTRY))
@@ -202,7 +198,6 @@ class Response extends SwooleResponse
             ->setModel(new Project())
             ->setModel(new Webhook())
             ->setModel(new Key())
-            ->setModel(new Task())
             ->setModel(new Domain())
             ->setModel(new Platform())
             ->setModel(new Country())
@@ -287,27 +282,6 @@ class Response extends SwooleResponse
     }
 
     /**
-     * Validate response objects and outputs
-     *  the response according to given format type
-     * 
-     * @param DatabaseDocument $document
-     * @param string $model
-     * 
-     * return void
-     */
-    public function dynamic2(DatabaseDocument $document, string $model): void
-    {
-        $output = $this->output2($document, $model);
-
-        // If filter is set, parse the output
-        if(self::isFilter()){
-            $output = self::getFilter()->parse($output, $model);
-        }
-
-        $this->json(!empty($output) ? $output : new stdClass());
-    }
-
-    /**
      * Generate valid response object from document data
      * 
      * @param Document $document
@@ -326,57 +300,7 @@ class Response extends SwooleResponse
             return $this->payload;
         }
 
-        foreach ($model->getRules() as $key => $rule) {
-            if (!$document->isSet($key)) {
-                if (!is_null($rule['default'])) {
-                    $document->setAttribute($key, $rule['default']);
-                } else {
-                    throw new Exception('Model '.$model->getName().' is missing response key: '.$key);
-                }
-            }
-
-            if ($rule['array']) {
-                if (!is_array($data[$key])) {
-                    throw new Exception($key.' must be an array of type '.$rule['type']);
-                }
-
-                foreach ($data[$key] as &$item) {
-                    if ($item instanceof Document) {
-                        if (!array_key_exists($rule['type'], $this->models)) {
-                            throw new Exception('Missing model for rule: '. $rule['type']);
-                        }
-
-                        $item = $this->output($item, $rule['type']);
-                    }
-                }
-            }
-            
-            $output[$key] = $data[$key];
-        }
-
-        $this->payload = $output;
-
-        return $this->payload;
-    }
-
-    /**
-     * Generate valid response object from document data
-     * 
-     * @param DatabaseDocument $document
-     * @param string $model
-     * 
-     * return array
-     */
-    public function output2(DatabaseDocument $document, string $model): array
-    {
-        $data       = $document;
-        $model      = $this->getModel($model);
-        $output     = [];
-
-        if ($model->isAny()) {
-            $this->payload = $document->getArrayCopy();
-            return $this->payload;
-        }
+        $document = $model->filter($document);
 
         foreach ($model->getRules() as $key => $rule) {
             if (!$document->isSet($key)) {
