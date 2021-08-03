@@ -72,33 +72,47 @@ class V09 extends Migration
             if ($oldProject->getId() !== 'console') {
                 $project = $this->dbConsole->getDocument('projects', $oldProject->getId());
 
+                /**
+                 * Migrate Project Document.
+                 */
                 if ($project->isEmpty()) {
-                    Console::log('Migrating project: ' . $oldProject->getAttribute('name') . ' (' . $oldProject->getId() . ')');
-
                     $newProject = $this->fixDocument($oldProject);
                     $newProject->setAttribute('version', '0.10.0');
                     $project = $this->dbConsole->createDocument('projects', $newProject);
+                    Console::log('Migrating project: ' . $oldProject->getAttribute('name') . ' (' . $oldProject->getId() . ')');
                 }
 
+                /**
+                 * Create internal DB tables
+                 */
                 if (!$this->dbInternal->exists()) {
-                    $this->dbInternal->create(); // Create internal DB structure
+                    $this->dbInternal->create();
                     Console::log('Created internal tables for : ' . $project->getAttribute('name') . ' (' . $project->getId() . ')');
                 }
 
+                /**
+                 * Create external DB tables
+                 */
                 if (!$this->dbExternal->exists()) {
-                    $this->dbExternal->create(); // Create external DB structure
+                    $this->dbExternal->create();
                     Console::log('Created external tables for : ' . $project->getAttribute('name') . ' (' . $project->getId() . ')');
                 }
 
+                /**
+                 * Create Audit tables
+                 */
                 if ($this->dbInternal->getCollection(Audit::COLLECTION)->isEmpty()) {
                     $audit = new Audit($this->dbInternal);
-                    $audit->setup(); // Setup Audit tables
+                    $audit->setup();
                     Console::log('Created audit tables for : ' . $project->getAttribute('name') . ' (' . $project->getId() . ')');
                 }
 
+                /**
+                 * Create Abuse tables
+                 */
                 if ($this->dbInternal->getCollection(TimeLimit::COLLECTION)->isEmpty()) {
                     $adapter = new TimeLimit("", 0, 1, $this->dbInternal);
-                    $adapter->setup(); // Setup Abuse tables
+                    $adapter->setup();
                     Console::log('Created abuse tables for : ' . $project->getAttribute('name') . ' (' . $project->getId() . ')');
                 }
 
@@ -190,7 +204,9 @@ class V09 extends Migration
                                 Console::warning('Skipped Collection ' . $newCollection->getId() . ' from ' . $newCollection->getCollection());
                             }
 
-                            // Migrate collection rules to attributes
+                            /**
+                             * Migrate collection rules to attributes
+                             */
                             $attributes = $this->migrateCollectionAttributes($oldCollection);
 
                             foreach ($attributes as $attribute) {
@@ -239,17 +255,29 @@ class V09 extends Migration
                                             return;
                                         }
                                         foreach ($document as $key => $attr) {
+                                            /**
+                                             * Convert nested Document to JSON strings.
+                                             */
                                             if ($document->getAttribute($key) instanceof OldDocument) {
                                                 $document[$key] = json_encode($this->fixDocument($attr)->getArrayCopy());
                                             }
+                                            /**
+                                             * Convert numeric Attributes to float.
+                                             */
                                             if (is_numeric($attr)) {
-                                                $document[$key] = floatval($attr); // Convert any numeric to float
+                                                $document[$key] = floatval($attr);
                                             }
                                             if (\is_array($attr)) {
                                                 foreach ($attr as $index => $child) {
+                                                    /**
+                                                     * Convert array of nested Document to array JSON strings.
+                                                     */
                                                     if ($document->getAttribute($key)[$index] instanceof OldDocument) {
                                                         $document[$key][$index] = json_encode($this->fixDocument($child)->getArrayCopy());
                                                     }
+                                                    /**
+                                                     * Convert array of numeric Attributes to array float.
+                                                     */
                                                     if (is_numeric($attr)) {
                                                         $document[$key][$index] = floatval($child); // Convert any numeric to float
                                                     }
@@ -274,7 +302,9 @@ class V09 extends Migration
             $sum = $this->limit;
             $offset = 0;
 
-            // Migrate remaining documents
+            /**
+             * Migrate internal documents
+             */
             while ($sum >= $this->limit) {
                 $all = $this->oldProjectDB->getCollection([
                     'limit' => $this->limit,
@@ -302,10 +332,6 @@ class V09 extends Migration
 
                         if (empty($new->getId())) {
                             Console::warning('Skipped Document due to missing ID.');
-                            return;
-                        }
-
-                        if (!$this->check_diff_multi($new->getArrayCopy(), $old)) {
                             return;
                         }
 
@@ -337,6 +363,9 @@ class V09 extends Migration
         $document = new Document($oldDocument->getArrayCopy());
         $document = $this->migratePermissions($document);
 
+        /**
+         * Check attributes and set their default values.
+         */
         if (array_key_exists($document->getCollection(), $this->oldCollections)) {
             foreach ($this->newCollections[$document->getCollection()]['attributes'] as $attr) {
                 if (
@@ -385,6 +414,9 @@ class V09 extends Migration
 
                 break;
             case OldDatabase::SYSTEM_COLLECTION_FILES:
+                /**
+                 * Migrating breakind changes on Files.
+                 */
                 if (!empty($document->getAttribute('fileOpenSSLVersion', null))) {
                     $document
                         ->setAttribute('openSSLVersion', $document->getAttribute('fileOpenSSLVersion'))
@@ -405,24 +437,13 @@ class V09 extends Migration
                         ->setAttribute('openSSLIV', $document->getAttribute('fileOpenSSLIV'))
                         ->removeAttribute('fileOpenSSLIV');
                 }
+
+                /**
+                 * Remove deprecated attributes.
+                 */
                 $document->removeAttribute('folderId');
                 $document->removeAttribute('token');
                 break;
-        }
-
-        // Convert nested Documents to JSON strings
-        foreach ($document as &$attr) {
-            if ($attr instanceof OldDocument) {
-                $attr = json_encode($this->fixDocument($attr)->getArrayCopy());
-            }
-
-            if (\is_array($attr)) {
-                foreach ($attr as &$child) {
-                    if ($child instanceof OldDocument) {
-                        $child = json_encode($this->fixDocument($child)->getArrayCopy());
-                    }
-                }
-            }
         }
 
         return $document;
@@ -430,7 +451,9 @@ class V09 extends Migration
 
     protected function migratePermissions(Document $document): Document
     {
-        // Migrate $permissions to independent $read,$write
+        /**
+         * Migrate $permissions to independent $read,$write
+         */
         if ($document->isSet('$permissions')) {
             $permissions = $document->getAttribute('$permissions', []);
             $read = $this->migrateWildcardPermissions($permissions['read'] ?? []);
