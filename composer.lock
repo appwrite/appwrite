@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "63a89a825697892a52aa27d6819b5972",
+    "content-hash": "e69ba4e38368f60742ad646d923be1bb",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1906,6 +1906,64 @@
                 "source": "https://github.com/utopia-php/locale/tree/0.4.0"
             },
             "time": "2021-07-24T11:35:55+00:00"
+        },
+        {
+            "name": "utopia-php/orchestration",
+            "version": "dev-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/PineappleIOnic/orchestration.git",
+                "reference": "ded89e7babf75ff1c3aefd4be1f4b235bd926835"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/PineappleIOnic/orchestration/zipball/ded89e7babf75ff1c3aefd4be1f4b235bd926835",
+                "reference": "ded89e7babf75ff1c3aefd4be1f4b235bd926835",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0",
+                "utopia-php/cli": "0.11.*"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.3",
+                "vimeo/psalm": "4.0.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Orchestration\\": "src/Orchestration"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Orchestration"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "eldad@appwrite.io"
+                }
+            ],
+            "description": "Lite & fast micro PHP abstraction library for container orchestration",
+            "keywords": [
+                "docker",
+                "framework",
+                "kubernetes",
+                "orchestration",
+                "php",
+                "swarm",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "source": "https://github.com/PineappleIOnic/orchestration/tree/dev"
+            },
+            "time": "2021-08-03T09:56:45+00:00"
         },
         {
             "name": "utopia-php/preloader",
@@ -4882,7 +4940,6 @@
                     "type": "github"
                 }
             ],
-            "abandoned": true,
             "time": "2020-09-28T06:45:17+00:00"
         },
         {
@@ -6068,7 +6125,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/orchestration": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
