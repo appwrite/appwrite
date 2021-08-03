@@ -71,7 +71,7 @@ class DatabaseV1 extends Worker
         $default = $attribute->getAttribute('default', null);
         $signed = $attribute->getAttribute('signed', true);
         $array = $attribute->getAttribute('array', false);
-        $format = $attribute->getAttribute('format', '');
+        $format = $attribute->getAttribute('format', null);
         $filters = $attribute->getAttribute('filters', []);
 
         $success = $dbForExternal->createAttribute($collectionId, $id, $type, $size, $required, $default, $signed, $array, $format, $filters);

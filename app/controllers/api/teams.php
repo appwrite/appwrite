@@ -273,7 +273,7 @@ App::post('/v1/teams/:teamId/memberships')
             throw new Exception('Team not found', 404);
         }
 
-        $invitee = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [$email])], 1); // Get user by email address
+        $invitee = $dbForInternal->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
 
         if (empty($invitee)) { // Create new user if no user with same email found
 

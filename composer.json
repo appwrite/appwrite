@@ -45,7 +45,7 @@
         "utopia-php/cache": "0.4.*",
         "utopia-php/cli": "0.11.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "dev-feat-attribute-format-validators as 0.5.1",
+        "utopia-php/database": "0.6.*",
         "utopia-php/locale": "0.3.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/preloader": "0.2.*",
@@ -62,12 +62,7 @@
         "adhocore/jwt": "1.1.2",
         "slickdeals/statsd": "3.1.0"
     },
-    "repositories": [
-        {
-            "type": "git",
-            "url": "https://github.com/utopia-php/database"
-        }
-    ],
+    "repositories": [],
     "require-dev": {
         "appwrite/sdk-generator": "0.13.0",
         "swoole/ide-helper": "4.6.7",
