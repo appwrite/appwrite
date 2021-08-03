@@ -153,10 +153,7 @@ $scopes = $this->getParam('scopes', []);
                 data-failure-param-alert-classname="error">
 
                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-
-                <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different API keys."><i class="icon-question"></i></span></label>
-                <input type="text" class="full-width" id="name" name="name" required autocomplete="off" maxlength="128" />
-
+                
                 <label for="keyId">Key ID <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different API keys."><i class="icon-question"></i></span></label>
                 <input
                     type="hidden"
@@ -165,6 +162,9 @@ $scopes = $this->getParam('scopes', []);
                     required
                     maxlength="36"
                     name="keyId" />
+                    
+                <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different API keys."><i class="icon-question"></i></span></label>
+                <input type="text" class="full-width" id="name" name="name" required autocomplete="off" maxlength="128" />
 
                 <section data-forms-select-all>
                     <label for="scopes">Scopes (<a data-ls-attrs="href={{env.HOME}}/docs/keys" target="_blank" rel="noopener">Learn more</a>)</label>

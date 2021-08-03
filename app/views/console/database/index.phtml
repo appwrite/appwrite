@@ -94,9 +94,6 @@
                         data-failure-param-alert-text="Failed to create collection"
                         data-failure-param-alert-classname="error">
 
-                        <label for="collection-name">Name</label>
-                        <input type="text" class="full-width" id="collection-name" name="name" required autocomplete="off" maxlength="128" />
-
                         <label for="collection-id">Collection ID</label>
                         <input
                             type="hidden"
@@ -105,6 +102,9 @@
                             required
                             maxlength="36"
                             name="collectionId" />
+                            
+                        <label for="collection-name">Name</label>
+                        <input type="text" class="full-width" id="collection-name" name="name" required autocomplete="off" maxlength="128" />
 
                         <input type="hidden" id="collection-read" name="read" required data-cast-to="json" value="<?php echo htmlentities(json_encode([])); ?>" />
                         <input type="hidden" id="collection-write" name="write" required data-cast-to="json" value="<?php echo htmlentities(json_encode([])); ?>" />

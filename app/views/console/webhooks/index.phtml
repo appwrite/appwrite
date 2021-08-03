@@ -176,10 +176,7 @@ $events = array_keys($this->getParam('events', []));
                 data-failure-param-alert-classname="error">
 
                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-                <label for="name">Name</label>
-                <input type="text" class="full-width" id="name" name="name" required autocomplete="off" maxlength="128" />
-
-                <label for="webhookId">ID</label>
+                <label for="webhookId">Webhook ID</label>
                 <input
                     type="hidden"
                     data-custom-id
@@ -188,6 +185,9 @@ $events = array_keys($this->getParam('events', []));
                     maxlength="36"
                     id="webhookId"
                     name="webhookId" />
+                    
+                <label for="name">Name</label>
+                <input type="text" class="full-width" id="name" name="name" required autocomplete="off" maxlength="128" />
 
                 <section data-forms-select-all>
                     <label for="events">Events</label>
