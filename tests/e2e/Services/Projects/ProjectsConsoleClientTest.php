@@ -521,6 +521,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
+            'teamId' => 'unique()',
             'name' => 'Project Test',
         ]);
         $this->assertEquals(201, $team['headers']['status-code']);
@@ -531,6 +532,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
+            'projectId' => 'unique()',
             'name' => 'Project Test',
             'teamId' => $team['body']['$id'],
         ]);
