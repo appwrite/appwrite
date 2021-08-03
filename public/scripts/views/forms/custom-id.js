@@ -5,13 +5,23 @@
   //validation rule
   window.ls.container.get("view").add({
     selector: "data-custom-id",
-    controller: function (element) {
+    controller: function (element, sdk, console) {
+      //sdk should be console sdk for this project
       var prevData = "";
       let idType = element.getAttribute('id-type');
 
       var div = window.document.createElement("div");
 
       div.className = "input-copy";
+
+      //verify the ID doesn't already exist using a Get endpoint
+      //on the right side of the help info show id exists or not
+
+      //validator in javascript
+      //extend HTML validators?
+      //if not possible disable create button if not valid id
+
+      //provide information about length
 
       var button = window.document.createElement("i");
 
@@ -45,6 +55,23 @@
         }
       }
 
+      var validate = function async(event) {
+        const value = event.target.value;
+        if (value.length < 1) {
+          event.target.setCustomValidity("ID is required");
+        } else {
+          console.projects.get(value).then(function(res){
+            if (res.$id == value) {
+              event.target.setCustomValidity("ID already exists");
+            } else {
+              event.target.setCustomValidity("");
+            }
+          }, function(e){
+            event.target.setCustomValidity("");
+          });
+        }
+      }
+
       var setIdType = function (idType) {
         if (idType == "custom") {
           info.innerHTML = "(Allowed Characters A-Z, a-z, 0-9, and non-leading _)";
@@ -53,6 +80,7 @@
           writer.disabled = false;
           element.value = prevData;
           writer.focus();
+          writer.addEventListener('blur', validate);
         } else {
           info.innerHTML = "(Automatically generated)";
           element.setAttribute('id-type', idType);
