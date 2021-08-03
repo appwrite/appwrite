@@ -266,7 +266,7 @@ App::post('/v1/database/collections/:collectionId/attributes')
         $signed = true;
         $filters = [];
 
-        $success = $dbForExternal->addAttributeInQueue($collectionId, $id, $type, $size, $required, $default, $signed, $array, $filters);
+        $success = $dbForExternal->addAttributeInQueue($collectionId, $id, $type, $size, $required, $default, $signed, $array, /*format*/ null, $filters);
 
         // Database->addAttributeInQueue() does not return a document
         // So we need to create one for the response
