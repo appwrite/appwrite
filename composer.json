@@ -38,7 +38,7 @@
         "appwrite/php-clamav": "1.1.*",
         "appwrite/php-runtimes": "0.4.*",
 
-        "utopia-php/framework": "dev-feat-range-validator-infinity as 0.16.2",
+        "utopia-php/framework": "0.17.*",
         "utopia-php/abuse": "0.6.*",
         "utopia-php/analytics": "0.2.*",
         "utopia-php/audit": "0.6.*",
@@ -66,10 +66,6 @@
         {
             "type": "git",
             "url": "https://github.com/utopia-php/database"
-        },
-        {
-            "type": "git",
-            "url": "https://github.com/utopia-php/framework"
         }
     ],
     "require-dev": {

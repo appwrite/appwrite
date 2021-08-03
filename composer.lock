@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e7dd41744fe6d89355623d5425d6ccd4",
+    "content-hash": "6c240e73a06b648ec38d71e56ffbb67c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2095,11 +2095,17 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "dev-feat-range-validator-infinity",
+            "version": "0.17.3",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/framework",
-                "reference": "c42cce848c6c20d0c4b4b75105dd15b5d8234e28"
+                "url": "https://github.com/utopia-php/framework.git",
+                "reference": "0274f6b3e49db2af0d702edf278ec7504dc99878"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/0274f6b3e49db2af0d702edf278ec7504dc99878",
+                "reference": "0274f6b3e49db2af0d702edf278ec7504dc99878",
+                "shasum": ""
             },
             "require": {
                 "php": ">=7.3.0"
@@ -2114,6 +2120,7 @@
                     "Utopia\\": "src/"
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -2129,7 +2136,11 @@
                 "php",
                 "upf"
             ],
-            "time": "2021-08-02T16:53:46+00:00"
+            "support": {
+                "issues": "https://github.com/utopia-php/framework/issues",
+                "source": "https://github.com/utopia-php/framework/tree/0.17.3"
+            },
+            "time": "2021-08-03T13:57:01+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -5137,7 +5148,6 @@
                     "type": "github"
                 }
             ],
-            "abandoned": true,
             "time": "2020-09-28T06:45:17+00:00"
         },
         {
@@ -6244,17 +6254,10 @@
             "version": "dev-feat-attribute-format-validators",
             "alias": "0.5.1",
             "alias_normalized": "0.5.1.0"
-        },
-        {
-            "package": "utopia-php/framework",
-            "version": "dev-feat-range-validator-infinity",
-            "alias": "0.16.2",
-            "alias_normalized": "0.16.2.0"
         }
     ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/framework": 20,
         "utopia-php/database": 20
     },
     "prefer-stable": false,
