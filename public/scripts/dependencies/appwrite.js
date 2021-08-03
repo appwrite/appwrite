@@ -935,14 +935,10 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-<<<<<<< HEAD
                 createCollection: (collectionId, name, read, write) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
-=======
-                createCollection: (name, read, write) => __awaiter(this, void 0, void 0, function* () {
->>>>>>> feat-database-indexing
                     if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
@@ -1227,11 +1223,7 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-<<<<<<< HEAD
                 createDocument: (collectionId, documentId, data, read, write) => __awaiter(this, void 0, void 0, function* () {
-=======
-                createDocument: (collectionId, data, read, write) => __awaiter(this, void 0, void 0, function* () {
->>>>>>> feat-database-indexing
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
@@ -2034,23 +2026,6 @@
                  */
                 getQueueLogs: () => __awaiter(this, void 0, void 0, function* () {
                     let path = '/health/queue/logs';
-                    let payload = {};
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('get', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
-                 * Get Tasks Queue
-                 *
-                 * Get the number of tasks that are waiting to be processed in the Appwrite
-                 * internal queue server.
-                 *
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                getQueueTasks: () => __awaiter(this, void 0, void 0, function* () {
-                    let path = '/health/queue/tasks';
                     let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
@@ -2996,6 +2971,9 @@
                     if (typeof service === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "service"');
                     }
+                    if (typeof status === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "status"');
+                    }
                     let path = '/projects/{projectId}/service'.replace('{projectId}', projectId);
                     let payload = {};
                     if (typeof service !== 'undefined') {
@@ -3006,228 +2984,6 @@
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('patch', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
-                 * List Tasks
-                 *
-                 *
-                 * @param {string} projectId
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                listTasks: (projectId) => __awaiter(this, void 0, void 0, function* () {
-                    if (typeof projectId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "projectId"');
-                    }
-                    let path = '/projects/{projectId}/tasks'.replace('{projectId}', projectId);
-                    let payload = {};
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('get', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
-                 * Create Task
-                 *
-                 *
-                 * @param {string} projectId
-                 * @param {string} taskId
-                 * @param {string} name
-                 * @param {string} status
-                 * @param {string} schedule
-                 * @param {boolean} security
-                 * @param {string} httpMethod
-                 * @param {string} httpUrl
-                 * @param {string[]} httpHeaders
-                 * @param {string} httpUser
-                 * @param {string} httpPass
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                createTask: (projectId, taskId, name, status, schedule, security, httpMethod, httpUrl, httpHeaders, httpUser, httpPass) => __awaiter(this, void 0, void 0, function* () {
-                    if (typeof projectId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "projectId"');
-                    }
-                    if (typeof taskId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "taskId"');
-                    }
-                    if (typeof name === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "name"');
-                    }
-                    if (typeof status === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "status"');
-                    }
-                    if (typeof schedule === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "schedule"');
-                    }
-                    if (typeof security === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "security"');
-                    }
-                    if (typeof httpMethod === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "httpMethod"');
-                    }
-                    if (typeof httpUrl === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "httpUrl"');
-                    }
-                    let path = '/projects/{projectId}/tasks'.replace('{projectId}', projectId);
-                    let payload = {};
-                    if (typeof taskId !== 'undefined') {
-                        payload['taskId'] = taskId;
-                    }
-                    if (typeof name !== 'undefined') {
-                        payload['name'] = name;
-                    }
-                    if (typeof status !== 'undefined') {
-                        payload['status'] = status;
-                    }
-                    if (typeof schedule !== 'undefined') {
-                        payload['schedule'] = schedule;
-                    }
-                    if (typeof security !== 'undefined') {
-                        payload['security'] = security;
-                    }
-                    if (typeof httpMethod !== 'undefined') {
-                        payload['httpMethod'] = httpMethod;
-                    }
-                    if (typeof httpUrl !== 'undefined') {
-                        payload['httpUrl'] = httpUrl;
-                    }
-                    if (typeof httpHeaders !== 'undefined') {
-                        payload['httpHeaders'] = httpHeaders;
-                    }
-                    if (typeof httpUser !== 'undefined') {
-                        payload['httpUser'] = httpUser;
-                    }
-                    if (typeof httpPass !== 'undefined') {
-                        payload['httpPass'] = httpPass;
-                    }
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('post', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
-                 * Get Task
-                 *
-                 *
-                 * @param {string} projectId
-                 * @param {string} taskId
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                getTask: (projectId, taskId) => __awaiter(this, void 0, void 0, function* () {
-                    if (typeof projectId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "projectId"');
-                    }
-                    if (typeof taskId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "taskId"');
-                    }
-                    let path = '/projects/{projectId}/tasks/{taskId}'.replace('{projectId}', projectId).replace('{taskId}', taskId);
-                    let payload = {};
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('get', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
-                 * Update Task
-                 *
-                 *
-                 * @param {string} projectId
-                 * @param {string} taskId
-                 * @param {string} name
-                 * @param {string} status
-                 * @param {string} schedule
-                 * @param {boolean} security
-                 * @param {string} httpMethod
-                 * @param {string} httpUrl
-                 * @param {string[]} httpHeaders
-                 * @param {string} httpUser
-                 * @param {string} httpPass
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                updateTask: (projectId, taskId, name, status, schedule, security, httpMethod, httpUrl, httpHeaders, httpUser, httpPass) => __awaiter(this, void 0, void 0, function* () {
-                    if (typeof projectId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "projectId"');
-                    }
-                    if (typeof taskId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "taskId"');
-                    }
-                    if (typeof name === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "name"');
-                    }
-                    if (typeof status === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "status"');
-                    }
-                    if (typeof schedule === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "schedule"');
-                    }
-                    if (typeof security === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "security"');
-                    }
-                    if (typeof httpMethod === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "httpMethod"');
-                    }
-                    if (typeof httpUrl === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "httpUrl"');
-                    }
-                    let path = '/projects/{projectId}/tasks/{taskId}'.replace('{projectId}', projectId).replace('{taskId}', taskId);
-                    let payload = {};
-                    if (typeof name !== 'undefined') {
-                        payload['name'] = name;
-                    }
-                    if (typeof status !== 'undefined') {
-                        payload['status'] = status;
-                    }
-                    if (typeof schedule !== 'undefined') {
-                        payload['schedule'] = schedule;
-                    }
-                    if (typeof security !== 'undefined') {
-                        payload['security'] = security;
-                    }
-                    if (typeof httpMethod !== 'undefined') {
-                        payload['httpMethod'] = httpMethod;
-                    }
-                    if (typeof httpUrl !== 'undefined') {
-                        payload['httpUrl'] = httpUrl;
-                    }
-                    if (typeof httpHeaders !== 'undefined') {
-                        payload['httpHeaders'] = httpHeaders;
-                    }
-                    if (typeof httpUser !== 'undefined') {
-                        payload['httpUser'] = httpUser;
-                    }
-                    if (typeof httpPass !== 'undefined') {
-                        payload['httpPass'] = httpPass;
-                    }
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('put', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
-                 * Delete Task
-                 *
-                 *
-                 * @param {string} projectId
-                 * @param {string} taskId
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                deleteTask: (projectId, taskId) => __awaiter(this, void 0, void 0, function* () {
-                    if (typeof projectId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "projectId"');
-                    }
-                    if (typeof taskId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "taskId"');
-                    }
-                    let path = '/projects/{projectId}/tasks/{taskId}'.replace('{projectId}', projectId).replace('{taskId}', taskId);
-                    let payload = {};
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('delete', uri, {
                         'content-type': 'application/json',
                     }, payload);
                 }),
