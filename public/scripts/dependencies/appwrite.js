@@ -935,10 +935,14 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
+<<<<<<< HEAD
                 createCollection: (collectionId, name, read, write) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
+=======
+                createCollection: (name, read, write) => __awaiter(this, void 0, void 0, function* () {
+>>>>>>> feat-database-indexing
                     if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
@@ -1223,7 +1227,11 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
+<<<<<<< HEAD
                 createDocument: (collectionId, documentId, data, read, write) => __awaiter(this, void 0, void 0, function* () {
+=======
+                createDocument: (collectionId, data, read, write) => __awaiter(this, void 0, void 0, function* () {
+>>>>>>> feat-database-indexing
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
@@ -2968,6 +2976,36 @@
                     let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('delete', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Update service status
+                 *
+                 *
+                 * @param {string} projectId
+                 * @param {string} service
+                 * @param {boolean} status
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateServiceStatus: (projectId, service, status) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof projectId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "projectId"');
+                    }
+                    if (typeof service === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "service"');
+                    }
+                    let path = '/projects/{projectId}/service'.replace('{projectId}', projectId);
+                    let payload = {};
+                    if (typeof service !== 'undefined') {
+                        payload['service'] = service;
+                    }
+                    if (typeof status !== 'undefined') {
+                        payload['status'] = status;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
                         'content-type': 'application/json',
                     }, payload);
                 }),

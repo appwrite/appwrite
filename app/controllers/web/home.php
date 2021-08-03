@@ -395,7 +395,7 @@ App::get('/specs/:format')
             }
         }
 
-        foreach (Config::getParam('services', []) as $key => $service) {
+        foreach (Config::getParam('services', []) as $service) {
             if(!isset($service['docs']) // Skip service if not part of the public API
                 || !isset($service['sdk'])
                 || !$service['docs']

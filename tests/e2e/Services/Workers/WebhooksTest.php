@@ -47,7 +47,6 @@ class WebhooksTest extends Scope
         $this->assertArrayHasKey('platforms', $response['body']);
         $this->assertArrayHasKey('webhooks', $response['body']);
         $this->assertArrayHasKey('keys', $response['body']);
-        $this->assertArrayHasKey('tasks', $response['body']);
 
         $projectId = $response['body']['$id'];
 
