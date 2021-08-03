@@ -67,13 +67,13 @@ $response = $orchestration->list(['label' => 'appwrite-type=function']);
 
 $list = [];
 
-array_map(function($value) use (&$list) {
+foreach ($response as &$value) {
     $list[$value->getName()] = $value;
-}, $response);
+}
 
 $executionEnd = \microtime(true);
 
-Console::info(count($list)." functions listed in " . ($executionEnd - $executionStart) . " seconds");
+Console::info(count($list).' functions listed in ' . ($executionEnd - $executionStart) . ' seconds');
 
 /**
  * 1. Get event args - DONE
@@ -383,29 +383,29 @@ class FunctionsV1 extends Worker
             $id = $orchestration->run(
                 $runtime['image'],
                 $container,
-                "",
-                array(
-                    'tail',
+                '',
+                ['tail',
                     '-f',
                     '/dev/null'
-                ),
-                "/usr/local/src",
-                array(),
+                ],
+                '/usr/local/src',
+                [],
                 $vars,
                 $tagPathTargetDir,
-                array(
-                    "appwrite-type" => "function",
-                    "appwrite-created" => "{$executionTime}"
-                ));
+                [
+                    'appwrite-type' => 'function',
+                    'appwrite-created' => strval($executionTime)
+                ]);
 
             $tarStdout = '';
             $tarStderr = '';
 
             $untarSuccess = $orchestration->execute($container, 
-                array(
+                [
                     'sh',
                     '-c',
-                    'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz'), 
+                    'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz'
+                ],
                 $tarStdout, 
                 $tarStderr,
                 $vars,
@@ -419,13 +419,13 @@ class FunctionsV1 extends Worker
 
             $list[$container] = new Container($container, 
                 $id, 
-                "Up", 
-                array(
+                'Up', 
+                [
                     'appwrite-type' => 'function',
-                    'appwrite-created' => "{$executionTime}"
-                ));
+                    'appwrite-created' => strval($executionTime),
+                ]);
 
-            Console::info("Function created in " . ($executionEnd - $executionStart) . " seconds");
+            Console::info('Function created in ' . ($executionEnd - $executionStart) . ' seconds');
         }
         else {
             Console::info('Container is ready to run');
@@ -448,7 +448,7 @@ class FunctionsV1 extends Worker
         $executionTime = ($executionEnd - $executionStart);
         $functionStatus = $exitCode ? 'completed' : 'failed';
 
-        Console::info("Function executed in " . ($executionEnd - $executionStart) . " seconds, status: {$functionStatus} ");
+        Console::info('Function executed in ' . ($executionEnd - $executionStart) . ' seconds, status: ' . $functionStatus);
 
         Authorization::disable();
         
