@@ -24,6 +24,7 @@ $cli
         Console::success('Starting Data Migration to version '.$version);
         $db = $register->get('db', true);
         $cache = $register->get('cache', true);
+        $cache->flushAll();
 
         $consoleDB = new Database();
         $consoleDB

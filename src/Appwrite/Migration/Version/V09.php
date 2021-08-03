@@ -18,6 +18,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 
 global $register;
@@ -49,31 +50,43 @@ class V09 extends Migration
     {
         Authorization::disable();
         Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+
+        // Get a project to check if the version works with this migration.
+        if (!str_starts_with($this->oldConsoleDB->getCollectionFirst([
+            'filters' => [
+                '$collection=' . OldDatabase::SYSTEM_COLLECTION_PROJECTS
+            ]
+        ])->getAttribute('version'), '0.9.')) {
+            throw new Exception("Can only migrate from version 0.9.x to 0.10.x");
+        }
+
         \Co\run(function () {
             $oldProject = $this->project;
 
             $this->dbInternal->setNamespace('project_' . $oldProject->getId() . '_internal');
             $this->dbExternal->setNamespace('project_' . $oldProject->getId() . '_external');
 
+            /**
+             * Create internal/external structure for projects and skip the console project.
+             */
             if ($oldProject->getId() !== 'console') {
-                // Migrate project document
                 $project = $this->dbConsole->getDocument('projects', $oldProject->getId());
 
                 if ($project->isEmpty()) {
                     Console::log('Migrating project: ' . $oldProject->getAttribute('name') . ' (' . $oldProject->getId() . ')');
 
-                    $newProject = new Document($oldProject->getArrayCopy());
-                    $newProject = $this->migratePermissions($newProject);
+                    $newProject = $this->fixDocument($oldProject);
+                    $newProject->setAttribute('version', '0.10.0');
                     $project = $this->dbConsole->createDocument('projects', $newProject);
                 }
 
                 if (!$this->dbInternal->exists()) {
-                    $this->dbInternal->create(); // Create internal DB structure if not exists
+                    $this->dbInternal->create(); // Create internal DB structure
                     Console::log('Created internal tables for : ' . $project->getAttribute('name') . ' (' . $project->getId() . ')');
                 }
 
                 if (!$this->dbExternal->exists()) {
-                    $this->dbExternal->create(); // Create external DB structure if not exists
+                    $this->dbExternal->create(); // Create external DB structure
                     Console::log('Created external tables for : ' . $project->getAttribute('name') . ' (' . $project->getId() . ')');
                 }
 
@@ -89,7 +102,9 @@ class V09 extends Migration
                     Console::log('Created abuse tables for : ' . $project->getAttribute('name') . ' (' . $project->getId() . ')');
                 }
 
-                // Create collections for Project
+                /**
+                 * Create internal collections for Project
+                 */
                 foreach ($this->newCollections as $key => $collection) {
                     if (!$this->dbInternal->getCollection($key)->isEmpty()) return; // Skip if project collection already exists
 
@@ -124,7 +139,9 @@ class V09 extends Migration
                 $sum = $this->limit;
                 $offset = 0;
 
-                // Migrate collections for Database
+                /**
+                 * Migrate external collections for Project
+                 */
                 while ($sum >= $this->limit) {
                     $databaseCollections = $this->oldProjectDB->getCollection([
                         'limit' => $this->limit,
@@ -137,6 +154,7 @@ class V09 extends Migration
 
                     $sum = \count($databaseCollections);
                     Console::log('Migrating Collections: ' . $offset . ' / ' . $this->oldProjectDB->getSum());
+
                     foreach ($databaseCollections as $oldCollection) {
                         go(function () use ($oldCollection) {
                             $id = $oldCollection->getId();
@@ -144,24 +162,41 @@ class V09 extends Migration
                             $name = $oldCollection->getAttribute('name');
                             $newCollection = $this->dbExternal->getCollection($id);
 
-                            $name .= '.'.$id; // TODO: make name unique only when necessary
-
-                            // Create collection if not exists
                             if ($newCollection->isEmpty()) {
                                 $collection = $this->dbExternal->createCollection($id);
+                                /**
+                                 * Migrate permissions
+                                 */
+                                $read = $this->migrateWildcardPermissions($permissions['read'] ?? []);
+                                $write = $this->migrateWildcardPermissions($permissions['write'] ?? []);
+
+                                /**
+                                 * Suffix collection name with a subsequent number to make it unique if possible.
+                                 */
+                                $suffix = 1;
+                                while ($this->dbExternal->findFirst(Database::COLLECTIONS, [
+                                    new Query('name', Query::TYPE_EQUAL, [$name])
+                                ])) {
+                                    $name .= ' - ' . $suffix++;
+                                }
+
                                 $collection->setAttribute('name', $name);
-                                $collection->setAttribute('$read', $permissions['read'] ?? []);
-                                $collection->setAttribute('$write', $permissions['write'] ?? []);
+                                $collection->setAttribute('$read', $read);
+                                $collection->setAttribute('$write', $write);
+
+
                                 $this->dbExternal->updateDocument(Database::COLLECTIONS, $id, $collection);
+                            } else {
+                                Console::warning('Skipped Collection ' . $newCollection->getId() . ' from ' . $newCollection->getCollection());
                             }
+
                             // Migrate collection rules to attributes
                             $attributes = $this->migrateCollectionAttributes($oldCollection);
 
                             foreach ($attributes as $attribute) {
-                                if (array_key_exists($attribute['$id'], $newCollection->getAttributes())){
-                                    var_dump($attribute['$id'].' exists');
-                                    return;
-                                } // Skip if attribute already exists
+                                if (array_key_exists($attribute['$id'], $newCollection->getAttributes())) {
+                                    return; // Skip if attribute already exists
+                                }
 
                                 $success = $this->dbExternal->createAttribute(
                                     $attribute['$collection'],
@@ -178,10 +213,13 @@ class V09 extends Migration
                                 if (!$success) {
                                     throw new Exception("Couldn't create create attribute '{$attribute['$id']}' for collection '{$name}'");
                                 } else {
-                                    Console::log('Created '.$attribute['$id'].' attribute in collection: ' . $name);
+                                    Console::log('Created ' . $attribute['$id'] . ' attribute in collection: ' . $name);
                                 }
                             }
 
+                            /**
+                             * Migrate all external documents
+                             */
                             $sumDocs = $this->limit;
                             $offsetDocs = 0;
                             while ($sumDocs >= $this->limit) {
@@ -202,7 +240,7 @@ class V09 extends Migration
                                         }
                                         foreach ($document as $key => $attr) {
                                             if ($document->getAttribute($key) instanceof OldDocument) {
-                                                $document[$key] = json_encode($attr->getArrayCopy());
+                                                $document[$key] = json_encode($this->fixDocument($attr)->getArrayCopy());
                                             }
                                             if (is_numeric($attr)) {
                                                 $document[$key] = floatval($attr); // Convert any numeric to float
@@ -210,7 +248,7 @@ class V09 extends Migration
                                             if (\is_array($attr)) {
                                                 foreach ($attr as $index => $child) {
                                                     if ($document->getAttribute($key)[$index] instanceof OldDocument) {
-                                                        $document[$key][$index] = json_encode($child->getArrayCopy());
+                                                        $document[$key][$index] = json_encode($this->fixDocument($child)->getArrayCopy());
                                                     }
                                                     if (is_numeric($attr)) {
                                                         $document[$key][$index] = floatval($child); // Convert any numeric to float
@@ -291,7 +329,6 @@ class V09 extends Migration
                 $offset += $this->limit;
             }
             Console::log('Migrated ' . $sum . ' Documents.');
-
         });
     }
 
@@ -300,18 +337,52 @@ class V09 extends Migration
         $document = new Document($oldDocument->getArrayCopy());
         $document = $this->migratePermissions($document);
 
+        if (array_key_exists($document->getCollection(), $this->oldCollections)) {
+            foreach ($this->newCollections[$document->getCollection()]['attributes'] as $attr) {
+                if (
+                    (!$attr['array'] ||
+                        ($attr['array'] && array_key_exists('filter', $attr)
+                            && in_array('json', $attr['filter'])))
+                    && empty($document->getAttribute($attr['$id'], null))
+                ) {
+                    $document->setAttribute($attr['$id'], $attr['default'] ?? null);
+                }
+            }
+        }
+
         switch ($document->getAttribute('$collection')) {
             case OldDatabase::SYSTEM_COLLECTION_USERS:
                 /**
                  * Remove deprecated user status 0 and replace with boolean.
                  */
-                if ($document->getAttribute('status') === 0 || $document->getAttribute('status') === 1) {
-                    $document->setAttribute('status', true);
-                }
                 if ($document->getAttribute('status') === 2) {
                     $document->setAttribute('status', false);
+                } else {
+                    $document->setAttribute('status', true);
                 }
-                var_dump($document->getAttribute('password'));
+
+                /**
+                 * Set default values for arrays if not set.
+                 */
+                if (empty($document->getAttribute('prefs', []))) {
+                    $document->setAttribute('prefs', []);
+                }
+                if (empty($document->getAttribute('sessions', []))) {
+                    $document->setAttribute('sessions', []);
+                }
+                if (empty($document->getAttribute('tokens', []))) {
+                    $document->setAttribute('tokens', []);
+                }
+                if (empty($document->getAttribute('memberships', []))) {
+                    $document->setAttribute('memberships', []);
+                }
+
+                /**
+                 * Replace user:{self} with user:USER_ID
+                 */
+                $write = $document->getWrite();
+                $document->setAttribute('$write', str_replace('user:{self}', "user:{$document->getId()}", $write));
+
                 break;
             case OldDatabase::SYSTEM_COLLECTION_FILES:
                 if (!empty($document->getAttribute('fileOpenSSLVersion', null))) {
@@ -342,13 +413,13 @@ class V09 extends Migration
         // Convert nested Documents to JSON strings
         foreach ($document as &$attr) {
             if ($attr instanceof OldDocument) {
-                $attr = json_encode($attr->getArrayCopy());
+                $attr = json_encode($this->fixDocument($attr)->getArrayCopy());
             }
 
             if (\is_array($attr)) {
                 foreach ($attr as &$child) {
                     if ($child instanceof OldDocument) {
-                        $child = json_encode($child->getArrayCopy());
+                        $child = json_encode($this->fixDocument($child)->getArrayCopy());
                     }
                 }
             }
@@ -362,12 +433,22 @@ class V09 extends Migration
         // Migrate $permissions to independent $read,$write
         if ($document->isSet('$permissions')) {
             $permissions = $document->getAttribute('$permissions', []);
-            $document->setAttribute('$read', $permissions['read'] ?? []);
-            $document->setAttribute('$write', $permissions['write'] ?? []);
+            $read = $this->migrateWildcardPermissions($permissions['read'] ?? []);
+            $write = $this->migrateWildcardPermissions($permissions['write'] ?? []);
+            $document->setAttribute('$read', $read);
+            $document->setAttribute('$write', $write);
             $document->removeAttribute('$permissions');
         }
 
         return $document;
+    }
+
+    protected function migrateWildcardPermissions(array $permissions): array
+    {
+        return array_map(function ($permission) {
+            if ($permission === '*') return 'role:all';
+            return $permission;
+        }, $permissions);
     }
 
     protected function migrateCollectionAttributes(OldDocument $collection): array
@@ -376,7 +457,6 @@ class V09 extends Migration
         foreach ($collection->getAttribute('rules', []) as $key => $value) {
             $collectionId = $collection->getId();
             $id = $value['key'];
-            $size = 65_535; // Max size of text in MariaDB
             $array = $value['array'] ?? false;
             $required = $value['required'] ?? false;
             $default = $value['default'] ?? null;
@@ -395,6 +475,8 @@ class V09 extends Migration
                 OldDatabase::SYSTEM_VAR_TYPE_BOOLEAN => Database::VAR_BOOLEAN,
                 default => Database::VAR_STRING
             };
+
+            $size = $type === Database::VAR_STRING ? 65_535 : 0; // Max size of text in MariaDB
 
             $attributes[$key] = [
                 '$collection' => $collectionId,
