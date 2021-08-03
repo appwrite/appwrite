@@ -51,7 +51,9 @@ class V09 extends Migration
         Authorization::disable();
         Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
-        // Get a project to check if the version works with this migration.
+        /**
+         * Get a project to check if the version works with this migration.
+         */
         if (!str_starts_with($this->oldConsoleDB->getCollectionFirst([
             'filters' => [
                 '$collection=' . OldDatabase::SYSTEM_COLLECTION_PROJECTS
@@ -207,7 +209,7 @@ class V09 extends Migration
                             /**
                              * Migrate collection rules to attributes
                              */
-                            $attributes = $this->migrateCollectionAttributes($oldCollection);
+                            $attributes = $this->getCollectionAttributes($oldCollection);
 
                             foreach ($attributes as $attribute) {
                                 if (array_key_exists($attribute['$id'], $newCollection->getAttributes())) {
@@ -449,11 +451,13 @@ class V09 extends Migration
         return $document;
     }
 
+    /**
+     * Migrates $permissions to independent $read and $write.
+     * @param Document $document 
+     * @return Document 
+     */
     protected function migratePermissions(Document $document): Document
     {
-        /**
-         * Migrate $permissions to independent $read,$write
-         */
         if ($document->isSet('$permissions')) {
             $permissions = $document->getAttribute('$permissions', []);
             $read = $this->migrateWildcardPermissions($permissions['read'] ?? []);
@@ -466,6 +470,11 @@ class V09 extends Migration
         return $document;
     }
 
+    /**
+     * Takes a permissions array and replaces wildcard * with role:all.
+     * @param array $permissions 
+     * @return array 
+     */
     protected function migrateWildcardPermissions(array $permissions): array
     {
         return array_map(function ($permission) {
@@ -474,7 +483,12 @@ class V09 extends Migration
         }, $permissions);
     }
 
-    protected function migrateCollectionAttributes(OldDocument $collection): array
+    /**
+     * Get new collection attributes from old collection rules.
+     * @param OldDocument $collection 
+     * @return array 
+     */
+    protected function getCollectionAttributes(OldDocument $collection): array
     {
         $attributes = [];
         foreach ($collection->getAttribute('rules', []) as $key => $value) {
