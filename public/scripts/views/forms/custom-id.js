@@ -97,13 +97,13 @@
         button.className = idType == "custom" ? "icon-shuffle copy" : "icon-edit copy";
       }
 
-      const sync = function (event) {
+      const syncEditorWithID = function (event) {
         if (element.value !== 'unique()') {
           writer.value = element.value;
         }
       }
 
-      const syncE = function (event) {
+      const syncIDWithWriter = function (event) {
         element.value = writer.value;
       }
 
