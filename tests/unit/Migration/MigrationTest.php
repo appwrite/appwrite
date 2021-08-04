@@ -5,6 +5,7 @@ namespace Appwrite\Tests;
 use Appwrite\Database\Document;
 use Appwrite\Migration\Migration;
 use PHPUnit\Framework\TestCase;
+use Redis;
 use ReflectionMethod;
 
 abstract class MigrationTest extends TestCase

@@ -32,15 +32,17 @@ class V09 extends Migration
     protected array $oldCollections;
     protected array $newCollections;
 
-    public function __construct(PDO $db, Redis $cache)
+    public function __construct(PDO $db, Redis $cache = null)
     {
         parent::__construct($db, $cache);
 
-        $cacheAdapter = new Cache(new RedisCache($this->cache));
-        $this->dbInternal = new Database(new MariaDB($this->db), $cacheAdapter);
-        $this->dbExternal = new Database(new MariaDB($this->db), $cacheAdapter);
-        $this->dbConsole = new Database(new MariaDB($this->db), $cacheAdapter);
-        $this->dbConsole->setNamespace('project_console_internal');
+        if(!is_null($cache)) {
+            $cacheAdapter = new Cache(new RedisCache($this->cache));
+            $this->dbInternal = new Database(new MariaDB($this->db), $cacheAdapter);
+            $this->dbExternal = new Database(new MariaDB($this->db), $cacheAdapter);
+            $this->dbConsole = new Database(new MariaDB($this->db), $cacheAdapter);
+            $this->dbConsole->setNamespace('project_console_internal');
+        }
 
         $this->newCollections = Config::getParam('collections2', []);
         $this->oldCollections = Config::getParam('collections', []);

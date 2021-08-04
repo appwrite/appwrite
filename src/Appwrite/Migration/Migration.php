@@ -60,10 +60,12 @@ abstract class Migration
      * 
      * @param PDO $pdo
      */
-    public function __construct(PDO $db, Redis $cache)
+    public function __construct(PDO $db, Redis $cache = null)
     {
         $this->db = $db;
-        $this->cache = $cache;
+        if(!is_null($cache)) {
+            $this->cache = $cache;
+        }
     }
 
     /**
