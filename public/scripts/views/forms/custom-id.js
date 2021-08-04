@@ -6,28 +6,26 @@
   window.ls.container.get("view").add({
     selector: "data-custom-id",
     controller: function (element, sdk, console) {
-      var prevData = "";
+      let prevData = "";
       let idType = element.dataset["id-type"];
 
-      var div = window.document.createElement("div");
-
+      const div = window.document.createElement("div");
       div.className = "input-copy";
 
-      var button = window.document.createElement("i");
-
+      const button = window.document.createElement("i");
       button.type = "button";
       button.style.cursor = "pointer";
 
-      var writer = document.createElement("input");
+      const writer = document.createElement("input");
       writer.type = "text";
       writer.className = "";
       writer.setAttribute("maxlength", element.getAttribute("maxlength"));
-      var placeholder = element.getAttribute("placeholder");
+      const placeholder = element.getAttribute("placeholder");
       if (placeholder) {
         writer.setAttribute("placeholder", placeholder);
       }
 
-      var info = window.document.createElement("div");
+      const info = document.createElement("div");
       info.className = "text-fade text-size-xs margin-top-negative-small margin-bottom";
 
       div.appendChild(writer);
@@ -35,7 +33,7 @@
       element.parentNode.insertBefore(div, element);
       element.parentNode.insertBefore(info, div.nextSibling);
 
-      var switchType = function (event) {
+      const switchType = function (event) {
         if (idType == "custom") {
           idType = "auto";
           setIdType(idType);
@@ -45,62 +43,45 @@
         }
       }
 
-      var validate = function (event) {
-        var service = element.dataset["validator"];
-        service = service.split('.');
+      const validate = function (event) {
+        const [service, method] = element.dataset["validator"].split('.');
         const value = event.target.value;
         if (value.length < 1) {
           event.target.setCustomValidity("ID is required");
         } else {
-          if (service[0] == 'projects') {
-            if (service[1] == 'getPlatform') {
-              var projectId = element.form.elements.namedItem("projectId").value;
-              console[service[0]][service[1]](projectId, value).then(function (res) {
-                if (res.$id == value) {
-                  event.target.setCustomValidity("ID already exists");
-                } else {
-                  event.target.setCustomValidity("");
-                }
-              }, function (e) {
-                event.target.setCustomValidity("");
-              });
-            } else {
-              console[service[0]][service[1]](value).then(function (res) {
-                if (res.$id == value) {
-                  event.target.setCustomValidity("ID already exists");
-                } else {
-                  event.target.setCustomValidity("");
-                }
-              }, function (e) {
-                event.target.setCustomValidity("");
-              });
-            }
-          } else if (service[0]=='teams' && service[1] == 'getMembership') {
-            var teamId = element.form.elements.namedItem("teamId").value;
-              sdk[service[0]][service[1]](teamId, value).then(function (res) {
-                if (res.$id == value) {
-                  event.target.setCustomValidity("ID already exists");
-                } else {
-                  event.target.setCustomValidity("");
-                }
-              }, function (e) {
-                event.target.setCustomValidity("");
-              });
-          } else {
-            sdk[service[0]][service[1]](value).then(function (res) {
-              if (res.$id == value) {
-                event.target.setCustomValidity("ID already exists");
+          switch(service) {
+            case 'projects':
+              if (method == 'getPlatform') {
+                const projectId = element.form.elements.namedItem("projectId").value;
+                setValidity(console[service][method](projectId, value), event.target);
               } else {
-                event.target.setCustomValidity("");
+                setValidity(console[service][method](value), event.target);
               }
-            }, function (e) {
-              event.target.setCustomValidity("");
-            });
+              break;
+            case 'teams':
+              if (method == 'getMembership') {
+                const teamId = element.form.elements.namedItem("teamId").value;
+                setValidity(sdk[service][method](teamId, value), event.target);
+              } else {
+                setValidity(sdk[service][method](teamId, value), event.target);
+              }
+              break;
+            default:
+              setValidity(sdk[service][method](value), event.target);
           }
         }
       }
 
-      var setIdType = function (idType) {
+      const setValidity = async function (promise, target) {
+        try {
+          await promise;
+          target.setCustomValidity("ID already exists");
+        } catch (e) {
+          target.setCustomValidity("");
+        }
+      }
+
+      const setIdType = function (idType) {
         element.setAttribute("data-id-type", idType);
         if (idType == "custom") {
           info.innerHTML = "Allowed Characters A-Z, a-z, 0-9, and non-leading underscore";
@@ -119,17 +100,17 @@
         button.className = idType == "custom" ? "icon-cog copy" : "icon-edit copy";
       }
 
-      var sync = function (event) {
+      const sync = function (event) {
         if (element.value !== 'unique()') {
           writer.value = element.value;
         }
       }
 
-      var syncE = function (event) {
+      const syncE = function (event) {
         element.value = writer.value;
       }
 
-      var keypress = function (e) {
+      const keypress = function (e) {
         // which key is pressed, keyPressed = e.which || e.keyCode; 
         const key = e.which || e.keyCode;
         const ZERO = 48;
