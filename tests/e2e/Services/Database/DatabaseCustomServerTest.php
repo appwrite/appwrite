@@ -307,6 +307,54 @@ class DatabaseCustomServerTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 404);
     }
 
+    /**
+     * @depends testDeleteCollection
+     */
+    public function testAttributeCountLimit()
+    {
+        $collection = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'name' => 'attributeCountLimit',
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+            'permission' => 'document',
+        ]);
+
+        $collectionId = $collection['body']['$id'];
+
+        // load the collection up to the limit
+        for ($i=0; $i < 1012; $i++) {
+            $attribute = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'attributeId' => "attribute{$i}",
+                'required' => false,
+            ]);
+
+            $this->assertEquals(201, $attribute['headers']['status-code']);
+        }
+
+        sleep(20);
+
+        $tooMany = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => "tooMany",
+            'required' => false,
+        ]);
+
+        $this->assertEquals(400, $tooMany['headers']['status-code']);
+        $this->assertEquals('Column limit reached. Cannot create new attribute.', $tooMany['body']['message']);
+    }
+
+
     public function testIndexLimitException()
     {
         $collection = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
