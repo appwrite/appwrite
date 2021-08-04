@@ -89,6 +89,8 @@ $attributesCallback = function ($collectionId, $attribute, $response, $dbForInte
         ]));
     } catch (DuplicateException $th) {
         throw new Exception('Attribute already exists', 409);
+    } catch (LimitException $e) {
+        throw new Exception($e->getMessage(), 400);
     }
 
     $dbForInternal->purgeDocument('collections', $collectionId);
