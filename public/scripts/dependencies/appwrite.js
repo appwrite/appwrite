@@ -1064,12 +1064,232 @@
                     }, payload);
                 }),
                 /**
-                 * Create Attribute
+                 * Create Boolean Attribute
                  *
                  *
                  * @param {string} collectionId
-                 * @param {string} id
-                 * @param {string} type
+                 * @param {string} attributeId
+                 * @param {boolean} required
+                 * @param {boolean} xdefault
+                 * @param {boolean} array
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createBooleanAttribute: (collectionId, attributeId, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof attributeId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "attributeId"');
+                    }
+                    if (typeof required === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "required"');
+                    }
+                    let path = '/database/collections/{collectionId}/attributes/boolean'.replace('{collectionId}', collectionId);
+                    let payload = {};
+                    if (typeof attributeId !== 'undefined') {
+                        payload['attributeId'] = attributeId;
+                    }
+                    if (typeof required !== 'undefined') {
+                        payload['required'] = required;
+                    }
+                    if (typeof xdefault !== 'undefined') {
+                        payload['xdefault'] = xdefault;
+                    }
+                    if (typeof array !== 'undefined') {
+                        payload['array'] = array;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Email Attribute
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @param {string} attributeId
+                 * @param {boolean} required
+                 * @param {string} xdefault
+                 * @param {boolean} array
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createEmailAttribute: (collectionId, attributeId, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof attributeId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "attributeId"');
+                    }
+                    if (typeof required === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "required"');
+                    }
+                    let path = '/database/collections/{collectionId}/attributes/email'.replace('{collectionId}', collectionId);
+                    let payload = {};
+                    if (typeof attributeId !== 'undefined') {
+                        payload['attributeId'] = attributeId;
+                    }
+                    if (typeof required !== 'undefined') {
+                        payload['required'] = required;
+                    }
+                    if (typeof xdefault !== 'undefined') {
+                        payload['xdefault'] = xdefault;
+                    }
+                    if (typeof array !== 'undefined') {
+                        payload['array'] = array;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Float Attribute
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @param {string} attributeId
+                 * @param {boolean} required
+                 * @param {string} min
+                 * @param {string} max
+                 * @param {string} xdefault
+                 * @param {boolean} array
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createFloatAttribute: (collectionId, attributeId, required, min, max, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof attributeId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "attributeId"');
+                    }
+                    if (typeof required === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "required"');
+                    }
+                    let path = '/database/collections/{collectionId}/attributes/float'.replace('{collectionId}', collectionId);
+                    let payload = {};
+                    if (typeof attributeId !== 'undefined') {
+                        payload['attributeId'] = attributeId;
+                    }
+                    if (typeof required !== 'undefined') {
+                        payload['required'] = required;
+                    }
+                    if (typeof min !== 'undefined') {
+                        payload['min'] = min;
+                    }
+                    if (typeof max !== 'undefined') {
+                        payload['max'] = max;
+                    }
+                    if (typeof xdefault !== 'undefined') {
+                        payload['xdefault'] = xdefault;
+                    }
+                    if (typeof array !== 'undefined') {
+                        payload['array'] = array;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Integer Attribute
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @param {string} attributeId
+                 * @param {boolean} required
+                 * @param {number} min
+                 * @param {number} max
+                 * @param {number} xdefault
+                 * @param {boolean} array
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createIntegerAttribute: (collectionId, attributeId, required, min, max, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof attributeId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "attributeId"');
+                    }
+                    if (typeof required === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "required"');
+                    }
+                    let path = '/database/collections/{collectionId}/attributes/integer'.replace('{collectionId}', collectionId);
+                    let payload = {};
+                    if (typeof attributeId !== 'undefined') {
+                        payload['attributeId'] = attributeId;
+                    }
+                    if (typeof required !== 'undefined') {
+                        payload['required'] = required;
+                    }
+                    if (typeof min !== 'undefined') {
+                        payload['min'] = min;
+                    }
+                    if (typeof max !== 'undefined') {
+                        payload['max'] = max;
+                    }
+                    if (typeof xdefault !== 'undefined') {
+                        payload['xdefault'] = xdefault;
+                    }
+                    if (typeof array !== 'undefined') {
+                        payload['array'] = array;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create IP Address Attribute
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @param {string} attributeId
+                 * @param {boolean} required
+                 * @param {string} xdefault
+                 * @param {boolean} array
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createIpAttribute: (collectionId, attributeId, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof attributeId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "attributeId"');
+                    }
+                    if (typeof required === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "required"');
+                    }
+                    let path = '/database/collections/{collectionId}/attributes/ip'.replace('{collectionId}', collectionId);
+                    let payload = {};
+                    if (typeof attributeId !== 'undefined') {
+                        payload['attributeId'] = attributeId;
+                    }
+                    if (typeof required !== 'undefined') {
+                        payload['required'] = required;
+                    }
+                    if (typeof xdefault !== 'undefined') {
+                        payload['xdefault'] = xdefault;
+                    }
+                    if (typeof array !== 'undefined') {
+                        payload['array'] = array;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create String Attribute
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @param {string} attributeId
                  * @param {number} size
                  * @param {boolean} required
                  * @param {string} xdefault
@@ -1077,15 +1297,12 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createAttribute: (collectionId, id, type, size, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                createStringAttribute: (collectionId, attributeId, size, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
-                    if (typeof id === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "id"');
-                    }
-                    if (typeof type === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "type"');
+                    if (typeof attributeId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "attributeId"');
                     }
                     if (typeof size === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "size"');
@@ -1093,13 +1310,58 @@
                     if (typeof required === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "required"');
                     }
-                    let path = '/database/collections/{collectionId}/attributes'.replace('{collectionId}', collectionId);
+                    let path = '/database/collections/{collectionId}/attributes/string'.replace('{collectionId}', collectionId);
                     let payload = {};
-                    if (typeof id !== 'undefined') {
-                        payload['id'] = id;
+                    if (typeof attributeId !== 'undefined') {
+                        payload['attributeId'] = attributeId;
                     }
-                    if (typeof type !== 'undefined') {
-                        payload['type'] = type;
+                    if (typeof size !== 'undefined') {
+                        payload['size'] = size;
+                    }
+                    if (typeof required !== 'undefined') {
+                        payload['required'] = required;
+                    }
+                    if (typeof xdefault !== 'undefined') {
+                        payload['xdefault'] = xdefault;
+                    }
+                    if (typeof array !== 'undefined') {
+                        payload['array'] = array;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create IP Address Attribute
+                 *
+                 *
+                 * @param {string} collectionId
+                 * @param {string} attributeId
+                 * @param {number} size
+                 * @param {boolean} required
+                 * @param {string} xdefault
+                 * @param {boolean} array
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createUrlAttribute: (collectionId, attributeId, size, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof attributeId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "attributeId"');
+                    }
+                    if (typeof size === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "size"');
+                    }
+                    if (typeof required === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "required"');
+                    }
+                    let path = '/database/collections/{collectionId}/attributes/url'.replace('{collectionId}', collectionId);
+                    let payload = {};
+                    if (typeof attributeId !== 'undefined') {
+                        payload['attributeId'] = attributeId;
                     }
                     if (typeof size !== 'undefined') {
                         payload['size'] = size;
@@ -3711,6 +3973,29 @@
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Get Team Membership
+                 *
+                 *
+                 * @param {string} teamId
+                 * @param {string} membershipId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getMembership: (teamId, membershipId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof teamId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "teamId"');
+                    }
+                    if (typeof membershipId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "membershipId"');
+                    }
+                    let path = '/teams/{teamId}/memberships/{membershipId}'.replace('{teamId}', teamId).replace('{membershipId}', membershipId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
                         'content-type': 'application/json',
                     }, payload);
                 }),

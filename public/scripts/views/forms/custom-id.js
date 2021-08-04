@@ -75,6 +75,17 @@
                 event.target.setCustomValidity("");
               });
             }
+          } else if (service[0]=='teams' && service[1] == 'getMembership') {
+            var teamId = element.form.elements.namedItem("teamId").value;
+              sdk[service[0]][service[1]](teamId, value).then(function (res) {
+                if (res.$id == value) {
+                  event.target.setCustomValidity("ID already exists");
+                } else {
+                  event.target.setCustomValidity("");
+                }
+              }, function (e) {
+                event.target.setCustomValidity("");
+              });
           } else {
             sdk[service[0]][service[1]](value).then(function (res) {
               if (res.$id == value) {
@@ -90,9 +101,9 @@
       }
 
       var setIdType = function (idType) {
+        element.setAttribute("data-id-type", idType);
         if (idType == "custom") {
           info.innerHTML = "Allowed Characters A-Z, a-z, 0-9, and non-leading underscore";
-          element.setAttribute('data-id-type', idType);
           writer.value = prevData;
           writer.disabled = false;
           element.value = prevData;
@@ -100,7 +111,6 @@
           writer.addEventListener('blur', validate);
         } else {
           info.innerHTML = "Appwrite will generate a unique ID";
-          element.setAttribute('data-id-type', idType);
           prevData = writer.value;
           writer.disabled = true;
           writer.value = 'auto-generated';

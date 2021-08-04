@@ -106,13 +106,59 @@ if(typeof read!=='undefined'){payload['read']=read;}
 if(typeof write!=='undefined'){payload['write']=write;}
 const uri=new URL(this.config.endpoint+path);return yield this.call('put',uri,{'content-type':'application/json',},payload);}),deleteCollection:(collectionId)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
 let path='/database/collections/{collectionId}'.replace('{collectionId}',collectionId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);}),listAttributes:(collectionId)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
-let path='/database/collections/{collectionId}/attributes'.replace('{collectionId}',collectionId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),createAttribute:(collectionId,id,type,size,required,xdefault,array)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
-if(typeof id==='undefined'){throw new AppwriteException('Missing required parameter: "id"');}
-if(typeof type==='undefined'){throw new AppwriteException('Missing required parameter: "type"');}
+let path='/database/collections/{collectionId}/attributes'.replace('{collectionId}',collectionId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),createBooleanAttribute:(collectionId,attributeId,required,xdefault,array)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
+if(typeof attributeId==='undefined'){throw new AppwriteException('Missing required parameter: "attributeId"');}
+if(typeof required==='undefined'){throw new AppwriteException('Missing required parameter: "required"');}
+let path='/database/collections/{collectionId}/attributes/boolean'.replace('{collectionId}',collectionId);let payload={};if(typeof attributeId!=='undefined'){payload['attributeId']=attributeId;}
+if(typeof required!=='undefined'){payload['required']=required;}
+if(typeof xdefault!=='undefined'){payload['xdefault']=xdefault;}
+if(typeof array!=='undefined'){payload['array']=array;}
+const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),createEmailAttribute:(collectionId,attributeId,required,xdefault,array)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
+if(typeof attributeId==='undefined'){throw new AppwriteException('Missing required parameter: "attributeId"');}
+if(typeof required==='undefined'){throw new AppwriteException('Missing required parameter: "required"');}
+let path='/database/collections/{collectionId}/attributes/email'.replace('{collectionId}',collectionId);let payload={};if(typeof attributeId!=='undefined'){payload['attributeId']=attributeId;}
+if(typeof required!=='undefined'){payload['required']=required;}
+if(typeof xdefault!=='undefined'){payload['xdefault']=xdefault;}
+if(typeof array!=='undefined'){payload['array']=array;}
+const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),createFloatAttribute:(collectionId,attributeId,required,min,max,xdefault,array)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
+if(typeof attributeId==='undefined'){throw new AppwriteException('Missing required parameter: "attributeId"');}
+if(typeof required==='undefined'){throw new AppwriteException('Missing required parameter: "required"');}
+let path='/database/collections/{collectionId}/attributes/float'.replace('{collectionId}',collectionId);let payload={};if(typeof attributeId!=='undefined'){payload['attributeId']=attributeId;}
+if(typeof required!=='undefined'){payload['required']=required;}
+if(typeof min!=='undefined'){payload['min']=min;}
+if(typeof max!=='undefined'){payload['max']=max;}
+if(typeof xdefault!=='undefined'){payload['xdefault']=xdefault;}
+if(typeof array!=='undefined'){payload['array']=array;}
+const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),createIntegerAttribute:(collectionId,attributeId,required,min,max,xdefault,array)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
+if(typeof attributeId==='undefined'){throw new AppwriteException('Missing required parameter: "attributeId"');}
+if(typeof required==='undefined'){throw new AppwriteException('Missing required parameter: "required"');}
+let path='/database/collections/{collectionId}/attributes/integer'.replace('{collectionId}',collectionId);let payload={};if(typeof attributeId!=='undefined'){payload['attributeId']=attributeId;}
+if(typeof required!=='undefined'){payload['required']=required;}
+if(typeof min!=='undefined'){payload['min']=min;}
+if(typeof max!=='undefined'){payload['max']=max;}
+if(typeof xdefault!=='undefined'){payload['xdefault']=xdefault;}
+if(typeof array!=='undefined'){payload['array']=array;}
+const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),createIpAttribute:(collectionId,attributeId,required,xdefault,array)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
+if(typeof attributeId==='undefined'){throw new AppwriteException('Missing required parameter: "attributeId"');}
+if(typeof required==='undefined'){throw new AppwriteException('Missing required parameter: "required"');}
+let path='/database/collections/{collectionId}/attributes/ip'.replace('{collectionId}',collectionId);let payload={};if(typeof attributeId!=='undefined'){payload['attributeId']=attributeId;}
+if(typeof required!=='undefined'){payload['required']=required;}
+if(typeof xdefault!=='undefined'){payload['xdefault']=xdefault;}
+if(typeof array!=='undefined'){payload['array']=array;}
+const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),createStringAttribute:(collectionId,attributeId,size,required,xdefault,array)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
+if(typeof attributeId==='undefined'){throw new AppwriteException('Missing required parameter: "attributeId"');}
 if(typeof size==='undefined'){throw new AppwriteException('Missing required parameter: "size"');}
 if(typeof required==='undefined'){throw new AppwriteException('Missing required parameter: "required"');}
-let path='/database/collections/{collectionId}/attributes'.replace('{collectionId}',collectionId);let payload={};if(typeof id!=='undefined'){payload['id']=id;}
-if(typeof type!=='undefined'){payload['type']=type;}
+let path='/database/collections/{collectionId}/attributes/string'.replace('{collectionId}',collectionId);let payload={};if(typeof attributeId!=='undefined'){payload['attributeId']=attributeId;}
+if(typeof size!=='undefined'){payload['size']=size;}
+if(typeof required!=='undefined'){payload['required']=required;}
+if(typeof xdefault!=='undefined'){payload['xdefault']=xdefault;}
+if(typeof array!=='undefined'){payload['array']=array;}
+const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),createUrlAttribute:(collectionId,attributeId,size,required,xdefault,array)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
+if(typeof attributeId==='undefined'){throw new AppwriteException('Missing required parameter: "attributeId"');}
+if(typeof size==='undefined'){throw new AppwriteException('Missing required parameter: "size"');}
+if(typeof required==='undefined'){throw new AppwriteException('Missing required parameter: "required"');}
+let path='/database/collections/{collectionId}/attributes/url'.replace('{collectionId}',collectionId);let payload={};if(typeof attributeId!=='undefined'){payload['attributeId']=attributeId;}
 if(typeof size!=='undefined'){payload['size']=size;}
 if(typeof required!=='undefined'){payload['required']=required;}
 if(typeof xdefault!=='undefined'){payload['xdefault']=xdefault;}
@@ -413,7 +459,9 @@ if(typeof email!=='undefined'){payload['email']=email;}
 if(typeof name!=='undefined'){payload['name']=name;}
 if(typeof roles!=='undefined'){payload['roles']=roles;}
 if(typeof url!=='undefined'){payload['url']=url;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),updateMembershipRoles:(teamId,membershipId,roles)=>__awaiter(this,void 0,void 0,function*(){if(typeof teamId==='undefined'){throw new AppwriteException('Missing required parameter: "teamId"');}
+const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),getMembership:(teamId,membershipId)=>__awaiter(this,void 0,void 0,function*(){if(typeof teamId==='undefined'){throw new AppwriteException('Missing required parameter: "teamId"');}
+if(typeof membershipId==='undefined'){throw new AppwriteException('Missing required parameter: "membershipId"');}
+let path='/teams/{teamId}/memberships/{membershipId}'.replace('{teamId}',teamId).replace('{membershipId}',membershipId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),updateMembershipRoles:(teamId,membershipId,roles)=>__awaiter(this,void 0,void 0,function*(){if(typeof teamId==='undefined'){throw new AppwriteException('Missing required parameter: "teamId"');}
 if(typeof membershipId==='undefined'){throw new AppwriteException('Missing required parameter: "membershipId"');}
 if(typeof roles==='undefined'){throw new AppwriteException('Missing required parameter: "roles"');}
 let path='/teams/{teamId}/memberships/{membershipId}'.replace('{teamId}',teamId).replace('{membershipId}',membershipId);let payload={};if(typeof roles!=='undefined'){payload['roles']=roles;}
@@ -2338,8 +2386,8 @@ function syncB(){picker.value=element.value;}
 element.parentNode.insertBefore(preview,element);update();syncB();}});})(window);(function(window){"use strict";window.ls.container.get("view").add({selector:"data-forms-copy",controller:function(element,alerts,document,window){var button=window.document.createElement("i");button.type="button";button.className="icon-docs note copy";button.style.cursor="pointer";element.parentNode.insertBefore(button,element.nextSibling);var copy=function(event){let disabled=element.disabled;element.disabled=false;element.focus();element.select();document.execCommand("Copy");if(document.selection){document.selection.empty();}else if(window.getSelection){window.getSelection().removeAllRanges();}
 element.disabled=disabled;element.blur();alerts.add({text:"Copied to clipboard",class:""},3000);};button.addEventListener("click",copy);}});})(window);(function(window){"use strict";window.ls.container.get("view").add({selector:"data-custom-id",controller:function(element,sdk,console){var prevData="";let idType=element.dataset["id-type"];var div=window.document.createElement("div");div.className="input-copy";var button=window.document.createElement("i");button.type="button";button.style.cursor="pointer";var writer=document.createElement("input");writer.type="text";writer.className="";writer.setAttribute("maxlength",element.getAttribute("maxlength"));var placeholder=element.getAttribute("placeholder");if(placeholder){writer.setAttribute("placeholder",placeholder);}
 var info=window.document.createElement("div");info.className="text-fade text-size-xs margin-top-negative-small margin-bottom";div.appendChild(writer);div.appendChild(button);element.parentNode.insertBefore(div,element);element.parentNode.insertBefore(info,div.nextSibling);var switchType=function(event){if(idType=="custom"){idType="auto";setIdType(idType);}else{idType="custom";setIdType(idType);}}
-var validate=function(event){var service=element.dataset["validator"];service=service.split('.');const value=event.target.value;if(value.length<1){event.target.setCustomValidity("ID is required");}else{if(service[0]=='projects'){if(service[1]=='getPlatform'){var projectId=element.form.elements.namedItem("projectId").value;console[service[0]][service[1]](projectId,value).then(function(res){if(res.$id==value){event.target.setCustomValidity("ID already exists");}else{event.target.setCustomValidity("");}},function(e){event.target.setCustomValidity("");});}else{console[service[0]][service[1]](value).then(function(res){if(res.$id==value){event.target.setCustomValidity("ID already exists");}else{event.target.setCustomValidity("");}},function(e){event.target.setCustomValidity("");});}}else{sdk[service[0]][service[1]](value).then(function(res){if(res.$id==value){event.target.setCustomValidity("ID already exists");}else{event.target.setCustomValidity("");}},function(e){event.target.setCustomValidity("");});}}}
-var setIdType=function(idType){if(idType=="custom"){info.innerHTML="Allowed Characters A-Z, a-z, 0-9, and non-leading underscore";element.setAttribute('data-id-type',idType);writer.value=prevData;writer.disabled=false;element.value=prevData;writer.focus();writer.addEventListener('blur',validate);}else{info.innerHTML="Appwrite will generate a unique ID";element.setAttribute('data-id-type',idType);prevData=writer.value;writer.disabled=true;writer.value='auto-generated';element.value='unique()';}
+var validate=function(event){var service=element.dataset["validator"];service=service.split('.');const value=event.target.value;if(value.length<1){event.target.setCustomValidity("ID is required");}else{if(service[0]=='projects'){if(service[1]=='getPlatform'){var projectId=element.form.elements.namedItem("projectId").value;console[service[0]][service[1]](projectId,value).then(function(res){if(res.$id==value){event.target.setCustomValidity("ID already exists");}else{event.target.setCustomValidity("");}},function(e){event.target.setCustomValidity("");});}else{console[service[0]][service[1]](value).then(function(res){if(res.$id==value){event.target.setCustomValidity("ID already exists");}else{event.target.setCustomValidity("");}},function(e){event.target.setCustomValidity("");});}}else if(service[0]=='teams'&&service[1]=='getMembership'){var teamId=element.form.elements.namedItem("teamId").value;sdk[service[0]][service[1]](teamId,value).then(function(res){if(res.$id==value){event.target.setCustomValidity("ID already exists");}else{event.target.setCustomValidity("");}},function(e){event.target.setCustomValidity("");});}else{sdk[service[0]][service[1]](value).then(function(res){if(res.$id==value){event.target.setCustomValidity("ID already exists");}else{event.target.setCustomValidity("");}},function(e){event.target.setCustomValidity("");});}}}
+var setIdType=function(idType){element.setAttribute("data-id-type",idType);if(idType=="custom"){info.innerHTML="Allowed Characters A-Z, a-z, 0-9, and non-leading underscore";writer.value=prevData;writer.disabled=false;element.value=prevData;writer.focus();writer.addEventListener('blur',validate);}else{info.innerHTML="Appwrite will generate a unique ID";prevData=writer.value;writer.disabled=true;writer.value='auto-generated';element.value='unique()';}
 button.className=idType=="custom"?"icon-cog copy":"icon-edit copy";}
 var sync=function(event){if(element.value!=='unique()'){writer.value=element.value;}}
 var syncE=function(event){element.value=writer.value;}
