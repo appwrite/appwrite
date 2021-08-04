@@ -376,23 +376,23 @@ class FunctionsV1 extends Worker
             $orchestration->setMemory($memory);
             $orchestration->setSwap($swap);
 
-            \array_walk($vars, function (string &$value) {
+            foreach($vars as $key => $value) {
                 $value = strval($value);
-            });
+            }
 
             $id = $orchestration->run(
-                $runtime['image'],
-                $container,
-                '',
-                ['tail',
+                image: $runtime['image'],
+                name: $container,
+                entrypoint: '',
+                command: ['tail',
                     '-f',
                     '/dev/null'
                 ],
-                '/usr/local/src',
-                [],
-                $vars,
-                $tagPathTargetDir,
-                [
+                workdir: '/usr/local/src',
+                volumes: [],
+                vars: $vars,
+                mountFolder: $tagPathTargetDir,
+                labels: [
                     'appwrite-type' => 'function',
                     'appwrite-created' => strval($executionTime)
                 ]);
@@ -400,16 +400,17 @@ class FunctionsV1 extends Worker
             $tarStdout = '';
             $tarStderr = '';
 
-            $untarSuccess = $orchestration->execute($container, 
-                [
+            $untarSuccess = $orchestration->execute(
+                name: $container, 
+                command: [
                     'sh',
                     '-c',
                     'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz'
                 ],
-                $tarStdout, 
-                $tarStderr,
-                $vars,
-                60);
+                stdout: $tarStdout, 
+                stderr: $tarStderr,
+                vars: $vars,
+                timeout: 60);
 
             if (!$untarSuccess) {
                 throw new Exception('Error untarring code');
@@ -439,7 +440,13 @@ class FunctionsV1 extends Worker
         $exitCode = 0;
 
         try {
-            $exitCode = $orchestration->execute($container, $orchestration->parseCommandString($command), $stdout, $stderr, $vars, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
+            $exitCode = $orchestration->execute(
+                name: $container, 
+                command: $orchestration->parseCommandString($command), 
+                stdout: $stdout, 
+                stderr: $stderr, 
+                vars: $vars, 
+                timeout: $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
         } catch (TimeoutException $e) {
             $exitCode = 0;
         }
