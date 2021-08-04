@@ -38,7 +38,7 @@
         "appwrite/php-clamav": "1.1.*",
         "appwrite/php-runtimes": "0.4.*",
 
-        "utopia-php/framework": "0.16.*",
+        "utopia-php/framework": "0.17.*",
         "utopia-php/abuse": "0.6.*",
         "utopia-php/analytics": "0.2.*",
         "utopia-php/audit": "0.6.*",
@@ -62,6 +62,7 @@
         "adhocore/jwt": "1.1.2",
         "slickdeals/statsd": "3.1.0"
     },
+    "repositories": [],
     "require-dev": {
         "appwrite/sdk-generator": "0.13.0",
         "swoole/ide-helper": "4.6.7",
