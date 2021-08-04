@@ -2391,7 +2391,7 @@ break;case'teams':if(method=='getMembership'){const teamId=element.form.elements
 break;default:setValidity(sdk[service][method](value),event.target);}}}
 const setValidity=async function(promise,target){try{await promise;target.setCustomValidity("ID already exists");}catch(e){target.setCustomValidity("");}}
 const setIdType=function(idType){element.setAttribute("data-id-type",idType);if(idType=="custom"){info.innerHTML="Allowed Characters A-Z, a-z, 0-9, and non-leading underscore";writer.value=prevData;writer.disabled=false;element.value=prevData;writer.focus();writer.addEventListener('blur',validate);}else{info.innerHTML="Appwrite will generate a unique ID";prevData=writer.value;writer.disabled=true;writer.value='auto-generated';element.value='unique()';}
-button.className=idType=="custom"?"icon-cog copy":"icon-edit copy";}
+button.className=idType=="custom"?"icon-shuffle copy":"icon-edit copy";}
 const sync=function(event){if(element.value!=='unique()'){writer.value=element.value;}}
 const syncE=function(event){element.value=writer.value;}
 const keypress=function(e){const key=e.which||e.keyCode;const ZERO=48;const NINE=57;const SMALL_A=97;const SMALL_Z=122;const CAPITAL_A=65;const CAPITAL_Z=90;const UNDERSCORE=95;const isNotValidDigit=key<ZERO||key>NINE;const isNotValidSmallAlphabet=key<SMALL_A||key>SMALL_Z;const isNotValidCapitalAlphabet=key<CAPITAL_A||key>CAPITAL_Z;if(key==UNDERSCORE&&e.target.value.length==0){e.preventDefault();}

@@ -97,7 +97,7 @@
           writer.value = 'auto-generated';
           element.value = 'unique()';
         }
-        button.className = idType == "custom" ? "icon-cog copy" : "icon-edit copy";
+        button.className = idType == "custom" ? "icon-shuffle copy" : "icon-edit copy";
       }
 
       const sync = function (event) {
