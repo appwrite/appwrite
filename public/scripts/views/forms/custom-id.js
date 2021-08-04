@@ -1,8 +1,5 @@
 (function (window) {
   "use strict";
-  //note field below field to validation errors
-  //2021-07-25-17-47-59.png
-  //validation rule
   window.ls.container.get("view").add({
     selector: "data-custom-id",
     controller: function (element, sdk, console) {
