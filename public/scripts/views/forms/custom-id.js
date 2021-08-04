@@ -103,37 +103,11 @@
         }
       }
 
-      const syncIDWithWriter = function (event) {
-        element.value = writer.value;
-      }
-
-      const keypress = function (e) {
-        // which key is pressed, keyPressed = e.which || e.keyCode; 
-        const key = e.which || e.keyCode;
-        const ZERO = 48;
-        const NINE = 57;
-        const SMALL_A = 97;
-        const SMALL_Z = 122;
-        const CAPITAL_A = 65;
-        const CAPITAL_Z = 90;
-        const UNDERSCORE = 95;
-
-        const isNotValidDigit = key < ZERO || key > NINE;
-        const isNotValidSmallAlphabet = key < SMALL_A || key > SMALL_Z;
-        const isNotValidCapitalAlphabet = key < CAPITAL_A || key > CAPITAL_Z;
-
-        //Leading underscore is prevented
-        if (key == UNDERSCORE && e.target.value.length == 0) {
-          e.preventDefault();
-        }
-        if (key != UNDERSCORE && isNotValidDigit && isNotValidSmallAlphabet && isNotValidCapitalAlphabet) {
-          e.preventDefault();
-        }
-      }
-
-      sync();
+      syncEditorWithID();
       setIdType(idType);
-      writer.addEventListener("change", syncE);
+      writer.addEventListener("change", function (event) {
+        element.value = writer.value;
+      });
       writer.addEventListener('keypress', keypress);
       button.addEventListener("click", switchType);
 
