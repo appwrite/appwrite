@@ -1,6 +1,6 @@
 <?php
 $graph = $this->getParam('graph', false);
-$usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
+$usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
 ?>
 
 <div class="cover margin-bottom-small">
@@ -73,7 +73,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
                 <button class="tick margin-start-small" data-ls-if="{{usage.range}} === '90d'" disabled>90d</button>
             </div>
-        <?php endif; ?>
+        <?php endif;?>
     </div>
     <div
         data-service="projects.getUsage"
@@ -105,7 +105,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                     </div>
                 </div>
             </div>
-        <?php endif; ?>
+        <?php endif;?>
 
         <div class="box dashboard">
             <div class="row responsive">
@@ -176,11 +176,11 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                 <div>
                     <div class="pull-start margin-end avatar-container">
                         <img src="" data-ls-attrs="src=/images/clients/{{platform.type}}.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Platform Logo" class="avatar" loading="lazy" width="60" height="60" />
-                        
+
                         <div data-ls-if="{{platform.type}} === 'flutter-ios'" class="corner">
                             <img src="" data-ls-attrs="src=/images/clients/flutter.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="iOS Logo" class="avatar xs" loading="lazy" width="30" height="30" />
                         </div>
-                        
+
                         <div data-ls-if="{{platform.type}} === 'flutter-android'" class="corner">
                             <img src="" data-ls-attrs="src=/images/clients/flutter.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Android Logo" class="avatar xs" loading="lazy" width="30" height="30" />
                         </div>
@@ -275,7 +275,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
         <input
             type="hidden"
             data-custom-id
-            id-type="auto"
+            data-id-type="auto"
+            data-validator="projects.getPlatform"
             required
             maxlength="36"
             name="platformId"
@@ -286,7 +287,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
         <label for="hostname">Hostname <span class="tooltip large" data-tooltip="The hostname that your website will use to interact with the <?php echo APP_NAME; ?> APIs in production or development environments. No port number required."><i class="icon-question"></i></span></label>
         <input name="hostname" type="text" class="margin-bottom" autocomplete="off" placeholder="localhost" required>
-        
+
         <div class="info margin-top margin-bottom">
             <div class="text-bold margin-bottom-small">Next Steps</div>
 
@@ -326,7 +327,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
         <label for="hostname">Hostname <span class="tooltip large" data-tooltip="The hostname that your website will use to interact with the <?php echo APP_NAME; ?> APIs in production or development environments. No port number required."><i class="icon-question"></i></span></label>
         <input name="hostname" type="text" class="margin-bottom" autocomplete="off" placeholder="localhost" data-ls-bind="{{platform.hostname}}" required />
-        
+
         <hr />
 
         <button type="submit">Update</button> &nbsp; <button data-ls-ui-trigger="modal-close" type="button" class="reverse">Back</button>
@@ -360,7 +361,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
         <label for="platformId">Platform ID <span class="tooltip large" data-tooltip="Choose an ID that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
         <input type="hidden"
             data-custom-id
-            id-type="auto"
+            data-id-type="auto"
+            data-validator="projects.getPlatform"
             required
             maxlength="36"
             name="platformId"
@@ -405,17 +407,18 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                 <input type="hidden" name="type" data-ls-bind="flutter-ios" />
-                
+
                 <label for="platformId">Platform ID <span class="tooltip large" data-tooltip="Choose an ID that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
-                <input 
+                <input
                     type="hidden"
                     data-custom-id
-                    id-type="auto"
+                    data-id-type="auto"
+                    data-validator="projects.getPlatform"
                     required
                     maxlength="36"
                     name="platformId"
                     placeholder="my_flutter_ios_app" />
-                    
+
                 <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
                 <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My iOS App" maxlength="128" />
 
@@ -449,12 +452,13 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                 <input type="hidden" name="type" data-ls-bind="flutter-android" />
-                
+
                 <label for="platformId">Platform ID <span class="tooltip large" data-tooltip="Choose an ID that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
-                <input 
+                <input
                     type="hidden"
                     data-custom-id
-                    id-type="auto"
+                    data-id-type="auto"
+                    data-validator="projects.getPlatform"
                     required
                     maxlength="36"
                     name="platformId"
@@ -497,12 +501,13 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                 <input
                     type="hidden"
                     data-custom-id
-                    id-type="auto"
+                    data-id-type="auto"
+                    data-validator="projects.getPlatform"
                     required
                     maxlength="36"
                     name="platformId"
                     placeholder="my_flutter_linux_app" />
-                    
+
                 <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
                 <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My Linux App" maxlength="128" />
 
@@ -540,12 +545,13 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                 <input
                     type="hidden"
                     data-custom-id
-                    id-type="auto"
+                    data-id-type="auto"
+                    data-validator="projects.getPlatform"
                     required
                     maxlength="36"
                     name="platformId"
                     placeholder="my_flutter_macos_app" />
-                    
+
                 <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
                 <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My Mac OS App" maxlength="128" />
 
@@ -583,12 +589,13 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                 <input
                     type="hidden"
                     data-custom-id
-                    id-type="auto"
+                    data-id-type="auto"
+                    data-validator="projects.getPlatform"
                     required
                     maxlength="36"
                     name="platformId"
                     placeholder="my_flutter_windows_app" />
-                    
+
                 <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
                 <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My Windows App" maxlength="128" />
 
@@ -628,7 +635,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
         <label data-ls-attrs="for=key-{{platform.$id}}">Bundle ID <span class="tooltip large" data-tooltip="You can find your Bundle Identifier in the General tab for your app's primary target in Xcode."><i class="icon-question"></i></span></label>
         <input name="key" type="text" class="margin-bottom" autocomplete="off" placeholder="com.cpmpany.appname" data-ls-bind="{{platform.key}}" required />
-        
+
         <hr />
 
         <button type="submit">Update</button> &nbsp; <button data-ls-ui-trigger="modal-close" type="button" class="reverse">Back</button>
@@ -659,7 +666,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
         <label data-ls-attrs="for=key-{{platform.$id}}">Package Name <span class="tooltip large" data-tooltip="Your package name is generally the applicationId in your app-level build.gradle file."><i class="icon-question"></i></span></label>
         <input name="key" type="text" class="margin-bottom" autocomplete="off" placeholder="com.cpmpany.appname" data-ls-bind="{{platform.key}}" required />
-        
+
         <hr />
 
         <button type="submit">Update</button> &nbsp; <button data-ls-ui-trigger="modal-close" type="button" class="reverse">Back</button>
@@ -691,7 +698,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
         <label data-ls-attrs="for=key-{{platform.$id}}">App Name <span class="tooltip large" data-tooltip="Your application name"><i class="icon-question"></i></span></label>
         <input name="key" type="text" class="margin-bottom" autocomplete="off" placeholder="appname" data-ls-bind="{{platform.key}}" required />
-        
+
         <hr />
 
         <button type="submit">Update</button> &nbsp; <button data-ls-ui-trigger="modal-close" type="button" class="reverse">Back</button>

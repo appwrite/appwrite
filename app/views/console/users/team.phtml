@@ -17,8 +17,8 @@
     </div>
 
     <div data-ui-modal class="modal width-large box close" data-button-hide="on" data-open-event="open-json">
-        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
-        
+        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
         <h2>JSON View</h2>
 
         <div class="margin-bottom">
@@ -32,7 +32,7 @@
         <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
             <li data-state="/console/users/teams/team?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Overview</h2>
-                
+
                 <div class="row responsive margin-top-negative">
                     <div class="col span-8 margin-bottom-large">
                         <label>&nbsp;</label>
@@ -146,20 +146,21 @@
 
                                     <input name="teamId" id="team-teamId" type="hidden" data-ls-bind="{{team.$id}}">
                                     <input name="url" type="hidden" data-ls-bind="{{env.ENDPOINT}}" />
-                                    
+
                                     <label for="membershipId">Membership ID</label>
                                     <input
                                         type="hidden"
                                         data-custom-id
-                                        id-type="auto"
+                                        data-id-type="auto"
+                                        data-validator="teams.getMembership"
                                         required
                                         maxlength="36"
                                         name="membershipId"
                                         id="membershipId" />
-                                    
+
                                     <label for="email">Email</label>
                                     <input name="email" id="email" type="email" autocomplete="email" required>
-                                    
+
                                     <label for="team-name">Name <small>(optional)</small></label>
                                     <input name="name" id="team-name" type="text" autocomplete="name" maxlength="128" />
 
@@ -242,7 +243,7 @@
                     </div>
                 </div>
             </li>
-            
+
         </ul>
     </div>
 </div>

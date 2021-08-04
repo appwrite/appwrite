@@ -35,7 +35,7 @@ $runtimes = $this->getParam('runtimes', []);
 
                 <div data-ls-if="0 != {{project-functions.functions.length}}">
                     <div class="margin-bottom-small margin-end-small text-align-end text-size-small margin-top-negative"><span data-ls-bind="{{project-functions.sum}}"></span> functions found</div>
-                    
+
                     <div class="box margin-bottom">
                         <ul data-ls-loop="project-functions.functions" data-ls-as="function" class="list">
                             <li class="clear">
@@ -106,22 +106,23 @@ $runtimes = $this->getParam('runtimes', []);
                             data-failure-param-alert-text="Failed to create function"
                             data-failure-param-alert-classname="error">
                             <label for="functionId">Function ID</label>
-                            <input 
+                            <input
                                 type="hidden"
                                 data-custom-id
-                                id-type="auto"
+                                data-id-type="auto"
+                                data-validator="functions.get"
                                 required
                                 maxlength="36"
                                 name="functionId" />
-                            
+
                             <label for="name">Name</label>
                             <input type="text" id="name" name="name" required autocomplete="off" class="margin-bottom" maxlength="128" />
-                            
+
                             <label for="runtime">Runtimes</label>
                             <select name="runtime" id="runtime" required class="margin-bottom-xl">
-                                <?php foreach($runtimes as $key => $runtime): ?>
+                                <?php foreach ($runtimes as $key => $runtime): ?>
                                     <option value="<?php echo $this->escape($key); ?>"><?php echo $this->escape($runtime['name']); ?> <?php echo $this->escape($runtime['version']); ?></option>
-                                <?php endforeach; ?>
+                                <?php endforeach;?>
                             </select>
 
                             <input id="execute" name="execute" value="" hidden/>
