@@ -156,7 +156,7 @@ App::post('/v1/account/sessions')
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
         
-        $profile = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [$email])], 1); // Get user by email address
+        $profile = $dbForInternal->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
 
         if (!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'))) {
             $audits
@@ -442,16 +442,16 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
         }
 
-        $user = ($user->isEmpty()) ? $dbForInternal->findFirst('sessions', [ // Get user by provider id
+        $user = ($user->isEmpty()) ? $dbForInternal->findOne('sessions', [ // Get user by provider id
             new Query('provider', QUERY::TYPE_EQUAL, [$provider]),
             new Query('providerUid', QUERY::TYPE_EQUAL, [$oauth2ID]),
-        ], 1) : $user;
+        ]) : $user;
 
         if ($user === false || $user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
             $name = $oauth2->getUserName($accessToken);
             $email = $oauth2->getUserEmail($accessToken);
 
-            $user = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [$email])], 1); // Get user by email address
+            $user = $dbForInternal->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
 
             if ($user === false || $user->isEmpty()) { // Last option -> create the user, generate random password
                 $limit = $project->getAttribute('usersAuthLimit', 0);
@@ -1074,7 +1074,7 @@ App::patch('/v1/account/email')
         }
 
         $email = \strtolower($email);
-        $profile = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [\strtolower($email)])], 1); // Get user by email address
+        $profile = $dbForInternal->findOne('users', [new Query('email', Query::TYPE_EQUAL, [\strtolower($email)])]); // Get user by email address
 
         if ($profile) {
             throw new Exception('User already registered', 400);
@@ -1379,7 +1379,7 @@ App::post('/v1/account/recovery')
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $email = \strtolower($email);
-        $profile = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [$email])], 1); // Get user by email address
+        $profile = $dbForInternal->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
 
         if (!$profile) {
             throw new Exception('User not found', 404);

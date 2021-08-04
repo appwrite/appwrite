@@ -44,9 +44,9 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         } else {
             Authorization::disable();
 
-            $certificate = $dbForConsole->findFirst('certificates', [
+            $certificate = $dbForConsole->findOne('certificates', [
                 new Query('domain', QUERY::TYPE_EQUAL, [$domain->get()])
-            ], /*limit*/ 1);
+            ]);
 
             if (empty($certificate)) {
                 $certificate = new Document([
