@@ -225,6 +225,10 @@ class Swagger2 extends Format
                     'required' => !$param['optional'],
                 ];
 
+                if($name == 'queries') {
+                    $node['x-type'] = 'query';
+                }
+
                 switch ((!empty($validator)) ? \get_class($validator) : '') {
                     case 'Utopia\Validator\Text':
                         $node['type'] = $validator->getType();
@@ -331,6 +335,7 @@ class Swagger2 extends Format
                         'description' => $node['description'],
                         'default' => $node['default'] ?? null,
                         'x-example' => $node['x-example'] ?? null,
+                        'x-type' => $node['x-type'] ?? null,
                     ];
 
                     if(\array_key_exists('items', $node)) {
