@@ -466,6 +466,42 @@ App::get('/v1/teams/:teamId/memberships')
         ]), Response::MODEL_MEMBERSHIP_LIST);
     });
 
+App::get('/v1/teams/:teamId/memberships/:membershipId')
+    ->desc('Get Team Membership')
+    ->groups(['api', 'teams'])
+    ->label('scope', 'teams.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'teams')
+    ->label('sdk.method', 'getMembership')
+    ->label('sdk.description', '/docs/references/teams/get-team-members.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MEMBERSHIP_LIST)
+    ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->param('membershipId', '', new UID(), 'membership unique ID.')
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->action(function ($teamId, $membershipId, $response, $dbForInternal) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
+
+        $team = $dbForInternal->getDocument('teams', $teamId);
+
+        if ($team->isEmpty()) {
+            throw new Exception('Team not found', 404);
+        }
+
+        $membership = $dbForInternal->getDocument('memberships', $membershipId);
+
+        if($membership->isEmpty() || empty($membership->getAttribute('userId', null))) {
+            throw new Exception('Membership not found', 404);
+        }
+
+        $temp = $dbForInternal->getDocument('users', $membership->getAttribute('userId', null))->getArrayCopy(['email', 'name']);
+
+        $response->dynamic(new Document(\array_merge($temp, $membership->getArrayCopy())), Response::MODEL_MEMBERSHIP );
+    });
+
 App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->desc('Update Membership Roles')
     ->groups(['api', 'teams'])
