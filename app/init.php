@@ -25,6 +25,9 @@ use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
 use Appwrite\Event\Event;
+use Appwrite\Network\Validator\Email;
+use Appwrite\Network\Validator\IP;
+use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\App;
 use Utopia\View;
@@ -38,7 +41,9 @@ use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Document as Document2;
 use Utopia\Database\Database as Database2;
+use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Validator\Range;
 use Swoole\Database\PDOConfig;
 use Swoole\Database\PDOPool;
 use Swoole\Database\RedisConfig;
@@ -183,6 +188,38 @@ Database2::addFilter('encrypt',
         return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
     }
 );
+
+Structure::addFormat('email', function() {
+    return new Email();
+}, Database2::VAR_STRING);
+
+Structure::addFormat('ip', function() {
+    return new IP();
+}, Database2::VAR_STRING);
+
+Structure::addFormat('url', function() {
+    return new URL();
+}, Database2::VAR_STRING);
+
+Structure::addFormat('int-range', function($attribute) {
+    // Format encoded as json string containing name and relevant options
+    // E.g. Range: $format = json_encode(['name'=>$name, 'min'=>$min, 'max'=>$max]);
+    $format = json_decode($attribute['format'], true);
+    $min = $format['min'] ?? -INF;
+    $max = $format['max'] ?? INF;
+    $type = $attribute['type'];
+    return new Range($min, $max, $type);
+}, Database2::VAR_INTEGER);
+
+Structure::addFormat('float-range', function($attribute) {
+    // Format encoded as json string containing name and relevant options
+    // E.g. Range: $format = json_encode(['name'=>$name, 'min'=>$min, 'max'=>$max]);
+    $format = json_decode($attribute['format'], true);
+    $min = $format['min'] ?? -INF;
+    $max = $format['max'] ?? INF;
+    $type = $attribute['type'] ?? '';
+    return new Range($min, $max, $type);
+}, Database2::VAR_FLOAT);
 
 /*
  * Registry

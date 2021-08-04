@@ -33,35 +33,32 @@ trait DatabaseBase
      */
     public function testCreateAttributes(array $data): array
     {
-        $title = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/attributes', array_merge([
+        $title = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'id' => 'title',
-            'type' => 'string',
+            'attributeId' => 'title',
             'size' => 256,
             'required' => true,
         ]);
 
-        $releaseYear = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/attributes', array_merge([
+        $releaseYear = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/attributes/integer', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'id' => 'releaseYear',
-            'type' => 'integer',
+            'attributeId' => 'releaseYear',
             'size' => 0,
             'required' => true,
         ]);
 
-        $actors = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/attributes', array_merge([
+        $actors = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'id' => 'actors',
-            'type' => 'string',
+            'attributeId' => 'actors',
             'size' => 256,
             'required' => false,
             'default' => null,
@@ -519,6 +516,332 @@ trait DatabaseBase
         $this->assertEquals($document['headers']['status-code'], 404);
         
         return $data;
+    }
+
+    public function testInvalidDocumentStructure()
+    {
+        $collection = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'name' => 'invalidDocumentStructure',
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $this->assertEquals('invalidDocumentStructure', $collection['body']['name']);
+
+        $collectionId = $collection['body']['$id'];
+
+        $email = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/email', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'email',
+            'required' => false,
+        ]);
+
+        $ip = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/ip', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'ip',
+            'required' => false,
+        ]);
+
+        $url = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/url', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'url',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        $range = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'range',
+            'required' => false,
+            'min' => 1,
+            'max' => 10,
+        ]);
+
+        // TODO@kodumbeats min and max are rounded in error message
+        $floatRange = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/float', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'floatRange',
+            'required' => false,
+            'min' => 1.1,
+            'max' => 1.4,
+        ]);
+
+        // TODO@kodumbeats float validator rejects 0.0 and 1.0 as floats
+        // $probability = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/float', array_merge([
+        //     'content-type' => 'application/json',
+        //     'x-appwrite-project' => $this->getProject()['$id'],
+        //     'x-appwrite-key' => $this->getProject()['apiKey']
+        // ]), [
+        //     'attributeId' => 'probability',
+        //     'required' => false,
+        //     'min' => \floatval(0.0),
+        //     'max' => \floatval(1.0),
+        // ]);
+
+        $upperBound = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'upperBound',
+            'required' => false,
+            'max' => 10,
+        ]);
+
+        $lowerBound = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'lowerBound',
+            'required' => false,
+            'min' => 5,
+        ]);
+
+        /**
+         * Test for failure
+         */
+
+        // TODO@kodumbeats troubleshoot
+        // $invalidRange = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
+        //     'content-type' => 'application/json', 'x-appwrite-project' => $this->getProject()['$id'],
+        //     'x-appwrite-key' => $this->getProject()['apiKey']
+        // ]), [
+        //     'attributeId' => 'invalidRange',
+        //     'required' => false,
+        //     'min' => 4,
+        //     'max' => 3,
+        // ]);
+
+        $this->assertEquals(201, $email['headers']['status-code']);
+        $this->assertEquals(201, $ip['headers']['status-code']);
+        $this->assertEquals(201, $url['headers']['status-code']);
+        $this->assertEquals(201, $range['headers']['status-code']);
+        $this->assertEquals(201, $floatRange['headers']['status-code']);
+        $this->assertEquals(201, $upperBound['headers']['status-code']);
+        $this->assertEquals(201, $lowerBound['headers']['status-code']);
+        // $this->assertEquals(400, $invalidRange['headers']['status-code']);
+        // $this->assertEquals('Minimum value must be lesser than maximum value', $invalidRange['body']['message']);
+
+        // wait for worker to add attributes
+        sleep(10);
+
+        $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), []); 
+
+        $this->assertCount(7, $collection['body']['attributes']);
+        $this->assertCount(0, $collection['body']['attributesInQueue']);
+
+        /**
+         * Test for successful validation
+         */
+
+        $goodEmail = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'email' => 'user@example.com',
+            ],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
+        ]);
+
+        $goodIp = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'ip' => '1.1.1.1',
+            ],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
+        ]);
+
+        $goodUrl = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'url' => 'http://www.example.com',
+            ],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
+        ]);
+
+        $goodRange = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'range' => 3,
+            ],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
+        ]);
+
+        $goodFloatRange = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'floatRange' => 1.4, 
+            ],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
+        ]);
+
+        $notTooHigh = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'upperBound' => 8, 
+            ],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
+        ]);
+
+        $notTooLow = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'lowerBound' => 8, 
+            ],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
+        ]);
+
+        // var_dump($notTooLow);
+
+        $this->assertEquals(201, $goodEmail['headers']['status-code']);
+        $this->assertEquals(201, $goodIp['headers']['status-code']);
+        $this->assertEquals(201, $goodUrl['headers']['status-code']);
+        $this->assertEquals(201, $goodRange['headers']['status-code']);
+        $this->assertEquals(201, $goodFloatRange['headers']['status-code']);
+        $this->assertEquals(201, $notTooHigh['headers']['status-code']);
+        $this->assertEquals(201, $notTooLow['headers']['status-code']);
+
+        /*
+         * Test that custom validators reject documents
+         */
+
+        $badEmail = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'email' => 'user@@example.com',
+            ],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
+        ]);
+
+        $badIp = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'ip' => '1.1.1.1.1',
+            ],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
+        ]);
+
+        $badUrl = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'url' => 'example...com',
+            ],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
+        ]);
+
+        $badRange = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'range' => 11,
+            ],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
+        ]);
+
+        $badFloatRange = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'floatRange' => 2.5,
+            ],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
+        ]);
+
+        $tooHigh = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'upperBound' => 11,
+            ],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
+        ]);
+
+        $tooLow = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'lowerBound' => 3,
+            ],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
+        ]);
+
+
+        $this->assertEquals(400, $badEmail['headers']['status-code']);
+        $this->assertEquals(400, $badIp['headers']['status-code']);
+        $this->assertEquals(400, $badUrl['headers']['status-code']);
+        $this->assertEquals(400, $badRange['headers']['status-code']);
+        $this->assertEquals(400, $badFloatRange['headers']['status-code']);
+        $this->assertEquals(400, $tooHigh['headers']['status-code']);
+        $this->assertEquals(400, $tooLow['headers']['status-code']);
+        $this->assertEquals('Invalid document structure: Attribute "email" has invalid format. Value must be a valid email address', $badEmail['body']['message']);
+        $this->assertEquals('Invalid document structure: Attribute "ip" has invalid format. Value must be a valid IP address', $badIp['body']['message']);
+        $this->assertEquals('Invalid document structure: Attribute "url" has invalid format. Value must be a valid URL', $badUrl['body']['message']);
+        $this->assertEquals('Invalid document structure: Attribute "range" has invalid format. Value must be a valid range between 1 and 10', $badRange['body']['message']);
+        $this->assertEquals('Invalid document structure: Attribute "floatRange" has invalid format. Value must be a valid range between 1 and 1', $badFloatRange['body']['message']);
+        $this->assertEquals('Invalid document structure: Attribute "upperBound" has invalid format. Value must be a valid range between inf and 10', $tooHigh['body']['message']);
+        $this->assertEquals('Invalid document structure: Attribute "lowerBound" has invalid format. Value must be a valid range between 5 and inf', $tooLow['body']['message']);
     }
 
     /**

@@ -51,24 +51,22 @@ trait WebhooksBase
      */
     public function testCreateAttributes(array $data): array
     {
-        $firstName = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['actorsId'] . '/attributes', array_merge([
+        $firstName = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['actorsId'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'id' => 'firstName',
-            'type' => 'string',
+            'attributeId' => 'firstName',
             'size' => 256,
             'required' => true,
         ]);
 
-        $lastName = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['actorsId'] . '/attributes', array_merge([
+        $lastName = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['actorsId'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'id' => 'lastName',
-            'type' => 'string',
+            'attributeId' => 'lastName',
             'size' => 256,
             'required' => true,
         ]);

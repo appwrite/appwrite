@@ -64,7 +64,7 @@ class WebhooksCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'id' => 'fullname',
-            'type' => 'text',
+            'type' => 'key',
             'attributes' => ['lastName', 'firstName'],
             'orders' => ['ASC', 'ASC'],
         ]);
