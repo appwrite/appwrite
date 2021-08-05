@@ -27,6 +27,7 @@ class WebhooksCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -77,6 +78,7 @@ class WebhooksCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -87,6 +89,7 @@ class WebhooksCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'sessionId' => 'unique()',
             'email' => $email,
             'password' => $password,
         ]);
@@ -143,6 +146,7 @@ class WebhooksCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'sessionId' => 'unique()',
             'email' => $email,
             'password' => $password,
         ]);
@@ -209,6 +213,7 @@ class WebhooksCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'sessionId' => 'unique()',
             'email' => $email,
             'password' => $password,
         ]);
@@ -281,6 +286,7 @@ class WebhooksCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'sessionId' => 'unique()',
             'email' => $email,
             'password' => $password,
         ]);
@@ -339,6 +345,7 @@ class WebhooksCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'sessionId' => 'unique()',
             'email' => $email,
             'password' => $password,
         ]);

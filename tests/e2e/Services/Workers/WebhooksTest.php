@@ -133,6 +133,7 @@ class WebhooksTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             'password' => $password,
             'name' => $name,

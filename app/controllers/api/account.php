@@ -24,6 +24,7 @@ use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Appwrite\Database\Validator\CustomId;
 
 $oauthDefaultSuccess = App::getEnv('_APP_HOME').'/auth/oauth2/success';
 $oauthDefaultFailure = App::getEnv('_APP_HOME').'/auth/oauth2/failure';
@@ -42,6 +43,7 @@ App::post('/v1/account')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->label('abuse-limit', 10)
+    ->param('userId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
@@ -50,7 +52,7 @@ App::post('/v1/account')
     ->inject('project')
     ->inject('dbForInternal')
     ->inject('audits')
-    ->action(function ($email, $password, $name, $request, $response, $project, $dbForInternal, $audits) {
+    ->action(function ($userId, $email, $password, $name, $request, $response, $project, $dbForInternal, $audits) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
@@ -84,7 +86,7 @@ App::post('/v1/account')
         Authorization::disable();
 
         try {
-            $userId = $dbForInternal->getId();
+            $userId = $userId == 'unique()' ? $dbForInternal->getId() : $userId;
             $user = $dbForInternal->createDocument('users', new Document([
                 '$id' => $userId,
                 '$read' => ['role:all'],
@@ -137,6 +139,7 @@ App::post('/v1/account/sessions')
     ->label('sdk.response.model', Response::MODEL_SESSION)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
+    ->param('sessionId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
     ->inject('request')
@@ -145,7 +148,7 @@ App::post('/v1/account/sessions')
     ->inject('locale')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($email, $password, $request, $response, $dbForInternal, $locale, $geodb, $audits) {
+    ->action(function ($sessionId, $email, $password, $request, $response, $dbForInternal, $locale, $geodb, $audits) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
@@ -178,7 +181,7 @@ App::post('/v1/account/sessions')
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge(
             [
-                '$id' => $dbForInternal->getId(),
+                '$id' => $sessionId == 'unique()' ? $dbForInternal->getId() : $sessionId,
                 'userId' => $profile->getId(),
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => $email,
@@ -679,7 +682,19 @@ App::post('/v1/account/sessions/anonymous')
             ->setAttribute('$read', ['user:'.$user->getId()])
             ->setAttribute('$write', ['user:'.$user->getId()])
         );
-
+        it', 50)
+        ->label('abuse-key', 'ip:{ip}')
+        ->inject('request')
+        ->inject('response')
+        ->inject('locale')
+        ->inject('user')
+        ->inject('project')
+        ->inject('dbForInternal')
+        ->inject('geodb')
+        ->inject('audits')
+        ->action(function ($request, $response, $locale, $user, $project, $dbForInternal, $geodb, $audits) {
+            /** @var Utopia\Swoole\Request $request */
+            /** @var Appwrite\Utopia\Response $respons
         $user = $dbForInternal->updateDocument('users', $user->getId(),
             $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND));
 

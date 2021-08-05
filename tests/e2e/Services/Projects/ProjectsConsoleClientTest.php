@@ -320,6 +320,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
+            'userIdId' => 'unique()',
             'email' => $originalEmail,
             'password' => $originalPassword,
             'name' => $originalName,
@@ -330,6 +331,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
+            'sessionId' => 'unique()',
             'email' => $originalEmail,
             'password' => $originalPassword,
         ]);
@@ -372,6 +374,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -419,6 +422,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
+            'sessionId' => 'unique()',
             'email' => $originalEmail,
             'password' => $originalPassword,
         ]);
@@ -479,6 +483,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -504,6 +509,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -665,6 +671,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
+            'teamId' => 'unique()',
             'name' => 'Arsenal'
         ]);
 
