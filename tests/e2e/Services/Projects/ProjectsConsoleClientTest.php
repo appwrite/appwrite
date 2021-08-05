@@ -489,7 +489,7 @@ class ProjectsConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals($response['headers']['status-code'], 501);
 
         /**
          * Test for FAILURE
