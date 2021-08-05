@@ -2203,20 +2203,20 @@
         },
         {
             "name": "utopia-php/locale",
-            "version": "0.3.3",
+            "version": "0.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/locale.git",
-                "reference": "5b5b22aab786d6e66eb3b9d546b7e606deae68e4"
+                "reference": "c2d9358d0fe2f6b6ed5448369f9d1e430c615447"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/locale/zipball/5b5b22aab786d6e66eb3b9d546b7e606deae68e4",
-                "reference": "5b5b22aab786d6e66eb3b9d546b7e606deae68e4",
+                "url": "https://api.github.com/repos/utopia-php/locale/zipball/c2d9358d0fe2f6b6ed5448369f9d1e430c615447",
+                "reference": "c2d9358d0fe2f6b6ed5448369f9d1e430c615447",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.1"
+                "php": ">=7.4"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -2248,9 +2248,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/locale/issues",
-                "source": "https://github.com/utopia-php/locale/tree/0.3.3"
+                "source": "https://github.com/utopia-php/locale/tree/0.4.0"
             },
-            "time": "2020-10-24T08:12:55+00:00"
+            "time": "2021-07-24T11:35:55+00:00"
         },
         {
             "name": "utopia-php/preloader",
@@ -5154,6 +5154,7 @@
                     "type": "github"
                 }
             ],
+            "abandoned": true,
             "time": "2020-09-28T06:45:17+00:00"
         },
         {

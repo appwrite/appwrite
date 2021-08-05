@@ -1,3 +1,9 @@
+# Version 0.9.3
+
+## Bugs
+
+- Fixed Abuse Limit keys for JWT and E-Mail confirmation (#1434)
+
 # Version 0.9.2
 
 ## Bugs
