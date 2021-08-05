@@ -2,9 +2,9 @@
   "use strict";
   window.ls.container.get("view").add({
     selector: "data-custom-id",
-    controller: function (element, sdk, console) {
+    controller: function (element, sdk, console, window) {
       let prevData = "";
-      let idType = element.dataset["id-type"];
+      let idType = element.getAttribute('data-id-type');
 
       const div = window.document.createElement("div");
       div.className = "input-copy";
@@ -13,16 +13,15 @@
       button.type = "button";
       button.style.cursor = "pointer";
 
-      const writer = document.createElement("input");
+      const writer = window.document.createElement("input");
       writer.type = "text";
-      writer.className = "";
       writer.setAttribute("maxlength", element.getAttribute("maxlength"));
       const placeholder = element.getAttribute("placeholder");
       if (placeholder) {
         writer.setAttribute("placeholder", placeholder);
       }
 
-      const info = document.createElement("div");
+      const info = window.document.createElement("div");
       info.className = "text-fade text-size-xs margin-top-negative-small margin-bottom";
 
       div.appendChild(writer);
@@ -46,7 +45,7 @@
         if (value.length < 1) {
           event.target.setCustomValidity("ID is required");
         } else {
-          switch(service) {
+          switch (service) {
             case 'projects':
               if (method == 'getPlatform' || method == 'getDomain') {
                 const projectId = element.form.elements.namedItem("projectId").value;
@@ -79,19 +78,26 @@
       }
 
       const setIdType = function (idType) {
-        element.setAttribute("data-id-type", idType);
         if (idType == "custom") {
+          element.setAttribute("data-id-type", idType);
           info.innerHTML = "Allowed Characters A-Z, a-z, 0-9, and non-leading underscore";
+          if (prevData === 'auto-generated') {
+            prevData = ""
+          }
+          writer.setAttribute("value", prevData);
           writer.value = prevData;
-          writer.disabled = false;
           element.value = prevData;
+          writer.removeAttribute("disabled");
           writer.focus();
           writer.addEventListener('blur', validate);
         } else {
-          info.innerHTML = "Appwrite will generate an unique ID";
+          idType = 'auto'
+          element.setAttribute("data-id-type", idType);
+          info.innerHTML = "Appwrite will generate a unique ID";
           prevData = writer.value;
-          writer.disabled = true;
-          writer.value = 'auto-generated';
+          writer.setAttribute("disabled", true);
+          writer.setAttribute("value", "auto-generated");
+          writer.value = "auto-generated";
           element.value = 'unique()';
         }
         button.className = idType == "custom" ? "icon-shuffle copy" : "icon-edit copy";
@@ -101,7 +107,7 @@
         if (element.value !== 'unique()' || idType != 'auto') {
           writer.value = element.value;
         }
-        if(idType == 'auto') {
+        if (idType == 'auto') {
           element.value = 'unique()';
         }
       }
@@ -134,6 +140,14 @@
       setIdType(idType);
       writer.addEventListener("change", function (event) {
         element.value = writer.value;
+      });
+      writer.form.addEventListener('reset', function (event) {
+        const resetEvent = new Event('reset');
+        element.dispatchEvent(resetEvent);
+      });
+      element.addEventListener('reset', function (event) {
+        idType = element.getAttribute('data-id-type');
+        setIdType(idType);
       });
       writer.addEventListener('keypress', keypress);
       button.addEventListener("click", switchType);

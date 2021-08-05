@@ -427,7 +427,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
 
                                     <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
 
-                                    <label for="keyId">Domain ID</label>
+                                    <label for="domainId">Domain ID</label>
                                     <input
                                         type="hidden"
                                         data-custom-id
@@ -561,7 +561,17 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
 
                             <input name="teamId" id="team-teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
                             <input name="url" type="hidden" data-ls-bind="{{env.ENDPOINT}}/auth/join?project={{router.params.project}}" />
-                            
+
+                            <label for="membership">Membership ID</label>
+                            <input
+                                type="hidden"
+                                data-custom-id
+                                data-id-type="auto"
+                                data-validator="teams.getMembership"
+                                required
+                                maxlength="36"
+                                name="membershipId" />
+
                             <label for="email">Email</label>
                             <input name="email" id="email" type="email" autocomplete="email" required>
                             
