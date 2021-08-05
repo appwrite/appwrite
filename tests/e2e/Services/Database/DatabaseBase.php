@@ -676,7 +676,7 @@ trait DatabaseBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'customId' => 'unique()',
+            'documentId' => 'unique()',
             'data' => [
                 'ip' => '1.1.1.1',
             ],
@@ -712,6 +712,7 @@ trait DatabaseBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'documentId' => 'unique()',
             'data' => [
                 'floatRange' => 1.4, 
             ],
@@ -742,8 +743,6 @@ trait DatabaseBase
             'read' => ['user:'.$this->getUser()['$id']],
             'write' => ['user:'.$this->getUser()['$id']],
         ]);
-
-        // var_dump($notTooLow);
 
         $this->assertEquals(201, $goodEmail['headers']['status-code']);
         $this->assertEquals(201, $goodIp['headers']['status-code']);
