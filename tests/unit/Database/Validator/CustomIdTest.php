@@ -33,8 +33,8 @@ class CustomIdTest extends TestCase
         $this->assertEquals($this->object->isValid('as$$5dasdasdas'), false);
         $this->assertEquals($this->object->isValid(false), false);
         $this->assertEquals($this->object->isValid(null), false);
-        $this->assertEquals($this->object->isValid('socialAccountForYoutubeSubscribers'), false);
-        $this->assertEquals($this->object->isValid('socialAccountForYoutubeSubscriber'), false);
+        $this->assertEquals($this->object->isValid('socialAccountForYoutubeAndRestSubscribers'), false);
+        $this->assertEquals($this->object->isValid('socialAccountForYoutubeAndRSubscriber'), false);
         $this->assertEquals($this->object->isValid('socialAccountForYoutubeSubscribe'), true);
         $this->assertEquals($this->object->isValid('socialAccountForYoutubeSubscrib'), true);
     }
