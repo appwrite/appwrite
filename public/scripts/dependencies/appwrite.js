@@ -76,13 +76,17 @@
                  * login to their new account, you need to create a new [account
                  * session](/docs/client/account#accountCreateSession).
                  *
+                 * @param {string} userId
                  * @param {string} email
                  * @param {string} password
                  * @param {string} name
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                create: (email, password, name) => __awaiter(this, void 0, void 0, function* () {
+                create: (userId, email, password, name) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
                     if (typeof email === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "email"');
                     }
@@ -91,6 +95,9 @@
                     }
                     let path = '/account';
                     let payload = {};
+                    if (typeof userId !== 'undefined') {
+                        payload['userId'] = userId;
+                    }
                     if (typeof email !== 'undefined') {
                         payload['email'] = email;
                     }
@@ -401,12 +408,16 @@
                  * Allow the user to login into their account by providing a valid email and
                  * password combination. This route will create a new session for the user.
                  *
+                 * @param {string} sessionId
                  * @param {string} email
                  * @param {string} password
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createSession: (email, password) => __awaiter(this, void 0, void 0, function* () {
+                createSession: (sessionId, email, password) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof sessionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "sessionId"');
+                    }
                     if (typeof email === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "email"');
                     }
@@ -415,6 +426,9 @@
                     }
                     let path = '/account/sessions';
                     let payload = {};
+                    if (typeof sessionId !== 'undefined') {
+                        payload['sessionId'] = sessionId;
+                    }
                     if (typeof email !== 'undefined') {
                         payload['email'] = email;
                     }
@@ -3979,6 +3993,8 @@
                 /**
                  * Get Team Membership
                  *
+                 * Get a team member by the membership unique id. All team members have read
+                 * access for this resource.
                  *
                  * @param {string} teamId
                  * @param {string} membershipId
