@@ -1056,12 +1056,12 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->param('queries', [], new ArrayList(new Text(128)), 'Array of query strings.', true)
     ->param('limit', 25, new Range(0, 100), 'Maximum number of documents to return in response.  Use this value to manage pagination. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 900000000), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
-    // TODO@kodumbeats 'after' param for pagination
     ->param('orderAttributes', [], new ArrayList(new Text(128)), 'Array of attributes used to sort results.', true)
     ->param('orderTypes', [], new ArrayList(new WhiteList(['DESC', 'ASC'], true)), 'Array of order directions for sorting attribtues. Possible values are DESC for descending order, or ASC for ascending order.', true)
+    ->param('orderAfter', '', new UID(), 'ID of the document used to return documents listed after. Should be used for efficient pagination working with many documents.', true)
     ->inject('response')
     ->inject('dbForExternal')
-    ->action(function ($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $response, $dbForExternal) {
+    ->action(function ($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $orderAfter, $response, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal */
 
@@ -1087,7 +1087,15 @@ App::get('/v1/database/collections/:collectionId/documents')
             throw new Exception($validator->getDescription(), 400);
         }
 
-        $documents = $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes);
+        if (!empty($orderAfter)) {
+            $orderAfterDocument = $dbForExternal->getDocument($collectionId, $orderAfter);
+
+            if ($orderAfterDocument->isEmpty()) {
+                throw new Exception('Document for orderAfter not found', 400);
+            }
+        }
+
+        $documents = $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $orderAfterDocument ?? null);
 
         $response->dynamic(new Document([
             'sum' => \count($documents),

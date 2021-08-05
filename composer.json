@@ -45,7 +45,7 @@
         "utopia-php/cache": "0.4.*",
         "utopia-php/cli": "0.11.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "0.6.*",
+        "utopia-php/database": "dev-main as 0.6.0",
         "utopia-php/locale": "0.3.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/preloader": "0.2.*",

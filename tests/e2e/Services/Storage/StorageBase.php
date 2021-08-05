@@ -34,7 +34,7 @@ trait StorageBase
          */
         return ['fileId' => $file['body']['$id']];
     }
-    
+
     /**
      * @depends testCreateFile
      */
@@ -169,7 +169,7 @@ trait StorageBase
         /**
          * Test for FAILURE
          */
-        
+
         return $data;
     }
 

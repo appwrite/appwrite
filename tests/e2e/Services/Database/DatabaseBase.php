@@ -292,6 +292,115 @@ trait DatabaseBase
     /**
      * @depends testCreateDocument
      */
+    public function testListDocumentsAfterPagination(array $data):array
+    {
+        /**
+         * Test after without order.
+         */
+        $base = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals('Captain America', $base['body']['documents'][0]['title']);
+        $this->assertEquals('Spider-Man: Far From Home', $base['body']['documents'][1]['title']);
+        $this->assertEquals('Spider-Man: Homecoming', $base['body']['documents'][2]['title']);
+        $this->assertCount(3, $base['body']['documents']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'orderAfter' => $base['body']['documents'][0]['$id']
+        ]);
+
+        $this->assertEquals($base['body']['documents'][1]['$id'], $documents['body']['documents'][0]['$id']);
+        $this->assertEquals($base['body']['documents'][2]['$id'], $documents['body']['documents'][1]['$id']);
+        $this->assertCount(2, $documents['body']['documents']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'orderAfter' => $base['body']['documents'][2]['$id']
+        ]);
+
+        $this->assertEmpty($documents['body']['documents']);
+
+        /**
+         * Test with ASC order and after.
+         */
+        $base = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'orderAttributes' => ['releaseYear'],
+            'orderTypes' => ['ASC'],
+        ]);
+
+        $this->assertEquals(1944, $base['body']['documents'][0]['releaseYear']);
+        $this->assertEquals(2017, $base['body']['documents'][1]['releaseYear']);
+        $this->assertEquals(2019, $base['body']['documents'][2]['releaseYear']);
+        $this->assertCount(3, $base['body']['documents']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'orderAttributes' => ['releaseYear'],
+            'orderTypes' => ['ASC'],
+            'orderAfter' => $base['body']['documents'][1]['$id']
+        ]);
+
+        $this->assertEquals($base['body']['documents'][2]['$id'], $documents['body']['documents'][0]['$id']);
+        $this->assertCount(1, $documents['body']['documents']);
+
+        /**
+         * Test with DESC order and after.
+         */
+        $base = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'orderAttributes' => ['releaseYear'],
+            'orderTypes' => ['DESC'],
+        ]);
+
+        $this->assertEquals(1944, $base['body']['documents'][2]['releaseYear']);
+        $this->assertEquals(2017, $base['body']['documents'][1]['releaseYear']);
+        $this->assertEquals(2019, $base['body']['documents'][0]['releaseYear']);
+        $this->assertCount(3, $base['body']['documents']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'orderAttributes' => ['releaseYear'],
+            'orderTypes' => ['DESC'],
+            'orderAfter' => $base['body']['documents'][1]['$id']
+        ]);
+
+        $this->assertEquals($base['body']['documents'][2]['$id'], $documents['body']['documents'][0]['$id']);
+        $this->assertCount(1, $documents['body']['documents']);
+
+        /**
+         * Test after with unknown document.
+         */
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'orderAfter' => 'unknown'
+        ]);
+
+        $this->assertEquals($documents['headers']['status-code'], 400);
+
+        return [];
+    }
+
+    /**
+     * @depends testCreateDocument
+     */
     public function testListDocumentsLimitAndOffset(array $data):array
     {
         $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([

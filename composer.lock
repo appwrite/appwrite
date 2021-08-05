@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f9727be2725e573a92b2d1aeeb77b421",
+    "content-hash": "1669de851a29702eba426a09a6871921",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1984,16 +1984,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.6.0",
+            "version": "dev-main",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "561adc215fce3bd3b8c3ebb971ca354fb1526f26"
+                "reference": "c48b60884f63a547520ecef35714827af1870bc4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/561adc215fce3bd3b8c3ebb971ca354fb1526f26",
-                "reference": "561adc215fce3bd3b8c3ebb971ca354fb1526f26",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/c48b60884f63a547520ecef35714827af1870bc4",
+                "reference": "c48b60884f63a547520ecef35714827af1870bc4",
                 "shasum": ""
             },
             "require": {
@@ -2011,6 +2011,7 @@
                 "utopia-php/cli": "^0.11.0",
                 "vimeo/psalm": "4.0.1"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -2041,9 +2042,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.6.0"
+                "source": "https://github.com/utopia-php/database/tree/main"
             },
-            "time": "2021-08-03T15:13:48+00:00"
+            "time": "2021-08-04T16:53:44+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -6254,9 +6255,18 @@
             "time": "2015-12-17T08:42:14+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-main",
+            "alias": "0.6.0",
+            "alias_normalized": "0.6.0.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -6278,5 +6288,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.1.0"
+    "plugin-api-version": "2.0.0"
 }
