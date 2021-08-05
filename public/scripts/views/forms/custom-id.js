@@ -48,7 +48,7 @@
         } else {
           switch(service) {
             case 'projects':
-              if (method == 'getPlatform') {
+              if (method == 'getPlatform' || method == 'getDomain') {
                 const projectId = element.form.elements.namedItem("projectId").value;
                 setValidity(console[service][method](projectId, value), event.target);
               } else {
@@ -88,7 +88,7 @@
           writer.focus();
           writer.addEventListener('blur', validate);
         } else {
-          info.innerHTML = "Appwrite will generate a unique ID";
+          info.innerHTML = "Appwrite will generate an unique ID";
           prevData = writer.value;
           writer.disabled = true;
           writer.value = 'auto-generated';
@@ -98,8 +98,11 @@
       }
 
       const syncEditorWithID = function (event) {
-        if (element.value !== 'unique()') {
+        if (element.value !== 'unique()' || idType != 'auto') {
           writer.value = element.value;
+        }
+        if(idType == 'auto') {
+          element.value = 'unique()';
         }
       }
 
