@@ -320,7 +320,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-            'userIdId' => 'unique()',
+            'userId' => 'unique()',
             'email' => $originalEmail,
             'password' => $originalPassword,
             'name' => $originalName,
@@ -489,7 +489,7 @@ class ProjectsConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 501);
+        $this->assertEquals($response['headers']['status-code'], 201);
 
         /**
          * Test for FAILURE
