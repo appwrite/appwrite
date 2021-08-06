@@ -23,6 +23,7 @@ class FunctionsCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'functionId' => 'unique()',
             'name' => 'Test',
             'vars' => [
                 'funcKey1' => 'funcValue1',
@@ -52,6 +53,7 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
+            'functionId' => 'unique()',
             'name' => 'Test',
             'execute' => ['user:'.$this->getUser()['$id']],
             'runtime' => 'php-8.0',
@@ -109,8 +111,6 @@ class FunctionsCustomClientTest extends Scope
             'async' => 1,
         ]);
 
-        $executionId = $execution['body']['$id'] ?? '';
-
         $this->assertEquals(201, $execution['headers']['status-code']);
        
         $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$function['body']['$id'].'/executions', array_merge([
@@ -138,6 +138,7 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
         ], [
+            'functionId' => 'unique()',
             'name' => 'Test',
             'execute' => ['role:all'],
             'runtime' => 'php-8.0',

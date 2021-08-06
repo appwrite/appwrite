@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Database\Validator\CustomId;
 use Appwrite\Detector\Detector;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response;
@@ -32,12 +33,13 @@ App::post('/v1/teams')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TEAM)
+    ->param('teamId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Team name. Max length: 128 chars.')
     ->param('roles', ['owner'], new ArrayList(new Key()), 'Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.', true)
     ->inject('response')
     ->inject('user')
     ->inject('dbForInternal')
-    ->action(function ($name, $roles, $response, $user, $dbForInternal) {
+    ->action(function ($teamId, $name, $roles, $response, $user, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForInternal */
@@ -47,7 +49,7 @@ App::post('/v1/teams')
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
-        $teamId = $dbForInternal->getId();
+        $teamId = $teamId == 'unique()' ? $dbForInternal->getId() : $teamId;
         $team = $dbForInternal->createDocument('teams', new Document([
             '$id' => $teamId ,
             '$read' => ['team:'.$teamId],
@@ -444,6 +446,42 @@ App::get('/v1/teams/:teamId/memberships')
             'memberships' => $users,
             'sum' => $sum,
         ]), Response::MODEL_MEMBERSHIP_LIST);
+    });
+
+App::get('/v1/teams/:teamId/memberships/:membershipId')
+    ->desc('Get Team Membership')
+    ->groups(['api', 'teams'])
+    ->label('scope', 'teams.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'teams')
+    ->label('sdk.method', 'getMembership')
+    ->label('sdk.description', '/docs/references/teams/get-team-member.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MEMBERSHIP_LIST)
+    ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->param('membershipId', '', new UID(), 'membership unique ID.')
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->action(function ($teamId, $membershipId, $response, $dbForInternal) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
+
+        $team = $dbForInternal->getDocument('teams', $teamId);
+
+        if ($team->isEmpty()) {
+            throw new Exception('Team not found', 404);
+        }
+
+        $membership = $dbForInternal->getDocument('memberships', $membershipId);
+
+        if($membership->isEmpty() || empty($membership->getAttribute('userId', null))) {
+            throw new Exception('Membership not found', 404);
+        }
+
+        $temp = $dbForInternal->getDocument('users', $membership->getAttribute('userId', null))->getArrayCopy(['email', 'name']);
+
+        $response->dynamic(new Document(\array_merge($temp, $membership->getArrayCopy())), Response::MODEL_MEMBERSHIP );
     });
 
 App::patch('/v1/teams/:teamId/memberships/:membershipId')

@@ -64,25 +64,25 @@ $events = array_keys($this->getParam('events', []));
                         <section data-forms-select-all>
                             <label data-ls-attrs="for=events-{{webhook.$id}}">Events</label>
                             <div class="row responsive thin">
-                                <?php foreach ($events as $i => $event) : ?>
+                                <?php foreach ($events as $i => $event): ?>
                                     <div class="col span-6 text-one-liner margin-bottom text-height-large text-size-small" title="<?php echo $event; ?>">
                                         <input type="checkbox" name="events" data-ls-bind="{{webhook.events}}" id="update-<?php echo $event; ?>" value="<?php echo $event; ?>" />
                                         &nbsp;
                                         <label class="inline" for="update-<?php echo $event; ?>"><?php echo $event; ?></label>
                                     </div>
-                                    <?php if (($i + 1) % 2 === 0) : ?>
+                                    <?php if (($i + 1) % 2 === 0): ?>
                                     </div>
                                     <div class="row responsive thin">
-                                    <?php endif; ?>
-    
-                                <?php endforeach; ?>
+                                    <?php endif;?>
+
+                                <?php endforeach;?>
                             </div>
                         </section>
 
                         <div class="margin-bottom toggle" data-ls-ui-open data-button-aria="Advanced Options">
                             <i class="icon-plus pull-end margin-top-tiny"></i>
                             <i class="icon-minus pull-end margin-top-tiny"></i>
-                            
+
                             <h2 class="margin-bottom">
                                 Advanced Options
                                 <small class="text-size-small">(optional)</small>
@@ -90,7 +90,7 @@ $events = array_keys($this->getParam('events', []));
 
                             <label data-ls-attrs="for=security-{{task.$id}}" class="margin-bottom-small">
                                 <div class="margin-bottom-small text-bold">SSL / TLS (Certificate verification)</div>
-                                        
+
                                 <input name="security" type="radio" required data-ls-attrs="id=secure-yes-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="true" data-cast-to="boolean" /> &nbsp; <span>Enabled</span> &nbsp;
                                 <input name="security" type="radio" required data-ls-attrs="id=secure-no-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="false" data-cast-to="boolean" /> &nbsp; <span>Disabled</span> &nbsp;
                             </label>
@@ -186,25 +186,25 @@ $events = array_keys($this->getParam('events', []));
                 <section data-forms-select-all>
                     <label for="events">Events</label>
                     <div class="row responsive thin">
-                        <?php foreach ($events as $i => $event) : ?>
+                        <?php foreach ($events as $i => $event): ?>
                             <div class="col span-6 text-one-liner margin-bottom text-height-large text-size-small" title="<?php echo $event; ?>">
                                 <input type="checkbox" name="events" id="add-<?php echo $event; ?>" value="<?php echo $event; ?>" />
                                 &nbsp;
                                 <label class="inline" for="add-<?php echo $event; ?>"><?php echo $event; ?></label>
                             </div>
-                            <?php if (($i + 1) % 2 === 0) : ?>
+                            <?php if (($i + 1) % 2 === 0): ?>
                             </div>
                             <div class="row responsive thin">
-                            <?php endif; ?>
+                            <?php endif;?>
 
-                        <?php endforeach; ?>
+                        <?php endforeach;?>
                     </div>
                 </section>
 
                 <div class="margin-bottom toggle" data-ls-ui-open data-button-aria="Advanced Options">
                     <i class="icon-plus pull-end margin-top-tiny"></i>
                     <i class="icon-minus pull-end margin-top-tiny"></i>
-                    
+
                     <h2 class="margin-bottom">
                         Advanced Options
                         <small class="text-size-small">(optional)</small>
@@ -212,7 +212,7 @@ $events = array_keys($this->getParam('events', []));
 
                     <label data-ls-attrs="for=security-{{task.$id}}" class="margin-bottom-small">
                         <div class="margin-bottom-small text-bold">SSL / TLS (Certificate verification)</div>
-                                        
+
                         <input name="security" type="radio" required data-ls-attrs="id=secure-yes" checked="checked" value="1" /> &nbsp; <span>Enabled</span> &nbsp;
                         <input name="security" type="radio" required data-ls-attrs="id=secure-no" value="0" /> &nbsp; <span>Disabled</span> &nbsp;
                     </label>
