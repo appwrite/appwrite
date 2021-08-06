@@ -1,3 +1,9 @@
+# Version 0.10.0
+
+## Features
+
+- Grouped auth related attributes in project collection. Introduced new attribute `auths` and removed all attributes related to auth methods and `usersAuthLimit` as well, all these are grouped under `auths` attribute 
+
 # Version 0.9.3
 
 ## Bugs
