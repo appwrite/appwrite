@@ -162,9 +162,9 @@ App::post('/v1/account/sessions')
 
         if (!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'))) {
             $audits
-            //->setParam('userId', $profile->getId())
+                //->setParam('userId', $profile->getId())
                 ->setParam('event', 'account.sessions.failed')
-                ->setParam('resource', 'users/' . ($profile ? $profile->getId() : ''))
+                ->setParam('resource', 'users/'.($profile ? $profile->getId() : ''))
             ;
 
             throw new Exception('Invalid credentials', 401); // Wrong password or username
@@ -270,13 +270,13 @@ App::get('/v1/account/sessions/oauth2/:provider')
             throw new Exception('This provider is disabled. Please configure the provider app ID and app secret key from your ' . APP_NAME . ' console to continue.', 412);
         }
 
-        $classname = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
+        $className = 'Appwrite\\Auth\\OAuth2\\'.\ucfirst($provider);
 
-        if (!\class_exists($classname)) {
+        if (!\class_exists($className)) {
             throw new Exception('Provider is not supported', 501);
         }
 
-        $oauth2 = new $classname($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure], $scopes);
+        $oauth2 = new $className($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure], $scopes);
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -381,11 +381,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $classname = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
 
-        if (!\class_exists($classname)) {
+        if (!\class_exists($className)) {
             throw new Exception('Provider is not supported', 501);
         }
 
-        $oauth2 = new $classname($appId, $appSecret, $callback);
+        $oauth2 = new $className($appId, $appSecret, $callback);
 
         if (!empty($state)) {
             try {

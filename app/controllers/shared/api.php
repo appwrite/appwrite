@@ -115,18 +115,10 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     ;
 }, ['utopia', 'request', 'response', 'project', 'user', 'register', 'events', 'audits', 'usage', 'deletes', 'database', 'dbForInternal'], 'api');
 
-App::init(function ($utopia, $request, $response, $project, $user) {
+App::init(function ($utopia, $request, $project) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
-    /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\Database\Document $project */
-    /** @var Utopia\Database\Document $user */
-    /** @var Utopia\Registry\Registry $register */
-    /** @var Appwrite\Event\Event $events */
-    /** @var Appwrite\Event\Event $audits */
-    /** @var Appwrite\Event\Event $usage */
-    /** @var Appwrite\Event\Event $deletes */
-    /** @var Appwrite\Event\Event $functions */
 
     $route = $utopia->match($request);
 
@@ -167,7 +159,7 @@ App::init(function ($utopia, $request, $response, $project, $user) {
             break;
     }
 
-}, ['utopia', 'request', 'response', 'project', 'user'], 'auth');
+}, ['utopia', 'request', 'project'], 'auth');
 
 App::shutdown(function ($utopia, $request, $response, $project, $events, $audits, $usage, $deletes, $database, $mode) {
     /** @var Utopia\App $utopia */
