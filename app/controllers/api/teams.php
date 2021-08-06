@@ -244,7 +244,6 @@ App::post('/v1/teams/:teamId/memberships')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
     ->label('abuse-limit', 10)
-    ->param('membershipId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
     ->param('teamId', '', new UID(), 'Team unique ID.')
     ->param('email', '', new Email(), 'New team member email.')
     ->param('name', '', new Text(128), 'New team member name. Max length: 128 chars.', true)
@@ -257,7 +256,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('locale')
     ->inject('audits')
     ->inject('mails')
-    ->action(function ($membershipId, $teamId, $email, $name, $roles, $url, $response, $project, $user, $dbForInternal, $locale, $audits, $mails) {
+    ->action(function ($teamId, $email, $name, $roles, $url, $response, $project, $user, $dbForInternal, $locale, $audits, $mails) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Document $user */
@@ -332,7 +331,7 @@ App::post('/v1/teams/:teamId/memberships')
         $secret = Auth::tokenGenerator();
 
         $membership = new Document([
-            '$id' => $membershipId == 'unique()' ? $dbForInternal->getId() : $membershipId,
+            '$id' => $dbForInternal->getId(),
             '$read' => ['role:all'],
             '$write' => ['user:'.$invitee->getId(), 'team:'.$team->getId().'/owner'],
             'userId' => $invitee->getId(),
