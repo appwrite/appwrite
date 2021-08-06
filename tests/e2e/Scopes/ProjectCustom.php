@@ -62,7 +62,6 @@ trait ProjectCustom
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
-            'keyId' => 'unique()',
             'name' => 'Demo Project Key',
             'scopes' => [
                 'users.read',
@@ -99,7 +98,6 @@ trait ProjectCustom
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
-            'webhookId' => 'unique()',
             'name' => 'Webhook Test',
             'events' => [
                 'account.create',
@@ -176,7 +174,6 @@ trait ProjectCustom
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
-            'keyId' => 'unique()',
             'name' => 'Demo Project Key',
             'scopes' => $scopes,
         ]);

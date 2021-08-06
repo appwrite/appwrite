@@ -701,7 +701,6 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'webhookId' => 'unique()',
             'name' => 'Webhook Test',
             'events' => ['account.create', 'account.update.email'],
             'url' => 'https://appwrite.io',
@@ -729,7 +728,6 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'webhookId' => 'unique()',
             'name' => 'Webhook Test',
             'events' => ['account.unknown', 'account.update.email'],
             'url' => 'https://appwrite.io',
@@ -937,7 +935,6 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'keyId' => 'unique()',
             'name' => 'Key Test',
             'scopes' => ['teams.read', 'teams.write'],
         ]);
@@ -958,7 +955,6 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'keyId' => 'unique()',
             'name' => 'Key Test',
             'scopes' => ['unknown'],
         ]);
@@ -1129,7 +1125,6 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'platformId' => 'unique()',
             'type' => 'web',
             'name' => 'Web App',
             'key' => '',
@@ -1151,7 +1146,6 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'platformId' => 'unique()',
             'type' => 'flutter-ios',
             'name' => 'Flutter App (iOS)',
             'key' => 'com.example.ios',
@@ -1173,7 +1167,6 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'platformId' => 'unique()',
             'type' => 'flutter-android',
             'name' => 'Flutter App (Android)',
             'key' => 'com.example.android',
@@ -1198,7 +1191,6 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'platformId' => 'unique()',
             'type' => 'unknown',
             'name' => 'Web App',
             'key' => '',
@@ -1475,7 +1467,6 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'domainId' => 'unique()',
             'domain' => 'sub.example.com',
         ]);
 
@@ -1496,7 +1487,6 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'domainId' => 'unique()',
             'domain' => '123',
         ]);
         

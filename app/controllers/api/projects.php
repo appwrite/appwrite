@@ -648,7 +648,6 @@ App::post('/v1/projects/:projectId/webhooks')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_WEBHOOK)
-    ->param('webhookId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
     ->param('events', null, new ArrayList(new WhiteList(array_keys(Config::getParam('events'), true), true)), 'Events list.')
@@ -658,7 +657,7 @@ App::post('/v1/projects/:projectId/webhooks')
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($webhookId, $projectId, $name, $events, $url, $security, $httpUser, $httpPass, $response, $dbForConsole) {
+    ->action(function ($projectId, $name, $events, $url, $security, $httpUser, $httpPass, $response, $dbForConsole) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
 
@@ -671,7 +670,7 @@ App::post('/v1/projects/:projectId/webhooks')
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
 
         $webhook = new Document([
-            '$id' => $webhookId == 'unique()' ? $dbForConsole->getId() : $webhookId,
+            '$id' => $dbForConsole->getId(),
             'name' => $name,
             'events' => $events,
             'url' => $url,
@@ -848,13 +847,12 @@ App::post('/v1/projects/:projectId/keys')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_KEY)
-    ->param('keyId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
     ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true)), 'Key scopes list.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($keyId, $projectId, $name, $scopes, $response, $dbForConsole) {
+    ->action(function ($projectId, $name, $scopes, $response, $dbForConsole) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
 
@@ -865,7 +863,7 @@ App::post('/v1/projects/:projectId/keys')
         }
 
         $key = new Document([
-            '$id' => $keyId == 'unique()' ? $dbForConsole->getId() : $keyId,
+            '$id' => $dbForConsole->getId(),
             'name' => $name,
             'scopes' => $scopes,
             'secret' => \bin2hex(\random_bytes(128)),
@@ -1026,7 +1024,6 @@ App::post('/v1/projects/:projectId/platforms')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PLATFORM)
-    ->param('platformId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('type', null, new WhiteList(['web', 'flutter-ios', 'flutter-android', 'flutter-linux', 'flutter-macos', 'flutter-windows', 'ios', 'android', 'unity'], true), 'Platform type.')
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
@@ -1035,7 +1032,7 @@ App::post('/v1/projects/:projectId/platforms')
     ->param('hostname', '', new Text(256), 'Platform client hostname. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($platformId, $projectId, $type, $name, $key, $store, $hostname, $response, $dbForConsole) {
+    ->action(function ($projectId, $type, $name, $key, $store, $hostname, $response, $dbForConsole) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
 
@@ -1046,7 +1043,7 @@ App::post('/v1/projects/:projectId/platforms')
         }
 
         $platform = new Document([
-            '$id' => $platformId == 'unique()' ? $dbForConsole->getId() : $platformId,
+            '$id' => $dbForConsole->getId(),
             'type' => $type,
             'name' => $name,
             'key' => $key,
@@ -1227,12 +1224,11 @@ App::post('/v1/projects/:projectId/domains')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOMAIN)
-    ->param('domainId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('domain', null, new DomainValidator(), 'Domain name.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($domainId, $projectId, $domain, $response, $dbForConsole) {
+    ->action(function ($projectId, $domain, $response, $dbForConsole) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
 
@@ -1257,7 +1253,7 @@ App::post('/v1/projects/:projectId/domains')
         $domain = new Domain($domain);
 
         $domain = new Document([
-            '$id' => $domainId == 'unique()' ? $dbForConsole->getId() : $domainId,
+            '$id' => $dbForConsole->getId(),
             'updated' => \time(),
             'domain' => $domain->get(),
             'tld' => $domain->getSuffix(),

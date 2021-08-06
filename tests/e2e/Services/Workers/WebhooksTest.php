@@ -87,7 +87,6 @@ class WebhooksTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'webhookId' => 'unique()',
             'name' => 'Webhook Worker Test',
             'events' => ['account.create', 'account.update.email'],
             'url' => 'http://request-catcher:5000/webhook',

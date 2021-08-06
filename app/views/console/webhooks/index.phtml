@@ -176,16 +176,6 @@ $events = array_keys($this->getParam('events', []));
                 data-failure-param-alert-classname="error">
 
                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-                <label for="webhookId">Webhook ID</label>
-                <input
-                    type="hidden"
-                    data-custom-id
-                    data-id-type="auto"
-                    data-validator="projects.getWebhook"
-                    required
-                    maxlength="36"
-                    id="webhookId"
-                    name="webhookId" />
 
                 <label for="name">Name</label>
                 <input type="text" class="full-width" id="name" name="name" required autocomplete="off" maxlength="128" />

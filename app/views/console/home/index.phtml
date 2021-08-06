@@ -271,17 +271,6 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="type" data-ls-bind="web" />
 
-        <label for="platformId">Platform ID <span class="tooltip large" data-tooltip="Choose an ID that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
-        <input
-            type="hidden"
-            data-custom-id
-            data-id-type="auto"
-            data-validator="projects.getPlatform"
-            required
-            maxlength="36"
-            name="platformId"
-            placeholder="my_web_app" />
-
         <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
         <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My Web App" maxlength="128" />
 
@@ -358,16 +347,6 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="type" data-ls-bind="android" />
 
-        <label for="platformId">Platform ID <span class="tooltip large" data-tooltip="Choose an ID that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
-        <input type="hidden"
-            data-custom-id
-            data-id-type="auto"
-            data-validator="projects.getPlatform"
-            required
-            maxlength="36"
-            name="platformId"
-            placeholder="my_android_app" />
-
         <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
         <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My Android App" maxlength="128" />
 
@@ -408,17 +387,6 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                 <input type="hidden" name="type" data-ls-bind="flutter-ios" />
 
-                <label for="platformId">Platform ID <span class="tooltip large" data-tooltip="Choose an ID that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
-                <input
-                    type="hidden"
-                    data-custom-id
-                    data-id-type="auto"
-                    data-validator="projects.getPlatform"
-                    required
-                    maxlength="36"
-                    name="platformId"
-                    placeholder="my_flutter_ios_app" />
-
                 <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
                 <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My iOS App" maxlength="128" />
 
@@ -453,17 +421,6 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                 <input type="hidden" name="type" data-ls-bind="flutter-android" />
 
-                <label for="platformId">Platform ID <span class="tooltip large" data-tooltip="Choose an ID that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
-                <input
-                    type="hidden"
-                    data-custom-id
-                    data-id-type="auto"
-                    data-validator="projects.getPlatform"
-                    required
-                    maxlength="36"
-                    name="platformId"
-                    placeholder="my_flutter_android_app" />
-
                 <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
                 <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My Android App" maxlength="128" />
 
@@ -496,17 +453,6 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
 
                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                 <input type="hidden" name="type" data-ls-bind="flutter-linux" />
-
-                <label for="platformId">Platform ID <span class="tooltip large" data-tooltip="Choose an ID that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
-                <input
-                    type="hidden"
-                    data-custom-id
-                    data-id-type="auto"
-                    data-validator="projects.getPlatform"
-                    required
-                    maxlength="36"
-                    name="platformId"
-                    placeholder="my_flutter_linux_app" />
 
                 <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
                 <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My Linux App" maxlength="128" />
@@ -541,17 +487,6 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                 <input type="hidden" name="type" data-ls-bind="flutter-macos" />
 
-                <label for="platformId">Platform ID <span class="tooltip large" data-tooltip="Choose an ID that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
-                <input
-                    type="hidden"
-                    data-custom-id
-                    data-id-type="auto"
-                    data-validator="projects.getPlatform"
-                    required
-                    maxlength="36"
-                    name="platformId"
-                    placeholder="my_flutter_macos_app" />
-
                 <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
                 <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My Mac OS App" maxlength="128" />
 
@@ -584,17 +519,6 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
 
                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                 <input type="hidden" name="type" data-ls-bind="flutter-windows" />
-
-                <label for="platformId">Platform ID <span class="tooltip large" data-tooltip="Choose an ID that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
-                <input
-                    type="hidden"
-                    data-custom-id
-                    data-id-type="auto"
-                    data-validator="projects.getPlatform"
-                    required
-                    maxlength="36"
-                    name="platformId"
-                    placeholder="my_flutter_windows_app" />
 
                 <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
                 <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My Windows App" maxlength="128" />
