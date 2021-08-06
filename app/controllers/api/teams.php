@@ -97,16 +97,25 @@ App::get('/v1/teams')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('after', '', new UID(), 'ID of the team used to return teams listed after. Should be used for efficient pagination working with many teams.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($search, $limit, $offset, $orderType, $response, $dbForInternal) {
+    ->action(function ($search, $limit, $offset, $after, $orderType, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
         $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
 
-        $results = $dbForInternal->find('teams', $queries, $limit, $offset, ['_id'], [$orderType]);
+        if (!empty($after)) {
+            $afterTeam = $dbForInternal->getDocument('teams', $after);
+
+            if ($afterTeam->isEmpty()) {
+                throw new Exception('Team for after not found', 400);
+            }
+        }
+
+        $results = $dbForInternal->find('teams', $queries, $limit, $offset, [], [$orderType], $afterTeam ?? null);
         $sum = $dbForInternal->count('teams', $queries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
@@ -413,10 +422,11 @@ App::get('/v1/teams/:teamId/memberships')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('after', '', new UID(), 'ID of the file used to return files listed after. Should be used for efficient pagination working with many files.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($teamId, $search, $limit, $offset, $orderType, $response, $dbForInternal) {
+    ->action(function ($teamId, $search, $limit, $offset, $after, $orderType, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
@@ -426,7 +436,15 @@ App::get('/v1/teams/:teamId/memberships')
             throw new Exception('Team not found', 404);
         }
 
-        $memberships = $dbForInternal->find('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], $limit, $offset, ['_id'], [$orderType]);
+        if (!empty($after)) {
+            $afterMembership = $dbForInternal->getDocument('memberships', $after);
+
+            if ($afterMembership->isEmpty()) {
+                throw new Exception('Membership for after not found', 400);
+            }
+        }
+
+        $memberships = $dbForInternal->find('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], $limit, $offset, [], [$orderType], $afterMembership ?? null);
         $sum = $dbForInternal->count('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], APP_LIMIT_COUNT);
         $users = [];
 
