@@ -34,6 +34,8 @@ $root = ($this->getParam('root') !== 'disabled');
             data-failure="alert"
             data-failure-param-alert-text="Login failed. Please check your credentials."
             data-failure-param-alert-classname="error">
+            
+            <input name="sessionId" type="hidden" value="unique()">
 
             <input name="email" type="email" class="full-width" autocomplete="email" placeholder="Email" required>
 
