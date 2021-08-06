@@ -47,20 +47,7 @@
         } else {
           switch (service) {
             case 'projects':
-              if (method == 'getPlatform' || method == 'getDomain') {
-                const projectId = element.form.elements.namedItem("projectId").value;
-                setValidity(console[service][method](projectId, value), event.target);
-              } else {
-                setValidity(console[service][method](value), event.target);
-              }
-              break;
-            case 'teams':
-              if (method == 'getMembership') {
-                const teamId = element.form.elements.namedItem("teamId").value;
-                setValidity(sdk[service][method](teamId, value), event.target);
-              } else {
-                setValidity(sdk[service][method](teamId, value), event.target);
-              }
+              setValidity(console[service][method](value), event.target);
               break;
             default:
               setValidity(sdk[service][method](value), event.target);
