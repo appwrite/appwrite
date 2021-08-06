@@ -641,7 +641,6 @@ App::post('/v1/functions/:functionId/executions')
     ->label('sdk.response.model', Response::MODEL_EXECUTION)
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
-    ->param('executionId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('data', '', new Text(8192), 'String of custom data to send to function.', true)
     // ->param('async', 1, new Range(0, 1), 'Execute code asynchronously. Pass 1 for true, 0 for false. Default value is 1.', true)
@@ -649,7 +648,7 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('project')
     ->inject('dbForInternal')
     ->inject('user')
-    ->action(function ($executionId, $functionId, $data, /*$async,*/ $response, $project, $dbForInternal, $user) {
+    ->action(function ($functionId, $data, /*$async,*/ $response, $project, $dbForInternal, $user) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForInternal */
@@ -684,7 +683,7 @@ App::post('/v1/functions/:functionId/executions')
         Authorization::disable();
 
         $execution = $dbForInternal->createDocument('executions', new Document([
-            '$id' => $executionId == 'unique()' ? $dbForInternal->getId() : $executionId,
+            '$id' => $dbForInternal->getId(),
             '$read' => (!$user->isEmpty()) ? ['user:' . $user->getId()] : [],
             '$write' => [],
             'dateCreated' => time(),
