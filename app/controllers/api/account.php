@@ -379,7 +379,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
         }
 
-        $classname = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
+        $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
 
         if (!\class_exists($className)) {
             throw new Exception('Provider is not supported', 501);
