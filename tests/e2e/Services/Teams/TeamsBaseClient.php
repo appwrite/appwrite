@@ -52,7 +52,6 @@ trait TeamsBaseClient
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'membershipId' => 'unique()',
             'email' => $email,
             'name' => $name,
             'roles' => ['admin', 'editor'],
@@ -85,7 +84,6 @@ trait TeamsBaseClient
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'membershipId' => 'unique()',
             'email' => $email,
             'name' => 'Friend User',
             'roles' => ['admin', 'editor'],

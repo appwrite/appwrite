@@ -493,7 +493,6 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'membershipId' => 'unique()',
             'email' => $email,
             'name' => 'Friend User',
             'roles' => ['admin', 'editor'],
@@ -552,7 +551,6 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'membershipId' => 'unique()',
             'email' => $email,
             'name' => 'Friend User',
             'roles' => ['admin', 'editor'],
