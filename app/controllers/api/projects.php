@@ -31,14 +31,6 @@ App::init(function ($project) {
     }
 }, ['project'], 'projects');
 
-App::init(function ($project) {
-    /** @var Utopia\Database\Document $project */
-
-    if($project->getId() !== 'console') {
-        throw new Exception('Access to this API is forbidden.', 401);
-    }
-}, ['project'], 'projects');
-
 App::post('/v1/projects')
     ->desc('Create Project')
     ->groups(['api', 'projects'])
