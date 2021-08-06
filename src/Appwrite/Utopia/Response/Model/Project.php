@@ -158,7 +158,7 @@ class Project extends Model
             $key = $method['key'] ?? '';
 
             $this
-                ->addRule($key, [
+                ->addRule('auth' . ucfirst($key), [
                     'type' => self::TYPE_BOOLEAN,
                     'description' => $name.' auth method status',
                     'example' => true,
@@ -229,9 +229,9 @@ class Project extends Model
         $auth = Config::getParam('auth', []);
 
         foreach ($auth as $index => $method) {
-            $key = $method['key'] ?? '';
+            $key = $method['key'];
             $value = $authValues[$key] ?? true;
-            $document->setAttribute($key, $value);
+            $document->setAttribute('auth' . ucfirst($key), $value);
         }
 
         return $document;
