@@ -81,14 +81,23 @@ App::get('/v1/users')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('after', '', new UID(), 'ID of the user used to return users listed after. Should be used for efficient pagination working with many users.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($search, $limit, $offset, $orderType, $response, $dbForInternal) {
+    ->action(function ($search, $limit, $offset, $after, $orderType, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $results = $dbForInternal->find('users', [], $limit, $offset, ['_id'], [$orderType]);
+        if (!empty($after)) {
+            $afterUser = $dbForInternal->getDocument('users', $after);
+
+            if ($afterUser->isEmpty()) {
+                throw new Exception('User for after not found', 400);
+            }
+        }
+
+        $results = $dbForInternal->find('users', [], $limit, $offset, [], [$orderType], $afterUser ?? null);
         $sum = $dbForInternal->count('users', [], APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
