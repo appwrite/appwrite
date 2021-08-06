@@ -90,7 +90,7 @@ class Project extends Model
                 'default' => '',
                 'example' => '131102020',
             ])
-            ->addRule('usersAuthLimit', [
+            ->addRule('authLimit', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Max users allowed. 0 is unlimited.',
                 'default' => 0,
@@ -229,6 +229,10 @@ class Project extends Model
         $auth = Config::getParam('auth', []);
 
         foreach ($auth as $index => $method) {
+            if($method == 'limit') {
+                $document->setAttribute('authLimit', $authValues['limit']);
+                continue;
+            }
             $key = $method['key'];
             $value = $authValues[$key] ?? true;
             $document->setAttribute('auth' . ucfirst($key), $value);

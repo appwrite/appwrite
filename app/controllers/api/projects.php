@@ -537,8 +537,11 @@ App::patch('/v1/projects/:projectId/auth/limit')
             throw new Exception('Project not found', 404);
         }
 
+        $auths = $project->getAttribute('auths', []);
+        $auths['limit'] = $limit;
+
         $dbForConsole->updateDocument('projects', $project->getId(), $project
-                ->setAttribute('usersAuthLimit', $limit)
+                ->setAttribute('auths', $auths)
         );
 
         $response->dynamic($project, Response::MODEL_PROJECT);

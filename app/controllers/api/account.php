@@ -71,7 +71,7 @@ App::post('/v1/account')
             }
         }
 
-        $limit = $project->getAttribute('usersAuthLimit', 0);
+        $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
         if ($limit !== 0) {
             $sum = $dbForInternal->count('users', [], APP_LIMIT_USERS);
@@ -450,7 +450,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $user = $dbForInternal->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
 
             if ($user === false || $user->isEmpty()) { // Last option -> create the user, generate random password
-                $limit = $project->getAttribute('usersAuthLimit', 0);
+                $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
         
                 if ($limit !== 0) {
                     $sum = $dbForInternal->count('users', [], APP_LIMIT_COUNT);
@@ -614,7 +614,7 @@ App::post('/v1/account/sessions/anonymous')
             throw new Exception('Cannot create an anonymous user when logged in.', 401);
         }
 
-        $limit = $project->getAttribute('usersAuthLimit', 0);
+        $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
         if ($limit !== 0) {
             $sum = $dbForInternal->count('users', [], APP_LIMIT_COUNT);
