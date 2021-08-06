@@ -418,7 +418,6 @@ App::post('/v1/functions/:functionId/tags')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TAG)
-    ->param('tagId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('command', '', new Text('1028'), 'Code execution command.')
     ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', false)
@@ -426,7 +425,7 @@ App::post('/v1/functions/:functionId/tags')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($tagId, $functionId, $command, $file, $request, $response, $dbForInternal, $usage) {
+    ->action(function ($functionId, $command, $file, $request, $response, $dbForInternal, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
@@ -474,7 +473,7 @@ App::post('/v1/functions/:functionId/tags')
         }
         
         $tag = $dbForInternal->createDocument('tags', new Document([
-            '$id' => $tagId == 'unique()' ? $dbForInternal->getId() : $tagId,
+            '$id' => $dbForInternal->getId(),
             '$read' => [],
             '$write' => [],
             'functionId' => $function->getId(),

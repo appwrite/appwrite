@@ -404,7 +404,6 @@ class WebhooksCustomServerTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'tagId' => 'unique()',
             'command' => 'php index.php',
             'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/timeout.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
         ]);

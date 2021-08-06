@@ -77,7 +77,6 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'tagId' => 'unique()',
             'command' => 'php index.php',
             'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
         ]);
@@ -160,7 +159,6 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
         ], [
-            'tagId' => 'unique()',
             'command' => 'php index.php',
             'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php-fn.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'), //different tarball names intentional
         ]);

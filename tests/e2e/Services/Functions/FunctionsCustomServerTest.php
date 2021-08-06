@@ -183,7 +183,6 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'tagId' => 'unique()',
             'command' => 'php index.php',
             'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
         ]);
@@ -480,7 +479,6 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'tagId' => 'unique()',
             'command' => $command,
             'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
         ]);
@@ -560,7 +558,6 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'tagId' => 'unique()',
             'command' => $command,
             'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
         ]);
