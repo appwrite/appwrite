@@ -408,16 +408,12 @@
                  * Allow the user to login into their account by providing a valid email and
                  * password combination. This route will create a new session for the user.
                  *
-                 * @param {string} sessionId
                  * @param {string} email
                  * @param {string} password
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createSession: (sessionId, email, password) => __awaiter(this, void 0, void 0, function* () {
-                    if (typeof sessionId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "sessionId"');
-                    }
+                createSession: (email, password) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof email === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "email"');
                     }
@@ -426,9 +422,6 @@
                     }
                     let path = '/account/sessions';
                     let payload = {};
-                    if (typeof sessionId !== 'undefined') {
-                        payload['sessionId'] = sessionId;
-                    }
                     if (typeof email !== 'undefined') {
                         payload['email'] = email;
                     }
@@ -1955,23 +1948,16 @@
                  * function execution process will start asynchronously.
                  *
                  * @param {string} functionId
-                 * @param {string} executionId
                  * @param {string} data
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createExecution: (functionId, executionId, data) => __awaiter(this, void 0, void 0, function* () {
+                createExecution: (functionId, data) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
-                    if (typeof executionId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "executionId"');
-                    }
                     let path = '/functions/{functionId}/executions'.replace('{functionId}', functionId);
                     let payload = {};
-                    if (typeof executionId !== 'undefined') {
-                        payload['executionId'] = executionId;
-                    }
                     if (typeof data !== 'undefined') {
                         payload['data'] = data;
                     }
@@ -2084,17 +2070,13 @@
                  *
                  * Use the "command" param to set the entry point used to execute your code.
                  *
-                 * @param {string} tagId
                  * @param {string} functionId
                  * @param {string} command
                  * @param {File} code
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createTag: (tagId, functionId, command, code) => __awaiter(this, void 0, void 0, function* () {
-                    if (typeof tagId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "tagId"');
-                    }
+                createTag: (functionId, command, code) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
@@ -2106,9 +2088,6 @@
                     }
                     let path = '/functions/{functionId}/tags'.replace('{functionId}', functionId);
                     let payload = {};
-                    if (typeof tagId !== 'undefined') {
-                        payload['tagId'] = tagId;
-                    }
                     if (typeof command !== 'undefined') {
                         payload['command'] = command;
                     }
@@ -2798,26 +2777,19 @@
                  *
                  *
                  * @param {string} projectId
-                 * @param {string} domainId
                  * @param {string} domain
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createDomain: (projectId, domainId, domain) => __awaiter(this, void 0, void 0, function* () {
+                createDomain: (projectId, domain) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
-                    }
-                    if (typeof domainId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "domainId"');
                     }
                     if (typeof domain === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "domain"');
                     }
                     let path = '/projects/{projectId}/domains'.replace('{projectId}', projectId);
                     let payload = {};
-                    if (typeof domainId !== 'undefined') {
-                        payload['domainId'] = domainId;
-                    }
                     if (typeof domain !== 'undefined') {
                         payload['domain'] = domain;
                     }
@@ -2919,18 +2891,14 @@
                  *
                  *
                  * @param {string} projectId
-                 * @param {string} keyId
                  * @param {string} name
                  * @param {string[]} scopes
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createKey: (projectId, keyId, name, scopes) => __awaiter(this, void 0, void 0, function* () {
+                createKey: (projectId, name, scopes) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
-                    }
-                    if (typeof keyId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "keyId"');
                     }
                     if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
@@ -2940,9 +2908,6 @@
                     }
                     let path = '/projects/{projectId}/keys'.replace('{projectId}', projectId);
                     let payload = {};
-                    if (typeof keyId !== 'undefined') {
-                        payload['keyId'] = keyId;
-                    }
                     if (typeof name !== 'undefined') {
                         payload['name'] = name;
                     }
@@ -3095,7 +3060,6 @@
                  *
                  *
                  * @param {string} projectId
-                 * @param {string} platformId
                  * @param {string} type
                  * @param {string} name
                  * @param {string} key
@@ -3104,12 +3068,9 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createPlatform: (projectId, platformId, type, name, key, store, hostname) => __awaiter(this, void 0, void 0, function* () {
+                createPlatform: (projectId, type, name, key, store, hostname) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
-                    }
-                    if (typeof platformId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "platformId"');
                     }
                     if (typeof type === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "type"');
@@ -3119,9 +3080,6 @@
                     }
                     let path = '/projects/{projectId}/platforms'.replace('{projectId}', projectId);
                     let payload = {};
-                    if (typeof platformId !== 'undefined') {
-                        payload['platformId'] = platformId;
-                    }
                     if (typeof type !== 'undefined') {
                         payload['type'] = type;
                     }
@@ -3310,7 +3268,6 @@
                  *
                  *
                  * @param {string} projectId
-                 * @param {string} webhookId
                  * @param {string} name
                  * @param {string[]} events
                  * @param {string} url
@@ -3320,12 +3277,9 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createWebhook: (projectId, webhookId, name, events, url, security, httpUser, httpPass) => __awaiter(this, void 0, void 0, function* () {
+                createWebhook: (projectId, name, events, url, security, httpUser, httpPass) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
-                    }
-                    if (typeof webhookId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "webhookId"');
                     }
                     if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
@@ -3341,9 +3295,6 @@
                     }
                     let path = '/projects/{projectId}/webhooks'.replace('{projectId}', projectId);
                     let payload = {};
-                    if (typeof webhookId !== 'undefined') {
-                        payload['webhookId'] = webhookId;
-                    }
                     if (typeof name !== 'undefined') {
                         payload['name'] = name;
                     }
@@ -3944,7 +3895,6 @@
                  * added your platforms in the console interface.
                  *
                  * @param {string} teamId
-                 * @param {string} membershipId
                  * @param {string} email
                  * @param {string[]} roles
                  * @param {string} url
@@ -3952,12 +3902,9 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createMembership: (teamId, membershipId, email, roles, url, name) => __awaiter(this, void 0, void 0, function* () {
+                createMembership: (teamId, email, roles, url, name) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof teamId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "teamId"');
-                    }
-                    if (typeof membershipId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "membershipId"');
                     }
                     if (typeof email === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "email"');
@@ -3970,9 +3917,6 @@
                     }
                     let path = '/teams/{teamId}/memberships'.replace('{teamId}', teamId);
                     let payload = {};
-                    if (typeof membershipId !== 'undefined') {
-                        payload['membershipId'] = membershipId;
-                    }
                     if (typeof email !== 'undefined') {
                         payload['email'] = email;
                     }
