@@ -201,7 +201,7 @@ trait TeamsBaseServer
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals('Arsenal', $response['body']['name']);
-        $this->assertEquals(2, $response['body']['sum']);
+        $this->assertEquals(1, $response['body']['sum']);
         $this->assertIsInt($response['body']['sum']);
         $this->assertIsInt($response['body']['dateCreated']);
 
