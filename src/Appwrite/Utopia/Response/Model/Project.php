@@ -225,6 +225,15 @@ class Project extends Model
             $document->setAttribute('serviceStatusFor'.ucfirst($key), $value);
         }
 
+        $authValues = $document->getAttribute('auths',[]);
+        $auth = Config::getParam('auth', []);
+
+        foreach ($auth as $index => $method) {
+            $key = $method['key'] ?? '';
+            $value = $authValues[$key] ?? true;
+            $document->setAttribute($key, $value);
+        }
+
         return $document;
     }
 }

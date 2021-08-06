@@ -167,6 +167,17 @@ $collections = [
                 'filters' => ['json'],
             ],
             [
+                '$id' => 'auths',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
                 '$id' => 'platforms',
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -1419,20 +1430,6 @@ foreach ($providers as $index => $provider) {
         'type' => Database::VAR_STRING,
         'format' => '',
         'size' => 16384,
-        'signed' => true,
-        'required' => false,
-        'default' => null,
-        'array' => false,
-        'filters' => [],
-    ];
-}
-
-foreach ($auth as $index => $method) {
-    $collections['projects']['attributes'][] = [
-        '$id' => $method['key'] ?? '',
-        'type' => Database::VAR_BOOLEAN,
-        'format' => '',
-        'size' => 0,
         'signed' => true,
         'required' => false,
         'default' => null,

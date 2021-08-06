@@ -69,6 +69,12 @@ App::post('/v1/projects')
         if ($team->isEmpty()) {
             throw new Exception('Team not found', 404);
         }
+        
+        $auth = Config::getParam('auth', []);
+        $auths = [];
+        foreach ($auth as $index => $method) {
+            $auths[$method['key'] ?? ''] = true;
+        }
 
         $project = $dbForConsole->createDocument('projects', new Document([
             '$read' => ['team:' . $teamId],
@@ -90,11 +96,7 @@ App::post('/v1/projects')
             'webhooks' => [],
             'keys' => [],
             'domains' => [],
-            'usersAuthEmailPassword' => true,
-            'usersAuthAnonymous' => true,
-            'usersAuthInvites' => true,
-            'usersAuthJWT' => true,
-            'usersAuthPhone' => true,
+            'auths' => $auths,
         ]));
 
         $collections = Config::getParam('collections2', []); /** @var array $collections */
@@ -570,9 +572,10 @@ App::patch('/v1/projects/:projectId/auth/:method')
             throw new Exception('Project not found', 404);
         }
 
-        $dbForConsole->updateDocument('projects', $project->getId(), $project
-                ->setAttribute($authKey, $status)
-        );
+        $auths = $project->getAttribute('auths', []);
+        $auths[$authKey] = $status;
+
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('auths', $auths));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
