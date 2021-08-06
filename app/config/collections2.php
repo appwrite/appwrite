@@ -167,6 +167,17 @@ $collections = [
                 'filters' => ['json'],
             ],
             [
+                '$id' => 'providers',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
                 '$id' => 'platforms',
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -1393,38 +1404,5 @@ $collections = [
         ],
     ],
 ];
-
-/*
- * Add enabled OAuth2 providers to default data rules
- */
-foreach ($providers as $index => $provider) {
-    if (!$provider['enabled']) {
-        continue;
-    }
-
-    $collections['projects']['attributes'][] = [
-        '$id' => 'usersOauth2' . \ucfirst($index) . 'Appid',
-        'type' => Database::VAR_STRING,
-        'format' => '',
-        'size' => 16384,
-        'signed' => true,
-        'required' => false,
-        'default' => null,
-        'array' => false,
-        'filters' => [],
-    ];
-
-    $collections['projects']['attributes'][] = [
-        '$id' => 'usersOauth2' . \ucfirst($index) . 'Secret',
-        'type' => Database::VAR_STRING,
-        'format' => '',
-        'size' => 16384,
-        'signed' => true,
-        'required' => false,
-        'default' => null,
-        'array' => false,
-        'filters' => [],
-    ];
-}
 
 return $collections;

@@ -138,13 +138,13 @@ class Project extends Model
             $name = (isset($provider['name'])) ? $provider['name'] : 'Unknown';
 
             $this
-                ->addRule('usersOauth2'.\ucfirst($index).'Appid', [
+                ->addRule('provider'.\ucfirst($index).'Appid', [
                     'type' => self::TYPE_STRING,
                     'description' => $name.' OAuth app ID.',
                     'example' => '123247283472834787438',
                     'default' => '',
                 ])
-                ->addRule('usersOauth2'.\ucfirst($index).'Secret', [
+                ->addRule('provider'.\ucfirst($index).'Secret', [
                     'type' => self::TYPE_STRING,
                     'description' => $name.' OAuth secret ID.',
                     'example' => 'djsgudsdsewe43434343dd34...',
@@ -236,6 +236,18 @@ class Project extends Model
             $key = $method['key'];
             $value = $authValues[$key] ?? true;
             $document->setAttribute('auth' . ucfirst($key), $value);
+        }
+
+        $providers = Config::getParam('providers', []);
+        $providerValues = $document->getAttribute('providers', []);
+
+        foreach ($providers as $key => $provider) {
+            if (!$provider['enabled']) {
+                continue;
+            }
+            $appId = $providerValues[$key . 'Appid'] ?? '';
+            $secret = $providerValues[$key . 'Secret'] ?? '';
+            $document->setAttribute($key . 'Appid', $appId)->setAttribute($key . 'Secret', $secret);
         }
 
         return $document;

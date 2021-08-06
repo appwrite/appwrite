@@ -505,10 +505,11 @@ App::patch('/v1/projects/:projectId/oauth2')
             throw new Exception('Project not found', 404);
         }
 
-        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
-                ->setAttribute('usersOauth2' . \ucfirst($provider) . 'Appid', $appId)
-                ->setAttribute('usersOauth2' . \ucfirst($provider) . 'Secret', $secret)
-        );
+        $providers = $project->getAttribute('providers', []);
+        $providers[$provider . 'Appid'] = $appId;
+        $providers[$provider . 'Secret'] = $secret;
+
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('providers', $providers));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });

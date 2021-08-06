@@ -275,8 +275,8 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals($id, $response['body']['$id']);
 
         foreach ($providers as $key => $provider) {
-            $this->assertEquals('AppId-'.ucfirst($key), $response['body']['usersOauth2'.ucfirst($key).'Appid']);
-            $this->assertEquals('Secret-'.ucfirst($key), $response['body']['usersOauth2'.ucfirst($key).'Secret']);
+            $this->assertEquals('AppId-'.ucfirst($key), $response['body']['provider'.ucfirst($key).'Appid']);
+            $this->assertEquals('Secret-'.ucfirst($key), $response['body']['provider'.ucfirst($key).'Secret']);
         }
 
         /**

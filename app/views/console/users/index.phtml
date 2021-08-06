@@ -439,15 +439,15 @@ $auth = $this->getParam('auth', []);
 
                                     <?php if(!$form): ?>
                                         <label for="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid">App ID</label>
-                                        <input name="appId" id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid" type="text" autocomplete="off" data-ls-bind="{{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid}}">
+                                        <input name="appId" id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid" type="text" autocomplete="off" data-ls-bind="{{console-project.provider<?php echo $this->escape(ucfirst($provider)); ?>Appid}}">
                                     
                                         <label for="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret">App Secret</label>
-                                        <input name="secret" data-forms-show-secret id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret" type="password" autocomplete="off" data-ls-bind="{{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret}}">
+                                        <input name="secret" data-forms-show-secret id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret" type="password" autocomplete="off" data-ls-bind="{{console-project.provider<?php echo $this->escape(ucfirst($provider)); ?>Secret}}">
                                     <?php else: ?>
                                         <label for="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid">Bundle ID <span class="tooltip" data-tooltip="Attribute internal display name"><i class="icon-info-circled"></i></span></label>
-                                        <input name="appId" id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid" type="text" autocomplete="off" data-ls-bind="{{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid}}" placeholder="com.company.appname" />
+                                        <input name="appId" id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid" type="text" autocomplete="off" data-ls-bind="{{console-project.provider<?php echo $this->escape(ucfirst($provider)); ?>Appid}}" placeholder="com.company.appname" />
 
-                                        <input name="secret" data-forms-oauth-apple id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret" type="hidden" autocomplete="off" data-ls-bind="{{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret}}" />
+                                        <input name="secret" data-forms-oauth-apple id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret" type="hidden" autocomplete="off" data-ls-bind="{{console-project.provider<?php echo $this->escape(ucfirst($provider)); ?>Secret}}" />
                                     <?php endif; ?>
 
                                     <div class="info row thin margin-bottom margin-top">
@@ -469,14 +469,14 @@ $auth = $this->getParam('auth', []);
 
                             <div class="box padding-small margin-bottom">
                                 <span data-ls-if="
-                                    {{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid}} &&
-                                    {{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret}}">
+                                    {{console-project.provider<?php echo $this->escape(ucfirst($provider)); ?>Appid}} &&
+                                    {{console-project.provider<?php echo $this->escape(ucfirst($provider)); ?>Secret}}">
                                     <button class="switch on pull-end" data-ls-ui-trigger="provider-update-<?php echo $provider; ?>"></button>
                                 </span>
 
                                 <span data-ls-if="
-                                    !{{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid}} ||
-                                    !{{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret}}">
+                                    !{{console-project.provider<?php echo $this->escape(ucfirst($provider)); ?>Appid}} ||
+                                    !{{console-project.provider<?php echo $this->escape(ucfirst($provider)); ?>Secret}}">
                                     <button class="switch pull-end" data-ls-ui-trigger="provider-update-<?php echo $this->escape($provider); ?>"></button>
                                 </span>
 

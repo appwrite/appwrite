@@ -256,8 +256,8 @@ App::get('/v1/account/sessions/oauth2/:provider')
 
         $protocol = $request->getProtocol();
         $callback = $protocol.'://'.$request->getHostname().'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
-        $appId = $project->getAttribute('usersOauth2'.\ucfirst($provider).'Appid', '');
-        $appSecret = $project->getAttribute('usersOauth2'.\ucfirst($provider).'Secret', '{}');
+        $appId = $project->getAttribute('providers', [])[$provider.'Appid'] ?? '';
+        $appSecret = $project->getAttribute('providers', [])[$provider.'Secret'] ?? '{}';
 
         if (!empty($appSecret) && isset($appSecret['version'])) {
             $key = App::getEnv('_APP_OPENSSL_KEY_V'.$appSecret['version']);
@@ -369,8 +369,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
         $validateURL = new URL();
 
-        $appId = $project->getAttribute('usersOauth2'.\ucfirst($provider).'Appid', '');
-        $appSecret = $project->getAttribute('usersOauth2'.\ucfirst($provider).'Secret', '{}');
+        $appId = $project->getAttribute('providers', [])[$provider.'Appid'] ?? '';
+        $appSecret = $project->getAttribute('providers', [])[$provider.'Secret'] ?? '{}';
 
         if (!empty($appSecret) && isset($appSecret['version'])) {
             $key = App::getEnv('_APP_OPENSSL_KEY_V'.$appSecret['version']);

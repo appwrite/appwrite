@@ -2,7 +2,9 @@
 
 ## Features
 
-- Grouped auth related attributes in project collection. Introduced new attribute `auths` and removed all attributes related to auth methods and `usersAuthLimit` as well, all these are grouped under `auths` attribute 
+- Grouped auth related attributes in project collection. Introduced new attribute `auths` and removed all attributes related to auth methods and `usersAuthLimit` as well, all these are grouped under `auths` attribute
+- Grouped oAuth related attributes in project collection. Introduced new attribute `providers` and removed all attributes related to OAuth2 providers. All OAuth2 attributes are grouped under `providers`
+- Project model changed, `userAuth<AuthMethod>` => `auth<AuthMethod>` example `userAuthEmailPassword` => `authEmailPassword`, also `userOauth2<Provider>...` => `provider<Provider>...` example `userOauth2GithubAppid` => `providerGithubAppid`
 
 # Version 0.9.3
 
