@@ -58,6 +58,9 @@ $events = array_keys($this->getParam('events', []));
                         <label data-ls-attrs="for=name-{{webhook.$id}}">Name</label>
                         <input type="text" class="full-width" data-ls-attrs="id=name-{{webhook.$id}}" name="name" required autocomplete="off" data-ls-bind="{{webhook.name}}" maxlength="128" />
 
+                        <label data-ls-attrs="for=url-{{webhook.$id}}">POST URL</label>
+                        <input type="url" class="full-width" data-ls-attrs="id=url-{{webhook.$id}}" name="url" required autocomplete="off" placeholder="https://example.com/callback" data-ls-bind="{{webhook.url}}" />
+
                         <section data-forms-select-all>
                             <label data-ls-attrs="for=events-{{webhook.$id}}">Events</label>
                             <div class="row responsive thin">
@@ -75,9 +78,6 @@ $events = array_keys($this->getParam('events', []));
                                 <?php endforeach; ?>
                             </div>
                         </section>
-
-                        <label data-ls-attrs="for=url-{{webhook.$id}}">POST URL</label>
-                        <input type="url" class="full-width" data-ls-attrs="id=url-{{webhook.$id}}" name="url" required autocomplete="off" placeholder="https://example.com/callback" data-ls-bind="{{webhook.url}}" />
 
                         <div class="margin-bottom toggle" data-ls-ui-open data-button-aria="Advanced Options">
                             <i class="icon-plus pull-end margin-top-tiny"></i>
@@ -180,6 +180,9 @@ $events = array_keys($this->getParam('events', []));
                 <label for="name">Name</label>
                 <input type="text" class="full-width" id="name" name="name" required autocomplete="off" maxlength="128" />
 
+                <label for="url">POST URL</label>
+                <input type="url" class="full-width" id="url" name="url" required autocomplete="off" placeholder="https://example.com/callback" />
+
                 <section data-forms-select-all>
                     <label for="events">Events</label>
                     <div class="row responsive thin">
@@ -197,9 +200,6 @@ $events = array_keys($this->getParam('events', []));
                         <?php endforeach; ?>
                     </div>
                 </section>
-
-                <label for="url">POST URL</label>
-                <input type="url" class="full-width" id="url" name="url" required autocomplete="off" placeholder="https://example.com/callback" />
 
                 <div class="margin-bottom toggle" data-ls-ui-open data-button-aria="Advanced Options">
                     <i class="icon-plus pull-end margin-top-tiny"></i>
