@@ -154,6 +154,17 @@ $auth = $this->getParam('auth', []);
                         data-failure-param-alert-text="Failed to create user"
                         data-failure-param-alert-classname="error">
 
+                        <label for="userId">User ID</label>
+                        <input
+                            type="hidden"
+                            data-custom-id
+                            data-id-type="auto"
+                            data-validator="users.get"
+                            required
+                            maxlength="36"
+                            id="userId"
+                            name="userId" />
+
                         <label for="user-name">Name</label>
                         <input type="text" class="full-width" id="user-name" name="name" required autocomplete="off" maxlength="128" />
 
@@ -290,9 +301,20 @@ $auth = $this->getParam('auth', []);
                         data-failure-param-alert-text="Failed to create team"
                         data-failure-param-alert-classname="error">
 
+                        <label for="teamId">Team ID</label>
+                        <input
+                            type="hidden"
+                            data-custom-id
+                            data-id-type="auto"
+                            data-validator="teams.get"
+                            required
+                            maxlength="36"
+                            id="teamId"
+                            name="teamId" />
+
                         <label for="team-name">Name</label>
                         <input type="text" class="full-width" id="team-name" name="name" required autocomplete="off" maxlength="128" />
-                        
+
                         <hr />
 
                         <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
@@ -300,7 +322,7 @@ $auth = $this->getParam('auth', []);
                 </div>
             </div>
         </li>
-        
+
         <li data-state="/console/users/providers?project={{router.params.project}}">
             <p data-ls-if="{{console-project.authLimit}} == 0" class="text-fade text-size-small margin-bottom pull-end">Unlimited Users <span class="link" data-ls-ui-trigger="project-update-auth-users-limit">Set Limit</a></p>
             <p data-ls-if="{{console-project.authLimit}} != 0" class="text-fade text-size-small margin-bottom pull-end"><span data-ls-bind="{{console-project.authLimit|statsTotal}}"></span> Users allowed <span class="link" data-ls-ui-trigger="project-update-auth-users-limit">Change Limit</a></p>
@@ -378,17 +400,17 @@ $auth = $this->getParam('auth', []);
                         <?php endif; ?>
 
                         <img src="<?php echo $this->escape($icon); ?>?buster=<?php echo APP_CACHE_BUSTER; ?>" alt="<?php echo $this->escape($name); ?> Logo" class="pull-start provider margin-end" />
-                                
-                        <span class="text-size-small"><?php echo $this->escape($name); ?><?php if(!$enabled): ?> <span class="text-fade text-size-xs">soon</span><?php endif; ?></span>
 
-                        <?php if($docs): ?>
+                        <span class="text-size-small"><?php echo $this->escape($name); ?><?php if (!$enabled): ?> <span class="text-fade text-size-xs">soon</span><?php endif;?></span>
+
+                        <?php if ($docs): ?>
                         <p class="margin-bottom-no text-one-liner text-size-small">
                             <a href="<?php echo $this->escape($docs); ?>" target="_blank" rel="noopener">Docs<i class="icon-link-ext"></i></a>
                         </p>
-                        <?php endif; ?>
+                        <?php endif;?>
                     </div>
                 </li>
-                <?php endforeach; ?>
+                <?php endforeach;?>
             </ul>
 
             <h3>OAuth2 Providers</h3>
@@ -401,18 +423,18 @@ $auth = $this->getParam('auth', []);
                 data-scope="console">
                 <ul class="tiles cell-3 margin-bottom-small">
                     <?php foreach ($providers as $provider => $data):
-                        if (isset($data['enabled']) && !$data['enabled']) { continue; }
-                        if (isset($data['mock']) && $data['mock']) { continue; }
-                        $sandbox = $data['sandbox'] ?? false;
-                        $form = $data['form'] ?? false;
-                        $name = $data['name'] ?? 'Unknown';
-                        $beta = $data['beta'] ?? false;
-                        ?>
-                        <li class="<?php echo (isset($data['enabled']) && !$data['enabled']) ? 'dev-feature' : ''; ?>">
-                            <div data-ui-modal class="modal close" data-button-alias="none" data-open-event="provider-update-<?php echo $provider; ?>">
-                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+    if (isset($data['enabled']) && !$data['enabled']) {continue;}
+    if (isset($data['mock']) && $data['mock']) {continue;}
+    $sandbox = $data['sandbox'] ?? false;
+    $form = $data['form'] ?? false;
+    $name = $data['name'] ?? 'Unknown';
+    $beta = $data['beta'] ?? false;
+    ?>
+	                        <li class="<?php echo (isset($data['enabled']) && !$data['enabled']) ? 'dev-feature' : ''; ?>">
+	                            <div data-ui-modal class="modal close" data-button-alias="none" data-open-event="provider-update-<?php echo $provider; ?>">
+	                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                                <h1><?php echo $this->escape($name); ?> <?php if($sandbox): ?>Sandbox<?php endif; ?> OAuth2 Settings</h1>
+	                                <h1><?php echo $this->escape($name); ?> <?php if ($sandbox): ?>Sandbox<?php endif;?> OAuth2 Settings</h1>
 
                                 <form
                                     autocomplete="off"
@@ -431,13 +453,13 @@ $auth = $this->getParam('auth', []);
                                     data-failure="alert"
                                     data-failure-param-alert-text="Failed to update project OAuth2 settings"
                                     data-failure-param-alert-classname="error">
-                                    
-                                    <input style="display: none" type="text" /> <?php /** Disabling Chrone Autofill @see https://stackoverflow.com/a/15917221/2299554 */ ?>
-                                    <input style="display: none" type="password" /> <?php /** Disabling Chrone Autofill @see https://stackoverflow.com/a/15917221/2299554 */ ?>
-                                    
+
+                                    <input style="display: none" type="text" /> <?php /** Disabling Chrone Autofill @see https://stackoverflow.com/a/15917221/2299554 */?>
+                                    <input style="display: none" type="password" /> <?php /** Disabling Chrone Autofill @see https://stackoverflow.com/a/15917221/2299554 */?>
+
                                     <input name="provider" id="provider<?php echo $this->escape(ucfirst($provider)); ?>" type="hidden" autocomplete="off" value="<?php echo $this->escape($provider); ?>">
 
-                                    <?php if(!$form): ?>
+                                    <?php if (!$form): ?>
                                         <label for="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid">App ID</label>
                                         <input name="appId" id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid" type="text" autocomplete="off" data-ls-bind="{{console-project.provider<?php echo $this->escape(ucfirst($provider)); ?>Appid}}">
                                     
@@ -446,7 +468,6 @@ $auth = $this->getParam('auth', []);
                                     <?php else: ?>
                                         <label for="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid">Bundle ID <span class="tooltip" data-tooltip="Attribute internal display name"><i class="icon-info-circled"></i></span></label>
                                         <input name="appId" id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid" type="text" autocomplete="off" data-ls-bind="{{console-project.provider<?php echo $this->escape(ucfirst($provider)); ?>Appid}}" placeholder="com.company.appname" />
-
                                         <input name="secret" data-forms-oauth-apple id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret" type="hidden" autocomplete="off" data-ls-bind="{{console-project.provider<?php echo $this->escape(ucfirst($provider)); ?>Secret}}" />
                                     <?php endif; ?>
 
@@ -481,9 +502,9 @@ $auth = $this->getParam('auth', []);
                                 </span>
 
                                 <img src="/images/users/<?php echo $this->escape(strtolower($provider)); ?>.png?buster=<?php echo APP_CACHE_BUSTER; ?>" alt="<?php echo $this->escape(ucfirst($provider)); ?> Logo" class="pull-start provider margin-end" />
-                                
+
                                 <span class="text-size-small">
-                                    <?php echo $this->escape($name); ?> <?php if($sandbox): ?><span class="text-size-xs text-fade">sandbox</span><?php endif; ?> <?php if($beta): ?><span class="text-size-xs text-fade">beta</span><?php endif; ?>
+                                    <?php echo $this->escape($name); ?> <?php if ($sandbox): ?><span class="text-size-xs text-fade">sandbox</span><?php endif;?> <?php if ($beta): ?><span class="text-size-xs text-fade">beta</span><?php endif;?>
                                 </span>
 
                                 <p class="margin-bottom-no text-one-liner text-size-small">
@@ -491,7 +512,7 @@ $auth = $this->getParam('auth', []);
                                 </p>
                             </div>
                         </li>
-                    <?php endforeach; ?>
+                    <?php endforeach;?>
                 </ul>
             </div>
         </li>

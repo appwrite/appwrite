@@ -3,7 +3,6 @@ $services = $this->getParam('services', []);
 $customDomainsEnabled = $this->getParam('customDomainsEnabled', false);
 $customDomainsTarget = $this->getParam('customDomainsTarget', false);
 $smtpEnabled = $this->getParam('smtpEnabled', false);
-
 ?>
 <div class="cover">
     <h1 class="zone xl margin-bottom-large">
@@ -51,7 +50,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                 data-failure-param-alert-classname="error">
 
                                 <input name="$id" type="hidden" data-ls-bind="{{console-project.$id}}" />
-                                
+
                                 <label for="name">Name</label>
                                 <input name="name" id="name" type="text" autocomplete="off" data-ls-bind="{{console-project.name}}" data-forms-text-direction required maxlength="128" />
 
@@ -260,10 +259,10 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                     <div class="box line margin-bottom">
                         <h3>Enable Custom Domains</h3>
                         
-                        <p>To enable <?php echo APP_NAME; ?>'s custom domain feature, you have to start your server instance with a public accessable domain name.</p>
+                        <p>To enable <?php echo APP_NAME; ?>'s custom domain feature, you have to start your server instance with a public accessible domain name.</p>
                         
-                        <p>Start your <?php echo APP_NAME; ?> server container with the <b>_APP_DOMAIN_TARGET</b> enviornment variable set with a public accessable domain name that resolves to your <?php echo APP_NAME; ?> server setup.</p>
-                        <p class="margin-bottom-no">The <?php echo APP_NAME; ?> server will use your target domain to validate new custom domains and will automatically generate SSL certificates for your new domains using letsencrypt certbot.</p>
+                        <p>Start your <?php echo APP_NAME; ?> server container with the <b>_APP_DOMAIN_TARGET</b> environment variable set with a public accessible domain name that resolves to your <?php echo APP_NAME; ?> server setup.</p>
+                        <p class="margin-bottom-no">The <?php echo APP_NAME; ?> server will use your target domain to validate new custom domains and will automatically generate SSL certificates for your new domains using Let'sencrypt Certbot.</p>
                     </div>
                 <?php endif; ?>
 
@@ -293,7 +292,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                         <th width="200">Domain Name</th>
                                         <th width="160">TLS</th>
                                         <th></th>
-                                        <th width="40"></th>
+                                        <th width="80"></th>
                                     </tr>
                                 </thead>
                                 <tbody data-ls-loop="console-domains.domains" data-ls-as="domain">
@@ -395,7 +394,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                                                 <input type="hidden" name="domainId" data-ls-bind="{{domain.$id}}" />
 
-                                                <button class="danger round reverse small"><i class="icon-trash"></i></button>
+                                                <button class="danger small">Delete</button>
                                             </form>
                                         </td>
                                     </tr>
@@ -551,7 +550,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
 
                             <input name="teamId" id="team-teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
                             <input name="url" type="hidden" data-ls-bind="{{env.ENDPOINT}}/auth/join?project={{router.params.project}}" />
-                            
+
                             <label for="email">Email</label>
                             <input name="email" id="email" type="email" autocomplete="email" required>
                             
