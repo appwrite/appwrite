@@ -139,7 +139,6 @@ App::post('/v1/account/sessions')
     ->label('sdk.response.model', Response::MODEL_SESSION)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
-    ->param('sessionId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
     ->inject('request')
@@ -148,7 +147,7 @@ App::post('/v1/account/sessions')
     ->inject('locale')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($sessionId, $email, $password, $request, $response, $dbForInternal, $locale, $geodb, $audits) {
+    ->action(function ($email, $password, $request, $response, $dbForInternal, $locale, $geodb, $audits) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
@@ -181,7 +180,7 @@ App::post('/v1/account/sessions')
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge(
             [
-                '$id' => $sessionId == 'unique()' ? $dbForInternal->getId() : $sessionId,
+                '$id' => $dbForInternal->getId(),
                 'userId' => $profile->getId(),
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => $email,

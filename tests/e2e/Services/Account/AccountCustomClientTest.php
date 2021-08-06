@@ -83,7 +83,6 @@ class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'sessionId' => 'unique()',
             'email' => $email,
             'password' => $password,
         ]);
@@ -126,7 +125,6 @@ class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'sessionId' => 'unique()',
             'email' => $email,
             'password' => $password,
         ]);
@@ -165,7 +163,6 @@ class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'sessionId' => 'unique()',
             'email' => $email,
             'password' => $password,
         ]);
@@ -374,7 +371,6 @@ class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'sessionId' => 'unique()',
             'email' => $email,
             'password' => $password,
         ]);

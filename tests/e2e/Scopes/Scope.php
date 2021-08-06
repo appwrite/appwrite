@@ -100,7 +100,6 @@ abstract class Scope extends TestCase
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
         ], [
-            'sessionId' => 'unique()',
             'email' => $email,
             'password' => $password,
         ]);
@@ -153,7 +152,6 @@ abstract class Scope extends TestCase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'sessionId' => 'unique()',
             'email' => $email,
             'password' => $password,
         ]);

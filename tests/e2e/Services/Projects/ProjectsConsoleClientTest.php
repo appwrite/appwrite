@@ -331,7 +331,6 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-            'sessionId' => 'unique()',
             'email' => $originalEmail,
             'password' => $originalPassword,
         ]);
@@ -421,7 +420,6 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-            'sessionId' => 'unique()',
             'email' => $originalEmail,
             'password' => $originalPassword,
         ]);

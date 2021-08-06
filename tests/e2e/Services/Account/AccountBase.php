@@ -111,7 +111,6 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'sessionId' => 'unique()',
             'email' => $email,
             'password' => $password,
         ]);
@@ -129,7 +128,6 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'sessionId' => 'unique()',
             'email' => $email.'x',
             'password' => $password,
         ]);
@@ -141,7 +139,6 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'sessionId' => 'unique()',
             'email' => $email,
             'password' => $password.'x',
         ]);
@@ -153,7 +150,6 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'sessionId' => 'unique()',
             'email' => '',
             'password' => '',
         ]);
@@ -491,7 +487,6 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'sessionId' => 'unique()',
             'email' => $email,
             'password' => 'new-password',
         ]);
@@ -855,7 +850,6 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'sessionId' => 'unique()',
             'email' => $email,
             'password' => $password,
         ]);
@@ -923,7 +917,6 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'sessionId' => 'unique()',
             'email' => $email,
             'password' => $password,
         ]);
@@ -1006,7 +999,6 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'sessionId' => 'unique()',
             'email' => $email,
             'password' => $password,
         ]);
