@@ -373,7 +373,7 @@ $auth = $this->getParam('auth', []);
                                 data-failure-param-alert-classname="error">
                                 <input name="method" id="<?php echo $this->escape($key); ?>" type="hidden" autocomplete="off" value="<?php echo $this->escape($index); ?>">
 
-                                <input name="status" type="hidden" data-forms-switch data-ls-bind="{{console-project.<?php echo $this->escape($key); ?>}}" data-cast-to="boolean" class="pull-end" />
+                                <input name="status" type="hidden" data-forms-switch data-ls-bind="{{console-project.auth<?php echo $this->escape(ucfirst($key)); ?>}}" data-cast-to="boolean" class="pull-end" />
                             </form>
                         <?php endif; ?>
 

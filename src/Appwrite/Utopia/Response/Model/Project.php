@@ -228,11 +228,9 @@ class Project extends Model
         $authValues = $document->getAttribute('auths',[]);
         $auth = Config::getParam('auth', []);
 
+        $document->setAttribute('authLimit', $authValues['limit']);
+
         foreach ($auth as $index => $method) {
-            if($method == 'limit') {
-                $document->setAttribute('authLimit', $authValues['limit']);
-                continue;
-            }
             $key = $method['key'];
             $value = $authValues[$key] ?? true;
             $document->setAttribute('auth' . ucfirst($key), $value);
@@ -247,9 +245,8 @@ class Project extends Model
             }
             $appId = $providerValues[$key . 'Appid'] ?? '';
             $secret = $providerValues[$key . 'Secret'] ?? '';
-            $document->setAttribute($key . 'Appid', $appId)->setAttribute($key . 'Secret', $secret);
+            $document->setAttribute('provider' . ucfirst($key) . 'Appid', $appId)->setAttribute('provider' . ucfirst($key) . 'Secret', $secret);
         }
-
         return $document;
     }
 }
