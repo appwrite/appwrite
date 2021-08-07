@@ -1,9 +1,3 @@
-<?php
-$collection = $this->getParam('collection', []);
-$rules = $collection->getAttribute('rules', []);
-$maxCells = 10;
-?>
-
 <div
     data-service="database.getCollection"
     data-param-collection-id="{{router.params.id}}"
@@ -85,47 +79,12 @@ $maxCells = 10;
                             <table class="vertical">
                                 <thead>
                                     <tr>
-                                        <?php foreach($rules as $i => $rule):
-                                            if($i > $maxCells) {
-                                                break;
-                                            }
-                                            $label = (isset($rule['label'])) ? $rule['label'] : '';
-                                            ?>
-                                            <th width="120"><?php echo $this->escape($label); ?></th>
-                                        <?php endforeach; ?>
+                                        <td>UID</td>
                                     </tr>
                                 </thead>
                                 <tbody data-ls-loop="project-documents.documents" data-ls-as="node">
                                     <tr>
-                                        <?php foreach($rules as $i => $rule):
-                                            if($i > $maxCells) {
-                                                break;
-                                            }
-                                            $label = $rule['label'] ?? '';
-                                            $key = $rule['key'] ?? '';
-                                            $type = $rule['type'] ?? '';
-                                            $array = $rule['array'] ?? '';
-                                            ?>
-                                            <td data-title="<?php echo $this->escape($label); ?>: " class="text-size-small text-height-small">
-                                                <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection={{router.params.id}}&project={{router.params.project}}&buster={{project-collection.dateUpdated}}">
-                                                    <?php if(!$array): ?>
-                                                        <?php switch($type):
-                                                            case 'fileId': ?>
-                                                                <img data-ls-if="{{node.<?php echo $this->escape($key); ?>}} != ''" src="" data-ls-attrs="src={{env.ENDPOINT}}/v1/storage/files/{{node.<?php echo $this->escape($key); ?>}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="avatar" width="30" height="30" loading="lazy" />
-                                                            <?php break; ?>
-                                                            <?php case 'document': ?>
-                                                                {...}
-                                                            <?php break; ?>
-                                                            <?php default: ?>
-                                                                <span data-ls-bind="{{node.<?php echo $this->escape($key); ?>}}" data-ls-attrs="title={{node.<?php echo $this->escape($key); ?>}}"></span>
-                                                            <?php break; ?>
-                                                        <?php endswitch; ?>
-                                                    <?php else: ?>
-                                                        [...]
-                                                    <?php endif; ?>
-                                                </a>
-                                            </td>
-                                        <?php endforeach; ?>
+                                        <td>42343</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -164,9 +123,54 @@ $maxCells = 10;
                         </form>
                     </div>
 
-                    <a data-ls-if="{{project-collection.rules.length}} > 0" data-ls-attrs="href=/console/database/document?collection={{router.params.id}}&project={{router.params.project}}&buster={{project-collection.dateUpdated}}" class="button">
+                    <a data-ls-attrs="href=/console/database/document?collection={{router.params.id}}&project={{router.params.project}}&buster={{project-collection.dateUpdated}}" class="button">
                         Add Document
                     </a>
+                </div>
+            </li>
+            <li data-state="/console/database/collection/attributes?id={{router.params.id}}&project={{router.params.project}}">
+                <h2>Attributes x</h2>
+
+                <span data-ls-bind="{{project-collection.attributes.length}}"></span>
+                <span data-ls-bind="{{project-collection.attributes}}"></span>
+                <span data-ls-bind="{{project-collection}}"></span>
+                <span data-ls-bind="{{project-collection}}">xxx</span>
+
+                <div class="clear">
+                    <div data-ls-if="0 == {{project-collection.attributes.length}}" class="box margin-bottom">
+                        <h3 class="margin-bottom-small text-bold">No Attributes Found</h3>
+    
+                        <p class="margin-bottom-no">Create your first attribute to get started</p>
+                    </div>
+    
+                    <div class="drop-list pull-start" data-ls-ui-open="" data-button-aria="Choose Platform" data-button-text="Create Attribute" data-button-class="button" data-blur="1">
+                        <ul>
+                            <li>
+                                <div class="link new-attribute-string"><img src="/images/clients/web.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="String Attribute Logo" class="avatar xxs margin-end-small" loading="lazy" /> New String Attribute</div>
+                            </li>
+                            <li>
+                                <div class="link new-attribute-integer"><img src="/images/clients/web.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="String Attribute Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Integer Attribute</div>
+                            </li>
+                            <li>
+                                <div class="link new-attribute-float"><img src="/images/clients/web.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="String Attribute Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Float Attribute</div>
+                            </li>
+                            <li>
+                                <div class="link new-attribute-boolean"><img src="/images/clients/web.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="String Attribute Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Boolean Attribute</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </li>
+            <li data-state="/console/database/collection/indexes?id={{router.params.id}}&project={{router.params.project}}">
+                <h2>Indexes</h2>
+            </li>
+            <li data-state="/console/database/collection/indexes?id={{router.params.id}}&project={{router.params.project}}">
+                <h2>Queue</h2>
+
+                <div data-ls-if="0 == {{project-documents.sum}}" class="box margin-bottom">
+                    <h3 class="margin-bottom-small text-bold">No Attributes Found in the Queue</h3>
+
+                    <p class="margin-bottom-no">Create your first attribute to get started</p>
                 </div>
             </li>
             <li data-state="/console/database/collection/settings?id={{router.params.id}}&project={{router.params.project}}">
@@ -197,119 +201,6 @@ $maxCells = 10;
                             <div class="box">
                                 <label for="collection-name">Name</label>
                                 <input name="name" id="collection-name" type="text" autocomplete="off" data-ls-bind="{{project-collection.name}}" data-forms-text-direction required placeholder="Collection Name" maxlength="128" />
-
-                                <h3 class="margin-bottom-small">Rules</h3>
-
-                                <div data-ls-if="(!{{project-collection.rules.length}})">
-                                    <hr class="margin-bottom-no margin-top-no" />
-                                    <div class="margin-bottom-xl margin-top-xl margin-end margin-start text-align-center">
-                                        <h4 class="text-fade text-size-small">No attribute rules added yet.</h4>
-                                    </div>
-                                </div>
-
-                                <input type="hidden" id="rulesInit" name="rules" data-cast-to="array-empty">
-
-                                <div data-ls-if="({{project-collection.rules.length}})">
-                                    <ul data-ls-loop="project-collection.rules" data-ls-as="rule" class="sortable">
-                                        <li data-forms-remove data-forms-move-up  data-forms-move-down>
-                                            <div class="toggle list sorts" data-ls-ui-open>
-                                                <i class="icon-up-open pull-end margin-top-tiny"></i>
-                                                <i class="icon-down-open pull-end margin-top-tiny"></i>
-                                    
-                                                <h4 class="margin-bottom">
-                                                    <div class="pull-start margin-end-large margin-bottom-small">
-                                                        <button type="button" disabled class="margin-bottom strip round" data-move-down><i class="icon-down-dir"></i></button>
-                                                        <button type="button" class="margin-bottom strip round" data-move-down><i class="icon-down-dir"></i></button>
-                                                        <button type="button" class="margin-bottom strip round" data-move-up><i class="icon-up-dir"></i></button>
-                                                        <button type="button" disabled class="margin-bottom strip round" data-move-up><i class="icon-up-dir"></i></button>
-                                                    </div>
-
-                                                    <span data-ls-bind="{{rule.label}}"></span>
-
-                                                    <span data-ls-if="({{rule.array}}.toString() == 'false')">
-                                                        <span class="text-fade text-size-small" data-ls-bind="&nbsp;{{rule.type}}&nbsp;"></span>
-                                                    </span>
-
-                                                    <span data-ls-if="({{rule.array}}.toString() == 'true')">
-                                                        <span class="text-size-small text-fade" data-ls-bind="&nbsp;{{rule.type}}[]&nbsp;"></span>
-                                                    </span>
-
-                                                    <div data-ls-if="{{rule.required}}.toString() == 'true'">
-                                                        <span class="text-size-xs text-danger text-fade">required</span>
-                                                    </div>
-
-                                                    <div data-ls-if="({{rule.required}}.toString() == 'false')">
-                                                        <span class="text-size-xs text-fade">optional</span>
-                                                    </div>
-                                                </h4>
-
-                                                <hr class="margin-top-no fade" />
-
-                                                <fieldset data-ls-attrs="name=rules" data-cast-to="array">
-                                                    <input name="$id" type="hidden" data-ls-bind="{{rule.$id}}" />
-                                                    <input name="$collection" type="hidden" data-ls-bind="{{rule.$collection}}" />
-                                                    
-                                                    <div class="row thin">
-                                                        <div class="col span-6">
-                                                            <label data-ls-attrs="for=rule-label-{{rule.$id}}">Label
-                                                                <span class="tooltip" data-tooltip="Attribute internal display name"><i class="icon-info-circled"></i></span>
-                                                            </label>
-                                                            <input name="label" type="text" data-ls-bind="{{rule.label}}" />
-                                                        </div>
-                                                        <div class="col span-6">
-                                                            <label data-ls-attrs="for=rule-key-{{rule.$id}}">Key
-                                                                <span class="tooltip small" data-tooltip="Attribute key name. Used as the document JSON key in the Database API"><i class="icon-info-circled"></i></span>
-                                                            </label>
-                                                            <div class="input-copy">
-                                                                <input data-forms-copy name="key" type="text" data-ls-bind="{{rule.key}}" maxlength="32" pattern="^(\d|\w)+$" title="No spaces or special charts allowed" />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <label data-ls-attrs="for=rule-type-{{rule.$id}}">Rule Type</label>
-
-                                                    <select data-ls-attrs="id=rule-type-{{rule.$id}}" name="type" required data-ls-bind="{{rule.type}}">
-                                                        <optgroup label="General">
-                                                            <option value="text">Text</option>
-                                                            <option value="numeric">Numeric</option>
-                                                            <option value="boolean">Boolean</option>
-                                                            <option value="wildcard">Wildcard (*)</option>
-                                                        </optgroup>
-                                                        <!-- <optgroup label="Links">
-                                                            <option value="fileId">File ID</option>
-                                                            <option value="documentId">Document ID</option>
-                                                        </optgroup> -->
-                                                        <optgroup label="Advanced">
-                                                            <option value="email">Email</option>
-                                                            <option value="url">URL</option>
-                                                            <option value="ip">IP</option>
-                                                            <option value="markdown">Markdown</option>
-                                                            <option value="document">Document (Embeded)</option>
-                                                        </optgroup>
-                                                    </select>
-                                                        
-                                                    <div class="margin-bottom">
-                                                        <input name="required" type="hidden" data-forms-switch data-ls-bind="{{rule.required}}" data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
-                                                    </div>
-                                                                                                        
-                                                    <div class="margin-bottom">
-                                                        <input name="array" type="hidden" data-forms-switch data-ls-bind="{{rule.array}}" data-cast-to="boolean" />  &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
-                                                    </div>
-
-                                                    <div data-ls-template="template-validation-{{rule.type}}" data-type="script" class="margin-bottom"></div>
-                                                </fieldset>
-
-                                                <button type="button" data-ls-ui-trigger="splice-rule-{{$index}}" class="reverse danger margin-bottom">Remove</button>
-
-                                                <!-- <button type="button" data-remove="" class="reverse danger margin-bottom">Remove</button> -->
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </div>
-
-                                <hr class="margin-bottom-no margin-top-no" />
-
-                                <button type="button" data-ls-ui-trigger="add-rule" class="reverse margin-top"><i class="icon-plus"></i>Add</button>
 
                                 <div class="toggle margin-bottom margin-top" data-ls-ui-open data-button-aria="Open Permissions">
                                     <i class="icon-plus pull-end margin-top-tiny"></i>
@@ -364,172 +255,63 @@ $maxCells = 10;
                         </form>
                     </div>
                 </div>
-
-                <ul data-ls-loop="project-collection.rules" data-ls-as="rule" class="sortable">
-                    <li data-forms-remove data-forms-move-up  data-forms-move-down>
-                        <form
-                            data-analytics
-                            data-analytics-event="splice-rule-{{$index}}"
-                            data-analytics-category="console"
-                            data-analytics-label="Spliced Collection Rule"
-                            data-service="container.path"
-                            data-event="splice-rule-{{$index}}"
-                            data-scope="window.ls"
-                            data-success="reset">
-
-                            <input type="hidden" name="path" value="project-collection.rules" />
-                            <input type="hidden" name="type" value="splice" />
-                            <input type="hidden" name="value" data-ls-bind="{{$index}}" />
-                        </form>
-                    </li>
-                </ul>
-
-                <div data-ui-modal class="box modal close" data-button-alias="none" data-open-event="add-rule">
-                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
-
-                    <h1>Add Rule</h1>
-
-                    <form
-                        data-analytics
-                        data-analytics-activity
-                        data-analytics-event="submit"
-                        data-analytics-category="console"
-                        data-analytics-label="Added Collection Rule"
-                        data-service="container.path"
-                        data-event="submit"
-                        data-scope="window.ls"
-                        data-success="reset">
-
-                        <input type="hidden" name="path" value="project-collection.rules" />
-                        <input type="hidden" name="type" value="append" />
-                        
-                        <fieldset name="value" data-cast-to="object">
-                            <input name="$id" type="hidden" value="" />    
-                            <input name="$collection" type="hidden" value="rules" />
-
-                            <div class="row thin">
-                                <div class="col span-6">
-                                    <label for="rule-label-new">Label
-                                        <span class="tooltip" data-tooltip="Attribute internal display name"><i class="icon-info-circled"></i></span>
-                                    </label>
-                                    <input name="label" type="text" required />
-                                </div>
-                                <div class="col span-6">
-                                    <label for="rule-key-new">Key
-                                        <span class="tooltip small" data-tooltip="Attribute key name. Used as the document JSON key in the Database API"><i class="icon-info-circled"></i></span>
-                                    </label>
-                                    <div class="input-copy">
-                                        <input data-forms-copy name="key" type="text" required maxlength="32" pattern="^(\d|\w)+$" title="No spaces or special charts allowed" />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <label for="rule-type-new">Rule Type</label>
-
-                            <select name="type" required>
-                                <optgroup label="General">
-                                    <option value="text">Text</option>
-                                    <option value="numeric">Numeric</option>
-                                    <option value="boolean">Boolean</option>
-                                    <option value="wildcard">Wildcard (*)</option>
-                                </optgroup>
-                                <!-- <optgroup label="Links">
-                                    <option value="fileId">File ID</option>
-                                    <option value="documentId">Document ID</option>
-                                </optgroup> -->
-                                <optgroup label="Advanced">
-                                    <option value="email">Email</option>
-                                    <option value="url">URL</option>
-                                    <option value="ip">IP</option>
-                                    <option value="markdown">Markdown</option>
-                                    <option value="document">Document (Embeded)</option>
-                                </optgroup>
-                            </select>
-                            
-                            <input name="default" type="hidden" value="" />
-                            <input name="required" type="hidden" value="false" data-cast-to="boolean" />
-                            <input name="array" type="hidden" value="false" data-cast-to="boolean" />
-                            
-                        </fieldset>
-
-                        <hr class="margin-top-no" />
-
-                        <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                    </form>
-                </div>
             </li>
         </ul>
     </div>
 </div>
-
-<script type="text/html" id="template-validation-text">
-    <div class="margin-bottom">
-        <label data-ls-attrs="for=rule-default-{{rule.$id}}">Default Value</label>
-        <input name="default" type="text" data-ls-bind="{{rule.default}}" data-forms-text-direction />
-    </div>
-</script>
-
-<script type="text/html" id="template-validation-numeric">
-    <div class="margin-bottom">
-        <label data-ls-attrs="for=rule-default-{{rule.$id}}">Default Value</label>
-        <input name="default" type="number" data-ls-bind="{{rule.default}}" data-cast-to="numeric" placeholder="0" step="any" />
-    </div>
-</script>
-
-<script type="text/html" id="template-validation-boolean">
-    <div class="margin-bottom">
-        <label data-ls-attrs="for=rule-default-{{rule.$id}}">Default Value</label>
-        <input name="default" data-ls-bind="{{rule.default}}" type="hidden" data-forms-switch data-cast-to="boolean" />
-    </div>
-</script>
-
-<script type="text/html" id="template-validation-text">
-    <div class="margin-bottom">
-        <label data-ls-attrs="for=rule-default-{{rule.$id}}">Default Value</label>
-        <input name="default" type="text" data-ls-bind="{{rule.default}}" data-forms-text-direction />
-    </div>
-</script>
-
-<script type="text/html" id="template-validation-documentId">
-    <div data-ls-template="template-validation-document-array-false" data-type="script"></div>
-
-    <div class="margin-bottom text-align-center margin-top-xl margin-bottom-large" data-ls-if="{{project-collections.sum}} == 1">
-        No Collections Found.
-    </div>
-</script>
-
-<script type="text/html" id="template-validation-document">
-    <div data-ls-template="template-validation-document-array-{{rule.array}}" data-type="script"></div>
-
-    <div class="margin-bottom text-align-center margin-top-xl margin-bottom-large" data-ls-if="{{project-collections.sum}} == 1">
-        No Collections Found.
-    </div>
-</script>
-
-<script type="text/html" id="template-validation-document-array-true">
-    <label data-ls-attrs="for=rule-list-{{rule.$id}}" class="margin-bottom">Allowed Collections</label>
-
-    <div data-ls-loop="project-collections.collections" data-ls-as="project" data-ls-key="$index2" class="tiles cell-3 margin-bottom-negative">
-        <div class="margin-bottom" data-ls-if="{{project.$id}} != {{router.params.id}}">
-            <input type="checkbox" name="list" data-ls-attrs="value={{project.$id}},id={{project.$id}}" data-ls-bind="{{rule.list}}" /> <label data-ls-attrs="for={{project.$id}}" data-ls-bind="{{project.name}}"></label>
-        </div>
-    </div>
-</script>
-
-<script type="text/html" id="template-validation-document-array-false">
-    <label data-ls-attrs="for=rule-list-{{rule.$id}}" class="margin-bottom">Allowed Collection</label>
-
-    <div data-ls-loop="project-collections.collections" data-ls-as="project" data-ls-key="$index2" class="tiles cell-3 margin-bottom-negative">
-        <div class="margin-bottom" data-ls-if="{{project.$id}} != {{router.params.id}}">
-            <input type="radio" data-ls-attrs="value={{project.$id}},id=[{{rule.$id}}].{{project.$id}},name=[{{rule.$id}}].list" data-ls-bind="{{rule.list|firstElement}}" data-cast-to="array" required />
-            <label data-ls-attrs="for={{project.$id}}"data-ls-bind="{{project.name}}"></label>
-        </div>
-    </div>
-</script>
 
 <div class="margin-top"
     data-service="database.listCollections"
     data-event="load,database.createCollection,database.updateCollection,database.deleteCollection"
     data-scope="sdk"
     data-name="project-collections">
+</div>
+
+
+<div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-string">
+    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+    <h1>Create a String Attribute</h1>
+
+    <form
+        data-analytics
+        data-analytics-activity
+        data-analytics-event="submit"
+        data-analytics-category="console"
+        data-analytics-label="Create Collection Attribute (string)"
+        data-service="database.createStringAttribute"
+        data-scope="sdk"
+        data-event="submit"
+        data-success="alert,trigger,reset"
+        data-success-param-alert-text="Created new attribute successfully"
+        data-success-param-trigger-events="database.createStringAttribute"
+        data-failure="alert"
+        data-failure-param-alert-text="Failed to create attribute"
+        data-failure-param-alert-classname="error">
+
+        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+        <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
+        <input type="hidden" name="type" data-ls-bind="web" />
+
+        <label for="string-attributeId">Attribute ID</label>
+        <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
+
+        <label for="string-length">Size</label>
+        <input id="string-length" name="size" type="number" class="margin-bottom" autocomplete="off" required value="255" data-cast-to="integer" />
+
+        <div class="margin-bottom">
+            <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+        </div>
+                                                            
+        <div class="margin-bottom">
+            <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" />  &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+        </div>
+
+        <label for="string-default">Default Value</label>
+        <input id="string-default" name="default" type="number" class="margin-bottom-large" autocomplete="off">
+
+        <footer>
+            <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
+        </footer>
+    </form>
 </div>

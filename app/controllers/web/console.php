@@ -4,9 +4,7 @@ use Utopia\App;
 use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
-use Utopia\Database\Database;
-use Appwrite\Database\Validator\Authorization;
-use Appwrite\Database\Validator\UID;
+use Utopia\Database\Validator\UID;
 use Utopia\Storage\Storage;
 
 App::init(function ($layout) {
@@ -212,25 +210,11 @@ App::get('/console/database/collection')
     ->param('id', '', new UID(), 'Collection unique ID.')
     ->inject('response')
     ->inject('layout')
-    ->inject('dbForExternal')
-    ->action(function ($id, $response, $layout, $dbForExternal) {
+    ->action(function ($id, $response, $layout) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\View $layout */
-        /** @var Utopia\Database\Database $dbForExternal */
-
-        Authorization::disable();
-        $collection = $dbForExternal->getCollection($id);
-        Authorization::reset();
-
-        if ($collection->isEmpty()) {
-            throw new Exception('Collection not found', 404);
-        }
 
         $page = new View(__DIR__.'/../../views/console/database/collection.phtml');
-
-        $page
-            ->setParam('collection', $collection)
-        ;
         
         $layout
             ->setParam('title', APP_NAME.' - Database Collection')
@@ -250,25 +234,14 @@ App::get('/console/database/document')
     ->label('scope', 'console')
     ->param('collection', '', new UID(), 'Collection unique ID.')
     ->inject('layout')
-    ->inject('dbForExternal')
-    ->action(function ($collection, $layout, $dbForExternal) {
+    ->action(function ($collection, $layout) {
         /** @var Utopia\View $layout */
-        /** @var Utopia\Database\Database $dbForExternal */
-
-        Authorization::disable();
-        $collection = $dbForExternal->getCollection($collection);
-        Authorization::reset();
-
-        if ($collection->isEmpty()) {
-            throw new Exception('Collection not found', 404);
-        }
 
         $page = new View(__DIR__.'/../../views/console/database/document.phtml');
         $searchFiles = new View(__DIR__.'/../../views/console/database/search/files.phtml');
         $searchDocuments = new View(__DIR__.'/../../views/console/database/search/documents.phtml');
 
         $page
-            ->setParam('db', $dbForExternal)
             ->setParam('collection', $collection)
             ->setParam('searchFiles', $searchFiles)
             ->setParam('searchDocuments', $searchDocuments)
