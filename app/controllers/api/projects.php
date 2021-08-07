@@ -73,7 +73,7 @@ App::post('/v1/projects')
         }
         
         $auth = Config::getParam('auth', []);
-        $auths = [];
+        $auths = ['limit' => 0];
         foreach ($auth as $index => $method) {
             $auths[$method['key'] ?? ''] = true;
         }
