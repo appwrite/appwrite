@@ -452,7 +452,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                     <input name="name" id="function-name" type="text" autocomplete="off" data-ls-bind="{{project-function.name}}" data-forms-text-direction required placeholder="Function Name" maxlength="128" />
 
                                     <label for="execute">Execute Access <span class="tooltip small" data-tooltip="Choose who can execute this function using the client API."><i class="icon-info-circled"></i></span> <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
-                                    <input type="hidden" id="execute" name="execute" data-forms-tags data-cast-to="json" data-ls-bind="{{project-function.$permissions.execute}}" placeholder="User ID, Team ID or Role" />
+                                    <input type="hidden" id="execute" name="execute" data-forms-tags data-cast-to="json" data-ls-bind="{{project-function.execute}}" placeholder="User ID, Team ID or Role" />
                                     <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
 
                                     <label for="timeout">Timeout (seconds) <span class="tooltip small" data-tooltip="Limit the execution time of your function."><i class="icon-info-circled"></i></span></label>
