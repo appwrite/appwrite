@@ -129,27 +129,28 @@ App::init(function ($utopia, $request, $project) {
         return;
     }
 
+    $auths = $project->getAttribute('auths', []);
     switch ($route->getLabel('auth.type', '')) {
         case 'emailPassword':
-            if($project->getAttribute('usersAuthEmailPassword', true) === false) {
+            if(($auths['emailPassword'] ?? true) === false) {
                 throw new Exception('Email / Password authentication is disabled for this project', 501);
             }
             break;
 
         case 'anonymous':
-            if($project->getAttribute('usersAuthAnonymous', true) === false) {
+            if(($auths['anonymous'] ?? true) === false) {
                 throw new Exception('Anonymous authentication is disabled for this project', 501);
             }
             break;
 
         case 'invites':
-            if($project->getAttribute('usersAuthInvites', true) === false) {
+            if(($auths['invites'] ?? true) === false) {
                 throw new Exception('Invites authentication is disabled for this project', 501);
             }
             break;
 
         case 'jwt':
-            if($project->getAttribute('usersAuthJWT', true) === false) {
+            if(($auths['JWT'] ?? true) === false) {
                 throw new Exception('JWT authentication is disabled for this project', 501);
             }
             break;

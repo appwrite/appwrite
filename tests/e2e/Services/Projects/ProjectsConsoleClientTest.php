@@ -281,8 +281,8 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals($id, $response['body']['$id']);
 
         foreach ($providers as $key => $provider) {
-            $this->assertEquals('AppId-'.ucfirst($key), $response['body']['usersOauth2'.ucfirst($key).'Appid']);
-            $this->assertEquals('Secret-'.ucfirst($key), $response['body']['usersOauth2'.ucfirst($key).'Secret']);
+            $this->assertEquals('AppId-'.ucfirst($key), $response['body']['provider'.ucfirst($key).'Appid']);
+            $this->assertEquals('Secret-'.ucfirst($key), $response['body']['provider'.ucfirst($key).'Secret']);
         }
 
         /**
@@ -358,7 +358,7 @@ class ProjectsConsoleClientTest extends Scope
 
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertNotEmpty($response['body']['$id']);
-            $this->assertEquals(false, $response['body'][$method['key']]);
+            $this->assertEquals(false, $response['body']['auth'. ucfirst($method['key'])]);
         }
         
         $email = uniqid().'user@localhost.test';

@@ -32,14 +32,6 @@ App::init(function ($project) {
     }
 }, ['project'], 'projects');
 
-App::init(function ($project) {
-    /** @var Utopia\Database\Document $project */
-
-    if($project->getId() !== 'console') {
-        throw new Exception('Access to this API is forbidden.', 401);
-    }
-}, ['project'], 'projects');
-
 App::post('/v1/projects')
     ->desc('Create Project')
     ->groups(['api', 'projects'])
@@ -79,6 +71,12 @@ App::post('/v1/projects')
         if ($team->isEmpty()) {
             throw new Exception('Team not found', 404);
         }
+        
+        $auth = Config::getParam('auth', []);
+        $auths = [];
+        foreach ($auth as $index => $method) {
+            $auths[$method['key'] ?? ''] = true;
+        }
 
         $project = $dbForConsole->createDocument('projects', new Document([
             '$id' => $projectId == 'unique()' ? $dbForConsole->getId() : $projectId,
@@ -102,11 +100,7 @@ App::post('/v1/projects')
             'webhooks' => [],
             'keys' => [],
             'domains' => [],
-            'usersAuthEmailPassword' => true,
-            'usersAuthAnonymous' => true,
-            'usersAuthInvites' => true,
-            'usersAuthJWT' => true,
-            'usersAuthPhone' => true,
+            'auths' => $auths,
         ]));
 
         $collections = Config::getParam('collections2', []); /** @var array $collections */
@@ -515,10 +509,11 @@ App::patch('/v1/projects/:projectId/oauth2')
             throw new Exception('Project not found', 404);
         }
 
-        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
-                ->setAttribute('usersOauth2' . \ucfirst($provider) . 'Appid', $appId)
-                ->setAttribute('usersOauth2' . \ucfirst($provider) . 'Secret', $secret)
-        );
+        $providers = $project->getAttribute('providers', []);
+        $providers[$provider . 'Appid'] = $appId;
+        $providers[$provider . 'Secret'] = $secret;
+
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('providers', $providers));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -547,8 +542,11 @@ App::patch('/v1/projects/:projectId/auth/limit')
             throw new Exception('Project not found', 404);
         }
 
+        $auths = $project->getAttribute('auths', []);
+        $auths['limit'] = $limit;
+
         $dbForConsole->updateDocument('projects', $project->getId(), $project
-                ->setAttribute('usersAuthLimit', $limit)
+                ->setAttribute('auths', $auths)
         );
 
         $response->dynamic($project, Response::MODEL_PROJECT);
@@ -582,9 +580,10 @@ App::patch('/v1/projects/:projectId/auth/:method')
             throw new Exception('Project not found', 404);
         }
 
-        $dbForConsole->updateDocument('projects', $project->getId(), $project
-                ->setAttribute($authKey, $status)
-        );
+        $auths = $project->getAttribute('auths', []);
+        $auths[$authKey] = $status;
+
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('auths', $auths));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
