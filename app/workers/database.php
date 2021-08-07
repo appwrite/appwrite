@@ -3,6 +3,7 @@
 use Appwrite\Resque\Worker;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 
 require_once __DIR__.'/../workers.php';
 
@@ -21,6 +22,8 @@ class DatabaseV1 extends Worker
     {
         $projectId = $this->args['projectId'] ?? '';
         $type = $this->args['type'] ?? '';
+
+        Authorization::disable();
         
         switch (strval($type)) {
             case CREATE_TYPE_ATTRIBUTE:
@@ -49,6 +52,7 @@ class DatabaseV1 extends Worker
                 break;
             }
 
+            Authorization::reset();
     }
 
     public function shutdown(): void
