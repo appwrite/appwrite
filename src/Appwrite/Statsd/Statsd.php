@@ -40,7 +40,7 @@ class Statsd
     }
 
     /**
-     * Save to statsd.
+     * Submit data to StatsD.
      */
     public function save(): void
     {
