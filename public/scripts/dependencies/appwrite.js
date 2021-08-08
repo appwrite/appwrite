@@ -1636,19 +1636,19 @@
                  *
                  *
                  * @param {string} collectionId
-                 * @param {string} id
+                 * @param {string} indexId
                  * @param {string} type
                  * @param {string[]} attributes
                  * @param {string[]} orders
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createIndex: (collectionId, id, type, attributes, orders) => __awaiter(this, void 0, void 0, function* () {
+                createIndex: (collectionId, indexId, type, attributes, orders) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
-                    if (typeof id === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "id"');
+                    if (typeof indexId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "indexId"');
                     }
                     if (typeof type === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "type"');
@@ -1658,8 +1658,8 @@
                     }
                     let path = '/database/collections/{collectionId}/indexes'.replace('{collectionId}', collectionId);
                     let payload = {};
-                    if (typeof id !== 'undefined') {
-                        payload['id'] = id;
+                    if (typeof indexId !== 'undefined') {
+                        payload['indexId'] = indexId;
                     }
                     if (typeof type !== 'undefined') {
                         payload['type'] = type;
@@ -1670,6 +1670,8 @@
                     if (typeof orders !== 'undefined') {
                         payload['orders'] = orders;
                     }
+
+                    console.log(collectionId, indexId, type, attributes, orders);
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
                         'content-type': 'application/json',

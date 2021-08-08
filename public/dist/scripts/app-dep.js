@@ -193,11 +193,11 @@ if(typeof write!=='undefined'){payload['write']=write;}
 const uri=new URL(this.config.endpoint+path);return yield this.call('patch',uri,{'content-type':'application/json',},payload);}),deleteDocument:(collectionId,documentId)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
 if(typeof documentId==='undefined'){throw new AppwriteException('Missing required parameter: "documentId"');}
 let path='/database/collections/{collectionId}/documents/{documentId}'.replace('{collectionId}',collectionId).replace('{documentId}',documentId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);}),listIndexes:(collectionId)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
-let path='/database/collections/{collectionId}/indexes'.replace('{collectionId}',collectionId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),createIndex:(collectionId,id,type,attributes,orders)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
-if(typeof id==='undefined'){throw new AppwriteException('Missing required parameter: "id"');}
+let path='/database/collections/{collectionId}/indexes'.replace('{collectionId}',collectionId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),createIndex:(collectionId,indexId,type,attributes,orders)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
+if(typeof indexId==='undefined'){throw new AppwriteException('Missing required parameter: "indexId"');}
 if(typeof type==='undefined'){throw new AppwriteException('Missing required parameter: "type"');}
 if(typeof attributes==='undefined'){throw new AppwriteException('Missing required parameter: "attributes"');}
-let path='/database/collections/{collectionId}/indexes'.replace('{collectionId}',collectionId);let payload={};if(typeof id!=='undefined'){payload['id']=id;}
+let path='/database/collections/{collectionId}/indexes'.replace('{collectionId}',collectionId);let payload={};if(typeof indexId!=='undefined'){payload['indexId']=indexId;}
 if(typeof type!=='undefined'){payload['type']=type;}
 if(typeof attributes!=='undefined'){payload['attributes']=attributes;}
 if(typeof orders!=='undefined'){payload['orders']=orders;}
