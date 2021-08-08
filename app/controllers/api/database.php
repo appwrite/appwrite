@@ -717,21 +717,21 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
             throw new Exception('Collection not found', 404);
         }
 
-        $attributes = $collection->getAttributes();
+        /** @var Document[] $attributes */
+        $attributes = $collection->getAttribute('attributes');
 
-        // Search for attribute
-        $attributeIndex = array_search($attributeId, array_column($attributes, '$id'));
-
-        if ($attributeIndex === false) {
-            throw new Exception('Attribute not found', 404);
+        // find attribute in collection
+        $attribute = null;
+        foreach ($attributes as $a) {
+            if ($a->getId() === $attributeId) {
+                $attribute = $a->setAttribute('$collection', $collectionId); // set the collectionId
+                break; // break once attribute is found
+            }
         }
 
-        $attribute = new Document([\array_merge($attributes[$attributeIndex], [
-            'collectionId' => $collectionId,
-        ])]);
-
-        $type = $attribute->getAttribute('type', '');
-        $format = $attribute->getAttribute('format', '');
+        if (\is_null($attribute)) {
+            throw new Exception('Attribute not found', 404);
+        }
 
         $database
             ->setParam('type', DELETE_TYPE_ATTRIBUTE)
