@@ -226,7 +226,7 @@ class Swagger2 extends Format
                 ];
 
                 if($name == 'queries') {
-                    $node['x-type'] = 'query';
+                    $node['x-class'] = 'query';
                 }
 
                 switch ((!empty($validator)) ? \get_class($validator) : '') {
@@ -335,7 +335,7 @@ class Swagger2 extends Format
                         'description' => $node['description'],
                         'default' => $node['default'] ?? null,
                         'x-example' => $node['x-example'] ?? null,
-                        'x-type' => $node['x-type'] ?? null,
+                        'x-class' => $node['x-class'] ?? null,
                     ];
 
                     if(\array_key_exists('items', $node)) {
