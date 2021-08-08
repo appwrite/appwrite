@@ -29,7 +29,7 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
-use Appwrite\Statsd\Statsd;
+use Appwrite\Stats\Stats;
 use Utopia\App;
 use Utopia\View;
 use Utopia\Config\Config;
@@ -423,7 +423,7 @@ App::setResource('audits', function($register) {
 }, ['register']);
 
 App::setResource('usage', function($register) {
-    return new Statsd($register->get('statsd'));
+    return new Stats($register->get('statsd'));
 }, ['register']);
 
 App::setResource('mails', function($register) {
