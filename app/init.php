@@ -26,6 +26,7 @@ use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
 use Appwrite\Event\Event;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Statsd\Statsd;
 use Utopia\App;
 use Utopia\View;
 use Utopia\Config\Config;
@@ -378,7 +379,7 @@ App::setResource('audits', function($register) {
 }, ['register']);
 
 App::setResource('usage', function($register) {
-    return new Event(Event::USAGE_QUEUE_NAME, Event::USAGE_CLASS_NAME);
+    return new Statsd($register->get('statsd'));
 }, ['register']);
 
 App::setResource('mails', function($register) {

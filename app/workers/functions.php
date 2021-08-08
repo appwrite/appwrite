@@ -2,6 +2,7 @@
 
 use Appwrite\Event\Event;
 use Appwrite\Resque\Worker;
+use Appwrite\Statsd\Statsd;
 use Appwrite\Utopia\Response\Model\Execution;
 use Cron\CronExpression;
 use Swoole\Runtime;
@@ -479,15 +480,18 @@ class FunctionsV1 extends Worker
         if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $statsd = $register->get('statsd');
 
-            $functionExecutionTime = $executionTime * 1000;
+            $usage = new Statsd($statsd);
 
-            $tags = ",project={$projectId},version=".App::getEnv('_APP_VERSION', 'UNKNOWN');
-
-            // the global namespace is prepended to every key (optional)
-            $statsd->setNamespace('appwrite.usage');
-
-            $statsd->increment('executions.all'.$tags.',functionId='.$function->getId().',functionStatus='.$functionStatus);
-            $statsd->count('executions.time'.$tags.',functionId='.$function->getId(), $functionExecutionTime);
+            $usage
+                ->setParam('projectId', $projectId)
+                ->setParam('functionId', $function->getId())
+                ->setParam('functionExecution', 1)
+                ->setParam('functionStatus', $functionStatus)
+                ->setParam('functionExecutionTime', $executionTime * 1000) // ms
+                ->setParam('networkRequestSize', 0)
+                ->setParam('networkResponseSize', 0)
+                ->save()
+            ;
         }
 
         $this->cleanup();

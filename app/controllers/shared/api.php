@@ -18,7 +18,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     /** @var Utopia\Registry\Registry $register */
     /** @var Appwrite\Event\Event $events */
     /** @var Appwrite\Event\Event $audits */
-    /** @var Appwrite\Event\Event $usage */
+    /** @var Appwrite\Statsd\Statsd $usage */
     /** @var Appwrite\Event\Event $deletes */
     /** @var Appwrite\Event\Event $database */
     /** @var Appwrite\Event\Event $functions */
@@ -176,7 +176,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $register, $even
     /** @var Utopia\Database\Document $project */
     /** @var Appwrite\Event\Event $events */
     /** @var Appwrite\Event\Event $audits */
-    /** @var Appwrite\Event\Event $usage */
+    /** @var Appwrite\Statsd\Statsd $usage */
     /** @var Appwrite\Event\Event $deletes */
     /** @var Appwrite\Event\Event $database */
     /** @var Appwrite\Event\Event $functions */
@@ -218,32 +218,12 @@ App::shutdown(function ($utopia, $request, $response, $project, $register, $even
         && $project->getId()
         && $mode !== APP_MODE_ADMIN //TODO: add check to make sure user is admin
         && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage on admin mode
-
-        $storage = $usage->getParam('storage') ?? 0;
-
-        $networkRequestSize = $request->getSize() + $usage->getParam('storage');
-        $networkResponseSize = $response->getSize();
         
-        $httpMethod = $usage->getParam('httpMethod') ?? '';
-        $httpRequest = $usage->getParam('httpRequest') ?? 0;
-
-        $tags = ",project={$project->getId()},version=".App::getEnv('_APP_VERSION', 'UNKNOWN');
-        
-        $statsd = $register->get('statsd');
-        // the global namespace is prepended to every key (optional)
-        $statsd->setNamespace('appwrite.usage');
-
-        if($httpRequest >= 1) {
-            $statsd->increment('requests.all'.$tags.',method='.\strtolower($httpMethod));
-        }
-
-        $statsd->count('network.inbound'.$tags, $networkRequestSize);
-        $statsd->count('network.outbound'.$tags, $networkResponseSize);
-        $statsd->count('network.all'.$tags, $networkRequestSize + $networkResponseSize);
-
-        if($storage >= 1) {
-            $statsd->count('storage.all'.$tags, $storage);
-        }
+        $usage
+            ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
+            ->setParam('networkResponseSize', $response->getSize())
+            ->save()
+        ;
     }
 
 }, ['utopia', 'request', 'response', 'project', 'register', 'events', 'audits', 'usage', 'deletes', 'database', 'mode'], 'api');
