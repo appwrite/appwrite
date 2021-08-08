@@ -79,17 +79,6 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'usersAuthLimit',
-                'type' => Database::VAR_INTEGER,
-                'format' => '',
-                'size' => 0,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
                 '$id' => 'legalName',
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -167,6 +156,28 @@ $collections = [
                 'filters' => ['json'],
             ],
             [
+                '$id' => 'auths',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
+                '$id' => 'providers',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
                 '$id' => 'platforms',
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -190,17 +201,6 @@ $collections = [
             ],
             [
                 '$id' => 'keys',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 16384,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => true,
-                'filters' => ['json'],
-            ],
-            [
-                '$id' => 'tasks',
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -984,6 +984,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => 'name',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 2048,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => 'dateCreated',
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
@@ -1011,17 +1022,6 @@ $collections = [
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'name',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 2048,
                 'signed' => true,
                 'required' => false,
                 'default' => null,
@@ -1404,52 +1404,5 @@ $collections = [
         ],
     ],
 ];
-
-/*
- * Add enabled OAuth2 providers to default data rules
- */
-foreach ($providers as $index => $provider) {
-    if (!$provider['enabled']) {
-        continue;
-    }
-
-    $collections['projects']['attributes'][] = [
-        '$id' => 'usersOauth2' . \ucfirst($index) . 'Appid',
-        'type' => Database::VAR_STRING,
-        'format' => '',
-        'size' => 16384,
-        'signed' => true,
-        'required' => false,
-        'default' => null,
-        'array' => false,
-        'filters' => [],
-    ];
-
-    $collections['projects']['attributes'][] = [
-        '$id' => 'usersOauth2' . \ucfirst($index) . 'Secret',
-        'type' => Database::VAR_STRING,
-        'format' => '',
-        'size' => 16384,
-        'signed' => true,
-        'required' => false,
-        'default' => null,
-        'array' => false,
-        'filters' => [],
-    ];
-}
-
-foreach ($auth as $index => $method) {
-    $collections['projects']['attributes'][] = [
-        '$id' => $method['key'] ?? '',
-        'type' => Database::VAR_BOOLEAN,
-        'format' => '',
-        'size' => 0,
-        'signed' => true,
-        'required' => false,
-        'default' => null,
-        'array' => false,
-        'filters' => [],
-    ];
-}
 
 return $collections;

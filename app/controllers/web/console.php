@@ -4,7 +4,7 @@ use Utopia\App;
 use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
-use Appwrite\Database\Database;
+use Utopia\Database\Database;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Validator\UID;
 use Utopia\Storage\Storage;
@@ -190,21 +190,6 @@ App::get('/console/keys')
             ->setParam('body', $page);
     });
 
-App::get('/console/tasks')
-    ->groups(['web', 'console'])
-    ->label('permission', 'public')
-    ->label('scope', 'console')
-    ->inject('layout')
-    ->action(function ($layout) {
-        /** @var Utopia\View $layout */
-
-        $page = new View(__DIR__.'/../../views/console/tasks/index.phtml');
-
-        $layout
-            ->setParam('title', APP_NAME.' - Tasks')
-            ->setParam('body', $page);
-    });
-
 App::get('/console/database')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
@@ -227,17 +212,17 @@ App::get('/console/database/collection')
     ->param('id', '', new UID(), 'Collection unique ID.')
     ->inject('response')
     ->inject('layout')
-    ->inject('projectDB')
-    ->action(function ($id, $response, $layout, $projectDB) {
+    ->inject('dbForExternal')
+    ->action(function ($id, $response, $layout, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\View $layout */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForExternal */
 
         Authorization::disable();
-        $collection = $projectDB->getDocument($id, false);
+        $collection = $dbForExternal->getCollection($id);
         Authorization::reset();
 
-        if ($collection->isEmpty() || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+        if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
         }
 
@@ -265,16 +250,16 @@ App::get('/console/database/document')
     ->label('scope', 'console')
     ->param('collection', '', new UID(), 'Collection unique ID.')
     ->inject('layout')
-    ->inject('projectDB')
-    ->action(function ($collection, $layout, $projectDB) {
+    ->inject('dbForExternal')
+    ->action(function ($collection, $layout, $dbForExternal) {
         /** @var Utopia\View $layout */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForExternal */
 
         Authorization::disable();
-        $collection = $projectDB->getDocument($collection, false);
+        $collection = $dbForExternal->getCollection($collection);
         Authorization::reset();
 
-        if ($collection->isEmpty() || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+        if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
         }
 
@@ -283,7 +268,7 @@ App::get('/console/database/document')
         $searchDocuments = new View(__DIR__.'/../../views/console/database/search/documents.phtml');
 
         $page
-            ->setParam('db', $projectDB)
+            ->setParam('db', $dbForExternal)
             ->setParam('collection', $collection)
             ->setParam('searchFiles', $searchFiles)
             ->setParam('searchDocuments', $searchDocuments)

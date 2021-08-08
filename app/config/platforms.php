@@ -45,7 +45,7 @@ return [
                     ],
                     [
                         'icon' => 'angular.svg',
-                        'name' => 'Todo App with Angular.js',
+                        'name' => 'Todo App with Angular',
                         'description' => 'A simple Todo app that uses both the Appwrite account and database APIs.',
                         'source' => 'https://github.com/appwrite/todo-with-angular',
                         'url' => 'https://appwrite-todo-with-angular.vercel.app/',
@@ -62,7 +62,7 @@ return [
             [
                 'key' => 'flutter',
                 'name' => 'Flutter',
-                'version' => '0.7.0',
+                'version' => '0.7.1',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter',
                 'package' => 'https://pub.dev/packages/appwrite',
                 'enabled' => true,
@@ -152,7 +152,7 @@ return [
         'name' => 'Console',
         'enabled' => false,
         'beta' => false,
-        'languages' => [ // TODO change key to 'sdks'
+        'languages' => [
             [
                 'key' => 'web',
                 'name' => 'Console',
@@ -179,7 +179,7 @@ return [
         'description' => 'Libraries for integrating with Appwrite to build server side integrations. Read the [getting started for server](/docs/getting-started-for-server) tutorial to start building your first server integration.',
         'enabled' => true,
         'beta' => false,
-        'languages' => [ // TODO change key to 'sdks'
+        'languages' => [
             [
                 'key' => 'nodejs',
                 'name' => 'Node.js',

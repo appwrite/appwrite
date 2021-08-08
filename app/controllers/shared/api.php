@@ -44,7 +44,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
         ->setParam('{url}', $request->getHostname().$route->getURL())
     ;
 
-    //TODO make sure we get array here
+    // TODO make sure we get array here
 
     foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
         if(!empty($value)) {
@@ -115,18 +115,10 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     ;
 }, ['utopia', 'request', 'response', 'project', 'user', 'register', 'events', 'audits', 'usage', 'deletes', 'database', 'dbForInternal'], 'api');
 
-App::init(function ($utopia, $request, $response, $project, $user) {
+App::init(function ($utopia, $request, $project) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
-    /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\Database\Document $project */
-    /** @var Utopia\Database\Document $user */
-    /** @var Utopia\Registry\Registry $register */
-    /** @var Appwrite\Event\Event $events */
-    /** @var Appwrite\Event\Event $audits */
-    /** @var Appwrite\Event\Event $usage */
-    /** @var Appwrite\Event\Event $deletes */
-    /** @var Appwrite\Event\Event $functions */
 
     $route = $utopia->match($request);
 
@@ -137,27 +129,28 @@ App::init(function ($utopia, $request, $response, $project, $user) {
         return;
     }
 
+    $auths = $project->getAttribute('auths', []);
     switch ($route->getLabel('auth.type', '')) {
         case 'emailPassword':
-            if($project->getAttribute('usersAuthEmailPassword', true) === false) {
+            if(($auths['emailPassword'] ?? true) === false) {
                 throw new Exception('Email / Password authentication is disabled for this project', 501);
             }
             break;
 
         case 'anonymous':
-            if($project->getAttribute('usersAuthAnonymous', true) === false) {
+            if(($auths['anonymous'] ?? true) === false) {
                 throw new Exception('Anonymous authentication is disabled for this project', 501);
             }
             break;
 
         case 'invites':
-            if($project->getAttribute('usersAuthInvites', true) === false) {
+            if(($auths['invites'] ?? true) === false) {
                 throw new Exception('Invites authentication is disabled for this project', 501);
             }
             break;
 
         case 'jwt':
-            if($project->getAttribute('usersAuthJWT', true) === false) {
+            if(($auths['JWT'] ?? true) === false) {
                 throw new Exception('JWT authentication is disabled for this project', 501);
             }
             break;
@@ -167,7 +160,7 @@ App::init(function ($utopia, $request, $response, $project, $user) {
             break;
     }
 
-}, ['utopia', 'request', 'response', 'project', 'user'], 'auth');
+}, ['utopia', 'request', 'project'], 'auth');
 
 App::shutdown(function ($utopia, $request, $response, $project, $register, $events, $audits, $usage, $deletes, $database, $mode) {
     /** @var Utopia\App $utopia */
@@ -216,7 +209,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $register, $even
     $route = $utopia->match($request);
     if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled' 
         && $project->getId()
-        && $mode !== APP_MODE_ADMIN //TODO: add check to make sure user is admin
+        && $mode !== APP_MODE_ADMIN // TODO: add check to make sure user is admin
         && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage on admin mode
         
         $usage

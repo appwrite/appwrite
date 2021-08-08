@@ -16,6 +16,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Validator\UID;
 use DeviceDetector\DeviceDetector;
+use Appwrite\Database\Validator\CustomId;
 
 App::post('/v1/users')
     ->desc('Create User')
@@ -29,19 +30,20 @@ App::post('/v1/users')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($email, $password, $name, $response, $dbForInternal) {
+    ->action(function ($userId, $email, $password, $name, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
         $email = \strtolower($email);
 
         try {
-            $userId = $dbForInternal->getId();
+            $userId = $userId == 'unique()' ? $dbForInternal->getId() : $userId;
             $user = $dbForInternal->createDocument('users', new Document([
                 '$id' => $userId,
                 '$read' => ['role:all'],
@@ -180,14 +182,12 @@ App::get('/v1/users/:userId/sessions')
         }
 
         $sessions = $user->getAttribute('sessions', []);
-        $countries = $locale->getText('countries');
 
         foreach ($sessions as $key => $session) { 
             /** @var Document $session */
 
-            $session->setAttribute('countryName', (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
-                ? $countries[strtoupper($session->getAttribute('countryCode'))]
-                : $locale->getText('locale.country.unknown'));
+            $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+            $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', false);
 
             $sessions[$key] = $session;
@@ -229,8 +229,6 @@ App::get('/v1/users/:userId/logs')
         }
 
         $audit = new Audit($dbForInternal);
-        
-        $countries = $locale->getText('countries');
 
         $logs = $audit->getLogsByUserAndEvents($user->getId(), [
             'account.create',
@@ -296,8 +294,8 @@ App::get('/v1/users/:userId/logs')
             $record = $geodb->get($log['ip']);
 
             if ($record) {
-                $output[$i]['countryCode'] = (isset($countries[$record['country']['iso_code']])) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
+                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
             } else {
                 $output[$i]['countryCode'] = '--';
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
@@ -446,7 +444,6 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
             }
         }
 
-        // TODO : Response filter implementation
         $response->noContent();
     });
 
@@ -537,6 +534,5 @@ App::delete('/v1/users/:userId')
             ->setParam('eventData', $response->output($user, Response::MODEL_USER))
         ;
 
-        // TODO : Response filter implementation
         $response->noContent();
     });

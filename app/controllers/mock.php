@@ -7,7 +7,7 @@ use Appwrite\Network\Validator\Host;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Validator\ArrayList;
-use Utopia\Validator\Numeric;
+use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
 use Utopia\Storage\Validator\File;
 
@@ -24,7 +24,7 @@ App::get('/v1/mock/tests/foo')
     ->label('sdk.response.model', Response::MODEL_MOCK)
     ->label('sdk.mock', true)
     ->param('x', '', new Text(100), 'Sample string param')
-    ->param('y', '', new Numeric(), 'Sample numeric param')
+    ->param('y', '', new Integer(true), 'Sample numeric param')
     ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
     ->action(function ($x, $y, $z) {
     });
@@ -42,7 +42,7 @@ App::post('/v1/mock/tests/foo')
     ->label('sdk.response.model', Response::MODEL_MOCK)
     ->label('sdk.mock', true)
     ->param('x', '', new Text(100), 'Sample string param')
-    ->param('y', '', new Numeric(), 'Sample numeric param')
+    ->param('y', '', new Integer(true), 'Sample numeric param')
     ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
     ->action(function ($x, $y, $z) {
     });
@@ -60,7 +60,7 @@ App::patch('/v1/mock/tests/foo')
     ->label('sdk.response.model', Response::MODEL_MOCK)
     ->label('sdk.mock', true)
     ->param('x', '', new Text(100), 'Sample string param')
-    ->param('y', '', new Numeric(), 'Sample numeric param')
+    ->param('y', '', new Integer(true), 'Sample numeric param')
     ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
     ->action(function ($x, $y, $z) {
     });
@@ -78,7 +78,7 @@ App::put('/v1/mock/tests/foo')
     ->label('sdk.response.model', Response::MODEL_MOCK)
     ->label('sdk.mock', true)
     ->param('x', '', new Text(100), 'Sample string param')
-    ->param('y', '', new Numeric(), 'Sample numeric param')
+    ->param('y', '', new Integer(true), 'Sample numeric param')
     ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
     ->action(function ($x, $y, $z) {
     });
@@ -96,7 +96,7 @@ App::delete('/v1/mock/tests/foo')
     ->label('sdk.response.model', Response::MODEL_MOCK)
     ->label('sdk.mock', true)
     ->param('x', '', new Text(100), 'Sample string param')
-    ->param('y', '', new Numeric(), 'Sample numeric param')
+    ->param('y', '', new Integer(true), 'Sample numeric param')
     ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
     ->action(function ($x, $y, $z) {
     });
@@ -113,10 +113,10 @@ App::get('/v1/mock/tests/bar')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MOCK)
     ->label('sdk.mock', true)
-    ->param('x', '', new Text(100), 'Sample string param')
-    ->param('y', '', new Numeric(), 'Sample numeric param')
+    ->param('required', '', new Text(100), 'Sample string param')
+    ->param('default', '', new Integer(true), 'Sample numeric param')
     ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
-    ->action(function ($x, $y, $z) {
+    ->action(function ($required, $default, $z) {
     });
 
 App::post('/v1/mock/tests/bar')
@@ -131,10 +131,10 @@ App::post('/v1/mock/tests/bar')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MOCK)
     ->label('sdk.mock', true)
-    ->param('x', '', new Text(100), 'Sample string param')
-    ->param('y', '', new Numeric(), 'Sample numeric param')
+    ->param('required', '', new Text(100), 'Sample string param')
+    ->param('default', '', new Integer(true), 'Sample numeric param')
     ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
-    ->action(function ($x, $y, $z) {
+    ->action(function ($required, $default, $z) {
     });
 
 App::patch('/v1/mock/tests/bar')
@@ -149,10 +149,10 @@ App::patch('/v1/mock/tests/bar')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MOCK)
     ->label('sdk.mock', true)
-    ->param('x', '', new Text(100), 'Sample string param')
-    ->param('y', '', new Numeric(), 'Sample numeric param')
+    ->param('required', '', new Text(100), 'Sample string param')
+    ->param('default', '', new Integer(true), 'Sample numeric param')
     ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
-    ->action(function ($x, $y, $z) {
+    ->action(function ($required, $default, $z) {
     });
 
 App::put('/v1/mock/tests/bar')
@@ -167,10 +167,10 @@ App::put('/v1/mock/tests/bar')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MOCK)
     ->label('sdk.mock', true)
-    ->param('x', '', new Text(100), 'Sample string param')
-    ->param('y', '', new Numeric(), 'Sample numeric param')
+    ->param('required', '', new Text(100), 'Sample string param')
+    ->param('default', '', new Integer(true), 'Sample numeric param')
     ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
-    ->action(function ($x, $y, $z) {
+    ->action(function ($required, $default, $z) {
     });
 
 App::delete('/v1/mock/tests/bar')
@@ -185,10 +185,10 @@ App::delete('/v1/mock/tests/bar')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MOCK)
     ->label('sdk.mock', true)
-    ->param('x', '', new Text(100), 'Sample string param')
-    ->param('y', '', new Numeric(), 'Sample numeric param')
+    ->param('required', '', new Text(100), 'Sample string param')
+    ->param('default', '', new Integer(true), 'Sample numeric param')
     ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
-    ->action(function ($x, $y, $z) {
+    ->action(function ($required, $default, $z) {
     });
 
 App::get('/v1/mock/tests/general/download')
@@ -230,7 +230,7 @@ App::post('/v1/mock/tests/general/upload')
     ->label('sdk.response.model', Response::MODEL_MOCK)
     ->label('sdk.mock', true)
     ->param('x', '', new Text(100), 'Sample string param')
-    ->param('y', '', new Numeric(), 'Sample numeric param')
+    ->param('y', '', new Integer(true), 'Sample numeric param')
     ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
     ->param('file', [], new File(), 'Sample file param', false)
     ->inject('request')
@@ -523,7 +523,7 @@ App::shutdown(function($utopia, $response, $request) {
     $tests = \array_merge($tests, $result);
 
     if (!\file_put_contents($path, \json_encode($tests), LOCK_EX)) {
-        throw new Exception('Failed to save resutls', 500);
+        throw new Exception('Failed to save results', 500);
     }
 
     $response->dynamic(new Document(['result' => $route->getMethod() . ':' . $route->getURL() . ':passed']), Response::MODEL_MOCK);

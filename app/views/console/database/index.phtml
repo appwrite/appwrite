@@ -29,7 +29,7 @@
                         <p class="margin-bottom-no">You haven't created any collections for your project yet.</p>
                     </div>
                 </div>
-                
+
                 <div data-ls-if="0 != {{project-collections.sum}}">
                     <ul data-ls-loop="project-collections.collections" data-ls-as="collection" data-ls-append="" class="tiles cell-3 margin-bottom-small">
                         <li class="margin-bottom">
@@ -94,13 +94,23 @@
                         data-failure-param-alert-text="Failed to create collection"
                         data-failure-param-alert-classname="error">
 
-                        <label for="user-name">Name</label>
+                        <label for="collection-id">Collection ID</label>
+                        <input
+                            type="hidden"
+                            data-custom-id
+                            data-id-type="auto"
+                            data-validator="database.getCollection"
+                            required
+                            maxlength="36"
+                            name="collectionId" />
+
+                        <label for="collection-name">Name</label>
                         <input type="text" class="full-width" id="collection-name" name="name" required autocomplete="off" maxlength="128" />
 
                         <input type="hidden" id="collection-read" name="read" required data-cast-to="json" value="<?php echo htmlentities(json_encode([])); ?>" />
                         <input type="hidden" id="collection-write" name="write" required data-cast-to="json" value="<?php echo htmlentities(json_encode([])); ?>" />
                         <input type="hidden" id="collection-rules" name="rules" required data-cast-to="json" value="{}" />
-                        
+
                         <hr />
 
                         <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>

@@ -78,9 +78,9 @@ class CertificatesV1 extends Worker
             }
         }
 
-        $certificate = $dbForConsole->findFirst('certificates', [
+        $certificate = $dbForConsole->findOne('certificates', [
             new Query('domain', QUERY::TYPE_EQUAL, [$domain->get()])
-        ], /*limit*/ 1);
+        ]);
 
         // $condition = ($certificate
         //     && $certificate instanceof Document

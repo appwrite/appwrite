@@ -23,6 +23,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'teamId' => 'unique()',
             'name' => 'Project Test',
         ]);
 
@@ -34,6 +35,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'projectId' => 'unique()',
             'name' => 'Project Test',
             'teamId' => $team['body']['$id'],
         ]);
@@ -45,7 +47,6 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertArrayHasKey('platforms', $response['body']);
         $this->assertArrayHasKey('webhooks', $response['body']);
         $this->assertArrayHasKey('keys', $response['body']);
-        $this->assertArrayHasKey('tasks', $response['body']);
 
         $projectId = $response['body']['$id'];
 
@@ -56,6 +57,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'projectId' => 'unique()',
             'name' => '',
             'teamId' => $team['body']['$id'],
         ]);
@@ -66,6 +68,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'projectId' => 'unique()',
             'name' => 'Project Test',
         ]);
 
@@ -164,7 +167,6 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertArrayHasKey('network', $response['body']);
         $this->assertArrayHasKey('requests', $response['body']);
         $this->assertArrayHasKey('storage', $response['body']);
-        $this->assertArrayHasKey('tasks', $response['body']);
         $this->assertArrayHasKey('users', $response['body']);
         $this->assertIsArray($response['body']['collections']['data']);
         $this->assertIsInt($response['body']['collections']['total']);
@@ -175,8 +177,6 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertIsArray($response['body']['requests']['data']);
         $this->assertIsInt($response['body']['requests']['total']);
         $this->assertIsInt($response['body']['storage']['total']);
-        $this->assertIsArray($response['body']['tasks']['data']);
-        $this->assertIsInt($response['body']['tasks']['total']);
         $this->assertIsArray($response['body']['users']['data']);
         $this->assertIsInt($response['body']['users']['total']);
 
@@ -215,6 +215,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'projectId' => 'unique()',
             'name' => 'Project Test 2',
         ]);
 
@@ -224,7 +225,6 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertArrayHasKey('platforms', $response['body']);
         $this->assertArrayHasKey('webhooks', $response['body']);
         $this->assertArrayHasKey('keys', $response['body']);
-        $this->assertArrayHasKey('tasks', $response['body']);
 
         $projectId = $response['body']['$id'];
 
@@ -236,6 +236,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'projectId' => 'unique()',
             'name' => '',
         ]);
 
@@ -280,8 +281,8 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals($id, $response['body']['$id']);
 
         foreach ($providers as $key => $provider) {
-            $this->assertEquals('AppId-'.ucfirst($key), $response['body']['usersOauth2'.ucfirst($key).'Appid']);
-            $this->assertEquals('Secret-'.ucfirst($key), $response['body']['usersOauth2'.ucfirst($key).'Secret']);
+            $this->assertEquals('AppId-'.ucfirst($key), $response['body']['provider'.ucfirst($key).'Appid']);
+            $this->assertEquals('Secret-'.ucfirst($key), $response['body']['provider'.ucfirst($key).'Secret']);
         }
 
         /**
@@ -319,6 +320,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
+            'userId' => 'unique()',
             'email' => $originalEmail,
             'password' => $originalPassword,
             'name' => $originalName,
@@ -356,7 +358,7 @@ class ProjectsConsoleClientTest extends Scope
 
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertNotEmpty($response['body']['$id']);
-            $this->assertEquals(false, $response['body'][$method['key']]);
+            $this->assertEquals(false, $response['body']['auth'. ucfirst($method['key'])]);
         }
         
         $email = uniqid().'user@localhost.test';
@@ -371,6 +373,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -383,6 +386,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
             'cookie' => 'a_session_'.$id.'='.$session,
         ]), [
+            'teamId' => 'unique()',
             'name' => 'Arsenal'
         ]);
 
@@ -476,6 +480,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -501,6 +506,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
+            'userId' => 'unique()',
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -518,6 +524,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
+            'teamId' => 'unique()',
             'name' => 'Project Test',
         ]);
         $this->assertEquals(201, $team['headers']['status-code']);
@@ -528,6 +535,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
+            'projectId' => 'unique()',
             'name' => 'Project Test',
             'teamId' => $team['body']['$id'],
         ]);
@@ -660,6 +668,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
+            'teamId' => 'unique()',
             'name' => 'Arsenal'
         ]);
 
@@ -1100,400 +1109,6 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
-    // Tasks
-
-    /**
-     * @depends testCreateProject
-     */
-    public function testCreateProjectTask($data): array
-    {
-        $id = $data['projectId'] ?? '';
-
-        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/tasks', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Task Test',
-            'status' => 'play',
-            'schedule' => '* * * * *',
-            'security' => true,
-            'httpMethod' => 'GET',
-            'httpUrl' => 'http://example.com',
-            'httpHeaders' => ['demo:value'],
-            'httpUser' => 'username',
-            'httpPass' => 'password',
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('Task Test', $response['body']['name']);
-        $this->assertEquals('play', $response['body']['status']);
-        $this->assertEquals(true, $response['body']['security']);
-        $this->assertEquals('* * * * *', $response['body']['schedule']);
-        $this->assertEquals('GET', $response['body']['httpMethod']);
-        $this->assertEquals('http://example.com', $response['body']['httpUrl']);
-        $this->assertContains('demo:value', $response['body']['httpHeaders']);
-        $this->assertCount(1, $response['body']['httpHeaders']);
-        $this->assertEquals('username', $response['body']['httpUser']);
-        $this->assertEquals('password', $response['body']['httpPass']);
-        
-        $data = array_merge($data, ['taskId' => $response['body']['$id']]);
-
-        /**
-         * Test for FAILURE
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/tasks', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Task Test',
-            'status' => 'unknown',
-            'schedule' => '* * * * *',
-            'security' => true,
-            'httpMethod' => 'GET',
-            'httpUrl' => 'http://example.com',
-            'httpHeaders' => ['demo:value'],
-            'httpUser' => 'username',
-            'httpPass' => 'password',
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/tasks', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Task Test',
-            'status' => 'play',
-            'schedule' => 'unknown',
-            'security' => true,
-            'httpMethod' => 'GET',
-            'httpUrl' => 'http://example.com',
-            'httpHeaders' => ['demo:value'],
-            'httpUser' => 'username',
-            'httpPass' => 'password',
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-        
-        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/tasks', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Task Test',
-            'status' => 'play',
-            'schedule' => '* * * * *',
-            'security' => 'string',
-            'httpMethod' => 'GET',
-            'httpUrl' => 'http://example.com',
-            'httpHeaders' => ['demo:value'],
-            'httpUser' => 'username',
-            'httpPass' => 'password',
-        ]);
-            
-        $this->assertEquals(400, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/tasks', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Task Test',
-            'status' => 'play',
-            'schedule' => '* * * * *',
-            'security' => true,
-            'httpMethod' => 'UNKNOWN',
-            'httpUrl' => 'http://example.com',
-            'httpHeaders' => ['demo:value'],
-            'httpUser' => 'username',
-            'httpPass' => 'password',
-        ]);
-            
-        $this->assertEquals(400, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/tasks', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Task Test',
-            'status' => 'play',
-            'schedule' => '* * * * *',
-            'security' => true,
-            'httpMethod' => 'GET',
-            'httpUrl' => 'http://example.com',
-            'httpHeaders' => 'string',
-            'httpUser' => 'username',
-            'httpPass' => 'password',
-        ]);
-            
-        $this->assertEquals(400, $response['headers']['status-code']);
-
-        return $data;
-    }
-
-    /**
-     * @depends testCreateProjectTask
-     */
-    public function testListProjectTask($data): array
-    {
-        $id = $data['projectId'] ?? '';
-
-        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/tasks', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, $response['body']['sum']);
-        
-        /**
-         * Test for FAILURE
-         */
-
-        return $data;
-    }
-
-    /**
-     * @depends testCreateProjectTask
-     */
-    public function testGetProjectTask($data): array
-    {
-        $id = $data['projectId'] ?? '';
-        $taskId = $data['taskId'] ?? '';
-
-        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/tasks/'.$taskId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals($taskId, $response['body']['$id']);
-        $this->assertEquals('Task Test', $response['body']['name']);
-        $this->assertEquals('play', $response['body']['status']);
-        $this->assertEquals(true, $response['body']['security']);
-        $this->assertEquals('* * * * *', $response['body']['schedule']);
-        $this->assertEquals('GET', $response['body']['httpMethod']);
-        $this->assertEquals('http://example.com', $response['body']['httpUrl']);
-        $this->assertContains('demo:value', $response['body']['httpHeaders']);
-        $this->assertCount(1, $response['body']['httpHeaders']);
-        $this->assertEquals('username', $response['body']['httpUser']);
-        $this->assertEquals('password', $response['body']['httpPass']);
-        
-        /**
-         * Test for FAILURE
-         */
-        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/tasks/error', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(404, $response['headers']['status-code']);
-
-        return $data;
-    }
-
-    /**
-     * @depends testCreateProjectTask
-     */
-    public function testUpdateProjectTask($data): array
-    {
-        $id = $data['projectId'] ?? '';
-        $taskId = $data['taskId'] ?? '';
-
-        $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/tasks/'.$taskId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Task Test 2',
-            'status' => 'pause',
-            'schedule' => '*/5 * * * *',
-            'security' => false,
-            'httpMethod' => 'POST',
-            'httpUrl' => 'http://example.com/demo',
-            'httpHeaders' => ['demo1: value1', 'demo2:value2'],
-            'httpUser' => 'username1',
-            'httpPass' => 'password1',
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals($taskId, $response['body']['$id']);
-        $this->assertEquals('Task Test 2', $response['body']['name']);
-        $this->assertEquals('pause', $response['body']['status']);
-        $this->assertEquals(false, $response['body']['security']);
-        $this->assertEquals('*/5 * * * *', $response['body']['schedule']);
-        $this->assertEquals('POST', $response['body']['httpMethod']);
-        $this->assertEquals('http://example.com/demo', $response['body']['httpUrl']);
-        $this->assertContains('demo1: value1', $response['body']['httpHeaders']);
-        $this->assertContains('demo2:value2', $response['body']['httpHeaders']);
-        $this->assertCount(2, $response['body']['httpHeaders']);
-        $this->assertEquals('username1', $response['body']['httpUser']);
-        $this->assertEquals('password1', $response['body']['httpPass']);
-
-        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/tasks/'.$taskId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals($taskId, $response['body']['$id']);
-        $this->assertEquals('Task Test 2', $response['body']['name']);
-        $this->assertEquals('pause', $response['body']['status']);
-        $this->assertEquals(false, $response['body']['security']);
-        $this->assertEquals('*/5 * * * *', $response['body']['schedule']);
-        $this->assertEquals('POST', $response['body']['httpMethod']);
-        $this->assertEquals('http://example.com/demo', $response['body']['httpUrl']);
-        $this->assertContains('demo1: value1', $response['body']['httpHeaders']);
-        $this->assertContains('demo2:value2', $response['body']['httpHeaders']);
-        $this->assertCount(2, $response['body']['httpHeaders']);
-        $this->assertEquals('username1', $response['body']['httpUser']);
-        $this->assertEquals('password1', $response['body']['httpPass']);
-        
-        /**
-         * Test for FAILURE
-         */
-        $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/tasks/'.$taskId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Task Test 2',
-            'status' => 'pause1',
-            'schedule' => '* * * * *',
-            'security' => false,
-            'httpMethod' => 'POST',
-            'httpUrl' => 'http://example.com/demo',
-            'httpHeaders' => ['demo1: value1', 'demo2:value2'],
-            'httpUser' => 'username1',
-            'httpPass' => 'password1',
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/tasks/'.$taskId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Task Test 2',
-            'status' => 'pause',
-            'schedule' => '* * * * *xxx',
-            'security' => false,
-            'httpMethod' => 'POST',
-            'httpUrl' => 'http://example.com/demo',
-            'httpHeaders' => ['demo1: value1', 'demo2:value2'],
-            'httpUser' => 'username1',
-            'httpPass' => 'password1',
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/tasks/'.$taskId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Task Test 2',
-            'status' => 'pause',
-            'schedule' => '* * * * *',
-            'security' => 'string',
-            'httpMethod' => 'POST',
-            'httpUrl' => 'http://example.com/demo',
-            'httpHeaders' => ['demo1: value1', 'demo2:value2'],
-            'httpUser' => 'username1',
-            'httpPass' => 'password1',
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/tasks/'.$taskId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Task Test 2',
-            'status' => 'pause',
-            'schedule' => '* * * * *',
-            'security' => false,
-            'httpMethod' => 'UNKNOWN',
-            'httpUrl' => 'http://example.com/demo',
-            'httpHeaders' => ['demo1: value1', 'demo2:value2'],
-            'httpUser' => 'username1',
-            'httpPass' => 'password1',
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/tasks/'.$taskId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Task Test 2',
-            'status' => 'pause',
-            'schedule' => '* * * * *',
-            'security' => false,
-            'httpMethod' => 'POST',
-            'httpUrl' => 'example.com/demo',
-            'httpHeaders' => ['demo1: value1', 'demo2:value2'],
-            'httpUser' => 'username1',
-            'httpPass' => 'password1',
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/tasks/'.$taskId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Task Test 2',
-            'status' => 'pause',
-            'schedule' => '* * * * *',
-            'security' => false,
-            'httpMethod' => 'POST',
-            'httpUrl' => 'http://example.com/demo',
-            'httpHeaders' => 'string',
-            'httpUser' => 'username1',
-            'httpPass' => 'password1',
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-
-        return $data;
-    }
-
-    /**
-     * @depends testCreateProjectTask
-     */
-    public function testDeleteProjectTask($data): array
-    {
-        $id = $data['projectId'] ?? '';
-        $taskId = $data['taskId'] ?? '';
-
-        $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/tasks/'.$taskId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(204, $response['headers']['status-code']);
-        $this->assertEmpty($response['body']);
-
-        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/tasks/'.$taskId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(404, $response['headers']['status-code']);
-        
-        /**
-         * Test for FAILURE
-         */
-        $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/tasks/error', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(404, $response['headers']['status-code']);
-
-        return $data;
-    }
-
     // Platforms
 
     /**
@@ -1826,7 +1441,7 @@ class ProjectsConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/tasks/error', array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/webhooks/error', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);

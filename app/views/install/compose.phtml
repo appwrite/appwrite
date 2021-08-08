@@ -158,30 +158,6 @@ services:
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
 
-  appwrite-worker-tasks:
-    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
-    entrypoint: worker-tasks
-    container_name: appwrite-worker-tasks
-    restart: unless-stopped
-    networks:
-      - appwrite
-    depends_on:
-      - redis
-      - mariadb
-    environment:
-      - _APP_ENV
-      - _APP_OPENSSL_KEY_V1
-      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-
   appwrite-worker-deletes:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-deletes
