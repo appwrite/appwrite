@@ -13,7 +13,7 @@ class DatabaseCustomServerTest extends Scope
     use ProjectCustom;
     use SideServer;
 
-    public function testDeleteAttribute()
+    public function testDeleteAttribute(): array
     {
         /**
          * Test for SUCCESS
@@ -124,11 +124,36 @@ class DatabaseCustomServerTest extends Scope
 
         return [
             'collectionId' => $actors['body']['$id'],
+            'indexId' => $index['body']['$id'],
         ];
+    }
+    /**
+     * @depends testDeleteAttribute
+     */
+    public function testDeleteIndex($data): array
+    {
+        $index = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $data['collectionId'] . '/indexes/'. $data['indexId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        // Wait for database worker to finish deleting index
+        sleep(5);
+
+        $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['collectionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), []); 
+
+        $this->assertCount(0, $collection['body']['indexes']);
+
+        return $data;
     }
 
     /**
-     * @depends testDeleteAttribute
+     * @depends testDeleteIndex
      */
     public function testDeleteCollection($data)
     {
