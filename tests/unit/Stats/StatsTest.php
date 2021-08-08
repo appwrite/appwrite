@@ -20,7 +20,7 @@ class StatsTest extends TestCase
 
         $connection = new \Domnikl\Statsd\Connection\UdpSocket($host, $port);
         $statsd = new \Domnikl\Statsd\Client($connection);
-        
+
         $this->object = new Stats($statsd);
     }
 
@@ -28,34 +28,42 @@ class StatsTest extends TestCase
     {
     }
 
+    public function testNamespace()
+    {
+        $this->object->setNamespace('appwritetest.usage');
+        $this->assertEquals('appwritetest.usage', $this->object->getNamespace());
+    }
+
     public function testParams()
     {
         $this->object
-            ->setParam('statsKey1', 'statsValue1')
-            ->setParam('statsKey2', 'statsValue2')
+            ->setParam('projectId', 'appwrite_test')
+            ->setParam('networkRequestSize', 100)
         ;
+
+        $this->assertEquals('appwrite_test', $this->object->getParam('projectId'));
+        $this->assertEquals(100, $this->object->getParam('networkRequestSize'));
 
         $this->object->submit();
 
-        $this->assertEquals(null, $this->object->getParam('statsKey1'));
-        $this->assertEquals(null, $this->object->getParam('statsKey2'));
-        $this->assertEquals(null, $this->object->getParam('statsKey3'));
+        $this->assertEquals(null, $this->object->getParam('projectId'));
+        $this->assertEquals(null, $this->object->getParam('networkRequestSize'));
     }
 
     public function testReset()
     {
         $this->object
-            ->setParam('statsKey1', 'statsValue1')
-            ->setParam('statsKey2', 'statsValue2')
+            ->setParam('projectId', 'appwrite_test')
+            ->setParam('networkRequestSize', 100)
         ;
 
-        $this->assertEquals('statsValue1', $this->object->getParam('statsKey1'));
-        $this->assertEquals('statsValue2', $this->object->getParam('statsKey2'));
+        $this->assertEquals('appwrite_test', $this->object->getParam('projectId'));
+        $this->assertEquals(100, $this->object->getParam('networkRequestSize'));
 
         $this->object->reset();
 
-        $this->assertEquals(null, $this->object->getParam('statsKey1'));
-        $this->assertEquals(null, $this->object->getParam('statsKey2'));
-        $this->assertEquals(null, $this->object->getParam('statsKey3'));
+        $this->assertEquals(null, $this->object->getParam('projectId'));
+        $this->assertEquals(null, $this->object->getParam('networkRequestSize'));
+        $this->assertEquals('appwrite.usage', $this->object->getNamespace());
     }
 }

@@ -17,6 +17,11 @@ class Stats
     protected $statsd;
 
     /**
+     * @var string
+     */
+    protected $namespace = 'appwrite.usage';
+
+    /**
      * Event constructor.
      *
      * @param mixed $statsd
@@ -50,6 +55,26 @@ class Stats
     }
 
     /**
+     * @param string $namespace
+     *
+     * @return $this
+     */
+    public function setNamespace(string $namespace): self
+    {
+        $this->namespace = $namespace;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getNamespace()
+    {
+        return $this->namespace;
+    }
+
+    /**
      * Submit data to StatsD.
      */
     public function submit(): void
@@ -72,7 +97,7 @@ class Stats
         $tags = ",project={$projectId},version=" . App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         // the global namespace is prepended to every key (optional)
-        $this->statsd->setNamespace('appwrite.usage');
+        $this->statsd->setNamespace($this->namespace);
 
         if ($httpRequest >= 1) {
             $this->statsd->increment('requests.all' . $tags . ',method=' . \strtolower($httpMethod));
@@ -97,6 +122,7 @@ class Stats
     public function reset(): self
     {
         $this->params = [];
+        $this->namespace = 'appwrite.usage';
 
         return $this;
     }
