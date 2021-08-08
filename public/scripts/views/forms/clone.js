@@ -30,6 +30,7 @@
 
       button.addEventListener("click", function() {
         var clone = document.createElement(element.tagName);
+        var input = clone.querySelector("input");
 
         if (element.name) {
           clone.name = element.name;
@@ -46,7 +47,9 @@
           button.parentNode.insertBefore(clone, button);
         }
 
-        clone.querySelector("input").focus();
+        if(input) {
+          input.focus();
+        }
 
         Array.prototype.slice
           .call(clone.querySelectorAll("[data-remove]"))
