@@ -2,7 +2,7 @@
 
 use Appwrite\Event\Event;
 use Appwrite\Resque\Worker;
-use Appwrite\Statsd\Statsd;
+use Appwrite\Stats\Stats;
 use Appwrite\Utopia\Response\Model\Execution;
 use Cron\CronExpression;
 use Swoole\Runtime;
@@ -480,7 +480,7 @@ class FunctionsV1 extends Worker
         if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $statsd = $register->get('statsd');
 
-            $usage = new Statsd($statsd);
+            $usage = new Stats($statsd);
 
             $usage
                 ->setParam('projectId', $projectId)
@@ -490,7 +490,7 @@ class FunctionsV1 extends Worker
                 ->setParam('functionExecutionTime', $executionTime * 1000) // ms
                 ->setParam('networkRequestSize', 0)
                 ->setParam('networkResponseSize', 0)
-                ->save()
+                ->submit()
             ;
         }
 

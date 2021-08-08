@@ -249,6 +249,7 @@ $register->set('statsd', function () { // Register DB connection
 
     return $statsd;
 });
+
 $register->set('smtp', function () {
     $mail = new PHPMailer(true);
 

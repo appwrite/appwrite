@@ -18,7 +18,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     /** @var Utopia\Registry\Registry $register */
     /** @var Appwrite\Event\Event $events */
     /** @var Appwrite\Event\Event $audits */
-    /** @var Appwrite\Statsd\Statsd $usage */
+    /** @var Appwrite\Stats\Stats $usage */
     /** @var Appwrite\Event\Event $deletes */
     /** @var Appwrite\Event\Event $database */
     /** @var Appwrite\Event\Event $functions */
@@ -176,7 +176,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $register, $even
     /** @var Utopia\Database\Document $project */
     /** @var Appwrite\Event\Event $events */
     /** @var Appwrite\Event\Event $audits */
-    /** @var Appwrite\Statsd\Statsd $usage */
+    /** @var Appwrite\Stats\Stats $usage */
     /** @var Appwrite\Event\Event $deletes */
     /** @var Appwrite\Event\Event $database */
     /** @var Appwrite\Event\Event $functions */
@@ -222,7 +222,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $register, $even
         $usage
             ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
             ->setParam('networkResponseSize', $response->getSize())
-            ->save()
+            ->submit()
         ;
     }
 

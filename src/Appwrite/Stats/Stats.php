@@ -1,10 +1,10 @@
 <?php
 
-namespace Appwrite\Statsd;
+namespace Appwrite\Stats;
 
 use Utopia\App;
 
-class Statsd
+class Stats
 {
     /**
      * @var array
@@ -40,9 +40,19 @@ class Statsd
     }
 
     /**
+     * @param string $key
+     *
+     * @return mixed|null
+     */
+    public function getParam(string $key)
+    {
+        return (isset($this->params[$key])) ? $this->params[$key] : null;
+    }
+
+    /**
      * Submit data to StatsD.
      */
-    public function save(): void
+    public function submit(): void
     {
         $projectId = $this->params['projectId'] ?? '';
 
