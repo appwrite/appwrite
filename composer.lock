@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e79cbd92bfd81499b5111bf3329e2318",
+    "content-hash": "6b3c314f3faa9c3aff868eaf7f6f3cbb",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1984,16 +1984,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-fix-after-pagination-with-order",
+            "version": "dev-main",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "2179adfdeb385864cebc86e2b063929dcfbf77e6"
+                "reference": "272bb30d641792fb82f68adcd002be3bd34c5461"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/2179adfdeb385864cebc86e2b063929dcfbf77e6",
-                "reference": "2179adfdeb385864cebc86e2b063929dcfbf77e6",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/272bb30d641792fb82f68adcd002be3bd34c5461",
+                "reference": "272bb30d641792fb82f68adcd002be3bd34c5461",
                 "shasum": ""
             },
             "require": {
@@ -2011,6 +2011,7 @@
                 "utopia-php/cli": "^0.11.0",
                 "vimeo/psalm": "4.0.1"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -2041,9 +2042,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/fix-after-pagination-with-order"
+                "source": "https://github.com/utopia-php/database/tree/main"
             },
-            "time": "2021-08-09T12:01:35+00:00"
+            "time": "2021-08-09T13:01:43+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -6257,7 +6258,7 @@
     "aliases": [
         {
             "package": "utopia-php/database",
-            "version": "dev-fix-after-pagination-with-order",
+            "version": "dev-main",
             "alias": "0.6.1",
             "alias_normalized": "0.6.1.0"
         }
