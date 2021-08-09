@@ -30,7 +30,6 @@
 
       button.addEventListener("click", function() {
         var clone = document.createElement(element.tagName);
-        var input = clone.querySelector("input");
 
         if (element.name) {
           clone.name = element.name;
@@ -38,6 +37,8 @@
 
         clone.innerHTML = template;
         clone.className = element.className;
+
+        var input = clone.querySelector("input, select, textarea");
 
         view.render(clone);
 
@@ -89,6 +90,15 @@
       element.parentNode.insertBefore(button, element.nextSibling);
 
       element.parentNode.removeChild(element);
+
+
+      button.form.addEventListener('reset', function (event) {
+        target.innerHTML = '';
+
+        if (first) {
+          button.click();
+        }
+      });
 
       if (first) {
         button.click();

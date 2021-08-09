@@ -10,12 +10,6 @@ class Index extends Model
     public function __construct()
     {
         $this
-            ->addRule('$collection', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Collection ID.',
-                'default' => '',
-                'example' => '5e5ea5c16d55',
-            ])
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Index ID.',
@@ -34,14 +28,6 @@ class Index extends Model
                 'default' => [],
                 'example' => [],
                 'array' => true,
-            ])
-            ->addRule('lengths', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Index lengths.',
-                'default' => [],
-                'example' => [],
-                'array' => true,
-                'required' => false,
             ])
             ->addRule('orders', [
                 'type' => self::TYPE_STRING,

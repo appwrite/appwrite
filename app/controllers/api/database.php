@@ -6,7 +6,6 @@ use Utopia\Exception;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
 use Utopia\Validator\Integer;
-use Utopia\Validator\Numeric;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Text;
@@ -717,21 +716,22 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
             throw new Exception('Collection not found', 404);
         }
 
-        $attributes = $collection->getAttributes();
+        // $attributes = $collection->getAttributes();
 
         // Search for attribute
-        $attributeIndex = array_search($attributeId, array_column($attributes, '$id'));
+        // $attributeIndex = array_search($attributeId, array_column($attributes, '$id'));
+        $attribute = $collection->find('$id', $attributeId, 'attributes');
 
-        if ($attributeIndex === false) {
+        if (empty($attribute) || !$attribute instanceof Document) {
             throw new Exception('Attribute not found', 404);
         }
 
-        $attribute = new Document([\array_merge($attributes[$attributeIndex], [
-            'collectionId' => $collectionId,
-        ])]);
+        // $attribute = new Document([\array_merge($attributes[$attributeIndex], [
+        //     'collectionId' => $collectionId,
+        // ])]);
 
-        $type = $attribute->getAttribute('type', '');
-        $format = $attribute->getAttribute('format', '');
+        // $type = $attribute->getAttribute('type', '');
+        // $format = $attribute->getAttribute('format', '');
 
         $database
             ->setParam('type', DELETE_TYPE_ATTRIBUTE)
@@ -764,7 +764,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_INDEX)
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
-    ->param('id', null, new Key(), 'Index ID.')
+    ->param('indexId', null, new Key(), 'Index ID.')
     ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE, Database::INDEX_SPATIAL, Database::INDEX_ARRAY]), 'Index type.')
     ->param('attributes', null, new ArrayList(new Key()), 'Array of attributes to index.')
     ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, Database::VAR_STRING)), 'Array of index orders.', true)

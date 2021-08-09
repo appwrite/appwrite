@@ -33,28 +33,6 @@
 
                 <h2>Documents</h2>
 
-                <form class="box padding-small margin-bottom search"
-                    data-service="database.listDocuments"
-                    data-event="submit"
-                    data-param-collection-id="{{router.params.id}}"
-                    data-param-search="{{router.params.search}}"
-                    data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                    data-param-offset=""
-                    data-param-order-type="DESC"
-                    data-scope="sdk"
-                    data-name="project-documents"
-                    data-success="state"
-                    data-success-param-state-keys="search,offset">
-                    <div class="row thin responsive">
-                        <div class="col span-10">
-                            <input name="search" id="searchDocuments" type="search" autocomplete="off" placeholder="Search" class="margin-bottom-no" data-ls-bind="{{router.params.search}}">
-                        </div>
-                        <div class="col span-2 desktops-only">
-                            <button class="fill" title="Search" aria-label="Search">Search</button>
-                        </div>
-                    </div>
-                </form>
-
                 <div
                     data-service="database.listDocuments"
                     data-event="load,database.createDocument,database.updateDocument,database.deleteDocument"
@@ -69,7 +47,7 @@
                     <div data-ls-if="0 == {{project-documents.sum}}" class="box margin-bottom">
                         <h3 class="margin-bottom-small text-bold">No Documents Found</h3>
 
-                        <p class="margin-bottom-no">Create your first document to get started</p>
+                        <p class="margin-bottom-no">Add your first document to get started</p>
                     </div>
 
                     <div data-ls-if="({{project-documents.sum}})">
@@ -132,16 +110,16 @@
                 <h2>Attributes</h2>
 
                 <div class="clear box margin-bottom">
-                    <div data-ls-if="0 == {{project-collection.attributes.length}}">
+                    <div data-ls-if="0 == {{project-collection.attributes.length}} && 0 == {{project-collection.attributesInQueue.length}}">
                         <h3 class="margin-bottom-small text-bold">No Attributes Found</h3>
     
-                        <p class="margin-bottom-no">Create your first attribute to get started</p>
+                        <p class="margin-bottom-no">Add your first attribute to get started</p>
                     </div>
 
-                    <table class="vertical" data-ls-if="0 < {{project-collection.attributes.length}}">
+                    <table class="vertical" data-ls-if="0 < {{project-collection.attributes.length}} || 0 < {{project-collection.attributesInQueue.length}}">
                         <thead>
                             <tr>
-                                <th width="100"></th>
+                                <th width="120"></th>
                                 <th width="140">Attribute ID</th>
                                 <th width="100">Type</th>
                                 <th width="180">Default</th>
@@ -152,11 +130,11 @@
                         <tbody data-ls-loop="project-collection.attributes" data-ls-as="attribute">
                             <tr>
                                 <td data-title="Status">
-                                    <span class="text-size-small text-success"><i class="icon-ok-circled"></i> Ready&nbsp;</span>
+                                    <span class="text-size-small text-success"><i class="icon-ok-circled"></i> Available&nbsp;</span>
                                 </td>
 
                                 <td data-title="Attribute ID: ">
-                                    <span class="text-size-small" data-ls-bind="{{attribute.$id}}"></span><span class="text-size-small" data-ls-if="{{attribute.size}}" data-ls-bind="({{attribute.size}})"></span>
+                                    <span class="text-size-small" data-ls-bind="{{attribute.$id}}"></span><span class="text-size-small" data-ls-if="{{attribute.size}}" data-ls-bind=" ({{attribute.size}})"></span>
                                 </td>
 
                                 <td data-title="Type:">
@@ -207,12 +185,12 @@
                     <table class="vertical" data-ls-if="0 < {{project-collection.attributesInQueue.length}}">
                         <tbody data-ls-loop="project-collection.attributesInQueue" data-ls-as="attribute">
                             <tr>
-                                <td width="100" data-title="Status">
-                                    <span class="text-size-small text-info"><i class="icon-cog"></i> Creating&nbsp;</span>
+                                <td width="120" data-title="Status">
+                                    <span class="text-size-small text-info"><i class="icon-dot-circled"></i> Creating&nbsp;</span>
                                 </td>
 
                                 <td width="140" data-title="Attribute ID: ">
-                                    <span class="text-size-small" data-ls-bind="{{attribute.$id}}"></span><span class="text-size-small" data-ls-if="{{attribute.size}}" data-ls-bind="({{attribute.size}})"></span>
+                                    <span class="text-size-small" data-ls-bind="{{attribute.$id}}"></span><span class="text-size-small" data-ls-if="{{attribute.size}}" data-ls-bind=" ({{attribute.size}})"></span>
                                 </td>
 
                                 <td width="100" data-title="Type:">
@@ -233,7 +211,7 @@
                     </table>
                 </div>
 
-                <div class="drop-list pull-start" data-ls-ui-open="" data-button-aria="Choose Platform" data-button-text="Create Attribute" data-button-class="button" data-blur="1">
+                <div class="drop-list pull-start" data-ls-ui-open="" data-button-aria="Choose Platform" data-button-text="Add Attribute" data-button-class="button" data-blur="1">
                     <ul>
                         <li>
                             <div class="link new-attribute-string"><img src="/images/clients/web.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="String Attribute Logo" class="avatar xxs margin-end-small" loading="lazy" /> New String Attribute</div>
@@ -254,19 +232,19 @@
                 <h2>Indexes</h2>
 
                 <div class="clear box margin-bottom">
-                    <div data-ls-if="0 == {{project-collection.indexes.length}}">
+                    <div data-ls-if="0 == {{project-collection.indexes.length}} && 0 == {{project-collection.indexesInQueue.length}}">
                         <h3 class="margin-bottom-small text-bold">No Indexes Found</h3>
     
-                        <p class="margin-bottom-no">Create your first index to get started</p>
+                        <p class="margin-bottom-no">Add your first index to get started</p>
                     </div>
 
-                    <table class="vertical" data-ls-if="0 < {{project-collection.indexes.length}}">
+                    <table class="vertical" data-ls-if="0 < {{project-collection.indexes.length}} || 0 < {{project-collection.indexesInQueue.length}}">
                         <thead>
                             <tr>
-                                <th width="100"></th>
+                                <th width="120"></th>
                                 <th width="140">Index ID</th>
                                 <th width="100">Type</th>
-                                <th width="180">Default</th>
+                                <th width="180">Attributes</th>
                                 <th></th>
                                 <th width="80"></th>
                             </tr>
@@ -274,7 +252,7 @@
                         <tbody data-ls-loop="project-collection.indexes" data-ls-as="index">
                             <tr>
                                 <td data-title="Status">
-                                    <span class="text-size-small text-success"><i class="icon-ok-circled"></i> Ready&nbsp;</span>
+                                    <span class="text-size-small text-success"><i class="icon-ok-circled"></i> Available&nbsp;</span>
                                 </td>
 
                                 <td data-title="Index ID: ">
@@ -286,9 +264,8 @@
                                     <span class="text-size-small" data-ls-if="{{index.array}}">[]</span>
                                 </td>
 
-                                <td data-title="Default:">
-                                    <span class="text-size-small" data-ls-bind="{{index.default}}" data-ls-attr="title={{index.default}}"></span>
-                                    <span class="text-fade text-size-small" data-ls-if="!({{index.default}})">n/a</span>
+                                <td data-title="Attributes:">
+                                    <span class="text-size-small" data-ls-bind="{{index.attributes}}"></span>
                                 </td>
 
                                 <td data-title="">
@@ -329,13 +306,36 @@
                     <table class="vertical" data-ls-if="0 < {{project-collection.indexesInQueue.length}}">
                         <tbody data-ls-loop="project-collection.indexesInQueue" data-ls-as="index">
                             <tr>
-                                
+                                <td width="120" data-title="Status">
+                                    <span class="text-size-small text-info"><i class="icon-dot-circled"></i> Creating&nbsp;</span>
+                                </td>
+
+                                <td width="140" data-title="Index ID: ">
+                                    <span class="text-size-small" data-ls-bind="{{index.$id}}"></span><span class="text-size-small" data-ls-if="{{index.size}}" data-ls-bind="({{index.size}})"></span>
+                                </td>
+
+                                <td width="100" data-title="Type:">
+                                    <span class="text-size-small" data-ls-bind="{{index.type}}"></span>
+                                    <span class="text-size-small" data-ls-if="{{index.array}}">[]</span>
+                                </td>
+
+                                <td width="180" data-title="Attributes:">
+                                    <span class="text-size-small" data-ls-bind="{{index.attributes}}"></span>
+                                </td>
+
+                                <td data-title="">
+                                    <span class="text-size-small text-danger" data-ls-if="{{index.required}}">Required *</span>
+                                </td>
+
+                                <td width="80" data-title="">
+                                    
+                                </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <button class="new-index">New Index</button>
+                <button class="new-index">Add Index</button>
             </li>
             <li data-state="/console/database/collection/settings?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Settings</h2>
@@ -426,7 +426,7 @@
     <div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-string">
         <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-        <h1>Create a String Attribute</h1>
+        <h1>Add String Attribute</h1>
 
         <form
             data-analytics
@@ -462,7 +462,62 @@
             </div>
 
             <label for="string-default">Default Value</label>
-            <input id="string-default" name="default" type="number" class="margin-bottom-large" autocomplete="off">
+            <input id="string-default" name="default" type="text" class="margin-bottom-large" autocomplete="off">
+
+            <footer>
+                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
+            </footer>
+        </form>
+    </div>
+
+    <div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-integer">
+        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+        <h1>Add Integer Attribute</h1>
+
+        <form
+            data-analytics
+            data-analytics-activity
+            data-analytics-event="submit"
+            data-analytics-category="console"
+            data-analytics-label="Create Collection Attribute (integer)"
+            data-service="database.createIntegerAttribute"
+            data-scope="sdk"
+            data-event="submit"
+            data-success="alert,trigger,reset"
+            data-success-param-alert-text="Created new attribute successfully"
+            data-success-param-trigger-events="database.createAttribute"
+            data-failure="alert"
+            data-failure-param-alert-text="Failed to create attribute"
+            data-failure-param-alert-classname="error">
+
+            <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+            <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
+
+            <label for="integer-attributeId">Attribute ID</label>
+            <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
+
+            <div class="margin-bottom">
+                <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+            </div>
+                                                                
+            <div class="margin-bottom">
+                <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" />  &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+            </div>
+
+            <div class="row responsive thin">
+                <div class="col span-6 margin-bottom-small">
+                    <label for="integer-min">Min</label>
+                    <input type="text" class="full-width" name="number" value="0" required autocomplete="off" />
+                </div>
+                <div class="col span-6 margin-bottom-small">
+                    <label for="integer-min">Max</label>
+                    <input type="text" class="full-width" name="number" value="0" required autocomplete="off" />
+                </div>
+            </div>
+
+            <label for="integer-default">Default Value</label>
+            <input id="integer-default" name="default" type="number" value="0" class="margin-bottom-large" autocomplete="off">
 
             <footer>
                 <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
@@ -473,9 +528,19 @@
     <div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-index">
         <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-        <h1>Create Index</h1>
+        <h1>Add Index</h1>
 
-        <form
+        <div data-ls-if="0 == {{project-collection.attributes.length}}">
+            <div class="info margin-top margin-bottom">
+                <h2>No Attributes Found</h2>
+    
+                <p>Please add your first attribute before adding your first index.</p>
+            </div>
+
+            <button data-ui-modal-close="" type="button" class="reverse">Back</button>
+        </div>
+
+        <form data-ls-if="0 < {{project-collection.attributes.length}}"
             data-analytics
             data-analytics-activity
             data-analytics-event="submit"
@@ -506,8 +571,10 @@
 
             <label>Attributes</label>
 
+            <div id="attributes-section"></div>
+
             <div class="margin-bottom">
-                <div data-forms-clone="" data-label="Add Attribute" data-first="1">
+                <div data-forms-clone="" data-label="Add Attribute" data-target="attributes-section" data-first="1">
                     <div class="row responsive thin margin-bottom-tiny">
                         <div class="col span-7 margin-bottom-small">
                             <select data-duplications data-ls-attrs="name=attributes" data-ls-loop="project-collection.attributes" data-ls-as="option" data-cast-to="array" class="margin-bottom-no">

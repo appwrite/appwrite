@@ -193,6 +193,11 @@ class Auth
     public static function tokenVerify(array $tokens, int $type, string $secret)
     {
         foreach ($tokens as $token) { /** @var Document $token */
+            if(!$token instanceof Document) {
+                var_dump('passed1');
+                continue;
+            }
+
             if ($token->isSet('type') &&
                 $token->isSet('secret') &&
                 $token->isSet('expire') &&
@@ -217,6 +222,10 @@ class Auth
     public static function sessionVerify(array $sessions, string $secret)
     {
         foreach ($sessions as $session) { /** @var Document $session */
+            if(!$session instanceof Document) {
+                var_dump('passed2');
+                continue;
+            }
             if ($session->isSet('secret') &&
                 $session->isSet('expire') &&
                 $session->isSet('provider') &&

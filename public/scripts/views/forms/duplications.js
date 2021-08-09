@@ -2,25 +2,37 @@
   "use strict";
   window.ls.container.get("view").add({
     selector: "data-duplications",
-    controller: function (element, sdk, console, window) {
-      element.addEventListener('change', function (event) {
+    controller: function (element) {
+      let validate = function (element) {
         let duplication = 0;
-        let form = event.target.form;
+        let form = element.form;
 
         for (let i = 0; i < form.elements.length; i++) {
           let field = form.elements[i];
 
-          if(field.name === event.target.name && field.value === event.target.value) {
+          if(field.name === element.name && field.value === element.value) {
             duplication++;
           }
         }
 
         if(duplication > 1) { // self + another element with same name and value
-          event.target.setCustomValidity("Duplicated value");
+          element.setCustomValidity("Duplicated value");
         }
         else {
-          event.target.setCustomValidity("");
+          element.setCustomValidity("");
         }
+      };
+
+      element.addEventListener('change', function(event) {
+        validate(event.target)
+      });
+
+      element.addEventListener('focus', function(event) {
+        validate(event.target)
+      });
+
+      element.addEventListener('blur', function(event) {
+        validate(event.target)
       });
     }
   });
