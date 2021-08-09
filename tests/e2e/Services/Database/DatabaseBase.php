@@ -647,7 +647,7 @@ trait DatabaseBase
         // $this->assertEquals('Minimum value must be lesser than maximum value', $invalidRange['body']['message']);
 
         // wait for worker to add attributes
-        sleep(10);
+        sleep(15);
 
         $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
