@@ -90,7 +90,7 @@ class Project extends Model
                 'default' => '',
                 'example' => '131102020',
             ])
-            ->addRule('usersAuthLimit', [
+            ->addRule('authLimit', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Max users allowed. 0 is unlimited.',
                 'default' => 0,
@@ -138,13 +138,13 @@ class Project extends Model
             $name = (isset($provider['name'])) ? $provider['name'] : 'Unknown';
 
             $this
-                ->addRule('usersOauth2'.\ucfirst($index).'Appid', [
+                ->addRule('provider'.\ucfirst($index).'Appid', [
                     'type' => self::TYPE_STRING,
                     'description' => $name.' OAuth app ID.',
                     'example' => '123247283472834787438',
                     'default' => '',
                 ])
-                ->addRule('usersOauth2'.\ucfirst($index).'Secret', [
+                ->addRule('provider'.\ucfirst($index).'Secret', [
                     'type' => self::TYPE_STRING,
                     'description' => $name.' OAuth secret ID.',
                     'example' => 'djsgudsdsewe43434343dd34...',
@@ -158,7 +158,7 @@ class Project extends Model
             $key = $method['key'] ?? '';
 
             $this
-                ->addRule($key, [
+                ->addRule('auth' . ucfirst($key), [
                     'type' => self::TYPE_BOOLEAN,
                     'description' => $name.' auth method status',
                     'example' => true,
@@ -225,6 +225,28 @@ class Project extends Model
             $document->setAttribute('serviceStatusFor'.ucfirst($key), $value);
         }
 
+        $authValues = $document->getAttribute('auths',[]);
+        $auth = Config::getParam('auth', []);
+
+        $document->setAttribute('authLimit', $authValues['limit'] ?? 0);
+
+        foreach ($auth as $index => $method) {
+            $key = $method['key'];
+            $value = $authValues[$key] ?? true;
+            $document->setAttribute('auth' . ucfirst($key), $value);
+        }
+
+        $providers = Config::getParam('providers', []);
+        $providerValues = $document->getAttribute('providers', []);
+
+        foreach ($providers as $key => $provider) {
+            if (!$provider['enabled']) {
+                continue;
+            }
+            $appId = $providerValues[$key . 'Appid'] ?? '';
+            $secret = $providerValues[$key . 'Secret'] ?? '';
+            $document->setAttribute('provider' . ucfirst($key) . 'Appid', $appId)->setAttribute('provider' . ucfirst($key) . 'Secret', $secret);
+        }
         return $document;
     }
 }

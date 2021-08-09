@@ -15,6 +15,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'userId' => 'unique()',
             'email' => 'users.service@example.com',
             'password' => 'password',
             'name' => 'Project User',
@@ -25,6 +26,26 @@ trait UsersBase
         $this->assertEquals($user['body']['email'], 'users.service@example.com');
         $this->assertEquals($user['body']['status'], true);
         $this->assertGreaterThan(0, $user['body']['registration']);
+
+        /**
+         * Test Create with Custom ID for SUCCESS
+         */
+        $res = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => 'user1',
+            'email' => 'users.service1@example.com',
+            'password' => 'password',
+            'name' => 'Project User',
+        ]);
+
+        $this->assertEquals($res['headers']['status-code'], 201);
+        $this->assertEquals($res['body']['$id'], 'user1');
+        $this->assertEquals($res['body']['name'], 'Project User');
+        $this->assertEquals($res['body']['email'], 'users.service1@example.com');
+        $this->assertEquals(true, $res['body']['status']);
+        $this->assertGreaterThan(0, $res['body']['registration']);
 
         return ['userId' => $user['body']['$id']];
     }
@@ -86,9 +107,9 @@ trait UsersBase
         $this->assertIsArray($users['body']);
         $this->assertIsArray($users['body']['users']);
         $this->assertIsInt($users['body']['sum']);
-        $this->assertEquals(1, $users['body']['sum']);
+        $this->assertEquals(2, $users['body']['sum']);
         $this->assertGreaterThan(0, $users['body']['sum']);
-        $this->assertCount(1, $users['body']['users']);
+        $this->assertCount(2, $users['body']['users']);
 
         return $data;
     }

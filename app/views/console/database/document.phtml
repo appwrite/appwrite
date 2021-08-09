@@ -1,8 +1,8 @@
 <?php
 
 use Appwrite\Database\Database;
-use Utopia\View;
 use Appwrite\Database\Validator\Authorization;
+use Utopia\View;
 
 $collection = $this->getParam('collection', null);
 $searchFiles = $this->getParam('searchFiles', null);
@@ -16,18 +16,18 @@ $collections = [];
 
 <?php echo $searchFiles->render(); ?>
 
-<?php foreach($rules as $rule): // Form to append child document
+<?php foreach ($rules as $rule): // Form to append child document
     $key = $rule['key'] ?? '';
     $label = $rule['label'] ?? '';
     $type = $rule['type'] ?? '';
     $list = $rule['list'] ?? [];
-?>
-    <?php foreach($list as $item):
-        if($item === $collection->getId()) {
+    ?>
+	    <?php foreach ($list as $item):
+        if ($item === $collection->getId()) {
             continue; // Do not allow rec recrusion
         }
 
-        if(!isset($collections[$item])) {
+        if (!isset($collections[$item])) {
             Authorization::disable(); //TODO Try and avoid calling the DB from the template
             $collections[$item] = $db->getDocument($item, false);
             Authorization::reset();
@@ -35,7 +35,7 @@ $collections = [];
 
         $childCollection = $collections[$item];
 
-        if(!$childCollection->getId() || $childCollection->getCollection() !== Database::SYSTEM_COLLECTION_COLLECTIONS) {
+        if (!$childCollection->getId() || $childCollection->getCollection() !== Database::SYSTEM_COLLECTION_COLLECTIONS) {
             continue;
         }
 
@@ -43,114 +43,114 @@ $collections = [];
             ->setParam('collection', $childCollection)
         ;
 
-        echo $searchDocuments->render(); ?>
-    <?php endforeach; ?>
-<?php endforeach; ?>
+        echo $searchDocuments->render();?>
+		    <?php endforeach;?>
+	<?php endforeach;?>
 
-<?php foreach($rules as $rule): // Form to append child document
+<?php foreach ($rules as $rule): // Form to append child document
     $key = $rule['key'] ?? '';
     $label = $rule['label'] ?? '';
     $type = $rule['type'] ?? '';
     $list = $rule['list'] ?? [];
     $array = $rule['array'] ?? false;
-?>
-
-    <?php if($type !== 'document' && $array): ?>
-
-        <form class="margin-bottom-no"
-            data-service="container.path"
-            data-event="collection-child-<?php echo $this->escape($namespace.'.'.$key); ?>"
-            data-scope="window.ls"
-            data-success="reset">
-
-            <input type="hidden" name="path" value="<?php echo $this->escape($namespace.'.'.$key); ?>" />
-            <input type="hidden" name="type" value="append" />
-            <input type="hidden" name="value" value="" />
-        </form>
-
-    <?php endif; ?>
-    
-    <?php if($type !== 'document'): ?>
-        <?php continue; ?>
-    <?php endif; ?>
-
-    <?php foreach($list as $item):
-        if($item === $collection->getId()) {
-            continue; // Do not allow rec recrusion
-        }
-
-        if(!isset($collections[$item])) {
-            Authorization::disable(); //TODO Try and avoid calling the DB from the template
-            $collections[$item] = $db->getDocument($item, false);
-            Authorization::reset();
-        }
-
-        $childCollection = $collections[$item];
-
-        if(!$childCollection->getId() || $childCollection->getCollection() !== Database::SYSTEM_COLLECTION_COLLECTIONS) {
-            continue;
-        }
     ?>
-        <form class="margin-bottom-no"
-            data-service="container.path"
-            data-event="collection-child-<?php echo $this->escape($namespace.'.'.$key); ?>-<?php echo $this->escape($childCollection->getId()); ?>"
-            data-scope="window.ls"
-            data-success="reset">
 
-            <input type="hidden" name="path" value="<?php echo $this->escape($namespace.'.'.$key); ?>" />
-            <input type="hidden" name="type" value="append" />
-            
-            <fieldset name="value" data-cast-to="object">                            
-                <input name="$id" type="hidden" value="" />
-                <input name="$collection" type="hidden" value="<?php echo $this->escape($childCollection->getId()); ?>" />
-            </fieldset>
-        </form>
+	    <?php if ($type !== 'document' && $array): ?>
 
-        <script type="text/html" id="collection-<?php echo ($array) ? 'array-' : ''; ?><?php echo $this->escape($childCollection->getId()); ?>">
-            <?php 
+	        <form class="margin-bottom-no"
+	            data-service="container.path"
+	            data-event="collection-child-<?php echo $this->escape($namespace . '.' . $key); ?>"
+	            data-scope="window.ls"
+	            data-success="reset">
 
-            $comp = new View(__DIR__.'/form.phtml');
-                                        
-            $comp
-                ->setParam('collection', $childCollection)
-                ->setParam('namespace', ($array) ? 'node' : $namespace.'.'.$key)
-                ->setParam('key', $key)
-                ->setParam('array', $array)
-                ->setParam('parent', 0)
-            ;
+	            <input type="hidden" name="path" value="<?php echo $this->escape($namespace . '.' . $key); ?>" />
+	            <input type="hidden" name="type" value="append" />
+	            <input type="hidden" name="value" value="" />
+	        </form>
 
-            echo $comp->render();
-            ?>
-        </script>
-    <?php endforeach; ?>
-<?php endforeach; ?>
+	    <?php endif;?>
 
-<?php foreach($rules as $rule): // Form to remove array $index key
+    <?php if ($type !== 'document'): ?>
+        <?php continue;?>
+    <?php endif;?>
+
+    <?php foreach ($list as $item):
+    if ($item === $collection->getId()) {
+        continue; // Do not allow rec recrusion
+    }
+
+    if (!isset($collections[$item])) {
+        Authorization::disable(); //TODO Try and avoid calling the DB from the template
+        $collections[$item] = $db->getDocument($item, false);
+        Authorization::reset();
+    }
+
+    $childCollection = $collections[$item];
+
+    if (!$childCollection->getId() || $childCollection->getCollection() !== Database::SYSTEM_COLLECTION_COLLECTIONS) {
+        continue;
+    }
+    ?>
+	        <form class="margin-bottom-no"
+	            data-service="container.path"
+	            data-event="collection-child-<?php echo $this->escape($namespace . '.' . $key); ?>-<?php echo $this->escape($childCollection->getId()); ?>"
+	            data-scope="window.ls"
+	            data-success="reset">
+
+	            <input type="hidden" name="path" value="<?php echo $this->escape($namespace . '.' . $key); ?>" />
+	            <input type="hidden" name="type" value="append" />
+
+	            <fieldset name="value" data-cast-to="object">
+	                <input name="$id" type="hidden" value="" />
+	                <input name="$collection" type="hidden" value="<?php echo $this->escape($childCollection->getId()); ?>" />
+	            </fieldset>
+	        </form>
+
+	        <script type="text/html" id="collection-<?php echo ($array) ? 'array-' : ''; ?><?php echo $this->escape($childCollection->getId()); ?>">
+	            <?php
+
+    $comp = new View(__DIR__ . '/form.phtml');
+
+    $comp
+        ->setParam('collection', $childCollection)
+        ->setParam('namespace', ($array) ? 'node' : $namespace . '.' . $key)
+        ->setParam('key', $key)
+        ->setParam('array', $array)
+        ->setParam('parent', 0)
+    ;
+
+    echo $comp->render();
+    ?>
+	        </script>
+	    <?php endforeach;?>
+<?php endforeach;?>
+
+<?php foreach ($rules as $rule): // Form to remove array $index key
     $key = $rule['key'] ?? '';
     $label = $rule['label'] ?? '';
     $type = $rule['type'] ?? '';
     $list = $rule['list'] ?? false;
     $array = $rule['array'] ?? false;
 
-    if(!$array) {
+    if (!$array) {
         continue;
     }
-?>
-    <ul data-ls-loop="<?php echo $this->escape($namespace.'.'.$key); ?>" data-ls-as="xxx">
-        <li>
-            <form
-                data-service="container.path"
-                data-event="splice-<?php echo $this->escape($namespace.'.'.$key); ?>-{{$index}}"
-                data-scope="window.ls"
-                data-success="reset">
+    ?>
+	    <ul data-ls-loop="<?php echo $this->escape($namespace . '.' . $key); ?>" data-ls-as="xxx">
+	        <li>
+	            <form
+	                data-service="container.path"
+	                data-event="splice-<?php echo $this->escape($namespace . '.' . $key); ?>-{{$index}}"
+	                data-scope="window.ls"
+	                data-success="reset">
 
-                <input type="hidden" name="path" value="<?php echo $this->escape($namespace.'.'.$key); ?>" />
-                <input type="hidden" name="type" value="splice" />
-                <input type="hidden" name="value" data-ls-bind="{{$index}}" />
-            </form>
-        </li>
-    </ul>
-<?php endforeach; ?>
+	                <input type="hidden" name="path" value="<?php echo $this->escape($namespace . '.' . $key); ?>" />
+	                <input type="hidden" name="type" value="splice" />
+	                <input type="hidden" name="value" data-ls-bind="{{$index}}" />
+	            </form>
+	        </li>
+	    </ul>
+	<?php endforeach;?>
 
 <div
     data-service="database.getDocument"
@@ -173,8 +173,8 @@ $collections = [];
     </div>
 
     <div data-ui-modal class="modal width-large box close" data-button-hide="on" data-open-event="open-json">
-        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
-        
+        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
         <h2>JSON View</h2>
 
         <div class="margin-bottom">
@@ -215,57 +215,57 @@ $collections = [];
 
                                 <!-- <div class="document-nav" data-forms-nav>
                                     <ul class="text-align-end margin-end-small">
-                                        <?php foreach($rules as $rule): // Form to append child document
-                                            $key = $rule['key'] ?? '';
-                                            $label = $rule['label'] ?? '';
-                                            $type = $rule['type'] ?? '';
-                                            $list = $rule['list'] ?? [];
-                                        ?>
-                                            <li class="text-size-small">
-                                                <span class="link text-fade" data-forms-nav-link="<?php echo $this->escape($key); ?>"><?php echo $this->escape($label); ?></span>
-                                            </li>
-                                        <?php endforeach; ?>
+                                        <?php foreach ($rules as $rule): // Form to append child document
+    $key = $rule['key'] ?? '';
+    $label = $rule['label'] ?? '';
+    $type = $rule['type'] ?? '';
+    $list = $rule['list'] ?? [];
+    ?>
+	                                            <li class="text-size-small">
+	                                                <span class="link text-fade" data-forms-nav-link="<?php echo $this->escape($key); ?>"><?php echo $this->escape($label); ?></span>
+	                                            </li>
+	                                        <?php endforeach;?>
                                     </ul>
                                 </div> -->
-                                
-                                <?php if(empty($rules)): ?>
+
+                                <?php if (empty($rules)): ?>
                                     <div class="margin-bottom-xl margin-top-xl margin-end margin-start text-align-center">
                                         <h4 class="text-fade text-size-small">No attribute rules added yet.<br /><br /><a data-ls-attrs="href=/console/database/collection/settings?id={{router.params.collection}}&project={{router.params.project}}">Update Collection</a></h4>
                                     </div>
                                 <?php else: ?>
                                     <?php
 
-                                    $comp = new View(__DIR__.'/form.phtml');
-                        
-                                    $comp
-                                        ->setParam('collection', $collection)
-                                        ->setParam('collections', $collections)
-                                        ->setParam('namespace', $namespace)
-                                        ->setParam('key', 'data')
-                                        ->setParam('parent', 1)
-                                    ;
+$comp = new View(__DIR__ . '/form.phtml');
 
-                                    echo $comp->render();
-                                    ?>
+$comp
+    ->setParam('collection', $collection)
+    ->setParam('collections', $collections)
+    ->setParam('namespace', $namespace)
+    ->setParam('key', 'data')
+    ->setParam('parent', 1)
+;
+
+echo $comp->render();
+?>
 
                                     <div class="toggle margin-bottom" data-ls-ui-open data-button-aria="Open Permissions">
                                         <i class="icon-plus pull-end margin-top-tiny"></i>
                                         <i class="icon-minus pull-end margin-top-tiny"></i>
-                                        
+
                                         <h3 class="margin-bottom-large">Permissions</h3>
-                                        
+
                                         <label for="collection-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
                                         <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-document.$permissions.read}}" placeholder="User ID, Team ID or Role" />
-                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
+                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
 
                                         <label for="collection-write">Write Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
                                         <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-document.$permissions.write}}" placeholder="User ID, Team ID or Role" />
-                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
+                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
                                     </div>
 
                                     <button data-ls-if="({{project-document.$id}})">Update</button>
                                     <button data-ls-if="(!{{project-document.$id}})">Create</button>
-                                <?php endif; ?>
+                                <?php endif;?>
                             </div>
 
                         </form>

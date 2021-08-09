@@ -107,11 +107,11 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 
                                                         <label for="file-read">Read Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
                                                         <input type="hidden" data-ls-attrs="id=file-read-{{file.$id}}" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{file.$read}}" placeholder="User ID, Team ID or Role" />
-                                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
-                                                        
+                                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+
                                                         <label for="file-write">Write Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
                                                         <input type="hidden" data-ls-attrs="id=file-write-{{file.$id}}" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{file.$write}}" placeholder="User ID, Team ID or Role" />
-                                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
+                                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
                                                     </form>
 
                                                     <form class="strip"
@@ -136,7 +136,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                                 </div>
                                                 <div class="col span-4 text-size-small">
                                                     <div class="margin-bottom-small">File Preview</div>
-                                                    
+
                                                     <div class="margin-bottom-small">
                                                         <img src="" class="file-preview" data-ls-attrs="src={{env.ENDPOINT}}/v1/storage/files/{{file.$id}}/preview?width=350&height=250&project={{router.params.project}}&mode=admin" loading="lazy" width="225" height="160" />
                                                     </div>
@@ -237,6 +237,17 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                         data-failure-param-alert-classname="error">
                         <input type="hidden" name="folderId" id="files-folderId" data-cast-to="integer" value="1">
 
+                        <label for="fileId">File ID</label>
+                        <input
+                            type="hidden"
+                            data-custom-id
+                            data-id-type="auto"
+                            data-validator="storage.getFile"
+                            required
+                            maxlength="36"
+                            name="fileId"
+                            id="fileId" />
+
                         <label for="file-read">File</label>
                         <input type="file" name="file" id="file-file" size="1" required>
 
@@ -244,11 +255,11 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 
                         <label for="file-read">Read Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
                         <input type="hidden" id="file-read" name="read" data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['role:all'])); ?>" placeholder="User ID, Team ID or Role" />
-                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
-                        
+                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+
                         <label for="file-write">Write Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
                         <input type="hidden" id="file-write" name="write" data-forms-tags data-cast-to="json" value="" placeholder="User ID, Team ID or Role" />
-                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
+                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
 
                         <footer>
                             <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>

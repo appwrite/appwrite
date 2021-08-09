@@ -26,9 +26,9 @@ trait ProjectCustom
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
+            'teamId' => 'unique()',
             'name' => 'Demo Project Team',
         ]);
-
         $this->assertEquals(201, $team['headers']['status-code']);
         $this->assertEquals('Demo Project Team', $team['body']['name']);
         $this->assertNotEmpty($team['body']['$id']);
@@ -39,6 +39,7 @@ trait ProjectCustom
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
+            'projectId' => 'unique()',
             'name' => 'Demo Project',
             'teamId' => $team['body']['$id'],
             'description' => 'Demo Project Description',

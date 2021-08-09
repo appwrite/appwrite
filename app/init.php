@@ -29,6 +29,7 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Stats\Stats;
 use Utopia\App;
 use Utopia\View;
 use Utopia\Config\Config;
@@ -291,6 +292,7 @@ $register->set('statsd', function () { // Register DB connection
 
     return $statsd;
 });
+
 $register->set('smtp', function () {
     $mail = new PHPMailer(true);
 
@@ -421,7 +423,7 @@ App::setResource('audits', function($register) {
 }, ['register']);
 
 App::setResource('usage', function($register) {
-    return new Event(Event::USAGE_QUEUE_NAME, Event::USAGE_CLASS_NAME);
+    return new Stats($register->get('statsd'));
 }, ['register']);
 
 App::setResource('mails', function($register) {
@@ -580,8 +582,8 @@ App::setResource('project', function($dbForConsole, $request, $console) {
 App::setResource('console', function() {
     return new Document2([
         '$id' => 'console',
-        '$collection' => 'projects',
         'name' => 'Appwrite',
+        '$collection' => 'projects',
         'description' => 'Appwrite core engine',
         'logo' => '',
         'teamId' => -1,
@@ -613,9 +615,11 @@ App::setResource('console', function() {
         'legalCity' => '',
         'legalAddress' => '',
         'legalTaxId' => '',
+        'auths' => [
+            'limit' => (App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
+        ],
         'authWhitelistEmails' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
         'authWhitelistIPs' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
-        'usersAuthLimit' => (App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
     ]);
 }, []);
 

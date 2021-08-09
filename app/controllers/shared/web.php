@@ -47,7 +47,11 @@ App::init(function ($utopia, $request, $response, $layout) {
     ;
 
     $route = $utopia->match($request);
+
+    $route->label('error', __DIR__.'/../../views/general/error.phtml');
+
     $scope = $route->getLabel('scope', '');
+    
     $layout
         ->setParam('version', App::getEnv('_APP_VERSION', 'UNKNOWN'))
         ->setParam('isDev', App::isDevelopment())

@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Database\Validator\CustomId;
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Validator\Boolean;
@@ -131,20 +132,21 @@ App::post('/v1/database/collections')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_COLLECTION)
+    ->param('collectionId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->inject('response')
     ->inject('dbForExternal')
     ->inject('audits')
-    ->action(function ($name, $read, $write, $response, $dbForExternal, $audits) {
+    ->action(function ($collectionId, $name, $read, $write, $response, $dbForExternal, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $audits */
 
-        $id = $dbForExternal->getId();
+        $collectionId = $collectionId == 'unique()' ? $dbForExternal->getId() : $collectionId;
 
-        $collection = $dbForExternal->createCollection($id);
+        $collection = $dbForExternal->createCollection($collectionId);
 
         // TODO@kodumbeats what should the default permissions be?
         $read = (is_null($read)) ? ($collection->getRead() ?? []) : $read; // By default inherit read permissions
@@ -154,7 +156,7 @@ App::post('/v1/database/collections')
         $collection->setAttribute('$read', $read);
         $collection->setAttribute('$write', $write);
 
-        $dbForExternal->updateDocument(Database::COLLECTIONS, $id, $collection);
+        $dbForExternal->updateDocument(Database::COLLECTIONS, $collectionId, $collection);
 
         $audits
             ->setParam('event', 'database.collections.create')
@@ -999,6 +1001,7 @@ App::post('/v1/database/collections/:collectionId/documents')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOCUMENT)
+    ->param('documentId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
@@ -1007,7 +1010,7 @@ App::post('/v1/database/collections/:collectionId/documents')
     ->inject('dbForExternal')
     ->inject('user')
     ->inject('audits')
-    ->action(function ($collectionId, $data, $read, $write, $response, $dbForExternal, $user, $audits) {
+    ->action(function ($documentId, $collectionId, $data, $read, $write, $response, $dbForExternal, $user, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal */
         /** @var Utopia\Database\Document $user */
@@ -1030,7 +1033,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         }
 
         $data['$collection'] = $collection->getId(); // Adding this param to make API easier for developers
-        $data['$id'] = $dbForExternal->getId();
+        $data['$id'] = $documentId == 'unique()' ? $dbForExternal->getId() : $documentId;
         $data['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; //  By default set read permissions for user
         $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; //  By default set write permissions for user
 
