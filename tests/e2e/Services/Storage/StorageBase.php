@@ -158,14 +158,44 @@ trait StorageBase
         /**
          * Test for SUCCESS
          */
+        $file = $this->client->call(Client::METHOD_POST, '/storage/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => 'unique()',
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+        ]);
+
+        $this->assertEquals($file['headers']['status-code'], 201);
+        $this->assertNotEmpty($file['body']['$id']);
+        $this->assertIsInt($file['body']['dateCreated']);
+        $this->assertEquals('logo.png', $file['body']['name']);
+        $this->assertEquals('image/png', $file['body']['mimeType']);
+        $this->assertEquals(47218, $file['body']['sizeOriginal']);
+
         $files = $this->client->call(Client::METHOD_GET, '/storage/files', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), [
+            'limit' => 2
+        ]);
 
         $this->assertEquals(200, $files['headers']['status-code']);
-        $this->assertGreaterThan(0, $files['body']['sum']);
-        $this->assertGreaterThan(0, count($files['body']['files']));
+        $this->assertCount(2, $files['body']['files']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/storage/files', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'limit' => 1,
+            'after' => $files['body']['files'][0]['$id']
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($files['body']['files'][1]['$id'], $response['body']['files'][0]['$id']);
+        $this->assertCount(1, $response['body']['files']);
 
         /**
          * Test for FAILURE
