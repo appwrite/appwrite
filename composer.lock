@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6b3c314f3faa9c3aff868eaf7f6f3cbb",
+    "content-hash": "e2cbe858dd5e1a6575d4631e2886e1e3",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1984,16 +1984,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-main",
+            "version": "dev-fix-update-document-cache",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "272bb30d641792fb82f68adcd002be3bd34c5461"
+                "reference": "13cafc216c53e22cedadc42aa9e4c9297f07c4de"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/272bb30d641792fb82f68adcd002be3bd34c5461",
-                "reference": "272bb30d641792fb82f68adcd002be3bd34c5461",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/13cafc216c53e22cedadc42aa9e4c9297f07c4de",
+                "reference": "13cafc216c53e22cedadc42aa9e4c9297f07c4de",
                 "shasum": ""
             },
             "require": {
@@ -2011,7 +2011,6 @@
                 "utopia-php/cli": "^0.11.0",
                 "vimeo/psalm": "4.0.1"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -2042,9 +2041,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/main"
+                "source": "https://github.com/utopia-php/database/tree/fix-update-document-cache"
             },
-            "time": "2021-08-09T13:01:43+00:00"
+            "time": "2021-08-09T14:46:11+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -6258,7 +6257,7 @@
     "aliases": [
         {
             "package": "utopia-php/database",
-            "version": "dev-main",
+            "version": "dev-fix-update-document-cache",
             "alias": "0.6.1",
             "alias_normalized": "0.6.1.0"
         }
