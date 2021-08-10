@@ -8,6 +8,10 @@
   li {
     display: none;
 
+    .badge {
+      display: none;
+    }
+
     li {
       display: block;
     }
@@ -45,10 +49,31 @@
     -ms-user-select: none;
     user-select: none;
 
+    li {
+      position: relative;
+    }
+
+    .badge {
+        background: #f02d65;
+        color: white;
+        display: inline-block;
+        border-radius: 15px;
+        width: 15px;
+        height: 15px;
+        margin: 10px;
+        line-height: 15px;
+        padding: 3px;
+        text-align: center;
+        font-weight: 600!important;
+        position: absolute;
+        top: -5px;
+        right: -35px;
+        font-size: 13px;
+    }
+
     .selected {
       font-weight: 400;
       color: var(--config-color-focus);
-      position: relative;
       opacity: 1;
 
       &:after {

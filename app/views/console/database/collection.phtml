@@ -265,7 +265,7 @@
                                 </td>
 
                                 <td data-title="Attributes:">
-                                    <span class="text-size-small" data-ls-bind="{{index.attributes}}"></span>
+                                    <span class="text-size-small" data-ls-bind="{{index|indexAttributes}}"></span>xxx1
                                 </td>
 
                                 <td data-title="">
@@ -336,6 +336,44 @@
                 </div>
 
                 <button class="new-index">Add Index</button>
+            </li>
+            <li data-state="/console/database/collection/activity?id={{router.params.id}}&project={{router.params.project}}">
+                <h2>Activity <span class="badge" data-ls-bind="1"></span></h2>
+
+                <div
+                    data-service="account.getLogs"
+                    data-scope="console"
+                    data-name="securityLogs"
+                    data-event="load">
+
+                    <div class="box">
+                        <table class="vertical small">
+                            <thead>
+                                <tr>
+                                    <th width="140">Date</th>
+                                    <th width="120">User</th>
+                                    <th>Event</th>
+                                    <th width="90">Location</th>
+                                    <th width="90">IP</th>
+                                </tr>
+                            </thead>
+                            <tbody data-ls-loop="securityLogs.logs" data-ls-as="log">
+                                <tr>
+                                    <td data-title="Date: "><span data-ls-bind="{{log.time|dateTime}}"></span></td>
+                                    <td data-title="User: ">
+                                        <span data-ls-bind="{{log.userId}}"></span>
+                                    </td>
+                                    <td data-title="Event: "><span data-ls-bind="{{log.event}}"></span></td>
+                                    <td data-title="Location: ">
+                                        <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-attrs="src={{env.API}}/avatars/flags/{{log.countryCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline margin-end-small" />
+                                        <span data-ls-bind="{{log.geo.countryName}}"></span>
+                                    </td>
+                                    <td data-title="IP: "><span data-ls-bind="{{log.ip}}"></span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </li>
             <li data-state="/console/database/collection/settings?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Settings</h2>

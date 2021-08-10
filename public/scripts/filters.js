@@ -255,6 +255,14 @@ window.ls.filter
 
     return '';
   })
+  .add("indexAttributes", function($value) {
+    let output = '';
+
+    for(let i = 0; i < $value.attributes.length; i++) {
+      output += $value.attributes[i] + ' (' + $value.orders[i] + '), '
+    }
+    return output.slice(0, -2);
+  })
 ;
 
 function abbreviate(number, maxPlaces, forcePlaces, forceLetter) {
