@@ -43,15 +43,18 @@ trait DatabaseBase
             'required' => true,
         ]);
 
+        sleep(2);
+
         $releaseYear = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/attributes/integer', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'attributeId' => 'releaseYear',
-            'size' => 0,
             'required' => true,
         ]);
+
+        sleep(2);
 
         $actors = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
@@ -61,7 +64,6 @@ trait DatabaseBase
             'attributeId' => 'actors',
             'size' => 256,
             'required' => false,
-            'default' => null,
             'array' => true,
         ]);
 
@@ -88,7 +90,7 @@ trait DatabaseBase
         $this->assertEquals($actors['body']['array'], true);
 
         // wait for database worker to create attributes
-        sleep(10);
+        sleep(5);
 
         $movies = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'], array_merge([
             'content-type' => 'application/json',
@@ -120,7 +122,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'id' => 'titleIndex',
+            'indexId' => 'titleIndex',
             'type' => 'fulltext',
             'attributes' => ['title'],
         ]);
@@ -754,7 +756,7 @@ trait DatabaseBase
         // $this->assertEquals('Minimum value must be lesser than maximum value', $invalidRange['body']['message']);
 
         // wait for worker to add attributes
-        sleep(10);
+        sleep(15);
 
         $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
@@ -763,7 +765,7 @@ trait DatabaseBase
         ]), []); 
 
         $this->assertCount(7, $collection['body']['attributes']);
-        $this->assertCount(0, $collection['body']['attributesInQueue']);
+        // $this->assertCount(0, $collection['body']['attributesInQueue']);
 
         /**
          * Test for successful validation
