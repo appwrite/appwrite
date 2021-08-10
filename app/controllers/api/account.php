@@ -782,7 +782,7 @@ App::post('/v1/account/jwt')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_JWT)
     ->label('abuse-limit', 10)
-    ->label('abuse-key', 'url:{url},userId:{param-userId}')
+    ->label('abuse-key', 'url:{url},userId:{userId}')
     ->inject('response')
     ->inject('user')
     ->action(function ($response, $user) {
@@ -918,16 +918,16 @@ App::get('/v1/account/logs')
     ->inject('user')
     ->inject('locale')
     ->inject('geodb')
-    ->inject('app')
-    ->action(function ($response, $project, $user, $locale, $geodb, $app) {
+    ->inject('utopia')
+    ->action(function ($response, $project, $user, $locale, $geodb, $utopia) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
-        /** @var Utopia\App $app */
+        /** @var Utopia\App $utopia */
 
-        $adapter = new AuditAdapter($app->getResource('db'));
+        $adapter = new AuditAdapter($utopia->getResource('db'));
         $adapter->setNamespace('app_'.$project->getId());
 
         $audit = new Audit($adapter);
@@ -1668,7 +1668,7 @@ App::post('/v1/account/verification')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TOKEN)
     ->label('abuse-limit', 10)
-    ->label('abuse-key', 'url:{url},email:{param-email}')
+    ->label('abuse-key', 'url:{url},userId:{userId}')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add built-in confirm page
     ->inject('request')
     ->inject('response')

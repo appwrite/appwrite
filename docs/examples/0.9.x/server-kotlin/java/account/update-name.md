@@ -9,8 +9,8 @@ public void main() {
 
     Account account = new Account(client);
     account.updateName(
-        name = "[NAME]"
-        new Continuation<Response>() {
+        "[NAME]"
+        new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {

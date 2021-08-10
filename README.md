@@ -1,6 +1,6 @@
 <br />
 <p align="center">
-    <a href="https://appwrite.io" target="_blank"><img width="260" height="39" src="https://appwrite.io/images/github-logo.png" alt="Appwrite Logo"></a>
+    <a href="https://appwrite.io" target="_blank"><img width="260" height="39" src="https://appwrite.io/images/appwrite.svg" alt="Appwrite Logo"></a>
     <br />
     <br />
     <b>A complete backend solution for your [Flutter / Vue / Angular / React / iOS / Android / *ANY OTHER*] app</b>
@@ -15,7 +15,7 @@
 [![Build Status](https://img.shields.io/travis/com/appwrite/appwrite?style=flat-square)](https://travis-ci.com/appwrite/appwrite)
 [![Twitter Account](https://img.shields.io/twitter/follow/appwrite_io?color=00acee&label=twitter&style=flat-square)](https://twitter.com/appwrite_io)
 
-[**Appwrite 0.8 has been released! Learn what's new!**](https://dev.to/appwrite/announcing-appwrite-0-8-an-open-source-self-hosted-baas-kda)
+[**Appwrite 0.9 has been released! Learn what's new!**](https://dev.to/appwrite/announcing-appwrite-0-9-the-open-source-firebase-alternative-53ho)
 
 Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker<nobr> microservices. Appwrite abstracts the complexity and repetitiveness required to build a modern backend API from scratch and allows you to build secure apps faster.
 
@@ -56,7 +56,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:0.8.0
+    appwrite/appwrite:0.9.4
 ```
 
 ### Windows
@@ -68,7 +68,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:0.8.0
+    appwrite/appwrite:0.9.4
 ```
 
 #### PowerShell
@@ -78,7 +78,7 @@ docker run -it --rm ,
     --volume /var/run/docker.sock:/var/run/docker.sock ,
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw ,
     --entrypoint="install" ,
-    appwrite/appwrite:0.8.0
+    appwrite/appwrite:0.9.4
 ```
 
 Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please note that on non-linux native hosts, the server might take a few minutes to start after installation completes.
@@ -121,14 +121,16 @@ Below is a list of currently supported platforms and languages. If you wish to h
 #### Client
 * ✅  &nbsp; [Web](https://github.com/appwrite/sdk-for-web) (Maintained by the Appwrite Team)
 * ✅  &nbsp; [Flutter](https://github.com/appwrite/sdk-for-flutter) (Maintained by the Appwrite Team)
+* ✅  &nbsp; [Android](https://github.com/appwrite/sdk-for-android) (Maintained by the Appwrite Team)
 
 #### Server
 * ✅  &nbsp; [NodeJS](https://github.com/appwrite/sdk-for-node) (Maintained by the Appwrite Team)
 * ✅  &nbsp; [PHP](https://github.com/appwrite/sdk-for-php) (Maintained by the Appwrite Team)
 * ✅  &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart) **Beta** (Maintained by the Appwrite Team)
 * ✅  &nbsp; [Deno](https://github.com/appwrite/sdk-for-deno) - **Beta** (Maintained by the Appwrite Team)
-* ✅  &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby) - **Beta** (Maintained by the Appwrite Team)
-* ✅  &nbsp; [Python](https://github.com/appwrite/sdk-for-python) - **Beta** (Maintained by the Appwrite Team)
+* ✅  &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby) (Maintained by the Appwrite Team)
+* ✅  &nbsp; [Python](https://github.com/appwrite/sdk-for-python) (Maintained by the Appwrite Team)
+* ✅  &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin) - **Beta** (Maintained by the Appwrite Team)
 * ✅  &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet) - **Experimental** (Maintained by the Appwrite Team)
 
 Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!

@@ -9,8 +9,8 @@ public void main() {
 
     Avatars avatars = new Avatars(client);
     avatars.getFavicon(
-        url = "https://example.com"
-        new Continuation<Response>() {
+        "https://example.com"
+        new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {

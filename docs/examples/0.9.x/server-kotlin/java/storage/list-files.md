@@ -9,7 +9,7 @@ public void main() {
 
     Storage storage = new Storage(client);
     storage.listFiles(
-        new Continuation<Response>() {
+        new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {

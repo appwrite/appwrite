@@ -1,3 +1,31 @@
+# Version 0.9.4
+
+## Security
+
+- Fixed security vulnerability that exposes project ID's from other admin users (#1453)
+
+# Version 0.9.3
+
+## Bugs
+
+- Fixed Abuse Limit keys for JWT and E-Mail confirmation (#1434)
+
+# Version 0.9.2
+
+## Bugs
+
+- Fixed JWT session validation (#1408)
+- Fixed passing valid JWT session to Cloud Functions (#1421)
+- Fixed race condition when uploading and extracting bigger Cloud Functions (#1419)
+
+# Version 0.9.1
+
+## Bugs
+
+- Fixed PDO Connection timeout (#1385)
+- Removed unnecessary `app` resource and replace with `utopia` (#1384)
+- Fixed missing quote in Functions Worker logs (#1375)
+
 # Version 0.9.0
 
 ## Features

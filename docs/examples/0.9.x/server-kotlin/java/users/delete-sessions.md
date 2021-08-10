@@ -9,8 +9,8 @@ public void main() {
 
     Users users = new Users(client);
     users.deleteSessions(
-        userId = "[USER_ID]"
-        new Continuation<Response>() {
+        "[USER_ID]"
+        new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {
