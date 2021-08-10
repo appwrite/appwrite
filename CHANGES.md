@@ -2,7 +2,7 @@
 
 ## Security
 
-- Fixed security vulnerability that exposes project ID's from other admin users
+- Fixed security vulnerability that exposes project ID's from other admin users (#1453)
 
 # Version 0.9.3
 
