@@ -16,6 +16,12 @@ class Log extends Model
                 'default' => '',
                 'example' => 'account.sessions.create',
             ])
+            ->addRule('userId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'User ID.',
+                'default' => '',
+                'example' => '610fc2f985ee0',
+            ])
             ->addRule('ip', [
                 'type' => self::TYPE_STRING,
                 'description' => 'IP session in use when the session was created.',

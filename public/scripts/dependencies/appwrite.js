@@ -1722,6 +1722,26 @@
                     return yield this.call('delete', uri, {
                         'content-type': 'application/json',
                     }, payload);
+                }),
+                /**
+                 * Get Collection Logs
+                 *
+                 * Get the collection activity logs list by its unique ID.
+                 *
+                 * @param {string} collectionId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getCollectionLogs: (collectionId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    let path = '/database/collections/{collectionId}/logs'.replace('{collectionId}', collectionId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
                 })
             };
             this.functions = {
@@ -4176,7 +4196,7 @@
                 /**
                  * Get User Logs
                  *
-                 * Get a user activity logs list by its unique ID.
+                 * Get the user activity logs list by its unique ID.
                  *
                  * @param {string} userId
                  * @throws {AppwriteException}
