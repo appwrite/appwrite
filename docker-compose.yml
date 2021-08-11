@@ -345,15 +345,22 @@ services:
       - _APP_MAINTENANCE_RETENTION_AUDIT
 
   appwrite-usage:
-    entrypoint: usage
+    entrypoint:
+     - php
+     - -e
+     - /usr/src/code/app/cli.php
+     - usage
     container_name: appwrite-usage
     build:
       context: .
+      args:
+        - DEBUG=false
     networks:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./dev:/usr/local/dev
     depends_on:
       - influxdb
       - mariadb
