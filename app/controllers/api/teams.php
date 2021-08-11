@@ -99,7 +99,7 @@ App::get('/v1/teams')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('after', '', new UID(), 'ID of the team used to return teams listed after. Should be used for efficient pagination working with many teams.', true)
+    ->param('after', '', new UID(), 'ID of the team used as the starting point for the query, excluding the team itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
@@ -113,7 +113,7 @@ App::get('/v1/teams')
             $afterTeam = $dbForInternal->getDocument('teams', $after);
 
             if ($afterTeam->isEmpty()) {
-                throw new Exception('Team for after not found', 400);
+                throw new Exception("Team '{$after}' for the 'after' value not found.", 400);
             }
         }
 
@@ -424,7 +424,7 @@ App::get('/v1/teams/:teamId/memberships')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('after', '', new UID(), 'ID of the file used to return files listed after. Should be used for efficient pagination working with many files.', true)
+    ->param('after', '', new UID(), 'ID of the membership used as the starting point for the query, excluding the membership itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
@@ -442,7 +442,7 @@ App::get('/v1/teams/:teamId/memberships')
             $afterMembership = $dbForInternal->getDocument('memberships', $after);
 
             if ($afterMembership->isEmpty()) {
-                throw new Exception('Membership for after not found', 400);
+                throw new Exception("Membership '{$after}' for the 'after' value not found.", 400);
             }
         }
 

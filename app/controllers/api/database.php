@@ -182,7 +182,7 @@ App::get('/v1/database/collections')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 40000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('after', '', new UID(), 'ID of the collection used to return collection listed after. Should be used for efficient pagination working with many collections.', true)
+    ->param('after', '', new UID(), 'ID of the collection used as the starting point for the query, excluding the collection itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForExternal')
@@ -196,7 +196,7 @@ App::get('/v1/database/collections')
             $afterCollection = $dbForExternal->getDocument('collections', $after);
 
             if ($afterCollection->isEmpty()) {
-                throw new Exception('Collection for after not found', 400);
+                throw new Exception("Collection '{$after}' for the 'after' value not found.", 400);
             }
         }
 
@@ -1068,7 +1068,7 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->param('queries', [], new ArrayList(new Text(128)), 'Array of query strings.', true)
     ->param('limit', 25, new Range(0, 100), 'Maximum number of documents to return in response.  Use this value to manage pagination. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 900000000), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
-    ->param('after', '', new UID(), 'ID of the document used to return documents listed after. Should be used for efficient pagination working with many documents.', true)
+    ->param('after', '', new UID(), 'ID of the document used as the starting point for the query, excluding the document itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('orderAttributes', [], new ArrayList(new Text(128)), 'Array of attributes used to sort results.', true)
     ->param('orderTypes', [], new ArrayList(new WhiteList(['DESC', 'ASC'], true)), 'Array of order directions for sorting attribtues. Possible values are DESC for descending order, or ASC for ascending order.', true)
     ->inject('response')
@@ -1103,7 +1103,7 @@ App::get('/v1/database/collections/:collectionId/documents')
             $afterDocument = $dbForExternal->getDocument($collectionId, $after);
 
             if ($afterDocument->isEmpty()) {
-                throw new Exception('Document for orderAfter not found', 400);
+                throw new Exception("Document '{$after}' for the 'after' value not found.", 400);
             }
         }
 
