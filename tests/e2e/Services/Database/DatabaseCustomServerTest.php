@@ -370,7 +370,7 @@ class DatabaseCustomServerTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]), [
-                'id' => "key_attribute{$i}",
+                'indexId' => "key_attribute{$i}",
                 'type' => 'key',
                 'attributes' => ["attribute{$i}"],
             ]);
