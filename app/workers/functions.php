@@ -376,18 +376,18 @@ class FunctionsV1 extends Worker
             $orchestration->setMemory($memory);
             $orchestration->setSwap($swap);
 
-            foreach($vars as $key => $value) {
+            foreach($vars as &$value) {
                 $value = strval($value);
             }
 
             $id = $orchestration->run(
                 image: $runtime['image'],
                 name: $container,
-                entrypoint: '',
                 command: ['tail',
-                    '-f',
-                    '/dev/null'
+                '-f',
+                '/dev/null'
                 ],
+                entrypoint: '',
                 workdir: '/usr/local/src',
                 volumes: [],
                 vars: $vars,
