@@ -21,6 +21,18 @@ $cli
             return;
         }
 
+        if (str_starts_with($version, '0.10.')) {
+            Console::error('WARNING');
+            Console::warning('Migrating to Version 0.10.x introduces a major breaking change within the Database Service!');
+            Console::warning('Before migrating, please read about the breaking changes here:');
+            Console::info('https://appwrite.io/guide-to-db-migration');
+            $confirm = Console::confirm("If you want to proceed, type 'yes':");
+            if($confirm != 'yes') {
+                Console::exit(1);
+                return;
+            }
+        }
+
         Console::success('Starting Data Migration to version '.$version);
         $db = $register->get('db', true);
         $cache = $register->get('cache', true);
