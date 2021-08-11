@@ -413,7 +413,7 @@ class FunctionsV1 extends Worker
                 timeout: 60);
 
             if (!$untarSuccess) {
-                throw new Exception('Error untarring code');
+                throw new Exception('Failed to extract tar: '.$stderr);
             }
 
             $executionEnd = \microtime(true);
