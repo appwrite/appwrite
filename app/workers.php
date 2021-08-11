@@ -32,3 +32,16 @@ $register->set('cache', function () { // Register cache connection
     return $redis;
 });
 
+$register->set('influxdb', function () { // Register DB connection
+    $host = App::getEnv('_APP_INFLUXDB_HOST', '');
+    $port = App::getEnv('_APP_INFLUXDB_PORT', '');
+
+    if (empty($host) || empty($port)) {
+        return;
+    }
+    $driver = new InfluxDB\Driver\Curl("http://{$host}:{$port}");
+    $client = new InfluxDB\Client($host, $port, '', '', false, false, 5);
+    $client->setDriver($driver);
+
+    return $client;
+});
