@@ -36,7 +36,7 @@ class V09 extends Migration
     {
         parent::__construct($db, $cache);
 
-        if(!is_null($cache)) {
+        if (!is_null($cache)) {
             $cacheAdapter = new Cache(new RedisCache($this->cache));
             $this->dbInternal = new Database(new MariaDB($this->db), $cacheAdapter);
             $this->dbExternal = new Database(new MariaDB($this->db), $cacheAdapter);
@@ -192,7 +192,7 @@ class V09 extends Migration
                                  * Suffix collection name with a subsequent number to make it unique if possible.
                                  */
                                 $suffix = 1;
-                                while ($this->dbExternal->findFirst(Database::COLLECTIONS, [
+                                while ($this->dbExternal->findOne(Database::COLLECTIONS, [
                                     new Query('name', Query::TYPE_EQUAL, [$name])
                                 ])) {
                                     $name .= ' - ' . $suffix++;
@@ -227,6 +227,7 @@ class V09 extends Migration
                                     $attribute['default'],
                                     $attribute['signed'],
                                     $attribute['array'],
+                                    null,
                                     $attribute['filters']
                                 );
 
@@ -328,9 +329,13 @@ class V09 extends Migration
 
                 foreach ($all as $document) {
                     go(function () use ($document) {
-                        if (!array_key_exists($document->getCollection(), $this->oldCollections)) {
+                        if (
+                            !array_key_exists($document->getCollection(), $this->oldCollections)
+                            || in_array($document->getCollection(), ['platforms', 'webhooks', 'keys']) // skip deprecated collection
+                        ) {
                             return;
                         }
+
                         $old = $document->getArrayCopy();
                         $new = $this->fixDocument($document);
 
@@ -370,7 +375,7 @@ class V09 extends Migration
         /**
          * Check attributes and set their default values.
          */
-        if (array_key_exists($document->getCollection(), $this->oldCollections)) {
+        if (array_key_exists($document->getCollection(), $this->oldCollections) && !in_array($document->getCollection(), ['platforms', 'webhooks', 'keys'])) {
             foreach ($this->newCollections[$document->getCollection()]['attributes'] as $attr) {
                 if (
                     (!$attr['array'] ||
