@@ -440,7 +440,7 @@ class FunctionsV1 extends Worker
         $exitCode = 0;
 
         try {
-            $exitCode = $orchestration->execute(
+            $exitCode = (int)!$orchestration->execute(
                 name: $container, 
                 command: $orchestration->parseCommandString($command), 
                 stdout: $stdout, 
@@ -448,12 +448,12 @@ class FunctionsV1 extends Worker
                 vars: $vars, 
                 timeout: $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
         } catch (TimeoutException $e) {
-            $exitCode = 0;
+            $exitCode = 124;
         }
 
         $executionEnd = \microtime(true);
         $executionTime = ($executionEnd - $executionStart);
-        $functionStatus = $exitCode ? 'completed' : 'failed';
+        $functionStatus = ($exitCode === 0) ? 'completed' : 'failed';
 
         Console::info('Function executed in ' . ($executionEnd - $executionStart) . ' seconds, status: ' . $functionStatus);
 
@@ -462,7 +462,7 @@ class FunctionsV1 extends Worker
         $execution = $database->updateDocument(array_merge($execution->getArrayCopy(), [
             'tagId' => $tag->getId(),
             'status' => $functionStatus,
-            'exitCode' => ($exitCode ? 0 : 1),
+            'exitCode' => ($exitCode === 0 ? 0 : 1),
             'stdout' => \mb_substr($stdout, -4000), // log last 4000 chars output
             'stderr' => \mb_substr($stderr, -4000), // log last 4000 chars output
             'time' => $executionTime
