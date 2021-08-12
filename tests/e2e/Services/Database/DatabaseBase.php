@@ -1089,4 +1089,67 @@ trait DatabaseBase
 
         return $data;
     }
+
+    public function testEnforceCollectionPermissions()
+    {
+        $user = 'user:' . $this->getUser()['$id'];
+        $collection = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => 'unique()',
+            'name' => 'enforceCollectionPermissions',
+            'enforce' => 'collection',
+            'read' => [$user],
+            'write' => [$user]
+        ]);
+
+        var_dump($collection);
+
+        $this->assertEquals($collection['headers']['status-code'], 201);
+        $this->assertEquals($collection['body']['name'], 'enforceCollectionPermissions');
+        $this->assertEquals($collection['body']['enforce'], 'collection');
+
+        $collectionId = $collection['body']['$id'];
+
+        $attribute = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'attribute',
+            'size' => 64,
+            'required' => true,
+        ]);
+
+        $this->assertEquals($attribute['headers']['status-code'], 201);
+        $this->assertEquals($attribute['body']['$id'], 'attribute');
+
+        // wait for db to add attribute
+        sleep(3);
+
+        $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'unique()',
+            'data' => [
+                'attribute' => 'documen1',
+            ],
+            'read' => [],
+            'write' => [],
+        ]);
+
+        $this->assertEquals($document['headers']['status-code'], 201);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        // var_dump($documents);
+
+        $this->assertCount(1, $documents['body']['documents']);
+    }
 }
