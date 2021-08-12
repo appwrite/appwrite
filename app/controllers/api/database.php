@@ -15,6 +15,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\QueryValidator;
@@ -1138,6 +1139,14 @@ App::post('/v1/database/collections/:collectionId/documents')
             throw new Exception('Collection not found', 404);
         }
 
+        // Check collection permissions when enforced
+        if ($collection->getAttribute('enforce') === 'collection') {
+            $validator = new Authorization($collection, 'write');
+            if (!$validator->isValid($collection->getWrite())) {
+                throw new Exception('Unauthorized permissions', 401);
+            }
+        }
+
         $data['$collection'] = $collection->getId(); // Adding this param to make API easier for developers
         $data['$id'] = $documentId == 'unique()' ? $dbForExternal->getId() : $documentId;
         $data['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; //  By default set read permissions for user
@@ -1195,6 +1204,14 @@ App::get('/v1/database/collections/:collectionId/documents')
             throw new Exception('Collection not found', 404);
         }
 
+        // Check collection permissions when enforced
+        if ($collection->getAttribute('enforce') === 'collection') {
+            $validator = new Authorization($collection, 'read');
+            if (!$validator->isValid($collection->getRead())) {
+                throw new Exception('Unauthorized permissions', 401);
+            }
+        }
+
         $queries = \array_map(function ($query) {
             return Query::parse($query);
         }, $queries);
@@ -1247,6 +1264,14 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
             throw new Exception('Collection not found', 404);
         }
 
+        // Check collection permissions when enforced
+        if ($collection->getAttribute('enforce') === 'collection') {
+            $validator = new Authorization($collection, 'read');
+            if (!$validator->isValid($collection->getRead())) {
+                throw new Exception('Unauthorized permissions', 401);
+            }
+        }
+
         $document = $dbForExternal->getDocument($collectionId, $documentId);
 
         if ($document->isEmpty()) {
@@ -1287,6 +1312,14 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
+        }
+
+        // Check collection permissions when enforced
+        if ($collection->getAttribute('enforce') === 'collection') {
+            $validator = new Authorization($collection, 'write');
+            if (!$validator->isValid($collection->getWrite())) {
+                throw new Exception('Unauthorized permissions', 401);
+            }
         }
 
         $document = $dbForExternal->getDocument($collectionId, $documentId);
@@ -1359,6 +1392,14 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
+        }
+
+        // Check collection permissions when enforced
+        if ($collection->getAttribute('enforce') === 'collection') {
+            $validator = new Authorization($collection, 'write');
+            if (!$validator->isValid($collection->getWrite())) {
+                throw new Exception('Unauthorized permissions', 401);
+            }
         }
 
         $document = $dbForExternal->getDocument($collectionId, $documentId);
