@@ -415,7 +415,7 @@ return [
     ],
     [
         "code" => "km",
-        "name" => "Cambodian",
+        "name" => "Khmer",
         "nativeName" => "ភាសាខ្មែរ"
     ],
     [
