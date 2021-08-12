@@ -26,51 +26,32 @@ $cli
         $cacheAdapter = new Cache(new None());
         $dbForConsole = new Database(new MariaDB($register->get('db')), $cacheAdapter);
         $dbForConsole->setNamespace('project_console_internal');
+        $dbForProject = new Database(new MariaDB($register->get('db')), $cacheAdapter);
 
         Authorization::disable();
-        $projects = $dbForConsole->find('projects');
         $projectIds = [];
-        foreach ($projects as $project) {
-            $projectIds[$project['$id']] = true;
-        }
+        $latestProject = null;
+        $latestData = [];
+        do {
+            $projects = $dbForConsole->find('projects', [], 100, orderAfter:$latestProject);
+            if (!empty($projects)) {
+                $latestProject = $projects[array_key_last($projects)];
+                $latestData = getLatestData($projects, $latestData, $dbForProject);
+            }
+        } while (!empty($projects));
+
         $projects = null;
 
-        $latestData = [];
-        $dbForProject = new Database(new MariaDB($register->get('db')), $cacheAdapter);
-        foreach ($projectIds as $id => $value) {
-            $dbForProject->setNamespace("project_{$id}_internal");
-            $doc = $dbForProject->find('stats', [new Query("period", Query::TYPE_EQUAL, ["1d"])], 1, 0, ['time'], [Database::ORDER_DESC]);
-            $doc = reset($doc);
-            $latestData[$id]["1d"] = $doc ? $doc->getAttribute('time') : null;
-            $doc = $dbForProject->find('stats', [new Query("period", Query::TYPE_EQUAL, ["30m"])], 1, 0, ['time'], [Database::ORDER_DESC]);
-            $doc = reset($doc);
-            $latestData[$id]["30m"] = $doc ? $doc->getAttribute('time') : null;
-        }
-
         $firstRun = true;
-        Console::loop(function () use ($interval, $register, &$projectIds, &$latestData, $dbForProject, $dbForConsole, &$firstRun) {
+        Console::loop(function () use ($interval, $register, &$projectIds, &$latestData, $dbForProject, $dbForConsole, &$firstRun, &$latestProject) {
             $time = date('d-m-Y H:i:s', time());
             Console::info("[{$time}] Syncing usage data from influxdb to Appwrite Console DB every {$interval} seconds");
 
             $client = $register->get('influxdb');
-            //fetch delta projects
             if (!$firstRun) {
-                $projects = $dbForConsole->find('projects');
-                foreach ($projects as $project) {
-                    $id = $project['$id'];
-                    if (!$projectIds[$id]) {
-                        $projectIds[$id] = true;
-                        if ($latestData[$id] == null) {
-                            $dbForProject->setNamespace("project_{$id}_internal");
-                            $doc = $dbForProject->find('stats', [new Query("period", Query::TYPE_EQUAL, ["1d"])], 1, 0, ['time'], [Database::ORDER_DESC]);
-                            $doc = reset($doc);
-                            $latestData[$id]["1d"] = $doc ? $doc->getAttribute('time') : null;
-                            $doc = $dbForProject->find('stats', [new Query("period", Query::TYPE_EQUAL, ["30m"])], 1, 0, ['time'], [Database::ORDER_DESC]);
-                            $doc = reset($doc);
-                            $latestData[$id]["30m"] = $doc ? $doc->getAttribute('time') : null;
-                        }
-                    }
-                }
+                $projects = $dbForConsole->find('projects', limit:100, orderAfter:$latestProject);
+                $latestProject = $projects[array_key_last($projects)];
+                $latestData = getLatestData($projects, $latestData, $dbForProject);
             }
 
             if ($client) {
@@ -82,6 +63,21 @@ $cli
             $firstRun = false;
         }, $interval);
     });
+
+function getLatestData(&$projects, &$latestData, $dbForProject)
+{
+    foreach ($projects as $project) {
+        $id = $project->getId();
+        $projectIds[$id] = true;
+        $dbForProject->setNamespace("project_{$id}_internal");
+        $doc = $dbForProject->findOne('stats', [new Query("period", Query::TYPE_EQUAL, ["1d"])], 0, ['time'], [Database::ORDER_DESC]);
+        $latestData[$id]["1d"] = $doc ? $doc->getAttribute('time') : null;
+        $doc = $dbForProject->findOne('stats', [new Query("period", Query::TYPE_EQUAL, ["30m"])], 0, ['time'], [Database::ORDER_DESC]);
+        $latestData[$id]["30m"] = $doc ? $doc->getAttribute('time') : null;
+    }
+    $projects = null;
+    return $latestData;
+}
 
 function syncData($client, $projectId, $period, &$latestData, $dbForProject)
 {
