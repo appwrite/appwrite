@@ -1913,12 +1913,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/PineappleIOnic/orchestration.git",
-                "reference": "213d8796cd3b4a23b8d3728227b0e8ab1ceb4aea"
+                "reference": "e888d0ae03fdaad38b37631cc8a7d75ac0d6c692"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PineappleIOnic/orchestration/zipball/213d8796cd3b4a23b8d3728227b0e8ab1ceb4aea",
-                "reference": "213d8796cd3b4a23b8d3728227b0e8ab1ceb4aea",
+                "url": "https://api.github.com/repos/PineappleIOnic/orchestration/zipball/e888d0ae03fdaad38b37631cc8a7d75ac0d6c692",
+                "reference": "e888d0ae03fdaad38b37631cc8a7d75ac0d6c692",
                 "shasum": ""
             },
             "require": {
@@ -1963,7 +1963,7 @@
             "support": {
                 "source": "https://github.com/PineappleIOnic/orchestration/tree/dev"
             },
-            "time": "2021-08-11T12:45:16+00:00"
+            "time": "2021-08-13T08:34:33+00:00"
         },
         {
             "name": "utopia-php/preloader",
