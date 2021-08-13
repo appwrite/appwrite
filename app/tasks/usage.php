@@ -5,6 +5,7 @@ global $cli, $register;
 require_once __DIR__ . '/../init.php';
 
 use Utopia\App;
+use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Adapter\Redis;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -22,11 +23,28 @@ $cli
         Console::success(APP_NAME . ' usage sync process v1 has started');
 
         $interval = (int) App::getEnv('_APP_USAGE_SYNC_INTERVAL', '30'); //30 seconds
+        $attempts = 0;
+        $max = 10;
+        $sleep = 1;
+        do {
+            try {
+                $attempts++;
+                $db = $register->get('db');
+                $redis = $register->get('cache');
+                break; // leave the do-while if successful
+            } catch (\Exception$e) {
+                Console::warning("Database not ready. Retrying connection ({$attempts})...");
+                if ($attempts >= $max) {
+                    throw new \Exception('Failed to connect to database: ' . $e->getMessage());
+                }
+                sleep($sleep);
+            }
+        } while ($attempts < $max);
 
-        $cacheAdapter = new Cache(new Redis($register->get('cache')));
-        $dbForConsole = new Database(new MariaDB($register->get('db')), $cacheAdapter);
+        $cacheAdapter = new Cache(new None());
+        $dbForConsole = new Database(new MariaDB($db), $cacheAdapter);
         $dbForConsole->setNamespace('project_console_internal');
-        $dbForProject = new Database(new MariaDB($register->get('db')), $cacheAdapter);
+        $dbForProject = new Database(new MariaDB($db), $cacheAdapter);
 
         Authorization::disable();
         $projectIds = [];
@@ -36,7 +54,7 @@ $cli
             $projects = $dbForConsole->find('projects', [], 100, orderAfter:$latestProject);
             if (!empty($projects)) {
                 $latestProject = $projects[array_key_last($projects)];
-                $latestData = getLatestData($projects, $latestData, $dbForProject);
+                $latestData = getLatestData($projects, $latestData, $dbForProject, $projectIds);
             }
         } while (!empty($projects));
 
@@ -51,7 +69,7 @@ $cli
                 $projects = $dbForConsole->find('projects', limit:100, orderAfter:$latestProject);
                 if (!empty($projects)) {
                     $latestProject = $projects[array_key_last($projects)];
-                    $latestData = getLatestData($projects, $latestData, $dbForProject);
+                    $latestData = getLatestData($projects, $latestData, $dbForProject, $projectIds);
                 }
             }
 
@@ -66,7 +84,7 @@ $cli
         }, $interval);
     });
 
-function getLatestData(&$projects, &$latestData, $dbForProject)
+function getLatestData(&$projects, &$latestData, $dbForProject, &$projectIds)
 {
     foreach ($projects as $project) {
         $id = $project->getId();
@@ -83,61 +101,27 @@ function getLatestData(&$projects, &$latestData, $dbForProject)
 
 function syncData($client, $projectId, $period, &$latestData, $dbForProject)
 {
-    $requests = [];
-    $network = [];
-    $functions = [];
     $start = DateTime::createFromFormat('U', \strtotime($period == '1d' ? '-90 days' : '-1 days'))->format(DateTime::RFC3339);
     if (!empty($latestData[$projectId][$period])) {
         $start = DateTime::createFromFormat('U', $latestData[$projectId][$period])->format(DateTime::RFC3339);
     }
     $end = DateTime::createFromFormat('U', \strtotime('now'))->format(DateTime::RFC3339);
     $database = $client->selectDB('telegraf');
-
-    // Requests
-    $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_requests_all" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' AND "project"=\'' . $projectId . '\' GROUP BY time(' . $period . ') FILL(null)');
-    $points = $result->getPoints();
-
     $dbForProject->setNamespace("project_{$projectId}_internal");
-    foreach ($points as $point) {
-        $requests[] = [
-            'value' => (!empty($point['value'])) ? $point['value'] : 0,
-            'date' => \strtotime($point['time']),
-            'dateStr' => $point['time'],
-            'point' => $point,
-        ];
-        $time = \strtotime($point['time']);
-        $id = \md5($time . '_' . $period . '_requests');
-        $value = (!empty($point['value'])) ? $point['value'] : 0;
-        $document = $dbForProject->getDocument('stats', $id);
-        if ($document->isEmpty()) {
-            $dbForProject->createDocument('stats', new Document([
-                '$id' => $id,
-                'period' => $period,
-                'time' => $time,
-                'metric' => 'requests',
-                'value' => $value,
-                'type' => 0,
-            ]));
-        } else {
-            $dbForProject->updateDocument('stats', $document->getId(),
-                $document->setAttribute('value', $value));
-        }
-        $latestData[$id]["30m"] = $time;
-    }
+    
+    syncMetric($database, $projectId, $period, 'requests', $start, $end, $dbForProject);
+    syncMetric($database, $projectId, $period, 'network', $start, $end, $dbForProject);
+    syncMetric($database, $projectId, $period, 'executions', $start, $end, $dbForProject);
+}
 
-    // Network
-    $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_network_all" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' AND "project"=\'' . $projectId . '\'GROUP BY time(' . $period . ') FILL(null)');
+function syncMetric($database, $projectId, $period, $metric, $start, $end, $dbForProject)
+{
+    $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_' . $metric . '_all" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' AND "project"=\'' . $projectId . '\'GROUP BY time(' . $period . ') FILL(null)');
     $points = $result->getPoints();
 
     foreach ($points as $point) {
-        $network[] = [
-            'value' => (!empty($point['value'])) ? $point['value'] : 0,
-            'date' => \strtotime($point['time']),
-            'dateStr' => $point['time'],
-            'point' => $point,
-        ];
         $time = \strtotime($point['time']);
-        $id = \md5($time . '_' . $period . '_network');
+        $id = \md5($time . '_' . $period . '_' . $metric);
         $value = (!empty($point['value'])) ? $point['value'] : 0;
         $document = $dbForProject->getDocument('stats', $id);
         if ($document->isEmpty()) {
@@ -145,7 +129,7 @@ function syncData($client, $projectId, $period, &$latestData, $dbForProject)
                 '$id' => $id,
                 'period' => $period,
                 'time' => $time,
-                'metric' => 'network',
+                'metric' => $metric,
                 'value' => $value,
                 'type' => 0,
             ]));
@@ -153,37 +137,6 @@ function syncData($client, $projectId, $period, &$latestData, $dbForProject)
             $dbForProject->updateDocument('stats', $document->getId(),
                 $document->setAttribute('value', $value));
         }
-        $latestData[$id]["30m"] = $time;
-    }
-
-    // Functions
-    $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' AND "project"=\'' . $id . '\'GROUP BY time(' . $period . ') FILL(null)');
-    $points = $result->getPoints();
-
-    foreach ($points as $point) {
-        $functions[] = [
-            'value' => (!empty($point['value'])) ? $point['value'] : 0,
-            'date' => \strtotime($point['time']),
-            'dateStr' => $point['time'],
-            'point' => $point,
-        ];
-        $time = \strtotime($point['time']);
-        $id = \md5($time . '_' . $period . '_functions');
-        $value = (!empty($point['value'])) ? $point['value'] : 0;
-        $document = $dbForProject->getDocument('stats', $id);
-        if ($document->isEmpty()) {
-            $dbForProject->createDocument('stats', new Document([
-                '$id' => $id,
-                'period' => $period,
-                'time' => $time,
-                'metric' => 'functions',
-                'value' => $value,
-                'type' => 0,
-            ]));
-        } else {
-            $dbForProject->updateDocument('stats', $document->getId(),
-                $document->setAttribute('value', $value));
-        }
-        $latestData[$id]["30m"] = $time;
+        $latestData[$id][$period] = $time;
     }
 }
