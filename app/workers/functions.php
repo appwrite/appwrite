@@ -347,11 +347,15 @@ class FunctionsV1 extends Worker
             }
         }
 
-        if(isset($list[$container]) &&  !(\substr($list[$container]->getStatus(), 0, 2) === 'Up')) { // Remove conatiner if not online
+        if(isset($list[$container]) && !(\substr($list[$container]->getStatus(), 0, 2) === 'Up')) { // Remove conatiner if not online
             $stdout = '';
             $stderr = '';
 
-            $orchestration->remove($container);
+            try {
+                $orchestration->remove($container);
+            } catch (Exception $e) {
+                Console::warning('Failed to remove container: '.$e->getMessage());
+            }
 
             unset($list[$container]);
         }
