@@ -16,7 +16,7 @@ use Utopia\Config\Config;
 use Utopia\Orchestration\Orchestration;
 use Utopia\Orchestration\Adapter\DockerAPI;
 use Utopia\Orchestration\Container;
-use Utopia\Orchestration\Exception\Timeout as TimeoutException;
+use Utopia\Orchestration\Exceptions\TimeoutException;
 
 require_once __DIR__.'/../workers.php';
 
@@ -29,8 +29,7 @@ $runtimes = Config::getParam('runtimes');
 
 $dockerUser = App::getEnv('DOCKERHUB_PULL_USERNAME', null);
 $dockerPass = App::getEnv('DOCKERHUB_PULL_PASSWORD', null);
-$dockerEmail = App::getEnv('DOCKERHUB_PULL_EMAIL', null);
-$orchestration = new Orchestration(new DockerAPI($dockerUser, $dockerPass, $dockerEmail));
+$orchestration = new Orchestration(new DockerAPI($dockerUser, $dockerPass));
 
 /**
  * Warmup Docker Images
@@ -68,7 +67,7 @@ $response = $orchestration->list(['label' => 'appwrite-type=function']);
 
 $list = [];
 
-foreach ($response as $value) {
+foreach ($response as &$value) {
     $list[$value->getName()] = $value;
 }
 
@@ -369,10 +368,13 @@ class FunctionsV1 extends Worker
     
             $executionStart = \microtime(true);
             $executionTime = \time();
+            $cpus = App::getEnv('_APP_FUNCTIONS_CPUS', '');
+            $memory = App::getEnv('_APP_FUNCTIONS_MEMORY', '');
+            $swap = App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '');
 
-            $orchestration->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', ''));
-            $orchestration->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', ''));
-            $orchestration->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', ''));
+            $orchestration->setCpus($cpus);
+            $orchestration->setMemory($memory);
+            $orchestration->setSwap($swap);
 
             foreach($vars as &$value) {
                 $value = strval($value);
@@ -395,8 +397,8 @@ class FunctionsV1 extends Worker
                     'appwrite-created' => strval($executionTime)
                 ]);
 
-            $untarStdout = '';
-            $untarStderr = '';
+            $tarStdout = '';
+            $tarStderr = '';
 
             $untarSuccess = $orchestration->execute(
                 name: $container, 
@@ -405,18 +407,20 @@ class FunctionsV1 extends Worker
                     '-c',
                     'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz'
                 ],
-                stdout: $untarStdout, 
-                stderr: $untarStderr,
+                stdout: $tarStdout, 
+                stderr: $tarStderr,
                 vars: $vars,
                 timeout: 60);
 
             if (!$untarSuccess) {
-                throw new Exception('Failed to extract tar: '.$untarStderr);
+                throw new Exception('Failed to extract tar: '.$stderr);
             }
 
             $executionEnd = \microtime(true);
 
-            $list[$container] = new Container($container, $id, 'Up', 
+            $list[$container] = new Container($container, 
+                $id, 
+                'Up', 
                 [
                     'appwrite-type' => 'function',
                     'appwrite-created' => strval($executionTime),
@@ -458,7 +462,7 @@ class FunctionsV1 extends Worker
         $execution = $database->updateDocument(array_merge($execution->getArrayCopy(), [
             'tagId' => $tag->getId(),
             'status' => $functionStatus,
-            'exitCode' => $exitCode,
+            'exitCode' => ($exitCode === 0 ? 0 : 1),
             'stdout' => \mb_substr($stdout, -4000), // log last 4000 chars output
             'stderr' => \mb_substr($stderr, -4000), // log last 4000 chars output
             'time' => $executionTime
