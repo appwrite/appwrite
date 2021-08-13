@@ -87,6 +87,7 @@ class Stats
         $networkResponseSize = $this->params['networkResponseSize'] ?? 0;
 
         $httpMethod = $this->params['httpMethod'] ?? '';
+        $httpPath = $this->params['httpPath'] ?? '';
         $httpRequest = $this->params['httpRequest'] ?? 0;
 
         $functionId = $this->params['functionId'] ?? '';
@@ -100,7 +101,7 @@ class Stats
         $this->statsd->setNamespace($this->namespace);
 
         if ($httpRequest >= 1) {
-            $this->statsd->increment('requests.all' . $tags . ',method=' . \strtolower($httpMethod));
+            $this->statsd->increment('requests.all' . $tags . ',method=' . \strtolower($httpMethod).',path='.$httpPath);
         }
 
         if ($functionExecution >= 1) {
