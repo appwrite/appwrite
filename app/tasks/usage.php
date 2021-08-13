@@ -76,8 +76,7 @@ $cli
             $client = $register->get('influxdb');
             if ($client) {
                 foreach ($projectIds as $id => $value) {
-                    syncData($client, $id, '30m', $latestData, $dbForProject);
-                    syncData($client, $id, '1d', $latestData, $dbForProject);
+                    syncData($client, $id, $latestData, $dbForProject);
                 }
             }
             $firstRun = false;
@@ -99,19 +98,22 @@ function getLatestData(&$projects, &$latestData, $dbForProject, &$projectIds)
     return $latestData;
 }
 
-function syncData($client, $projectId, $period, &$latestData, $dbForProject)
+function syncData($client, $projectId, &$latestData, $dbForProject)
 {
-    $start = DateTime::createFromFormat('U', \strtotime($period == '1d' ? '-90 days' : '-1 days'))->format(DateTime::RFC3339);
-    if (!empty($latestData[$projectId][$period])) {
-        $start = DateTime::createFromFormat('U', $latestData[$projectId][$period])->format(DateTime::RFC3339);
+    foreach (['30m', '1d'] as $period) {
+        $start = DateTime::createFromFormat('U', \strtotime($period == '1d' ? '-90 days' : '-1 days'))->format(DateTime::RFC3339);
+        if (!empty($latestData[$projectId][$period])) {
+            $start = DateTime::createFromFormat('U', $latestData[$projectId][$period])->format(DateTime::RFC3339);
+        }
+        $end = DateTime::createFromFormat('U', \strtotime('now'))->format(DateTime::RFC3339);
+        $database = $client->selectDB('telegraf');
+        $dbForProject->setNamespace("project_{$projectId}_internal");
+
+        syncMetric($database, $projectId, $period, 'requests', $start, $end, $dbForProject);
+        syncMetric($database, $projectId, $period, 'network', $start, $end, $dbForProject);
+        syncMetric($database, $projectId, $period, 'executions', $start, $end, $dbForProject);
     }
-    $end = DateTime::createFromFormat('U', \strtotime('now'))->format(DateTime::RFC3339);
-    $database = $client->selectDB('telegraf');
-    $dbForProject->setNamespace("project_{$projectId}_internal");
-    
-    syncMetric($database, $projectId, $period, 'requests', $start, $end, $dbForProject);
-    syncMetric($database, $projectId, $period, 'network', $start, $end, $dbForProject);
-    syncMetric($database, $projectId, $period, 'executions', $start, $end, $dbForProject);
+
 }
 
 function syncMetric($database, $projectId, $period, $metric, $start, $end, $dbForProject)
