@@ -338,26 +338,27 @@
                 <button class="new-index">Add Index</button>
             </li>
             <li data-state="/console/database/collection/activity?id={{router.params.id}}&project={{router.params.project}}">
-                <h2>Activity <span class="badge" data-ls-bind="1"></span></h2>
+                <h2>Activity <span class="badge" data-ls-bind="{{project-collection-logs.logs.length}}"></span></h2>
 
                 <div
-                    data-service="account.getLogs"
-                    data-scope="console"
-                    data-name="securityLogs"
-                    data-event="load">
+                    data-service="database.getCollectionLogs"
+                    data-param-collection-id="{{router.params.id}}"
+                    data-scope="sdk"
+                    data-event="load"
+                    data-name="project-collection-logs">
 
                     <div class="box">
                         <table class="vertical small">
                             <thead>
                                 <tr>
-                                    <th width="140">Date</th>
+                                    <th width="120">Date</th>
                                     <th width="120">User</th>
                                     <th>Event</th>
                                     <th width="90">Location</th>
                                     <th width="90">IP</th>
                                 </tr>
                             </thead>
-                            <tbody data-ls-loop="securityLogs.logs" data-ls-as="log">
+                            <tbody data-ls-loop="project-collection-logs.logs" data-ls-as="log">
                                 <tr>
                                     <td data-title="Date: "><span data-ls-bind="{{log.time|dateTime}}"></span></td>
                                     <td data-title="User: ">
@@ -404,20 +405,38 @@
                                 <label for="collection-name">Name</label>
                                 <input name="name" id="collection-name" type="text" autocomplete="off" data-ls-bind="{{project-collection.name}}" data-forms-text-direction required placeholder="Collection Name" maxlength="128" />
 
-                                <div class="toggle margin-bottom margin-top" data-ls-ui-open data-button-aria="Open Permissions">
-                                    <i class="icon-plus pull-end margin-top-tiny"></i>
-                                    <i class="icon-minus pull-end margin-top-tiny"></i>
-                                    
-                                    <h3 class="margin-bottom-large">Permissions</h3>
-                                    
-                                    <label for="collection-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
-                                    <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$permissions.read}}" placeholder="User ID, Team ID or Role" />
-                                    <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
-                                                    
-                                    <label for="collection-write">Write Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                                    <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$permissions.write}}" placeholder="User ID, Team ID or Role" />
-                                    <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
+
+                                <label class="margin-bottom-small">Permissions</label>
+
+                                <p class="text-fade text-size-small">Choose the permissions model for this collection.</p>
+                                
+                                <hr class="margin-top-small" />
+
+                                <div class="row">
+                                    <div class="col span-1"><input type="radio" class="margin-top-no" /></div>
+                                    <div class="col span-11">
+                                        <b>Document Level</b>
+                                        <p class="text-fade margin-top-tiny">Bla bla bla bla bla Bla blabla bla Bla blabla bla Bla blabla bla Bla blaBla bla bla Bla bla bla Bla bla bla Bla bla bla Bla bla bla Bla bla bla Bla bla bla Bla bla bla</p>
+                                    </div>
                                 </div>
+
+                                <div class="row">
+                                    <div class="col span-1"><input type="radio" class="margin-top-tiny" /></div>
+                                    <div class="col span-11">
+                                        <b>Collection Level</b>
+                                        <p class="text-fade margin-top-tiny">Bla bla bla Bla blabla bla Bla blabla bla Bla blabla bla Bla bla bla Bla bla bla Bla bla bla Bla bla bla Bla bla bla Bla bla bla Bla</p>
+
+                                        <label for="collection-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
+                                        <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$permissions.read}}" placeholder="User ID, Team ID or Role" />
+                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
+                                                        
+                                        <label for="collection-write">Write Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
+                                        <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$permissions.write}}" placeholder="User ID, Team ID or Role" />
+                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
+                                    </div>
+                                </div>
+
+                                <hr class="margin-top-no" />
 
                                 <button>Update</button>
                             </form>

@@ -25,7 +25,6 @@ use Utopia\Audit\Audit;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 
 $attributesCallback = function ($attribute, $response, $dbForExternal, $database, $audits) {
     /** @var Utopia\Database\Document $document*/
@@ -114,7 +113,7 @@ $attributesCallback = function ($attribute, $response, $dbForExternal, $database
 
     $audits
         ->setParam('event', 'database.attributes.create')
-        ->setParam('resource', 'database/attributes/'.$attribute->getId())
+        ->setParam('resource', 'database/collection/'.$collection->getId())
         ->setParam('data', $attribute)
     ;
 
@@ -287,6 +286,7 @@ App::get('/v1/database/collections/:collectionId/logs')
 
             $output[$i] = new Document([
                 'event' => $log['event'],
+                'userId' => $log['userId'],
                 'ip' => $log['ip'],
                 'time' => $log['time'],
 
@@ -367,7 +367,7 @@ App::put('/v1/database/collections/:collectionId')
 
         $audits
             ->setParam('event', 'database.collections.update')
-            ->setParam('resource', 'database/collections/'.$collection->getId())
+            ->setParam('resource', 'database/collection/'.$collection->getId())
             ->setParam('data', $collection->getArrayCopy())
         ;
 
@@ -411,7 +411,7 @@ App::delete('/v1/database/collections/:collectionId')
 
         $audits
             ->setParam('event', 'database.collections.delete')
-            ->setParam('resource', 'database/collections/'.$collection->getId())
+            ->setParam('resource', 'database/collection/'.$collection->getId())
             ->setParam('data', $collection->getArrayCopy())
         ;
 
@@ -841,7 +841,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
 
         $audits
             ->setParam('event', 'database.attributes.delete')
-            ->setParam('resource', 'database/attributes/'.$attribute->getId())
+            ->setParam('resource', 'database/collection/'.$collection->getId())
             ->setParam('data', $attribute->getArrayCopy())
         ;
 
@@ -927,7 +927,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
 
         $audits
             ->setParam('event', 'database.indexes.create')
-            ->setParam('resource', 'database/indexes/'.$index->getId())
+            ->setParam('resource', 'database/collection/'.$collection->getId())
             ->setParam('data', $index->getArrayCopy())
         ;
 
@@ -1070,7 +1070,7 @@ App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
 
         $audits
             ->setParam('event', 'database.indexes.delete')
-            ->setParam('resource', 'database/indexes/'.$index->getId())
+            ->setParam('resource', 'database/collection/'.$collection->getId())
             ->setParam('data', $index->getArrayCopy())
         ;
 
