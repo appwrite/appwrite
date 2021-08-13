@@ -2,10 +2,10 @@
 
 global $cli, $register;
 
-require_once __DIR__ . '/../workers.php';
+require_once __DIR__ . '/../init.php';
 
 use Utopia\App;
-use Utopia\Cache\Adapter\None;
+use Utopia\Cache\Adapter\Redis;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Adapter\MariaDB;
@@ -23,7 +23,7 @@ $cli
 
         $interval = (int) App::getEnv('_APP_USAGE_SYNC_INTERVAL', '30'); //30 seconds
 
-        $cacheAdapter = new Cache(new None());
+        $cacheAdapter = new Cache(new Redis($register->get('cache')));
         $dbForConsole = new Database(new MariaDB($register->get('db')), $cacheAdapter);
         $dbForConsole->setNamespace('project_console_internal');
         $dbForProject = new Database(new MariaDB($register->get('db')), $cacheAdapter);
@@ -47,13 +47,15 @@ $cli
             $time = date('d-m-Y H:i:s', time());
             Console::info("[{$time}] Syncing usage data from influxdb to Appwrite Console DB every {$interval} seconds");
 
-            $client = $register->get('influxdb');
             if (!$firstRun) {
                 $projects = $dbForConsole->find('projects', limit:100, orderAfter:$latestProject);
-                $latestProject = $projects[array_key_last($projects)];
-                $latestData = getLatestData($projects, $latestData, $dbForProject);
+                if (!empty($projects)) {
+                    $latestProject = $projects[array_key_last($projects)];
+                    $latestData = getLatestData($projects, $latestData, $dbForProject);
+                }
             }
 
+            $client = $register->get('influxdb');
             if ($client) {
                 foreach ($projectIds as $id => $value) {
                     syncData($client, $id, '30m', $latestData, $dbForProject);

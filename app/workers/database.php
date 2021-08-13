@@ -5,7 +5,7 @@ use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
-require_once __DIR__.'/../workers.php';
+require_once __DIR__.'/../init.php';
 
 Console::title('Database V1 Worker');
 Console::success(APP_NAME.' database worker v1 has started'."\n");
