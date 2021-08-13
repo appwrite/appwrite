@@ -125,6 +125,7 @@ class Response extends SwooleResponse
     // Deprecated
     const MODEL_PERMISSIONS = 'permissions';
     const MODEL_RULE = 'rule';
+    const MODEL_TASK = 'task';
 
     // Tests (keep last)
     const MODEL_MOCK = 'mock';
