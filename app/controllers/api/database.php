@@ -189,7 +189,11 @@ App::get('/v1/database/collections')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal */
 
-        $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('name', Query::TYPE_SEARCH, [$search]);
+        }
 
         $response->dynamic(new Document([
             'collections' => $dbForExternal->find(Database::COLLECTIONS, $queries, $limit, $offset, ['_id'], [$orderType]),

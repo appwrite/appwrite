@@ -53,8 +53,9 @@ App::post('/v1/functions')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
+        $functionId = ($functionId == 'unique()') ? $dbForInternal->getId() : $functionId;
         $function = $dbForInternal->createDocument('functions', new Document([
-            '$id' => $functionId == 'unique()' ? $dbForInternal->getId() : $functionId,
+            '$id' => $functionId,
             'execute' => $execute,
             'dateCreated' => time(),
             'dateUpdated' => time(),
@@ -68,6 +69,7 @@ App::post('/v1/functions')
             'schedulePrevious' => 0,
             'scheduleNext' => 0,
             'timeout' => $timeout,
+            'search' => implode(' ', [$functionId, $name, $runtime]),
         ]));
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -95,7 +97,11 @@ App::get('/v1/functions')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+        }
 
         $response->dynamic(new Document([
             'functions' => $dbForInternal->find('functions', $queries, $limit, $offset, ['_id'], [$orderType]),
@@ -296,6 +302,7 @@ App::put('/v1/functions/:functionId')
             'schedule' => $schedule,
             'scheduleNext' => (int)$next,
             'timeout' => $timeout,
+            'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
 
         if ($next && $schedule !== $original) {
@@ -472,8 +479,9 @@ App::post('/v1/functions/:functionId/tags')
             throw new Exception('Failed moving file', 500);
         }
         
+        $tagId = $dbForInternal->getId();
         $tag = $dbForInternal->createDocument('tags', new Document([
-            '$id' => $dbForInternal->getId(),
+            '$id' => $tagId,
             '$read' => [],
             '$write' => [],
             'functionId' => $function->getId(),
@@ -481,6 +489,7 @@ App::post('/v1/functions/:functionId/tags')
             'command' => $command,
             'path' => $path,
             'size' => $size,
+            'search' => implode(' ', [$tagId, $command]),
         ]));
 
         $usage
@@ -517,6 +526,12 @@ App::get('/v1/functions/:functionId/tags')
 
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
+        }
+
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
         }
 
         $queries[] = new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]);

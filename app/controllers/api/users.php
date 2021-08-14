@@ -17,6 +17,7 @@ use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Validator\UID;
 use DeviceDetector\DeviceDetector;
 use Appwrite\Database\Validator\CustomId;
+use Utopia\Database\Query;
 
 App::post('/v1/users')
     ->desc('Create User')
@@ -60,6 +61,7 @@ App::post('/v1/users')
                 'sessions' => [],
                 'tokens' => [],
                 'memberships' => [],
+                'search' => implode(' ', [$userId, $email, $name]),
             ]));
         } catch (Duplicate $th) {
             throw new Exception('Account already exists', 409);
@@ -90,8 +92,14 @@ App::get('/v1/users')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $results = $dbForInternal->find('users', [], $limit, $offset, ['_id'], [$orderType]);
-        $sum = $dbForInternal->count('users', [], APP_LIMIT_COUNT);
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+        }
+
+        $results = $dbForInternal->find('users', $queries, $limit, $offset, ['_id'], [$orderType]);
+        $sum = $dbForInternal->count('users', $queries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
             'users' => $results,
@@ -519,11 +527,6 @@ App::delete('/v1/users/:userId')
         if (!$dbForInternal->deleteDocument('users', $userId)) {
             throw new Exception('Failed to remove user from DB', 500);
         }
-        
-        // $dbForInternal->createDocument('users', new Document([
-        //     '$id' => $userId,
-        //     '$read' => ['role:all'],
-        // ]));
 
         $deletes
             ->setParam('type', DELETE_TYPE_DOCUMENT)

@@ -103,6 +103,7 @@ App::post('/v1/account')
                 'sessions' => [],
                 'tokens' => [],
                 'memberships' => [],
+                'search' => implode(' ', [$userId, $email, $name]),
             ]));
         } catch (Duplicate $th) {
             throw new Exception('Account already exists', 409);
@@ -195,8 +196,8 @@ App::post('/v1/account/sessions')
         Authorization::setRole('user:' . $profile->getId());
 
         $session = $dbForInternal->createDocument('sessions', $session
-                ->setAttribute('$read', ['user:' . $profile->getId()])
-                ->setAttribute('$write', ['user:' . $profile->getId()])
+            ->setAttribute('$read', ['user:' . $profile->getId()])
+            ->setAttribute('$write', ['user:' . $profile->getId()])
         );
 
         $profile->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
@@ -481,6 +482,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'sessions' => [],
                         'tokens' => [],
                         'memberships' => [],
+                        'search' => implode(' ', [$userId, $email, $name]),
                     ]));
                 } catch (Duplicate $th) {
                     throw new Exception('Account already exists', 409);
@@ -530,8 +532,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         Authorization::setRole('user:' . $user->getId());
 
         $session = $dbForInternal->createDocument('sessions', $session
-                ->setAttribute('$read', ['user:' . $user->getId()])
-                ->setAttribute('$write', ['user:' . $user->getId()])
+            ->setAttribute('$read', ['user:' . $user->getId()])
+            ->setAttribute('$write', ['user:' . $user->getId()])
         );
 
         $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
@@ -644,6 +646,7 @@ App::post('/v1/account/sessions/anonymous')
             'sessions' => [],
             'tokens' => [],
             'memberships' => [],
+            'search' => $userId,
         ]));
 
         Authorization::reset();
@@ -978,7 +981,10 @@ App::patch('/v1/account/name')
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
 
-        $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('name', $name));
+        $user = $dbForInternal->updateDocument('users', $user->getId(), $user
+            ->setAttribute('name', $name)
+            ->setAttribute('search', implode(' ', [$user->getId(), $name, $user->getAttribute('email')]))
+        );
 
         $audits
             ->setParam('userId', $user->getId())
@@ -1073,9 +1079,10 @@ App::patch('/v1/account/email')
         }
 
         $user = $dbForInternal->updateDocument('users', $user->getId(), $user
-                ->setAttribute('password', $isAnonymousUser ? Auth::passwordHash($password) : $user->getAttribute('password', ''))
-                ->setAttribute('email', $email)
-                ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
+            ->setAttribute('password', $isAnonymousUser ? Auth::passwordHash($password) : $user->getAttribute('password', ''))
+            ->setAttribute('email', $email)
+            ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
+            ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name'), $user->getAttribute('email')]))
         );
 
         $audits
@@ -1489,10 +1496,9 @@ App::put('/v1/account/recovery')
         );
 
         /**
-     * We act like we're updating and validating
-     *  the recovery token but actually we don't need it anymore.
-     */
-
+         * We act like we're updating and validating
+         *  the recovery token but actually we don't need it anymore.
+         */
         foreach ($tokens as $key => $token) {
             if ($recovery === $token->getId()) {
                 $recovery = $token;
@@ -1650,9 +1656,9 @@ App::put('/v1/account/verification')
         $profile = $dbForInternal->updateDocument('users', $profile->getId(), $profile->setAttribute('emailVerification', true));
 
         /**
-     * We act like we're updating and validating
-     *  the verification token but actually we don't need it anymore.
-     */
+         * We act like we're updating and validating
+         *  the verification token but actually we don't need it anymore.
+         */
         foreach ($tokens as $key => $token) {
             if ($token->getId() === $verification) {
                 $verification = $token;

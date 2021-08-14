@@ -123,13 +123,14 @@ App::post('/v1/storage/files')
 
         $sizeActual = $device->getFileSize($path);
         
+        $fileId = ($fileId == 'unique()') ? $dbForInternal->getId() : $fileId;
         $file = $dbForInternal->createDocument('files', new Document([
-            '$id' => $fileId == 'unique()' ? $dbForInternal->getId() : $fileId,
+            '$id' => $fileId,
             '$read' => (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? [], // By default set read permissions for user
             '$write' => (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? [], // By default set write permissions for user
             'dateCreated' => \time(),
             'bucketId' => '',
-            'name' => $file['name'],
+            'name' => $file['name'] ?? '',
             'path' => $path,
             'signature' => $device->getFileHash($path),
             'mimeType' => $mimeType,
@@ -141,6 +142,7 @@ App::post('/v1/storage/files')
             'openSSLCipher' => OpenSSL::CIPHER_AES_128_GCM,
             'openSSLTag' => \bin2hex($tag),
             'openSSLIV' => \bin2hex($iv),
+            'search' => implode(' ', [$fileId, $file['name'] ?? '',]),
         ]));
 
         $audits
@@ -178,7 +180,11 @@ App::get('/v1/storage/files')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, $search)] : [];
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+        }
 
         $response->dynamic(new Document([
             'files' => $dbForInternal->find('files', $queries, $limit, $offset, ['_id'], [$orderType]),

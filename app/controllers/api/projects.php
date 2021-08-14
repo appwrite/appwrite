@@ -5,9 +5,7 @@ use Appwrite\Database\Validator\CustomId;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain as DomainValidator;
 use Appwrite\Network\Validator\URL;
-use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Response;
-use Cron\CronExpression;
 use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
@@ -78,8 +76,9 @@ App::post('/v1/projects')
             $auths[$method['key'] ?? ''] = true;
         }
 
+        $projectId = ($projectId == 'unique()') ? $dbForConsole->getId() : $projectId;
         $project = $dbForConsole->createDocument('projects', new Document([
-            '$id' => $projectId == 'unique()' ? $dbForConsole->getId() : $projectId,
+            '$id' => $projectId,
             '$collection' => 'projects',
             '$read' => ['team:' . $teamId],
             '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
@@ -95,12 +94,13 @@ App::post('/v1/projects')
             'legalCity' => $legalCity,
             'legalAddress' => $legalAddress,
             'legalTaxId' => $legalTaxId,
+            'auths' => $auths,
             'services' => new stdClass(),
             'platforms' => [],
             'webhooks' => [],
             'keys' => [],
             'domains' => [],
-            'auths' => $auths,
+            'search' => implode(' ', [$projectId, $name]),
         ]));
 
         $collections = Config::getParam('collections2', []); /** @var array $collections */
@@ -171,7 +171,11 @@ App::get('/v1/projects')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
 
-        $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+        }
 
         $results = $dbForConsole->find('projects', $queries, $limit, $offset, ['_id'], [$orderType]);
         $sum = $dbForConsole->count('projects', $queries, APP_LIMIT_COUNT);
@@ -445,6 +449,7 @@ App::patch('/v1/projects/:projectId')
                 ->setAttribute('legalCity', $legalCity)
                 ->setAttribute('legalAddress', $legalAddress)
                 ->setAttribute('legalTaxId', $legalTaxId)
+                ->setAttribute('search', implode(' ', [$projectId, $name]))
         );
 
         $response->dynamic($project, Response::MODEL_PROJECT);
@@ -546,7 +551,7 @@ App::patch('/v1/projects/:projectId/auth/limit')
         $auths['limit'] = $limit;
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project
-                ->setAttribute('auths', $auths)
+            ->setAttribute('auths', $auths)
         );
 
         $response->dynamic($project, Response::MODEL_PROJECT);
@@ -869,7 +874,7 @@ App::post('/v1/projects/:projectId/keys')
         ]);
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
-                ->setAttribute('keys', $key, Document::SET_TYPE_APPEND)
+            ->setAttribute('keys', $key, Document::SET_TYPE_APPEND)
         );
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -1053,7 +1058,7 @@ App::post('/v1/projects/:projectId/platforms')
         ]);
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
-                ->setAttribute('platforms', $platform, Document::SET_TYPE_APPEND)
+            ->setAttribute('platforms', $platform, Document::SET_TYPE_APPEND)
         );
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -1262,7 +1267,7 @@ App::post('/v1/projects/:projectId/domains')
         ]);
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
-                ->setAttribute('domains', $domain, Document::SET_TYPE_APPEND)
+            ->setAttribute('domains', $domain, Document::SET_TYPE_APPEND)
         );
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
