@@ -226,12 +226,12 @@ App::get('/v1/database/collections/:collectionId')
     });
 
 App::get('/v1/database/collections/:collectionId/logs')
-    ->desc('Get Collection Logs')
+    ->desc('List Collection Logs')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'database')
-    ->label('sdk.method', 'getCollectionLogs')
+    ->label('sdk.method', 'listCollectionLogs')
     ->label('sdk.description', '/docs/references/database/get-collection-logs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -287,6 +287,9 @@ App::get('/v1/database/collections/:collectionId/logs')
             $output[$i] = new Document([
                 'event' => $log['event'],
                 'userId' => $log['userId'],
+                'userEmail' => $log['data']['userEmail'] ?? null,
+                'userName' => $log['data']['userName'] ?? null,
+                'mode' => $log['data']['mode'] ?? null,
                 'ip' => $log['ip'],
                 'time' => $log['time'],
 

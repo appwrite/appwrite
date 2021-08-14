@@ -1732,7 +1732,7 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                getCollectionLogs: (collectionId) => __awaiter(this, void 0, void 0, function* () {
+                listCollectionLogs: (collectionId) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }

@@ -22,6 +22,24 @@ class Log extends Model
                 'default' => '',
                 'example' => '610fc2f985ee0',
             ])
+            ->addRule('userEmail', [
+                'type' => self::TYPE_STRING,
+                'description' => 'User Email.',
+                'default' => '',
+                'example' => 'john@appwrite.io',
+            ])
+            ->addRule('userName', [
+                'type' => self::TYPE_STRING,
+                'description' => 'User Name.',
+                'default' => '',
+                'example' => 'John Doe',
+            ])
+            ->addRule('mode', [
+                'type' => self::TYPE_STRING,
+                'description' => 'API mode when event triggered.',
+                'default' => '',
+                'example' => 'admin',
+            ])
             ->addRule('ip', [
                 'type' => self::TYPE_STRING,
                 'description' => 'IP session in use when the session was created.',

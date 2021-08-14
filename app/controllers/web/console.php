@@ -214,7 +214,10 @@ App::get('/console/database/collection')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\View $layout */
 
+        $logs = new View(__DIR__.'/../../views/console/comps/logs.phtml');
         $page = new View(__DIR__.'/../../views/console/database/collection.phtml');
+        
+        $page->setParam('logs', $logs);
         
         $layout
             ->setParam('title', APP_NAME.' - Database Collection')

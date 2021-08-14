@@ -7,9 +7,16 @@ table {
   position: relative;
   table-layout: fixed;
 
-
   &.y-scroll {
     overflow-y: auto;
+  }
+
+  &.multi-line {
+    thead th, tbody td {
+      line-height: inherit;
+      text-overflow:inherit;
+      white-space: inherit;
+    }
   }
 
   thead {
