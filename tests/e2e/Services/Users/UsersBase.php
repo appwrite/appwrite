@@ -53,6 +53,42 @@ trait UsersBase
     /**
      * @depends testCreateUser
      */
+    public function testListUsers(array $data): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['users']);
+        $this->assertCount(2, $response['body']['users']);
+
+        $this->assertEquals($response['body']['users'][0]['$id'], $data['userId']);
+        $this->assertEquals($response['body']['users'][1]['$id'], 'user1');
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'after' => $response['body']['users'][0]['$id']
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['users']);
+        $this->assertCount(1, $response['body']['users']);
+
+        $this->assertEquals($response['body']['users'][0]['$id'], 'user1');
+    }
+
+    /**
+     * @depends testCreateUser
+     */
     public function testGetUser(array $data):array
     {
         /**
