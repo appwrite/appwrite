@@ -29,6 +29,7 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Stats\Stats;
 use Utopia\App;
 use Utopia\View;
 use Utopia\Config\Config;
@@ -76,18 +77,18 @@ const APP_SOCIAL_DISCORD = 'https://appwrite.io/discord';
 const APP_SOCIAL_DISCORD_CHANNEL = '564160730845151244';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite'; 
-// Creation Types
-const CREATE_TYPE_ATTRIBUTE = 'newAttribute';
-const CREATE_TYPE_INDEX = 'newIndex';
-// Deletion Types
-const DELETE_TYPE_ATTRIBUTE = 'attribute';
-const DELETE_TYPE_INDEX = 'index';
+// Database Worker Types
+const DATABASE_TYPE_CREATE_ATTRIBUTE = 'createAttribute';
+const DATABASE_TYPE_CREATE_INDEX = 'createIndex';
+const DATABASE_TYPE_DELETE_ATTRIBUTE = 'deleteAttribute';
+const DATABASE_TYPE_DELETE_INDEX = 'deleteIndex';
+// Deletes Worker Types
 const DELETE_TYPE_DOCUMENT = 'document';
 const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_CERTIFICATES = 'certificates';
-// Mail Types
+// Mail Worker Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_RECOVERY = 'recovery';
 const MAIL_TYPE_INVITATION = 'invitation';
@@ -291,6 +292,7 @@ $register->set('statsd', function () { // Register DB connection
 
     return $statsd;
 });
+
 $register->set('smtp', function () {
     $mail = new PHPMailer(true);
 
@@ -421,7 +423,7 @@ App::setResource('audits', function($register) {
 }, ['register']);
 
 App::setResource('usage', function($register) {
-    return new Event(Event::USAGE_QUEUE_NAME, Event::USAGE_CLASS_NAME);
+    return new Stats($register->get('statsd'));
 }, ['register']);
 
 App::setResource('mails', function($register) {

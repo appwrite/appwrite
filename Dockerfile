@@ -238,7 +238,6 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-deletes && \
     chmod +x /usr/local/bin/worker-functions && \
     chmod +x /usr/local/bin/worker-mails && \
-    chmod +x /usr/local/bin/worker-usage && \
     chmod +x /usr/local/bin/worker-webhooks
 
 # Letsencrypt Permissions

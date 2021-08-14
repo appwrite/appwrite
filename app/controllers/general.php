@@ -53,7 +53,6 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
                     'domain' => $domain->get(),
                 ]);
                 $certificate = $dbForConsole->createDocument('certificates', $certificate);
-                Authorization::enable();
 
                 Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in a few seconds...');
 
@@ -63,10 +62,11 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
                     'validateTarget' => false,
                     'validateCNAME' => false,
                 ]);
-            } else {
-                Authorization::enable(); // ensure authorization is reenabled
             }
+
             $domains[$domain->get()] = true;
+
+            Authorization::reset(); // ensure authorization is re-enabled
         }
         Config::setParam('domains', $domains);
     }
