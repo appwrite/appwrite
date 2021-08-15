@@ -101,7 +101,7 @@ class Stats
         $this->statsd->setNamespace($this->namespace);
 
         if ($httpRequest >= 1) {
-            $this->statsd->increment('requests.all' . $tags . ',method=' . \strtolower($httpMethod).',path='.$httpPath);
+            $this->statsd->increment('requests.all' . $tags . ',method=' . \strtolower($httpMethod) . ',path=' . str_replace(':', '*', $httpPath));
         }
 
         if ($functionExecution >= 1) {
