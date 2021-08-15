@@ -5,7 +5,6 @@ global $cli, $register;
 require_once __DIR__ . '/../init.php';
 
 use Utopia\App;
-use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Adapter\Redis;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -41,7 +40,7 @@ $cli
             }
         } while ($attempts < $max);
 
-        $cacheAdapter = new Cache(new None());
+        $cacheAdapter = new Cache(new Redis($redis));
         $dbForConsole = new Database(new MariaDB($db), $cacheAdapter);
         $dbForConsole->setNamespace('project_console_internal');
         $dbForProject = new Database(new MariaDB($db), $cacheAdapter);
@@ -89,7 +88,7 @@ function getLatestData(&$projects, &$latestData, $dbForProject, &$projectIds)
         $id = $project->getId();
         $projectIds[$id] = true;
         $dbForProject->setNamespace("project_{$id}_internal");
-        foreach (['requests', 'network', 'executions', 'database.reads', 'database.creates', 'database.updates', 'database.deletes'] as $metric) {
+        foreach (['requests', 'network', 'executions', 'database.reads'] as $metric) {
             $doc = $dbForProject->findOne('stats', [new Query("period", Query::TYPE_EQUAL, ["1d"]), new Query("metric", Query::TYPE_EQUAL, [$metric])], 0, ['time'], [Database::ORDER_DESC]);
             $latestData[$id][$metric]["1d"] = $doc ? $doc->getAttribute('time') : null;
             $doc = $dbForProject->findOne('stats', [new Query("period", Query::TYPE_EQUAL, ["30m"])], 0, ['time'], [Database::ORDER_DESC]);
@@ -113,8 +112,6 @@ function syncData($client, $projectId, &$latestData, $dbForProject)
             }
             syncMetric($database, $projectId, $period, 'requests', $start, $end, $dbForProject);
         }
-        // syncMetric($database, $projectId, $period, 'network', $start, $end, $dbForProject);
-        // syncMetric($database, $projectId, $period, 'executions', $start, $end, $dbForProject);
         syncMetricPaths($database, $projectId, $period, $start, $end, $dbForProject);
     }
 
@@ -124,7 +121,7 @@ function syncMetricPaths($database, $projectId, $period, $start, $end, $dbForPro
 {
     $start = DateTime::createFromFormat('U', \strtotime($period == '1d' ? '-7 days' : '-24 hours'))->format(DateTime::RFC3339);
     if (!empty($latestData[$projectId]['database'][$period])) {
-        $start = DateTime::createFromFormat('U', $latestData[$projectId]['database'][$period])->format(DateTime::RFC3339);
+        $start = DateTime::createFromFormat('U', $latestData[$projectId]['database.reads'][$period])->format(DateTime::RFC3339);
     }
     $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_requests_all" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' AND "project"=\'' . $projectId . '\'GROUP BY time(' . $period . '), "path", "method" FILL(null)');
     $points = $result->getPoints();
@@ -216,7 +213,7 @@ function syncMetricPaths($database, $projectId, $period, $start, $end, $dbForPro
             }
         }
     }
-    $latestData[$projectId]['database'][$period] = $time;
+    $latestData[$projectId]['database.reads'][$period] = $time;
 }
 
 function syncMetric($database, $projectId, $period, $metric, $start, $end, $dbForProject)
