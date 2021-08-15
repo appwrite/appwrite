@@ -56,7 +56,7 @@ $logs = $this->getParam('logs', null);
                         <p class="margin-bottom-no">Add your first document to get started</p>
                     </div>
 
-                    <div xdata-ls-if="({{project-documents.sum}})" class="margin-top-negative">
+                    <div data-ls-if="({{project-documents.sum}})" class="margin-top-negative">
                         <div class="margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-documents.sum}}"></span> documents found</div>
 
                         <div class="box margin-bottom y-scroll text-size-small">
@@ -90,7 +90,8 @@ $logs = $this->getParam('logs', null);
                             data-param-collection-id="{{router.params.id}}"
                             data-param-search="{{router.params.search}}"
                             data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                            data-param-order-type="DESC"
+                            data-param-order-types="DESC"
+                            data-param-order-types-cast-to="array"
                             data-scope="sdk"
                             data-name="project-documents"
                             data-success="state"
@@ -106,7 +107,8 @@ $logs = $this->getParam('logs', null);
                             data-param-collection-id="{{router.params.id}}"
                             data-param-search="{{router.params.search}}"
                             data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                            data-param-order-type="DESC"
+                            data-param-order-types="DESC"
+                            data-param-order-types-cast-to="array"
                             data-scope="sdk"
                             data-name="project-documents"
                             data-success="state"
@@ -115,9 +117,13 @@ $logs = $this->getParam('logs', null);
                         </form>
                     </div>
 
-                    <a data-ls-attrs="href=/console/database/document?collection={{router.params.id}}&project={{router.params.project}}&buster={{project-collection.dateUpdated}}" class="button">
+                    <a data-ls-if="0 < {{project-collection.attributes.length}}" data-ls-attrs="href=/console/database/document?collection={{router.params.id}}&project={{router.params.project}}&buster={{project-collection.dateUpdated}}" class="button">
                         Add Document
                     </a>
+
+                    <button disabled data-ls-if="!{{project-collection.attributes.length}}">
+                        Add Document
+                    </button >
                 </div>
             </li>
             <li data-state="/console/database/collection/attributes?id={{router.params.id}}&project={{router.params.project}}">
@@ -371,6 +377,9 @@ $logs = $this->getParam('logs', null);
                 <h2>Activity <span class="badge" data-ls-bind="{{project-collection-logs.logs.length}}"></span></h2>
 
                 <?php echo $logs->render(); ?>                
+            </li>
+            <li data-state="/console/database/collection/usage?id={{router.params.id}}&project={{router.params.project}}">
+                <h2>Usage</h2>
             </li>
             <li data-state="/console/database/collection/settings?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Settings</h2>

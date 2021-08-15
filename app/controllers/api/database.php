@@ -1211,11 +1211,9 @@ App::get('/v1/database/collections/:collectionId/documents')
             }
         }
 
-        $documents = $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $afterDocument ?? null);
-
         $response->dynamic(new Document([
-            'sum' => \count($documents),
-            'documents' => $documents,
+            'sum' => $dbForExternal->count($collectionId, $queries, APP_LIMIT_COUNT),
+            'documents' => $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $afterDocument ?? null),
         ]), Response::MODEL_DOCUMENT_LIST);
     });
 
