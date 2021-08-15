@@ -21,7 +21,7 @@ $cli
         Console::title('Usage Sync V1');
         Console::success(APP_NAME . ' usage sync process v1 has started');
 
-        $interval = (int) App::getEnv('_APP_USAGE_SYNC_INTERVAL', '30'); //30 seconds
+        $interval = (int) App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '30'); //30 seconds
         $attempts = 0;
         $max = 10;
         $sleep = 1;
