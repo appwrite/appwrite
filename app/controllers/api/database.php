@@ -1,8 +1,10 @@
 <?php
 
+use Appwrite\Utopia\Response;
 use Appwrite\Database\Validator\CustomId;
 use Utopia\App;
 use Utopia\Exception;
+use Utopia\Audit\Audit;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
 use Utopia\Validator\Integer;
@@ -11,6 +13,9 @@ use Utopia\Validator\WhiteList;
 use Utopia\Validator\Text;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\QueryValidator;
@@ -18,13 +23,9 @@ use Utopia\Database\Validator\Queries as QueriesValidator;
 use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\UID;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Structure as StructureException;
-use Appwrite\Utopia\Response;
 use DeviceDetector\DeviceDetector;
-use Utopia\Audit\Audit;
-use Utopia\Database\Database;
-use Utopia\Database\Document;
-use Utopia\Database\Query;
 
 $attributesCallback = function ($attribute, $response, $dbForExternal, $database, $audits) {
     /** @var Utopia\Database\Document $document*/
@@ -85,7 +86,7 @@ $attributesCallback = function ($attribute, $response, $dbForExternal, $database
         }
     }
 
-    $success = $dbForExternal->addAttributeInQueue($collectionId, $attributeId, $type, $size, $required, $default, $signed, $array, $format, $filters);
+    $dbForExternal->addAttributeInQueue($collectionId, $attributeId, $type, $size, $required, $default, $signed, $array, $format, $filters);
 
     // Database->addAttributeInQueue() does not return a document
     // So we need to create one for the response
@@ -916,7 +917,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
             $lengths[$key] = ($attributeType === Database::VAR_STRING) ? $attributeSize : null;
         }
 
-        $success = $dbForExternal->addIndexInQueue($collectionId, $indexId, $type, $attributes, $lengths, $orders);
+        $dbForExternal->addIndexInQueue($collectionId, $indexId, $type, $attributes, $lengths, $orders);
 
         // Database->createIndex() does not return a document
         // So we need to create one for the response
@@ -1141,7 +1142,8 @@ App::post('/v1/database/collections/:collectionId/documents')
 
         try {
             $document = $dbForExternal->createDocument($collectionId, new Document($data));
-        } catch (StructureException $exception) {
+        }
+        catch (StructureException $exception) {
             throw new Exception($exception->getMessage(), 400);
         }
 
@@ -1307,11 +1309,13 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
 
         try {
             $document = $dbForExternal->updateDocument($collection->getId(), $document->getId(), new Document($data));
-        } catch (AuthorizationException $exception) {
+        }
+        catch (AuthorizationException $exception) {
             throw new Exception('Unauthorized permissions', 401);
-        } catch (StructureException $exception) {
+        }
+        catch (StructureException $exception) {
             throw new Exception('Bad structure. '.$exception->getMessage(), 400);
-        } 
+        }
 
         $audits
             ->setParam('event', 'database.documents.update')
@@ -1357,7 +1361,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
             throw new Exception('No document found', 404);
         }
 
-        $success = $dbForExternal->deleteDocument($collectionId, $documentId);
+        $dbForExternal->deleteDocument($collectionId, $documentId);
 
         $events
             ->setParam('eventData', $response->output($document, Response::MODEL_DOCUMENT))

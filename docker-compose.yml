@@ -124,6 +124,10 @@ services:
       - _APP_FUNCTIONS_RUNTIMES
       - _APP_STATSD_HOST
       - _APP_STATSD_PORT
+      - _APP_MAINTENANCE_INTERVAL
+      - _APP_MAINTENANCE_RETENTION_EXECUTION
+      - _APP_MAINTENANCE_RETENTION_ABUSE
+      - _APP_MAINTENANCE_RETENTION_AUDIT
 
   appwrite-worker-audits:
     entrypoint: worker-audits

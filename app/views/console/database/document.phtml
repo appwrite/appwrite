@@ -2,7 +2,7 @@
     data-service="database.getCollection"
     data-param-collection-id="{{router.params.collection}}"
     data-scope="sdk"
-    data-event="load,database.updateCollection"
+    data-event="load,database.updateDocument"
     data-name="project-collection">
     
     <div
@@ -10,7 +10,7 @@
         data-param-collection-id="{{router.params.collection}}"
         data-param-document-id="{{router.params.id}}"
         data-scope="sdk"
-        data-event="load,database.updateDocument"
+        data-event="load"
         data-name="project-document"
         data-success="default">
 
@@ -40,7 +40,7 @@
         <div class="zone xl margin-bottom-no">
             <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
                 <li data-state="/console/database/document?id={{router.params.id}}&collection={{router.params.collection}}&project={{router.params.project}}">
-                    <h2>Update</h2>
+                    <h2>Overview</h2>
 
                     <div class="row responsive margin-top-negative">
                         <div class="col span-8 margin-bottom">
@@ -54,17 +54,32 @@
                                 data-name="project-document"
                                 data-scope="sdk"
                                 data-event="submit"
-                                data-success="alert,trigger{{|documentSuccess}}"
+                                data-success="alert,trigger"
                                 data-success-param-alert-text="Updated document successfully"
                                 data-success-param-trigger-events="database.updateDocument"
-                                data-success-param-redirect-url="/console/database/document?id={{serviceData.$id}}&collection={{router.params.collection}}&project={{router.params.project}}"
                                 data-failure="alert"
                                 data-failure-param-alert-text="Failed to update document"
                                 data-failure-param-alert-classname="error">
+                                
+                                <input type="hidden" name="collectionId" data-ls-bind="{{project-collection.$id}}" />
+                                <input type="hidden" name="documentId" data-ls-bind="{{project-document.$id}}" />
 
                                 <label>&nbsp;</label>
 
                                 <div class="box">
+                                    <fieldset name="data" data-cast-to="object">                            
+                                        <ul data-ls-loop="project-collection.attributes" data-ls-as="attribute">
+                                            <li>
+                                                <label>
+                                                    <div data-ls-bind="{{attribute.$id}}" class="margin-bottom-tiny"></div>
+                                                    <div data-ls-if="{{attribute.required}}" class="text-size-xs text-danger text-fade">required</div>
+                                                    <div data-ls-if="!{{attribute.required}}" class="text-size-xs text-fade">optional</div>
+                                                </label>
+                                                <textarea data-ls-attrs="name={{attribute.$id}}" data-ls-bind="{{project-document|documentAttribute}}"></textarea>
+                                            </li>
+                                        </ul>
+                                    </fieldset>
+
                                     <div class="toggle margin-bottom" data-ls-ui-open data-button-aria="Open Permissions">
                                         <i class="icon-plus pull-end margin-top-tiny"></i>
                                         <i class="icon-minus pull-end margin-top-tiny"></i>
@@ -72,11 +87,11 @@
                                         <h3 class="margin-bottom-large">Permissions</h3>
 
                                         <label for="collection-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
-                                        <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-document.$permissions.read}}" placeholder="User ID, Team ID or Role" />
+                                        <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-document.$read}}" placeholder="User ID, Team ID or Role" />
                                         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
 
                                         <label for="collection-write">Write Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                                        <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-document.$permissions.write}}" placeholder="User ID, Team ID or Role" />
+                                        <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-document.$write}}" placeholder="User ID, Team ID or Role" />
                                         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
                                     </div>
 

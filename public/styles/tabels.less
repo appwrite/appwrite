@@ -19,6 +19,16 @@ table {
     }
   }
 
+  &.borders {
+    td, th {
+      .func-border-end(1px, var(--config-border-fade-super));
+
+      &:last-child{
+        border: none;
+      }
+    }
+  }
+
   thead {
     box-shadow: 0 0 2px rgba(0,0,0,.25);
     border-bottom: solid 1px var(--config-color-fade-super);
@@ -101,10 +111,6 @@ table {
 
     &:first-child {
       .func-padding-start(30px);
-    }
-
-    &:last-child {
-      .func-padding-end(30px);
     }
   }
 

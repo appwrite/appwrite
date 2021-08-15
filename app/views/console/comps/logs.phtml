@@ -1,3 +1,6 @@
+<?php
+$interval = floor((int)$this->getParam('interval', 0) / 86400);
+?>
 <div
     data-service="database.listCollectionLogs"
     data-param-collection-id="{{router.params.id}}"
@@ -6,7 +9,13 @@
     data-name="project-collection-logs">
 
     <div class="box margin-bottom">
-        <table class="vertical small">
+        <div data-ls-if="0 == {{project-collection-logs.logs.length}}">
+            <h3 class="margin-bottom-small text-bold">No Logs Found</h3>
+
+            <p class="margin-bottom-no">Logs are retained for <?php echo $this->escape($interval); ?> days.</p>
+        </div>
+
+        <table class="vertical small" data-ls-if="0 != {{project-collection-logs.logs.length}}">
             <thead>
                 <tr>
                     <th width="120">Date</th>

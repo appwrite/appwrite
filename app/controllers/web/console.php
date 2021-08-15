@@ -215,6 +215,11 @@ App::get('/console/database/collection')
         /** @var Utopia\View $layout */
 
         $logs = new View(__DIR__.'/../../views/console/comps/logs.phtml');
+
+        $logs
+            ->setParam('interval', App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 0))
+        ;
+
         $page = new View(__DIR__.'/../../views/console/database/collection.phtml');
         
         $page->setParam('logs', $logs);

@@ -263,6 +263,24 @@ window.ls.filter
     }
     return output.slice(0, -2);
   })
+  .add("collectionAttributes", function($value) {
+    if(!Array.isArray($value)) {
+      return [];
+    }
+
+    $value.unshift({
+      $id: '$id'
+    });
+
+    return $value;
+  })
+  .add("documentAttribute", function($value, attribute) {
+    if($value[attribute.$id]) {
+      return $value[attribute.$id];
+    }
+    
+    return null;
+  })
 ;
 
 function abbreviate(number, maxPlaces, forcePlaces, forceLetter) {

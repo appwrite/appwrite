@@ -45,7 +45,8 @@ $logs = $this->getParam('logs', null);
                     data-param-search="{{router.params.search}}"
                     data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                     data-param-offset="{{router.params.offset}}"
-                    data-param-order-type="DESC"
+                    data-param-order-types="DESC"
+                    data-param-order-types-cast-to="array"
                     data-scope="sdk"
                     data-name="project-documents">
 
@@ -55,19 +56,27 @@ $logs = $this->getParam('logs', null);
                         <p class="margin-bottom-no">Add your first document to get started</p>
                     </div>
 
-                    <div data-ls-if="({{project-documents.sum}})">
+                    <div xdata-ls-if="({{project-documents.sum}})" class="margin-top-negative">
                         <div class="margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-documents.sum}}"></span> documents found</div>
 
-                        <div class="box margin-bottom y-scroll">
-                            <table class="vertical">
+                        <div class="box margin-bottom y-scroll text-size-small">
+                            <table class="vertical borders">
                                 <thead>
-                                    <tr>
-                                        <td>UID</td>
+                                    <tr data-ls-loop="project-collection.attributes" data-ls-as="attribute" data-ls-prefix="template-attribute-title-first" data-ls-limit="20">
+                                        <td style="width: 170px">
+                                            <i data-ls-attrs="class=pull-end icon-{{attribute.type}} text-size-xs"></i>
+                                            <span class="text-bold" data-ls-bind="{{attribute.$id}}"></span>
+                                            <span class="text-size-small" data-ls-if="{{attribute.array}}">[]</span>
+                                        </td>
                                     </tr>
                                 </thead>
                                 <tbody data-ls-loop="project-documents.documents" data-ls-as="node">
-                                    <tr>
-                                        <td>42343</td>
+                                    <tr data-ls-loop="project-collection.attributes" data-ls-as="attribute" data-ls-prefix="template-attribute-body-first" data-ls-limit="20">
+                                        <td data-ls-attrs="data-title={{attribute.$id}}: ">
+                                            <!-- <a href="" target="_blank" rel="noopener" class="pull-end margin-start"><i class="icon-link-ext"></i></a> -->
+                                            <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection={{router.params.id}}&project={{router.params.project}}"><span data-ls-bind="{{node|documentAttribute}}"></span></a>
+                                            <span data-ls-if="!{{node|documentAttribute}}" class="text-fade">n/a</span>
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -124,8 +133,9 @@ $logs = $this->getParam('logs', null);
                     <table class="vertical" data-ls-if="0 < {{project-collection.attributes.length}} || 0 < {{project-collection.attributesInQueue.length}}">
                         <thead>
                             <tr>
-                                <th width="120"></th>
-                                <th width="140">Attribute ID</th>
+                                <th width="30"></th>
+                                <th width="80"></th>
+                                <th width="130">Attribute ID</th>
                                 <th width="100">Type</th>
                                 <th width="180">Default</th>
                                 <th></th>
@@ -134,8 +144,11 @@ $logs = $this->getParam('logs', null);
                         </thead>
                         <tbody data-ls-loop="project-collection.attributes" data-ls-as="attribute">
                             <tr>
+                                <td>
+                                    <i data-ls-attrs="class=icon-{{attribute.type}}"></i>
+                                </td>
                                 <td data-title="Status">
-                                    <span class="text-size-small text-success"><i class="icon-ok-circled"></i> Available&nbsp;</span>
+                                    <span class="text-size-small text-success">available&nbsp;</span>
                                 </td>
 
                                 <td data-title="Attribute ID: ">
@@ -153,7 +166,7 @@ $logs = $this->getParam('logs', null);
                                 </td>
 
                                 <td data-title="">
-                                    <span class="text-size-small text-danger" data-ls-if="{{attribute.required}}">Required *</span>
+                                    <span class="text-size-small text-danger" data-ls-if="{{attribute.required}}">required</span>
                                 </td>
 
                                 <td data-title="">
@@ -190,11 +203,14 @@ $logs = $this->getParam('logs', null);
                     <table class="vertical" data-ls-if="0 < {{project-collection.attributesInQueue.length}}">
                         <tbody data-ls-loop="project-collection.attributesInQueue" data-ls-as="attribute">
                             <tr>
-                                <td width="120" data-title="Status">
-                                    <span class="text-size-small text-info"><i class="icon-dot-circled"></i> Creating&nbsp;</span>
+                                <td width="30">
+                                    <i data-ls-attrs="class=icon-{{attribute.type}}"></i>
+                                </td>
+                                <td width="80" data-title="Status">
+                                    <span class="text-size-small text-info">creating&nbsp;</span>
                                 </td>
 
-                                <td width="140" data-title="Attribute ID: ">
+                                <td width="130" data-title="Attribute ID: ">
                                     <span class="text-size-small" data-ls-bind="{{attribute.$id}}"></span><span class="text-size-small" data-ls-if="{{attribute.size}}" data-ls-bind=" ({{attribute.size}})"></span>
                                 </td>
 
@@ -209,7 +225,7 @@ $logs = $this->getParam('logs', null);
                                 </td>
 
                                 <td data-title="">
-                                    <span class="text-size-small text-danger" data-ls-if="{{attribute.required}}">Required *</span>
+                                    <span class="text-size-small text-danger" data-ls-if="{{attribute.required}}">required</span>
                                 </td>
                             </tr>
                         </tbody>
@@ -246,8 +262,9 @@ $logs = $this->getParam('logs', null);
                     <table class="vertical multi-line" data-ls-if="0 < {{project-collection.indexes.length}} || 0 < {{project-collection.indexesInQueue.length}}">
                         <thead>
                             <tr>
-                                <th width="120"></th>
-                                <th width="140">Index ID</th>
+                                <th width="30"></th>
+                                <th width="80"></th>
+                                <th width="130">Index ID</th>
                                 <th width="100">Type</th>
                                 <th width="180">Attributes</th>
                                 <th></th>
@@ -256,8 +273,12 @@ $logs = $this->getParam('logs', null);
                         </thead>
                         <tbody data-ls-loop="project-collection.indexes" data-ls-as="index">
                             <tr>
+                                <td>
+                                    <i class="icon-key"></i>
+                                </td>
+
                                 <td data-title="Status">
-                                    <span class="text-size-small text-success"><i class="icon-ok-circled"></i> Available&nbsp;</span>
+                                    <span class="text-size-small text-success">available</span>
                                 </td>
 
                                 <td data-title="Index ID: ">
@@ -274,7 +295,7 @@ $logs = $this->getParam('logs', null);
                                 </td>
 
                                 <td data-title="">
-                                    <span class="text-size-small text-danger" data-ls-if="{{index.required}}">Required *</span>
+                                    <span class="text-size-small text-danger" data-ls-if="{{index.required}}">required</span>
                                 </td>
 
                                 <td data-title="">
@@ -297,7 +318,7 @@ $logs = $this->getParam('logs', null);
 
                                         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                                         <input type="hidden" name="collectionId" data-ls-bind="{{project-collection.$id}}" />
-                                        <input type="hidden" name="attributeId" data-ls-bind="{{attribute.$id}}" />
+                                        <input type="hidden" name="indexId" data-ls-bind="{{index.$id}}" />
 
                                         <button class="danger small">Delete</button>
                                     </form>
@@ -311,11 +332,15 @@ $logs = $this->getParam('logs', null);
                     <table class="vertical multi-line" data-ls-if="0 < {{project-collection.indexesInQueue.length}}">
                         <tbody data-ls-loop="project-collection.indexesInQueue" data-ls-as="index">
                             <tr>
-                                <td width="120" data-title="Status">
-                                    <span class="text-size-small text-info"><i class="icon-dot-circled"></i> Creating&nbsp;</span>
+                                <td width="30">
+                                    <i class="icon-key"></i>
                                 </td>
 
-                                <td width="140" data-title="Index ID: ">
+                                <td width="80" data-title="Status">
+                                    <span class="text-size-small text-info">creating</span>
+                                </td>
+
+                                <td width="130" data-title="Index ID: ">
                                     <span class="text-size-small" data-ls-bind="{{index.$id}}"></span><span class="text-size-small" data-ls-if="{{index.size}}" data-ls-bind="({{index.size}})"></span>
                                 </td>
 
@@ -329,7 +354,7 @@ $logs = $this->getParam('logs', null);
                                 </td>
 
                                 <td data-title="">
-                                    <span class="text-size-small text-danger" data-ls-if="{{index.required}}">Required *</span>
+                                    <span class="text-size-small text-danger" data-ls-if="{{index.required}}">required</span>
                                 </td>
 
                                 <td width="80" data-title="">
@@ -362,10 +387,9 @@ $logs = $this->getParam('logs', null);
                             data-scope="sdk"
                             data-event="submit"
                             data-param-collection-id="{{router.params.id}}"
-                            data-success="alert,trigger,redirect"
+                            data-success="alert,trigger"
                             data-success-param-alert-text="Updated collection successfully"
                             data-success-param-trigger-events="database.updateCollection"
-                            data-success-param-redirect-url="/console/database/collection/settings?id={{serviceData.$id}}&project={{router.params.project}}"
                             data-failure="alert"
                             data-failure-param-alert-text="Failed to update collection"
                             data-failure-param-alert-classname="error">
@@ -635,3 +659,11 @@ $logs = $this->getParam('logs', null);
     data-scope="sdk"
     data-name="project-collections">
 </div>
+
+<script type="text/html" id="template-attribute-title-first">
+    <i data-ls-attrs="class=pull-end icon-key text-size-xs"></i>
+    <span class="text-bold">$id</span>
+</script>
+<script type="text/html" id="template-attribute-body-first">
+    <span class="text-fade" data-ls-bind="{{node.$id}}" data-general-copy data-class="icon-docs note copy text-fade pull-end"></span>
+</script>
