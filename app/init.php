@@ -78,18 +78,18 @@ const APP_SOCIAL_DISCORD = 'https://appwrite.io/discord';
 const APP_SOCIAL_DISCORD_CHANNEL = '564160730845151244';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite'; 
-// Creation Types
-const CREATE_TYPE_ATTRIBUTE = 'newAttribute';
-const CREATE_TYPE_INDEX = 'newIndex';
-// Deletion Types
-const DELETE_TYPE_ATTRIBUTE = 'attribute';
-const DELETE_TYPE_INDEX = 'index';
+// Database Worker Types
+const DATABASE_TYPE_CREATE_ATTRIBUTE = 'createAttribute';
+const DATABASE_TYPE_CREATE_INDEX = 'createIndex';
+const DATABASE_TYPE_DELETE_ATTRIBUTE = 'deleteAttribute';
+const DATABASE_TYPE_DELETE_INDEX = 'deleteIndex';
+// Deletes Worker Types
 const DELETE_TYPE_DOCUMENT = 'document';
 const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_CERTIFICATES = 'certificates';
-// Mail Types
+// Mail Worker Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_RECOVERY = 'recovery';
 const MAIL_TYPE_INVITATION = 'invitation';

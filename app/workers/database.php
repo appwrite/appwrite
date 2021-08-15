@@ -26,22 +26,22 @@ class DatabaseV1 extends Worker
         Authorization::disable();
         
         switch (strval($type)) {
-            case CREATE_TYPE_ATTRIBUTE:
+            case DATABASE_TYPE_CREATE_ATTRIBUTE:
                 $attribute = $this->args['document'] ?? '';
                 $attribute = new Document($attribute);
                 $this->createAttribute($attribute, $projectId);
                 break;
-            case DELETE_TYPE_ATTRIBUTE:
+            case DATABASE_TYPE_DELETE_ATTRIBUTE:
                 $attribute = $this->args['document'] ?? '';
                 $attribute = new Document($attribute);
                 $this->deleteAttribute($attribute, $projectId);
                 break;
-            case CREATE_TYPE_INDEX:
+            case DATABASE_TYPE_CREATE_INDEX:
                 $index = $this->args['document'] ?? '';
                 $index = new Document($index);
                 $this->createIndex($index, $projectId);
                 break;
-            case DELETE_TYPE_INDEX:
+            case DATABASE_TYPE_DELETE_INDEX:
                 $index = $this->args['document'] ?? '';
                 $index = new Document($index);
                 $this->deleteIndex($index, $projectId);

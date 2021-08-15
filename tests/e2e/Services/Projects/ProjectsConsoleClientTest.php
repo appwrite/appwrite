@@ -63,7 +63,7 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        
+
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -97,6 +97,60 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals($id, $response['body']['projects'][0]['$id']);
         $this->assertEquals('Project Test', $response['body']['projects'][0]['name']);
 
+        /**
+         * Test after pagination
+         */
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => 'unique()',
+            'name' => 'Project Test 2',
+        ]);
+
+        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals('Project Test 2', $team['body']['name']);
+        $this->assertNotEmpty($team['body']['$id']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => 'unique()',
+            'name' => 'Project Test 2',
+            'teamId' => $team['body']['$id'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals('Project Test 2', $response['body']['name']);
+        $this->assertEquals($team['body']['$id'], $response['body']['teamId']);
+        $this->assertArrayHasKey('platforms', $response['body']);
+        $this->assertArrayHasKey('webhooks', $response['body']);
+        $this->assertArrayHasKey('keys', $response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertCount(2, $response['body']['projects']);
+        $this->assertEquals('Project Test', $response['body']['projects'][0]['name']);
+        $this->assertEquals('Project Test 2', $response['body']['projects'][1]['name']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()),[
+            'after' => $response['body']['projects'][0]['$id']
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertCount(1, $response['body']['projects']);
+        $this->assertEquals('Project Test 2', $response['body']['projects'][0]['name']);
         /**
          * Test for FAILURE
          */

@@ -43,15 +43,18 @@ trait DatabaseBase
             'required' => true,
         ]);
 
+        sleep(2);
+
         $releaseYear = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/attributes/integer', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'attributeId' => 'releaseYear',
-            'size' => 0,
             'required' => true,
         ]);
+
+        sleep(2);
 
         $actors = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
@@ -61,7 +64,6 @@ trait DatabaseBase
             'attributeId' => 'actors',
             'size' => 256,
             'required' => false,
-            'default' => null,
             'array' => true,
         ]);
 
@@ -88,7 +90,7 @@ trait DatabaseBase
         $this->assertEquals($actors['body']['array'], true);
 
         // wait for database worker to create attributes
-        sleep(10);
+        sleep(5);
 
         $movies = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'], array_merge([
             'content-type' => 'application/json',
@@ -120,7 +122,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'id' => 'titleIndex',
+            'indexId' => 'titleIndex',
             'type' => 'fulltext',
             'attributes' => ['title'],
         ]);
@@ -290,6 +292,115 @@ trait DatabaseBase
         $this->assertEquals(2017, $documents['body']['documents'][1]['releaseYear']);
         $this->assertEquals(2019, $documents['body']['documents'][0]['releaseYear']);
         $this->assertCount(3, $documents['body']['documents']);
+
+        return [];
+    }
+
+    /**
+     * @depends testCreateDocument
+     */
+    public function testListDocumentsAfterPagination(array $data):array
+    {
+        /**
+         * Test after without order.
+         */
+        $base = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals('Captain America', $base['body']['documents'][0]['title']);
+        $this->assertEquals('Spider-Man: Far From Home', $base['body']['documents'][1]['title']);
+        $this->assertEquals('Spider-Man: Homecoming', $base['body']['documents'][2]['title']);
+        $this->assertCount(3, $base['body']['documents']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'after' => $base['body']['documents'][0]['$id']
+        ]);
+
+        $this->assertEquals($base['body']['documents'][1]['$id'], $documents['body']['documents'][0]['$id']);
+        $this->assertEquals($base['body']['documents'][2]['$id'], $documents['body']['documents'][1]['$id']);
+        $this->assertCount(2, $documents['body']['documents']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'after' => $base['body']['documents'][2]['$id']
+        ]);
+
+        $this->assertEmpty($documents['body']['documents']);
+
+        /**
+         * Test with ASC order and after.
+         */
+        $base = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'orderAttributes' => ['releaseYear'],
+            'orderTypes' => ['ASC'],
+        ]);
+
+        $this->assertEquals(1944, $base['body']['documents'][0]['releaseYear']);
+        $this->assertEquals(2017, $base['body']['documents'][1]['releaseYear']);
+        $this->assertEquals(2019, $base['body']['documents'][2]['releaseYear']);
+        $this->assertCount(3, $base['body']['documents']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'orderAttributes' => ['releaseYear'],
+            'orderTypes' => ['ASC'],
+            'after' => $base['body']['documents'][1]['$id']
+        ]);
+
+        $this->assertEquals($base['body']['documents'][2]['$id'], $documents['body']['documents'][0]['$id']);
+        $this->assertCount(1, $documents['body']['documents']);
+
+        /**
+         * Test with DESC order and after.
+         */
+        $base = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'orderAttributes' => ['releaseYear'],
+            'orderTypes' => ['DESC'],
+        ]);
+
+        $this->assertEquals(1944, $base['body']['documents'][2]['releaseYear']);
+        $this->assertEquals(2017, $base['body']['documents'][1]['releaseYear']);
+        $this->assertEquals(2019, $base['body']['documents'][0]['releaseYear']);
+        $this->assertCount(3, $base['body']['documents']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'orderAttributes' => ['releaseYear'],
+            'orderTypes' => ['DESC'],
+            'after' => $base['body']['documents'][1]['$id']
+        ]);
+
+        $this->assertEquals($base['body']['documents'][2]['$id'], $documents['body']['documents'][0]['$id']);
+        $this->assertCount(1, $documents['body']['documents']);
+
+        /**
+         * Test after with unknown document.
+         */
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'after' => 'unknown'
+        ]);
+
+        $this->assertEquals($documents['headers']['status-code'], 400);
 
         return [];
     }
@@ -645,7 +756,7 @@ trait DatabaseBase
         // $this->assertEquals('Minimum value must be lesser than maximum value', $invalidRange['body']['message']);
 
         // wait for worker to add attributes
-        sleep(10);
+        sleep(15);
 
         $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
@@ -654,7 +765,7 @@ trait DatabaseBase
         ]), []); 
 
         $this->assertCount(7, $collection['body']['attributes']);
-        $this->assertCount(0, $collection['body']['attributesInQueue']);
+        // $this->assertCount(0, $collection['body']['attributesInQueue']);
 
         /**
          * Test for successful validation

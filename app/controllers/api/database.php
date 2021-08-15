@@ -106,7 +106,7 @@ $attributesCallback = function ($attribute, $response, $dbForExternal, $database
     ]);
 
     $database
-        ->setParam('type', CREATE_TYPE_ATTRIBUTE)
+        ->setParam('type', DATABASE_TYPE_CREATE_ATTRIBUTE)
         ->setParam('document', $attribute)
     ;
 
@@ -182,17 +182,26 @@ App::get('/v1/database/collections')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 40000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('after', '', new UID(), 'ID of the collection used as the starting point for the query, excluding the collection itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForExternal')
-    ->action(function ($search, $limit, $offset, $orderType, $response, $dbForExternal) {
+    ->action(function ($search, $limit, $offset, $after, $orderType, $response, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal */
 
         $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
 
+        if (!empty($after)) {
+            $afterCollection = $dbForExternal->getDocument('collections', $after);
+
+            if ($afterCollection->isEmpty()) {
+                throw new Exception("Collection '{$after}' for the 'after' value not found.", 400);
+            }
+        }
+
         $response->dynamic(new Document([
-            'collections' => $dbForExternal->find(Database::COLLECTIONS, $queries, $limit, $offset, ['_id'], [$orderType]),
+            'collections' => $dbForExternal->find(Database::COLLECTIONS, $queries, $limit, $offset, [], [$orderType], $afterCollection ?? null),
             'sum' => $dbForExternal->count(Database::COLLECTIONS, $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_COLLECTION_LIST);
     });
@@ -717,24 +726,24 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
             throw new Exception('Collection not found', 404);
         }
 
-        $attributes = $collection->getAttributes();
+        /** @var Document[] $attributes */
+        $attributes = $collection->getAttribute('attributes');
 
-        // Search for attribute
-        $attributeIndex = array_search($attributeId, array_column($attributes, '$id'));
+        // find attribute in collection
+        $attribute = null;
+        foreach ($attributes as $a) {
+            if ($a->getId() === $attributeId) {
+                $attribute = $a->setAttribute('$collection', $collectionId); // set the collectionId
+                break; // break once attribute is found
+            }
+        }
 
-        if ($attributeIndex === false) {
+        if (\is_null($attribute)) {
             throw new Exception('Attribute not found', 404);
         }
 
-        $attribute = new Document([\array_merge($attributes[$attributeIndex], [
-            'collectionId' => $collectionId,
-        ])]);
-
-        $type = $attribute->getAttribute('type', '');
-        $format = $attribute->getAttribute('format', '');
-
         $database
-            ->setParam('type', DELETE_TYPE_ATTRIBUTE)
+            ->setParam('type', DATABASE_TYPE_DELETE_ATTRIBUTE)
             ->setParam('document', $attribute)
         ;
 
@@ -764,7 +773,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_INDEX)
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
-    ->param('id', null, new Key(), 'Index ID.')
+    ->param('indexId', null, new Key(), 'Index ID.')
     ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE, Database::INDEX_SPATIAL, Database::INDEX_ARRAY]), 'Index type.')
     ->param('attributes', null, new ArrayList(new Key()), 'Array of attributes to index.')
     ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, Database::VAR_STRING)), 'Array of index orders.', true)
@@ -772,7 +781,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
     ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $id, $type, $attributes, $orders, $response, $dbForExternal, $database, $audits) {
+    ->action(function ($collectionId, $indexId, $type, $attributes, $orders, $response, $dbForExternal, $database, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Event\Event $database */
@@ -808,7 +817,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
             $lengths[$key] = ($attributeType === Database::VAR_STRING) ? $attributeSize : null;
         }
 
-        $success = $dbForExternal->addIndexInQueue($collectionId, $id, $type, $attributes, $lengths, $orders);
+        $success = $dbForExternal->addIndexInQueue($collectionId, $indexId, $type, $attributes, $lengths, $orders);
 
         // Database->createIndex() does not return a document
         // So we need to create one for the response
@@ -816,7 +825,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
         // TODO@kodumbeats should $lengths be a part of the response model?
         $index = new Document([
             '$collection' => $collectionId,
-            '$id' => $id,
+            '$id' => $indexId,
             'type' => $type,
             'attributes' => $attributes,
             'lengths' => $lengths,
@@ -824,7 +833,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
         ]);
 
         $database
-            ->setParam('type', CREATE_TYPE_INDEX)
+            ->setParam('type', DATABASE_TYPE_CREATE_INDEX)
             ->setParam('document', $index)
         ;
 
@@ -949,21 +958,24 @@ App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
             throw new Exception('Collection not found', 404);
         }
 
+        /** @var Document[] $indexes */
         $indexes = $collection->getAttribute('indexes');
 
-        // // Search for index
-        $indexIndex = array_search($indexId, array_column($indexes, '$id'));
+        // find attribute in collection
+        $index= null;
+        foreach ($indexes as $i) {
+            if ($i->getId() === $indexId) {
+                $index = $i->setAttribute('$collection', $collectionId); // set the collectionId
+                break; // break once index is found
+            }
+        }
 
-        if ($indexIndex === false) {
+        if (\is_null($index)) {
             throw new Exception('Index not found', 404);
         }
 
-        $index = new Document([\array_merge($indexes[$indexIndex], [
-            'collectionId' => $collectionId,
-        ])]);
-
         $database
-            ->setParam('type', DELETE_TYPE_INDEX)
+            ->setParam('type', DATABASE_TYPE_DELETE_INDEX)
             ->setParam('document', $index)
         ;
 
@@ -1059,12 +1071,12 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->param('queries', [], new ArrayList(new Text(128)), 'Array of query strings.', true)
     ->param('limit', 25, new Range(0, 100), 'Maximum number of documents to return in response.  Use this value to manage pagination. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 900000000), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
-    // TODO@kodumbeats 'after' param for pagination
+    ->param('after', '', new UID(), 'ID of the document used as the starting point for the query, excluding the document itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('orderAttributes', [], new ArrayList(new Text(128)), 'Array of attributes used to sort results.', true)
     ->param('orderTypes', [], new ArrayList(new WhiteList(['DESC', 'ASC'], true)), 'Array of order directions for sorting attribtues. Possible values are DESC for descending order, or ASC for ascending order.', true)
     ->inject('response')
     ->inject('dbForExternal')
-    ->action(function ($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $response, $dbForExternal) {
+    ->action(function ($collectionId, $queries, $limit, $offset, $after, $orderAttributes, $orderTypes, $response, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal */
 
@@ -1090,7 +1102,15 @@ App::get('/v1/database/collections/:collectionId/documents')
             throw new Exception($validator->getDescription(), 400);
         }
 
-        $documents = $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes);
+        if (!empty($after)) {
+            $afterDocument = $dbForExternal->getDocument($collectionId, $after);
+
+            if ($afterDocument->isEmpty()) {
+                throw new Exception("Document '{$after}' for the 'after' value not found.", 400);
+            }
+        }
+
+        $documents = $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $afterDocument ?? null);
 
         $response->dynamic(new Document([
             'sum' => \count($documents),
