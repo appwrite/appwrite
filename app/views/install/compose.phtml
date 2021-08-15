@@ -307,7 +307,7 @@ services:
       - _APP_DB_PASS
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
-      - _APP_USAGE_SYNC_INTERVAL
+      - _APP_USAGE_AGGREGATION_INTERVAL
 
   appwrite-schedule:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
