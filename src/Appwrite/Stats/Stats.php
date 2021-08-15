@@ -87,7 +87,6 @@ class Stats
         $networkResponseSize = $this->params['networkResponseSize'] ?? 0;
 
         $httpMethod = $this->params['httpMethod'] ?? '';
-        $httpPath = $this->params['httpPath'] ?? '';
         $httpRequest = $this->params['httpRequest'] ?? 0;
 
         $functionId = $this->params['functionId'] ?? '';
@@ -101,7 +100,7 @@ class Stats
         $this->statsd->setNamespace($this->namespace);
 
         if ($httpRequest >= 1) {
-            $this->statsd->increment('requests.all' . $tags . ',method=' . \strtolower($httpMethod) . ',path=' . str_replace(':', '*', $httpPath));
+            $this->statsd->increment('requests.all' . $tags . ',method=' . \strtolower($httpMethod));
         }
 
         if ($functionExecution >= 1) {
@@ -112,6 +111,25 @@ class Stats
         $this->statsd->count('network.inbound' . $tags, $networkRequestSize);
         $this->statsd->count('network.outbound' . $tags, $networkResponseSize);
         $this->statsd->count('network.all' . $tags, $networkRequestSize + $networkResponseSize);
+
+        $dbMetrics = [
+            'database.collections.create',
+            'database.collections.read',
+            'database.collections.update',
+            'database.collections.delete',
+            'database.documents.create',
+            'database.documents.read',
+            'database.documents.update',
+            'database.documents.delete',
+        ];
+
+        foreach ($dbMetrics as $metric) {
+            $value = $this->params[$metric] ?? 0;
+            if ($value >= 1) {
+                $dbTags = ",project={$projectId},collectionId=" . ($this->params['collectionId'] ?? '');
+                $this->statsd->increment($metric . $dbTags);
+            }
+        }
 
         if ($storage >= 1) {
             $this->statsd->count('storage.all' . $tags, $storage);
