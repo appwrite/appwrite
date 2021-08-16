@@ -8,13 +8,13 @@ $auth = Config::getParam('auth', []);
 
 $collections = [
     'collections' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'collections',
         'name' => 'Collections',
         'attributes' => [
             [
                 '$id' => 'name',
-                'type' => self::VAR_STRING,
+                'type' => Database::VAR_STRING,
                 'size' => 256,
                 'required' => true,
                 'signed' => true,
@@ -45,7 +45,7 @@ $collections = [
             ],
             [
                 '$id' => 'attributes',
-                'type' => self::VAR_STRING,
+                'type' => Database::VAR_STRING,
                 'size' => 1000000,
                 'required' => false,
                 'signed' => true,
@@ -54,7 +54,7 @@ $collections = [
             ],
             [
                 '$id' => 'indexes',
-                'type' => self::VAR_STRING,
+                'type' => Database::VAR_STRING,
                 'size' => 1000000,
                 'required' => false,
                 'signed' => true,
@@ -85,7 +85,7 @@ $collections = [
     ],
 
     'projects' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'projects',
         'name' => 'Projects',
         'attributes' => [
@@ -311,7 +311,7 @@ $collections = [
     ],
 
     'users' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'users',
         'name' => 'Users',
         'attributes' => [
@@ -460,7 +460,7 @@ $collections = [
     ],
 
     'sessions' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'sessions',
         'name' => 'Sessions',
         'attributes' => [
@@ -708,7 +708,7 @@ $collections = [
     ],
 
     'teams' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'teams',
         'name' => 'Teams',
         'attributes' => [
@@ -758,7 +758,7 @@ $collections = [
     ],
 
     'memberships' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'memberships',
         'name' => 'Memberships',
         'attributes' => [
@@ -866,7 +866,7 @@ $collections = [
     ],
 
     'files' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'files',
         'name' => 'Files',
         'attributes' => [
@@ -1045,7 +1045,7 @@ $collections = [
     ],
 
     'functions' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'functions',
         'name' => 'Functions',
         'attributes' => [
@@ -1206,7 +1206,7 @@ $collections = [
     ],
 
     'tags' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'tags',
         'name' => 'Tags',
         'attributes' => [
@@ -1279,7 +1279,7 @@ $collections = [
     ],
 
     'executions' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'executions',
         'name' => 'Executions',
         'attributes' => [
@@ -1396,7 +1396,7 @@ $collections = [
     ],
 
     'certificates' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'certificates',
         'name' => 'Certificates',
         'attributes' => [
