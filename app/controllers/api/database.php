@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Database\Validator\CustomId;
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Validator\Boolean;
@@ -12,6 +11,9 @@ use Utopia\Validator\WhiteList;
 use Utopia\Validator\Text;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\QueryValidator;
@@ -20,26 +22,31 @@ use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\UID;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Appwrite\Database\Validator\CustomId;
+use Appwrite\Network\Validator\Email;
+use Appwrite\Network\Validator\IP;
+use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Response;
-use Utopia\Database\Database;
-use Utopia\Database\Document;
-use Utopia\Database\Query;
 
-$attributesCallback = function ($attribute, $response, $dbForExternal, $database, $audits) {
-    /** @var Utopia\Database\Document $document*/
-    /** @var Appwrite\Utopia\Response $response */
-    /** @var Utopia\Database\Database $dbForExternal*/
-    /** @var Appwrite\Event\Event $database */
-    /** @var Appwrite\Event\Event $audits */
-
+/**
+ * Create attribute of varying type
+ *
+ * @param Document $attribute
+ * @param Response $response
+ * @param Database $dbForExternal
+ * @param Event $database
+ * @param Event $audits
+ *
+ * @return Document Newly created attribute document
+ */
+function attributesCallback($attribute, $response, $dbForExternal, $database, $audits): Document
+{
     $collectionId = $attribute->getCollection();
     $attributeId = $attribute->getId();
     $type = $attribute->getAttribute('type', '');
     $size = $attribute->getAttribute('size', 0);
     $required = $attribute->getAttribute('required', true);
     $default = $attribute->getAttribute('default', null);
-    $min = $attribute->getAttribute('min', null);
-    $max = $attribute->getAttribute('max', null);
     $signed = $attribute->getAttribute('signed', true); // integers are signed by default 
     $array = $attribute->getAttribute('array', false);
     $format = $attribute->getAttribute('format', null);
@@ -51,36 +58,10 @@ $attributesCallback = function ($attribute, $response, $dbForExternal, $database
         throw new Exception('Collection not found', 404);
     }
 
-    // TODO@kodumbeats how to depend on $size for Text validator length
-    // Ensure attribute default is within required size
-    if ($size > 0 && !\is_null($default)) {
-        $validator = new Text($size);
-        if (!$validator->isValid($default)) {
-            throw new Exception('Length of default attribute exceeds attribute size', 400);
-        }
-    } 
-
     if (!\is_null($format)) {
         $name = \json_decode($format, true)['name'];
         if (!Structure::hasFormat($name, $type)) {
             throw new Exception("Format {$name} not available for {$type} attributes.", 400);
-        }
-    }
-
-    if (!is_null($min) || !is_null($max)) { // Add range validator if either $min or $max is provided
-        switch ($type) {
-            case Database::VAR_INTEGER:
-                $min = (is_null($min)) ? -INF : \intval($min);
-                $max = (is_null($max)) ? INF : \intval($max);
-                $format = 'int-range';
-                break;
-            case Database::VAR_FLOAT:
-                $min = (is_null($min)) ? -INF : \floatval($min);
-                $max = (is_null($max)) ? INF : \floatval($max);
-                $format = 'float-range';
-                break;
-            default:
-                throw new Exception("Format range not available for {$type} attributes.", 400);
         }
     }
 
@@ -97,8 +78,6 @@ $attributesCallback = function ($attribute, $response, $dbForExternal, $database
         'size' => $size,
         'required' => $required,
         'default' => $default,
-        'min' => $min,
-        'max' => $max,
         'signed' => $signed,
         'array' => $array,
         'format' => $format,
@@ -117,7 +96,8 @@ $attributesCallback = function ($attribute, $response, $dbForExternal, $database
     ;
 
     $response->setStatusCode(Response::STATUS_CODE_CREATED);
-    $response->dynamic($attribute, Response::MODEL_ATTRIBUTE);
+
+    return $attribute;
 };
 
 App::post('/v1/database/collections')
@@ -344,13 +324,19 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
     ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $attributeId, $size, $required, $default, $array, $response, $dbForExternal, $database, $audits) use ($attributesCallback) {
+    ->action(function ($collectionId, $attributeId, $size, $required, $default, $array, $response, $dbForExternal, $database, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
-        return $attributesCallback(new Document([
+        // Ensure attribute default is within required size
+        $validator = new Text($size);
+        if (!is_null($default) && !$validator->isValid($default)) {
+            throw new Exception($validator->getDescription(), 400);
+        }
+
+        $attribute = attributesCallback(new Document([
             '$collection' => $collectionId,
             '$id' => $attributeId,
             'type' => Database::VAR_STRING,
@@ -359,6 +345,8 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
             'default' => $default,
             'array' => $array,
         ]), $response, $dbForExternal, $database, $audits);
+
+        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
     });
 
 App::post('/v1/database/collections/:collectionId/attributes/email')
@@ -382,13 +370,19 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
     ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForExternal, $database, $audits) use ($attributesCallback) {
+    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForExternal, $database, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
-        return $attributesCallback(new Document([
+        // Ensure attribute default is valid email
+        $validator = new Email();
+        if (!is_null($default) && !$validator->isValid($default)) {
+            throw new Exception($validator->getDescription(), 400);
+        }
+
+        $attribute = attributesCallback(new Document([
             '$collection' => $collectionId,
             '$id' => $attributeId,
             'type' => Database::VAR_STRING,
@@ -396,8 +390,10 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
             'required' => $required,
             'default' => $default,
             'array' => $array,
-            'format' => \json_encode(['name'=>'email']),
+            'format' => \json_encode(['name'=> APP_DATABASE_ATTRIBUTE_EMAIL]),
         ]), $response, $dbForExternal, $database, $audits);
+
+        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_EMAIL);
     });
 
 App::post('/v1/database/collections/:collectionId/attributes/ip')
@@ -421,13 +417,19 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
     ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForExternal, $database, $audits) use ($attributesCallback) {
+    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForExternal, $database, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
-        return $attributesCallback(new Document([
+        // Ensure attribute default is valid IP address
+        $validator = new IP();
+        if (!is_null($default) && !$validator->isValid($default)) {
+            throw new Exception($validator->getDescription(), 400);
+        }
+
+        $attribute = attributesCallback(new Document([
             '$collection' => $collectionId,
             '$id' => $attributeId,
             'type' => Database::VAR_STRING,
@@ -435,8 +437,10 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
             'required' => $required,
             'default' => $default,
             'array' => $array,
-            'format' => \json_encode(['name'=>'ip']),
+            'format' => \json_encode(['name'=> APP_DATABASE_ATTRIBUTE_IP]),
         ]), $response, $dbForExternal, $database, $audits);
+
+        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_IP);
     });
 
 App::post('/v1/database/collections/:collectionId/attributes/url')
@@ -461,13 +465,19 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
     ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $attributeId, $size, $required, $default, $array, $response, $dbForExternal, $database, $audits) use ($attributesCallback) {
+    ->action(function ($collectionId, $attributeId, $size, $required, $default, $array, $response, $dbForExternal, $database, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
-        return $attributesCallback(new Document([
+        // Ensure attribute default is valid URL
+        $validator = new URL();
+        if (!is_null($default) && !$validator->isValid($default)) {
+            throw new Exception($validator->getDescription(), 400);
+        }
+
+        $attribute = attributesCallback(new Document([
             '$collection' => $collectionId,
             '$id' => $attributeId,
             'type' => Database::VAR_STRING,
@@ -475,8 +485,10 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
             'required' => $required,
             'default' => $default,
             'array' => $array,
-            'format' => \json_encode(['name'=>'url']),
+            'format' => \json_encode(['name'=> APP_DATABASE_ATTRIBUTE_URL]),
         ]), $response, $dbForExternal, $database, $audits);
+
+        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_URL);
     });
 
 App::post('/v1/database/collections/:collectionId/attributes/integer')
@@ -502,13 +514,23 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
     ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $attributeId, $required, $min, $max, $default, $array, $response, $dbForExternal, $database, $audits) use ($attributesCallback) {
+    ->action(function ($collectionId, $attributeId, $required, $min, $max, $default, $array, $response, $dbForExternal, $database, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
-        return $attributesCallback(new Document([
+        // Ensure attribute default is within range
+        $format = (\is_null($min) || \is_null($max)); // whether to apply range format
+        $min = \is_null($min) ? -INF : \intval($min);
+        $max = \is_null($max) ? INF : \intval($max);
+        $validator = new Range($min, $max, Database::VAR_INTEGER);
+
+        if (!is_null($default) && !$validator->isValid($default)) {
+            throw new Exception($validator->getDescription(), 400);
+        }
+
+        $attribute = attributesCallback(new Document([
             '$collection' => $collectionId,
             '$id' => $attributeId,
             'type' => Database::VAR_INTEGER,
@@ -516,12 +538,14 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
             'required' => $required,
             'default' => $default,
             'array' => $array,
-            'format' => \json_encode([
-                'name'=>'int-range',
+            'format' => ($format) ? \json_encode([
+                'name'=> APP_DATABASE_ATTRIBUTE_INT_RANGE,
                 'min' => $min,
                 'max' => $max,
-            ]),
+            ]) : null,
         ]), $response, $dbForExternal, $database, $audits);
+
+        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_INTEGER);
     });
 
 App::post('/v1/database/collections/:collectionId/attributes/float')
@@ -547,13 +571,23 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
     ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $attributeId, $required, $min, $max, $default, $array, $response, $dbForExternal, $database, $audits) use ($attributesCallback) {
+    ->action(function ($collectionId, $attributeId, $required, $min, $max, $default, $array, $response, $dbForExternal, $database, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
-        return $attributesCallback(new Document([
+        // Ensure attribute default is within range
+        $format = (\is_null($min) || \is_null($max)); // whether to apply range format
+        $min = \is_null($min) ? -INF : \floatval($min);
+        $max = \is_null($max) ? INF : \floatval($max);
+        $validator = new Range($min, $max, Database::VAR_FLOAT);
+
+        if (!is_null($default) && !$validator->isValid($default)) {
+            throw new Exception($validator->getDescription(), 400);
+        }
+
+        $attribute = attributesCallback(new Document([
             '$collection' => $collectionId,
             '$id' => $attributeId,
             'type' => Database::VAR_FLOAT,
@@ -561,12 +595,14 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
             'size' => 0,
             'default' => $default,
             'array' => $array,
-            'format' => \json_encode([
-                'name'=>'float-range',
+            'format' => ($format) ? \json_encode([
+                'name'=> APP_DATABASE_ATTRIBUTE_FLOAT_RANGE,
                 'min' => $min,
                 'max' => $max,
-            ]),
+            ]) : null,
         ]), $response, $dbForExternal, $database, $audits);
+
+        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_FLOAT);
     });
 
 App::post('/v1/database/collections/:collectionId/attributes/boolean')
@@ -590,13 +626,13 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
     ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForExternal, $database, $audits) use ($attributesCallback) {
+    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForExternal, $database, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
-        return $attributesCallback(new Document([
+        $attribute = attributesCallback(new Document([
             '$collection' => $collectionId,
             '$id' => $attributeId,
             'type' => Database::VAR_BOOLEAN,
@@ -605,6 +641,8 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
             'default' => $default,
             'array' => $array,
         ]), $response, $dbForExternal, $database, $audits);
+
+        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
     });
 
 App::get('/v1/database/collections/:collectionId/attributes')
@@ -682,8 +720,24 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
         $attribute = new Document([\array_merge($attributes[$attributeIndex], [
             'collectionId' => $collectionId,
         ])]);
+
+        $type = $attribute->getAttribute('type');
+        $format = json_decode($attribute->getAttribute('format'), true);
+
+        $model = match($type) {
+            Database::VAR_BOOLEAN => Response::MODEL_ATTRIBUTE_BOOLEAN,
+            Database::VAR_INTEGER => Response::MODEL_ATTRIBUTE_INTEGER,
+            Database::VAR_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,
+            Database::VAR_STRING => match($format['name']) {
+                APP_DATABASE_ATTRIBUTE_URL => Response::MODEL_ATTRIBUTE_EMAIL,
+                APP_DATABASE_ATTRIBUTE_IP => Response::MODEL_ATTRIBUTE_IP,
+                APP_DATABASE_ATTRIBUTE_URL => Response::MODEL_ATTRIBUTE_URL,
+                default => Response::MODEL_ATTRIBUTE_STRING,
+            },
+            default => Response::MODEL_ATTRIBUTE,
+        };
         
-        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE);
+        $response->dynamic($attribute, $model);
     });
 
 App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
