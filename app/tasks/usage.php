@@ -66,19 +66,19 @@ $cli
             'database.documents.delete' => [
                 'table' => 'appwrite_usage_database_documents_delete',
             ],
-            'database.documents.collectionId.create' => [
+            'database.collections.collectionId.documents.create' => [
                 'table' => 'appwrite_usage_database_documents_create',
                 'groupBy' => 'collectionId',
             ],
-            'database.documents.collectionId.read' => [
+            'database.collections.collectionId.documents.read' => [
                 'table' => 'appwrite_usage_database_documents_read',
                 'groupBy' => 'collectionId',
             ],
-            'database.documents.collectionId.update' => [
+            'database.collections.collectionId.documents.update' => [
                 'table' => 'appwrite_usage_database_documents_update',
                 'groupBy' => 'collectionId',
             ],
-            'database.documents.collectionId.delete' => [
+            'database.collections.collectionId.documents.delete' => [
                 'table' => 'appwrite_usage_database_documents_delete',
                 'groupBy' => 'collectionId',
             ],
