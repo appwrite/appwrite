@@ -94,7 +94,7 @@ class Stats
         $functionExecutionTime = $this->params['functionExecutionTime'] ?? 0;
         $functionStatus = $this->params['functionStatus'] ?? '';
 
-        $tags = ",project={$projectId},version=" . App::getEnv('_APP_VERSION', 'UNKNOWN');
+        $tags = ",projectId={$projectId},version=" . App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         // the global namespace is prepended to every key (optional)
         $this->statsd->setNamespace($this->namespace);
@@ -126,7 +126,7 @@ class Stats
         foreach ($dbMetrics as $metric) {
             $value = $this->params[$metric] ?? 0;
             if ($value >= 1) {
-                $dbTags = ",project={$projectId},collectionId=" . ($this->params['collectionId'] ?? '');
+                $dbTags = ",projectId={$projectId},collectionId=" . ($this->params['collectionId'] ?? '');
                 $this->statsd->increment($metric . $dbTags);
             }
         }
