@@ -54,7 +54,7 @@ App::post('/v1/storage/files')
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
-        /** @var Appwrite\Event\Event $usage */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $file = $request->getFiles('file');
 
@@ -150,6 +150,8 @@ App::post('/v1/storage/files')
 
         $usage
             ->setParam('storage', $sizeActual)
+            ->setParam('storage.files.create', 1)
+            ->setParam('bucketId', 'default')
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -175,9 +177,11 @@ App::get('/v1/storage/files')
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($search, $limit, $offset, $after, $orderType, $response, $dbForInternal) {
+    ->inject('usage')
+    ->action(function ($search, $limit, $offset, $after, $orderType, $response, $dbForInternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, $search)] : [];
 
@@ -188,6 +192,11 @@ App::get('/v1/storage/files')
                 throw new Exception("File '{$after}' for the 'after' value not found.", 400);
             }
         }
+
+        $usage
+            ->setParam('storage.files.read', 1)
+            ->setParam('bucketId', 'default')
+        ;
 
         $response->dynamic(new Document([
             'files' => $dbForInternal->find('files', $queries, $limit, $offset, [], [$orderType], $afterFile ?? null),
@@ -209,16 +218,21 @@ App::get('/v1/storage/files/:fileId')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($fileId, $response, $dbForInternal) {
+    ->inject('usage')
+    ->action(function ($fileId, $response, $dbForInternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $file = $dbForInternal->getDocument('files', $fileId);
 
         if (empty($file->getId())) {
             throw new Exception('File not found', 404);
         }
-
+        $usage
+            ->setParam('storage.files.read', 1)
+            ->setParam('bucketId', 'default')
+        ;
         $response->dynamic($file, Response::MODEL_FILE);
     });
 
@@ -249,11 +263,13 @@ App::get('/v1/storage/files/:fileId/preview')
     ->inject('response')
     ->inject('project')
     ->inject('dbForInternal')
-    ->action(function ($fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $dbForInternal) {
+    ->inject('usage')
+    ->action(function ($fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $dbForInternal, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Appwrite\Stats\Stats $stats */
 
         $storage = 'files';
 
@@ -366,6 +382,11 @@ App::get('/v1/storage/files/:fileId/preview')
 
         $cache->save($key, $data);
 
+        $usage
+            ->setParam('storage.files.read', 1)
+            ->setParam('bucketId', 'default')
+        ;
+
         $response
             ->setContentType($outputs[$output])
             ->addHeader('Expires', $date)
@@ -390,9 +411,11 @@ App::get('/v1/storage/files/:fileId/download')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($fileId, $response, $dbForInternal) {
+    ->inject('usage')
+    ->action(function ($fileId, $response, $dbForInternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $file = $dbForInternal->getDocument('files', $fileId);
 
@@ -424,6 +447,11 @@ App::get('/v1/storage/files/:fileId/download')
 
         $source = $compressor->decompress($source);
 
+        $usage
+            ->setParam('storage.files.read', 1)
+            ->setParam('bucketId', 'default')
+        ;
+
         // Response
         $response
             ->setContentType($file->getAttribute('mimeType'))
@@ -448,9 +476,11 @@ App::get('/v1/storage/files/:fileId/view')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($fileId, $response, $dbForInternal) {
+    ->inject('usage')
+    ->action(function ($fileId, $response, $dbForInternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $file  = $dbForInternal->getDocument('files', $fileId);
         $mimes = Config::getParam('storage-mimes');
@@ -490,6 +520,11 @@ App::get('/v1/storage/files/:fileId/view')
         $output = $compressor->decompress($source);
         $fileName = $file->getAttribute('name', '');
 
+        $usage
+            ->setParam('storage.files.read', 1)
+            ->setParam('bucketId', 'default')
+        ;
+
         // Response
         $response
             ->setContentType($contentType)
@@ -520,7 +555,8 @@ App::put('/v1/storage/files/:fileId')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('audits')
-    ->action(function ($fileId, $read, $write, $response, $dbForInternal, $audits) {
+    ->inject('usage')
+    ->action(function ($fileId, $read, $write, $response, $dbForInternal, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
@@ -540,6 +576,11 @@ App::put('/v1/storage/files/:fileId')
         $audits
             ->setParam('event', 'storage.files.update')
             ->setParam('resource', 'storage/files/'.$file->getId())
+        ;
+
+        $usage
+            ->setParam('storage.files.update', 1)
+            ->setParam('bucketId', 'default')
         ;
 
         $response->dynamic($file, Response::MODEL_FILE);
@@ -567,7 +608,7 @@ App::delete('/v1/storage/files/:fileId')
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
-        /** @var Appwrite\Event\Event $usage */
+        /** @var Appwrite\Stats\Stats $usage */
         
         $file = $dbForInternal->getDocument('files', $fileId);
 
@@ -594,6 +635,11 @@ App::delete('/v1/storage/files/:fileId')
 
         $events
             ->setParam('eventData', $response->output($file, Response::MODEL_FILE))
+        ;
+
+        $usage
+            ->setParam('storage.files.delete', 1)
+            ->setParam('bucketId', 'default')
         ;
 
         $response->noContent();

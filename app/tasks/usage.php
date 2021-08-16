@@ -32,7 +32,7 @@ use Utopia\Database\Validator\Authorization;
  * users.sessions.delete (project=x,provider=y)
  *
  * storage.buckets.CRUD (project=x)
- * storage.files.CRUD (project=x,files=y)
+ * storage.files.CRUD (project=x,bucket=y)
  *
  * refactor later
  * - functions
@@ -127,6 +127,26 @@ $cli
                 'method' => 'getDatabaseMetrics',
                 'table' => 'appwrite_usage_database_documents_delete',
                 'groupBy' => 'collectionId',
+            ],
+            'storage.buckets.bucketId.files.create' => [
+                'method' => 'getDatabaseMetrics',
+                'table' => 'appwrite_usage_storage_files_create',
+                'groupBy' => 'bucketId',
+            ],
+            'storage.buckets.bucketId.files.read' => [
+                'method' => 'getDatabaseMetrics',
+                'table' => 'appwrite_usage_storage_files_read',
+                'groupBy' => 'bucketId',
+            ],
+            'storage.buckets.bucketId.files.update' => [
+                'method' => 'getDatabaseMetrics',
+                'table' => 'appwrite_usage_storage_files_update',
+                'groupBy' => 'bucketId',
+            ],
+            'storage.buckets.bucketId.files.delete' => [
+                'method' => 'getDatabaseMetrics',
+                'table' => 'appwrite_usage_storage_files_delete',
+                'groupBy' => 'bucketId',
             ],
         ];
 

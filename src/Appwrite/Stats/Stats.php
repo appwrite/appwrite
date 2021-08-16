@@ -131,6 +131,21 @@ class Stats
             }
         }
 
+        $storageMertics = [
+            'storage.files.create',
+            'storage.files.read',
+            'storage.files.update',
+            'storage.files.delete',
+        ];
+
+        foreach ($storageMertics as $metric) {
+            $value = $this->params[$metric] ?? 0;
+            if ($value >= 1) {
+                $storageTags = ",projectId={$projectId},bucketId=" . ($this->params['bucketId'] ?? '');
+                $this->statsd->increment($metric . $storageTags);
+            }
+        }
+
         if ($storage >= 1) {
             $this->statsd->count('storage.all' . $tags, $storage);
         }
