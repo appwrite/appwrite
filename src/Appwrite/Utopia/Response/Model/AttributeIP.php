@@ -18,6 +18,14 @@ class AttributeIP extends AttributeString
                 'array' => false,
                 'required' => true,
             ])
+            ->addRule('default', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
+                'default' => null,
+                'example' => '192.0.2.0',
+                'array' => false,
+                'required' => false,
+            ])
         ;
     }
 

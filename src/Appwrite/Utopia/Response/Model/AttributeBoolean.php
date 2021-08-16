@@ -10,6 +10,14 @@ class AttributeBoolean extends Model
     public function __construct()
     {
         $this
+            ->addRule('default', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
+                'default' => null,
+                'example' => false,
+                'array' => false,
+                'required' => false,
+            ])
         ;
     }
 

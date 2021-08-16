@@ -16,6 +16,14 @@ class AttributeString extends Attribute
                 'default' => 0,
                 'example' => 128,
             ])
+            ->addRule('default', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
+                'default' => null,
+                'example' => 'default',
+                'array' => false,
+                'required' => false,
+            ])
         ;
     }
 

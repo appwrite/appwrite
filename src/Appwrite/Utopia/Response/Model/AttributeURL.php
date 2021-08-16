@@ -18,6 +18,14 @@ class AttributeURL extends AttributeString
                 'array' => false,
                 'required' => true,
             ])
+            ->addRule('default', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
+                'default' => null,
+                'example' => 'http://example.com',
+                'array' => false,
+                'required' => false,
+            ])
         ;
     }
 

@@ -26,6 +26,14 @@ class AttributeFloat extends Attribute
                 'array' => false,
                 'required' => false,
             ])
+            ->addRule('default', [
+                'type' => self::TYPE_FLOAT,
+                'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
+                'default' => null,
+                'example' => 2.5,
+                'array' => false,
+                'required' => false,
+            ])
         ;
     }
 
