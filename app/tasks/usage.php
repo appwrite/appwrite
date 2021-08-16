@@ -140,11 +140,13 @@ $cli
         $cacheAdapter = new Cache(new Redis($redis));
         $dbForProject = new Database(new MariaDB($db), $cacheAdapter);
 
+        $latestTime = [];
+
         Authorization::disable();
 
-        Console::loop(function () use ($interval, $register, $dbForProject, $globalMetrics, $periods) {
-            $time = date('d-m-Y H:i:s', time());
-            Console::info("[{$time}] Aggregating usage data every {$interval} seconds");
+        Console::loop(function () use ($interval, $register, $dbForProject, $globalMetrics, $periods, &$latestTime) {
+            $now = date('d-m-Y H:i:s', time());
+            Console::info("[{$now}] Aggregating usage data every {$interval} seconds");
 
             $loopStart = microtime(true);
 
@@ -155,6 +157,9 @@ $cli
                 foreach ($globalMetrics as $metric => $options) {
                     foreach ($periods as $period) {
                         $start = DateTime::createFromFormat('U', \strtotime($period['startTime']))->format(DateTime::RFC3339);
+                        if(!empty($latestTime[$metric][$period['key']])) {
+                            $start = DateTime::createFromFormat('U', $latestTime[$metric][$period['key']])->format(DateTime::RFC3339);
+                        }
                         $end = DateTime::createFromFormat('U', \strtotime('now'))->format(DateTime::RFC3339);
 
                         $table = $options['table'];
@@ -192,6 +197,7 @@ $cli
                                         $dbForProject->updateDocument('stats', $document->getId(),
                                             $document->setAttribute('value', $value));
                                     }
+                                    $latestTime[$metric][$period['key']] = $time;
                                 } catch (\Exception$e) {
                                     Console::warning("Failed to save data for project {$projectId} and metric {$metric}");
                                 }
@@ -202,7 +208,7 @@ $cli
             }
 
             $loopTook = microtime(true) - $loopStart;
-            $time = date('d-m-Y H:i:s', time());
-            Console::info("[{$time}] Aggregation took {$loopTook} seconds");
+            $now = date('d-m-Y H:i:s', time());
+            Console::info("[{$now}] Aggregation took {$loopTook} seconds");
         }, $interval);
     });
