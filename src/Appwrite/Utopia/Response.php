@@ -14,6 +14,9 @@ use Appwrite\Utopia\Response\Model\Attribute;
 use Appwrite\Utopia\Response\Model\AttributeString;
 use Appwrite\Utopia\Response\Model\AttributeInteger;
 use Appwrite\Utopia\Response\Model\AttributeFloat;
+use Appwrite\Utopia\Response\Model\AttributeEmail;
+use Appwrite\Utopia\Response\Model\AttributeIP;
+use Appwrite\Utopia\Response\Model\AttributeURL;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Collection;
 use Appwrite\Utopia\Response\Model\Continent;
@@ -21,14 +24,12 @@ use Appwrite\Utopia\Response\Model\Country;
 use Appwrite\Utopia\Response\Model\Currency;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
 use Appwrite\Utopia\Response\Model\Domain;
-use Appwrite\Utopia\Response\Model\Email;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
 use Appwrite\Utopia\Response\Model\File;
 use Appwrite\Utopia\Response\Model\Func;
 use Appwrite\Utopia\Response\Model\Index;
-use Appwrite\Utopia\Response\Model\IP;
 use Appwrite\Utopia\Response\Model\JWT;
 use Appwrite\Utopia\Response\Model\Key;
 use Appwrite\Utopia\Response\Model\Language;
@@ -45,7 +46,6 @@ use Appwrite\Utopia\Response\Model\Project;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Tag;
 use Appwrite\Utopia\Response\Model\Token;
-use Appwrite\Utopia\Response\Model\URL;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\Mock; // Keep last
@@ -82,11 +82,11 @@ class Response extends SwooleResponse
     const MODEL_INTEGER_LIST= 'integerList';
     const MODEL_FLOAT= 'float';
     const MODEL_FLOAT_LIST= 'floatList';
-    const MODEL_EMAIL= 'email';
+    const MODEL_ATTRIBUTE_EMAIL= 'email';
     const MODEL_EMAIL_LIST= 'emailList';
-    const MODEL_IP= 'ip';
+    const MODEL_ATTRIBUTE_IP= 'ip';
     const MODEL_IP_LIST= 'ipList';
-    const MODEL_URL= 'url';
+    const MODEL_ATTRIBUTE_URL= 'url';
     const MODEL_URL_LIST= 'urlList';
 
     // Users
@@ -202,9 +202,9 @@ class Response extends SwooleResponse
             ->setModel(new AttributeString())
             ->setModel(new AttributeInteger())
             ->setModel(new AttributeFloat())
-            ->setModel(new Email())
-            ->setModel(new IP())
-            ->setModel(new URL())
+            ->setModel(new AttributeEmail())
+            ->setModel(new AttributeIP())
+            ->setModel(new AttributeURL())
             ->setModel(new Index())
             ->setModel(new ModelDocument())
             ->setModel(new Log())

@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\AttributeString;
 
-class Email extends AttributeString
+class AttributeURL extends AttributeString
 {
     public function __construct()
     {
@@ -13,8 +13,8 @@ class Email extends AttributeString
             ->addRule('format', [
                 'type' => self::TYPE_STRING,
                 'description' => 'String format.',
-                'default' => 'email',
-                'example' => 'email',
+                'default' => 'url',
+                'example' => 'url',
                 'array' => false,
                 'required' => true,
             ])
@@ -28,7 +28,7 @@ class Email extends AttributeString
      */
     public function getName():string
     {
-        return 'Email';
+        return 'AttributeURL';
     }
 
     /**
@@ -38,6 +38,6 @@ class Email extends AttributeString
      */
     public function getType():string
     {
-        return Response::MODEL_EMAIL;
+        return Response::MODEL_ATTRIBUTE_URL;
     }
 }
