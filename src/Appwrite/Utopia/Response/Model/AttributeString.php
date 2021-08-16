@@ -22,7 +22,7 @@ class AttributeString extends Attribute
                 'default' => null,
                 'example' => 'default',
                 'array' => false,
-                'required' => false,
+                'require' => false,
             ])
         ;
     }

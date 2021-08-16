@@ -13,10 +13,10 @@ class AttributeIP extends AttributeString
             ->addRule('format', [
                 'type' => self::TYPE_STRING,
                 'description' => 'String format.',
-                'default' => 'ip',
-                'example' => 'ip',
+                'default' => \json_encode(['name'=>APP_DATABASE_ATTRIBUTE_IP]),
+                'example' => \json_encode(['name'=>APP_DATABASE_ATTRIBUTE_IP]),
                 'array' => false,
-                'required' => true,
+                'require' => true,
             ])
             ->addRule('default', [
                 'type' => self::TYPE_STRING,
@@ -24,7 +24,7 @@ class AttributeIP extends AttributeString
                 'default' => null,
                 'example' => '192.0.2.0',
                 'array' => false,
-                'required' => false,
+                'require' => false,
             ])
         ;
     }

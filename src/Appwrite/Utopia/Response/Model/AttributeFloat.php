@@ -10,21 +10,17 @@ class AttributeFloat extends Attribute
     public function __construct()
     {
         $this
-            ->addRule('min', [
+            ->addRule('format', [
                 'type' => self::TYPE_FLOAT,
-                'description' => 'Minimum value to enforce on new documents.',
+                'description' => 'Float format.',
                 'default' => null,
-                'example' => 0.5,
+                'example' => \json_encode([
+                    'name' => APP_DATABASE_ATTRIBUTE_FLOAT_RANGE,
+                    'min' => 1.5,
+                    'max' => 2.5,
+                ]),
                 'array' => false,
-                'required' => false,
-            ])
-            ->addRule('max', [
-                'type' => self::TYPE_FLOAT,
-                'description' => 'Minimum value to enforce on new documents.',
-                'default' => null,
-                'example' => 2.5,
-                'array' => false,
-                'required' => false,
+                'require' => false,
             ])
             ->addRule('default', [
                 'type' => self::TYPE_FLOAT,
@@ -32,7 +28,7 @@ class AttributeFloat extends Attribute
                 'default' => null,
                 'example' => 2.5,
                 'array' => false,
-                'required' => false,
+                'require' => false,
             ])
         ;
     }

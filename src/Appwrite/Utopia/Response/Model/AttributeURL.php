@@ -13,8 +13,8 @@ class AttributeURL extends AttributeString
             ->addRule('format', [
                 'type' => self::TYPE_STRING,
                 'description' => 'String format.',
-                'default' => 'url',
-                'example' => 'url',
+                'default' => \json_encode(['name'=>APP_DATABASE_ATTRIBUTE_URL]),
+                'example' => \json_encode(['name'=>APP_DATABASE_ATTRIBUTE_URL]),
                 'array' => false,
                 'required' => true,
             ])
@@ -24,7 +24,7 @@ class AttributeURL extends AttributeString
                 'default' => null,
                 'example' => 'http://example.com',
                 'array' => false,
-                'required' => false,
+                'require' => false,
             ])
         ;
     }

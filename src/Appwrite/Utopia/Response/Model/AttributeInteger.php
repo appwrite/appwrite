@@ -10,21 +10,17 @@ class AttributeInteger extends Attribute
     public function __construct()
     {
         $this
-            ->addRule('min', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Minimum value to enforce on new documents.',
+            ->addRule('format', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Integer format.',
                 'default' => null,
-                'example' => 0,
+                'example' => \json_encode([
+                    'name' => APP_DATABASE_ATTRIBUTE_INT_RANGE,
+                    'min' => 0,
+                    'max' => 10,
+                ]),
                 'array' => false,
-                'required' => false,
-            ])
-            ->addRule('max', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Minimum value to enforce on new documents.',
-                'default' => null,
-                'example' => 10,
-                'array' => false,
-                'required' => false,
+                'require' => false,
             ])
             ->addRule('default', [
                 'type' => self::TYPE_INTEGER,
@@ -32,7 +28,7 @@ class AttributeInteger extends Attribute
                 'default' => null,
                 'example' => 10,
                 'array' => false,
-                'required' => false,
+                'require' => false,
             ])
         ;
     }

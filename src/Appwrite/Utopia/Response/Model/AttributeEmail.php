@@ -13,10 +13,10 @@ class AttributeEmail extends AttributeString
             ->addRule('format', [
                 'type' => self::TYPE_STRING,
                 'description' => 'String format.',
-                'default' => 'email',
-                'example' => 'email',
+                'default' => \json_encode(['name'=>APP_DATABASE_ATTRIBUTE_EMAIL]),
+                'example' => \json_encode(['name'=>APP_DATABASE_ATTRIBUTE_EMAIL]),
                 'array' => false,
-                'required' => true,
+                'require' => true,
             ])
             ->addRule('default', [
                 'type' => self::TYPE_STRING,
@@ -24,7 +24,7 @@ class AttributeEmail extends AttributeString
                 'default' => null,
                 'example' => 'default@example.com',
                 'array' => false,
-                'required' => false,
+                'require' => false,
             ])
         ;
     }

@@ -16,7 +16,7 @@ class AttributeBoolean extends Model
                 'default' => null,
                 'example' => false,
                 'array' => false,
-                'required' => false,
+                'require' => false,
             ])
         ;
     }
