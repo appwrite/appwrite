@@ -14,6 +14,7 @@ use Appwrite\Utopia\Response\Model\Attribute;
 use Appwrite\Utopia\Response\Model\AttributeString;
 use Appwrite\Utopia\Response\Model\AttributeInteger;
 use Appwrite\Utopia\Response\Model\AttributeFloat;
+use Appwrite\Utopia\Response\Model\AttributeBoolean;
 use Appwrite\Utopia\Response\Model\AttributeEmail;
 use Appwrite\Utopia\Response\Model\AttributeIP;
 use Appwrite\Utopia\Response\Model\AttributeURL;
@@ -197,6 +198,7 @@ class Response extends SwooleResponse
             ->setModel(new AttributeString())
             ->setModel(new AttributeInteger())
             ->setModel(new AttributeFloat())
+            ->setModel(new AttributeBoolean())
             ->setModel(new AttributeEmail())
             ->setModel(new AttributeIP())
             ->setModel(new AttributeURL())
