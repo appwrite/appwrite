@@ -7,6 +7,83 @@ $providers = Config::getParam('providers', []);
 $auth = Config::getParam('auth', []);
 
 $collections = [
+    'collections' => [
+        '$collection' => Database::COLLECTIONS,
+        '$id' => 'collections',
+        'name' => 'Collections',
+        'attributes' => [
+            [
+                '$id' => 'name',
+                'type' => self::VAR_STRING,
+                'size' => 256,
+                'required' => true,
+                'signed' => true,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'dateCreated',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'dateUpdated',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'attributes',
+                'type' => self::VAR_STRING,
+                'size' => 1000000,
+                'required' => false,
+                'signed' => true,
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
+                '$id' => 'indexes',
+                'type' => self::VAR_STRING,
+                'size' => 1000000,
+                'required' => false,
+                'signed' => true,
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
+                '$id' => 'search',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+        ],
+        'indexes' => [
+            [
+                '$id' => '_fulltext_search',
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => ['search'],
+                'lengths' => [1024],
+                'orders' => [Database::ORDER_ASC],
+            ],
+        ],
+    ],
+
     'projects' => [
         '$collection' => Database::COLLECTIONS,
         '$id' => 'projects',

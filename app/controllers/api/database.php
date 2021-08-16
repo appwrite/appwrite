@@ -23,6 +23,7 @@ use Utopia\Database\Exception\Structure as StructureException;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 
 $attributesCallback = function ($attribute, $response, $dbForExternal, $database, $audits) {
@@ -137,9 +138,10 @@ App::post('/v1/database/collections')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->inject('response')
+    ->inject('dbForInternal')
     ->inject('dbForExternal')
     ->inject('audits')
-    ->action(function ($collectionId, $name, $read, $write, $response, $dbForExternal, $audits) {
+    ->action(function ($collectionId, $name, $read, $write, $response, $dbForInternal, $dbForExternal, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $audits */
@@ -152,11 +154,17 @@ App::post('/v1/database/collections')
         $read = (is_null($read)) ? ($collection->getRead() ?? []) : $read; // By default inherit read permissions
         $write = (is_null($write)) ? ($collection->getWrite() ?? []) : $write; // By default inherit write permissions
 
-        $collection->setAttribute('name', $name);
-        $collection->setAttribute('$read', $read);
-        $collection->setAttribute('$write', $write);
-
-        $dbForExternal->updateDocument(Database::COLLECTIONS, $collectionId, $collection);
+        try {
+            $collection = $dbForInternal->createDocument('collections', new Document([
+                '$id' => $collectionId,
+                '$read' => $read,
+                '$write' => $write,
+                'name' => $name,
+                'search' => implode(' ', [$collectionId, $name]),
+            ]));
+        } catch (Duplicate $th) {
+            throw new Exception('Collection already exists', 409);
+        }
 
         $audits
             ->setParam('event', 'database.collections.create')
@@ -184,16 +192,20 @@ App::get('/v1/database/collections')
     ->param('offset', 0, new Range(0, 40000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
-    ->inject('dbForExternal')
-    ->action(function ($search, $limit, $offset, $orderType, $response, $dbForExternal) {
+    ->inject('dbForInternal')
+    ->action(function ($search, $limit, $offset, $orderType, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForExternal */
+        /** @var Utopia\Database\Database $dbForInternal */
 
-        $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('name', Query::TYPE_SEARCH, [$search]);
+        }
 
         $response->dynamic(new Document([
-            'collections' => $dbForExternal->find(Database::COLLECTIONS, $queries, $limit, $offset, ['_id'], [$orderType]),
-            'sum' => $dbForExternal->count(Database::COLLECTIONS, $queries, APP_LIMIT_COUNT),
+            'collections' => $dbForInternal->find(Database::COLLECTIONS, $queries, $limit, $offset, ['_id'], [$orderType]),
+            'sum' => $dbForInternal->count(Database::COLLECTIONS, $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_COLLECTION_LIST);
     });
 
@@ -210,12 +222,12 @@ App::get('/v1/database/collections/:collectionId')
     ->label('sdk.response.model', Response::MODEL_COLLECTION)
     ->param('collectionId', '', new UID(), 'Collection unique ID.')
     ->inject('response')
-    ->inject('dbForExternal')
-    ->action(function ($collectionId, $response, $dbForExternal) {
+    ->inject('dbForInternal')
+    ->action(function ($collectionId, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForExternal */
+        /** @var Utopia\Database\Database $dbForInternal */
 
-        $collection = $dbForExternal->getCollection($collectionId);
+        $collection = $dbForInternal->getDocument('collections', $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
@@ -241,14 +253,14 @@ App::put('/v1/database/collections/:collectionId')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default inherits the existing read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default inherits the existing write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
-    ->inject('dbForExternal')
+    ->inject('dbForInternal')
     ->inject('audits')
-    ->action(function ($collectionId, $name, $read, $write, $response, $dbForExternal, $audits) {
+    ->action(function ($collectionId, $name, $read, $write, $response, $dbForInternal, $audits) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForExternal */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
 
-        $collection = $dbForExternal->getCollection($collectionId);
+        $collection = $dbForInternal->getDocument('collections', $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
@@ -258,16 +270,17 @@ App::put('/v1/database/collections/:collectionId')
         $write = (is_null($write)) ? ($collection->getWrite() ?? []) : $write; // By default inherit write permissions
 
         try {
-            $collection = $dbForExternal->updateDocument(Database::COLLECTIONS, $collection->getId(), new Document(\array_merge($collection->getArrayCopy(), [
-                'name' => $name,
-                '$read' => $read,
-                '$write' => $write
-            ])));
+            $collection = $dbForInternal->updateDocument('collections', $collection->getId(), $collection
+                ->setAttribute('$read', $read)
+                ->setAttribute('$write', $write)
+                ->setAttribute('name', $name)
+                ->setAttribute('search', implode(' ', [$collectionId, $name]))
+            );
         } catch (AuthorizationException $exception) {
             throw new Exception('Unauthorized permissions', 401);
         } catch (StructureException $exception) {
             throw new Exception('Bad structure. '.$exception->getMessage(), 400);
-        } 
+        }
 
         $audits
             ->setParam('event', 'database.collections.update')
@@ -291,23 +304,29 @@ App::delete('/v1/database/collections/:collectionId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('collectionId', '', new UID(), 'Collection unique ID.')
     ->inject('response')
+    ->inject('dbForInternal')
     ->inject('dbForExternal')
     ->inject('events')
     ->inject('audits')
     ->inject('deletes')
-    ->action(function ($collectionId, $response, $dbForExternal, $events, $audits, $deletes) {
+    ->action(function ($collectionId, $response, $dbForInternal, $dbForExternal, $events, $audits, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
 
-        $collection = $dbForExternal->getCollection($collectionId);
+        $collection = $dbForInternal->getDocument('collections', $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception('Collection not found', 404);
         }
 
         $dbForExternal->deleteCollection($collectionId);
+
+        if (!$dbForInternal->deleteDocument('collections', $collectionId)) {
+            throw new Exception('Failed to remove collection from DB', 500);
+        }
 
         $events
             ->setParam('eventData', $response->output($collection, Response::MODEL_COLLECTION))
