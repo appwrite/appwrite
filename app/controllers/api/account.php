@@ -562,7 +562,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $usage
             ->setParam('users.sessions.create', 1)
             ->setParam('projectId', $project->getId())
-            ->setParam('provider', $provider)
+            ->setParam('provider', 'oauth2-'.$provider)
         ;
         if (!Config::getParam('domainVerification')) {
             $response

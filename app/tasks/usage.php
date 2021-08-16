@@ -17,8 +17,8 @@ $cli
     ->task('usage')
     ->desc('Schedules syncing data from influxdb to Appwrite console db')
     ->action(function () use ($register) {
-        Console::title('Usage Sync V1');
-        Console::success(APP_NAME . ' usage sync process v1 has started');
+        Console::title('Usage Aggregation V1');
+        Console::success(APP_NAME . ' usage aggregation process v1 has started');
 
         $interval = (int) App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '30'); //30 seconds
         $periods = [
@@ -32,6 +32,7 @@ $cli
             ],
         ];
 
+        // all the metrics that we are collecting at the moment
         $globalMetrics = [
             'requests' => [
                 'table' => 'appwrite_usage_requests_all',
@@ -154,19 +155,18 @@ $cli
             if ($client) {
                 $database = $client->selectDB('telegraf');
                 // sync data
-                foreach ($globalMetrics as $metric => $options) {
-                    foreach ($periods as $period) {
+                foreach ($globalMetrics as $metric => $options) { //for each metrics
+                    foreach ($periods as $period) { // aggregate data for each period
                         $start = DateTime::createFromFormat('U', \strtotime($period['startTime']))->format(DateTime::RFC3339);
                         if(!empty($latestTime[$metric][$period['key']])) {
                             $start = DateTime::createFromFormat('U', $latestTime[$metric][$period['key']])->format(DateTime::RFC3339);
                         }
                         $end = DateTime::createFromFormat('U', \strtotime('now'))->format(DateTime::RFC3339);
 
-                        $table = $options['table'];
-                        $groupBy = $options['groupBy'] ?? '';
+                        $table = $options['table']; //which influxdb table to query for this metric
+                        $groupBy = empty($options['groupBy']) ? '' : ', "' . $options['groupBy'] . '"'; //some sub level metrics may be grouped by other tags like collectionId, bucketId, etc
 
-                        $query = 'SELECT sum(value) AS "value" FROM "' . $table . '" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' GROUP BY time(' . $period['key'] . '), "projectId"' . (empty($groupBy) ? '' : ', "' . $groupBy . '"') . ' FILL(null)';
-                        $result = $database->query($query);
+                        $result = $database->query('SELECT sum(value) AS "value" FROM "' . $table . '" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' GROUP BY time(' . $period['key'] . '), "projectId"' . $groupBy . ' FILL(null)');
                         $points = $result->getPoints();
                         foreach ($points as $point) {
                             $projectId = $point['projectId'];
@@ -180,7 +180,7 @@ $cli
                                     $metric = str_replace($groupBy, $groupedBy, $metric);
                                 }
                                 $time = \strtotime($point['time']);
-                                $id = \md5($time . '_' . $period['key'] . '_' . $metric);
+                                $id = \md5($time . '_' . $period['key'] . '_' . $metric); //construct unique id for each metric using time, period and metric
                                 $value = (!empty($point['value'])) ? $point['value'] : 0;
                                 try {
                                     $document = $dbForProject->getDocument('stats', $id);
@@ -198,7 +198,8 @@ $cli
                                             $document->setAttribute('value', $value));
                                     }
                                     $latestTime[$metric][$period['key']] = $time;
-                                } catch (\Exception$e) {
+                                } catch (\Exception $e) {
+                                    // if projects are deleted this might fail
                                     Console::warning("Failed to save data for project {$projectId} and metric {$metric}");
                                 }
                             }
