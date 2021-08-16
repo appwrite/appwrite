@@ -52,12 +52,14 @@ App::post('/v1/account')
     ->inject('project')
     ->inject('dbForInternal')
     ->inject('audits')
-    ->action(function ($userId, $email, $password, $name, $request, $response, $project, $dbForInternal, $audits) {
+    ->inject('usage')
+    ->action(function ($userId, $email, $password, $name, $request, $response, $project, $dbForInternal, $audits, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Usage\Usage $usage */
 
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
@@ -120,6 +122,9 @@ App::post('/v1/account')
             ->setParam('resource', 'users/' . $user->getId())
         ;
 
+        $usage
+            ->setParam('users.create', 1)
+        ;
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -147,13 +152,15 @@ App::post('/v1/account/sessions')
     ->inject('locale')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($email, $password, $request, $response, $dbForInternal, $locale, $geodb, $audits) {
+    ->inject('usage')
+    ->action(function ($email, $password, $request, $response, $dbForInternal, $locale, $geodb, $audits, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Usage\Usage $usage */
 
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
@@ -227,6 +234,11 @@ App::post('/v1/account/sessions')
             ->setAttribute('countryName', $countryName)
         ;
 
+        $usage
+            ->setParam('users.update', 1)
+            ->setParam('users.sessions.create', 1)
+            ->setParam('provider', 'email')
+        ;
         $response->dynamic($session, Response::MODEL_SESSION);
     });
 
@@ -357,7 +369,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('geodb')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $dbForInternal, $geodb, $audits, $events) use ($oauthDefaultSuccess) {
+    ->inject('usage')
+    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $dbForInternal, $geodb, $audits, $events, $usage) use ($oauthDefaultSuccess) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
@@ -365,6 +378,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $protocol = $request->getProtocol();
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
@@ -545,6 +559,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $events->setParam('eventData', $response->output($session, Response::MODEL_SESSION));
 
+        $usage
+            ->setParam('users.sessions.create', 1)
+            ->setParam('projectId', $project->getId())
+            ->setParam('provider', $provider)
+        ;
         if (!Config::getParam('domainVerification')) {
             $response
                 ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
@@ -595,7 +614,8 @@ App::post('/v1/account/sessions/anonymous')
     ->inject('dbForInternal')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($request, $response, $locale, $user, $project, $dbForInternal, $geodb, $audits) {
+    ->inject('usage')
+    ->action(function ($request, $response, $locale, $user, $project, $dbForInternal, $geodb, $audits, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
@@ -604,6 +624,7 @@ App::post('/v1/account/sessions/anonymous')
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $protocol = $request->getProtocol();
 
@@ -684,6 +705,11 @@ App::post('/v1/account/sessions/anonymous')
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.sessions.create')
             ->setParam('resource', 'users/' . $user->getId())
+        ;
+
+        $usage
+            ->setParam('users.sessions.create', 1)
+            ->setParam('provider', 'anonymous')
         ;
 
         if (!Config::getParam('domainVerification')) {
@@ -771,10 +797,15 @@ App::get('/v1/account')
     ->label('sdk.response.model', Response::MODEL_USER)
     ->inject('response')
     ->inject('user')
-    ->action(function ($response, $user) {
+    ->inject('usage')
+    ->action(function ($response, $user, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
+        /** @var Appwrite\Stats\Stats $usage */
 
+        $usage
+            ->setParam('users.read', 1)
+        ;
         $response->dynamic($user, Response::MODEL_USER);
     });
 
@@ -791,12 +822,17 @@ App::get('/v1/account/prefs')
     ->label('sdk.response.model', Response::MODEL_PREFERENCES)
     ->inject('response')
     ->inject('user')
-    ->action(function ($response, $user) {
+    ->inject('usage')
+    ->action(function ($response, $user, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $prefs = $user->getAttribute('prefs', new \stdClass());
 
+        $usage
+            ->setParam('users.read', 1)
+        ;
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
@@ -814,10 +850,12 @@ App::get('/v1/account/sessions')
     ->inject('response')
     ->inject('user')
     ->inject('locale')
-    ->action(function ($response, $user, $locale) {
+    ->inject('usage')
+    ->action(function ($response, $user, $locale, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $sessions = $user->getAttribute('sessions', []);
         $current = Auth::sessionVerify($sessions, Auth::$secret);
@@ -831,6 +869,9 @@ App::get('/v1/account/sessions')
             $sessions[$key] = $session;
         }
 
+        $usage
+            ->setParam('users.read', 1)
+        ;
         $response->dynamic(new Document([
             'sessions' => $sessions,
             'sum' => count($sessions),
@@ -853,13 +894,15 @@ App::get('/v1/account/logs')
     ->inject('locale')
     ->inject('geodb')
     ->inject('dbForInternal')
-    ->action(function ($response, $user, $locale, $geodb, $dbForInternal) {
+    ->inject('usage')
+    ->action(function ($response, $user, $locale, $geodb, $dbForInternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $audit = new Audit($dbForInternal);
 
@@ -906,6 +949,9 @@ App::get('/v1/account/logs')
 
         }
 
+        $usage
+            ->setParam('users.read', 1)
+        ;
         $response->dynamic(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
     });
 
@@ -925,11 +971,13 @@ App::get('/v1/account/sessions/:sessionId')
     ->inject('user')
     ->inject('locale')
     ->inject('dbForInternal')
-    ->action(function ($sessionId, $response, $user, $locale, $dbForInternal) {
+    ->inject('usage')
+    ->action(function ($sessionId, $response, $user, $locale, $dbForInternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
         /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $sessions = $user->getAttribute('sessions', []);
         $sessionId = ($sessionId === 'current')
@@ -946,6 +994,10 @@ App::get('/v1/account/sessions/:sessionId')
                 $session
                     ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
                     ->setAttribute('countryName', $countryName)
+                ;
+
+                $usage
+                    ->setParam('users.read', 1)
                 ;
 
                 return $response->dynamic($session, Response::MODEL_SESSION);
@@ -972,11 +1024,13 @@ App::patch('/v1/account/name')
     ->inject('user')
     ->inject('dbForInternal')
     ->inject('audits')
-    ->action(function ($name, $response, $user, $dbForInternal, $audits) {
+    ->inject('usage')
+    ->action(function ($name, $response, $user, $dbForInternal, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('name', $name));
 
@@ -984,6 +1038,10 @@ App::patch('/v1/account/name')
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.update.name')
             ->setParam('resource', 'users/' . $user->getId())
+        ;
+
+        $usage
+            ->setParam('users.update', 1)
         ;
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -1007,11 +1065,13 @@ App::patch('/v1/account/password')
     ->inject('user')
     ->inject('dbForInternal')
     ->inject('audits')
-    ->action(function ($password, $oldPassword, $response, $user, $dbForInternal, $audits) {
+    ->inject('usage')
+    ->action(function ($password, $oldPassword, $response, $user, $dbForInternal, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Stats\Stats $usage */
 
         // Check old password only if its an existing user.
         if ($user->getAttribute('passwordUpdate') !== 0 && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
@@ -1029,6 +1089,9 @@ App::patch('/v1/account/password')
             ->setParam('resource', 'users/' . $user->getId())
         ;
 
+        $usage
+            ->setParam('users.update', 1)
+        ;
         $response->dynamic($user, Response::MODEL_USER);
     });
 
@@ -1050,11 +1113,13 @@ App::patch('/v1/account/email')
     ->inject('user')
     ->inject('dbForInternal')
     ->inject('audits')
-    ->action(function ($email, $password, $response, $user, $dbForInternal, $audits) {
+    ->inject('usage')
+    ->action(function ($email, $password, $response, $user, $dbForInternal, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $isAnonymousUser = is_null($user->getAttribute('email')) && is_null($user->getAttribute('password')); // Check if request is from an anonymous account for converting
 
@@ -1084,6 +1149,9 @@ App::patch('/v1/account/email')
             ->setParam('resource', 'users/' . $user->getId())
         ;
 
+        $usage
+            ->setParam('users.update', 1)
+        ;
         $response->dynamic($user, Response::MODEL_USER);
     });
 
@@ -1104,11 +1172,13 @@ App::patch('/v1/account/prefs')
     ->inject('user')
     ->inject('dbForInternal')
     ->inject('audits')
-    ->action(function ($prefs, $response, $user, $dbForInternal, $audits) {
+    ->inject('usage')
+    ->action(function ($prefs, $response, $user, $dbForInternal, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
 
@@ -1117,6 +1187,9 @@ App::patch('/v1/account/prefs')
             ->setParam('resource', 'users/' . $user->getId())
         ;
 
+        $usage
+            ->setParam('users.update', 1)
+        ;
         $response->dynamic($user, Response::MODEL_USER);
     });
 
@@ -1137,13 +1210,15 @@ App::delete('/v1/account')
     ->inject('dbForInternal')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($request, $response, $user, $dbForInternal, $audits, $events) {
+    ->inject('usage')
+    ->action(function ($request, $response, $user, $dbForInternal, $audits, $events, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $protocol = $request->getProtocol();
         $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('status', false));
@@ -1173,6 +1248,9 @@ App::delete('/v1/account')
             ;
         }
 
+        $usage
+            ->setParam('users.delete', 1)
+        ;
         $response
             ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
@@ -1200,7 +1278,8 @@ App::delete('/v1/account/sessions/:sessionId')
     ->inject('locale')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($sessionId, $request, $response, $user, $dbForInternal, $locale, $audits, $events) {
+    ->inject('usage')
+    ->action(function ($sessionId, $request, $response, $user, $dbForInternal, $locale, $audits, $events, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
@@ -1208,6 +1287,7 @@ App::delete('/v1/account/sessions/:sessionId')
         /** @var Utopia\Locale\Locale $locale */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
@@ -1254,6 +1334,10 @@ App::delete('/v1/account/sessions/:sessionId')
                     ->setParam('eventData', $response->output($session, Response::MODEL_SESSION))
                 ;
 
+                $usage
+                    ->setParam('users.sessions.delete', 1)
+                    ->setParam('users.update', 1)
+                ;
                 return $response->noContent();
             }
         }
@@ -1280,7 +1364,8 @@ App::delete('/v1/account/sessions')
     ->inject('locale')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($request, $response, $user, $dbForInternal, $locale, $audits, $events) {
+    ->inject('usage')
+    ->action(function ($request, $response, $user, $dbForInternal, $locale, $audits, $events, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
@@ -1288,6 +1373,7 @@ App::delete('/v1/account/sessions')
         /** @var Utopia\Locale\Locale $locale */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
@@ -1330,6 +1416,10 @@ App::delete('/v1/account/sessions')
             ]), Response::MODEL_SESSION_LIST))
         ;
 
+        $usage
+            ->setParam('users.sessions.delete', 1)
+            ->setParam('users.update', 1)
+        ;
         $response->noContent();
     });
 
@@ -1357,7 +1447,8 @@ App::post('/v1/account/recovery')
     ->inject('mails')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($email, $url, $request, $response, $dbForInternal, $project, $locale, $mails, $audits, $events) {
+    ->inject('usage')
+    ->action(function ($email, $url, $request, $response, $dbForInternal, $project, $locale, $mails, $audits, $events, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
@@ -1366,6 +1457,7 @@ App::post('/v1/account/recovery')
         /** @var Appwrite\Event\Event $mails */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
@@ -1433,6 +1525,9 @@ App::post('/v1/account/recovery')
             ->setParam('resource', 'users/' . $profile->getId())
         ;
 
+        $usage
+            ->setParam('users.update', 1)
+        ;
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($recovery, Response::MODEL_TOKEN);
     });
@@ -1458,10 +1553,12 @@ App::put('/v1/account/recovery')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('audits')
-    ->action(function ($userId, $secret, $password, $passwordAgain, $response, $dbForInternal, $audits) {
+    ->inject('usage')
+    ->action(function ($userId, $secret, $password, $passwordAgain, $response, $dbForInternal, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Stats\Stats $usage */
 
         if ($password !== $passwordAgain) {
             throw new Exception('Passwords must match', 400);
@@ -1508,6 +1605,9 @@ App::put('/v1/account/recovery')
             ->setParam('resource', 'users/' . $profile->getId())
         ;
 
+        $usage
+            ->setParam('users.update', 1)
+        ;
         $response->dynamic($recovery, Response::MODEL_TOKEN);
     });
 
@@ -1535,7 +1635,8 @@ App::post('/v1/account/verification')
     ->inject('audits')
     ->inject('events')
     ->inject('mails')
-    ->action(function ($url, $request, $response, $project, $user, $dbForInternal, $locale, $audits, $events, $mails) {
+    ->inject('usage')
+    ->action(function ($url, $request, $response, $project, $user, $dbForInternal, $locale, $audits, $events, $mails, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
@@ -1545,6 +1646,7 @@ App::post('/v1/account/verification')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $mails */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
@@ -1602,6 +1704,9 @@ App::post('/v1/account/verification')
             ->setParam('resource', 'users/' . $user->getId())
         ;
 
+        $usage
+            ->setParam('users.update', 1)
+        ;
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($verification, Response::MODEL_TOKEN);
     });
@@ -1626,11 +1731,13 @@ App::put('/v1/account/verification')
     ->inject('user')
     ->inject('dbForInternal')
     ->inject('audits')
-    ->action(function ($userId, $secret, $response, $user, $dbForInternal, $audits) {
+    ->inject('usage')
+    ->action(function ($userId, $secret, $response, $user, $dbForInternal, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $profile = $dbForInternal->getDocument('users', $userId);
 
@@ -1668,5 +1775,8 @@ App::put('/v1/account/verification')
             ->setParam('resource', 'users/' . $user->getId())
         ;
 
+        $usage
+            ->setParam('users.update', 1)
+        ;
         $response->dynamic($verification, Response::MODEL_TOKEN);
     });

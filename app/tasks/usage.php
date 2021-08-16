@@ -11,36 +11,7 @@ use Utopia\CLI\Console;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-
-/**
- * 1. Load all the projects
- * 2. Load latest data entered entered for each project, for each period
- * 3. Start the loop
- * 4. Fore each project, for each metric, for each period - sync data
- */
-
-/**
- * Only succefull operations
- *
- * database.collections.CRUD (project=x)
- * database.documents.CRUD (project=x,collection=y)
- *
- * users.CRUD
- * users.sessions.create (project=x,provider=y)
- * users.sessions.delete (project=x,provider=y)
- *
- * storage.buckets.CRUD (project=x)
- * storage.files.CRUD (project=x,bucket=y)
- *
- * refactor later
- * - functions
- * - realtime
- * - teams
- * - webhooks
- * - keys - really later!
- */
 
 $cli
     ->task('usage')
@@ -61,92 +32,90 @@ $cli
             ],
         ];
 
-        //use projectId from influxdb instead of iterating over projects from DB
-
         $globalMetrics = [
             'requests' => [
-                'method' => 'getGlobalMetrics',
                 'table' => 'appwrite_usage_requests_all',
             ],
             'network' => [
-                'method' => 'getGlobalMetrics',
                 'table' => 'appwrite_usage_network_all',
             ],
             'executions' => [
-                'method' => 'getGlobalMetrics',
                 'table' => 'appwrite_usage_executions_all',
             ],
             'database.collections.create' => [
-                'method' => 'getDatabaseMetrics',
                 'table' => 'appwrite_usage_database_collections_create',
             ],
             'database.collections.read' => [
-                'method' => 'getDatabaseMetrics',
                 'table' => 'appwrite_usage_database_collections_read',
             ],
             'database.collections.update' => [
-                'method' => 'getDatabaseMetrics',
                 'table' => 'appwrite_usage_database_collections_update',
             ],
             'database.collections.delete' => [
-                'method' => 'getDatabaseMetrics',
                 'table' => 'appwrite_usage_database_collections_delete',
             ],
             'database.documents.create' => [
-                'method' => 'getDatabaseMetrics',
                 'table' => 'appwrite_usage_database_documents_create',
             ],
             'database.documents.read' => [
-                'method' => 'getDatabaseMetrics',
                 'table' => 'appwrite_usage_database_documents_read',
             ],
             'database.documents.update' => [
-                'method' => 'getDatabaseMetrics',
                 'table' => 'appwrite_usage_database_documents_update',
             ],
             'database.documents.delete' => [
-                'method' => 'getDatabaseMetrics',
                 'table' => 'appwrite_usage_database_documents_delete',
             ],
             'database.documents.collectionId.create' => [
-                'method' => 'getDatabaseMetrics',
                 'table' => 'appwrite_usage_database_documents_create',
                 'groupBy' => 'collectionId',
             ],
             'database.documents.collectionId.read' => [
-                'method' => 'getDatabaseMetrics',
                 'table' => 'appwrite_usage_database_documents_read',
                 'groupBy' => 'collectionId',
             ],
             'database.documents.collectionId.update' => [
-                'method' => 'getDatabaseMetrics',
                 'table' => 'appwrite_usage_database_documents_update',
                 'groupBy' => 'collectionId',
             ],
             'database.documents.collectionId.delete' => [
-                'method' => 'getDatabaseMetrics',
                 'table' => 'appwrite_usage_database_documents_delete',
                 'groupBy' => 'collectionId',
             ],
             'storage.buckets.bucketId.files.create' => [
-                'method' => 'getDatabaseMetrics',
                 'table' => 'appwrite_usage_storage_files_create',
                 'groupBy' => 'bucketId',
             ],
             'storage.buckets.bucketId.files.read' => [
-                'method' => 'getDatabaseMetrics',
                 'table' => 'appwrite_usage_storage_files_read',
                 'groupBy' => 'bucketId',
             ],
             'storage.buckets.bucketId.files.update' => [
-                'method' => 'getDatabaseMetrics',
                 'table' => 'appwrite_usage_storage_files_update',
                 'groupBy' => 'bucketId',
             ],
             'storage.buckets.bucketId.files.delete' => [
-                'method' => 'getDatabaseMetrics',
                 'table' => 'appwrite_usage_storage_files_delete',
                 'groupBy' => 'bucketId',
+            ],
+            'users.create' => [
+                'table' => 'appwrite_usage_users_create',
+            ],
+            'users.read' => [
+                'table' => 'appwrite_usage_users_read',
+            ],
+            'users.update' => [
+                'table' => 'appwrite_usage_users_update',
+            ],
+            'users.delete' => [
+                'table' => 'appwrite_usage_users_delete',
+            ],
+            'users.sessions.create' => [
+                'table' => 'appwrite_usage_users_sessions_create',
+                'groupBy' => 'provider',
+            ],
+            'users.sessions.delete' => [
+                'table' => 'appwrite_usage_users_sessions_delete',
             ],
         ];
 
@@ -169,17 +138,15 @@ $cli
         } while ($attempts < $max);
 
         $cacheAdapter = new Cache(new Redis($redis));
-        $dbForConsole = new Database(new MariaDB($db), $cacheAdapter);
-        $dbForConsole->setNamespace('project_console_internal');
         $dbForProject = new Database(new MariaDB($db), $cacheAdapter);
 
         Authorization::disable();
-        $latestData = [];
 
-        $firstRun = true;
-        Console::loop(function () use ($interval, $register, &$latestData, $dbForProject, $dbForConsole, &$firstRun, $globalMetrics, $periods) {
+        Console::loop(function () use ($interval, $register, $dbForProject, $globalMetrics, $periods) {
             $time = date('d-m-Y H:i:s', time());
             Console::info("[{$time}] Aggregating usage data every {$interval} seconds");
+
+            $loopStart = microtime(true);
 
             $client = $register->get('influxdb');
             if ($client) {
@@ -225,7 +192,6 @@ $cli
                                         $dbForProject->updateDocument('stats', $document->getId(),
                                             $document->setAttribute('value', $value));
                                     }
-                                    $latestData[$projectId][$metric][$period['key']] = $time;
                                 } catch (\Exception$e) {
                                     Console::warning("Failed to save data for project {$projectId} and metric {$metric}");
                                 }
@@ -234,6 +200,9 @@ $cli
                     }
                 }
             }
-            $firstRun = false;
+
+            $loopTook = microtime(true) - $loopStart;
+            $time = date('d-m-Y H:i:s', time());
+            Console::info("[{$time}] Aggregation took {$loopTook} seconds");
         }, $interval);
     });

@@ -573,7 +573,7 @@ App::delete('/v1/users/:userId')
     ->inject('dbForInternal')
     ->inject('events')
     ->inject('deletes')
-    ->inject('users')
+    ->inject('usage')
     ->action(function ($userId, $response, $dbForInternal, $events, $deletes, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */

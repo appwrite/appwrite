@@ -126,8 +126,8 @@ class Stats
         foreach ($dbMetrics as $metric) {
             $value = $this->params[$metric] ?? 0;
             if ($value >= 1) {
-                $dbTags = ",projectId={$projectId},collectionId=" . ($this->params['collectionId'] ?? '');
-                $this->statsd->increment($metric . $dbTags);
+                $tags = ",projectId={$projectId},collectionId=" . ($this->params['collectionId'] ?? '');
+                $this->statsd->increment($metric . $tags);
             }
         }
 
@@ -141,8 +141,36 @@ class Stats
         foreach ($storageMertics as $metric) {
             $value = $this->params[$metric] ?? 0;
             if ($value >= 1) {
-                $storageTags = ",projectId={$projectId},bucketId=" . ($this->params['bucketId'] ?? '');
-                $this->statsd->increment($metric . $storageTags);
+                $tags = ",projectId={$projectId},bucketId=" . ($this->params['bucketId'] ?? '');
+                $this->statsd->increment($metric . $tags);
+            }
+        }
+
+        $usersMetrics = [
+            'users.create',
+            'users.read',
+            'users.update',
+            'users.delete',
+        ];
+
+        foreach ($usersMetrics as $metric) {
+            $value = $this->params[$metric] ?? 0;
+            if ($value >= 1) {
+                $tags = ",projectId={$projectId}";
+                $this->statsd->increment($metric . $tags);
+            }
+        }
+
+        $sessionsMetrics = [
+            'users.sessions.create',
+            'users.sessions.delete',
+        ];
+
+        foreach ($sessionsMetrics as $metric) {
+            $value = $this->params[$metric] ?? 0;
+            if ($value >= 1) {
+                $tags = ",projectId={$projectId},provider=". ($this->params['provider'] ?? '');
+                $this->statsd->increment($metric . $tags);
             }
         }
 
