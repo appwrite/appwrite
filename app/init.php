@@ -62,6 +62,11 @@ const APP_LIMIT_COUNT = 5000;
 const APP_LIMIT_USERS = 10000;
 const APP_CACHE_BUSTER = 151;
 const APP_VERSION_STABLE = '0.10.0';
+const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
+const APP_DATABASE_ATTRIBUTE_IP = 'ip';
+const APP_DATABASE_ATTRIBUTE_URL = 'url';
+const APP_DATABASE_ATTRIBUTE_INT_RANGE = 'intRange';
+const APP_DATABASE_ATTRIBUTE_FLOAT_RANGE = 'floatRange';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_CACHE = '/storage/cache';
@@ -196,19 +201,19 @@ Database2::addFilter('encrypt',
     }
 );
 
-Structure::addFormat('email', function() {
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_EMAIL, function() {
     return new Email();
 }, Database2::VAR_STRING);
 
-Structure::addFormat('ip', function() {
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_IP, function() {
     return new IP();
 }, Database2::VAR_STRING);
 
-Structure::addFormat('url', function() {
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_URL, function() {
     return new URL();
 }, Database2::VAR_STRING);
 
-Structure::addFormat('int-range', function($attribute) {
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_INT_RANGE, function($attribute) {
     // Format encoded as json string containing name and relevant options
     // E.g. Range: $format = json_encode(['name'=>$name, 'min'=>$min, 'max'=>$max]);
     $format = json_decode($attribute['format'], true);
@@ -218,7 +223,7 @@ Structure::addFormat('int-range', function($attribute) {
     return new Range($min, $max, $type);
 }, Database2::VAR_INTEGER);
 
-Structure::addFormat('float-range', function($attribute) {
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_FLOAT_RANGE, function($attribute) {
     // Format encoded as json string containing name and relevant options
     // E.g. Range: $format = json_encode(['name'=>$name, 'min'=>$min, 'max'=>$max]);
     $format = json_decode($attribute['format'], true);
