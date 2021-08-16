@@ -26,7 +26,7 @@ class AttributeString extends Attribute
      */
     public function getName():string
     {
-        return 'String';
+        return 'AttributeString';
     }
 
     /**

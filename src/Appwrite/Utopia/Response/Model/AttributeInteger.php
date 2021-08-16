@@ -36,7 +36,7 @@ class AttributeInteger extends Attribute
      */
     public function getName():string
     {
-        return 'Integer';
+        return 'AttributeInteger';
     }
 
     /**
@@ -46,6 +46,6 @@ class AttributeInteger extends Attribute
      */
     public function getType():string
     {
-        return Response::MODEL_INTEGER;
+        return Response::MODEL_ATTRIBUTE_INTEGER;
     }
 }

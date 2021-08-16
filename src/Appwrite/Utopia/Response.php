@@ -77,17 +77,11 @@ class Response extends SwooleResponse
     const MODEL_ATTRIBUTE = 'attribute';
     const MODEL_ATTRIBUTE_LIST = 'attributeList';
     const MODEL_ATTRIBUTE_STRING = 'attributeString';
-    const MODEL_ATTRIBUTE_STRING_LIST = 'attributeStringList';
-    const MODEL_INTEGER= 'integer';
-    const MODEL_INTEGER_LIST= 'integerList';
-    const MODEL_FLOAT= 'float';
-    const MODEL_FLOAT_LIST= 'floatList';
-    const MODEL_ATTRIBUTE_EMAIL= 'email';
-    const MODEL_EMAIL_LIST= 'emailList';
-    const MODEL_ATTRIBUTE_IP= 'ip';
-    const MODEL_IP_LIST= 'ipList';
-    const MODEL_ATTRIBUTE_URL= 'url';
-    const MODEL_URL_LIST= 'urlList';
+    const MODEL_ATTRIBUTE_INTEGER= 'attributeInteger';
+    const MODEL_ATTRIBUTE_FLOAT= 'attributeFloat';
+    const MODEL_ATTRIBUTE_EMAIL= 'attributeEmail';
+    const MODEL_ATTRIBUTE_IP= 'attributeIp';
+    const MODEL_ATTRIBUTE_URL= 'attributeUrl';
 
     // Users
     const MODEL_USER = 'user';

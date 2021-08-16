@@ -36,7 +36,7 @@ class AttributeFloat extends Attribute
      */
     public function getName():string
     {
-        return 'Float';
+        return 'AttributeFloat';
     }
 
     /**
@@ -46,6 +46,6 @@ class AttributeFloat extends Attribute
      */
     public function getType():string
     {
-        return Response::MODEL_FLOAT;
+        return Response::MODEL_ATTRIBUTE_FLOAT;
     }
 }
