@@ -1,3 +1,15 @@
+## 0.7.1
+- Fix - createOAuth2Session completing too early
+
+## 0.7.0
+- Support for Appwrite 0.9
+- Breaking - removed order type enum, now you should pass string 'ASC' or 'DESC'
+- Image Crop Gravity support in image preview service
+- New endpoint in Account getSession to get session by ID
+- Fix - issues with User-Agent when app name consisted of non-ASCII characters
+- Fix - issue with null Success and Failure URL in createOAuth2Session
+- Updated underlying dependencies
+
 ## 0.6.3
 
 - Removed default values, nothing should change in usage as default values are already allocated in server

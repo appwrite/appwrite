@@ -9,9 +9,9 @@ public void main() {
 
     Account account = new Account(client);
     account.updateEmail(
-        email = "email@example.com",
-        password = "password"
-        new Continuation<Response>() {
+        "email@example.com",
+        "password"
+        new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {

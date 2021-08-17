@@ -9,10 +9,10 @@ public void main() {
 
     Storage storage = new Storage(client);
     storage.updateFile(
-        fileId = "[FILE_ID]",
-        read = listOf(),
-        write = listOf()
-        new Continuation<Response>() {
+        "[FILE_ID]",
+        listOf(),
+        listOf()
+        new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {

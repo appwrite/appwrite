@@ -43,6 +43,7 @@ class Realtime extends Adapter
      */
     public function subscribe(string $projectId, mixed $connection, array $roles, array $channels): void
     {
+        //TODO: merge project & channel to a single layer
         if (!isset($this->subscriptions[$projectId])) { // Init Project
             $this->subscriptions[$projectId] = [];
         }
@@ -65,7 +66,7 @@ class Realtime extends Adapter
     }
 
     /**
-     * Removes Subscription. 
+     * Removes Subscription.
      * 
      * @param mixed $connection
      * @return void 
@@ -101,10 +102,11 @@ class Realtime extends Adapter
      * @param string $projectId 
      * @param string $role 
      * @param string $channel 
-     * @return bool 
+     * @return bool
      */
     public function hasSubscriber(string $projectId, string $role, string $channel = ''): bool
     {
+        //TODO: look into moving it to an abstract class in the parent class
         if (empty($channel)) {
             return array_key_exists($projectId, $this->subscriptions)
                 && array_key_exists($role, $this->subscriptions[$projectId]);
@@ -121,22 +123,22 @@ class Realtime extends Adapter
      * @param array $payload 
      * @param string $event 
      * @param array $channels 
-     * @param array $permissions 
+     * @param array $roles 
      * @param array $options 
      * @return void 
      */
-    public static function send(string $project, array $payload, string $event, array $channels, array $permissions, array $options = []): void
+    public static function send(string $project, array $payload, string $event, array $channels, array $roles, array $options = []): void
     {
-        if (empty($channels) || empty($permissions) || empty($project)) return;
+        if (empty($channels) || empty($roles) || empty($project)) return;
 
         $permissionsChanged = array_key_exists('permissionsChanged', $options) && $options['permissionsChanged'];
         $userId = array_key_exists('userId', $options) ? $options['userId'] : null;
 
-        $redis = new \Redis();
+        $redis = new \Redis(); //TODO: make this part of the constructor
         $redis->connect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
         $redis->publish('realtime', json_encode([
             'project' => $project,
-            'permissions' => $permissions,
+            'roles' => $roles,
             'permissionsChanged' => $permissionsChanged,
             'userId' => $userId,
             'data' => [
@@ -161,18 +163,19 @@ class Realtime extends Adapter
      * 
      * @param array $event
      */
-    public function getReceivers(array $event)
+    public function getSubscribers(array $event)
     {
+        //TODO: do comments
         $receivers = [];
         if (isset($this->subscriptions[$event['project']])) {
             foreach ($this->subscriptions[$event['project']] as $role => $subscription) {
                 foreach ($event['data']['channels'] as $channel) {
                     if (
                         \array_key_exists($channel, $this->subscriptions[$event['project']][$role])
-                        && (\in_array($role, $event['permissions']) || \in_array('*', $event['permissions']))
+                        && (\in_array($role, $event['roles']) || \in_array('*', $event['roles']))
                     ) {
-                        foreach (array_keys($this->subscriptions[$event['project']][$role][$channel]) as $ids) {
-                            $receivers[$ids] = 0;
+                        foreach (array_keys($this->subscriptions[$event['project']][$role][$channel]) as $id) {
+                            $receivers[$id] = 0;
                         }
                         break;
                     }
@@ -187,10 +190,10 @@ class Realtime extends Adapter
      * Converts the channels from the Query Params into an array. 
      * Also renames the account channel to account.USER_ID and removes all illegal account channel variations.
      * @param array $channels 
-     * @param Document $user 
+     * @param string $userId 
      * @return array 
      */
-    public static function convertChannels(array $channels, Document $user): array
+    public static function convertChannels(array $channels, string $userId): array
     {
         $channels = array_flip($channels);
 
@@ -201,8 +204,8 @@ class Realtime extends Adapter
                     break;
 
                 case $key === 'account':
-                    if (!empty($user->getId())) {
-                        $channels['account.' . $user->getId()] = $value;
+                    if (!empty($userId)) {
+                        $channels['account.' . $userId] = $value;
                     }
                     unset($channels['account']);
                     break;
@@ -210,8 +213,8 @@ class Realtime extends Adapter
         }
 
         if (\array_key_exists('account', $channels)) {
-            if ($user->getId()) {
-                $channels['account.' . $user->getId()] = $channels['account'];
+            if ($userId) {
+                $channels['account.' . $userId] = $channels['account'];
             }
             unset($channels['account']);
         }
@@ -227,53 +230,55 @@ class Realtime extends Adapter
     public static function fromPayload(string $event, Document $payload): array
     {
         $channels = [];
-        $permissions = [];
+        $roles = [];
         $permissionsChanged = false;
 
         switch (true) {
             case strpos($event, 'account.recovery.') === 0:
             case strpos($event, 'account.sessions.') === 0:
             case strpos($event, 'account.verification.') === 0:
+                $channels[] = 'account';
                 $channels[] = 'account.' . $payload->getAttribute('userId');
-                $permissions = ['user:' . $payload->getAttribute('userId')];
+                $roles = ['user:' . $payload->getAttribute('userId')];
 
                 break;
             case strpos($event, 'account.') === 0:
+                $channels[] = 'account';
                 $channels[] = 'account.' . $payload->getId();
-                $permissions = ['user:' . $payload->getId()];
+                $roles = ['user:' . $payload->getId()];
 
                 break;
             case strpos($event, 'teams.memberships') === 0:
                 $permissionsChanged = in_array($event, ['teams.memberships.update', 'teams.memberships.delete', 'teams.memberships.update.status']);
                 $channels[] = 'memberships';
                 $channels[] = 'memberships.' . $payload->getId();
-                $permissions = ['team:' . $payload->getAttribute('teamId')];
+                $roles = ['team:' . $payload->getAttribute('teamId')];
 
                 break;
             case strpos($event, 'teams.') === 0:
                 $permissionsChanged = $event === 'teams.create';
                 $channels[] = 'teams';
                 $channels[] = 'teams.' . $payload->getId();
-                $permissions = ['team:' . $payload->getId()];
+                $roles = ['team:' . $payload->getId()];
 
                 break;
             case strpos($event, 'database.collections.') === 0:
                 $channels[] = 'collections';
                 $channels[] = 'collections.' . $payload->getId();
-                $permissions = $payload->getAttribute('$permissions.read');
+                $roles = $payload->getAttribute('$permissions.read');
 
                 break;
             case strpos($event, 'database.documents.') === 0:
                 $channels[] = 'documents';
                 $channels[] = 'collections.' . $payload->getAttribute('$collection') . '.documents';
                 $channels[] = 'documents.' . $payload->getId();
-                $permissions = $payload->getAttribute('$permissions.read');
+                $roles = $payload->getAttribute('$permissions.read');
 
                 break;
             case strpos($event, 'storage.') === 0:
                 $channels[] = 'files';
                 $channels[] = 'files.' . $payload->getId();
-                $permissions = $payload->getAttribute('$permissions.read');
+                $roles = $payload->getAttribute('$permissions.read');
 
                 break;
             case strpos($event, 'functions.executions.') === 0:
@@ -281,14 +286,14 @@ class Realtime extends Adapter
                     $channels[] = 'executions';
                     $channels[] = 'executions.' . $payload->getId();
                     $channels[] = 'functions.' . $payload->getAttribute('functionId');
-                    $permissions = $payload->getAttribute('$permissions.read');
+                    $roles = $payload->getAttribute('$permissions.read');
                 }
                 break;
         }
 
         return [
             'channels' => $channels,
-            'permissions' => $permissions,
+            'roles' => $roles,
             'permissionsChanged' => $permissionsChanged
         ];
     }

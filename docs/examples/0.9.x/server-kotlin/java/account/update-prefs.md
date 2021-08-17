@@ -9,8 +9,8 @@ public void main() {
 
     Account account = new Account(client);
     account.updatePrefs(
-        prefs = mapOf( "a" to "b" )
-        new Continuation<Response>() {
+        mapOf( "a" to "b" )
+        new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {

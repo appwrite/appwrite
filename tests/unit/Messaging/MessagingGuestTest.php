@@ -20,7 +20,7 @@ class MessagingGuestTest extends TestCase
 
         $event = [
             'project' => '1',
-            'permissions' => ['*'],
+            'roles' => ['*'],
             'data' => [
                 'channels' => [
                     0 => 'documents',
@@ -29,89 +29,89 @@ class MessagingGuestTest extends TestCase
             ]
         ];
 
-        $receivers = $realtime->getReceivers($event);
+        $receivers = $realtime->getSubscribers($event);
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['permissions'] = ['role:guest'];
+        $event['roles'] = ['role:guest'];
 
-        $receivers = $realtime->getReceivers($event);
+        $receivers = $realtime->getSubscribers($event);
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['permissions'] = ['role:member'];
+        $event['roles'] = ['role:member'];
 
-        $receivers = $realtime->getReceivers($event);
-
-        $this->assertEmpty($receivers);
-
-        $event['permissions'] = ['user:123'];
-
-        $receivers = $realtime->getReceivers($event);
+        $receivers = $realtime->getSubscribers($event);
 
         $this->assertEmpty($receivers);
 
-        $event['permissions'] = ['team:abc'];
+        $event['roles'] = ['user:123'];
 
-        $receivers = $realtime->getReceivers($event);
-
-        $this->assertEmpty($receivers);
-
-        $event['permissions'] = ['team:abc/administrator'];
-
-        $receivers = $realtime->getReceivers($event);
+        $receivers = $realtime->getSubscribers($event);
 
         $this->assertEmpty($receivers);
 
-        $event['permissions'] = ['team:abc/god'];
+        $event['roles'] = ['team:abc'];
 
-        $receivers = $realtime->getReceivers($event);
-
-        $this->assertEmpty($receivers);
-
-        $event['permissions'] = ['team:def'];
-
-        $receivers = $realtime->getReceivers($event);
+        $receivers = $realtime->getSubscribers($event);
 
         $this->assertEmpty($receivers);
 
-        $event['permissions'] = ['team:def/guest'];
+        $event['roles'] = ['team:abc/administrator'];
 
-        $receivers = $realtime->getReceivers($event);
-
-        $this->assertEmpty($receivers);
-
-        $event['permissions'] = ['user:456'];
-
-        $receivers = $realtime->getReceivers($event);
+        $receivers = $realtime->getSubscribers($event);
 
         $this->assertEmpty($receivers);
 
-        $event['permissions'] = ['team:def/member'];
+        $event['roles'] = ['team:abc/god'];
 
-        $receivers = $realtime->getReceivers($event);
+        $receivers = $realtime->getSubscribers($event);
 
         $this->assertEmpty($receivers);
 
-        $event['permissions'] = ['*'];
+        $event['roles'] = ['team:def'];
+
+        $receivers = $realtime->getSubscribers($event);
+
+        $this->assertEmpty($receivers);
+
+        $event['roles'] = ['team:def/guest'];
+
+        $receivers = $realtime->getSubscribers($event);
+
+        $this->assertEmpty($receivers);
+
+        $event['roles'] = ['user:456'];
+
+        $receivers = $realtime->getSubscribers($event);
+
+        $this->assertEmpty($receivers);
+
+        $event['roles'] = ['team:def/member'];
+
+        $receivers = $realtime->getSubscribers($event);
+
+        $this->assertEmpty($receivers);
+
+        $event['roles'] = ['*'];
         $event['data']['channels'] = ['documents.123'];
 
-        $receivers = $realtime->getReceivers($event);
+        $receivers = $realtime->getSubscribers($event);
 
         $this->assertEmpty($receivers);
 
         $event['data']['channels'] = ['documents.789'];
 
-        $receivers = $realtime->getReceivers($event);
+        $receivers = $realtime->getSubscribers($event);
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
         $event['project'] = '2';
 
-        $receivers = $realtime->getReceivers($event);
+        $receivers = $realtime->getSubscribers($event);
 
         $this->assertEmpty($receivers);
 

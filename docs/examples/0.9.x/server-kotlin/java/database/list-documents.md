@@ -9,8 +9,8 @@ public void main() {
 
     Database database = new Database(client);
     database.listDocuments(
-        collectionId = "[COLLECTION_ID]",
-        new Continuation<Response>() {
+        "[COLLECTION_ID]",
+        new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {

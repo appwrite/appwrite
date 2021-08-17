@@ -9,9 +9,9 @@ public void main() {
 
     Functions functions = new Functions(client);
     functions.getExecution(
-        functionId = "[FUNCTION_ID]",
-        executionId = "[EXECUTION_ID]"
-        new Continuation<Response>() {
+        "[FUNCTION_ID]",
+        "[EXECUTION_ID]"
+        new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {

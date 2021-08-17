@@ -1,3 +1,12 @@
+## 0.7.0
+- Support for Appwrite 0.9
+- Breaking - removed order type enum, now you should pass string 'ASC' or 'DESC'
+- Breaking - changed param name from `env` to `runtime` in the **Functions** API
+- Image Crop Gravity support in image preview service
+- New endpoint in Account getSession to get session by ID
+- New endpoint in the Users API to update user verification status 
+- Fix - issues with User-Agent when app name consisted of non-ASCII characters
+
 ## 0.6.2
 
 - Removed default values, nothing should change in usage as default values are already allocated in server

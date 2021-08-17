@@ -9,8 +9,8 @@ public void main() {
 
     Avatars avatars = new Avatars(client);
     avatars.getQR(
-        text = "[TEXT]",
-        new Continuation<Response>() {
+        "[TEXT]",
+        new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {
