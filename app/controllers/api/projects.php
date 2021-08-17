@@ -322,79 +322,22 @@ App::get('/v1/projects/:projectId/usage')
                 ];
             }
             $functions = array_reverse($functions);
-
-            //     $requests = [];
-            //     $network = [];
-            //     $functions = [];
-
-            //     $client = $register->get('influxdb');
-            //     if ($client) {
-            //         $start = $period[$range]['start']->format(DateTime::RFC3339);
-            //         $end = $period[$range]['end']->format(DateTime::RFC3339);
-            //         $database = $client->selectDB('telegraf');
-
-            //         // Requests
-            //         $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_requests_all" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' AND "projectId"=\'' . $project->getId() . '\' GROUP BY time(' . $period[$range]['group'] . ') FILL(null)');
-            //         $points = $result->getPoints();
-
-            //         foreach ($points as $point) {
-            //             $requests[] = [
-            //                 'value' => (!empty($point['value'])) ? $point['value'] : 0,
-            //                 'date' => \strtotime($point['time']),
-            //             ];
-            //         }
-
-            //         // Network
-            //         $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_network_all" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' AND "projectId"=\'' . $project->getId() . '\' GROUP BY time(' . $period[$range]['group'] . ') FILL(null)');
-            //         $points = $result->getPoints();
-
-            //         foreach ($points as $point) {
-            //             $network[] = [
-            //                 'value' => (!empty($point['value'])) ? $point['value'] : 0,
-            //                 'date' => \strtotime($point['time']),
-            //             ];
-            //         }
-
-            //         // Functions
-            //         $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' AND "projectId"=\'' . $project->getId() . '\' GROUP BY time(' . $period[$range]['group'] . ') FILL(null)');
-            //         $points = $result->getPoints();
-
-            //         foreach ($points as $point) {
-            //             $functions[] = [
-            //                 'value' => (!empty($point['value'])) ? $point['value'] : 0,
-            //                 'date' => \strtotime($point['time']),
-            //             ];
-            //         }
-            //     }
         } else {
             $requests = [];
             $network = [];
             $functions = [];
         }
 
-        // Users
+        $usersCount = Authorization::skip(function () use ($dbForInternal) {
+            return $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['users.count'])], 0, ['time'], [Database::ORDER_DESC]);
+        });
+        $usersTotal = $usersCount ? $usersCount->getAttribute('value', 0) : 0;
 
-        // $projectDB->getCollection([
-        //     'limit' => 0,
-        //     'offset' => 0,
-        //     'filters' => [
-        //         '$collection=users',
-        //     ],
-        // ]);
-
-        // $usersTotal = $projectDB->getSum();
-
-        // // Documents
-
-        // $collections = $projectDB->getCollection([
-        //     'limit' => 100,
-        //     'offset' => 0,
-        //     'filters' => [
-        //         '$collection=collections',
-        //     ],
-        // ]);
-
-        // $collectionsTotal = $projectDB->getSum();
+        $collectionsCount = Authorization::skip(function () use ($dbForInternal, $period, $range) {
+            return $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['collections.count'])], 0, ['time'], [Database::ORDER_DESC]);
+        });
+        $collectionsTotal = $collectionsCount ? $collectionsCount->getAttribute('value', 0) : 0;
+        
 
         // $documents = [];
 
@@ -409,6 +352,11 @@ App::get('/v1/projects/:projectId/usage')
 
         //     $documents[] = ['name' => $collection['name'], 'total' => $projectDB->getSum()];
         // }
+
+        $filesCount = Authorization::skip(function () use ($dbForInternal, $period, $range) {
+            return $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['files.count'])], 0, ['time'], [Database::ORDER_DESC]);
+        });
+        $filesTotal = $filesCount ? $filesCount->getAttribute('value', 0) : 0;
 
         $response->json([
             'range' => $range,
@@ -430,20 +378,24 @@ App::get('/v1/projects/:projectId/usage')
                     return $item['value'];
                 }, $functions)),
             ],
-            // 'collections' => [
-            //     'data' => $collections,
-            //     'total' => $collectionsTotal,
-            // ],
+            'collections' => [
+                'data' => [],
+                'total' => $collectionsTotal,
+            ],
+            'files' => [
+                'data' => [],
+                'total' => $filesTotal,
+            ],
             // 'documents' => [
             //     'data' => $documents,
             //     'total' => \array_sum(\array_map(function ($item) {
             //         return $item['total'];
             //     }, $documents)),
             // ],
-            // 'users' => [
-            //     'data' => [],
-            //     'total' => $usersTotal,
-            // ],
+            'users' => [
+                'data' => [],
+                'total' => $usersTotal,
+            ],
             // 'storage' => [
             //     'total' => $projectDB->getCount(
             //         [
