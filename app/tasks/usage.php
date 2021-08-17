@@ -11,6 +11,7 @@ use Utopia\CLI\Console;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 
 $cli
@@ -158,7 +159,7 @@ $cli
                 foreach ($globalMetrics as $metric => $options) { //for each metrics
                     foreach ($periods as $period) { // aggregate data for each period
                         $start = DateTime::createFromFormat('U', \strtotime($period['startTime']))->format(DateTime::RFC3339);
-                        if(!empty($latestTime[$metric][$period['key']])) {
+                        if (!empty($latestTime[$metric][$period['key']])) {
                             $start = DateTime::createFromFormat('U', $latestTime[$metric][$period['key']])->format(DateTime::RFC3339);
                         }
                         $end = DateTime::createFromFormat('U', \strtotime('now'))->format(DateTime::RFC3339);
@@ -198,7 +199,7 @@ $cli
                                             $document->setAttribute('value', $value));
                                     }
                                     $latestTime[$metric][$period['key']] = $time;
-                                } catch (\Exception $e) {
+                                } catch (\Exception$e) {
                                     // if projects are deleted this might fail
                                     Console::warning("Failed to save data for project {$projectId} and metric {$metric}");
                                 }
@@ -212,4 +213,46 @@ $cli
             $now = date('d-m-Y H:i:s', time());
             Console::info("[{$now}] Aggregation took {$loopTook} seconds");
         }, $interval);
+
+        //aggregate number of objects in database
+        $dbForConsole = new Database(new MariaDB($db), $cacheAdapter);
+        $dbForConsole->setNamespace('project_console_internal');
+
+        $dbCountInterval = 15*60; //aggregate data every 15 minutes
+        Console::loop(function () use ($dbForConsole, $dbForProject, $dbCountInterval) {
+            $now = date('d-m-Y H:i:s', time());
+            Console::info("[{$now}] Aggregating Database object count every {$dbCountInterval} seconds");
+            $loopStart = microtime(true);
+
+            $latestProject = null;
+            do {
+                $projects = $dbForConsole->find('projects', [], 100, orderAfter:$latestProject);
+                if (!empty($projects)) {
+                    $latestProject = $projects[array_key_last($projects)];
+
+                    foreach ($projects as $project) {
+                        $id = $project->getId();
+                        $dbForProject->setNamespace("project_{$id}_internal");
+                        $collections = ['users', 'collections', 'files'];
+                        foreach ($collections as $collection) {
+                            $count = $dbForProject->count($collection);
+                            $dbForProject->createDocument('stats', new Document([
+                                '$id' => $dbForProject->getId(),
+                                'time' => time(),
+                                'period' => '15m',
+                                'metric' => "{$collection}.count",
+                                'value' => $count,
+                                'type' => 1,
+                            ]));
+                        }
+                    }
+                }
+
+            } while (!empty($projects));
+
+            $loopTook = microtime(true) - $loopStart;
+            $now = date('d-m-Y H:i:s', time());
+            Console::info("[{$now}] DB objects count aggregation took {$loopTook} seconds");
+
+        }, $dbCountInterval);
     });
