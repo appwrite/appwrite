@@ -38,14 +38,14 @@
         "appwrite/php-clamav": "1.1.*",
         "appwrite/php-runtimes": "0.4.*",
 
-        "utopia-php/framework": "0.14.*",
+        "utopia-php/framework": "0.17.*",
         "utopia-php/abuse": "0.5.*",
         "utopia-php/analytics": "0.2.*",
         "utopia-php/audit": "0.5.*",
         "utopia-php/cache": "0.2.*",
         "utopia-php/cli": "0.11.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/locale": "0.3.*",
+        "utopia-php/locale": "0.4.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/preloader": "0.2.*",
         "utopia-php/domains": "1.1.*",
@@ -63,10 +63,10 @@
         "slickdeals/statsd": "3.1.0"
     },
     "require-dev": {
-        "appwrite/sdk-generator": "0.12.0",
-        "textalk/websocket": "1.5.2",
-        "swoole/ide-helper": "4.6.7",
+        "appwrite/sdk-generator": "0.12.1",
         "phpunit/phpunit": "9.5.6",
+        "swoole/ide-helper": "4.6.7",
+        "textalk/websocket": "1.5.2",
         "vimeo/psalm": "4.7.2"
     },
     "repositories": [

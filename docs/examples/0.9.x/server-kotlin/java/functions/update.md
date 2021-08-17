@@ -9,10 +9,10 @@ public void main() {
 
     Functions functions = new Functions(client);
     functions.update(
-        functionId = "[FUNCTION_ID]",
-        name = "[NAME]",
-        execute = listOf(),
-        new Continuation<Response>() {
+        "[FUNCTION_ID]",
+        "[NAME]",
+        listOf(),
+        new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {

@@ -252,11 +252,7 @@ App::post('/v1/account/sessions')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
-        $countries = $locale->getText('countries');
-
-        $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
-        ? $countries[strtoupper($session->getAttribute('countryCode'))]
-        : $locale->getText('locale.country.unknown');
+        $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
@@ -782,7 +778,7 @@ App::post('/v1/account/jwt')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_JWT)
     ->label('abuse-limit', 10)
-    ->label('abuse-key', 'url:{url},userId:{param-userId}')
+    ->label('abuse-key', 'url:{url},userId:{userId}')
     ->inject('response')
     ->inject('user')
     ->action(function ($response, $user) {
@@ -880,16 +876,12 @@ App::get('/v1/account/sessions')
         /** @var Utopia\Locale\Locale $locale */
 
         $sessions = $user->getAttribute('sessions', []);
-        $countries = $locale->getText('countries');
         $current = Auth::sessionVerify($sessions, Auth::$secret);
 
         foreach ($sessions as $key => $session) { 
             /** @var Document $session */
 
-            $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
-            ? $countries[strtoupper($session->getAttribute('countryCode'))]
-            : $locale->getText('locale.country.unknown');
-
+            $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
             $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', ($current == $session->getId()) ? true : false);
 
@@ -918,20 +910,19 @@ App::get('/v1/account/logs')
     ->inject('user')
     ->inject('locale')
     ->inject('geodb')
-    ->inject('app')
-    ->action(function ($response, $project, $user, $locale, $geodb, $app) {
+    ->inject('utopia')
+    ->action(function ($response, $project, $user, $locale, $geodb, $utopia) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
-        /** @var Utopia\App $app */
+        /** @var Utopia\App $utopia */
 
-        $adapter = new AuditAdapter($app->getResource('db'));
+        $adapter = new AuditAdapter($utopia->getResource('db'));
         $adapter->setNamespace('app_'.$project->getId());
 
         $audit = new Audit($adapter);
-        $countries = $locale->getText('countries');
 
         $logs = $audit->getLogsByUserAndActions($user->getId(), [
             'account.create',
@@ -967,8 +958,8 @@ App::get('/v1/account/logs')
             $record = $geodb->get($log['ip']);
 
             if ($record) {
-                $output[$i]['countryCode'] = (isset($countries[$record['country']['iso_code']])) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
+                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));        
             } else {
                 $output[$i]['countryCode'] = '--';
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
@@ -1524,32 +1515,15 @@ App::post('/v1/account/recovery')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
-        $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
-        $content = new Template(__DIR__.'/../../config/locale/translations/templates/'.$locale->getText('account.emails.recovery.body'));
-        $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
-
-        $body
-            ->setParam('{{content}}', $content->render(false))
-            ->setParam('{{cta}}', $cta->render())
-            ->setParam('{{title}}', $locale->getText('account.emails.recovery.title'))
-            ->setParam('{{direction}}', $locale->getText('settings.direction'))
-            ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
-            ->setParam('{{name}}', $profile->getAttribute('name'))
-            ->setParam('{{redirect}}', $url)
-            ->setParam('{{bg-body}}', '#f7f7f7')
-            ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{bg-cta}}', '#073b4c')
-            ->setParam('{{text-content}}', '#000000')
-            ->setParam('{{text-cta}}', '#ffffff')
-        ;
-
         $mails
             ->setParam('event', 'account.recovery.create')
-            ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name')))
+            ->setParam('from', $project->getId())
             ->setParam('recipient', $profile->getAttribute('email', ''))
             ->setParam('name', $profile->getAttribute('name', ''))
-            ->setParam('subject', $locale->getText('account.emails.recovery.title'))
-            ->setParam('body', $body->render())
+            ->setParam('url', $url)
+            ->setParam('locale', $locale->default)
+            ->setParam('project', $project->getAttribute('name', ['[APP-NAME]']))
+            ->setParam('type', MAIL_TYPE_RECOVERY)
             ->trigger();
         ;
 
@@ -1668,7 +1642,7 @@ App::post('/v1/account/verification')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TOKEN)
     ->label('abuse-limit', 10)
-    ->label('abuse-key', 'url:{url},email:{param-email}')
+    ->label('abuse-key', 'url:{url},userId:{userId}')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add built-in confirm page
     ->inject('request')
     ->inject('response')
@@ -1728,32 +1702,15 @@ App::post('/v1/account/verification')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
-        $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
-        $content = new Template(__DIR__.'/../../config/locale/translations/templates/'.$locale->getText('account.emails.verification.body'));
-        $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
-
-        $body
-            ->setParam('{{content}}', $content->render(false))
-            ->setParam('{{cta}}', $cta->render())
-            ->setParam('{{title}}', $locale->getText('account.emails.verification.title'))
-            ->setParam('{{direction}}', $locale->getText('settings.direction'))
-            ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
-            ->setParam('{{name}}', $user->getAttribute('name'))
-            ->setParam('{{redirect}}', $url)
-            ->setParam('{{bg-body}}', '#f7f7f7')
-            ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{bg-cta}}', '#073b4c')
-            ->setParam('{{text-content}}', '#000000')
-            ->setParam('{{text-cta}}', '#ffffff')
-        ;
-
         $mails
             ->setParam('event', 'account.verification.create')
-            ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name')))
+            ->setParam('from', $project->getId())
             ->setParam('recipient', $user->getAttribute('email'))
             ->setParam('name', $user->getAttribute('name'))
-            ->setParam('subject', $locale->getText('account.emails.verification.title'))
-            ->setParam('body', $body->render())
+            ->setParam('url', $url)
+            ->setParam('locale', $locale->default)
+            ->setParam('project', $project->getAttribute('name', ['[APP-NAME]']))
+            ->setParam('type', MAIL_TYPE_VERIFICATION)
             ->trigger()
         ;
 

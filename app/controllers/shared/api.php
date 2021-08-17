@@ -206,7 +206,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
                 $response->getPayload(), 
                 $events->getParam('event'), 
                 $target['channels'], 
-                $target['permissions'], 
+                $target['roles'], 
                 [
                     'permissionsChanged' => $target['permissionsChanged'], 
                     'userId' => $events->getParam('userId')

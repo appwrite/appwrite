@@ -206,7 +206,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
             $event = [
                 'project' => 'console',
-                'permissions' => ['role:member'],
+                'roles' => ['role:member'],
                 'data' => [
                     'event' => 'stats.connections',
                     'channels' => ['project'],
@@ -215,9 +215,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 ]
             ];
 
-            $server->send($realtime->getReceivers($event), json_encode($event));
-            $register->get('dbPool')->put($db);
-            $register->get('redisPool')->put($cache);
+            $server->send($realtime->getSubscribers($event), json_encode($event['data']));
         }
     });
 
@@ -272,7 +270,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     $register->get('redisPool')->put($cache);
                 }
 
-                $receivers = $realtime->getReceivers($event);
+                $receivers = $realtime->getSubscribers($event);
 
                 // Temporarily print debug logs by default for Alpha testing.
                 // if (App::isDevelopment() && !empty($receivers)) {
@@ -379,7 +377,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         $roles = Auth::getRoles($user);
 
-        $channels = Realtime::convertChannels($request->getQuery('channels', []), $user);
+        $channels = Realtime::convertChannels($request->getQuery('channels', []), $user->getId());
 
         /**
          * Channels Check
@@ -407,6 +405,10 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         //}
         $server->send([$connection], json_encode($response));
         $server->close($connection, $th->getCode());
+
+        if ($th instanceof PDOException) {
+            $db = null;
+        }
     } finally {
         /**
          * Put used PDO and Redis Connections back into their pools.

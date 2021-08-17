@@ -9,9 +9,9 @@ public void main() {
 
     Database database = new Database(client);
     database.deleteDocument(
-        collectionId = "[COLLECTION_ID]",
-        documentId = "[DOCUMENT_ID]"
-        new Continuation<Response>() {
+        "[COLLECTION_ID]",
+        "[DOCUMENT_ID]"
+        new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {

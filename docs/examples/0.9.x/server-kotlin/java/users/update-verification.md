@@ -9,9 +9,9 @@ public void main() {
 
     Users users = new Users(client);
     users.updateVerification(
-        userId = "[USER_ID]",
-        emailVerification = false
-        new Continuation<Response>() {
+        "[USER_ID]",
+        false
+        new Continuation<Object>() {
             @NotNull
             @Override
             public CoroutineContext getContext() {
