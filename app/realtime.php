@@ -67,7 +67,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId)
             }
         ];
     };
-    
+
     /**
      * Create document for this worker for connection stats across Containers.
      */
