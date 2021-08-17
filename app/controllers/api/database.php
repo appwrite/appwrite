@@ -93,7 +93,6 @@ $attributesCallback = function ($attribute, $response, $dbForExternal, $database
     //
     // TODO@kodumbeats should $signed and $filters be part of the response model?
     $attribute = new Document([
-        '$collection' => $collectionId,
         '$id' => $attributeId,
         'type' => $type,
         'size' => $size,
@@ -460,7 +459,6 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
         /** @var Appwrite\Event\Event $audits */
 
         return $attributesCallback(new Document([
-            '$collection' => $collectionId,
             '$id' => $attributeId,
             'type' => Database::VAR_STRING,
             'size' => $size,
@@ -498,7 +496,6 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
         /** @var Appwrite\Event\Event $audits */
 
         return $attributesCallback(new Document([
-            '$collection' => $collectionId,
             '$id' => $attributeId,
             'type' => Database::VAR_STRING,
             'size' => 254,
@@ -537,7 +534,6 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
         /** @var Appwrite\Event\Event $audits */
 
         return $attributesCallback(new Document([
-            '$collection' => $collectionId,
             '$id' => $attributeId,
             'type' => Database::VAR_STRING,
             'size' => 39,
@@ -577,7 +573,6 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
         /** @var Appwrite\Event\Event $audits */
 
         return $attributesCallback(new Document([
-            '$collection' => $collectionId,
             '$id' => $attributeId,
             'type' => Database::VAR_STRING,
             'size' => $size,
@@ -618,7 +613,6 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
         /** @var Appwrite\Event\Event $audits */
 
         return $attributesCallback(new Document([
-            '$collection' => $collectionId,
             '$id' => $attributeId,
             'type' => Database::VAR_INTEGER,
             'size' => 0,
@@ -663,7 +657,6 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
         /** @var Appwrite\Event\Event $audits */
 
         return $attributesCallback(new Document([
-            '$collection' => $collectionId,
             '$id' => $attributeId,
             'type' => Database::VAR_FLOAT,
             'required' => $required,
@@ -706,7 +699,6 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
         /** @var Appwrite\Event\Event $audits */
 
         return $attributesCallback(new Document([
-            '$collection' => $collectionId,
             '$id' => $attributeId,
             'type' => Database::VAR_BOOLEAN,
             'size' => 0,
@@ -833,7 +825,6 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
         $attribute = null;
         foreach ($attributes as $a) {
             if ($a->getId() === $attributeId) {
-                $attribute = $a->setAttribute('$collection', $collectionId); // set the collectionId
                 break; // break once attribute is found
             }
         }

@@ -72,10 +72,8 @@ trait WebhooksBase
         ]);
 
         $this->assertEquals($firstName['headers']['status-code'], 201);
-        $this->assertEquals($firstName['body']['$collection'], $data['actorsId']);
         $this->assertEquals($firstName['body']['$id'], 'firstName');
         $this->assertEquals($lastName['headers']['status-code'], 201);
-        $this->assertEquals($lastName['body']['$collection'], $data['actorsId']);
         $this->assertEquals($lastName['body']['$id'], 'lastName');
 
         // wait for database worker to kick in
