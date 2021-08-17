@@ -141,12 +141,15 @@ $cli
 
         $cacheAdapter = new Cache(new Redis($redis));
         $dbForProject = new Database(new MariaDB($db), $cacheAdapter);
+        $dbForConsole = new Database(new MariaDB($db), $cacheAdapter);
+        $dbForConsole->setNamespace('project_console_internal');
 
         $latestTime = [];
 
         Authorization::disable();
 
-        Console::loop(function () use ($interval, $register, $dbForProject, $globalMetrics, $periods, &$latestTime) {
+        $iterations = 0;
+        Console::loop(function () use ($interval, $register, $dbForProject, $dbForConsole, $globalMetrics, $periods, &$latestTime, &$iterations) {
             $now = date('d-m-Y H:i:s', time());
             Console::info("[{$now}] Aggregating usage data every {$interval} seconds");
 
@@ -174,7 +177,7 @@ $cli
                             if (!empty($projectId) && $projectId != 'console') {
                                 $dbForProject->setNamespace('project_' . $projectId . '_internal');
                                 if (!empty($groupBy)) {
-                                    $groupedBy = $point[$groupBy];
+                                    $groupedBy = $point[$groupBy] ?? '';
                                     if (empty($groupedBy)) {
                                         continue;
                                     }
@@ -209,50 +212,44 @@ $cli
                 }
             }
 
+            if ($iterations % 30 == 0) {
+                //aggregate number of objects in database
+                $latestProject = null;
+                do {
+                    $projects = $dbForConsole->find('projects', [], 100, orderAfter:$latestProject);
+                    if (!empty($projects)) {
+                        $latestProject = $projects[array_key_last($projects)];
+
+                        foreach ($projects as $project) {
+                            $id = $project->getId();
+                            $collections = ['users' => [
+                                'namespace' => 'internal',
+                            ], 'collections' => [
+                                'namespace' => 'external',
+                            ], 'files' => [
+                                'namespace' => 'internal',
+                            ]];
+                            foreach ($collections as $collection => $options) {
+                                $dbForProject->setNamespace("project_{$id}_{$options['namespace']}");
+                                $count = $dbForProject->count($collection);
+                                $dbForProject->setNamespace("project_{$id}_internal");
+                                $dbForProject->createDocument('stats', new Document([
+                                    '$id' => $dbForProject->getId(),
+                                    'time' => time(),
+                                    'period' => '15m',
+                                    'metric' => "{$collection}.count",
+                                    'value' => $count,
+                                    'type' => 1,
+                                ]));
+                            }
+                        }
+                    }
+
+                } while (!empty($projects));
+            }
+            $iterations++;
             $loopTook = microtime(true) - $loopStart;
             $now = date('d-m-Y H:i:s', time());
             Console::info("[{$now}] Aggregation took {$loopTook} seconds");
         }, $interval);
-
-        //aggregate number of objects in database
-        $dbForConsole = new Database(new MariaDB($db), $cacheAdapter);
-        $dbForConsole->setNamespace('project_console_internal');
-
-        $dbCountInterval = 15*60; //aggregate data every 15 minutes
-        Console::loop(function () use ($dbForConsole, $dbForProject, $dbCountInterval) {
-            $now = date('d-m-Y H:i:s', time());
-            Console::info("[{$now}] Aggregating Database object count every {$dbCountInterval} seconds");
-            $loopStart = microtime(true);
-
-            $latestProject = null;
-            do {
-                $projects = $dbForConsole->find('projects', [], 100, orderAfter:$latestProject);
-                if (!empty($projects)) {
-                    $latestProject = $projects[array_key_last($projects)];
-
-                    foreach ($projects as $project) {
-                        $id = $project->getId();
-                        $dbForProject->setNamespace("project_{$id}_internal");
-                        $collections = ['users', 'collections', 'files'];
-                        foreach ($collections as $collection) {
-                            $count = $dbForProject->count($collection);
-                            $dbForProject->createDocument('stats', new Document([
-                                '$id' => $dbForProject->getId(),
-                                'time' => time(),
-                                'period' => '15m',
-                                'metric' => "{$collection}.count",
-                                'value' => $count,
-                                'type' => 1,
-                            ]));
-                        }
-                    }
-                }
-
-            } while (!empty($projects));
-
-            $loopTook = microtime(true) - $loopStart;
-            $now = date('d-m-Y H:i:s', time());
-            Console::info("[{$now}] DB objects count aggregation took {$loopTook} seconds");
-
-        }, $dbCountInterval);
     });
