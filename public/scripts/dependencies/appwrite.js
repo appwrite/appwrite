@@ -512,7 +512,7 @@
                  * @param {string} failure
                  * @param {string[]} scopes
                  * @throws {AppwriteException}
-                 * @returns {void|string}
+                 * @returns {void|URL}
                  */
                 createOAuth2Session: (provider, success, failure, scopes) => {
                     if (typeof provider === 'undefined') {
