@@ -170,7 +170,7 @@ class Stats
             $value = $this->params[$metric] ?? 0;
             if ($value >= 1) {
                 $tags = ",projectId={$projectId},provider=". ($this->params['provider'] ?? '');
-                $this->statsd->increment($metric . $tags);
+                $this->statsd->count($metric . $tags, $value);
             }
         }
 

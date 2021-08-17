@@ -1409,15 +1409,17 @@ App::delete('/v1/account/sessions')
 
         $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('sessions', []));
 
+        $numOfSessions = count($sessions);
+
         $events
             ->setParam('eventData', $response->output(new Document([
                 'sessions' => $sessions,
-                'sum' => count($sessions),
+                'sum' => $numOfSessions,
             ]), Response::MODEL_SESSION_LIST))
         ;
 
         $usage
-            ->setParam('users.sessions.delete', 1)
+            ->setParam('users.sessions.delete', $numOfSessions)
             ->setParam('users.update', 1)
         ;
         $response->noContent();
