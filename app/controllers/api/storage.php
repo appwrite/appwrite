@@ -631,15 +631,12 @@ App::delete('/v1/storage/files/:fileId')
 
         $usage
             ->setParam('storage', $file->getAttribute('size', 0) * -1)
+            ->setParam('storage.files.delete', 1)
+            ->setParam('bucketId', 'default')
         ;
 
         $events
             ->setParam('eventData', $response->output($file, Response::MODEL_FILE))
-        ;
-
-        $usage
-            ->setParam('storage.files.delete', 1)
-            ->setParam('bucketId', 'default')
         ;
 
         $response->noContent();
