@@ -1,3 +1,6 @@
+## 0.7.1
+- Fix - createOAuth2Session completing too early
+
 ## 0.7.0
 - Support for Appwrite 0.9
 - Breaking - removed order type enum, now you should pass string 'ASC' or 'DESC'
