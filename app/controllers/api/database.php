@@ -92,8 +92,11 @@ $attributesCallback = function ($attribute, $response, $dbForExternal, $database
     // So we need to create one for the response
     //
     // TODO@kodumbeats should $signed and $filters be part of the response model?
+
+    var_dump($collectionId);
     $attribute = new Document([
         '$id' => $attributeId,
+        '$collection' => $collectionId,
         'type' => $type,
         'size' => $size,
         'required' => $required,
@@ -330,8 +333,6 @@ App::get('/v1/database/collections/:collectionId/logs')
         $response->dynamic(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
     });
 
-
-
 App::put('/v1/database/collections/:collectionId')
     ->desc('Update Collection')
     ->groups(['api', 'database'])
@@ -460,6 +461,7 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
 
         return $attributesCallback(new Document([
             '$id' => $attributeId,
+            '$collection' => $collectionId,
             'type' => Database::VAR_STRING,
             'size' => $size,
             'required' => $required,
@@ -497,6 +499,7 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
 
         return $attributesCallback(new Document([
             '$id' => $attributeId,
+            '$collection' => $collectionId,
             'type' => Database::VAR_STRING,
             'size' => 254,
             'required' => $required,
@@ -535,6 +538,7 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
 
         return $attributesCallback(new Document([
             '$id' => $attributeId,
+            '$collection' => $collectionId,
             'type' => Database::VAR_STRING,
             'size' => 39,
             'required' => $required,
@@ -574,6 +578,7 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
 
         return $attributesCallback(new Document([
             '$id' => $attributeId,
+            '$collection' => $collectionId,
             'type' => Database::VAR_STRING,
             'size' => $size,
             'required' => $required,
@@ -614,6 +619,7 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
 
         return $attributesCallback(new Document([
             '$id' => $attributeId,
+            '$collection' => $collectionId,
             'type' => Database::VAR_INTEGER,
             'size' => 0,
             'required' => $required,
@@ -658,6 +664,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
 
         return $attributesCallback(new Document([
             '$id' => $attributeId,
+            '$collection' => $collectionId,
             'type' => Database::VAR_FLOAT,
             'required' => $required,
             'size' => 0,
@@ -700,6 +707,7 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
 
         return $attributesCallback(new Document([
             '$id' => $attributeId,
+            '$collection' => $collectionId,
             'type' => Database::VAR_BOOLEAN,
             'size' => 0,
             'required' => $required,
