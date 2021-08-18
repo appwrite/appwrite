@@ -1307,6 +1307,9 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         catch (AuthorizationException $exception) {
             throw new Exception('Unauthorized permissions', 401);
         }
+        catch (DuplicateException $exception) {
+            throw new Exception($exception->getMessage(), 400);
+        }
         catch (StructureException $exception) {
             throw new Exception('Bad structure. '.$exception->getMessage(), 400);
         }
@@ -1369,4 +1372,3 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         ;
 
         $response->noContent();
-    });
