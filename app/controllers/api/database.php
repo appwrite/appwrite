@@ -1266,7 +1266,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, new UID(), 'Document unique ID.')
     ->inject('response')
-    ->inject('$dbForInternal')
+    ->inject('dbForInternal')
     ->inject('dbForExternal')
     ->action(function ($collectionId, $documentId, $response, $dbForInternal, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
