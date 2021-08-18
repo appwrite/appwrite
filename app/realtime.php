@@ -27,12 +27,11 @@ require_once __DIR__ . '/init.php';
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
-$adapter = new Adapter\Swoole(port: App::getEnv('PORT', 80));
-$adapter->setPackageMaxLength(64000); // Default maximum Package Size (64kb)
+$realtime = new Realtime();
 
-$subscriptions = [];
-$connections = [];
-
+/**
+ * Table for statistics across all workers.
+ */
 $stats = new Table(4096, 1);
 $stats->column('projectId', Table::TYPE_STRING, 64);
 $stats->column('connections', Table::TYPE_INT);
@@ -43,9 +42,10 @@ $stats->create();
 $containerId = uniqid();
 $documentId = null;
 
-$server = new Server($adapter);
+$adapter = new Adapter\Swoole(port: App::getEnv('PORT', 80));
+$adapter->setPackageMaxLength(64000); // Default maximum Package Size (64kb)
 
-$realtime = new Realtime();
+$server = new Server($adapter);
 
 $server->onStart(function () use ($stats, $register, $containerId, &$documentId) {
     Console::success('Server started succefully');
@@ -69,7 +69,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId)
     };
 
     /**
-     * Create document for this worker for connection stats across Containers.
+     * Create document for this worker to share stats across Containers.
      */
     go(function () use ($getConsoleDb, $containerId, &$documentId) {
         try {
@@ -194,6 +194,9 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 ],
             ]);
 
+            /**
+             * Aggregate stats across containers.
+             */
             foreach ($list as $document) {
                 foreach (json_decode($document->getAttribute('value')) as $projectId => $value) {
                     if (array_key_exists($projectId, $payload)) {
