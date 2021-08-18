@@ -636,6 +636,7 @@ trait RealtimeBase
             'execute' => ['*'],
             'timeout' => 10,
         ]);
+        var_dump($function);
 
         $functionId = $function['body']['$id'] ?? '';
 
