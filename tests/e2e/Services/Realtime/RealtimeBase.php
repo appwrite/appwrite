@@ -632,11 +632,10 @@ trait RealtimeBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Test',
-            'runtime' => 'php-7.4',
+            'runtime' => 'php-8.0',
             'execute' => ['*'],
             'timeout' => 10,
         ]);
-        var_dump($function);
 
         $functionId = $function['body']['$id'] ?? '';
 
@@ -651,7 +650,7 @@ trait RealtimeBase
             'command' => 'php index.php',
             'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/timeout.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
         ]);
-        var_dump($tag);
+
         $tagId = $tag['body']['$id'] ?? '';
 
         $this->assertEquals($tag['headers']['status-code'], 201);
