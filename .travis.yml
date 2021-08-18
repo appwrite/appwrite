@@ -30,8 +30,7 @@ before_install:
 - echo "_APP_FUNCTIONS_RUNTIMES=php-8.0" >> .env
 
 install:
-- docker-compose build --parallel
-- docker-compose up -d
+- docker-compose up -d --build
 - sleep 10
 
 script:
