@@ -1,4 +1,4 @@
-dist: xenial
+dist: focal
 
 arch:
   - amd64
