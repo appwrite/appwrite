@@ -1226,16 +1226,16 @@ App::get('/v1/database/collections/:collectionId/documents')
         }, $queries);
 
         // TODO@kodumbeats find a more efficient alternative to this
-        $schema = $collection->getArrayCopy()['attributes'];
-        $indexes = $collection->getArrayCopy()['indexes'];
-        $indexesInQueue = $collection->getArrayCopy()['indexesInQueue'];
+        // $schema = $collection->getArrayCopy()['attributes'];
+        // $indexes = $collection->getArrayCopy()['indexes'];
+        // $indexesInQueue = $collection->getArrayCopy()['indexesInQueue'];
 
         // TODO@kodumbeats use strict query validation
-        $validator = new QueriesValidator(new QueryValidator($schema), $indexes, $indexesInQueue, false);
+        // $validator = new QueriesValidator(new QueryValidator($schema), $indexes, $indexesInQueue, false);
 
-        if (!$validator->isValid($queries)) {
-            throw new Exception($validator->getDescription(), 400);
-        }
+        // if (!$validator->isValid($queries)) {
+        //     throw new Exception($validator->getDescription(), 400);
+        // }
 
         if (!empty($after)) {
             $afterDocument = $dbForExternal->getDocument($collectionId, $after);
