@@ -2,6 +2,7 @@
 
 use Appwrite\Event\Event;
 use Appwrite\Resque\Worker;
+use Appwrite\Stats\Stats;
 use Appwrite\Utopia\Response\Model\Execution;
 use Cron\CronExpression;
 use Swoole\Runtime;
@@ -134,8 +135,6 @@ class FunctionsV1 extends Worker
 
     public function run(): void
     {
-        global $register;
-
         $projectId = $this->args['projectId'] ?? '';
         $functionId = $this->args['functionId'] ?? '';
         $webhooks = $this->args['webhooks'] ?? [];
@@ -279,7 +278,7 @@ class FunctionsV1 extends Worker
      */
     public function execute(string $trigger, string $projectId, string $executionId, Database $database, Document $function, string $event = '', string $eventData = '', string $data = '', array $webhooks = [], string $userId = '', string $jwt = ''): void
     {
-        global $list;
+        global $list, $register;
 
         $runtimes = Config::getParam('runtimes');
 
@@ -477,21 +476,22 @@ class FunctionsV1 extends Worker
             ->setParam('eventData', $execution->getArrayCopy(array_keys($executionModel->getRules())));
 
         $executionUpdate->trigger();
-
-        $usage = new Event('v1-usage', 'UsageV1');
-
-        $usage
-            ->setParam('projectId', $projectId)
-            ->setParam('functionId', $function->getId())
-            ->setParam('functionExecution', 1)
-            ->setParam('functionStatus', $functionStatus)
-            ->setParam('functionExecutionTime', $executionTime * 1000) // ms
-            ->setParam('networkRequestSize', 0)
-            ->setParam('networkResponseSize', 0)
-        ;
         
         if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-            $usage->trigger();
+            $statsd = $register->get('statsd');
+
+            $usage = new Stats($statsd);
+
+            $usage
+                ->setParam('projectId', $projectId)
+                ->setParam('functionId', $function->getId())
+                ->setParam('functionExecution', 1)
+                ->setParam('functionStatus', $functionStatus)
+                ->setParam('functionExecutionTime', $executionTime * 1000) // ms
+                ->setParam('networkRequestSize', 0)
+                ->setParam('networkResponseSize', 0)
+                ->submit()
+            ;
         }
 
         $this->cleanup();

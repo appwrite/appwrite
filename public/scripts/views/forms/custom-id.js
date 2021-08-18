@@ -5,9 +5,12 @@
     controller: function (element, sdk, console, window) {
       let prevData = "";
       let idType = element.getAttribute('data-id-type');
+      let disableSwitch = element.getAttribute('data-disable-switch');
 
       const div = window.document.createElement("div");
-      div.className = "input-copy";
+      if(disableSwitch !== "true") {
+        div.className = "input-copy";
+      }
 
       const button = window.document.createElement("i");
       button.type = "button";
@@ -25,7 +28,9 @@
       info.className = "text-fade text-size-xs margin-top-negative-small margin-bottom";
 
       div.appendChild(writer);
-      div.appendChild(button);
+      if(disableSwitch !== "true") {
+        div.appendChild(button);
+      }
       element.parentNode.insertBefore(div, element);
       element.parentNode.insertBefore(info, div.nextSibling);
 

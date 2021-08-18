@@ -63,14 +63,13 @@ class WebhooksCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'id' => 'fullname',
+            'indexId' => 'fullname',
             'type' => 'key',
             'attributes' => ['lastName', 'firstName'],
             'orders' => ['ASC', 'ASC'],
         ]);
 
         $this->assertEquals($index['headers']['status-code'], 201);
-        $this->assertEquals($index['body']['$collection'], $data['actorsId']);
         $this->assertEquals($index['body']['$id'], 'fullname');
 
         // wait for database worker to create index

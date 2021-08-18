@@ -9,7 +9,7 @@ use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 
-App::init(function ($utopia, $request, $response, $project, $user, $register, $events, $audits, $usage, $deletes, $database, $dbForInternal) {
+App::init(function ($utopia, $request, $response, $project, $user, $events, $audits, $usage, $deletes, $database, $dbForInternal, $mode) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
@@ -18,7 +18,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     /** @var Utopia\Registry\Registry $register */
     /** @var Appwrite\Event\Event $events */
     /** @var Appwrite\Event\Event $audits */
-    /** @var Appwrite\Event\Event $usage */
+    /** @var Appwrite\Stats\Stats $usage */
     /** @var Appwrite\Event\Event $deletes */
     /** @var Appwrite\Event\Event $database */
     /** @var Appwrite\Event\Event $functions */
@@ -89,6 +89,9 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     $audits
         ->setParam('projectId', $project->getId())
         ->setParam('userId', $user->getId())
+        ->setParam('userEmail', $user->getAttribute('email'))
+        ->setParam('userName', $user->getAttribute('name'))
+        ->setParam('mode', $mode)
         ->setParam('event', '')
         ->setParam('resource', '')
         ->setParam('userAgent', $request->getUserAgent(''))
@@ -113,7 +116,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     $database
         ->setParam('projectId', $project->getId())
     ;
-}, ['utopia', 'request', 'response', 'project', 'user', 'register', 'events', 'audits', 'usage', 'deletes', 'database', 'dbForInternal'], 'api');
+}, ['utopia', 'request', 'response', 'project', 'user', 'events', 'audits', 'usage', 'deletes', 'database', 'dbForInternal', 'mode'], 'api');
 
 App::init(function ($utopia, $request, $project) {
     /** @var Utopia\App $utopia */
@@ -162,14 +165,14 @@ App::init(function ($utopia, $request, $project) {
 
 }, ['utopia', 'request', 'project'], 'auth');
 
-App::shutdown(function ($utopia, $request, $response, $project, $events, $audits, $usage, $deletes, $database, $mode) {
+App::shutdown(function ($utopia, $request, $response, $project, $register, $events, $audits, $usage, $deletes, $database, $mode) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\Database\Document $project */
     /** @var Appwrite\Event\Event $events */
     /** @var Appwrite\Event\Event $audits */
-    /** @var Appwrite\Event\Event $usage */
+    /** @var Appwrite\Stats\Stats $usage */
     /** @var Appwrite\Event\Event $deletes */
     /** @var Appwrite\Event\Event $database */
     /** @var Appwrite\Event\Event $functions */
@@ -215,8 +218,8 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
         $usage
             ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
             ->setParam('networkResponseSize', $response->getSize())
-            ->trigger()
+            ->submit()
         ;
     }
 
-}, ['utopia', 'request', 'response', 'project', 'events', 'audits', 'usage', 'deletes', 'database', 'mode'], 'api');
+}, ['utopia', 'request', 'response', 'project', 'register', 'events', 'audits', 'usage', 'deletes', 'database', 'mode'], 'api');
