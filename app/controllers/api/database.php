@@ -93,10 +93,9 @@ $attributesCallback = function ($attribute, $response, $dbForExternal, $database
     //
     // TODO@kodumbeats should $signed and $filters be part of the response model?
 
-    var_dump($collectionId);
     $attribute = new Document([
-        '$id' => $attributeId,
         '$collection' => $collectionId,
+        '$id' => $attributeId,
         'type' => $type,
         'size' => $size,
         'required' => $required,
