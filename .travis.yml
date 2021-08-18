@@ -41,6 +41,9 @@ script:
 - docker-compose exec appwrite vars
 - docker-compose exec appwrite test --debug
 
+after_failure:
+- docker-compose logs appwrite
+
 deploy:
   - provider: script
     edge: true
