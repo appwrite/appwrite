@@ -66,6 +66,7 @@ class DatabaseV1 extends Worker
     protected function createAttribute($attribute, $projectId): void
     {
         $dbForExternal = $this->getExternalDB($projectId);
+        $dbForInternal = $this->getInternalDB($projectId);
 
         $collectionId = $attribute->getCollection();
         $id = $attribute->getAttribute('$id', '');
@@ -81,6 +82,23 @@ class DatabaseV1 extends Worker
         $success = $dbForExternal->createAttribute($collectionId, $id, $type, $size, $required, $default, $signed, $array, $format, $filters);
         if ($success) {
             $removed = $dbForExternal->removeAttributeInQueue($collectionId, $id);
+
+            // Update internal collection
+            $collection = $dbForInternal->getDocument('collections', $collectionId);
+
+            $collection->setAttribute('attributes', new Document([
+                '$id' => $id,
+                'type' => $type,
+                'size' => $size,
+                'required' => $required,
+                'default' => $default,
+                'signed' => $signed,
+                'array' => $array,
+                'format' => $format,
+                'filters' => $filters,
+            ]), Document::SET_TYPE_APPEND);
+
+            $dbForInternal->updateDocument('collections', $collection->getId(), $collection);
         }
     }
 
@@ -91,11 +109,20 @@ class DatabaseV1 extends Worker
     protected function deleteAttribute($attribute, $projectId): void
     {
         $dbForExternal = $this->getExternalDB($projectId);
+        $dbForInternal = $this->getInternalDB($projectId);
 
         $collectionId = $attribute->getCollection();
         $id = $attribute->getAttribute('$id');
 
         $success = $dbForExternal->deleteAttribute($collectionId, $id);
+        if ($success) {
+            // Update internal collection
+            $collection = $dbForInternal->getDocument('collections', $collectionId);
+
+            $collection->findAndRemove('$id', $id, 'attributes');
+
+            $dbForInternal->updateDocument('collections', $collection->getId(), $collection);
+        }
     }
 
     /**
@@ -105,6 +132,7 @@ class DatabaseV1 extends Worker
     protected function createIndex($index, $projectId): void
     {
         $dbForExternal = $this->getExternalDB($projectId);
+        $dbForInternal = $this->getInternalDB($projectId);
 
         $collectionId = $index->getCollection();
         $id = $index->getAttribute('$id', '');
@@ -116,6 +144,19 @@ class DatabaseV1 extends Worker
         $success = $dbForExternal->createIndex($collectionId, $id, $type, $attributes, $lengths, $orders);
         if ($success) {
             $dbForExternal->removeIndexInQueue($collectionId, $id);
+
+            // Update internal collection
+            $collection = $dbForInternal->getDocument('collections', $collectionId);
+
+            $collection->setAttribute('indexes', new Document([
+                '$id' => $id,
+                'type' => $type,
+                'attributes' => $attributes,
+                'lengths' => $lengths,
+                'order' => $orders,
+            ]), Document::SET_TYPE_APPEND);
+
+            $dbForInternal->updateDocument('collections', $collectionId, $collection);
         }
     }
 
@@ -126,10 +167,19 @@ class DatabaseV1 extends Worker
     protected function deleteIndex($index, $projectId): void
     {
         $dbForExternal = $this->getExternalDB($projectId);
+        $dbForInternal = $this->getInternalDB($projectId);
 
         $collectionId = $index->getCollection();
         $id = $index->getAttribute('$id');
 
         $success = $dbForExternal->deleteIndex($collectionId, $id);
+        if ($success) {
+            // Update internal collection
+            $collection = $dbForInternal->getDocument('collections', $collectionId);
+
+            $collection->findAndRemove('$id', $id, 'indexes');
+
+            $dbForInternal->updateDocument('collections', $collection->getId(), $collection);
+        }
     }
 }
