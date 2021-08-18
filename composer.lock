@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b5f4227860b0b7697a79405cc8bdfba9",
+    "content-hash": "d0304d97605ec2f0be74b0d87ad7597a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2177,11 +2177,17 @@
         },
         {
             "name": "utopia-php/websocket",
-            "version": "dev-main",
+            "version": "0.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/websocket.git",
                 "reference": "808317ef4ea0683c2c82dee5d543b1c8378e2e1b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/808317ef4ea0683c2c82dee5d543b1c8378e2e1b",
+                "reference": "808317ef4ea0683c2c82dee5d543b1c8378e2e1b",
+                "shasum": ""
             },
             "require": {
                 "php": ">=8.0"
@@ -2193,13 +2199,13 @@
                 "vimeo/psalm": "^4.8.1",
                 "workerman/workerman": "^4.0"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
                     "Utopia\\WebSocket\\": "src/WebSocket"
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -2221,6 +2227,10 @@
                 "utopia",
                 "websocket"
             ],
+            "support": {
+                "issues": "https://github.com/utopia-php/websocket/issues",
+                "source": "https://github.com/utopia-php/websocket/tree/0.0.1"
+            },
             "time": "2021-07-11T13:09:44+00:00"
         },
         {
@@ -6164,9 +6174,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/websocket": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
