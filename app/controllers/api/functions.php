@@ -98,18 +98,18 @@ App::get('/v1/functions')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $queries = [];
-
-        if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
-        }
-
         if (!empty($after)) {
             $afterFunction = $dbForInternal->getDocument('functions', $after);
 
             if ($afterFunction->isEmpty()) {
                 throw new Exception("Function '{$after}' for the 'after' value not found.", 400);
             }
+        }
+        
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
         }
 
         $response->dynamic(new Document([
@@ -538,14 +538,6 @@ App::get('/v1/functions/:functionId/tags')
             throw new Exception('Function not found', 404);
         }
 
-        $queries = [];
-
-        if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
-        }
-
-        $queries[] = new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]);
-
         if (!empty($after)) {
             $afterTag = $dbForInternal->getDocument('tags', $after);
 
@@ -553,6 +545,14 @@ App::get('/v1/functions/:functionId/tags')
                 throw new Exception("Tag '{$after}' for the 'after' value not found.", 400);
             }
         }
+
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+        }
+
+        $queries[] = new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]);
 
         $results = $dbForInternal->find('tags', $queries, $limit, $offset, [], [$orderType], $afterTag ?? null);
         $sum = $dbForInternal->count('tags', $queries, APP_LIMIT_COUNT);

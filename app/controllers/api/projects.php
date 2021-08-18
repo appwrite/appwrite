@@ -171,18 +171,18 @@ App::get('/v1/projects')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
 
-        $queries = [];
-
-        if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
-        }
-
         if (!empty($after)) {
             $afterProject = $dbForConsole->getDocument('projects', $after);
 
             if ($afterProject->isEmpty()) {
                 throw new Exception("Project '{$after}' for the 'after' value not found.", 400);
             }
+        }
+
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
         }
 
         $results = $dbForConsole->find('projects', $queries, $limit, $offset, [], [$orderType], $afterProject ?? null);

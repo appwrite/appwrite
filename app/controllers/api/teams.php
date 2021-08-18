@@ -108,12 +108,6 @@ App::get('/v1/teams')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $queries = [];
-
-        if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
-        }
-
         if (!empty($after)) {
             $afterTeam = $dbForInternal->getDocument('teams', $after);
 
@@ -122,6 +116,12 @@ App::get('/v1/teams')
             }
         }
 
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+        }
+        
         $results = $dbForInternal->find('teams', $queries, $limit, $offset, [], [$orderType], $afterTeam ?? null);
         $sum = $dbForInternal->count('teams', $queries, APP_LIMIT_COUNT);
 

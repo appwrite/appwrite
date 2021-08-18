@@ -193,18 +193,18 @@ App::get('/v1/database/collections')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal */
 
-        $queries = [];
-
-        if (!empty($search)) {
-            $queries[] = new Query('name', Query::TYPE_SEARCH, [$search]);
-        }
-
         if (!empty($after)) {
             $afterCollection = $dbForExternal->getDocument('collections', $after);
 
             if ($afterCollection->isEmpty()) {
                 throw new Exception("Collection '{$after}' for the 'after' value not found.", 400);
             }
+        }
+
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('name', Query::TYPE_SEARCH, [$search]);
         }
 
         $response->dynamic(new Document([

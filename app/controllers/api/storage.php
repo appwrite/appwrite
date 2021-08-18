@@ -181,18 +181,18 @@ App::get('/v1/storage/files')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $queries = [];
-
-        if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
-        }
-
         if (!empty($after)) {
             $afterFile = $dbForInternal->getDocument('files', $after);
 
             if ($afterFile->isEmpty()) {
                 throw new Exception("File '{$after}' for the 'after' value not found.", 400);
             }
+        }
+
+        $queries = [];
+
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
         }
 
         $response->dynamic(new Document([
