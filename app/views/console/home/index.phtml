@@ -39,7 +39,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                     data-event="submit"
                     data-name="usage"
                     data-param-project-id="{{router.params.project}}"
-                    data-param-range="24h">
+                    data-param-range="24h"
+                    data-scope="console">
                     <button class="tick">24h</button>
                 </form>
 
@@ -53,7 +54,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                     data-service="projects.getUsage"
                     data-event="submit"
                     data-name="usage"
-                    data-param-project-id="{{router.params.project}}">
+                    data-param-project-id="{{router.params.project}}"
+                    data-scope="console">
                     <button class="tick">30d</button>
                 </form>
 
@@ -68,7 +70,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                     data-event="submit"
                     data-name="usage"
                     data-param-project-id="{{router.params.project}}"
-                    data-param-range="90d">
+                    data-param-range="90d"
+                    data-scope="console">
                     <button class="tick">90d</button>
                 </form>
 
@@ -106,6 +109,9 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                     </div>
                 </div>
             </div>
+            <h2 class="margin-top margin-bottom-small">
+                Realtime
+            </h2>
             <div class="box dashboard">
                 <div class="row responsive">
                     <div class="col span-9">
@@ -129,7 +135,9 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                 </div>
             </div>
         <?php endif; ?>
-
+        <h2 class="margin-top margin-bottom-small">
+            Total
+        </h2>
         <div class="box dashboard">
             <div class="row responsive">
                 <div class="col span-3">
@@ -156,8 +164,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
     </div>
 </div>
 
-<div class="zone xl margin-top-xl clear" data-ls-if="({{console-project}})">
-    <h2 class="margin-bottom">Platforms</h2>
+<div class="zone xxl margin-top clear" data-ls-if="({{console-project}})">
+    <h2 class="margin-bottom-small">Platforms</h2>
 
     <div class="box margin-bottom" data-ls-if="0 < {{console-project.platforms.length}} && undefined !== {{console-project.platforms}}">
         <ul data-ls-loop="console-project.platforms" data-ls-as="platform" class="list">
