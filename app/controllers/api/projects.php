@@ -78,8 +78,7 @@ App::post('/v1/projects')
 
         $projectId = ($projectId == 'unique()') ? $dbForConsole->getId() : $projectId;
         $project = $dbForConsole->createDocument('projects', new Document([
-            '$id' => $projectId,
-            '$collection' => 'projects',
+            '$id' => $projectId == 'unique()' ? $dbForConsole->getId() : $projectId,
             '$read' => ['team:' . $teamId],
             '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
             'name' => $name,

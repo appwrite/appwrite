@@ -1121,18 +1121,26 @@ window.ls.container.get("view").add({
   selector: "data-ls-loop",
   template: false,
   nested: false,
-  controller: function (element, view, container, window, expression) {
+  controller: function (element, view, container, filter, window, expression) {
     let expr = expression.parse(element.getAttribute("data-ls-loop"));
     let as = element.getAttribute("data-ls-as");
+    let filterName = element.getAttribute("data-ls-filter");
     let key = element.getAttribute("data-ls-key") || "$index";
+    let prefix = element.getAttribute("data-ls-prefix") || null;
+    let postfix = element.getAttribute("data-ls-postfix") || null;
     let limit = parseInt(
-      expression.parse(element.getAttribute("data-limit") || "") || -1
+      expression.parse(element.getAttribute("data-ls-limit") || "") || -1
     );
     let debug = element.getAttribute("data-debug") || false;
     let echo = function () {
       let array = container.path(expr);
       let counter = 0;
       array = !array ? [] : array;
+
+      if(filterName) {
+        array = filter.apply(filterName, array);
+      }
+      
       let watch = !!(array && array.__proxy);
       while (element.hasChildNodes()) {
         element.removeChild(element.lastChild);
@@ -1149,6 +1157,18 @@ window.ls.container.get("view").add({
         0 === array.length && element.style.visibility == ""
           ? "hidden"
           : "visible";
+
+      if(prefix) {
+        prefixElement = document.getElementById(prefix);
+        let html = prefixElement.innerHTML;
+        prefixElement = template.cloneNode(true);
+        if(prefixElement) {
+          prefixElement.innerHTML = html;
+          element.appendChild(prefixElement);
+          view.render(prefixElement);
+        }
+      }
+
       for (let prop in array) {
         if (counter == limit) {
           break;
@@ -1181,7 +1201,7 @@ window.ls.container.get("view").add({
       element.dispatchEvent(new Event("looped"));
     };
     let template =
-      element.children.length === 1
+      element.children.length >= 1
         ? element.children[0]
         : window.document.createElement("li");
     echo();

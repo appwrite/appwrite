@@ -170,8 +170,6 @@ class DatabaseCustomServerTest extends Scope
 
         $unneededId = $unneeded['body']['$id'];
 
-        $this->assertEquals($collection['body']['$id'], $firstName['body']['$collection']);
-        $this->assertEquals($collection['body']['$id'], $lastName['body']['$collection']);
         $this->assertIsArray($collection['body']['attributes']);
         $this->assertCount(3, $collection['body']['attributes']);
         $this->assertEquals($collection['body']['attributes'][0]['$id'], $firstName['body']['$id']);
@@ -195,8 +193,6 @@ class DatabaseCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), []); 
 
-        $this->assertEquals($collection['body']['$id'], $firstName['body']['$collection']);
-        $this->assertEquals($collection['body']['$id'], $lastName['body']['$collection']);
         $this->assertIsArray($collection['body']['attributes']);
         $this->assertCount(2, $collection['body']['attributes']);
         $this->assertEquals($collection['body']['attributes'][0]['$id'], $firstName['body']['$id']);
@@ -267,7 +263,6 @@ class DatabaseCustomServerTest extends Scope
         ]);
 
         $this->assertEquals($document1['headers']['status-code'], 201);
-        $this->assertEquals($document1['body']['$collection'], $collectionId);
         $this->assertIsArray($document1['body']['$read']);
         $this->assertIsArray($document1['body']['$write']);
         $this->assertCount(1, $document1['body']['$read']);
@@ -276,7 +271,6 @@ class DatabaseCustomServerTest extends Scope
         $this->assertEquals($document1['body']['lastName'], 'Holland');
 
         $this->assertEquals($document2['headers']['status-code'], 201);
-        $this->assertEquals($document2['body']['$collection'], $collectionId);
         $this->assertIsArray($document2['body']['$read']);
         $this->assertIsArray($document2['body']['$write']);
         $this->assertCount(1, $document2['body']['$read']);
