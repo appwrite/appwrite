@@ -1,8 +1,8 @@
-dist: xenial
+dist: focal
 
 arch:
   - amd64
-  - arm64
+  - arm64-graviton2
 
 os: linux
 
@@ -30,7 +30,7 @@ before_install:
 - echo "_APP_FUNCTIONS_RUNTIMES=php-8.0" >> .env
 
 install:
-- docker-compose up -d
+- docker-compose up -d --build
 - sleep 10
 
 script:
