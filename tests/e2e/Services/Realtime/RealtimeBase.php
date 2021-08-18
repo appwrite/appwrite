@@ -650,7 +650,7 @@ trait RealtimeBase
             'command' => 'php index.php',
             'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/timeout.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
         ]);
-
+        var_dump($tag);
         $tagId = $tag['body']['$id'] ?? '';
 
         $this->assertEquals($tag['headers']['status-code'], 201);
