@@ -832,6 +832,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
         $attribute = null;
         foreach ($attributes as $a) {
             if ($a->getId() === $attributeId) {
+                $attribute = $a->setAttribute('$collection', $collectionId); // set the collectionId
                 break; // break once attribute is found
             }
         }
