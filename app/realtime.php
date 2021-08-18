@@ -83,10 +83,10 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     $start = time();
     $redisPool = $register->get('redisPool');
 
-    /**
-     * Sending current connections to project channels on the console project every 5 seconds.
-     */
     Timer::tick(5000, function () use ($server, $stats, $realtime) {
+        /**
+         * Sending current connections to project channels on the console project every 5 seconds.
+         */
         if ($realtime->hasSubscriber('console', 'role:member', 'project')) {
             $payload = [];
             foreach ($stats as $projectId => $value) {
@@ -99,6 +99,25 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 'data' => [
                     'event' => 'stats.connections',
                     'channels' => ['project'],
+                    'timestamp' => time(),
+                    'payload' => $payload
+                ]
+            ];
+
+            $server->send($realtime->getSubscribers($event), json_encode($event['data']));
+        }
+        /**
+         * Sending test message for SDK E2E tests every 5 seconds.
+         */
+        if ($realtime->hasSubscriber('console', 'role:guest', 'tests')) {
+            $payload = ['response' => 'WS:/v1/realtime:passed'];
+
+            $event = [
+                'project' => 'console',
+                'roles' => ['role:guest'],
+                'data' => [
+                    'event' => 'test.event',
+                    'channels' => ['tests'],
                     'timestamp' => time(),
                     'payload' => $payload
                 ]
