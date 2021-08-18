@@ -632,7 +632,7 @@ trait RealtimeBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Test',
-            'runtime' => 'php-7.4',
+            'runtime' => 'php-8.0',
             'execute' => ['*'],
             'timeout' => 10,
         ]);
