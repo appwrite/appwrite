@@ -910,11 +910,13 @@ App::post('/v1/database/collections/:collectionId/indexes')
     ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, Database::VAR_STRING)), 'Array of index orders.', true)
     ->inject('response')
     ->inject('dbForInternal')
+    ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $indexId, $type, $attributes, $orders, $response, $dbForInternal, $database, $audits) {
+    ->action(function ($collectionId, $indexId, $type, $attributes, $orders, $response, $dbForInternal, $dbForExternal, $database, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForExternal */
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
@@ -948,7 +950,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
             $lengths[$key] = ($attributeType === Database::VAR_STRING) ? $attributeSize : null;
         }
 
-        $dbForInternal->addIndexInQueue($collectionId, $indexId, $type, $attributes, $lengths, $orders);
+        $dbForExternal->addIndexInQueue($collectionId, $indexId, $type, $attributes, $lengths, $orders);
 
         // Database->createIndex() does not return a document
         // So we need to create one for the response
@@ -976,7 +978,6 @@ App::post('/v1/database/collections/:collectionId/indexes')
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($index, Response::MODEL_INDEX);
-       
     });
 
 App::get('/v1/database/collections/:collectionId/indexes')
