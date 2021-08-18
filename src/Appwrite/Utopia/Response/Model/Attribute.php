@@ -40,27 +40,12 @@ class Attribute extends Model
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('signed', [
-                'type' => self::TYPE_BOOLEAN,
-                'description' => 'Is attribute signed?',
-                'default' => true,
-                'example' => true,
-                'required' => false,
-            ])
             ->addRule('array', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Is attribute an array?',
                 'default' => false,
                 'example' => false,
                 'required' => false
-            ])
-            ->addRule('filters', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Attribute filters.',
-                'default' => [],
-                'example' => [],
-                'array' => true,
-                'required' => false,
             ])
         ;
     }

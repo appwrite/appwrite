@@ -56,12 +56,12 @@ App::get('/')
         ;
 
         if ('console' === $project->getId() || $project->isEmpty()) {
-            $whitlistRoot = App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled');
+            $whitelistRoot = App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled');
 
-            if($whitlistRoot !== 'disabled') {
-                $sum = $dbForConsole->count('users', [], APP_LIMIT_USERS);
+            if($whitelistRoot !== 'disabled') {
+                $count = $dbForConsole->count('users', [], 1);
 
-                if($sum !== 0) {
+                if($count !== 0) {
                     return $response->redirect('/auth/signin');
                 }
             }
