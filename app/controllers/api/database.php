@@ -459,8 +459,8 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
         /** @var Appwrite\Event\Event $audits */
 
         return $attributesCallback(new Document([
-            '$id' => $attributeId,
             '$collection' => $collectionId,
+            '$id' => $attributeId,
             'type' => Database::VAR_STRING,
             'size' => $size,
             'required' => $required,
@@ -497,8 +497,8 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
         /** @var Appwrite\Event\Event $audits */
 
         return $attributesCallback(new Document([
-            '$id' => $attributeId,
             '$collection' => $collectionId,
+            '$id' => $attributeId,
             'type' => Database::VAR_STRING,
             'size' => 254,
             'required' => $required,
@@ -536,8 +536,8 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
         /** @var Appwrite\Event\Event $audits */
 
         return $attributesCallback(new Document([
-            '$id' => $attributeId,
             '$collection' => $collectionId,
+            '$id' => $attributeId,
             'type' => Database::VAR_STRING,
             'size' => 39,
             'required' => $required,
@@ -576,8 +576,8 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
         /** @var Appwrite\Event\Event $audits */
 
         return $attributesCallback(new Document([
-            '$id' => $attributeId,
             '$collection' => $collectionId,
+            '$id' => $attributeId,
             'type' => Database::VAR_STRING,
             'size' => $size,
             'required' => $required,
@@ -617,8 +617,8 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
         /** @var Appwrite\Event\Event $audits */
 
         return $attributesCallback(new Document([
-            '$id' => $attributeId,
             '$collection' => $collectionId,
+            '$id' => $attributeId,
             'type' => Database::VAR_INTEGER,
             'size' => 0,
             'required' => $required,
@@ -662,8 +662,8 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
         /** @var Appwrite\Event\Event $audits */
 
         return $attributesCallback(new Document([
-            '$id' => $attributeId,
             '$collection' => $collectionId,
+            '$id' => $attributeId,
             'type' => Database::VAR_FLOAT,
             'required' => $required,
             'size' => 0,
@@ -705,8 +705,8 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
         /** @var Appwrite\Event\Event $audits */
 
         return $attributesCallback(new Document([
-            '$id' => $attributeId,
             '$collection' => $collectionId,
+            '$id' => $attributeId,
             'type' => Database::VAR_BOOLEAN,
             'size' => 0,
             'required' => $required,
