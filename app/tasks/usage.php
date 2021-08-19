@@ -14,6 +14,43 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 
+/**
+ * Metrics We collect
+ * 
+ * requests
+ * network
+ * executions
+ * database.collections.create
+ * database.collections.read
+ * database.collections.update
+ * database.collections.delete
+ * database.documents.create
+ * database.documents.read
+ * database.documents.update
+ * database.documents.delete
+ * database.collections.{collectionId}.documents.create
+ * database.collections.{collectionId}.documents.read
+ * database.collections.{collectionId}.documents.update
+ * database.collections.{collectionId}.documents.delete
+ * storage.buckets.{bucketId}.files.create
+ * storage.buckets.{bucketId}.files.read
+ * storage.buckets.{bucketId}.files.update
+ * storage.buckets.{bucketId}.files.delete
+ * users.create
+ * users.read
+ * users.update
+ * users.delete
+ * users.sessions.create
+ * users.sessions.delete
+ * 
+ * Counters
+ * 
+ * users.count
+ * files.count
+ * collections.count
+ * 
+ */
+
 $cli
     ->task('usage')
     ->desc('Schedules syncing data from influxdb to Appwrite console db')
