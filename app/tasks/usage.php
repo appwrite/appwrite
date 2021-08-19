@@ -16,7 +16,7 @@ use Utopia\Database\Validator\Authorization;
 
 /**
  * Metrics We collect
- * 
+ *
  * requests
  * network
  * executions
@@ -42,13 +42,15 @@ use Utopia\Database\Validator\Authorization;
  * users.delete
  * users.sessions.create
  * users.sessions.delete
- * 
+ *
  * Counters
- * 
+ *
  * users.count
- * files.count
- * collections.count
- * 
+ * storage.files.count
+ * database.collections.count
+ * database.documents.count
+ * database.collections.{collectionId}.documents.count
+ *
  */
 
 $cli
@@ -249,8 +251,10 @@ $cli
                 }
             }
 
-            if ($iterations % 30 == 0) {
-                //aggregate number of objects in database
+            if ($iterations % 30 == 0) { //every 15 minutes
+                // aggregate number of objects in database
+                // get count of all the documents per collection -
+                // buckets will have the same
                 $latestProject = null;
                 do {
                     $projects = $dbForConsole->find('projects', [], 100, orderAfter:$latestProject);
@@ -259,25 +263,80 @@ $cli
 
                         foreach ($projects as $project) {
                             $id = $project->getId();
-                            $collections = ['users' => [
-                                'namespace' => 'internal',
-                            ], 'collections' => [
-                                'namespace' => 'external',
-                            ], 'files' => [
-                                'namespace' => 'internal',
-                            ]];
+                            $collections = [
+                                'users' => [
+                                    'namespace' => 'internal',
+                                ],
+                                'collections' => [
+                                    'metricPrefix' => 'database',
+                                    'namespace' => 'external', //new change will make this internal
+                                    'subCollections' => [
+                                        'documents' => [
+                                            'namespace' => 'external',
+                                        ],
+                                    ],
+                                ],
+                                'files' => [
+                                    'metricPrefix' => 'storage',
+                                    'namespace' => 'internal',
+                                ],
+                            ];
                             foreach ($collections as $collection => $options) {
                                 $dbForProject->setNamespace("project_{$id}_{$options['namespace']}");
                                 $count = $dbForProject->count($collection);
                                 $dbForProject->setNamespace("project_{$id}_internal");
+                                $metricPrefix = $options['metricPrefix'] ?? '';
+                                $metric = empty($metricPrefix) ? "{$collection}.count" : "{$metricPrefix}.{$collection}.count";
                                 $dbForProject->createDocument('stats', new Document([
                                     '$id' => $dbForProject->getId(),
                                     'time' => time(),
                                     'period' => '15m',
-                                    'metric' => "{$collection}.count",
+                                    'metric' => $metric,
                                     'value' => $count,
                                     'type' => 1,
                                 ]));
+
+                                $subCollections = $options['subCollections'] ?? [];
+                                if (!empty($subCollections)) {
+                                    $latestParent = null;
+                                    $subCollectionCounts = []; //total project level count of sub collections
+                                    do {
+                                        $dbForProject->setNamespace("project_{$id}_{$options['namespace']}");
+                                        $parents = $dbForProject->find($collection, [], 100, orderAfter:$latestParent);
+                                        if (!empty($parents)) {
+                                            $latestParent = $parents[array_key_last($parents)];
+                                            foreach ($parents as $parent) {
+                                                foreach ($subCollections as $subCollection => $subOptions) {
+                                                    $dbForProject->setNamespace("project_{$id}_{$subOptions['namespace']}");
+                                                    $count = $dbForProject->count($parent->getId());
+                                                    $subCollectionsCounts[$subCollection] = ($subCollectionCounts[$subCollection] ?? 0) + $count;
+                                                    
+                                                    $dbForProject->setNamespace("project_{$id}_internal");
+                                                    $dbForProject->createDocument('stats', new Document([
+                                                        '$id' => $dbForProject->getId(),
+                                                        'time' => time(),
+                                                        'period' => '15m',
+                                                        'metric' => empty($metricPrefix) ? "{$collection}.{$parent->getId()}.{$subCollection}.count" : "{$metricPrefix}.{$collection}.{$parent->getId()}.{$subCollection}.count",
+                                                        'value' => $count,
+                                                        'type' => 1,
+                                                    ]));
+                                                }
+                                            }
+                                        }
+                                    } while (!empty($parents));
+
+                                    foreach ($subCollectionsCounts as $subCollection => $count) {
+                                        $dbForProject->setNamespace("project_{$id}_internal");
+                                        $dbForProject->createDocument('stats', new Document([
+                                            '$id' => $dbForProject->getId(),
+                                            'time' => time(),
+                                            'period' => '15m',
+                                            'metric' => empty($metricPrefix) ? "{$subCollection}.count" : "{$metricPrefix}.{$subCollection}.count",
+                                            'value' => $count,
+                                            'type' => 1,
+                                        ]));
+                                    }
+                                }
                             }
                         }
                     }

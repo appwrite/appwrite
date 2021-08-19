@@ -285,33 +285,16 @@ App::get('/v1/projects/:projectId/usage')
             }
         }
 
-        $usersCount = Authorization::skip(function () use ($dbForInternal) {
-            return $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['users.count'])], 0, ['time'], [Database::ORDER_DESC]);
-        });
+        $usersCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['users.count'])], 0, ['time'], [Database::ORDER_DESC]);
         $usersTotal = $usersCount ? $usersCount->getAttribute('value', 0) : 0;
 
-        $collectionsCount = Authorization::skip(function () use ($dbForInternal, $period, $range) {
-            return $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['collections.count'])], 0, ['time'], [Database::ORDER_DESC]);
-        });
+        $collectionsCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['database.collections.count'])], 0, ['time'], [Database::ORDER_DESC]);
         $collectionsTotal = $collectionsCount ? $collectionsCount->getAttribute('value', 0) : 0;
 
-        // $documents = [];
+        $documentsCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['database.documents.count'])], 0, ['time'], [Database::ORDER_DESC]);
+        $documentsTotal = $documentsCount ? $documentsCount->getAttribute('value', 0) : 0;
 
-        // foreach ($collections as $collection) {
-        //     $result = $projectDB->getCollection([
-        //         'limit' => 0,
-        //         'offset' => 0,
-        //         'filters' => [
-        //             '$collection=' . $collection['$id'],
-        //         ],
-        //     ]);
-
-        //     $documents[] = ['name' => $collection['name'], 'total' => $projectDB->getSum()];
-        // }
-
-        $filesCount = Authorization::skip(function () use ($dbForInternal, $period, $range) {
-            return $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['files.count'])], 0, ['time'], [Database::ORDER_DESC]);
-        });
+        $filesCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['storage.files.count'])], 0, ['time'], [Database::ORDER_DESC]);
         $filesTotal = $filesCount ? $filesCount->getAttribute('value', 0) : 0;
 
         Authorization::reset();
@@ -344,12 +327,10 @@ App::get('/v1/projects/:projectId/usage')
                 'data' => [],
                 'total' => $filesTotal,
             ],
-            // 'documents' => [
-            //     'data' => $documents,
-            //     'total' => \array_sum(\array_map(function ($item) {
-            //         return $item['total'];
-            //     }, $documents)),
-            // ],
+            'documents' => [
+                'data' => [],
+                'total' => $documentsTotal,
+            ],
             'users' => [
                 'data' => [],
                 'total' => $usersTotal,
