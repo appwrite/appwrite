@@ -88,23 +88,23 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
          * Sending current connections to project channels on the console project every 5 seconds.
          */
         if ($realtime->hasSubscriber('console', 'role:member', 'project')) {
-            $payload = [];
             foreach ($stats as $projectId => $value) {
-                $payload[$projectId] = $value['connectionsTotal'];
+                $payload = [
+                    'projectId' => $value['connectionsTotal']
+                ];
+                $event = [
+                    'project' => 'console',
+                    'roles' => ['team:'.$projectId],
+                    'data' => [
+                        'event' => 'stats.connections',
+                        'channels' => ['project'],
+                        'timestamp' => time(),
+                        'payload' => $payload
+                    ]
+                ];
+
+                $server->send($realtime->getSubscribers($event), json_encode($event['data']));
             }
-
-            $event = [
-                'project' => 'console',
-                'roles' => ['role:member'],
-                'data' => [
-                    'event' => 'stats.connections',
-                    'channels' => ['project'],
-                    'timestamp' => time(),
-                    'payload' => $payload
-                ]
-            ];
-
-            $server->send($realtime->getSubscribers($event), json_encode($event['data']));
         }
         /**
          * Sending test message for SDK E2E tests every 5 seconds.
