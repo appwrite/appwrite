@@ -34,6 +34,7 @@ $connections = [];
 
 $stats = new Table(4096, 1);
 $stats->column('projectId', Table::TYPE_STRING, 64);
+$stats->column('teamId', Table::TYPE_STRING, 64);
 $stats->column('connections', Table::TYPE_INT);
 $stats->column('connectionsTotal', Table::TYPE_INT);
 $stats->column('messages', Table::TYPE_INT);
@@ -64,7 +65,6 @@ $server->onStart(function () use ($stats) {
                 ->setParam('networkResponseSize', 0);
 
             $stats->set($projectId, [
-                'projectId' => $projectId,
                 'messages' => 0,
                 'connections' => 0
             ]);
@@ -90,11 +90,11 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         if ($realtime->hasSubscriber('console', 'role:member', 'project')) {
             foreach ($stats as $projectId => $value) {
                 $payload = [
-                    'projectId' => $value['connectionsTotal']
+                    $projectId => $value['connectionsTotal']
                 ];
                 $event = [
                     'project' => 'console',
-                    'roles' => ['team:'.$projectId],
+                    'roles' => ['team:'.$value['teamId']],
                     'data' => [
                         'event' => 'stats.connections',
                         'channels' => ['project'],
@@ -298,6 +298,10 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         $server->send([$connection], json_encode($channels));
 
+        $stats->set($project->getId(), [
+            'projectId' => $project->getId(),
+            'teamId' => $project->getAttribute('teamId')
+        ]);
         $stats->incr($project->getId(), 'connections');
         $stats->incr($project->getId(), 'connectionsTotal');
     } catch (\Throwable $th) {
