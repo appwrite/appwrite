@@ -182,10 +182,6 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             $consoleDb->setNamespace('app_console');
             $consoleDb->setMocks(Config::getParam('collections', []));
 
-            $projectDb = new Database();
-            $projectDb->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
-            $projectDb->setMocks(Config::getParam('collections', []));
-
             $payload = [];
             $list = $consoleDb->getCollection([
                 'filters' => [
@@ -219,6 +215,9 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             ];
 
             $server->send($realtime->getSubscribers($event), json_encode($event['data']));
+
+            $register->get('dbPool')->put($db);
+            $register->get('redisPool')->put($cache);
         }
         /**
          * Sending test message for SDK E2E tests every 5 seconds.
@@ -294,9 +293,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                 $receivers = $realtime->getSubscribers($event);
 
-                // Temporarily print debug logs by default for Alpha testing.
-                // if (App::isDevelopment() && !empty($receivers)) {
-                if (!empty($receivers)) {
+                if (App::isDevelopment() && !empty($receivers)) {
                     Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
                     Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode($receivers));
                     Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
@@ -419,14 +416,15 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             'code' => $th->getCode(),
             'message' => $th->getMessage()
         ];
-        // Temporarily print debug logs by default for Alpha testing.
-        //if (App::isDevelopment()) {
-        Console::error("[Error] Connection Error");
-        Console::error("[Error] Code: " . $response['code']);
-        Console::error("[Error] Message: " . $response['message']);
-        //}
+
         $server->send([$connection], json_encode($response));
         $server->close($connection, $th->getCode());
+
+        if (App::isDevelopment()) {
+            Console::error("[Error] Connection Error");
+            Console::error("[Error] Code: " . $response['code']);
+            Console::error("[Error] Message: " . $response['message']);
+        }
 
         if ($th instanceof PDOException) {
             $db = null;
