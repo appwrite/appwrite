@@ -35,15 +35,15 @@ class Realtime extends Adapter
 
     /**
      * Adds a subscribtion.
-     * @param string $projectId Project ID.
-     * @param mixed $connection Unique Identifier - Connection ID.
-     * @param array $roles Roles of the Subscription.
-     * @param array $channels Subscribed Channels.
+     * 
+     * @param string $projectId 
+     * @param mixed $identifier 
+     * @param array $roles 
+     * @param array $channels 
      * @return void 
      */
-    public function subscribe(string $projectId, mixed $connection, array $roles, array $channels): void
+    public function subscribe(string $projectId, mixed $identifier, array $roles, array $channels): void
     {
-        //TODO: merge project & channel to a single layer
         if (!isset($this->subscriptions[$projectId])) { // Init Project
             $this->subscriptions[$projectId] = [];
         }
@@ -54,11 +54,11 @@ class Realtime extends Adapter
             }
 
             foreach ($channels as $channel => $list) {
-                $this->subscriptions[$projectId][$role][$channel][$connection] = true;
+                $this->subscriptions[$projectId][$role][$channel][$identifier] = true;
             }
         }
 
-        $this->connections[$connection] = [
+        $this->connections[$identifier] = [
             'projectId' => $projectId,
             'roles' => $roles,
             'channels' => $channels
@@ -119,7 +119,7 @@ class Realtime extends Adapter
 
     /**
      * Sends an event to the Realtime Server.
-     * @param string $project 
+     * @param string $projectId 
      * @param array $payload 
      * @param string $event 
      * @param array $channels 
@@ -127,9 +127,9 @@ class Realtime extends Adapter
      * @param array $options 
      * @return void 
      */
-    public static function send(string $project, array $payload, string $event, array $channels, array $roles, array $options = []): void
+    public static function send(string $projectId, array $payload, string $event, array $channels, array $roles, array $options = []): void
     {
-        if (empty($channels) || empty($roles) || empty($project)) return;
+        if (empty($channels) || empty($roles) || empty($projectId)) return;
 
         $permissionsChanged = array_key_exists('permissionsChanged', $options) && $options['permissionsChanged'];
         $userId = array_key_exists('userId', $options) ? $options['userId'] : null;
@@ -137,7 +137,7 @@ class Realtime extends Adapter
         $redis = new \Redis(); //TODO: make this part of the constructor
         $redis->connect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
         $redis->publish('realtime', json_encode([
-            'project' => $project,
+            'project' => $projectId,
             'roles' => $roles,
             'permissionsChanged' => $permissionsChanged,
             'userId' => $userId,
@@ -224,8 +224,10 @@ class Realtime extends Adapter
 
     /**
      * Create channels array based on the event name and payload.
-     *
-     * @return void
+     * 
+     * @param string $event 
+     * @param Document $payload 
+     * @return array 
      */
     public static function fromPayload(string $event, Document $payload): array
     {
