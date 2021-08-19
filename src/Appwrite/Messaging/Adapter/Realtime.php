@@ -4,6 +4,7 @@ namespace Appwrite\Messaging\Adapter;
 
 use Appwrite\Database\Document;
 use Appwrite\Messaging\Adapter;
+use Redis;
 use Utopia\App;
 
 class Realtime extends Adapter
@@ -165,16 +166,34 @@ class Realtime extends Adapter
      */
     public function getSubscribers(array $event)
     {
-        //TODO: do comments
+
         $receivers = [];
+        /**
+         * Check if project has subscriber.
+         */
         if (isset($this->subscriptions[$event['project']])) {
+            /**
+             * Iterate through each role.
+             */
             foreach ($this->subscriptions[$event['project']] as $role => $subscription) {
+                /**
+                 * Iterate through each channel.
+                 */
                 foreach ($event['data']['channels'] as $channel) {
+                    /**
+                     * Check if channel has subscriber. Also taking care of the role in the event and the wildcard role.
+                     */
                     if (
                         \array_key_exists($channel, $this->subscriptions[$event['project']][$role])
                         && (\in_array($role, $event['roles']) || \in_array('*', $event['roles']))
                     ) {
+                        /**
+                         * Saving all connections that are allowed to receive this event.
+                         */
                         foreach (array_keys($this->subscriptions[$event['project']][$role][$channel]) as $id) {
+                            /**
+                             * To prevent duplicates, we save the connections as array keys.
+                             */
                             $receivers[$id] = 0;
                         }
                         break;
