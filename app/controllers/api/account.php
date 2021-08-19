@@ -160,7 +160,7 @@ App::post('/v1/account/sessions')
         /** @var Utopia\Locale\Locale $locale */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
-        /** @var Appwrite\Usage\Usage $usage */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
