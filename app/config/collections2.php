@@ -1473,9 +1473,16 @@ $collections = [
                 'orders' => [Database::ORDER_DESC],
             ],
             [
-                '$id' => '_key_time_period',
+                '$id' => '_key_metric',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['time', 'period'],
+                'attributes' => ['metric'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => '_key_metric_period',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['metric', 'period'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_DESC],
             ],
