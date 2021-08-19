@@ -300,60 +300,64 @@ $cli
                                 ],
                             ];
                             foreach ($collections as $collection => $options) {
-                                $dbForProject->setNamespace("project_{$id}_{$options['namespace']}");
-                                $count = $dbForProject->count($collection);
-                                $dbForProject->setNamespace("project_{$id}_internal");
-                                $metricPrefix = $options['metricPrefix'] ?? '';
-                                $metric = empty($metricPrefix) ? "{$collection}.count" : "{$metricPrefix}.{$collection}.count";
-                                $dbForProject->createDocument('stats', new Document([
-                                    '$id' => $dbForProject->getId(),
-                                    'time' => time(),
-                                    'period' => '15m',
-                                    'metric' => $metric,
-                                    'value' => $count,
-                                    'type' => 1,
-                                ]));
-
-                                $subCollections = $options['subCollections'] ?? [];
-                                if (!empty($subCollections)) {
-                                    $latestParent = null;
-                                    $subCollectionCounts = []; //total project level count of sub collections
-                                    do {
-                                        $dbForProject->setNamespace("project_{$id}_{$options['namespace']}");
-                                        $parents = $dbForProject->find($collection, [], 100, orderAfter:$latestParent);
-                                        if (!empty($parents)) {
-                                            $latestParent = $parents[array_key_last($parents)];
-                                            foreach ($parents as $parent) {
-                                                foreach ($subCollections as $subCollection => $subOptions) {
-                                                    $dbForProject->setNamespace("project_{$id}_{$subOptions['namespace']}");
-                                                    $count = $dbForProject->count($parent->getId());
-                                                    $subCollectionsCounts[$subCollection] = ($subCollectionCounts[$subCollection] ?? 0) + $count;
-
-                                                    $dbForProject->setNamespace("project_{$id}_internal");
-                                                    $dbForProject->createDocument('stats', new Document([
-                                                        '$id' => $dbForProject->getId(),
-                                                        'time' => time(),
-                                                        'period' => '15m',
-                                                        'metric' => empty($metricPrefix) ? "{$collection}.{$parent->getId()}.{$subCollection}.count" : "{$metricPrefix}.{$collection}.{$parent->getId()}.{$subCollection}.count",
-                                                        'value' => $count,
-                                                        'type' => 1,
-                                                    ]));
+                                try {
+                                    $dbForProject->setNamespace("project_{$id}_{$options['namespace']}");
+                                    $count = $dbForProject->count($collection);
+                                    $dbForProject->setNamespace("project_{$id}_internal");
+                                    $metricPrefix = $options['metricPrefix'] ?? '';
+                                    $metric = empty($metricPrefix) ? "{$collection}.count" : "{$metricPrefix}.{$collection}.count";
+                                    $dbForProject->createDocument('stats', new Document([
+                                        '$id' => $dbForProject->getId(),
+                                        'time' => time(),
+                                        'period' => '15m',
+                                        'metric' => $metric,
+                                        'value' => $count,
+                                        'type' => 1,
+                                    ]));
+    
+                                    $subCollections = $options['subCollections'] ?? [];
+                                    if (!empty($subCollections)) {
+                                        $latestParent = null;
+                                        $subCollectionCounts = []; //total project level count of sub collections
+                                        do {
+                                            $dbForProject->setNamespace("project_{$id}_{$options['namespace']}");
+                                            $parents = $dbForProject->find($collection, [], 100, orderAfter:$latestParent);
+                                            if (!empty($parents)) {
+                                                $latestParent = $parents[array_key_last($parents)];
+                                                foreach ($parents as $parent) {
+                                                    foreach ($subCollections as $subCollection => $subOptions) {
+                                                        $dbForProject->setNamespace("project_{$id}_{$subOptions['namespace']}");
+                                                        $count = $dbForProject->count($parent->getId());
+                                                        $subCollectionsCounts[$subCollection] = ($subCollectionCounts[$subCollection] ?? 0) + $count;
+    
+                                                        $dbForProject->setNamespace("project_{$id}_internal");
+                                                        $dbForProject->createDocument('stats', new Document([
+                                                            '$id' => $dbForProject->getId(),
+                                                            'time' => time(),
+                                                            'period' => '15m',
+                                                            'metric' => empty($metricPrefix) ? "{$collection}.{$parent->getId()}.{$subCollection}.count" : "{$metricPrefix}.{$collection}.{$parent->getId()}.{$subCollection}.count",
+                                                            'value' => $count,
+                                                            'type' => 1,
+                                                        ]));
+                                                    }
                                                 }
                                             }
+                                        } while (!empty($parents));
+    
+                                        foreach ($subCollectionsCounts as $subCollection => $count) {
+                                            $dbForProject->setNamespace("project_{$id}_internal");
+                                            $dbForProject->createDocument('stats', new Document([
+                                                '$id' => $dbForProject->getId(),
+                                                'time' => time(),
+                                                'period' => '15m',
+                                                'metric' => empty($metricPrefix) ? "{$subCollection}.count" : "{$metricPrefix}.{$subCollection}.count",
+                                                'value' => $count,
+                                                'type' => 1,
+                                            ]));
                                         }
-                                    } while (!empty($parents));
-
-                                    foreach ($subCollectionsCounts as $subCollection => $count) {
-                                        $dbForProject->setNamespace("project_{$id}_internal");
-                                        $dbForProject->createDocument('stats', new Document([
-                                            '$id' => $dbForProject->getId(),
-                                            'time' => time(),
-                                            'period' => '15m',
-                                            'metric' => empty($metricPrefix) ? "{$subCollection}.count" : "{$metricPrefix}.{$subCollection}.count",
-                                            'value' => $count,
-                                            'type' => 1,
-                                        ]));
                                     }
+                                } catch(\Exception $e) {
+                                    Console::warning("Failed to save database counters data for project {$collection}");
                                 }
                             }
                         }
