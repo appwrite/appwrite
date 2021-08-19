@@ -319,7 +319,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
         
         if($route) {
             Console::error('[Error] Method: '.$route->getMethod());
-            Console::error('[Error] URL: '.$route->getURL());
+            Console::error('[Error] URL: '.$route->getPath());
         }
         
         Console::error('[Error] Type: '.get_class($error));
