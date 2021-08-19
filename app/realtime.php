@@ -34,6 +34,7 @@ $realtime = new Realtime();
  */
 $stats = new Table(4096, 1);
 $stats->column('projectId', Table::TYPE_STRING, 64);
+$stats->column('teamId', Table::TYPE_STRING, 64);
 $stats->column('connections', Table::TYPE_INT);
 $stats->column('connectionsTotal', Table::TYPE_INT);
 $stats->column('messages', Table::TYPE_INT);
@@ -121,7 +122,6 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId)
                 ->setParam('networkResponseSize', 0);
 
             $stats->set($projectId, [
-                'projectId' => $projectId,
                 'messages' => 0,
                 'connections' => 0
             ]);
@@ -169,7 +169,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     $attempts = 0;
     $start = time();
 
-    Timer::tick(5000, function () use ($server, $register, $realtime) {
+    Timer::tick(5000, function () use ($server, $register, $realtime, $stats) {
         /**
          * Sending current connections to project channels on the console project every 5 seconds.
          */
@@ -203,18 +203,22 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 }
             }
 
-            $event = [
-                'project' => 'console',
-                'roles' => ['role:member'],
-                'data' => [
-                    'event' => 'stats.connections',
-                    'channels' => ['project'],
-                    'timestamp' => time(),
-                    'payload' => $payload
-                ]
-            ];
+            foreach ($stats as $projectId => $value) {
+                $event = [
+                    'project' => 'console',
+                    'roles' => ['team:'.$value['teamId']],
+                    'data' => [
+                        'event' => 'stats.connections',
+                        'channels' => ['project'],
+                        'timestamp' => time(),
+                        'payload' => [
+                            $projectId => $payload[$projectId]
+                        ]
+                    ]
+                ];
 
-            $server->send($realtime->getSubscribers($event), json_encode($event['data']));
+                $server->send($realtime->getSubscribers($event), json_encode($event['data']));
+            }
 
             $register->get('dbPool')->put($db);
             $register->get('redisPool')->put($cache);
@@ -409,6 +413,10 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         $server->send([$connection], json_encode($channels));
 
+        $stats->set($project->getId(), [
+            'projectId' => $project->getId(),
+            'teamId' => $project->getAttribute('teamId')
+        ]);
         $stats->incr($project->getId(), 'connections');
         $stats->incr($project->getId(), 'connectionsTotal');
     } catch (\Throwable $th) {
