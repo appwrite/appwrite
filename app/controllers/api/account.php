@@ -59,7 +59,7 @@ App::post('/v1/account')
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
-        /** @var Appwrite\Usage\Usage $usage */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
