@@ -20,31 +20,27 @@ class DatabaseV1 extends Worker
 
     public function run(): void
     {
+        Authorization::disable();
+        
         $projectId = $this->args['projectId'] ?? '';
         $type = $this->args['type'] ?? '';
-
-        Authorization::disable();
+        $collection = $this->args['collection'] ?? '';
+        $collection = new Document($collection);
+        $document = $this->args['document'] ?? '';
+        $document = new Document($document);
         
         switch (strval($type)) {
             case DATABASE_TYPE_CREATE_ATTRIBUTE:
-                $attribute = $this->args['document'] ?? '';
-                $attribute = new Document($attribute);
-                $this->createAttribute($attribute, $projectId);
+                $this->createAttribute($collection, $document, $projectId);
                 break;
             case DATABASE_TYPE_DELETE_ATTRIBUTE:
-                $attribute = $this->args['document'] ?? '';
-                $attribute = new Document($attribute);
-                $this->deleteAttribute($attribute, $projectId);
+                $this->deleteAttribute($collection, $document, $projectId);
                 break;
             case DATABASE_TYPE_CREATE_INDEX:
-                $index = $this->args['document'] ?? '';
-                $index = new Document($index);
-                $this->createIndex($index, $projectId);
+                $this->createIndex($collection, $document, $projectId);
                 break;
             case DATABASE_TYPE_DELETE_INDEX:
-                $index = $this->args['document'] ?? '';
-                $index = new Document($index);
-                $this->deleteIndex($index, $projectId);
+                $this->deleteIndex($collection, $document, $projectId);
                 break;
 
             default:
@@ -60,14 +56,15 @@ class DatabaseV1 extends Worker
     }
 
     /**
+     * @param Document $collection
      * @param Document $attribute
      * @param string $projectId
      */
-    protected function createAttribute($attribute, $projectId): void
+    protected function createAttribute(Document $collection, Document $attribute, string $projectId): void
     {
         $dbForExternal = $this->getExternalDB($projectId);
 
-        $collectionId = $attribute->getCollection();
+        $collectionId = $collection->getId();
         $id = $attribute->getAttribute('$id', '');
         $type = $attribute->getAttribute('type', '');
         $size = $attribute->getAttribute('size', 0);
@@ -85,28 +82,30 @@ class DatabaseV1 extends Worker
     }
 
     /**
+     * @param Document $collection
      * @param Document $attribute
      * @param string $projectId
      */
-    protected function deleteAttribute($attribute, $projectId): void
+    protected function deleteAttribute(Document $collection, Document $attribute, string $projectId): void
     {
         $dbForExternal = $this->getExternalDB($projectId);
 
-        $collectionId = $attribute->getCollection();
+        $collectionId = $collection->getId();
         $id = $attribute->getAttribute('$id');
 
         $success = $dbForExternal->deleteAttribute($collectionId, $id);
     }
 
     /**
+     * @param Document $collection
      * @param Document $index
      * @param string $projectId
      */
-    protected function createIndex($index, $projectId): void
+    protected function createIndex(Document $collection, Document $index, string $projectId): void
     {
         $dbForExternal = $this->getExternalDB($projectId);
 
-        $collectionId = $index->getCollection();
+        $collectionId = $collection->getId();
         $id = $index->getAttribute('$id', '');
         $type = $index->getAttribute('type', '');
         $attributes = $index->getAttribute('attributes', []);
@@ -120,14 +119,15 @@ class DatabaseV1 extends Worker
     }
 
     /**
+     * @param Document $collection
      * @param Document $index
      * @param string $projectId
      */
-    protected function deleteIndex($index, $projectId): void
+    protected function deleteIndex(Document $collection, Document $index, string $projectId): void
     {
         $dbForExternal = $this->getExternalDB($projectId);
 
-        $collectionId = $index->getCollection();
+        $collectionId = $collection->getId();
         $id = $index->getAttribute('$id');
 
         $success = $dbForExternal->deleteIndex($collectionId, $id);

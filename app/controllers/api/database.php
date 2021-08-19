@@ -27,14 +27,13 @@ use Appwrite\Utopia\Response;
 use Appwrite\Database\Validator\CustomId;
 use DeviceDetector\DeviceDetector;
 
-$attributesCallback = function ($attribute, $response, $dbForInternal, $dbForExternal, $database, $audits) {
+$attributesCallback = function ($collectionId, $attribute, $response, $dbForInternal, $dbForExternal, $database, $audits) {
     /** @var Utopia\Database\Document $document*/
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\Database\Database $dbForExternal*/
     /** @var Appwrite\Event\Event $database */
     /** @var Appwrite\Event\Event $audits */
 
-    $collectionId = $attribute->getCollection();
     $attributeId = $attribute->getId();
     $type = $attribute->getAttribute('type', '');
     $size = $attribute->getAttribute('size', 0);
@@ -94,7 +93,6 @@ $attributesCallback = function ($attribute, $response, $dbForInternal, $dbForExt
     // TODO@kodumbeats should $signed and $filters be part of the response model?
 
     $attribute = new Document([
-        '$collection' => $collectionId,
         '$id' => $attributeId,
         'type' => $type,
         'size' => $size,
@@ -110,6 +108,7 @@ $attributesCallback = function ($attribute, $response, $dbForInternal, $dbForExt
 
     $database
         ->setParam('type', DATABASE_TYPE_CREATE_ATTRIBUTE)
+        ->setParam('collection', $collection)
         ->setParam('document', $attribute)
     ;
 
@@ -137,30 +136,32 @@ App::post('/v1/database/collections')
     ->label('sdk.response.model', Response::MODEL_COLLECTION)
     ->param('collectionId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
+    ->param('permission', null, new WhiteList(['document', 'collection']), 'Permissions type model to use for reading documents in this collection. You can use collection-level permission set once on the collection using the `read` and `write` params, or you can set document-level permission where each document read and write params will decide who has access to read and write to each document individually. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('dbForExternal')
     ->inject('audits')
-    ->action(function ($collectionId, $name, $read, $write, $response, $dbForInternal, $dbForExternal, $audits) {
+    ->action(function ($collectionId, $name, $permission, $read, $write, $response, $dbForInternal, $dbForExternal, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $audits */
 
         $collectionId = $collectionId == 'unique()' ? $dbForExternal->getId() : $collectionId;
 
-        $collection = $dbForExternal->createCollection($collectionId);
-
-        // TODO@kodumbeats what should the default permissions be?
-        $read = (is_null($read)) ? ($collection->getRead() ?? []) : $read; // By default inherit read permissions
-        $write = (is_null($write)) ? ($collection->getWrite() ?? []) : $write; // By default inherit write permissions
-
         try {
+            $dbForExternal->createCollection($collectionId);
+
             $collection = $dbForInternal->createDocument('collections', new Document([
                 '$id' => $collectionId,
-                '$read' => $read,
-                '$write' => $write,
+                '$read' => [], // Collection permissions themselves
+                '$write' => [], // Collection permissions themselves
+                'dateCreated' => time(),
+                'dateUpdated' => time(),
+                'documentsPermission' => $permission, // Permissions model type (document vs collection)
+                'documentsRead' => $read ?? [], // Collection permissions for collection documents (based on permission model)
+                'documentsWrite' => $write ?? [], // Collection permissions for collection documents (based on permission model)
                 'name' => $name,
                 'search' => implode(' ', [$collectionId, $name]),
             ]));
@@ -357,12 +358,13 @@ App::put('/v1/database/collections/:collectionId')
     ->label('sdk.response.model', Response::MODEL_COLLECTION)
     ->param('collectionId', '', new UID(), 'Collection unique ID.')
     ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.')
+    ->param('permission', null, new WhiteList(['document', 'collection']), 'Permissions type model to use for reading documents in this collection. You can use collection-level permission set once on the collection using the `read` and `write` params, or you can set document-level permission where each document read and write params will decide who has access to read and write to each document individually. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default inherits the existing read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default inherits the existing write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('audits')
-    ->action(function ($collectionId, $name, $read, $write, $response, $dbForInternal, $audits) {
+    ->action(function ($collectionId, $name, $permission, $read, $write, $response, $dbForInternal, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
@@ -378,14 +380,18 @@ App::put('/v1/database/collections/:collectionId')
 
         try {
             $collection = $dbForInternal->updateDocument('collections', $collection->getId(), $collection
-                ->setAttribute('$read', $read)
-                ->setAttribute('$write', $write)
                 ->setAttribute('name', $name)
+                ->setAttribute('dateUpdated', time())
+                ->setAttribute('documentsPermission', $permission)
+                ->setAttribute('documentsRead', $read)
+                ->setAttribute('documentsWrite', $write)
                 ->setAttribute('search', implode(' ', [$collectionId, $name]))
             );
-        } catch (AuthorizationException $exception) {
+        }
+        catch (AuthorizationException $exception) {
             throw new Exception('Unauthorized permissions', 401);
-        } catch (StructureException $exception) {
+        }
+        catch (StructureException $exception) {
             throw new Exception('Bad structure. '.$exception->getMessage(), 400);
         }
 
@@ -429,7 +435,7 @@ App::delete('/v1/database/collections/:collectionId')
             throw new Exception('Collection not found', 404);
         }
 
-        $dbForExternal->deleteCollection($collectionId);
+        $dbForExternal->deleteCollection($collectionId); // TDOD move to DB worker
 
         if (!$dbForInternal->deleteDocument('collections', $collectionId)) {
             throw new Exception('Failed to remove collection from DB', 500);
@@ -478,8 +484,7 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
-        return $attributesCallback(new Document([
-            '$collection' => $collectionId,
+        return $attributesCallback($collectionId, new Document([
             '$id' => $attributeId,
             'type' => Database::VAR_STRING,
             'size' => $size,
@@ -518,8 +523,7 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
-        return $attributesCallback(new Document([
-            '$collection' => $collectionId,
+        return $attributesCallback($collectionId, new Document([
             '$id' => $attributeId,
             'type' => Database::VAR_STRING,
             'size' => 254,
@@ -559,8 +563,7 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
-        return $attributesCallback(new Document([
-            '$collection' => $collectionId,
+        return $attributesCallback($collectionId, new Document([
             '$id' => $attributeId,
             'type' => Database::VAR_STRING,
             'size' => 39,
@@ -601,8 +604,7 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
-        return $attributesCallback(new Document([
-            '$collection' => $collectionId,
+        return $attributesCallback($collectionId, new Document([
             '$id' => $attributeId,
             'type' => Database::VAR_STRING,
             'size' => $size,
@@ -644,8 +646,7 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
-        return $attributesCallback(new Document([
-            '$collection' => $collectionId,
+        return $attributesCallback($collectionId, new Document([
             '$id' => $attributeId,
             'type' => Database::VAR_INTEGER,
             'size' => 0,
@@ -691,8 +692,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
-        return $attributesCallback(new Document([
-            '$collection' => $collectionId,
+        return $attributesCallback($collectionId, new Document([
             '$id' => $attributeId,
             'type' => Database::VAR_FLOAT,
             'required' => $required,
@@ -736,8 +736,7 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
-        return $attributesCallback(new Document([
-            '$collection' => $collectionId,
+        return $attributesCallback($collectionId, new Document([
             '$id' => $attributeId,
             'type' => Database::VAR_BOOLEAN,
             'size' => 0,
