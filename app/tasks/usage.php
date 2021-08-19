@@ -287,7 +287,7 @@ $cli
                                 ],
                                 'collections' => [
                                     'metricPrefix' => 'database',
-                                    'namespace' => 'external', //new change will make this internal
+                                    'namespace' => 'internal',
                                     'subCollections' => [
                                         'documents' => [
                                             'namespace' => 'external',
