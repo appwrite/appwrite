@@ -121,8 +121,9 @@
         const isNotValidSmallAlphabet = key < SMALL_A || key > SMALL_Z;
         const isNotValidCapitalAlphabet = key < CAPITAL_A || key > CAPITAL_Z;
 
+        const isNotValidFirstChar = (key === UNDERSCORE || key === HYPHEN || key === PERIOD);
         //Leading underscore is prevented
-        if (key == UNDERSCORE && e.target.value.length == 0) {
+        if ( isNotValidFirstChar && e.target.value.length == 0) {
           e.preventDefault();
         }
         if (key != UNDERSCORE && key != HYPHEN && key != PERIOD && isNotValidDigit && isNotValidSmallAlphabet && isNotValidCapitalAlphabet) {
