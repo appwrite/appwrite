@@ -51,6 +51,10 @@ use Utopia\Database\Validator\Authorization;
  * database.documents.count
  * database.collections.{collectionId}.documents.count
  *
+ * Totals
+ *
+ * storage.total
+ *
  */
 
 $cli
@@ -263,6 +267,20 @@ $cli
 
                         foreach ($projects as $project) {
                             $id = $project->getId();
+
+                            // get total storage
+                            $dbForProject->setNamespace('project_' . $id . '_internal');
+                            $storageTotal = $dbForProject->sum('files', 'sizeOriginal') + $dbForProject->sum('tags', 'size');
+
+                            $dbForProject->createDocument('stats', new Document([
+                                '$id' => $dbForProject->getId(),
+                                'period' => '15m',
+                                'time' => time(),
+                                'metric' => 'storage.total',
+                                'value' => $storageTotal,
+                                'type' => 1,
+                            ]));
+
                             $collections = [
                                 'users' => [
                                     'namespace' => 'internal',
@@ -310,7 +328,7 @@ $cli
                                                     $dbForProject->setNamespace("project_{$id}_{$subOptions['namespace']}");
                                                     $count = $dbForProject->count($parent->getId());
                                                     $subCollectionsCounts[$subCollection] = ($subCollectionCounts[$subCollection] ?? 0) + $count;
-                                                    
+
                                                     $dbForProject->setNamespace("project_{$id}_internal");
                                                     $dbForProject->createDocument('stats', new Document([
                                                         '$id' => $dbForProject->getId(),

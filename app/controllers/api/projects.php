@@ -296,6 +296,9 @@ App::get('/v1/projects/:projectId/usage')
 
         $filesCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['storage.files.count'])], 0, ['time'], [Database::ORDER_DESC]);
         $filesTotal = $filesCount ? $filesCount->getAttribute('value', 0) : 0;
+        
+        $storageTotal = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['storage.total'])], 0, ['time'], [Database::ORDER_DESC]);
+        $storage = $storageTotal ? $storageTotal->getAttribute('value', 0) : 0;
 
         Authorization::reset();
 
@@ -335,24 +338,9 @@ App::get('/v1/projects/:projectId/usage')
                 'data' => [],
                 'total' => $usersTotal,
             ],
-            // 'storage' => [
-            //     'total' => $projectDB->getCount(
-            //         [
-            //             'attribute' => 'sizeOriginal',
-            //             'filters' => [
-            //                 '$collection=files',
-            //             ],
-            //         ]
-            //     ) +
-            //     $projectDB->getCount(
-            //         [
-            //             'attribute' => 'size',
-            //             'filters' => [
-            //                 '$collection=tags',
-            //             ],
-            //         ]
-            //     ),
-            // ],
+            'storage' => [
+                'total' => $storage,
+            ],
         ]);
     });
 
