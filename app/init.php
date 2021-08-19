@@ -71,6 +71,7 @@ const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_CERTIFICATES = 'certificates';
+const DELETE_TYPE_REALTIME = 'realtime';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_RECOVERY = 'recovery';
