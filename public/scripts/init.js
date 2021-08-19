@@ -55,7 +55,10 @@ document.addEventListener("account.create", function () {
 window.addEventListener("load", () => {
   const realtime = window.ls.container.get('realtime');
   window.ls.container.get('console').subscribe('project', event => {
-    realtime.set(event.payload);
+    realtime.set({
+      ...realtime.current,
+      ...event.payload
+    });
   });
 });
 
