@@ -5,7 +5,7 @@ sdk
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-let promise = sdk.projects.create('[NAME]', '[TEAM_ID]');
+let promise = sdk.projects.create('', '[NAME]', '[TEAM_ID]');
 
 promise.then(function (response) {
     console.log(response); // Success

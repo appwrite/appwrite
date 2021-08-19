@@ -9,7 +9,7 @@ use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 
-App::init(function ($utopia, $request, $response, $project, $user, $register, $events, $audits, $usage, $deletes, $database, $dbForInternal) {
+App::init(function ($utopia, $request, $response, $project, $user, $events, $audits, $usage, $deletes, $database, $dbForInternal, $mode) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
@@ -89,6 +89,9 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     $audits
         ->setParam('projectId', $project->getId())
         ->setParam('userId', $user->getId())
+        ->setParam('userEmail', $user->getAttribute('email'))
+        ->setParam('userName', $user->getAttribute('name'))
+        ->setParam('mode', $mode)
         ->setParam('event', '')
         ->setParam('resource', '')
         ->setParam('userAgent', $request->getUserAgent(''))
@@ -113,7 +116,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     $database
         ->setParam('projectId', $project->getId())
     ;
-}, ['utopia', 'request', 'response', 'project', 'user', 'register', 'events', 'audits', 'usage', 'deletes', 'database', 'dbForInternal'], 'api');
+}, ['utopia', 'request', 'response', 'project', 'user', 'events', 'audits', 'usage', 'deletes', 'database', 'dbForInternal', 'mode'], 'api');
 
 App::init(function ($utopia, $request, $project) {
     /** @var Utopia\App $utopia */

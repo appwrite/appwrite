@@ -5,9 +5,7 @@ use Appwrite\Database\Validator\CustomId;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain as DomainValidator;
 use Appwrite\Network\Validator\URL;
-use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Response;
-use Cron\CronExpression;
 use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
@@ -80,7 +78,6 @@ App::post('/v1/projects')
 
         $project = $dbForConsole->createDocument('projects', new Document([
             '$id' => $projectId == 'unique()' ? $dbForConsole->getId() : $projectId,
-            '$collection' => 'projects',
             '$read' => ['team:' . $teamId],
             '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
             'name' => $name,

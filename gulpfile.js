@@ -46,6 +46,7 @@ const configApp  = {
         'public/scripts/views/forms/copy.js',
         'public/scripts/views/forms/custom-id.js',
         'public/scripts/views/forms/document.js',
+        'public/scripts/views/forms/duplications.js',
         'public/scripts/views/forms/document-preview.js',
         'public/scripts/views/forms/filter.js',
         'public/scripts/views/forms/headers.js',
@@ -68,6 +69,7 @@ const configApp  = {
         'public/scripts/views/forms/upload.js',
 
         'public/scripts/views/general/cookies.js',
+        'public/scripts/views/general/copy.js',
         'public/scripts/views/general/page-title.js',
         'public/scripts/views/general/scroll-to.js',
         'public/scripts/views/general/scroll-direction.js',

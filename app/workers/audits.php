@@ -21,6 +21,9 @@ class AuditsV1 extends Worker
     {
         $projectId = $this->args['projectId'];
         $userId = $this->args['userId'];
+        $userName = $this->args['userName'];
+        $userEmail = $this->args['userEmail'];
+        $mode = $this->args['mode'];
         $event = $this->args['event'];
         $resource = $this->args['resource'];
         $userAgent = $this->args['userAgent'];
@@ -30,7 +33,12 @@ class AuditsV1 extends Worker
         $dbForInternal = $this->getInternalDB($projectId);
         $audit = new Audit($dbForInternal);
 
-        $audit->log($userId, $event, $resource, $userAgent, $ip, '', $data);
+        $audit->log($userId, $event, $resource, $userAgent, $ip, '', [
+            'userName' => $userName,
+            'userEmail' => $userEmail,
+            'mode' => $mode,
+            'data' => $data,
+        ]);
     }
 
     public function shutdown(): void
