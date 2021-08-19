@@ -288,14 +288,8 @@ App::get('/v1/projects/:projectId/usage')
         $usersCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['users.count'])], 0, ['time'], [Database::ORDER_DESC]);
         $usersTotal = $usersCount ? $usersCount->getAttribute('value', 0) : 0;
 
-        $collectionsCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['database.collections.count'])], 0, ['time'], [Database::ORDER_DESC]);
-        $collectionsTotal = $collectionsCount ? $collectionsCount->getAttribute('value', 0) : 0;
-
         $documentsCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['database.documents.count'])], 0, ['time'], [Database::ORDER_DESC]);
         $documentsTotal = $documentsCount ? $documentsCount->getAttribute('value', 0) : 0;
-
-        $filesCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['storage.files.count'])], 0, ['time'], [Database::ORDER_DESC]);
-        $filesTotal = $filesCount ? $filesCount->getAttribute('value', 0) : 0;
         
         $storageTotal = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['storage.total'])], 0, ['time'], [Database::ORDER_DESC]);
         $storage = $storageTotal ? $storageTotal->getAttribute('value', 0) : 0;
@@ -321,14 +315,6 @@ App::get('/v1/projects/:projectId/usage')
                 'total' => \array_sum(\array_map(function ($item) {
                     return $item['value'];
                 }, $stats['executions'] ?? [])),
-            ],
-            'collections' => [
-                'data' => [],
-                'total' => $collectionsTotal,
-            ],
-            'files' => [
-                'data' => [],
-                'total' => $filesTotal,
             ],
             'documents' => [
                 'data' => [],
