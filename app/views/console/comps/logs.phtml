@@ -32,7 +32,8 @@ $interval = floor((int)$this->getParam('interval', 0) / 86400);
                         <span data-ls-if="{{log.userName|escape}} !== '' && {{log.mode}} === ''"><i class="icon-user"></i>&nbsp; <a data-ls-attrs="href=/console/users/user?id={{log.userId}}&project={{router.params.project}}" data-ls-bind="{{log.userName}}"></a></span>
                         <span data-ls-if="{{log.userName|escape}} === '' && {{log.userEmail}} !== '' && {{log.mode}} !== 'key'"><i class="icon-user"></i>&nbsp; Unknown</span>
                         <span data-ls-if="{{log.userName|escape}} === '' && {{log.userEmail}} === '' && {{log.mode}} !== 'key'"><i class="icon-user"></i>&nbsp; Anonymous User</span>
-                        <span data-ls-if="{{log.mode}} === 'admin'"><i class="icon-user"></i>&nbsp; <span data-ls-bind="{{log.userName}} (Admin)"></span></span>
+                        <span data-ls-if="{{log.mode}} === 'admin'">
+                        <img src="" data-ls-attrs="src={{log.userName|avatar}}" data-size="45" alt="User Avatar" class="avatar xxs inline margin-end-small" loading="lazy" width="30" height="30" />&nbsp; <span data-ls-bind="{{log.userName}} (Admin)"></span></span>
                         <span data-ls-if="{{log.mode}} === 'key'"> <i class="icon-key"></i>&nbsp; API Key</span>
                     </td>
                     <td data-title="Event: "><span data-ls-bind="{{log.event}}"></span></td>
