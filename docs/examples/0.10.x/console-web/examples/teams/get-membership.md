@@ -5,7 +5,7 @@ sdk
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-let promise = sdk.account.create('', 'email@example.com', 'password');
+let promise = sdk.teams.getMembership('[TEAM_ID]', '[MEMBERSHIP_ID]');
 
 promise.then(function (response) {
     console.log(response); // Success

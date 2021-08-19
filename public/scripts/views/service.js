@@ -373,6 +373,7 @@
             view.render(element);
           },
           function(exception) {
+            console.error(exception);
             if (loaderId !== null) {
               // Remove loader if needed
               alerts.remove(loaderId);
