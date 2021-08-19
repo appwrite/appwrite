@@ -241,30 +241,22 @@ App::get('/v1/projects/:projectId/usage')
             throw new Exception('Project not found', 404);
         }
 
+        $stats = [];
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-
             $period = [
                 '24h' => [
-                    // 'start' => DateTime::createFromFormat('U', \strtotime('-24 hours')),
-                    // 'end' => DateTime::createFromFormat('U', \strtotime('+1 hour')),
                     'period' => '30m',
                     'limit' => 48,
                 ],
                 '7d' => [
-                    // 'start' => DateTime::createFromFormat('U', \strtotime('-7 days')),
-                    // 'end' => DateTime::createFromFormat('U', \strtotime('now')),
                     'period' => '1d',
                     'limit' => 7,
                 ],
                 '30d' => [
-                    // 'start' => DateTime::createFromFormat('U', \strtotime('-30 days')),
-                    // 'end' => DateTime::createFromFormat('U', \strtotime('now')),
                     'period' => '1d',
                     'limit' => 30,
                 ],
                 '90d' => [
-                    // 'start' => DateTime::createFromFormat('U', \strtotime('-90 days')),
-                    // 'end' => DateTime::createFromFormat('U', \strtotime('now')),
                     'period' => '1d',
                     'limit' => 90,
                 ],
@@ -272,59 +264,25 @@ App::get('/v1/projects/:projectId/usage')
 
             $dbForInternal->setNamespace('project_' . $projectId . '_internal');
 
-            $requestDocs = Authorization::skip(function () use ($dbForInternal, $period, $range) {
-                return $dbForInternal->find('stats', [
+            Authorization::disable();
+
+            $metrics = ['requests', 'network', 'executions'];
+            foreach ($metrics as $metric) {
+                $requestDocs = $dbForInternal->find('stats', [
                     new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
-                    new Query('metric', Query::TYPE_EQUAL, ['requests']),
+                    new Query('metric', Query::TYPE_EQUAL, [$metric]),
                 ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
-            });
 
-            $requests = [];
-            foreach ($requestDocs as $requestDoc) {
-                $requests[] = [
-                    'value' => $requestDoc->getAttribute('value'),
-                    'date' => $requestDoc->getAttribute('time'),
-                ];
+                $stats[$metric] = [];
+                foreach ($requestDocs as $requestDoc) {
+                    $stats[$metric][] = [
+                        'value' => $requestDoc->getAttribute('value'),
+                        'date' => $requestDoc->getAttribute('time'),
+                    ];
+                }
+
+                $stats[$metric] = array_reverse($stats[$metric]);
             }
-
-            $requests = array_reverse($requests);
-
-            $networkDocs = Authorization::skip(function () use ($dbForInternal, $period, $range) {
-                return $dbForInternal->find('stats', [
-                    new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
-                    new Query('metric', Query::TYPE_EQUAL, ['network']),
-                ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
-            });
-
-            $network = [];
-            foreach ($networkDocs as $networkDoc) {
-                $network[] = [
-                    'value' => $networkDoc->getAttribute('value'),
-                    'date' => $networkDoc->getAttribute('time'),
-                ];
-            }
-
-            $network = array_reverse($network);
-
-            $functionsDocs = Authorization::skip(function () use ($dbForInternal, $period, $range) {
-                return $dbForInternal->find('stats', [
-                    new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
-                    new Query('metric', Query::TYPE_EQUAL, ['executions']),
-                ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
-            });
-
-            $functions = [];
-            foreach ($functionsDocs as $functionDoc) {
-                $functions[] = [
-                    'value' => $functionDoc->getAttribute('value'),
-                    'date' => $functionDoc->getAttribute('time'),
-                ];
-            }
-            $functions = array_reverse($functions);
-        } else {
-            $requests = [];
-            $network = [];
-            $functions = [];
         }
 
         $usersCount = Authorization::skip(function () use ($dbForInternal) {
@@ -336,7 +294,6 @@ App::get('/v1/projects/:projectId/usage')
             return $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['collections.count'])], 0, ['time'], [Database::ORDER_DESC]);
         });
         $collectionsTotal = $collectionsCount ? $collectionsCount->getAttribute('value', 0) : 0;
-        
 
         // $documents = [];
 
@@ -357,25 +314,27 @@ App::get('/v1/projects/:projectId/usage')
         });
         $filesTotal = $filesCount ? $filesCount->getAttribute('value', 0) : 0;
 
+        Authorization::reset();
+
         $response->json([
             'range' => $range,
             'requests' => [
-                'data' => $requests,
+                'data' => $stats['requests'] ?? [],
                 'total' => \array_sum(\array_map(function ($item) {
                     return $item['value'];
-                }, $requests)),
+                }, $stats['requests'] ?? [])),
             ],
             'network' => [
-                'data' => \array_map(function ($value) {return ['value' => \round($value['value'] / 1000000, 2), 'date' => $value['date']];}, $network), // convert bytes to mb
+                'data' => \array_map(function ($value) {return ['value' => \round($value['value'] / 1000000, 2), 'date' => $value['date']];}, $stats['network'] ?? []), // convert bytes to mb
                 'total' => \array_sum(\array_map(function ($item) {
                     return $item['value'];
-                }, $network)),
+                }, $stats['network'] ?? [])),
             ],
             'functions' => [
-                'data' => $functions,
+                'data' => $stats['executions'] ?? [],
                 'total' => \array_sum(\array_map(function ($item) {
                     return $item['value'];
-                }, $functions)),
+                }, $stats['executions'] ?? [])),
             ],
             'collections' => [
                 'data' => [],
