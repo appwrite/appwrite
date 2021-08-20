@@ -257,10 +257,9 @@ App::get('/v1/database/usage')
     ->label('sdk.method', 'getUsage')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
-    ->inject('dbForConsole')
     ->inject('dbForInternal')
     ->inject('register')
-    ->action(function ($range, $response, $dbForConsole, $dbForInternal, $register) {
+    ->action(function ($range, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
         /** @var Utopia\Database\Database $dbForInternal */
@@ -399,11 +398,122 @@ App::get('/v1/database/usage')
     });
 
 
-// :collectionId/usage
-// 'reads',
-// 'writes',
-// 'updates',
-// 'delete'
+App::get('/v1/database/:collectionId/usage')
+    ->desc('Get Database Usage')
+    ->groups(['api', 'database'])
+    ->label('scope', 'collections.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'database')
+    ->label('sdk.method', 'getUsage')
+    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+    ->param('collectionId', '', new UID(), 'Collection unique ID.')
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->inject('dbForExternal')
+    ->action(function ($range, $collectionId, $response, $dbForInternal, $dbForExternal) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForConsole */
+        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Registry\Registry $register */
+
+        $collection = $dbForExternal->getCollection($collectionId);
+
+        if ($collection->isEmpty()) {
+            throw new Exception('Collection not found', 404);
+        }
+        
+        $stats = [];
+        if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+            $period = [
+                '24h' => [
+                    'period' => '30m',
+                    'limit' => 48,
+                ],
+                '7d' => [
+                    'period' => '1d',
+                    'limit' => 7,
+                ],
+                '30d' => [
+                    'period' => '1d',
+                    'limit' => 30,
+                ],
+                '90d' => [
+                    'period' => '1d',
+                    'limit' => 90,
+                ],
+            ];
+            
+            Authorization::disable();
+
+            $metrics = [
+                "database.collections.$collectionId.documents.create",
+                "database.collections.$collectionId.documents.read",
+                "database.collections.$collectionId.documents.update",
+                "database.collections.$collectionId.documents.delete",
+            ];
+
+            foreach ($metrics as $metric) {
+                $requestDocs = $dbForInternal->find('stats', [
+                    new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
+                    new Query('metric', Query::TYPE_EQUAL, [$metric]),
+                ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
+
+                $stats[$metric] = [];
+                foreach ($requestDocs as $requestDoc) {
+                    $stats[$metric][] = [
+                        'value' => $requestDoc->getAttribute('value'),
+                        'date' => $requestDoc->getAttribute('time'),
+                    ];
+                }
+
+                $stats[$metric] = array_reverse($stats[$metric]);
+            }
+
+            $documentsCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ["database.collections.$collectionId.documents.count"])], 0, ['time'], [Database::ORDER_DESC]);
+            $documentsTotal = $documentsCount ? $documentsCount->getAttribute('value', 0) : 0;
+            
+            Authorization::reset();
+    
+            $create = $stats["database.collections.$collectionId.documents.create"] ?? [];
+            $read = $stats["database.collections.$collectionId.documents.read"] ?? [];
+            $update = $stats["database.collections.$collectionId.documents.update"] ?? [];
+            $delete = $stats["database.collections.$collectionId.documents.delete"] ?? [];
+
+            $response->json([
+                'range' => $range,
+                'create' => [
+                    'data' => $create,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $create)),
+                ],
+                'read' => [
+                    'data' => $read,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $read)),
+                ],
+                'update' => [
+                    'data' => $update,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $update)),
+                ],
+                'delete' => [
+                    'data' => $delete,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $delete)),
+                ],
+                'documentCount' => [
+                    'data' => [],
+                    'total' => $documentsTotal,
+                ],
+            ]);
+        } else {
+            $response->json([]);
+        }
+    });
 
 App::get('/v1/database/collections/:collectionId/logs')
     ->desc('List Collection Logs')
