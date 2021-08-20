@@ -1713,15 +1713,3 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
 
         $response->noContent();
     });
-
-
-// Refactor usage endpoint in Functions API 
-
-
-// Create usage endpoint in the Database API
-
-
-// Create usage endpoint in the users API
-
-
-// Create usage endpoint in the Storage API 
