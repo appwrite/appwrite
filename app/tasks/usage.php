@@ -43,6 +43,12 @@ use Utopia\Database\Validator\Authorization;
  * users.sessions.create
  * users.sessions.delete
  *
+ * Functions
+ *
+ * functions.{functionId}.executions
+ * functions.{functionId}.failures
+ * functions.{functionId}.compute
+ *
  * Counters
  *
  * users.count
@@ -162,6 +168,21 @@ $cli
             'users.sessions.delete' => [
                 'table' => 'appwrite_usage_users_sessions_delete',
             ],
+            'functions.functionId.executions' => [
+                'table' => 'appwrite_usage_executions_all',
+                'groupBy' => 'functionId',
+            ],
+            'functions.functionId.compute' => [
+                'table' => 'appwrite_usage_executions_time',
+                'groupBy' => 'functionId',
+            ],
+            'functions.functionId.failures' => [
+                'table' => 'appwrite_usage_executions_all',
+                'groupBy' => 'functionId',
+                'filters' => [
+                    'functionStatus' => 'failed',
+                ],
+            ],
         ];
 
         $attempts = 0;
@@ -213,7 +234,15 @@ $cli
                         $table = $options['table']; //which influxdb table to query for this metric
                         $groupBy = empty($options['groupBy']) ? '' : ', "' . $options['groupBy'] . '"'; //some sub level metrics may be grouped by other tags like collectionId, bucketId, etc
 
-                        $result = $database->query('SELECT sum(value) AS "value" FROM "' . $table . '" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' GROUP BY time(' . $period['key'] . '), "projectId"' . $groupBy . ' FILL(null)');
+                        $filters = $options['filters'] ?? [];
+                        if (!empty($filters)) {
+                            $filters = ' AND ' . implode(' AND ', array_map(function ($filter, $value) {
+                                return '"' . $filter . '"=\'' . $value . '\'';
+                            }, array_keys($filters), array_values($filters)));
+                        }
+
+                        $result = $database->query('SELECT sum(value) AS "value" FROM "' . $table . '" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\'' . (empty($filters) ? '' : $filters) . ' GROUP BY time(' . $period['key'] . '), "projectId"' . $groupBy . ' FILL(null)');
+                        
                         $points = $result->getPoints();
                         foreach ($points as $point) {
                             $projectId = $point['projectId'];
@@ -314,7 +343,7 @@ $cli
                                         'value' => $count,
                                         'type' => 1,
                                     ]));
-    
+
                                     $subCollections = $options['subCollections'] ?? [];
                                     if (!empty($subCollections)) {
                                         $latestParent = null;
@@ -329,7 +358,7 @@ $cli
                                                         $dbForProject->setNamespace("project_{$id}_{$subOptions['namespace']}");
                                                         $count = $dbForProject->count($parent->getId());
                                                         $subCollectionsCounts[$subCollection] = ($subCollectionCounts[$subCollection] ?? 0) + $count;
-    
+
                                                         $dbForProject->setNamespace("project_{$id}_internal");
                                                         $dbForProject->createDocument('stats', new Document([
                                                             '$id' => $dbForProject->getId(),
@@ -343,7 +372,7 @@ $cli
                                                 }
                                             }
                                         } while (!empty($parents));
-    
+
                                         foreach ($subCollectionsCounts as $subCollection => $count) {
                                             $dbForProject->setNamespace("project_{$id}_internal");
                                             $dbForProject->createDocument('stats', new Document([
@@ -356,7 +385,7 @@ $cli
                                             ]));
                                         }
                                     }
-                                } catch(\Exception $e) {
+                                } catch (\Exception$e) {
                                     Console::warning("Failed to save database counters data for project {$collection}");
                                 }
                             }
