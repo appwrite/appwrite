@@ -320,26 +320,75 @@ App::get('/v1/database/usage')
             $documentsCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['database.documents.count'])], 0, ['time'], [Database::ORDER_DESC]);
             $documentsTotal = $documentsCount ? $documentsCount->getAttribute('value', 0) : 0;
 
-            $collectionsCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['n
-            '])], 0, ['time'], [Database::ORDER_DESC]);
+            $collectionsCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['database.collections.count'])], 0, ['time'], [Database::ORDER_DESC]);
             $collectionsTotal = $collectionsCount ? $collectionsCount->getAttribute('value', 0) : 0;
 
             Authorization::reset();
 
+            $documentsCreate = $stats["database.documents.create"] ?? [];
+            $documentsRead   = $stats["database.documents.read"] ?? [];
+            $documentsUpdate = $stats["database.documents.update"] ?? [];
+            $documentsDelete = $stats["database.documents.delete"] ?? [];
+            $collectionsCreate = $stats["database.collections.create"] ?? [];
+            $collectionsRead = $stats["database.collections.read"] ?? [];
+            $collectionsUpdate = $stats["database.collections.update"] ?? [];
+            $collectionsDelete = $stats["database.collections.delete"] ?? [];
+
             $response->json([
                 'range' => $range,
-                'stats' => $stats,
-                'requests' => [
-                    'data' => $stats['requests'] ?? [],
+                'documents.create' => [
+                    'data' => $documentsCreate,
                     'total' => \array_sum(\array_map(function ($item) {
                         return $item['value'];
-                    }, $stats['requests'] ?? [])),
+                    }, $documentsCreate)),
                 ],
-                'documents' => [
+                'documents.read' => [
+                    'data' => $documentsRead,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $documentsRead)),
+                ],
+                'documents.update' => [
+                    'data' => $documentsUpdate,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $documentsUpdate)),
+                ],
+                'documents.delete' => [
+                    'data' => $documentsDelete,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $documentsDelete)),
+                ],
+                'collections.create' => [
+                    'data' => $collectionsCreate,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $collectionsCreate)),
+                ],
+                'collections.read' => [
+                    'data' => $collectionsRead,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $collectionsRead)),
+                ],
+                'collections.update' => [
+                    'data' => $collectionsUpdate,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $collectionsUpdate)),
+                ],
+                'collections.delete' => [
+                    'data' => $collectionsDelete,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $collectionsDelete)),
+                ],
+                'documentCount' => [
                     'data' => [],
                     'total' => $documentsTotal,
                 ],
-                'collections' => [
+                'collectionCount' => [
                     'data' => [],
                     'total' => $collectionsTotal,
                 ]
