@@ -706,40 +706,42 @@ App::get('/v1/storage/:bucketId/usage')
 
                 $stats[$metric] = array_reverse($stats[$metric]);
             }
+
+            Authorization::reset();
+
+            $create = $stats["storage.buckets.$bucketId.files.create"] ?? [];
+            $read = $stats["storage.buckets.$bucketId.files.read"] ?? [];
+            $update = $stats["storage.buckets.$bucketId.files.update"] ?? [];
+            $delete = $stats["storage.buckets.$bucketId.files.delete"] ?? [];
+
+            $response->json([
+                'range' => $range,
+                'create' => [
+                    'data' => $create,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $create)),
+                ],
+                'read' => [
+                    'data' => $read,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $read)),
+                ],
+                'update' => [
+                    'data' => $update,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $update)),
+                ],
+                'delete' => [
+                    'data' => $delete,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $delete)),
+                ],
+            ]);
+        } else {
+            $response->json([]);
         }
-
-        Authorization::reset();
-
-        $create = $stats["storage.buckets.$bucketId.files.create"] ?? [];
-        $read = $stats["storage.buckets.$bucketId.files.read"] ?? [];
-        $update = $stats["storage.buckets.$bucketId.files.update"] ?? [];
-        $delete = $stats["storage.buckets.$bucketId.files.delete"] ?? [];
-
-        $response->json([
-            'range' => $range,
-            'create' => [
-                'data' => $create,
-                'total' => \array_sum(\array_map(function ($item) {
-                    return $item['value'];
-                }, $create)),
-            ],
-            'read' => [
-                'data' => $read,
-                'total' => \array_sum(\array_map(function ($item) {
-                    return $item['value'];
-                }, $read)),
-            ],
-            'update' => [
-                'data' => $update,
-                'total' => \array_sum(\array_map(function ($item) {
-                    return $item['value'];
-                }, $update)),
-            ],
-            'delete' => [
-                'data' => $delete,
-                'total' => \array_sum(\array_map(function ($item) {
-                    return $item['value'];
-                }, $delete)),
-            ],
-        ]);
     });
