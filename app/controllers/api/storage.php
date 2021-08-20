@@ -644,6 +644,64 @@ App::delete('/v1/storage/files/:fileId')
         $response->noContent();
     });
 
+App::get('/v1/storage/usage')
+    ->desc('Get usage stats for storage')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'storage.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'getUsage')
+    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->action(function ($range, $response, $dbForInternal) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
+
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+            $period = [
+                '24h' => [
+                    'period' => '30m',
+                    'limit' => 48,
+                ],
+                '7d' => [
+                    'period' => '1d',
+                    'limit' => 7,
+                ],
+                '30d' => [
+                    'period' => '1d',
+                    'limit' => 30,
+                ],
+                '90d' => [
+                    'period' => '1d',
+                    'limit' => 90,
+                ],
+            ];
+
+            Authorization::disable();
+
+            $storageTotal = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['storage.total'])], 0, ['time'], [Database::ORDER_DESC]);
+            $storage = $storageTotal ? $storageTotal->getAttribute('value', 0) : 0;
+
+            $filesCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['storage.files.count'])], 0, ['time'], [Database::ORDER_DESC]);
+            $filesTotal = $filesCount ? $filesCount->getAttribute('value', 0) : 0;
+
+            Authorization::reset();
+
+            $response->json([
+                'range' => $range,
+                'storage' => [
+                    'total' => $storage,
+                ],
+                'files' => [
+                    'total' => $filesTotal,
+                ],
+            ]);
+        } else {
+            $response->json([]);
+        }
+    });
+
 App::get('/v1/storage/:bucketId/usage')
     ->desc('Get usage stats for a storage bucket')
     ->groups(['api', 'storage'])
@@ -655,13 +713,11 @@ App::get('/v1/storage/:bucketId/usage')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->inject('register')
     ->action(function ($bucketId, $range, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        // TODO: Check is the storage bucket exists else throw 404 
-
+        // TODO: Check if the storage bucket exists else throw 404 
         $stats = [];
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $period = [
