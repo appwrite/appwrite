@@ -249,7 +249,7 @@ App::get('/v1/database/collections/:collectionId')
     });
 
 App::get('/v1/database/usage')
-    ->desc('Get Database Usage')
+    ->desc('Get usage stats for the database')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -258,7 +258,6 @@ App::get('/v1/database/usage')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->inject('register')
     ->action(function ($range, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
@@ -399,7 +398,7 @@ App::get('/v1/database/usage')
 
 
 App::get('/v1/database/:collectionId/usage')
-    ->desc('Get Database Usage for a collection')
+    ->desc('Get usage stats for a collection')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])

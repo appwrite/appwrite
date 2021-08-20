@@ -610,7 +610,7 @@ App::delete('/v1/users/:userId')
     });
 
 App::get('/v1/users/usage')
-    ->desc('Get Users Usage')
+    ->desc('Get usage stats for the users API')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])

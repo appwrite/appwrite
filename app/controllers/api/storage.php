@@ -645,7 +645,7 @@ App::delete('/v1/storage/files/:fileId')
     });
 
 App::get('/v1/storage/:bucketId/usage')
-    ->desc('Get Bucket Usage')
+    ->desc('Get usage stats for a storage bucket')
     ->groups(['api', 'storage'])
     ->label('scope', 'storage.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -659,6 +659,8 @@ App::get('/v1/storage/:bucketId/usage')
     ->action(function ($bucketId, $range, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
+
+        // TODO: Check is the storage bucket exists else throw 404 
 
         $stats = [];
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
