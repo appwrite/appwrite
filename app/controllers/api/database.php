@@ -85,26 +85,18 @@ $attributesCallback = function ($collectionId, $attribute, $response, $dbForInte
         }
     }
 
-    $dbForExternal->addAttributeInQueue($collectionId, $attributeId, $type, $size, $required, $default, $signed, $array, $format, $filters);
-
-    // Database->addAttributeInQueue() does not return a document
-    // So we need to create one for the response
-    //
-    // TODO@kodumbeats should $signed and $filters be part of the response model?
-
-    $attribute = new Document([
+    $attribute = $dbForInternal->createDocument('attributes', new Document([
         '$id' => $attributeId,
         'type' => $type,
+        'status' => 'processing', // processing, available, failed
         'size' => $size,
         'required' => $required,
-        'default' => $default,
-        'min' => $min,
-        'max' => $max,
         'signed' => $signed,
+        'default' => (string)$default, // Convert to proper type on fetch
         'array' => $array,
         'format' => $format,
         'filters' => $filters,
-    ]);
+    ]));
 
     $database
         ->setParam('type', DATABASE_TYPE_CREATE_ATTRIBUTE)
@@ -947,11 +939,6 @@ App::post('/v1/database/collections/:collectionId/indexes')
             $lengths[$key] = ($attributeType === Database::VAR_STRING) ? $attributeSize : null;
         }
 
-        $dbForInternal->addIndexInQueue($collectionId, $indexId, $type, $attributes, $lengths, $orders);
-
-        // Database->createIndex() does not return a document
-        // So we need to create one for the response
-        // 
         // TODO@kodumbeats should $lengths be a part of the response model?
         $index = new Document([
             '$collection' => $collectionId,

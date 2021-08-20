@@ -906,11 +906,12 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
+                 * @param {string} after
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listCollections: (search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
+                listCollections: (search, limit, offset, after, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/database/collections';
                     let payload = {};
                     if (typeof search !== 'undefined') {
@@ -921,6 +922,9 @@
                     }
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
+                    }
+                    if (typeof after !== 'undefined') {
+                        payload['after'] = after;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -937,17 +941,21 @@
                  *
                  * @param {string} collectionId
                  * @param {string} name
+                 * @param {string} permission
                  * @param {string} read
                  * @param {string} write
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createCollection: (collectionId, name, read, write) => __awaiter(this, void 0, void 0, function* () {
+                createCollection: (collectionId, name, permission, read, write) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
                     if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
+                    }
+                    if (typeof permission === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "permission"');
                     }
                     if (typeof read === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "read"');
@@ -962,6 +970,9 @@
                     }
                     if (typeof name !== 'undefined') {
                         payload['name'] = name;
+                    }
+                    if (typeof permission !== 'undefined') {
+                        payload['permission'] = permission;
                     }
                     if (typeof read !== 'undefined') {
                         payload['read'] = read;
@@ -1002,22 +1013,29 @@
                  *
                  * @param {string} collectionId
                  * @param {string} name
+                 * @param {string} permission
                  * @param {string} read
                  * @param {string} write
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateCollection: (collectionId, name, read, write) => __awaiter(this, void 0, void 0, function* () {
+                updateCollection: (collectionId, name, permission, read, write) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
                     if (typeof name === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "name"');
                     }
+                    if (typeof permission === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "permission"');
+                    }
                     let path = '/database/collections/{collectionId}'.replace('{collectionId}', collectionId);
                     let payload = {};
                     if (typeof name !== 'undefined') {
                         payload['name'] = name;
+                    }
+                    if (typeof permission !== 'undefined') {
+                        payload['permission'] = permission;
                     }
                     if (typeof read !== 'undefined') {
                         payload['read'] = read;
@@ -1445,12 +1463,13 @@
                  * @param {string[]} queries
                  * @param {number} limit
                  * @param {number} offset
+                 * @param {string} after
                  * @param {string[]} orderAttributes
                  * @param {string[]} orderTypes
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listDocuments: (collectionId, queries, limit, offset, orderAttributes, orderTypes) => __awaiter(this, void 0, void 0, function* () {
+                listDocuments: (collectionId, queries, limit, offset, after, orderAttributes, orderTypes) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
@@ -1464,6 +1483,9 @@
                     }
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
+                    }
+                    if (typeof after !== 'undefined') {
+                        payload['after'] = after;
                     }
                     if (typeof orderAttributes !== 'undefined') {
                         payload['orderAttributes'] = orderAttributes;
@@ -1670,8 +1692,6 @@
                     if (typeof orders !== 'undefined') {
                         payload['orders'] = orders;
                     }
-
-                    console.log(collectionId, indexId, type, attributes, orders);
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
                         'content-type': 'application/json',
@@ -1724,7 +1744,7 @@
                     }, payload);
                 }),
                 /**
-                 * Get Collection Logs
+                 * List Collection Logs
                  *
                  * Get the collection activity logs list by its unique ID.
                  *
@@ -1754,11 +1774,12 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
+                 * @param {string} after
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                list: (search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
+                list: (search, limit, offset, after, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/functions';
                     let payload = {};
                     if (typeof search !== 'undefined') {
@@ -1769,6 +1790,9 @@
                     }
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
+                    }
+                    if (typeof after !== 'undefined') {
+                        payload['after'] = after;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -1941,10 +1965,11 @@
                  * @param {string} functionId
                  * @param {number} limit
                  * @param {number} offset
+                 * @param {string} after
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listExecutions: (functionId, limit, offset) => __awaiter(this, void 0, void 0, function* () {
+                listExecutions: (functionId, limit, offset, after) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
@@ -1955,6 +1980,9 @@
                     }
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
+                    }
+                    if (typeof after !== 'undefined') {
+                        payload['after'] = after;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
@@ -2051,11 +2079,12 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
+                 * @param {string} after
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listTags: (functionId, search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
+                listTags: (functionId, search, limit, offset, after, orderType) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
@@ -2069,6 +2098,9 @@
                     }
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
+                    }
+                    if (typeof after !== 'undefined') {
+                        payload['after'] = after;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -2516,11 +2548,12 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
+                 * @param {string} after
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                list: (search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
+                list: (search, limit, offset, after, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/projects';
                     let payload = {};
                     if (typeof search !== 'undefined') {
@@ -2531,6 +2564,9 @@
                     }
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
+                    }
+                    if (typeof after !== 'undefined') {
+                        payload['after'] = after;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -3457,11 +3493,12 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
+                 * @param {string} after
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                listFiles: (search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
+                listFiles: (search, limit, offset, after, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/storage/files';
                     let payload = {};
                     if (typeof search !== 'undefined') {
@@ -3472,6 +3509,9 @@
                     }
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
+                    }
+                    if (typeof after !== 'undefined') {
+                        payload['after'] = after;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -3728,11 +3768,12 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
+                 * @param {string} after
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                list: (search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
+                list: (search, limit, offset, after, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/teams';
                     let payload = {};
                     if (typeof search !== 'undefined') {
@@ -3743,6 +3784,9 @@
                     }
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
+                    }
+                    if (typeof after !== 'undefined') {
+                        payload['after'] = after;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -3869,11 +3913,12 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
+                 * @param {string} after
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                getMemberships: (teamId, search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
+                getMemberships: (teamId, search, limit, offset, after, orderType) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof teamId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "teamId"');
                     }
@@ -3887,6 +3932,9 @@
                     }
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
+                    }
+                    if (typeof after !== 'undefined') {
+                        payload['after'] = after;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
@@ -4088,11 +4136,12 @@
                  * @param {string} search
                  * @param {number} limit
                  * @param {number} offset
+                 * @param {string} after
                  * @param {string} orderType
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                list: (search, limit, offset, orderType) => __awaiter(this, void 0, void 0, function* () {
+                list: (search, limit, offset, after, orderType) => __awaiter(this, void 0, void 0, function* () {
                     let path = '/users';
                     let payload = {};
                     if (typeof search !== 'undefined') {
@@ -4103,6 +4152,9 @@
                     }
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
+                    }
+                    if (typeof after !== 'undefined') {
+                        payload['after'] = after;
                     }
                     if (typeof orderType !== 'undefined') {
                         payload['orderType'] = orderType;
