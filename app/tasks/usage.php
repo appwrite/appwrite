@@ -248,15 +248,19 @@ $cli
                             $projectId = $point['projectId'];
                             if (!empty($projectId) && $projectId != 'console') {
                                 $dbForProject->setNamespace('project_' . $projectId . '_internal');
+                                if($metric == 'functions.functionId.executions') {
+                                    var_dump($points);
+                                }
+                                $metricUpdated = $metric;
                                 if (!empty($groupBy)) {
-                                    $groupedBy = $point[$groupBy] ?? '';
+                                    $groupedBy = $point[$options['groupBy']] ?? '';
                                     if (empty($groupedBy)) {
                                         continue;
                                     }
-                                    $metric = str_replace($groupBy, $groupedBy, $metric);
+                                    $metricUpdated = str_replace($options['groupBy'], $groupedBy, $metric);
                                 }
                                 $time = \strtotime($point['time']);
-                                $id = \md5($time . '_' . $period['key'] . '_' . $metric); //construct unique id for each metric using time, period and metric
+                                $id = \md5($time . '_' . $period['key'] . '_' . $metricUpdated); //construct unique id for each metric using time, period and metric
                                 $value = (!empty($point['value'])) ? $point['value'] : 0;
                                 try {
                                     $document = $dbForProject->getDocument('stats', $id);
@@ -265,7 +269,7 @@ $cli
                                             '$id' => $id,
                                             'period' => $period['key'],
                                             'time' => $time,
-                                            'metric' => $metric,
+                                            'metric' => $metricUpdated,
                                             'value' => $value,
                                             'type' => 0,
                                         ]));
@@ -276,7 +280,7 @@ $cli
                                     $latestTime[$metric][$period['key']] = $time;
                                 } catch (\Exception$e) {
                                     // if projects are deleted this might fail
-                                    Console::warning("Failed to save data for project {$projectId} and metric {$metric}");
+                                    Console::warning("Failed to save data for project {$projectId} and metric {$metricUpdated}");
                                 }
                             }
                         }
