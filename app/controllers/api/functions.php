@@ -259,6 +259,101 @@ App::get('/v1/functions/:functionId/usage')
         }
     });
 
+App::get('/v1/functions/:functionId/usage2')
+    ->desc('Get Function Usage')
+    ->groups(['api', 'functions'])
+    ->label('scope', 'functions.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'getUsage')
+    ->param('functionId', '', new UID(), 'Function unique ID.')
+    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d']), 'Date range.', true)
+    ->inject('response')
+    ->inject('project')
+    ->inject('dbForInternal')
+    ->inject('register')
+    ->action(function ($functionId, $range, $response, $project, $dbForInternal, $register) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Document $project */
+        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Registry\Registry $register */
+
+        $function = $dbForInternal->getDocument('functions', $functionId);
+
+        if ($function->isEmpty()) {
+            throw new Exception('Function not found', 404);
+        }
+        
+        if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+            $period = [
+                '24h' => [
+                    'period' => '30m',
+                    'limit' => 48,
+                ],
+                '7d' => [
+                    'period' => '1d',
+                    'limit' => 7,
+                ],
+                '30d' => [
+                    'period' => '1d',
+                    'limit' => 30,
+                ],
+                '90d' => [
+                    'period' => '1d',
+                    'limit' => 90,
+                ],
+            ];
+            
+            Authorization::disable();
+
+            $metrics = ["functions.$functionId.executions", "functions.$functionId.failures", "functions.$functionId.compute"];
+            foreach ($metrics as $metric) {
+                $requestDocs = $dbForInternal->find('stats', [
+                    new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
+                    new Query('metric', Query::TYPE_EQUAL, [$metric]),
+                ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
+
+                $stats[$metric] = [];
+                foreach ($requestDocs as $requestDoc) {
+                    $stats[$metric][] = [
+                        'value' => $requestDoc->getAttribute('value'),
+                        'date' => $requestDoc->getAttribute('time'),
+                    ];
+                }
+
+                $stats[$metric] = array_reverse($stats[$metric]);
+            }
+    
+            $executions = $stats["functions.$functionId.executions"] ?? [];
+            $failures = $stats["functions.$functionId.failures"] ?? [];
+            $compute = $stats["functions.$functionId.compute"] ?? [];
+
+            $response->json([
+                'range' => $range,
+                'executions' => [
+                    'data' => $executions,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $executions)),
+                ],
+                'failures' => [
+                    'data' => $failures,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $failures)),
+                ],
+                'compute' => [
+                    'data' => $compute,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $compute)),
+                ],
+            ]);
+        } else {
+            $response->json([]);
+        }
+    });
+
 App::put('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
     ->desc('Update Function')
