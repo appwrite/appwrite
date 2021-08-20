@@ -217,7 +217,7 @@ App::get('/v1/projects/:projectId')
     });
 
 App::get('/v1/projects/:projectId/usage')
-    ->desc('Get Project Usage')
+    ->desc('Get usage stats for a project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
