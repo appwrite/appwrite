@@ -61,7 +61,7 @@ $attributesCallback = function ($attribute, $response, $dbForExternal, $database
         if (!$validator->isValid($default)) {
             throw new Exception('Length of default attribute exceeds attribute size', 400);
         }
-    }
+    } 
 
     if (!\is_null($format)) {
         $name = \json_decode($format, true)['name'];
@@ -111,14 +111,16 @@ $attributesCallback = function ($attribute, $response, $dbForExternal, $database
 
     $database
         ->setParam('type', DATABASE_TYPE_CREATE_ATTRIBUTE)
-        ->setParam('document', $attribute);
+        ->setParam('document', $attribute)
+    ;
 
     $usage->setParam('database.collections.update', 1);
 
     $audits
         ->setParam('event', 'database.attributes.create')
-        ->setParam('resource', 'database/collection/' . $collection->getId())
-        ->setParam('data', $attribute);
+        ->setParam('resource', 'database/collection/'.$collection->getId())
+        ->setParam('data', $attribute)
+    ;
 
     $response->setStatusCode(Response::STATUS_CODE_CREATED);
     $response->dynamic($attribute, Response::MODEL_ATTRIBUTE);
@@ -166,8 +168,9 @@ App::post('/v1/database/collections')
 
         $audits
             ->setParam('event', 'database.collections.create')
-            ->setParam('resource', 'database/collection/' . $collection->getId())
-            ->setParam('data', $collection->getArrayCopy());
+            ->setParam('resource', 'database/collection/'.$collection->getId())
+            ->setParam('data', $collection->getArrayCopy())
+        ;
 
         $usage->setParam('database.collections.create', 1);
 
@@ -248,7 +251,7 @@ App::get('/v1/database/collections/:collectionId')
         $response->dynamic($collection, Response::MODEL_COLLECTION);
     });
 
-App::get('/v1/database/usage')
+    App::get('/v1/database/usage')
     ->desc('Get usage stats for the database')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
@@ -395,7 +398,6 @@ App::get('/v1/database/usage')
             $response->json([]);
         }
     });
-
 
 App::get('/v1/database/:collectionId/usage')
     ->desc('Get usage stats for a collection')
@@ -547,7 +549,7 @@ App::get('/v1/database/collections/:collectionId/logs')
 
         $audit = new Audit($dbForInternal);
 
-        $logs = $audit->getLogsByResource('database/collection/' . $collection->getId());
+        $logs = $audit->getLogsByResource('database/collection/'.$collection->getId());
 
         $output = [];
 
@@ -599,8 +601,8 @@ App::get('/v1/database/collections/:collectionId/logs')
             $record = $geodb->get($log['ip']);
 
             if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
             } else {
                 $output[$i]['countryCode'] = '--';
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
@@ -654,15 +656,16 @@ App::put('/v1/database/collections/:collectionId')
         } catch (AuthorizationException $exception) {
             throw new Exception('Unauthorized permissions', 401);
         } catch (StructureException $exception) {
-            throw new Exception('Bad structure. ' . $exception->getMessage(), 400);
-        }
+            throw new Exception('Bad structure. '.$exception->getMessage(), 400);
+        } 
 
         $usage->setParam('database.collections.update', 1);
 
         $audits
             ->setParam('event', 'database.collections.update')
-            ->setParam('resource', 'database/collection/' . $collection->getId())
-            ->setParam('data', $collection->getArrayCopy());
+            ->setParam('resource', 'database/collection/'.$collection->getId())
+            ->setParam('data', $collection->getArrayCopy())
+        ;
 
         $response->dynamic($collection, Response::MODEL_COLLECTION);
     });
@@ -703,12 +706,14 @@ App::delete('/v1/database/collections/:collectionId')
         $usage->setParam('database.collections.delete', 1);
 
         $events
-            ->setParam('eventData', $response->output($collection, Response::MODEL_COLLECTION));
+            ->setParam('eventData', $response->output($collection, Response::MODEL_COLLECTION))
+        ;
 
         $audits
             ->setParam('event', 'database.collections.delete')
-            ->setParam('resource', 'database/collection/' . $collection->getId())
-            ->setParam('data', $collection->getArrayCopy());
+            ->setParam('resource', 'database/collection/'.$collection->getId())
+            ->setParam('data', $collection->getArrayCopy())
+        ;
 
         $response->noContent();
     });
@@ -791,7 +796,7 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
             'required' => $required,
             'default' => $default,
             'array' => $array,
-            'format' => \json_encode(['name' => 'email']),
+            'format' => \json_encode(['name'=>'email']),
         ]), $response, $dbForExternal, $database, $audits, $usage);
     });
 
@@ -832,7 +837,7 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
             'required' => $required,
             'default' => $default,
             'array' => $array,
-            'format' => \json_encode(['name' => 'ip']),
+            'format' => \json_encode(['name'=>'ip']),
         ]), $response, $dbForExternal, $database, $audits, $usage);
     });
 
@@ -874,7 +879,7 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
             'required' => $required,
             'default' => $default,
             'array' => $array,
-            'format' => \json_encode(['name' => 'url']),
+            'format' => \json_encode(['name'=>'url']),
         ]), $response, $dbForExternal, $database, $audits, $usage);
     });
 
@@ -909,7 +914,7 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
 
-
+        
         return $attributesCallback(new Document([
             '$collection' => $collectionId,
             '$id' => $attributeId,
@@ -919,7 +924,7 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
             'default' => $default,
             'array' => $array,
             'format' => \json_encode([
-                'name' => 'int-range',
+                'name'=>'int-range',
                 'min' => $min,
                 'max' => $max,
             ]),
@@ -966,7 +971,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
             'default' => $default,
             'array' => $array,
             'format' => \json_encode([
-                'name' => 'float-range',
+                'name'=>'float-range',
                 'min' => $min,
                 'max' => $max,
             ]),
@@ -1096,7 +1101,7 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
         ])]);
 
         $usage->setParam('database.collections.read', 1);
-
+        
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE);
     });
 
@@ -1151,17 +1156,20 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
 
         $database
             ->setParam('type', DATABASE_TYPE_DELETE_ATTRIBUTE)
-            ->setParam('document', $attribute);
+            ->setParam('document', $attribute)
+        ;
 
         $usage->setParam('database.collections.update', 1);
 
         $events
-            ->setParam('payload', $response->output($attribute, Response::MODEL_ATTRIBUTE));
+            ->setParam('payload', $response->output($attribute, Response::MODEL_ATTRIBUTE))
+        ;
 
         $audits
             ->setParam('event', 'database.attributes.delete')
-            ->setParam('resource', 'database/collection/' . $collection->getId())
-            ->setParam('data', $attribute->getArrayCopy());
+            ->setParam('resource', 'database/collection/'.$collection->getId())
+            ->setParam('data', $attribute->getArrayCopy())
+        ;
 
         $response->noContent();
     });
@@ -1242,17 +1250,20 @@ App::post('/v1/database/collections/:collectionId/indexes')
 
         $database
             ->setParam('type', DATABASE_TYPE_CREATE_INDEX)
-            ->setParam('document', $index);
+            ->setParam('document', $index)
+        ;
 
         $usage->setParam('database.collections.update', 1);
 
         $audits
             ->setParam('event', 'database.indexes.create')
-            ->setParam('resource', 'database/collection/' . $collection->getId())
-            ->setParam('data', $index->getArrayCopy());
+            ->setParam('resource', 'database/collection/'.$collection->getId())
+            ->setParam('data', $index->getArrayCopy())
+        ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($index, Response::MODEL_INDEX);
+       
     });
 
 App::get('/v1/database/collections/:collectionId/indexes')
@@ -1338,7 +1349,7 @@ App::get('/v1/database/collections/:collectionId/indexes/:indexId')
         ])]);
 
         $usage->setParam('database.collections.read', 1);
-
+        
         $response->dynamic($index, Response::MODEL_INDEX);
     });
 
@@ -1379,7 +1390,7 @@ App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
         $indexes = $collection->getAttribute('indexes');
 
         // find attribute in collection
-        $index = null;
+        $index= null;
         foreach ($indexes as $i) {
             if ($i->getId() === $indexId) {
                 $index = $i->setAttribute('$collection', $collectionId); // set the collectionId
@@ -1393,17 +1404,20 @@ App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
 
         $database
             ->setParam('type', DATABASE_TYPE_DELETE_INDEX)
-            ->setParam('document', $index);
+            ->setParam('document', $index)
+        ;
 
         $usage->setParam('database.collections.update', 1);
 
         $events
-            ->setParam('payload', $response->output($index, Response::MODEL_INDEX));
+            ->setParam('payload', $response->output($index, Response::MODEL_INDEX))
+        ;
 
         $audits
             ->setParam('event', 'database.indexes.delete')
-            ->setParam('resource', 'database/collection/' . $collection->getId())
-            ->setParam('data', $index->getArrayCopy());
+            ->setParam('resource', 'database/collection/'.$collection->getId())
+            ->setParam('data', $index->getArrayCopy())
+        ;
 
         $response->noContent();
     });
@@ -1436,7 +1450,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Stats\Stats $usage */
-
+    
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data)) {
@@ -1446,7 +1460,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         if (isset($data['$id'])) {
             throw new Exception('$id is not allowed for creating new documents, try update instead', 400);
         }
-
+        
         $collection = $dbForExternal->getCollection($collectionId);
 
         if ($collection->isEmpty()) {
@@ -1455,23 +1469,26 @@ App::post('/v1/database/collections/:collectionId/documents')
 
         $data['$collection'] = $collection->getId(); // Adding this param to make API easier for developers
         $data['$id'] = $documentId == 'unique()' ? $dbForExternal->getId() : $documentId;
-        $data['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? []; //  By default set read permissions for user
-        $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? []; //  By default set write permissions for user
+        $data['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; //  By default set read permissions for user
+        $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; //  By default set write permissions for user
 
         try {
             $document = $dbForExternal->createDocument($collectionId, new Document($data));
-        } catch (StructureException $exception) {
+        }
+        catch (StructureException $exception) {
             throw new Exception($exception->getMessage(), 400);
         }
 
         $usage
             ->setParam('database.documents.create', 1)
-            ->setParam('collectionId', $collectionId);
+            ->setParam('collectionId', $collectionId)
+            ;
 
         $audits
             ->setParam('event', 'database.documents.create')
-            ->setParam('resource', 'database/document/' . $document->getId())
-            ->setParam('data', $document->getArrayCopy());
+            ->setParam('resource', 'database/document/'.$document->getId())
+            ->setParam('data', $document->getArrayCopy())
+        ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($document, Response::MODEL_DOCUMENT);
@@ -1535,8 +1552,9 @@ App::get('/v1/database/collections/:collectionId/documents')
 
         $usage
             ->setParam('database.documents.read', 1)
-            ->setParam('collectionId', $collectionId);
-
+            ->setParam('collectionId', $collectionId)
+            ;
+        
         $response->dynamic(new Document([
             'sum' => $dbForExternal->count($collectionId, $queries, APP_LIMIT_COUNT),
             'documents' => $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $afterDocument ?? null),
@@ -1577,7 +1595,8 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
 
         $usage
             ->setParam('database.documents.read', 1)
-            ->setParam('collectionId', $collectionId);
+            ->setParam('collectionId', $collectionId)
+            ;
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
@@ -1626,7 +1645,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         if (empty($data)) {
             throw new Exception('Missing payload', 400);
         }
-
+ 
         if (!\is_array($data)) {
             throw new Exception('Data param should be a valid JSON object', 400);
         }
@@ -1640,20 +1659,24 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
 
         try {
             $document = $dbForExternal->updateDocument($collection->getId(), $document->getId(), new Document($data));
-        } catch (AuthorizationException $exception) {
-            throw new Exception('Unauthorized permissions', 401);
-        } catch (StructureException $exception) {
-            throw new Exception('Bad structure. ' . $exception->getMessage(), 400);
         }
-
+        catch (AuthorizationException $exception) {
+            throw new Exception('Unauthorized permissions', 401);
+        }
+        catch (StructureException $exception) {
+            throw new Exception('Bad structure. '.$exception->getMessage(), 400);
+        }
+        
         $usage
             ->setParam('database.documents.update', 1)
-            ->setParam('collectionId', $collectionId);
+            ->setParam('collectionId', $collectionId)
+            ;
 
         $audits
             ->setParam('event', 'database.documents.update')
-            ->setParam('resource', 'database/document/' . $document->getId())
-            ->setParam('data', $document->getArrayCopy());
+            ->setParam('resource', 'database/document/'.$document->getId())
+            ->setParam('data', $document->getArrayCopy())
+        ;
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
@@ -1699,14 +1722,16 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
 
         $usage
             ->setParam('database.documents.delete', 1)
-            ->setParam('collectionId', $collectionId);
+            ->setParam('collectionId', $collectionId)
+            ;
 
         $events
-            ->setParam('eventData', $response->output($document, Response::MODEL_DOCUMENT));
+            ->setParam('eventData', $response->output($document, Response::MODEL_DOCUMENT))
+        ;
 
         $audits
             ->setParam('event', 'database.documents.delete')
-            ->setParam('resource', 'database/document/' . $document->getId())
+            ->setParam('resource', 'database/document/'.$document->getId())
             ->setParam('data', $document->getArrayCopy()) // Audit document in case of malicious or disastrous action
         ;
 
