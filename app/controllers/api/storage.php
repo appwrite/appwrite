@@ -10,6 +10,7 @@ use Utopia\Validator\HexColor;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Filesystem;
 use Appwrite\ClamAV\Network;
+use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Validator\CustomId;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
@@ -22,6 +23,7 @@ use Utopia\Image\Image;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
 use Utopia\Database\Query;
 
 App::post('/v1/storage/files')
@@ -640,4 +642,104 @@ App::delete('/v1/storage/files/:fileId')
         ;
 
         $response->noContent();
+    });
+
+App::get('/v1/storage/:bucketId/usage')
+    ->desc('Get Bucket Usage')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'storage.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'getUsage')
+    ->param('bucketId', '', new UID(), 'Bucket unique ID.')
+    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->inject('register')
+    ->action(function ($bucketId, $range, $response, $dbForInternal) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
+
+        $stats = [];
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+            $period = [
+                '24h' => [
+                    'period' => '30m',
+                    'limit' => 48,
+                ],
+                '7d' => [
+                    'period' => '1d',
+                    'limit' => 7,
+                ],
+                '30d' => [
+                    'period' => '1d',
+                    'limit' => 30,
+                ],
+                '90d' => [
+                    'period' => '1d',
+                    'limit' => 90,
+                ],
+            ];
+
+            Authorization::disable();
+
+            $metrics = [
+                "storage.buckets.$bucketId.files.create",
+                "storage.buckets.$bucketId.files.read",
+                "storage.buckets.$bucketId.files.update",
+                "storage.buckets.$bucketId.files.delete"
+            ];
+
+            foreach ($metrics as $metric) {
+                $requestDocs = $dbForInternal->find('stats', [
+                    new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
+                    new Query('metric', Query::TYPE_EQUAL, [$metric]),
+                ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
+
+                $stats[$metric] = [];
+                foreach ($requestDocs as $requestDoc) {
+                    $stats[$metric][] = [
+                        'value' => $requestDoc->getAttribute('value'),
+                        'date' => $requestDoc->getAttribute('time'),
+                    ];
+                }
+
+                $stats[$metric] = array_reverse($stats[$metric]);
+            }
+        }
+
+        Authorization::reset();
+
+        $create = $stats["storage.buckets.$bucketId.files.create"] ?? [];
+        $read = $stats["storage.buckets.$bucketId.files.read"] ?? [];
+        $update = $stats["storage.buckets.$bucketId.files.update"] ?? [];
+        $delete = $stats["storage.buckets.$bucketId.files.delete"] ?? [];
+
+        $response->json([
+            'range' => $range,
+            'create' => [
+                'data' => $create,
+                'total' => \array_sum(\array_map(function ($item) {
+                    return $item['value'];
+                }, $create)),
+            ],
+            'read' => [
+                'data' => $read,
+                'total' => \array_sum(\array_map(function ($item) {
+                    return $item['value'];
+                }, $read)),
+            ],
+            'update' => [
+                'data' => $update,
+                'total' => \array_sum(\array_map(function ($item) {
+                    return $item['value'];
+                }, $update)),
+            ],
+            'delete' => [
+                'data' => $delete,
+                'total' => \array_sum(\array_map(function ($item) {
+                    return $item['value'];
+                }, $delete)),
+            ],
+        ]);
     });
