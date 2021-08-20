@@ -86,8 +86,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
         data-name="usage"
         data-param-project-id="{{router.params.project}}"
         data-param-range="30d">
-
-        <?php if (!$graph && $usageStatsEnabled): ?>
+            <?php if (!$graph && $usageStatsEnabled): ?>
             <div class="box dashboard">
                 <div class="row responsive">
                     <div class="col span-9">
@@ -101,71 +100,51 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                         </div>
                     </div>
                     <div class="col span-3">
-                        <div class="value margin-bottom-small">
+                        <!-- <div class="value margin-bottom-small">
                             <span class="sum" data-ls-bind="{{usage.network.total|humanFileSize}}" data-default="0">0</span>
                             <span data-ls-bind="{{usage.network.total|humanFileUnit}}" class="text-size-small unit"></span>
                         </div>
-                        <div class="metric margin-bottom-small">Bandwidth</div>
-                    </div>
-                </div>
-            </div>
-            <h2 class="margin-top margin-bottom-small">
-                Realtime
-            </h2>
-            <div class="box dashboard">
-                <div class="row responsive">
-                    <div class="col span-9">
-                        <div class="chart pull-end">
-                            <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Connections=usage.realtimeConnections.data,Messages=usage.realtimeMessages.data" />
-                        </div>
-
-                        <div class="chart-metric">
-                            <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.realtimeConnections.total|statsTotal}}">N/A</span></div>
-                            <div class="metric margin-bottom-small">Connections <span class="tooltip" data-tooltip="Total number of Realtime Connections established"><i class="icon-info-circled"></i></span></div>
-                            <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.realtimeMessages.total|statsTotal}}">N/A</span></div>
-                            <div class="metric margin-bottom-small">Messages <span class="tooltip" data-tooltip="Total number of Realtime Messages sent"><i class="icon-info-circled"></i></span></div>
-                        </div>
-                    </div>
-                    <div class="col span-3">
+                        <div class="metric margin-bottom-small">Bandwidth</div> -->
                         <div class="value margin-bottom-small">
                             <span class="sum" data-ls-bind="{{realtime.current|accessProject}}" data-default="0">0</span>
                         </div>
-                        <div class="metric margin-bottom-small">Live Connections</div>
+                        <div class="metric margin-bottom-small">Connections</div>
+                        <div class="chart-bar margin-bottom-small" data-ls-attrs="data-history={{realtime.history|accessProject}}" data-forms-chart-bars="{{realtime.history|accessProject}}"></div>
+                        <div class="metric">Connections per 5 seconds</div>
                     </div>
                 </div>
             </div>
-        <?php endif; ?>
-        <h2 class="margin-top margin-bottom-small">
-            Total
-        </h2>
-        <div class="box dashboard">
-            <div class="row responsive">
-                <div class="col span-3">
-                    <div class="value"><span class="sum" data-ls-bind="{{usage.documents.total|statsTotal}}" data-default="0">0</span></div>
-                    <div class="margin-top-small"><b class="text-size-small unit">Documents</b></div>
-                </div>
-                <div class="col span-3">
-                    <div class="value">
-                        <span class="sum" data-ls-bind="{{usage.storage.total|humanFileSize}}" data-default="0">0</span>
-                        <span data-ls-bind="{{usage.storage.total|humanFileUnit}}" class="text-size-small unit"></span>
+            <?php endif; ?>
+            <div class="box dashboard">
+                <div class="row responsive">
+                    <div class="col span-3">
+                        <div class="value"><span class="sum" data-ls-bind="{{usage.documents.total|statsTotal}}" data-default="0">0</span></div>
+                        <div class="margin-top-small"><b class="text-size-small unit">Documents</b></div>
                     </div>
-                    <div class="margin-top-small"><b class="text-size-small unit">Storage</b></div>
-                </div>
-                <div class="col span-3">
-                    <div class="value"><span class="sum" data-ls-bind="{{usage.users.total}}" data-default="0">0</span></div>
-                    <div class="margin-top-small"><b class="text-size-small unit">Users</b></div>
-                </div>
-                <div class="col span-3">
-                    <div class="value"><span class="sum" data-ls-bind="{{usage.tasks.total}}" data-default="0">0</span></div>
-                    <div class="margin-top-small"><b class="text-size-small unit">Tasks</b></div>
+                    <div class="col span-3">
+                        <div class="value">
+                            <span class="sum" data-ls-bind="{{usage.storage.total|humanFileSize}}" data-default="0">0</span>
+                            <span data-ls-bind="{{usage.storage.total|humanFileUnit}}" class="text-size-small unit"></span>
+                        </div>
+                        <div class="margin-top-small"><b class="text-size-small unit">Storage</b></div>
+                    </div>
+                    <div class="col span-3">
+                        <div class="value"><span class="sum" data-ls-bind="{{usage.users.total}}" data-default="0">0</span></div>
+                        <div class="margin-top-small"><b class="text-size-small unit">Users</b></div>
+                    </div>
+                    <div class="col span-3">
+                        <div class="value"><span class="sum" data-ls-bind="{{usage.functions.total|statsTotal}}" data-default="0">0</span></div>
+                        <div class="margin-top-small"><b class="text-size-small unit">Executions</b></div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+    </div>
 </div>
 
-<div class="zone xxl margin-top clear" data-ls-if="({{console-project}})">
-    <h2 class="margin-bottom-small">Platforms</h2>
+<div class="zone xl margin-top-xl clear" data-ls-if="({{console-project}})">
+    <h2 class="margin-bottom">Platforms</h2>
 
     <div class="box margin-bottom" data-ls-if="0 < {{console-project.platforms.length}} && undefined !== {{console-project.platforms}}">
         <ul data-ls-loop="console-project.platforms" data-ls-as="platform" class="list">

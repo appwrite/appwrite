@@ -26,7 +26,7 @@ document.addEventListener("account.create", function () {
   let promise = sdk.account.createSession(form.email, form.password);
 
   container.set("serviceForm", {}, true, true); // Remove sensetive data when not needed
-  
+
   promise.then(function () {
     var subscribe = document.getElementById('newsletter').checked;
     if (subscribe) {
@@ -53,12 +53,53 @@ document.addEventListener("account.create", function () {
   });
 });
 window.addEventListener("load", () => {
+  const bars = 10;
   const realtime = window.ls.container.get('realtime');
+  let current = {};
   window.ls.container.get('console').subscribe('project', event => {
-    realtime.set({
-      ...realtime.current,
-      ...event.payload
-    });
+    for (var project in event.payload) {
+      current[project] = event.payload[project] ?? 0;
+    }
   });
+  setInterval(() => {
+    let newHistory = {};
+    for (const project in current) {
+      let history = realtime?.history ?? {};
+
+      if (!(project in history)) {
+        history[project] = new Array(bars).fill({
+          percentage: 0,
+          value: 0
+        });
+      }
+
+      history = history[project];
+      history.push({
+        percentage: 0,
+        value: current[project]
+      });
+      if (history.length >= bars) {
+        history.shift();
+      }
+
+      const highest = history.reduce((prev, curr) => {
+        return (curr.value > prev) ? curr.value : prev;
+      }, 0);
+
+      history = history.map(({ percentage, value }) => {
+        percentage = value === 0 ? 0 : ((Math.round((value / highest) * 10) / 10) * 100);
+        if (percentage > 100) percentage = 100;
+        else if (percentage == 0 && value != 0) percentage = 5;
+
+        return {
+          percentage: percentage,
+          value: value
+        };
+      })
+      newHistory[project] = history;
+    }
+    realtime.setHistory(newHistory);
+    realtime.setCurrent(current);
+  }, 5000);
 });
 
