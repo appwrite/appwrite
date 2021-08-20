@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
+use Appwrite\Database\Validator\Authorization;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Exception;
@@ -17,6 +18,8 @@ use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Validator\UID;
 use DeviceDetector\DeviceDetector;
 use Appwrite\Database\Validator\CustomId;
+use Utopia\Database\Database;
+use Utopia\Database\Query;
 
 App::post('/v1/users')
     ->desc('Create User')
@@ -604,4 +607,128 @@ App::delete('/v1/users/:userId')
             ->setParam('users.delete', 1)
         ;
         $response->noContent();
+    });
+
+App::get('/v1/users/usage')
+    ->desc('Get Users Usage')
+    ->groups(['api', 'users'])
+    ->label('scope', 'users.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'getUsage')
+    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->inject('register')
+    ->action(function ($range, $response, $dbForInternal) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
+
+        $stats = [];
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+            $period = [
+                '24h' => [
+                    'period' => '30m',
+                    'limit' => 48,
+                ],
+                '7d' => [
+                    'period' => '1d',
+                    'limit' => 7,
+                ],
+                '30d' => [
+                    'period' => '1d',
+                    'limit' => 30,
+                ],
+                '90d' => [
+                    'period' => '1d',
+                    'limit' => 90,
+                ],
+            ];
+
+            Authorization::disable();
+
+            $metrics = [
+                "users.create",
+                "users.read",
+                "users.update",
+                "users.delete",
+                "users.sessions.create",
+                "users.sessions.delete"
+            ];
+
+            foreach ($metrics as $metric) {
+                $requestDocs = $dbForInternal->find('stats', [
+                    new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
+                    new Query('metric', Query::TYPE_EQUAL, [$metric]),
+                ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
+
+                $stats[$metric] = [];
+                foreach ($requestDocs as $requestDoc) {
+                    $stats[$metric][] = [
+                        'value' => $requestDoc->getAttribute('value'),
+                        'date' => $requestDoc->getAttribute('time'),
+                    ];
+                }
+
+                $stats[$metric] = array_reverse($stats[$metric]);
+            }
+
+            $usersCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['users.count'])], 0, ['time'], [Database::ORDER_DESC]);
+            $usersTotal = $usersCount ? $usersCount->getAttribute('value', 0) : 0;
+
+            Authorization::reset();
+
+            $create = $stats["users.create"] ?? [];
+            $read = $stats["users.read"] ?? [];
+            $update = $stats["users.update"] ?? [];
+            $delete = $stats["users.delete"] ?? [];
+            $sessionsCreate = $stats["users.sessions.create"] ?? [];
+            $sessionsDelete = $stats["users.sessions.delete"] ?? [];
+
+            $response->json([
+                'range' => $range,
+                'users' => [
+                    'data' => [],
+                    'total' => $usersTotal,
+                ],
+                'create' => [
+                    'data' => $create,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $create)),
+                ],
+                'read' => [
+                    'data' => $read,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $read)),
+                ],
+                'update' => [
+                    'data' => $update,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $update)),
+                ],
+                'delete' => [
+                    'data' => $delete,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $delete)),
+                ],
+                'sessionsCreate' => [
+                    'data' => $sessionsCreate,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $sessionsCreate)),
+                ],
+                'sessionsDelete' => [
+                    'data' => $sessionsDelete,
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $sessionsDelete)),
+                ]
+            ]);
+        } else {
+            $response->json([]);
+        }
     });
