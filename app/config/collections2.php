@@ -8,7 +8,7 @@ $auth = Config::getParam('auth', []);
 
 $collections = [
     'projects' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'projects',
         'name' => 'Projects',
         'attributes' => [
@@ -234,7 +234,7 @@ $collections = [
     ],
 
     'users' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'users',
         'name' => 'Users',
         'attributes' => [
@@ -383,7 +383,7 @@ $collections = [
     ],
 
     'sessions' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'sessions',
         'name' => 'Sessions',
         'attributes' => [
@@ -631,7 +631,7 @@ $collections = [
     ],
 
     'teams' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'teams',
         'name' => 'Teams',
         'attributes' => [
@@ -681,7 +681,7 @@ $collections = [
     ],
 
     'memberships' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'memberships',
         'name' => 'Memberships',
         'attributes' => [
@@ -789,7 +789,7 @@ $collections = [
     ],
 
     'files' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'files',
         'name' => 'Files',
         'attributes' => [
@@ -968,7 +968,7 @@ $collections = [
     ],
 
     'functions' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'functions',
         'name' => 'Functions',
         'attributes' => [
@@ -1129,7 +1129,7 @@ $collections = [
     ],
 
     'tags' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'tags',
         'name' => 'Tags',
         'attributes' => [
@@ -1202,7 +1202,7 @@ $collections = [
     ],
 
     'executions' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'executions',
         'name' => 'Executions',
         'attributes' => [
@@ -1319,7 +1319,7 @@ $collections = [
     ],
 
     'certificates' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'certificates',
         'name' => 'Certificates',
         'attributes' => [
@@ -1404,7 +1404,7 @@ $collections = [
         ],
     ],
     'stats' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'stats',
         'name' => 'Stats',
         'attributes' => [
