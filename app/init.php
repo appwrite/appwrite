@@ -23,7 +23,6 @@ use Appwrite\Auth\Auth;
 use Appwrite\Database\Database;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
-use Appwrite\Database\Document;
 use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
@@ -40,7 +39,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MariaDB;
-use Utopia\Database\Document as Document2;
+use Utopia\Database\Document;
 use Utopia\Database\Database as Database2;
 use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\Authorization;
@@ -49,6 +48,7 @@ use Swoole\Database\PDOConfig;
 use Swoole\Database\PDOPool;
 use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
+use Utopia\Database\Query;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -138,6 +138,7 @@ if(!empty($user) || !empty($pass)) {
 } else {
     Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '').':'.App::getEnv('_APP_REDIS_PORT', ''));
 }
+
 /**
  * DB Filters
  */
@@ -175,6 +176,18 @@ Database::addFilter('encrypt',
     }
 );
 
+Database2::addFilter('subQuery',
+    function($value) {
+        return $value;
+    },
+    function($value, Document $document, Document $collection, Database2 $database) {
+        return $database
+            ->find('attributes', [
+                new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
+            ], 100, 0, ['_id']);
+    }
+);
+
 Database2::addFilter('encrypt',
     function($value) {
         $key = App::getEnv('_APP_OPENSSL_KEY_V1');
@@ -196,6 +209,9 @@ Database2::addFilter('encrypt',
     }
 );
 
+/**
+ * DB Formats
+ */
 Structure::addFormat('email', function() {
     return new Email();
 }, Database2::VAR_STRING);
@@ -292,7 +308,6 @@ $register->set('statsd', function () { // Register DB connection
 
     return $statsd;
 });
-
 $register->set('smtp', function () {
     $mail = new PHPMailer(true);
 
@@ -440,8 +455,8 @@ App::setResource('database', function($register) {
 
 // Test Mock
 App::setResource('clients', function($request, $console, $project) {
-    $console->setAttribute('platforms', [ // Allways allow current host
-        '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+    $console->setAttribute('platforms', [ // Always allow current host
+        '$collection' => 'platforms',
         'name' => 'Current Host',
         'type' => 'web',
         'hostname' => $request->getHostname(),
@@ -509,7 +524,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
 
     if (APP_MODE_ADMIN !== $mode) {
         if ($project->isEmpty()) {
-            $user = new Document2(['$id' => '', '$collection' => 'users']);
+            $user = new Document(['$id' => '', '$collection' => 'users']);
         }
         else {
             $user = $dbForInternal->getDocument('users', Auth::$unique);
@@ -521,14 +536,14 @@ App::setResource('user', function($mode, $project, $console, $request, $response
 
     if ($user->isEmpty() // Check a document has been found in the DB
         || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)) { // Validate user has valid login token
-        $user = new Document2(['$id' => '', '$collection' => 'users']);
+        $user = new Document(['$id' => '', '$collection' => 'users']);
     }
 
     if (APP_MODE_ADMIN === $mode) {
         if ($user->find('teamId', $project->getAttribute('teamId'), 'memberships')) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         } else {
-            $user = new Document2(['$id' => '', '$collection' => 'users']);
+            $user = new Document(['$id' => '', '$collection' => 'users']);
         }
     }
 
@@ -551,7 +566,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
         }
 
         if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
-            $user = new Document2(['$id' => '', '$collection' => 'users']);
+            $user = new Document(['$id' => '', '$collection' => 'users']);
         }
     }
 
@@ -580,7 +595,7 @@ App::setResource('project', function($dbForConsole, $request, $console) {
 }, ['dbForConsole', 'request', 'console']);
 
 App::setResource('console', function() {
-    return new Document2([
+    return new Document([
         '$id' => 'console',
         'name' => 'Appwrite',
         '$collection' => 'projects',

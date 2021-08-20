@@ -87,6 +87,7 @@ $attributesCallback = function ($collectionId, $attribute, $response, $dbForInte
 
     $attribute = $dbForInternal->createDocument('attributes', new Document([
         '$id' => $attributeId,
+        'collectionId' => $collectionId,
         'type' => $type,
         'status' => 'processing', // processing, available, failed
         'size' => $size,
