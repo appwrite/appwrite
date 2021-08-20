@@ -323,6 +323,8 @@ App::get('/v1/functions/:functionId/usage2')
 
                 $stats[$metric] = array_reverse($stats[$metric]);
             }
+
+            Authorization::reset();
     
             $executions = $stats["functions.$functionId.executions"] ?? [];
             $failures = $stats["functions.$functionId.failures"] ?? [];

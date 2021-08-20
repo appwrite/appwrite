@@ -316,35 +316,37 @@ App::get('/v1/database/usage')
 
                 $stats[$metric] = array_reverse($stats[$metric]);
             }
+
+            $documentsCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['database.documents.count'])], 0, ['time'], [Database::ORDER_DESC]);
+            $documentsTotal = $documentsCount ? $documentsCount->getAttribute('value', 0) : 0;
+
+            $collectionsCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['n
+            '])], 0, ['time'], [Database::ORDER_DESC]);
+            $collectionsTotal = $collectionsCount ? $collectionsCount->getAttribute('value', 0) : 0;
+
+            Authorization::reset();
+
+            $response->json([
+                'range' => $range,
+                'stats' => $stats,
+                'requests' => [
+                    'data' => $stats['requests'] ?? [],
+                    'total' => \array_sum(\array_map(function ($item) {
+                        return $item['value'];
+                    }, $stats['requests'] ?? [])),
+                ],
+                'documents' => [
+                    'data' => [],
+                    'total' => $documentsTotal,
+                ],
+                'collections' => [
+                    'data' => [],
+                    'total' => $collectionsTotal,
+                ]
+            ]);
+        } else {
+            $response->json([]);
         }
-
-        $documentsCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['database.documents.count'])], 0, ['time'], [Database::ORDER_DESC]);
-        $documentsTotal = $documentsCount ? $documentsCount->getAttribute('value', 0) : 0;
-
-        $collectionsCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['n
-        '])], 0, ['time'], [Database::ORDER_DESC]);
-        $collectionsTotal = $collectionsCount ? $collectionsCount->getAttribute('value', 0) : 0;
-
-        Authorization::reset();
-
-        $response->json([
-            'range' => $range,
-            'stats' => $stats,
-            'requests' => [
-                'data' => $stats['requests'] ?? [],
-                'total' => \array_sum(\array_map(function ($item) {
-                    return $item['value'];
-                }, $stats['requests'] ?? [])),
-            ],
-            'documents' => [
-                'data' => [],
-                'total' => $documentsTotal,
-            ],
-            'collections' => [
-                'data' => [],
-                'total' => $collectionsTotal,
-            ]
-        ]);
     });
 
 
