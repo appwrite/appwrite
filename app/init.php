@@ -178,7 +178,7 @@ Database::addFilter('encrypt',
 
 Database2::addFilter('subQuery',
     function($value) {
-        return $value;
+        return null;
     },
     function($value, Document $document, Document $collection, Database2 $database) {
         return $database

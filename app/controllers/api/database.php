@@ -849,20 +849,18 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
             throw new Exception('Collection not found', 404);
         }
 
-        /** @var Document[] $attributes */
-        $attributes = $collection->getAttribute('attributes');
+        $attribute = $dbForInternal->getDocument('attributes', $attributeId);
 
-        // find attribute in collection
-        $attribute = null;
-        foreach ($attributes as $a) {
-            if ($a->getId() === $attributeId) {
-                $attribute = $a->setAttribute('$collection', $collectionId); // set the collectionId
-                break; // break once attribute is found
-            }
+        if (empty($attribute->getId())) {
+            throw new Exception('Attribute not found', 404);
         }
 
-        if (\is_null($attribute)) {
-            throw new Exception('Attribute not found', 404);
+        if (!$dbForInternal->deleteDocument('attributes', $attributeId)) {
+            throw new Exception('Failed to remove attribute from DB', 500);
+        }
+
+        if (!$dbForInternal->purgeDocument('collections', $collectionId)) {
+            throw new Exception('Failed to remove collection from the cache', 500);
         }
 
         $database
