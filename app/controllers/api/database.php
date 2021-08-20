@@ -399,7 +399,7 @@ App::get('/v1/database/usage')
 
 
 App::get('/v1/database/:collectionId/usage')
-    ->desc('Get Database Usage')
+    ->desc('Get Database Usage for a collection')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
