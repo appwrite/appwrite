@@ -24,9 +24,9 @@ class DatabaseV1 extends Worker
         
         $projectId = $this->args['projectId'] ?? '';
         $type = $this->args['type'] ?? '';
-        $collection = $this->args['collection'] ?? '';
+        $collection = $this->args['collection'] ?? [];
         $collection = new Document($collection);
-        $document = $this->args['document'] ?? '';
+        $document = $this->args['document'] ?? [];
         $document = new Document($document);
         
         switch (strval($type)) {
@@ -62,10 +62,12 @@ class DatabaseV1 extends Worker
      */
     protected function createAttribute(Document $collection, Document $attribute, string $projectId): void
     {
+        $dbForInternal = $this->getInternalDB($projectId);
         $dbForExternal = $this->getExternalDB($projectId);
 
         $collectionId = $collection->getId();
         $id = $attribute->getAttribute('$id', '');
+        $key = $attribute->getAttribute('key', '');
         $type = $attribute->getAttribute('type', '');
         $size = $attribute->getAttribute('size', 0);
         $required = $attribute->getAttribute('required', false);
@@ -75,9 +77,17 @@ class DatabaseV1 extends Worker
         $format = $attribute->getAttribute('format', null);
         $filters = $attribute->getAttribute('filters', []);
 
-        $success = $dbForExternal->createAttribute($collectionId, $id, $type, $size, $required, $default, $signed, $array, $format, $filters);
-        if ($success) {
-            $removed = $dbForExternal->removeAttributeInQueue($collectionId, $id);
+        try {
+            $success = $dbForExternal->createAttribute($collectionId, $key, $type, $size, $required, $default, $signed, $array, $format, $filters);
+        
+            $dbForInternal->updateDocument('attributes', $id, $attribute->setAttribute('status', ($success) ? 'available' : 'failed'));
+        } catch (\Throwable $th) {
+            Console::error($th->getMessage());
+            $dbForInternal->updateDocument('attributes', $id, $attribute->setAttribute('status', 'failed'));
+        }
+
+        if (!$dbForInternal->purgeDocument('collections', $collectionId)) {
+            throw new Exception('Failed to remove collection from the cache', 500);
         }
     }
 

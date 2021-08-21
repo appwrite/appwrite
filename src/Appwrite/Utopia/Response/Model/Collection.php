@@ -35,7 +35,13 @@ class Collection extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Collection name.',
                 'default' => '',
-                'example' => '',
+                'example' => 'My Collection',
+            ])
+            ->addRule('permission', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Collection permission model. Possible values: `document` or `collection`',
+                'default' => '',
+                'example' => 'document',
             ])
             ->addRule('attributes', [
                 'type' => Response::MODEL_ATTRIBUTE,
@@ -47,20 +53,6 @@ class Collection extends Model
             ->addRule('indexes', [
                 'type' => Response::MODEL_INDEX,
                 'description' => 'Collection indexes.',
-                'default' => [],
-                'example' => new stdClass,
-                'array' => true
-            ])
-            ->addRule('attributesInQueue', [
-                'type' => Response::MODEL_ATTRIBUTE,
-                'description' => 'Collection attributes in creation queue.',
-                'default' => [],
-                'example' => new stdClass,
-                'array' => true
-            ])
-            ->addRule('indexesInQueue', [
-                'type' => Response::MODEL_INDEX,
-                'description' => 'Collection indexes in creation queue.',
                 'default' => [],
                 'example' => new stdClass,
                 'array' => true

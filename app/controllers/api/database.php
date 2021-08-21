@@ -30,6 +30,7 @@ use DeviceDetector\DeviceDetector;
 $attributesCallback = function ($collectionId, $attribute, $response, $dbForInternal, $dbForExternal, $database, $audits) {
     /** @var Utopia\Database\Document $document*/
     /** @var Appwrite\Utopia\Response $response */
+    /** @var Utopia\Database\Database $dbForInternal*/
     /** @var Utopia\Database\Database $dbForExternal*/
     /** @var Appwrite\Event\Event $database */
     /** @var Appwrite\Event\Event $audits */
@@ -85,19 +86,28 @@ $attributesCallback = function ($collectionId, $attribute, $response, $dbForInte
         }
     }
 
-    $attribute = $dbForInternal->createDocument('attributes', new Document([
-        '$id' => $attributeId,
-        'collectionId' => $collectionId,
-        'type' => $type,
-        'status' => 'processing', // processing, available, failed
-        'size' => $size,
-        'required' => $required,
-        'signed' => $signed,
-        'default' => (string)$default, // Convert to proper type on fetch
-        'array' => $array,
-        'format' => $format,
-        'filters' => $filters,
-    ]));
+    try {
+        $attribute = $dbForInternal->createDocument('attributes', new Document([
+            '$id' => $collectionId.'_'.$attributeId,
+            'key' => $attributeId,
+            'collectionId' => $collectionId,
+            'type' => $type,
+            'status' => 'processing', // processing, available, failed
+            'size' => $size,
+            'required' => $required,
+            'signed' => $signed,
+            'default' => (string)$default, // Convert to proper type on fetch
+            'array' => $array,
+            'format' => $format,
+            'filters' => $filters,
+        ]));
+    } catch (DuplicateException $th) {
+        throw new Exception('Attribute already exists', 409);
+    }
+
+    if (!$dbForInternal->purgeDocument('collections', $collectionId)) {
+        throw new Exception('Failed to remove collection from the cache', 500);
+    }
 
     $database
         ->setParam('type', DATABASE_TYPE_CREATE_ATTRIBUTE)
@@ -143,18 +153,17 @@ App::post('/v1/database/collections')
 
         $collectionId = $collectionId == 'unique()' ? $dbForExternal->getId() : $collectionId;
 
+        var_dump($permission);
         try {
             $dbForExternal->createCollection($collectionId);
 
             $collection = $dbForInternal->createDocument('collections', new Document([
                 '$id' => $collectionId,
-                '$read' => [], // Collection permissions themselves
-                '$write' => [], // Collection permissions themselves
+                '$read' => $read ?? [], // Collection permissions for collection documents (based on permission model)
+                '$write' => $write ?? [], // Collection permissions for collection documents (based on permission model)
+                'permission' => $permission, // Permissions model type (document vs collection)
                 'dateCreated' => time(),
                 'dateUpdated' => time(),
-                'documentsPermission' => $permission, // Permissions model type (document vs collection)
-                'documentsRead' => $read ?? [], // Collection permissions for collection documents (based on permission model)
-                'documentsWrite' => $write ?? [], // Collection permissions for collection documents (based on permission model)
                 'name' => $name,
                 'search' => implode(' ', [$collectionId, $name]),
             ]));
@@ -373,11 +382,11 @@ App::put('/v1/database/collections/:collectionId')
 
         try {
             $collection = $dbForInternal->updateDocument('collections', $collection->getId(), $collection
+                ->setAttribute('$write', $write)
+                ->setAttribute('$read', $read)
                 ->setAttribute('name', $name)
+                ->setAttribute('permission', $permission)
                 ->setAttribute('dateUpdated', time())
-                ->setAttribute('documentsPermission', $permission)
-                ->setAttribute('documentsRead', $read)
-                ->setAttribute('documentsWrite', $write)
                 ->setAttribute('search', implode(' ', [$collectionId, $name]))
             );
         }
@@ -849,13 +858,13 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
             throw new Exception('Collection not found', 404);
         }
 
-        $attribute = $dbForInternal->getDocument('attributes', $attributeId);
+        $attribute = $dbForInternal->getDocument('attributes', $collectionId.'_'.$attributeId);
 
         if (empty($attribute->getId())) {
             throw new Exception('Attribute not found', 404);
         }
 
-        if (!$dbForInternal->deleteDocument('attributes', $attributeId)) {
+        if (!$dbForInternal->deleteDocument('attributes', $attribute->getId())) {
             throw new Exception('Failed to remove attribute from DB', 500);
         }
 
@@ -865,6 +874,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
 
         $database
             ->setParam('type', DATABASE_TYPE_DELETE_ATTRIBUTE)
+            ->setParam('collection', $collection)
             ->setParam('document', $attribute)
         ;
 
