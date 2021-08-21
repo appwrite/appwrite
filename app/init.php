@@ -20,7 +20,7 @@ error_reporting(E_ALL);
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
-use Appwrite\Database\Database;
+use Appwrite\Database\Database as DatabaseOld;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Event\Event;
@@ -40,7 +40,7 @@ use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Document;
-use Utopia\Database\Database as Database2;
+use Utopia\Database\Database;
 use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\Range;
@@ -142,7 +142,7 @@ if(!empty($user) || !empty($pass)) {
 /**
  * DB Filters
  */
-Database::addFilter('json',
+DatabaseOld::addFilter('json',
     function($value) {
         if(!is_array($value)) {
             return $value;
@@ -154,7 +154,7 @@ Database::addFilter('json',
     }
 );
 
-Database::addFilter('encrypt',
+DatabaseOld::addFilter('encrypt',
     function($value) {
         $key = App::getEnv('_APP_OPENSSL_KEY_V1');
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
@@ -176,11 +176,11 @@ Database::addFilter('encrypt',
     }
 );
 
-Database2::addFilter('subQuery',
+Database::addFilter('subQuery',
     function($value) {
         return null;
     },
-    function($value, Document $document, Document $collection, Database2 $database) {
+    function($value, Document $document, Database $database) {
         return $database
             ->find('attributes', [
                 new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
@@ -188,7 +188,7 @@ Database2::addFilter('subQuery',
     }
 );
 
-Database2::addFilter('encrypt',
+Database::addFilter('encrypt',
     function($value) {
         $key = App::getEnv('_APP_OPENSSL_KEY_V1');
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
@@ -214,35 +214,27 @@ Database2::addFilter('encrypt',
  */
 Structure::addFormat('email', function() {
     return new Email();
-}, Database2::VAR_STRING);
+}, Database::VAR_STRING);
 
 Structure::addFormat('ip', function() {
     return new IP();
-}, Database2::VAR_STRING);
+}, Database::VAR_STRING);
 
 Structure::addFormat('url', function() {
     return new URL();
-}, Database2::VAR_STRING);
+}, Database::VAR_STRING);
 
 Structure::addFormat('int-range', function($attribute) {
-    // Format encoded as json string containing name and relevant options
-    // E.g. Range: $format = json_encode(['name'=>$name, 'min'=>$min, 'max'=>$max]);
-    $format = json_decode($attribute['format'], true);
-    $min = $format['min'] ?? -INF;
-    $max = $format['max'] ?? INF;
-    $type = $attribute['type'];
-    return new Range($min, $max, $type);
-}, Database2::VAR_INTEGER);
+    $min = $attribute['formatOptions']['min'] ?? -INF;
+    $max = $attribute['formatOptions']['max'] ?? INF;
+    return new Range($min, $max, Range::TYPE_INTEGER);
+}, Database::VAR_INTEGER);
 
 Structure::addFormat('float-range', function($attribute) {
-    // Format encoded as json string containing name and relevant options
-    // E.g. Range: $format = json_encode(['name'=>$name, 'min'=>$min, 'max'=>$max]);
-    $format = json_decode($attribute['format'], true);
-    $min = $format['min'] ?? -INF;
-    $max = $format['max'] ?? INF;
-    $type = $attribute['type'] ?? '';
-    return new Range($min, $max, $type);
-}, Database2::VAR_FLOAT);
+    $min = $attribute['formatOptions']['min'] ?? -INF;
+    $max = $attribute['formatOptions']['max'] ?? INF;
+    return new Range($min, $max, Range::TYPE_FLOAT);
+}, Database::VAR_FLOAT);
 
 /*
  * Registry
@@ -606,19 +598,19 @@ App::setResource('console', function() {
         'keys' => [],
         'platforms' => [
             [
-                '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+                '$collection' => 'platforms',
                 'name' => 'Production',
                 'type' => 'web',
                 'hostname' => 'appwrite.io',
             ],
             [
-                '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+                '$collection' => 'platforms',
                 'name' => 'Development',
                 'type' => 'web',
                 'hostname' => 'appwrite.test',
             ],
             [
-                '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+                '$collection' => 'platforms',
                 'name' => 'Localhost',
                 'type' => 'web',
                 'hostname' => 'localhost',
@@ -639,7 +631,7 @@ App::setResource('console', function() {
 }, []);
 
 App::setResource('consoleDB', function($db, $cache) {
-    $consoleDB = new Database();
+    $consoleDB = new DatabaseOld();
     $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
     $consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
     $consoleDB->setMocks(Config::getParam('collections', []));
@@ -648,7 +640,7 @@ App::setResource('consoleDB', function($db, $cache) {
 }, ['db', 'cache']);
 
 App::setResource('projectDB', function($db, $cache, $project) {
-    $projectDB = new Database();
+    $projectDB = new DatabaseOld();
     $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
     $projectDB->setNamespace('app_'.$project->getId());
     $projectDB->setMocks(Config::getParam('collections', []));
@@ -659,7 +651,7 @@ App::setResource('projectDB', function($db, $cache, $project) {
 App::setResource('dbForInternal', function($db, $cache, $project) {
     $cache = new Cache(new RedisCache($cache));
 
-    $database = new Database2(new MariaDB($db), $cache);
+    $database = new Database(new MariaDB($db), $cache);
     $database->setNamespace('project_'.$project->getId().'_internal');
 
     return $database;
@@ -668,7 +660,7 @@ App::setResource('dbForInternal', function($db, $cache, $project) {
 App::setResource('dbForExternal', function($db, $cache, $project) {
     $cache = new Cache(new RedisCache($cache));
 
-    $database = new Database2(new MariaDB($db), $cache);
+    $database = new Database(new MariaDB($db), $cache);
     $database->setNamespace('project_'.$project->getId().'_external');
 
     return $database;
@@ -677,7 +669,7 @@ App::setResource('dbForExternal', function($db, $cache, $project) {
 App::setResource('dbForConsole', function($db, $cache) {
     $cache = new Cache(new RedisCache($cache));
 
-    $database = new Database2(new MariaDB($db), $cache);
+    $database = new Database(new MariaDB($db), $cache);
     $database->setNamespace('project_console_internal');
 
     return $database;
