@@ -74,11 +74,12 @@ class DatabaseV1 extends Worker
         $default = $attribute->getAttribute('default', null);
         $signed = $attribute->getAttribute('signed', true);
         $array = $attribute->getAttribute('array', false);
-        $format = $attribute->getAttribute('format', null);
+        $format = $attribute->getAttribute('format', '');
+        $formatOptions = $attribute->getAttribute('formatOptions', []);
         $filters = $attribute->getAttribute('filters', []);
 
         try {
-            $success = $dbForExternal->createAttribute($collectionId, $key, $type, $size, $required, $default, $signed, $array, $format, $filters);
+            $success = $dbForExternal->createAttribute($collectionId, $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters);
         
             $dbForInternal->updateDocument('attributes', $id, $attribute->setAttribute('status', ($success) ? 'available' : 'failed'));
         } catch (\Throwable $th) {
@@ -86,9 +87,7 @@ class DatabaseV1 extends Worker
             $dbForInternal->updateDocument('attributes', $id, $attribute->setAttribute('status', 'failed'));
         }
 
-        if (!$dbForInternal->purgeDocument('collections', $collectionId)) {
-            throw new Exception('Failed to remove collection from the cache', 500);
-        }
+        $dbForInternal->purgeDocument('collections', $collectionId);
     }
 
     /**

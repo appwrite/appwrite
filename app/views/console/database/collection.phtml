@@ -458,7 +458,7 @@ $logs = $this->getParam('logs', null);
             <input id="string-default" name="default" type="text" class="margin-bottom-large" autocomplete="off">
 
             <footer>
-                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
+                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
             </footer>
         </form>
     </div>
@@ -501,19 +501,19 @@ $logs = $this->getParam('logs', null);
             <div class="row responsive thin">
                 <div class="col span-6 margin-bottom-small">
                     <label for="integer-min">Min</label>
-                    <input type="text" class="full-width" name="number" value="0" required autocomplete="off" />
+                    <input id="integer-min" type="number" class="full-width" name="min" value="0" required autocomplete="off" data-cast-to="integer" />
                 </div>
                 <div class="col span-6 margin-bottom-small">
-                    <label for="integer-min">Max</label>
-                    <input type="text" class="full-width" name="number" value="0" required autocomplete="off" />
+                    <label for="integer-max">Max</label>
+                    <input id="integer-max" type="number" class="full-width" name="max" value="0" required autocomplete="off" data-cast-to="integer" />
                 </div>
             </div>
 
             <label for="integer-default">Default Value</label>
-            <input id="integer-default" name="default" type="number" value="0" class="margin-bottom-large" autocomplete="off">
+            <input id="integer-default" name="default" type="number" value="0" class="margin-bottom-large" autocomplete="off" data-cast-to="integer">
 
             <footer>
-                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
+                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
             </footer>
         </form>
     </div>
@@ -530,7 +530,7 @@ $logs = $this->getParam('logs', null);
                 <p>Please add your first attribute before adding your first index.</p>
             </div>
 
-            <button data-ui-modal-close="" type="button" class="reverse">Back</button>
+            <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
         </div>
 
         <form data-ls-if="0 < {{project-collection.attributes.length}}"
@@ -571,7 +571,7 @@ $logs = $this->getParam('logs', null);
                     <div class="row responsive thin margin-bottom-tiny">
                         <div class="col span-7 margin-bottom-small">
                             <select data-duplications data-ls-attrs="name=attributes" data-ls-loop="project-collection.attributes" data-ls-as="option" data-cast-to="array" class="margin-bottom-no">
-                                <option data-ls-attrs="value={{option.$id}}" data-ls-bind="{{option.$id}}"></option>
+                                <option data-ls-attrs="value={{option.key}}" data-ls-bind="{{option.key}}"></option>
                             </select>
                         </div>
                         <div class="col span-4 margin-bottom-small">
@@ -588,7 +588,7 @@ $logs = $this->getParam('logs', null);
             </div>
 
             <footer>
-                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
+                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
             </footer>
         </form>
     </div>

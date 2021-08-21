@@ -27,11 +27,10 @@ use Appwrite\Utopia\Response;
 use Appwrite\Database\Validator\CustomId;
 use DeviceDetector\DeviceDetector;
 
-$attributesCallback = function ($collectionId, $attribute, $response, $dbForInternal, $dbForExternal, $database, $audits) {
-    /** @var Utopia\Database\Document $document*/
+$attributesCallback = function ($collectionId, $attribute, $response, $dbForInternal, $database, $audits) {
+    /** @var Utopia\Database\Document $attribute*/
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\Database\Database $dbForInternal*/
-    /** @var Utopia\Database\Database $dbForExternal*/
     /** @var Appwrite\Event\Event $database */
     /** @var Appwrite\Event\Event $audits */
 
@@ -39,13 +38,15 @@ $attributesCallback = function ($collectionId, $attribute, $response, $dbForInte
     $type = $attribute->getAttribute('type', '');
     $size = $attribute->getAttribute('size', 0);
     $required = $attribute->getAttribute('required', true);
-    $default = $attribute->getAttribute('default', null);
     $min = $attribute->getAttribute('min', null);
     $max = $attribute->getAttribute('max', null);
     $signed = $attribute->getAttribute('signed', true); // integers are signed by default 
     $array = $attribute->getAttribute('array', false);
-    $format = $attribute->getAttribute('format', null);
+    $format = $attribute->getAttribute('format', '');
+    $formatOptions = $attribute->getAttribute('formatOptions', []);
     $filters = $attribute->getAttribute('filters', []); // filters are hidden from the endpoint 
+    $default = $attribute->getAttribute('default', null);
+    $default = (empty($default)) ? null : (int)$default;
 
     $collection = $dbForInternal->getDocument('collections', $collectionId);
 
@@ -62,28 +63,21 @@ $attributesCallback = function ($collectionId, $attribute, $response, $dbForInte
         }
     } 
 
-    if (!\is_null($format)) {
-        $name = \json_decode($format, true)['name'];
-        if (!Structure::hasFormat($name, $type)) {
-            throw new Exception("Format {$name} not available for {$type} attributes.", 400);
+    if (!empty($format)) {
+        if (!Structure::hasFormat($format, $type)) {
+            throw new Exception("Format {$format} not available for {$type} attributes.", 400);
         }
     }
 
-    if (!is_null($min) || !is_null($max)) { // Add range validator if either $min or $max is provided
-        switch ($type) {
-            case Database::VAR_INTEGER:
-                $min = (is_null($min)) ? -INF : \intval($min);
-                $max = (is_null($max)) ? INF : \intval($max);
-                $format = 'int-range';
-                break;
-            case Database::VAR_FLOAT:
-                $min = (is_null($min)) ? -INF : \floatval($min);
-                $max = (is_null($max)) ? INF : \floatval($max);
-                $format = 'float-range';
-                break;
-            default:
-                throw new Exception("Format range not available for {$type} attributes.", 400);
-        }
+    switch ($type) {
+        case Database::VAR_INTEGER:
+            $min = (is_null($min)) ? PHP_INT_MIN : \intval($min);
+            $max = (is_null($max)) ? PHP_INT_MAX : \intval($max);
+            break;
+        case Database::VAR_FLOAT:
+            $min = (is_null($min)) ? PHP_FLOAT_MIN : \floatval($min);
+            $max = (is_null($max)) ? PHP_FLOAT_MAX : \floatval($max);
+            break;
     }
 
     try {
@@ -96,18 +90,17 @@ $attributesCallback = function ($collectionId, $attribute, $response, $dbForInte
             'size' => $size,
             'required' => $required,
             'signed' => $signed,
-            'default' => (string)$default, // Convert to proper type on fetch
+            'default' => $default,
             'array' => $array,
             'format' => $format,
+            'formatOptions' => $formatOptions,
             'filters' => $filters,
         ]));
     } catch (DuplicateException $th) {
         throw new Exception('Attribute already exists', 409);
     }
 
-    if (!$dbForInternal->purgeDocument('collections', $collectionId)) {
-        throw new Exception('Failed to remove collection from the cache', 500);
-    }
+    $dbForInternal->purgeDocument('collections', $collectionId);
 
     $database
         ->setParam('type', DATABASE_TYPE_CREATE_ATTRIBUTE)
@@ -153,7 +146,6 @@ App::post('/v1/database/collections')
 
         $collectionId = $collectionId == 'unique()' ? $dbForExternal->getId() : $collectionId;
 
-        var_dump($permission);
         try {
             $dbForExternal->createCollection($collectionId);
 
@@ -476,10 +468,9 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $attributeId, $size, $required, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits) use ($attributesCallback) {
+    ->action(function ($collectionId, $attributeId, $size, $required, $default, $array, $response, $dbForInternal, $database, $audits) use ($attributesCallback) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal*/
         /** @var Utopia\Database\Database $dbForExternal*/
@@ -493,7 +484,7 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
             'required' => $required,
             'default' => $default,
             'array' => $array,
-        ]), $response, $dbForInternal, $dbForExternal, $database, $audits);
+        ]), $response, $dbForInternal, $database, $audits);
     });
 
 App::post('/v1/database/collections/:collectionId/attributes/email')
@@ -515,13 +506,11 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits) use ($attributesCallback) {
+    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForInternal, $database, $audits) use ($attributesCallback) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal*/
-        /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
@@ -532,8 +521,8 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
             'required' => $required,
             'default' => $default,
             'array' => $array,
-            'format' => \json_encode(['name'=>'email']),
-        ]), $response, $dbForInternal, $dbForExternal, $database, $audits);
+            'format' => 'email',
+        ]), $response, $dbForInternal, $database, $audits);
     });
 
 App::post('/v1/database/collections/:collectionId/attributes/ip')
@@ -555,13 +544,11 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits) use ($attributesCallback) {
+    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForInternal, $database, $audits) use ($attributesCallback) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal*/
-        /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
@@ -572,8 +559,8 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
             'required' => $required,
             'default' => $default,
             'array' => $array,
-            'format' => \json_encode(['name'=>'ip']),
-        ]), $response, $dbForInternal, $dbForExternal, $database, $audits);
+            'format' => 'ip',
+        ]), $response, $dbForInternal, $database, $audits);
     });
 
 App::post('/v1/database/collections/:collectionId/attributes/url')
@@ -596,12 +583,10 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $attributeId, $size, $required, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits) use ($attributesCallback) {
+    ->action(function ($collectionId, $attributeId, $size, $required, $default, $array, $response, $dbForInternal, $database, $audits) use ($attributesCallback) {
         /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal*/
         /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
@@ -613,8 +598,8 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
             'required' => $required,
             'default' => $default,
             'array' => $array,
-            'format' => \json_encode(['name'=>'url']),
-        ]), $response, $dbForInternal, $dbForExternal, $database, $audits);
+            'format' => 'url',
+        ]), $response, $dbForInternal, $database, $audits);
     });
 
 App::post('/v1/database/collections/:collectionId/attributes/integer')
@@ -638,13 +623,11 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $attributeId, $required, $min, $max, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits) use ($attributesCallback) {
+    ->action(function ($collectionId, $attributeId, $required, $min, $max, $default, $array, $response, $dbForInternal, $database, $audits) use ($attributesCallback) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal*/
-        /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
@@ -655,12 +638,12 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
             'required' => $required,
             'default' => $default,
             'array' => $array,
-            'format' => \json_encode([
-                'name'=>'int-range',
-                'min' => $min,
-                'max' => $max,
-            ]),
-        ]), $response, $dbForInternal, $dbForExternal, $database, $audits);
+            'format' => 'int-range',
+            'formatOptions' => [
+                'min' => (is_null($min)) ? PHP_INT_MIN : \intval($min),
+                'max' => (is_null($max)) ? PHP_INT_MAX : \intval($max),
+            ],
+        ]), $response, $dbForInternal, $database, $audits);
     });
 
 App::post('/v1/database/collections/:collectionId/attributes/float')
@@ -684,13 +667,11 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $attributeId, $required, $min, $max, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits) use ($attributesCallback) {
+    ->action(function ($collectionId, $attributeId, $required, $min, $max, $default, $array, $response, $dbForInternal, $database, $audits) use ($attributesCallback) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal*/
-        /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
@@ -701,12 +682,12 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
             'size' => 0,
             'default' => $default,
             'array' => $array,
-            'format' => \json_encode([
-                'name'=>'float-range',
-                'min' => $min,
-                'max' => $max,
-            ]),
-        ]), $response, $dbForInternal, $dbForExternal, $database, $audits);
+            'format' => 'float-range',
+            'formatOptions' => [
+                'min' => (is_null($min)) ? PHP_FLOAT_MIN : \floatval($min),
+                'max' => (is_null($max)) ? PHP_FLOAT_MAX : \floatval($max),
+            ],
+        ]), $response, $dbForInternal, $database, $audits);
     });
 
 App::post('/v1/database/collections/:collectionId/attributes/boolean')
@@ -728,13 +709,11 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->inject('dbForExternal')
     ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForInternal, $dbForExternal, $database, $audits) use ($attributesCallback) {
+    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForInternal, $database, $audits) use ($attributesCallback) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal*/
-        /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
@@ -745,7 +724,7 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
             'required' => $required,
             'default' => $default,
             'array' => $array,
-        ]), $response, $dbForInternal, $dbForExternal, $database, $audits);
+        ]), $response, $dbForInternal, $database, $audits);
     });
 
 App::get('/v1/database/collections/:collectionId/attributes')
@@ -868,9 +847,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
             throw new Exception('Failed to remove attribute from DB', 500);
         }
 
-        if (!$dbForInternal->purgeDocument('collections', $collectionId)) {
-            throw new Exception('Failed to remove collection from the cache', 500);
-        }
+        $dbForInternal->purgeDocument('collections', $collectionId);
 
         $database
             ->setParam('type', DATABASE_TYPE_DELETE_ATTRIBUTE)
@@ -1174,6 +1151,9 @@ App::post('/v1/database/collections/:collectionId/documents')
         catch (StructureException $exception) {
             throw new Exception($exception->getMessage(), 400);
         }
+        catch (DuplicateException $exception) {
+            throw new Exception('Document already exists', 409);
+        }
 
         $audits
             ->setParam('event', 'database.documents.create')
@@ -1223,7 +1203,8 @@ App::get('/v1/database/collections/:collectionId/documents')
         // TODO@kodumbeats find a more efficient alternative to this
         $schema = $collection->getArrayCopy()['attributes'];
         $indexes = $collection->getArrayCopy()['indexes'];
-        $indexesInQueue = $collection->getArrayCopy()['indexesInQueue'];
+        $indexesInQueue = [];
+        // $indexesInQueue = $collection->getArrayCopy()['indexesInQueue'];
 
         // TODO@kodumbeats use strict query validation
         $validator = new QueriesValidator(new QueryValidator($schema), $indexes, $indexesInQueue, false);
@@ -1260,7 +1241,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, new UID(), 'Document unique ID.')
     ->inject('response')
-    ->inject('$dbForInternal')
+    ->inject('dbForInternal')
     ->inject('dbForExternal')
     ->action(function ($collectionId, $documentId, $response, $dbForInternal, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */

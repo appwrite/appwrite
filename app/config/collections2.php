@@ -207,6 +207,16 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => 'formatOptions',
+                'type' => Database::VAR_STRING,
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => new stdClass,
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
                 '$id' => 'filters',
                 'type' => Database::VAR_STRING,
                 'size' => 64,
@@ -214,7 +224,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => true,
-                'filters' => ['json'],
+                'filters' => [],
             ],
         ],
         'indexes' => [

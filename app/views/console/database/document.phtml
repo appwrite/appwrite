@@ -71,11 +71,11 @@
                                         <ul data-ls-loop="project-collection.attributes" data-ls-as="attribute">
                                             <li>
                                                 <label>
-                                                    <div data-ls-bind="{{attribute.$id}}" class="margin-bottom-tiny"></div>
+                                                    <div data-ls-bind="{{attribute.key}}" class="margin-bottom-tiny"></div>
                                                     <div data-ls-if="{{attribute.required}}" class="text-size-xs text-danger text-fade">required</div>
                                                     <div data-ls-if="!{{attribute.required}}" class="text-size-xs text-fade">optional</div>
                                                 </label>
-                                                <textarea data-ls-attrs="name={{attribute.$id}}" data-ls-bind="{{project-document|documentAttribute}}"></textarea>
+                                                <textarea data-ls-attrs="name={{attribute.key}}" data-ls-bind="{{project-document|documentAttribute}}"></textarea>
                                             </li>
                                         </ul>
                                     </fieldset>
