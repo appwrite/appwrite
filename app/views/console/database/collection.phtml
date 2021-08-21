@@ -65,14 +65,14 @@ $logs = $this->getParam('logs', null);
                                     <tr data-ls-loop="project-collection.attributes" data-ls-as="attribute" data-ls-prefix="template-attribute-title-first" data-ls-limit="20">
                                         <td style="width: 170px">
                                             <i data-ls-attrs="class=pull-end icon-{{attribute.type}} text-size-xs"></i>
-                                            <span class="text-bold" data-ls-bind="{{attribute.$id}}"></span>
+                                            <span class="text-bold" data-ls-bind="{{attribute.key}}"></span>
                                             <span class="text-size-small" data-ls-if="{{attribute.array}}">[]</span>
                                         </td>
                                     </tr>
                                 </thead>
                                 <tbody data-ls-loop="project-documents.documents" data-ls-as="node">
                                     <tr data-ls-loop="project-collection.attributes" data-ls-as="attribute" data-ls-prefix="template-attribute-body-first" data-ls-limit="20">
-                                        <td data-ls-attrs="data-title={{attribute.$id}}: ">
+                                        <td data-ls-attrs="data-title={{attribute.key}}: ">
                                             <!-- <a href="" target="_blank" rel="noopener" class="pull-end margin-start"><i class="icon-link-ext"></i></a> -->
                                             <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection={{router.params.id}}&project={{router.params.project}}"><span data-ls-bind="{{node|documentAttribute}}"></span></a>
                                             <span data-ls-if="!{{node|documentAttribute}}" class="text-fade">n/a</span>
@@ -130,17 +130,17 @@ $logs = $this->getParam('logs', null);
                 <h2>Attributes</h2>
 
                 <div class="clear box margin-bottom">
-                    <div data-ls-if="0 == {{project-collection.attributes.length}} && 0 == {{project-collection.attributesInQueue.length}}">
+                    <div data-ls-if="0 == {{project-collection.attributes.length}}">
                         <h3 class="margin-bottom-small text-bold">No Attributes Found</h3>
     
                         <p class="margin-bottom-no">Add your first attribute to get started</p>
                     </div>
 
-                    <table class="vertical" data-ls-if="0 < {{project-collection.attributes.length}} || 0 < {{project-collection.attributesInQueue.length}}">
+                    <table class="vertical" data-ls-if="0 < {{project-collection.attributes.length}}">
                         <thead>
                             <tr>
                                 <th width="30"></th>
-                                <th width="80"></th>
+                                <th width="100"></th>
                                 <th width="130">Attribute ID</th>
                                 <th width="100">Type</th>
                                 <th width="180">Default</th>
@@ -154,11 +154,13 @@ $logs = $this->getParam('logs', null);
                                     <i data-ls-attrs="class=icon-{{attribute.type}}"></i>
                                 </td>
                                 <td data-title="Status">
-                                    <span class="text-size-small text-success">available&nbsp;</span>
+                                    <span data-ls-if="{{attribute.status}} == 'available'" class="text-size-small text-success">available&nbsp;</span>
+                                    <span data-ls-if="{{attribute.status}} == 'processing'" class="text-size-small text-info">processing&nbsp;</span>
+                                    <span data-ls-if="{{attribute.status}} == 'failed'" class="text-size-small text-danger">failed&nbsp;</span>
                                 </td>
 
                                 <td data-title="Attribute ID: ">
-                                    <span class="text-size-small" data-ls-bind="{{attribute.$id}}"></span><span class="text-size-small" data-ls-if="{{attribute.size}}" data-ls-bind=" ({{attribute.size}})"></span>
+                                    <span class="text-size-small" data-ls-bind="{{attribute.key}}"></span><span class="text-size-small" data-ls-if="{{attribute.size}}" data-ls-bind=" ({{attribute.size}})"></span>
                                 </td>
 
                                 <td data-title="Type:">
@@ -195,43 +197,10 @@ $logs = $this->getParam('logs', null);
 
                                         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                                         <input type="hidden" name="collectionId" data-ls-bind="{{project-collection.$id}}" />
-                                        <input type="hidden" name="attributeId" data-ls-bind="{{attribute.$id}}" />
+                                        <input type="hidden" name="attributeId" data-ls-bind="{{attribute.key}}" />
 
                                         <button class="danger small">Delete</button>
                                     </form>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <hr data-ls-if="0 < {{project-collection.attributesInQueue.length}}" />
-                    
-                    <table class="vertical" data-ls-if="0 < {{project-collection.attributesInQueue.length}}">
-                        <tbody data-ls-loop="project-collection.attributesInQueue" data-ls-as="attribute">
-                            <tr>
-                                <td width="30">
-                                    <i data-ls-attrs="class=icon-{{attribute.type}}"></i>
-                                </td>
-                                <td width="80" data-title="Status">
-                                    <span class="text-size-small text-info">creating&nbsp;</span>
-                                </td>
-
-                                <td width="130" data-title="Attribute ID: ">
-                                    <span class="text-size-small" data-ls-bind="{{attribute.$id}}"></span><span class="text-size-small" data-ls-if="{{attribute.size}}" data-ls-bind=" ({{attribute.size}})"></span>
-                                </td>
-
-                                <td width="100" data-title="Type:">
-                                    <span class="text-size-small" data-ls-bind="{{attribute.type}}"></span>
-                                    <span class="text-size-small" data-ls-if="{{attribute.array}}">[]</span>
-                                </td>
-
-                                <td width="180" data-title="Default:">
-                                    <span class="text-size-small" data-ls-bind="{{attribute.default}}" data-ls-attr="title={{attribute.default}}"></span>
-                                    <span class="text-fade text-size-small" data-ls-if="!({{attribute.default}})">n/a</span>
-                                </td>
-
-                                <td data-title="">
-                                    <span class="text-size-small text-danger" data-ls-if="{{attribute.required}}">required</span>
                                 </td>
                             </tr>
                         </tbody>
@@ -259,13 +228,13 @@ $logs = $this->getParam('logs', null);
                 <h2>Indexes</h2>
 
                 <div class="clear box margin-bottom">
-                    <div data-ls-if="0 == {{project-collection.indexes.length}} && 0 == {{project-collection.indexesInQueue.length}}">
+                    <div data-ls-if="0 == {{project-collection.indexes.length}}">
                         <h3 class="margin-bottom-small text-bold">No Indexes Found</h3>
     
                         <p class="margin-bottom-no">Add your first index to get started</p>
                     </div>
 
-                    <table class="vertical multi-line" data-ls-if="0 < {{project-collection.indexes.length}} || 0 < {{project-collection.indexesInQueue.length}}">
+                    <table class="vertical multi-line" data-ls-if="0 < {{project-collection.indexes.length}}">
                         <thead>
                             <tr>
                                 <th width="30"></th>
@@ -332,43 +301,6 @@ $logs = $this->getParam('logs', null);
                             </tr>
                         </tbody>
                     </table>
-
-                    <hr data-ls-if="0 < {{project-collection.indexesInQueue.length}}" />
-
-                    <table class="vertical multi-line" data-ls-if="0 < {{project-collection.indexesInQueue.length}}">
-                        <tbody data-ls-loop="project-collection.indexesInQueue" data-ls-as="index">
-                            <tr>
-                                <td width="30">
-                                    <i class="icon-key"></i>
-                                </td>
-
-                                <td width="80" data-title="Status">
-                                    <span class="text-size-small text-info">creating</span>
-                                </td>
-
-                                <td width="130" data-title="Index ID: ">
-                                    <span class="text-size-small" data-ls-bind="{{index.$id}}"></span><span class="text-size-small" data-ls-if="{{index.size}}" data-ls-bind="({{index.size}})"></span>
-                                </td>
-
-                                <td width="100" data-title="Type:">
-                                    <span class="text-size-small" data-ls-bind="{{index.type}}"></span>
-                                    <span class="text-size-small" data-ls-if="{{index.array}}">[]</span>
-                                </td>
-
-                                <td width="180" data-title="Attributes:">
-                                    <span class="text-size-small" data-ls-bind="{{index|indexAttributes}}"></span>
-                                </td>
-
-                                <td data-title="">
-                                    <span class="text-size-small text-danger" data-ls-if="{{index.required}}">required</span>
-                                </td>
-
-                                <td width="80" data-title="">
-                                    
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </div>
 
                 <button class="new-index">Add Index</button>
@@ -417,7 +349,7 @@ $logs = $this->getParam('logs', null);
                                 <hr class="margin-top-small" />
 
                                 <div class="row">
-                                    <div class="col span-1"><input name="permission" value="document" type="radio" class="margin-top-no" /></div>
+                                    <div class="col span-1"><input name="permission" value="document" type="radio" class="margin-top-no" data-ls-bind="{{project-collection.permission}}" /></div>
                                     <div class="col span-11">
                                         <b>Document Level</b>
                                         <p class="text-fade margin-top-tiny">Bla bla bla bla bla Bla blabla bla Bla blabla bla Bla blabla bla Bla blaBla bla bla Bla bla bla Bla bla bla Bla bla bla Bla bla bla Bla bla bla Bla bla bla Bla bla bla</p>
@@ -425,7 +357,7 @@ $logs = $this->getParam('logs', null);
                                 </div>
 
                                 <div class="row">
-                                    <div class="col span-1"><input name="permission" value="collection" type="radio" class="margin-top-tiny" /></div>
+                                    <div class="col span-1"><input name="permission" value="collection" type="radio" class="margin-top-tiny" data-ls-bind="{{project-collection.permission}}" /></div>
                                     <div class="col span-11">
                                         <b>Collection Level</b>
                                         <p class="text-fade margin-top-tiny">Bla bla bla Bla blabla bla Bla blabla bla Bla blabla bla Bla bla bla Bla bla bla Bla bla bla Bla bla bla Bla bla bla Bla bla bla Bla</p>
