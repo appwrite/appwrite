@@ -179,7 +179,8 @@ $logs = $this->getParam('logs', null);
                                 </td>
 
                                 <td data-title="">
-                                    <form class="pull-end"
+                                    <form data-ls-if="{{attribute.status}} !== 'deleting'"
+                                        class="pull-end"
                                         data-analytics
                                         data-analytics-activity
                                         data-analytics-event="submit"

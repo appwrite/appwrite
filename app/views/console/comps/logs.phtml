@@ -21,7 +21,7 @@ $interval = floor((int)$this->getParam('interval', 0) / 86400);
                     <th width="120">Date</th>
                     <th width="180">Initiator</th>
                     <th>Event</th>
-                    <th width="90">Location</th>
+                    <th width="110">Location</th>
                     <th width="90">IP</th>
                 </tr>
             </thead>
@@ -39,8 +39,8 @@ $interval = floor((int)$this->getParam('interval', 0) / 86400);
                     </td>
                     <td data-title="Event: "><span data-ls-bind="{{log.event}}"></span></td>
                     <td data-title="Location: ">
-                        <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-attrs="src={{env.API}}/avatars/flags/{{log.countryCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline margin-end-small" />
-                        <span data-ls-bind="{{log.geo.countryName}}"></span>
+                        <img onerror="this.onerror=null;this.className='avatar xxs hide'" data-ls-attrs="src={{env.API}}/avatars/flags/{{log.countryCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline margin-end-small" />
+                        <span data-ls-bind="{{log.countryName}}"></span>
                     </td>
                     <td data-title="IP: "><span data-ls-bind="{{log.ip}}"></span></td>
                 </tr>
