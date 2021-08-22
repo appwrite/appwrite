@@ -24,7 +24,7 @@ class Attribute extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Attribute status. Possible values: `available`, `processing`, or `failed`',
+                'description' => 'Attribute status. Possible values: `available`, `processing`, `deleting`, or `failed`',
                 'default' => '',
                 'example' => 'string',
             ])

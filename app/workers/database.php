@@ -66,7 +66,6 @@ class DatabaseV1 extends Worker
         $dbForExternal = $this->getExternalDB($projectId);
 
         $collectionId = $collection->getId();
-        $id = $attribute->getAttribute('$id', '');
         $key = $attribute->getAttribute('key', '');
         $type = $attribute->getAttribute('type', '');
         $size = $attribute->getAttribute('size', 0);
@@ -79,12 +78,14 @@ class DatabaseV1 extends Worker
         $filters = $attribute->getAttribute('filters', []);
 
         try {
-            $success = $dbForExternal->createAttribute($collectionId, $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters);
+            if(!$dbForExternal->createAttribute($collectionId, $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
+                throw new Exception('Failed to create Attribute');
+            }
         
-            $dbForInternal->updateDocument('attributes', $id, $attribute->setAttribute('status', ($success) ? 'available' : 'failed'));
+            $dbForInternal->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
-            $dbForInternal->updateDocument('attributes', $id, $attribute->setAttribute('status', 'failed'));
+            $dbForInternal->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'failed'));
         }
 
         $dbForInternal->purgeDocument('collections', $collectionId);
@@ -97,12 +98,24 @@ class DatabaseV1 extends Worker
      */
     protected function deleteAttribute(Document $collection, Document $attribute, string $projectId): void
     {
+        $dbForInternal = $this->getInternalDB($projectId);
         $dbForExternal = $this->getExternalDB($projectId);
-
+        
         $collectionId = $collection->getId();
-        $id = $attribute->getAttribute('$id');
+        $key = $attribute->getAttribute('key', '');
 
-        $success = $dbForExternal->deleteAttribute($collectionId, $id);
+        try {
+            if(!$dbForExternal->deleteAttribute($collectionId, $key)) {
+                throw new Exception('Failed to delete Attribute');
+            }
+
+            $dbForInternal->deleteDocument('attributes', $attribute->getId());
+        } catch (\Throwable $th) {
+            Console::error($th->getMessage());
+            $dbForInternal->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'failed'));
+        }
+
+        $dbForInternal->purgeDocument('collections', $collectionId);
     }
 
     /**

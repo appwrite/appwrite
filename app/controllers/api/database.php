@@ -86,7 +86,7 @@ $attributesCallback = function ($collectionId, $attribute, $response, $dbForInte
             'key' => $attributeId,
             'collectionId' => $collectionId,
             'type' => $type,
-            'status' => 'processing', // processing, available, failed
+            'status' => 'processing', // processing, available, failed, deleting
             'size' => $size,
             'required' => $required,
             'signed' => $signed,
@@ -843,10 +843,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
             throw new Exception('Attribute not found', 404);
         }
 
-        if (!$dbForInternal->deleteDocument('attributes', $attribute->getId())) {
-            throw new Exception('Failed to remove attribute from DB', 500);
-        }
-
+        $attribute = $dbForInternal->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'deleting'));
         $dbForInternal->purgeDocument('collections', $collectionId);
 
         $database
