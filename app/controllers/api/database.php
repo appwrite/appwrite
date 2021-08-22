@@ -577,7 +577,6 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE)
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('attributeId', '', new Key(), 'Attribute ID.')
-    ->param('size', null, new Integer(), 'Attribute size for text attributes, in number of characters.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
@@ -585,7 +584,7 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
     ->inject('dbForInternal')
     ->inject('database')
     ->inject('audits')
-    ->action(function ($collectionId, $attributeId, $size, $required, $default, $array, $response, $dbForInternal, $database, $audits) use ($attributesCallback) {
+    ->action(function ($collectionId, $attributeId, $required, $default, $array, $response, $dbForInternal, $database, $audits) use ($attributesCallback) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
@@ -594,7 +593,7 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
         return $attributesCallback($collectionId, new Document([
             '$id' => $attributeId,
             'type' => Database::VAR_STRING,
-            'size' => $size,
+            'size' => 2000,
             'required' => $required,
             'default' => $default,
             'array' => $array,

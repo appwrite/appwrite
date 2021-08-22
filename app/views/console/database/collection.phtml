@@ -224,13 +224,13 @@ $logs = $this->getParam('logs', null);
                             <div class="link new-attribute-boolean"><i class="avatar icon-boolean"></i> New Boolean Attribute</div>
                         </li>
                         <li>
-                            <div class="link new-attribute-boolean"><i class="avatar icon-link"></i> New URL Attribute</div>
+                            <div class="link new-attribute-url"><i class="avatar icon-link"></i> New URL Attribute</div>
                         </li>
                         <li>
-                            <div class="link new-attribute-boolean"><i class="avatar icon-mail"></i> New Email Attribute</div>
+                            <div class="link new-attribute-email"><i class="avatar icon-mail"></i> New Email Attribute</div>
                         </li>
                         <li>
-                            <div class="link new-attribute-boolean"><i class="avatar icon-ip"></i> New IP Attribute</div>
+                            <div class="link new-attribute-ip"><i class="avatar icon-ip"></i> New IP Attribute</div>
                         </li>
                     </ul>
                 </div>
@@ -522,6 +522,94 @@ $logs = $this->getParam('logs', null);
 
             <label for="integer-default">Default Value</label>
             <input id="integer-default" name="default" type="number" value="0" class="margin-bottom-large" autocomplete="off" data-cast-to="integer">
+
+            <footer>
+                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+            </footer>
+        </form>
+    </div>
+
+    <div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-email">
+        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+        <h1>Add Email Attribute</h1>
+
+        <form
+            data-analytics
+            data-analytics-activity
+            data-analytics-event="submit"
+            data-analytics-category="console"
+            data-analytics-label="Create Collection Attribute (email)"
+            data-service="database.createEmailAttribute"
+            data-scope="sdk"
+            data-event="submit"
+            data-success="alert,trigger,reset"
+            data-success-param-alert-text="Created new attribute successfully"
+            data-success-param-trigger-events="database.createAttribute"
+            data-failure="alert"
+            data-failure-param-alert-text="Failed to create attribute"
+            data-failure-param-alert-classname="error">
+
+            <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+            <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
+
+            <label for="string-attributeId">Attribute ID</label>
+            <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
+
+            <div class="margin-bottom">
+                <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+            </div>
+                                                                
+            <div class="margin-bottom">
+                <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" />  &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+            </div>
+
+            <label for="string-default">Default Value</label>
+            <input id="string-default" name="default" type="email" placeholder="demo@appwrite.io" class="margin-bottom-large" autocomplete="off">
+
+            <footer>
+                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+            </footer>
+        </form>
+    </div>
+
+    <div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-url">
+        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+        <h1>Add URL Attribute</h1>
+
+        <form
+            data-analytics
+            data-analytics-activity
+            data-analytics-event="submit"
+            data-analytics-category="console"
+            data-analytics-label="Create Collection Attribute (url)"
+            data-service="database.createUrlAttribute"
+            data-scope="sdk"
+            data-event="submit"
+            data-success="alert,trigger,reset"
+            data-success-param-alert-text="Created new attribute successfully"
+            data-success-param-trigger-events="database.createAttribute"
+            data-failure="alert"
+            data-failure-param-alert-text="Failed to create attribute"
+            data-failure-param-alert-classname="error">
+
+            <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+            <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
+
+            <label for="string-attributeId">Attribute ID</label>
+            <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
+
+            <div class="margin-bottom">
+                <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+            </div>
+                                                                
+            <div class="margin-bottom">
+                <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" />  &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+            </div>
+
+            <label for="string-default">Default Value</label>
+            <input id="string-default" name="default" type="url" placeholder="https://appwrite.io/my-link" class="margin-bottom-large" autocomplete="off">
 
             <footer>
                 <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>

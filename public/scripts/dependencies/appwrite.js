@@ -1363,22 +1363,18 @@
                  *
                  * @param {string} collectionId
                  * @param {string} attributeId
-                 * @param {number} size
                  * @param {boolean} required
                  * @param {string} xdefault
                  * @param {boolean} array
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createUrlAttribute: (collectionId, attributeId, size, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                createUrlAttribute: (collectionId, attributeId, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof collectionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "collectionId"');
                     }
                     if (typeof attributeId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "attributeId"');
-                    }
-                    if (typeof size === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "size"');
                     }
                     if (typeof required === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "required"');
@@ -1387,9 +1383,6 @@
                     let payload = {};
                     if (typeof attributeId !== 'undefined') {
                         payload['attributeId'] = attributeId;
-                    }
-                    if (typeof size !== 'undefined') {
-                        payload['size'] = size;
                     }
                     if (typeof required !== 'undefined') {
                         payload['required'] = required;

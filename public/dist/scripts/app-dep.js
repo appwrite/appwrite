@@ -161,12 +161,10 @@ if(typeof size!=='undefined'){payload['size']=size;}
 if(typeof required!=='undefined'){payload['required']=required;}
 if(typeof xdefault!=='undefined'){payload['xdefault']=xdefault;}
 if(typeof array!=='undefined'){payload['array']=array;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),createUrlAttribute:(collectionId,attributeId,size,required,xdefault,array)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
+const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),createUrlAttribute:(collectionId,attributeId,required,xdefault,array)=>__awaiter(this,void 0,void 0,function*(){if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
 if(typeof attributeId==='undefined'){throw new AppwriteException('Missing required parameter: "attributeId"');}
-if(typeof size==='undefined'){throw new AppwriteException('Missing required parameter: "size"');}
 if(typeof required==='undefined'){throw new AppwriteException('Missing required parameter: "required"');}
 let path='/database/collections/{collectionId}/attributes/url'.replace('{collectionId}',collectionId);let payload={};if(typeof attributeId!=='undefined'){payload['attributeId']=attributeId;}
-if(typeof size!=='undefined'){payload['size']=size;}
 if(typeof required!=='undefined'){payload['required']=required;}
 if(typeof xdefault!=='undefined'){payload['xdefault']=xdefault;}
 if(typeof array!=='undefined'){payload['array']=array;}
