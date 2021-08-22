@@ -16,13 +16,14 @@
           history = JSON.parse(history);
         }
         element.innerHTML = '';
-        history.forEach(({ percentage, value }) => {
+        history.forEach(({ percentage, value }, index) => {
+          const seconds = 50- (index * 5)
           const bar = document.createElement('span');
-          bar.classList.add('bar')
-          bar.classList.add(`bar-${percentage}`)
-          // bar.classList.add('tooltip')
-          // bar.classList.add('down')
-          //ar.setAttribute('data-tooltip', `${value} connections (x seconds ago)`)
+          bar.classList.add('bar');
+          bar.classList.add(`bar-${percentage}`);
+          bar.classList.add('tooltip');
+          bar.classList.add('down');
+          bar.setAttribute('data-tooltip', `${value} (${seconds} seconds ago)`);
           element.appendChild(bar);
         })
       }
