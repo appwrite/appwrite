@@ -1,11 +1,13 @@
 <?php
 
+use Appwrite\Utopia\Response;
+use Appwrite\Database\Validator\CustomId;
 use Utopia\App;
 use Utopia\Exception;
+use Utopia\Audit\Audit;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
 use Utopia\Validator\Integer;
-use Utopia\Validator\Numeric;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Text;
@@ -21,21 +23,23 @@ use Utopia\Database\Validator\Queries as QueriesValidator;
 use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\UID;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Appwrite\Database\Validator\CustomId;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Response;
+use DeviceDetector\DeviceDetector;
 
 /**
  * Create attribute of varying type
  *
- * @param Document $attribute
- * @param Response $response
- * @param Database $dbForExternal
- * @param Event $database
- * @param Event $audits
+ * @param Utopia\Database\Document $attribute
+ * @param Appwrite\Utopia\Response $response
+ * @param Utopia\Database\Database $dbForExternal
+ * @param Appwrite\Event\Event $database
+ * @param Appwrite\Event\Event $audits
  *
  * @return Document Newly created attribute document
  */
@@ -71,6 +75,7 @@ function attributesCallback($attribute, $response, $dbForExternal, $database, $a
     // So we need to create one for the response
     //
     // TODO@kodumbeats should $signed and $filters be part of the response model?
+
     $attribute = new Document([
         '$collection' => $collectionId,
         '$id' => $attributeId,
@@ -91,7 +96,7 @@ function attributesCallback($attribute, $response, $dbForExternal, $database, $a
 
     $audits
         ->setParam('event', 'database.attributes.create')
-        ->setParam('resource', 'database/attributes/'.$attribute->getId())
+        ->setParam('resource', 'database/collection/'.$collection->getId())
         ->setParam('data', $attribute)
     ;
 
@@ -112,7 +117,7 @@ App::post('/v1/database/collections')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_COLLECTION)
-    ->param('collectionId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
+    ->param('collectionId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
@@ -162,17 +167,26 @@ App::get('/v1/database/collections')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 40000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('after', '', new UID(), 'ID of the collection used as the starting point for the query, excluding the collection itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForExternal')
-    ->action(function ($search, $limit, $offset, $orderType, $response, $dbForExternal) {
+    ->action(function ($search, $limit, $offset, $after, $orderType, $response, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal */
 
         $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
 
+        if (!empty($after)) {
+            $afterCollection = $dbForExternal->getDocument('collections', $after);
+
+            if ($afterCollection->isEmpty()) {
+                throw new Exception("Collection '{$after}' for the 'after' value not found.", 400);
+            }
+        }
+
         $response->dynamic(new Document([
-            'collections' => $dbForExternal->find(Database::COLLECTIONS, $queries, $limit, $offset, ['_id'], [$orderType]),
+            'collections' => $dbForExternal->find(Database::COLLECTIONS, $queries, $limit, $offset, [], [$orderType], $afterCollection ?? null),
             'sum' => $dbForExternal->count(Database::COLLECTIONS, $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_COLLECTION_LIST);
     });
@@ -202,6 +216,102 @@ App::get('/v1/database/collections/:collectionId')
         }
 
         $response->dynamic($collection, Response::MODEL_COLLECTION);
+    });
+
+App::get('/v1/database/collections/:collectionId/logs')
+    ->desc('List Collection Logs')
+    ->groups(['api', 'database'])
+    ->label('scope', 'collections.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'database')
+    ->label('sdk.method', 'listCollectionLogs')
+    ->label('sdk.description', '/docs/references/database/get-collection-logs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_LOG_LIST)
+    ->param('collectionId', '', new UID(), 'Collection unique ID.')
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->inject('dbForExternal')
+    ->inject('locale')
+    ->inject('geodb')
+    ->action(function ($collectionId, $response, $dbForInternal, $dbForExternal, $locale, $geodb) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Document $project */
+        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForExternal */
+        /** @var Utopia\Locale\Locale $locale */
+        /** @var MaxMind\Db\Reader $geodb */
+
+        $collection = $dbForExternal->getCollection($collectionId);
+
+        if ($collection->isEmpty()) {
+            throw new Exception('Collection not found', 404);
+        }
+
+        $audit = new Audit($dbForInternal);
+
+        $logs = $audit->getLogsByResource('database/collection/'.$collection->getId());
+
+        $output = [];
+
+        foreach ($logs as $i => &$log) {
+            $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
+
+            $dd = new DeviceDetector($log['userAgent']);
+
+            $dd->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+
+            $dd->parse();
+
+            $os = $dd->getOs();
+            $osCode = (isset($os['short_name'])) ? $os['short_name'] : '';
+            $osName = (isset($os['name'])) ? $os['name'] : '';
+            $osVersion = (isset($os['version'])) ? $os['version'] : '';
+
+            $client = $dd->getClient();
+            $clientType = (isset($client['type'])) ? $client['type'] : '';
+            $clientCode = (isset($client['short_name'])) ? $client['short_name'] : '';
+            $clientName = (isset($client['name'])) ? $client['name'] : '';
+            $clientVersion = (isset($client['version'])) ? $client['version'] : '';
+            $clientEngine = (isset($client['engine'])) ? $client['engine'] : '';
+            $clientEngineVersion = (isset($client['engine_version'])) ? $client['engine_version'] : '';
+
+            $output[$i] = new Document([
+                'event' => $log['event'],
+                'userId' => $log['userId'],
+                'userEmail' => $log['data']['userEmail'] ?? null,
+                'userName' => $log['data']['userName'] ?? null,
+                'mode' => $log['data']['mode'] ?? null,
+                'ip' => $log['ip'],
+                'time' => $log['time'],
+
+                'osCode' => $osCode,
+                'osName' => $osName,
+                'osVersion' => $osVersion,
+                'clientType' => $clientType,
+                'clientCode' => $clientCode,
+                'clientName' => $clientName,
+                'clientVersion' => $clientVersion,
+                'clientEngine' => $clientEngine,
+                'clientEngineVersion' => $clientEngineVersion,
+                'deviceName' => $dd->getDeviceName(),
+                'deviceBrand' => $dd->getBrandName(),
+                'deviceModel' => $dd->getModel(),
+            ]);
+
+            $record = $geodb->get($log['ip']);
+
+            if ($record) {
+                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+            } else {
+                $output[$i]['countryCode'] = '--';
+                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
+            }
+        }
+
+        $response->dynamic(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
     });
 
 App::put('/v1/database/collections/:collectionId')
@@ -251,7 +361,7 @@ App::put('/v1/database/collections/:collectionId')
 
         $audits
             ->setParam('event', 'database.collections.update')
-            ->setParam('resource', 'database/collections/'.$collection->getId())
+            ->setParam('resource', 'database/collection/'.$collection->getId())
             ->setParam('data', $collection->getArrayCopy())
         ;
 
@@ -295,7 +405,7 @@ App::delete('/v1/database/collections/:collectionId')
 
         $audits
             ->setParam('event', 'database.collections.delete')
-            ->setParam('resource', 'database/collections/'.$collection->getId())
+            ->setParam('resource', 'database/collection/'.$collection->getId())
             ->setParam('data', $collection->getArrayCopy())
         ;
 
@@ -306,7 +416,7 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
     ->desc('Create String Attribute')
     ->groups(['api', 'database'])
     ->label('event', 'database.attributes.create')
-    ->label('scope', 'attributes.write')
+    ->label('scope', 'collections.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'createStringAttribute')
@@ -353,7 +463,7 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
     ->desc('Create Email Attribute')
     ->groups(['api', 'database'])
     ->label('event', 'database.attributes.create')
-    ->label('scope', 'attributes.write')
+    ->label('scope', 'collections.write')
     ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createEmailAttribute')
@@ -400,7 +510,7 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
     ->desc('Create IP Address Attribute')
     ->groups(['api', 'database'])
     ->label('event', 'database.attributes.create')
-    ->label('scope', 'attributes.write')
+    ->label('scope', 'collections.write')
     ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createIpAttribute')
@@ -447,7 +557,7 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
     ->desc('Create IP Address Attribute')
     ->groups(['api', 'database'])
     ->label('event', 'database.attributes.create')
-    ->label('scope', 'attributes.write')
+    ->label('scope', 'collections.write')
     ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createUrlAttribute')
@@ -495,7 +605,7 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
     ->desc('Create Integer Attribute')
     ->groups(['api', 'database'])
     ->label('event', 'database.attributes.create')
-    ->label('scope', 'attributes.write')
+    ->label('scope', 'collections.write')
     ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createIntegerAttribute')
@@ -552,7 +662,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
     ->desc('Create Float Attribute')
     ->groups(['api', 'database'])
     ->label('event', 'database.attributes.create')
-    ->label('scope', 'attributes.write')
+    ->label('scope', 'collections.write')
     ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createFloatAttribute')
@@ -609,7 +719,7 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
     ->desc('Create Boolean Attribute')
     ->groups(['api', 'database'])
     ->label('event', 'database.attributes.create')
-    ->label('scope', 'attributes.write')
+    ->label('scope', 'collections.write')
     ->label('sdk.namespace', 'database')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createBooleanAttribute')
@@ -648,7 +758,7 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
 App::get('/v1/database/collections/:collectionId/attributes')
     ->desc('List Attributes')
     ->groups(['api', 'database'])
-    ->label('scope', 'attributes.read')
+    ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'listAttributes')
@@ -686,7 +796,7 @@ App::get('/v1/database/collections/:collectionId/attributes')
 App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
     ->desc('Get Attribute')
     ->groups(['api', 'database'])
-    ->label('scope', 'attributes.read')
+    ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'getAttribute')
@@ -743,7 +853,7 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
 App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
     ->desc('Delete Attribute')
     ->groups(['api', 'database'])
-    ->label('scope', 'attributes.write')
+    ->label('scope', 'collections.write')
     ->label('event', 'database.attributes.delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'database')
@@ -798,7 +908,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
 
         $audits
             ->setParam('event', 'database.attributes.delete')
-            ->setParam('resource', 'database/attributes/'.$attribute->getId())
+            ->setParam('resource', 'database/collection/'.$collection->getId())
             ->setParam('data', $attribute->getArrayCopy())
         ;
 
@@ -809,7 +919,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
     ->desc('Create Index')
     ->groups(['api', 'database'])
     ->label('event', 'database.indexes.create')
-    ->label('scope', 'indexes.write')
+    ->label('scope', 'collections.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'createIndex')
@@ -862,7 +972,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
             $lengths[$key] = ($attributeType === Database::VAR_STRING) ? $attributeSize : null;
         }
 
-        $success = $dbForExternal->addIndexInQueue($collectionId, $indexId, $type, $attributes, $lengths, $orders);
+        $dbForExternal->addIndexInQueue($collectionId, $indexId, $type, $attributes, $lengths, $orders);
 
         // Database->createIndex() does not return a document
         // So we need to create one for the response
@@ -884,7 +994,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
 
         $audits
             ->setParam('event', 'database.indexes.create')
-            ->setParam('resource', 'database/indexes/'.$index->getId())
+            ->setParam('resource', 'database/collection/'.$collection->getId())
             ->setParam('data', $index->getArrayCopy())
         ;
 
@@ -896,7 +1006,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
 App::get('/v1/database/collections/:collectionId/indexes')
     ->desc('List Indexes')
     ->groups(['api', 'database'])
-    ->label('scope', 'indexes.read')
+    ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'listIndexes')
@@ -934,7 +1044,7 @@ App::get('/v1/database/collections/:collectionId/indexes')
 App::get('/v1/database/collections/:collectionId/indexes/:indexId')
     ->desc('Get Index')
     ->groups(['api', 'database'])
-    ->label('scope', 'indexes.read')
+    ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'getIndex')
@@ -975,7 +1085,7 @@ App::get('/v1/database/collections/:collectionId/indexes/:indexId')
 App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
     ->desc('Delete Index')
     ->groups(['api', 'database'])
-    ->label('scope', 'indexes.write')
+    ->label('scope', 'collections.write')
     ->label('event', 'database.indexes.delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'database')
@@ -1030,7 +1140,7 @@ App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
 
         $audits
             ->setParam('event', 'database.indexes.delete')
-            ->setParam('resource', 'database/indexes/'.$index->getId())
+            ->setParam('resource', 'database/collection/'.$collection->getId())
             ->setParam('data', $index->getArrayCopy())
         ;
 
@@ -1049,7 +1159,7 @@ App::post('/v1/database/collections/:collectionId/documents')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOCUMENT)
-    ->param('documentId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
+    ->param('documentId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('collectionId', null, new UID(), 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
@@ -1087,7 +1197,8 @@ App::post('/v1/database/collections/:collectionId/documents')
 
         try {
             $document = $dbForExternal->createDocument($collectionId, new Document($data));
-        } catch (StructureException $exception) {
+        }
+        catch (StructureException $exception) {
             throw new Exception($exception->getMessage(), 400);
         }
 
@@ -1116,12 +1227,12 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->param('queries', [], new ArrayList(new Text(128)), 'Array of query strings.', true)
     ->param('limit', 25, new Range(0, 100), 'Maximum number of documents to return in response.  Use this value to manage pagination. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 900000000), 'Offset value. The default value is 0. Use this param to manage pagination.', true)
-    // TODO@kodumbeats 'after' param for pagination
+    ->param('after', '', new UID(), 'ID of the document used as the starting point for the query, excluding the document itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('orderAttributes', [], new ArrayList(new Text(128)), 'Array of attributes used to sort results.', true)
     ->param('orderTypes', [], new ArrayList(new WhiteList(['DESC', 'ASC'], true)), 'Array of order directions for sorting attribtues. Possible values are DESC for descending order, or ASC for ascending order.', true)
     ->inject('response')
     ->inject('dbForExternal')
-    ->action(function ($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $response, $dbForExternal) {
+    ->action(function ($collectionId, $queries, $limit, $offset, $after, $orderAttributes, $orderTypes, $response, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForExternal */
 
@@ -1147,11 +1258,17 @@ App::get('/v1/database/collections/:collectionId/documents')
             throw new Exception($validator->getDescription(), 400);
         }
 
-        $documents = $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes);
+        if (!empty($after)) {
+            $afterDocument = $dbForExternal->getDocument($collectionId, $after);
+
+            if ($afterDocument->isEmpty()) {
+                throw new Exception("Document '{$after}' for the 'after' value not found.", 400);
+            }
+        }
 
         $response->dynamic(new Document([
-            'sum' => \count($documents),
-            'documents' => $documents,
+            'sum' => $dbForExternal->count($collectionId, $queries, APP_LIMIT_COUNT),
+            'documents' => $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $afterDocument ?? null),
         ]), Response::MODEL_DOCUMENT_LIST);
     });
 
@@ -1245,11 +1362,13 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
 
         try {
             $document = $dbForExternal->updateDocument($collection->getId(), $document->getId(), new Document($data));
-        } catch (AuthorizationException $exception) {
+        }
+        catch (AuthorizationException $exception) {
             throw new Exception('Unauthorized permissions', 401);
-        } catch (StructureException $exception) {
+        }
+        catch (StructureException $exception) {
             throw new Exception('Bad structure. '.$exception->getMessage(), 400);
-        } 
+        }
 
         $audits
             ->setParam('event', 'database.documents.update')
@@ -1295,7 +1414,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
             throw new Exception('No document found', 404);
         }
 
-        $success = $dbForExternal->deleteDocument($collectionId, $documentId);
+        $dbForExternal->deleteDocument($collectionId, $documentId);
 
         $events
             ->setParam('eventData', $response->output($document, Response::MODEL_DOCUMENT))

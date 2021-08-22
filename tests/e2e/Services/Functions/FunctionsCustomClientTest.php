@@ -112,7 +112,7 @@ class FunctionsCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(201, $execution['headers']['status-code']);
-       
+
         $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$function['body']['$id'].'/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -121,7 +121,7 @@ class FunctionsCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $execution['headers']['status-code']);
-       
+
         return [];
     }
 
@@ -187,7 +187,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code']);
 
         $executionId = $execution['body']['$id'] ?? '';
-        
+
         sleep(10);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions/'.$executionId, [
@@ -212,19 +212,52 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals($this->getUser()['$id'], $output['APPWRITE_FUNCTION_USER_ID']);
         $this->assertNotEmpty($output['APPWRITE_FUNCTION_JWT']);
 
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', [
+        return [
+            'functionId' => $functionId
+        ];
+    }
+
+    /**
+     * @depends testCreateCustomExecution
+     */
+    public function testListExecutions(array $data)
+    {
+        $functionId = $data['functionId'];
+        $projectId = $this->getProject()['$id'];
+        $apikey = $this->getProject()['apiKey'];
+
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'data' => 'foobar',
+        ]);
+
+        $this->assertEquals(201, $execution['headers']['status-code']);
+
+        sleep(10);
+
+        $base = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
         ]);
 
-        $this->assertEquals(200, $executions['headers']['status-code']);
-        $this->assertCount(1, $executions['body']['executions']);
-        $this->assertEquals('completed', $executions['body']['executions'][0]['status']);
-        $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['stdout']);
-        $this->assertStringContainsString($this->getUser()['$id'], $executions['body']['executions'][0]['stdout']);
-      
-        return [];
-    }
+        $this->assertEquals(200, $base['headers']['status-code']);
+        $this->assertCount(2, $base['body']['executions']);
+        $this->assertEquals('completed', $base['body']['executions'][0]['status']);
+        $this->assertEquals('completed', $base['body']['executions'][1]['status']);
 
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apikey,
+        ], [
+            'after' => $base['body']['executions'][0]['$id']
+        ]);
+
+        $this->assertCount(1, $executions['body']['executions']);
+        $this->assertEquals($base['body']['executions'][1]['$id'], $executions['body']['executions'][0]['$id']);
+
+    }
 }

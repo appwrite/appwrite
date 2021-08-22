@@ -5,7 +5,7 @@ sdk
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-let promise = sdk.database.createIndex('[COLLECTION_ID]', '', 'text', []);
+let promise = sdk.database.createIndex('[COLLECTION_ID]', '', 'key', []);
 
 promise.then(function (response) {
     console.log(response); // Success

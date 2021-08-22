@@ -70,7 +70,6 @@ class WebhooksCustomServerTest extends Scope
         ]);
 
         $this->assertEquals($index['headers']['status-code'], 201);
-        $this->assertEquals($index['body']['$collection'], $data['actorsId']);
         $this->assertEquals($index['body']['$id'], 'fullname');
 
         // wait for database worker to create index
