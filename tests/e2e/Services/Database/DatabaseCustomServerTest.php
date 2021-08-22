@@ -179,7 +179,7 @@ class DatabaseCustomServerTest extends Scope
         $this->assertEquals($collection['body']['attributes'][1]['key'], $lastName['body']['key']);
         $this->assertEquals($collection['body']['attributes'][2]['key'], $unneeded['body']['key']);
         $this->assertCount(1, $collection['body']['indexes']);
-        $this->assertEquals($collection['body']['indexes'][0]['$id'], $index['body']['$id']);
+        $this->assertEquals($collection['body']['indexes'][0]['key'], $index['body']['key']);
 
         // Delete attribute
         $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $actors ['body']['$id'] . '/attributes/' . $unneededId, array_merge([
@@ -198,12 +198,12 @@ class DatabaseCustomServerTest extends Scope
 
         $this->assertIsArray($collection['body']['attributes']);
         $this->assertCount(2, $collection['body']['attributes']);
-        $this->assertEquals($collection['body']['attributes'][0]['$id'], $firstName['body']['$id']);
-        $this->assertEquals($collection['body']['attributes'][1]['$id'], $lastName['body']['$id']);
+        $this->assertEquals($collection['body']['attributes'][0]['key'], $firstName['body']['key']);
+        $this->assertEquals($collection['body']['attributes'][1]['key'], $lastName['body']['key']);
 
         return [
             'collectionId' => $actors['body']['$id'],
-            'indexId' => $index['body']['$id'],
+            'indexId' => $index['body']['key'],
         ];
     }
     /**

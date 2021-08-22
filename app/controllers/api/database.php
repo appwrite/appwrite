@@ -941,6 +941,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
 
         $database
             ->setParam('type', DATABASE_TYPE_CREATE_INDEX)
+            ->setParam('collection', $collection)
             ->setParam('document', $index)
         ;
 

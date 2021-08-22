@@ -120,24 +120,24 @@ trait DatabaseBase
             'attributes' => ['title'],
         ]);
 
-        // $this->assertEquals($titleIndex['headers']['status-code'], 201);
-        // $this->assertEquals($titleIndex['body']['$id'], 'titleIndex');
-        // $this->assertEquals($titleIndex['body']['type'], 'fulltext');
-        // $this->assertCount(1, $titleIndex['body']['attributes']);
-        // $this->assertEquals($titleIndex['body']['attributes'][0], 'title');
+        $this->assertEquals($titleIndex['headers']['status-code'], 201);
+        $this->assertEquals($titleIndex['body']['key'], 'titleIndex');
+        $this->assertEquals($titleIndex['body']['type'], 'fulltext');
+        $this->assertCount(1, $titleIndex['body']['attributes']);
+        $this->assertEquals($titleIndex['body']['attributes'][0], 'title');
 
-        // // wait for database worker to create index
-        // sleep(5);
+        // wait for database worker to create index
+        sleep(5);
 
-        // $movies = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'], array_merge([
-        //     'content-type' => 'application/json',
-        //     'x-appwrite-project' => $this->getProject()['$id'],
-        //     'x-appwrite-key' => $this->getProject()['apiKey']
-        // ]), []); 
+        $movies = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), []); 
 
-        // $this->assertIsArray($movies['body']['indexes']);
-        // $this->assertCount(1, $movies['body']['indexes']);
-        // $this->assertEquals($movies['body']['indexes'][0]['$id'], $titleIndex['body']['$id']);
+        $this->assertIsArray($movies['body']['indexes']);
+        $this->assertCount(1, $movies['body']['indexes']);
+        $this->assertEquals($movies['body']['indexes'][0]['key'], $titleIndex['body']['key']);
 
         return $data;
     }

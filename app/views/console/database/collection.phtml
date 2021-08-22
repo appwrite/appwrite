@@ -264,11 +264,14 @@ $logs = $this->getParam('logs', null);
                                 </td>
 
                                 <td data-title="Status">
-                                    <span class="text-size-small text-success">available</span>
+                                    <span data-ls-if="{{index.status}} == 'available'" class="text-size-small text-success">available&nbsp;</span>
+                                    <span data-ls-if="{{index.status}} == 'processing'" class="text-size-small text-info">processing&nbsp;</span>
+                                    <span data-ls-if="{{index.status}} == 'failed'" class="text-size-small text-danger">failed&nbsp;</span>
+                                    <span data-ls-if="{{index.status}} == 'deleting'" class="text-size-small text-danger">deleting&nbsp;</span>
                                 </td>
 
                                 <td data-title="Index ID: ">
-                                    <span class="text-size-small" data-ls-bind="{{index.$id}}"></span><span class="text-size-small" data-ls-if="{{index.size}}" data-ls-bind="({{index.size}})"></span>
+                                    <span class="text-size-small" data-ls-bind="{{index.key}}"></span><span class="text-size-small" data-ls-if="{{index.size}}" data-ls-bind="({{index.size}})"></span>
                                 </td>
 
                                 <td data-title="Type:">
