@@ -1127,6 +1127,8 @@ trait DatabaseBase
             'write' => ['user:'.$this->getUser()['$id']],
         ]);
 
+        $this->assertEquals(409, $duplicate['headers']['status-code']);
+
         // Test for exception when updating document to conflict
         $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -1165,7 +1167,7 @@ trait DatabaseBase
             'write' => ['user:'.$this->getUser()['$id']],
         ]);
 
-        $this->assertEquals(400, $duplicate['headers']['status-code']);
+        $this->assertEquals(409, $duplicate['headers']['status-code']);
 
         return $data;
     }
