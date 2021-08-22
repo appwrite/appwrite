@@ -27,6 +27,7 @@ class DatabaseCustomServerTest extends Scope
             'collectionId' => 'first',
             'read' => ['role:all'],
             'write' => ['role:all'],
+            'permission' => 'document'
         ]);
 
         $test2 = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
@@ -38,6 +39,7 @@ class DatabaseCustomServerTest extends Scope
             'collectionId' => 'second',
             'read' => ['role:all'],
             'write' => ['role:all'],
+            'permission' => 'document'
         ]);
 
         $collections = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
@@ -109,6 +111,7 @@ class DatabaseCustomServerTest extends Scope
             'name' => 'Actors',
             'read' => ['role:all'],
             'write' => ['role:all'],
+            'permission' => 'document'
         ]);
 
         $this->assertEquals($actors['headers']['status-code'], 201);
@@ -168,13 +171,13 @@ class DatabaseCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), []); 
 
-        $unneededId = $unneeded['body']['$id'];
+        $unneededId = $unneeded['body']['key'];
 
         $this->assertIsArray($collection['body']['attributes']);
         $this->assertCount(3, $collection['body']['attributes']);
-        $this->assertEquals($collection['body']['attributes'][0]['$id'], $firstName['body']['$id']);
-        $this->assertEquals($collection['body']['attributes'][1]['$id'], $lastName['body']['$id']);
-        $this->assertEquals($collection['body']['attributes'][2]['$id'], $unneeded['body']['$id']);
+        $this->assertEquals($collection['body']['attributes'][0]['key'], $firstName['body']['key']);
+        $this->assertEquals($collection['body']['attributes'][1]['key'], $lastName['body']['key']);
+        $this->assertEquals($collection['body']['attributes'][2]['key'], $unneeded['body']['key']);
         $this->assertCount(1, $collection['body']['indexes']);
         $this->assertEquals($collection['body']['indexes'][0]['$id'], $index['body']['$id']);
 

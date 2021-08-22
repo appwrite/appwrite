@@ -908,7 +908,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
         // set attribute size as length for strings, null otherwise
         foreach ($attributes as $key => $attribute) {
             // find attribute metadata in collection document
-            $attributeIndex = \array_search($attribute, array_column($oldAttributes, '$id'));
+            $attributeIndex = \array_search($attribute, array_column($oldAttributes, 'key'));
 
             if ($attributeIndex === false) {
                 throw new Exception('Unknown attribute: ' . $attribute, 400);
