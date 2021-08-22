@@ -176,13 +176,25 @@ DatabaseOld::addFilter('encrypt',
     }
 );
 
-Database::addFilter('subQuery',
+Database::addFilter('subQueryAttributes',
     function($value) {
         return null;
     },
     function($value, Document $document, Database $database) {
         return $database
             ->find('attributes', [
+                new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
+            ], 100, 0, ['_id']);
+    }
+);
+
+Database::addFilter('subQueryIndexes',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return $database
+            ->find('indexes', [
                 new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
             ], 100, 0, ['_id']);
     }

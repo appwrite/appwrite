@@ -125,19 +125,28 @@ class DatabaseV1 extends Worker
      */
     protected function createIndex(Document $collection, Document $index, string $projectId): void
     {
+        $dbForInternal = $this->getInternalDB($projectId);
         $dbForExternal = $this->getExternalDB($projectId);
 
         $collectionId = $collection->getId();
-        $id = $index->getAttribute('$id', '');
+        $key = $index->getAttribute('key', '');
         $type = $index->getAttribute('type', '');
         $attributes = $index->getAttribute('attributes', []);
         $lengths = $index->getAttribute('lengths', []);
         $orders = $index->getAttribute('orders', []);
 
-        $success = $dbForExternal->createIndex($collectionId, $id, $type, $attributes, $lengths, $orders);
-        if ($success) {
-            $dbForExternal->removeIndexInQueue($collectionId, $id);
+        try {
+            if(!$dbForExternal->createIndex($collectionId, $key, $type, $attributes, $lengths, $orders)) {
+                throw new Exception('Failed to create Index');
+            }
+        
+            $dbForInternal->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
+        } catch (\Throwable $th) {
+            Console::error($th->getMessage());
+            $dbForInternal->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'failed'));
         }
+
+        $dbForInternal->purgeDocument('collections', $collectionId);
     }
 
     /**
@@ -147,11 +156,23 @@ class DatabaseV1 extends Worker
      */
     protected function deleteIndex(Document $collection, Document $index, string $projectId): void
     {
+        $dbForInternal = $this->getInternalDB($projectId);
         $dbForExternal = $this->getExternalDB($projectId);
 
         $collectionId = $collection->getId();
-        $id = $index->getAttribute('$id');
+        $key = $index->getAttribute('key');
 
-        $success = $dbForExternal->deleteIndex($collectionId, $id);
+        try {
+            if(!$dbForExternal->deleteIndex($collectionId, $key)) {
+                throw new Exception('Failed to delete Attribute');
+            }
+
+            $dbForInternal->deleteDocument('indexes', $index->getId());
+        } catch (\Throwable $th) {
+            Console::error($th->getMessage());
+            $dbForInternal->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'failed'));
+        }
+
+        $dbForInternal->purgeDocument('collections', $collectionId);
     }
 }

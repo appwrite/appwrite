@@ -922,14 +922,22 @@ App::post('/v1/database/collections/:collectionId/indexes')
         }
 
         // TODO@kodumbeats should $lengths be a part of the response model?
-        $index = new Document([
-            '$collection' => $collectionId,
-            '$id' => $indexId,
-            'type' => $type,
-            'attributes' => $attributes,
-            'lengths' => $lengths,
-            'orders' => $orders,
-        ]);
+        try {
+            $index = $dbForInternal->createDocument('indexes', new Document([
+                '$id' => $collectionId.'_'.$indexId,
+                'key' => $indexId,
+                'status' => 'processing', // processing, available, failed, deleting
+                'collectionId' => $collectionId,
+                'type' => $type,
+                'attributes' => $attributes,
+                'lengths' => $lengths,
+                'orders' => $orders,
+            ]));
+        } catch (DuplicateException $th) {
+            throw new Exception('Attribute already exists', 409);
+        }
+
+        $dbForInternal->purgeDocument('collections', $collectionId);
 
         $database
             ->setParam('type', DATABASE_TYPE_CREATE_INDEX)
@@ -944,7 +952,6 @@ App::post('/v1/database/collections/:collectionId/indexes')
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($index, Response::MODEL_INDEX);
-       
     });
 
 App::get('/v1/database/collections/:collectionId/indexes')
