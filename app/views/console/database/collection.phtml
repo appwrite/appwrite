@@ -57,7 +57,7 @@ $logs = $this->getParam('logs', null);
                     </div>
 
                     <div data-ls-if="({{project-documents.sum}})" class="margin-top-negative">
-                        <div class="margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-documents.sum}}"></span> documents found</div>
+                        <div class="margin-bottom-small text-align-end text-size-small text-fade"><span data-ls-bind="{{project-documents.sum}}"></span> documents found</div>
 
                         <div class="box margin-bottom y-scroll text-size-small">
                             <table class="vertical borders">
@@ -157,6 +157,7 @@ $logs = $this->getParam('logs', null);
                                     <span data-ls-if="{{attribute.status}} == 'available'" class="text-size-small text-success">available&nbsp;</span>
                                     <span data-ls-if="{{attribute.status}} == 'processing'" class="text-size-small text-info">processing&nbsp;</span>
                                     <span data-ls-if="{{attribute.status}} == 'failed'" class="text-size-small text-danger">failed&nbsp;</span>
+                                    <span data-ls-if="{{attribute.status}} == 'deleting'" class="text-size-small text-danger">deleting&nbsp;</span>
                                 </td>
 
                                 <td data-title="Attribute ID: ">
@@ -210,16 +211,25 @@ $logs = $this->getParam('logs', null);
                 <div class="drop-list pull-start" data-ls-ui-open="" data-button-aria="Choose Platform" data-button-text="Add Attribute" data-button-class="button" data-blur="1">
                     <ul>
                         <li>
-                            <div class="link new-attribute-string"><img src="/images/clients/web.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="String Attribute Logo" class="avatar xxs margin-end-small" loading="lazy" /> New String Attribute</div>
+                            <div class="link new-attribute-string"><i class="avatar icon-string"></i> New String Attribute</div>
                         </li>
                         <li>
-                            <div class="link new-attribute-integer"><img src="/images/clients/web.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="String Attribute Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Integer Attribute</div>
+                            <div class="link new-attribute-integer"><i class="avatar icon-integer"></i> New Integer Attribute</div>
                         </li>
                         <li>
-                            <div class="link new-attribute-float"><img src="/images/clients/web.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="String Attribute Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Float Attribute</div>
+                            <div class="link new-attribute-float"><i class="avatar icon-float"></i> New Float Attribute</div>
                         </li>
                         <li>
-                            <div class="link new-attribute-boolean"><img src="/images/clients/web.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="String Attribute Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Boolean Attribute</div>
+                            <div class="link new-attribute-boolean"><i class="avatar icon-boolean"></i> New Boolean Attribute</div>
+                        </li>
+                        <li>
+                            <div class="link new-attribute-boolean"><i class="avatar icon-link"></i> New URL Attribute</div>
+                        </li>
+                        <li>
+                            <div class="link new-attribute-boolean"><i class="avatar icon-mail"></i> New Email Attribute</div>
+                        </li>
+                        <li>
+                            <div class="link new-attribute-boolean"><i class="avatar icon-ip"></i> New IP Attribute</div>
                         </li>
                     </ul>
                 </div>
