@@ -144,7 +144,6 @@ class DatabaseV1 extends Worker
             if(!$dbForExternal->createIndex($collectionId, $key, $type, $attributes, $lengths, $orders)) {
                 throw new Exception('Failed to create Index');
             }
-        
             $dbForInternal->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
