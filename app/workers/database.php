@@ -21,7 +21,6 @@ class DatabaseV1 extends Worker
     public function run(): void
     {
         Authorization::disable();
-        
         $projectId = $this->args['projectId'] ?? '';
         $type = $this->args['type'] ?? '';
         $collection = $this->args['collection'] ?? [];
