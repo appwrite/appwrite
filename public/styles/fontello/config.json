@@ -783,6 +783,12 @@
       "css": "key",
       "code": 59479,
       "src": "elusive"
+    },
+    {
+      "uid": "3256ef03b16e7ab51235bc7378b53bb5",
+      "css": "boolean",
+      "code": 61957,
+      "src": "fontawesome"
     }
   ]
 }

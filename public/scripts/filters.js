@@ -275,8 +275,8 @@ window.ls.filter
     return $value;
   })
   .add("documentAttribute", function($value, attribute) {
-    if($value[attribute.$id]) {
-      return $value[attribute.$id];
+    if($value[attribute.key]) {
+      return $value[attribute.key];
     }
     
     return null;
