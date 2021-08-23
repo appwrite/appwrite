@@ -240,8 +240,8 @@ $collections = [
 
     'indexes' => [
         '$collection' => Database::METADATA,
-        '$id' => 'attributes',
-        'name' => 'Attributes',
+        '$id' => 'indexes',
+        'name' => 'Indexes',
         'attributes' => [
             [
                 '$id' => 'collectionId',
