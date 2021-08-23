@@ -26,7 +26,7 @@ class Attribute extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Attribute status. Possible values: `available`, `processing`, `deleting`, or `failed`',
                 'default' => '',
-                'example' => 'string',
+                'example' => 'available',
             ])
             ->addRule('required', [
                 'type' => self::TYPE_BOOLEAN,

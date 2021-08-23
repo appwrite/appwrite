@@ -21,7 +21,6 @@ class DatabaseV1 extends Worker
     public function run(): void
     {
         Authorization::disable();
-        
         $projectId = $this->args['projectId'] ?? '';
         $type = $this->args['type'] ?? '';
         $collection = $this->args['collection'] ?? [];
@@ -89,7 +88,6 @@ class DatabaseV1 extends Worker
             if(!$dbForExternal->createAttribute($collectionId, $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
                 throw new Exception('Failed to create Attribute');
             }
-        
             $dbForInternal->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
@@ -108,7 +106,6 @@ class DatabaseV1 extends Worker
     {
         $dbForInternal = $this->getInternalDB($projectId);
         $dbForExternal = $this->getExternalDB($projectId);
-        
         $collectionId = $collection->getId();
         $key = $attribute->getAttribute('key', '');
 
@@ -147,7 +144,6 @@ class DatabaseV1 extends Worker
             if(!$dbForExternal->createIndex($collectionId, $key, $type, $attributes, $lengths, $orders)) {
                 throw new Exception('Failed to create Index');
             }
-        
             $dbForInternal->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
