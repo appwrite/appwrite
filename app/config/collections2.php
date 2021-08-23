@@ -179,7 +179,7 @@ $collections = [
             [
                 '$id' => 'signed',
                 'type' => Database::VAR_BOOLEAN,
-                'size' => 64,
+                'size' => 0,
                 'signed' => true,
                 'required' => false,
                 'default' => null,
