@@ -107,7 +107,6 @@ class DatabaseV1 extends Worker
     {
         $dbForInternal = $this->getInternalDB($projectId);
         $dbForExternal = $this->getExternalDB($projectId);
-        
         $collectionId = $collection->getId();
         $key = $attribute->getAttribute('key', '');
 
