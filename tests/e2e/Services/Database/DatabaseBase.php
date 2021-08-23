@@ -73,7 +73,6 @@ trait DatabaseBase
         $this->assertEquals($releaseYear['headers']['status-code'], 201);
         $this->assertEquals($releaseYear['body']['key'], 'releaseYear');
         $this->assertEquals($releaseYear['body']['type'], 'integer');
-        $this->assertEquals($releaseYear['body']['size'], 0);
         $this->assertEquals($releaseYear['body']['required'], true);
 
         $this->assertEquals($actors['headers']['status-code'], 201);
