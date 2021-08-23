@@ -7,7 +7,7 @@ version: '3'
 
 services:
   traefik:
-    image: traefik:2.3
+    image: traefik:2.5
     container_name: appwrite-traefik
     command:
       - --log.level=DEBUG
@@ -214,6 +214,7 @@ services:
     volumes: 
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      # - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - redis
       - mariadb
@@ -399,6 +400,8 @@ services:
   redis:
     image: redis:6.0-alpine
     container_name: appwrite-redis
+    ports:
+      - "6379:6379"
     networks:
       - appwrite
     volumes:

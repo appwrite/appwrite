@@ -28,6 +28,7 @@ class WebhooksCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Actors1',
+            'permission' => 'document',
         ]);
         
         $this->assertEquals($actors['headers']['status-code'], 200);
@@ -70,7 +71,7 @@ class WebhooksCustomServerTest extends Scope
         ]);
 
         $this->assertEquals($index['headers']['status-code'], 201);
-        $this->assertEquals($index['body']['$id'], 'fullname');
+        $this->assertEquals($index['body']['key'], 'fullname');
 
         // wait for database worker to create index
         sleep(5);
@@ -125,6 +126,7 @@ class WebhooksCustomServerTest extends Scope
             'name' => 'Demo',
             'read' => ['role:all'],
             'write' => ['role:all'],
+            'permission' => 'document'
         ]);
         
         $this->assertEquals($actors['headers']['status-code'], 201);

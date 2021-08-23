@@ -10,17 +10,23 @@ class Index extends Model
     public function __construct()
     {
         $this
-            ->addRule('$id', [
+            ->addRule('key', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Index ID.',
+                'description' => 'Index Key.',
                 'default' => '',
-                'example' => '',
+                'example' => 'index1',
             ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Index type.',
                 'default' => '',
                 'example' => '',
+            ])
+            ->addRule('status', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Index status. Possible values: `available`, `processing`, `deleting`, or `failed`',
+                'default' => '',
+                'example' => 'string',
             ])
             ->addRule('attributes', [
                 'type' => self::TYPE_STRING,
