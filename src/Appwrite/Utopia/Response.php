@@ -325,7 +325,7 @@ class Response extends SwooleResponse
         $document = $model->filter($document);
 
         foreach ($model->getRules() as $key => $rule) {
-            if (!$document->isSet($key)) {
+            if (!$document->isSet($key) && $rule['require']) { // do not set attribute in response if not required
                 if (!is_null($rule['default'])) {
                     $document->setAttribute($key, $rule['default']);
                 } else {
