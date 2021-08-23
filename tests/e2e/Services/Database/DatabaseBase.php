@@ -44,8 +44,6 @@ trait DatabaseBase
             'required' => true,
         ]);
 
-        sleep(2);
-
         $releaseYear = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/attributes/integer', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -54,8 +52,6 @@ trait DatabaseBase
             'attributeId' => 'releaseYear',
             'required' => true,
         ]);
-
-        sleep(2);
 
         $actors = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
@@ -88,7 +84,7 @@ trait DatabaseBase
         $this->assertEquals($actors['body']['array'], true);
 
         // wait for database worker to create attributes
-        sleep(5);
+        sleep(2);
 
         $movies = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'], array_merge([
             'content-type' => 'application/json',
@@ -127,7 +123,7 @@ trait DatabaseBase
         $this->assertEquals($titleIndex['body']['attributes'][0], 'title');
 
         // wait for database worker to create index
-        sleep(5);
+        sleep(2);
 
         $movies = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'], array_merge([
             'content-type' => 'application/json',
@@ -242,8 +238,8 @@ trait DatabaseBase
         $this->assertCount(1, $document3['body']['$read']);
         $this->assertCount(1, $document3['body']['$write']);
         $this->assertCount(2, $document3['body']['actors']);
-        $this->assertEquals($document2['body']['actors'][0], 'Tom Holland');
-        $this->assertEquals($document2['body']['actors'][1], 'Zendaya Maree Stoermer');
+        $this->assertEquals($document3['body']['actors'][0], 'Tom Holland');
+        $this->assertEquals($document3['body']['actors'][1], 'Zendaya Maree Stoermer');
 
         $this->assertEquals($document4['headers']['status-code'], 400);
 
@@ -263,6 +259,7 @@ trait DatabaseBase
             'orderTypes' => ['ASC'],
         ]);
 
+        $this->assertEquals($documents['headers']['status-code'], 200);
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
         $this->assertEquals(2017, $documents['body']['documents'][1]['releaseYear']);
         $this->assertEquals(2019, $documents['body']['documents'][2]['releaseYear']);
@@ -276,6 +273,7 @@ trait DatabaseBase
             'orderTypes' => ['DESC'],
         ]);
 
+        $this->assertEquals($documents['headers']['status-code'], 200);
         $this->assertEquals(1944, $documents['body']['documents'][2]['releaseYear']);
         $this->assertEquals(2017, $documents['body']['documents'][1]['releaseYear']);
         $this->assertEquals(2019, $documents['body']['documents'][0]['releaseYear']);
@@ -297,6 +295,7 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
+        $this->assertEquals($base['headers']['status-code'], 200);
         $this->assertEquals('Captain America', $base['body']['documents'][0]['title']);
         $this->assertEquals('Spider-Man: Far From Home', $base['body']['documents'][1]['title']);
         $this->assertEquals('Spider-Man: Homecoming', $base['body']['documents'][2]['title']);
@@ -309,6 +308,7 @@ trait DatabaseBase
             'after' => $base['body']['documents'][0]['$id']
         ]);
 
+        $this->assertEquals($documents['headers']['status-code'], 200);
         $this->assertEquals($base['body']['documents'][1]['$id'], $documents['body']['documents'][0]['$id']);
         $this->assertEquals($base['body']['documents'][2]['$id'], $documents['body']['documents'][1]['$id']);
         $this->assertCount(2, $documents['body']['documents']);
@@ -320,6 +320,7 @@ trait DatabaseBase
             'after' => $base['body']['documents'][2]['$id']
         ]);
 
+        $this->assertEquals($documents['headers']['status-code'], 200);
         $this->assertEmpty($documents['body']['documents']);
 
         /**
@@ -333,6 +334,7 @@ trait DatabaseBase
             'orderTypes' => ['ASC'],
         ]);
 
+        $this->assertEquals($base['headers']['status-code'], 200);
         $this->assertEquals(1944, $base['body']['documents'][0]['releaseYear']);
         $this->assertEquals(2017, $base['body']['documents'][1]['releaseYear']);
         $this->assertEquals(2019, $base['body']['documents'][2]['releaseYear']);
@@ -347,6 +349,7 @@ trait DatabaseBase
             'after' => $base['body']['documents'][1]['$id']
         ]);
 
+        $this->assertEquals($documents['headers']['status-code'], 200);
         $this->assertEquals($base['body']['documents'][2]['$id'], $documents['body']['documents'][0]['$id']);
         $this->assertCount(1, $documents['body']['documents']);
 
@@ -361,6 +364,7 @@ trait DatabaseBase
             'orderTypes' => ['DESC'],
         ]);
 
+        $this->assertEquals($base['headers']['status-code'], 200);
         $this->assertEquals(1944, $base['body']['documents'][2]['releaseYear']);
         $this->assertEquals(2017, $base['body']['documents'][1]['releaseYear']);
         $this->assertEquals(2019, $base['body']['documents'][0]['releaseYear']);
@@ -375,6 +379,7 @@ trait DatabaseBase
             'after' => $base['body']['documents'][1]['$id']
         ]);
 
+        $this->assertEquals($documents['headers']['status-code'], 200);
         $this->assertEquals($base['body']['documents'][2]['$id'], $documents['body']['documents'][0]['$id']);
         $this->assertCount(1, $documents['body']['documents']);
 
@@ -407,6 +412,7 @@ trait DatabaseBase
             'orderTypes' => ['ASC'],
         ]);
 
+        $this->assertEquals($documents['headers']['status-code'], 200);
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
         $this->assertCount(1, $documents['body']['documents']);
 
@@ -420,6 +426,7 @@ trait DatabaseBase
             'orderTypes' => ['ASC'],
         ]);
 
+        $this->assertEquals($documents['headers']['status-code'], 200);
         $this->assertEquals(2017, $documents['body']['documents'][0]['releaseYear']);
         $this->assertEquals(2019, $documents['body']['documents'][1]['releaseYear']);
         $this->assertCount(2, $documents['body']['documents']);
@@ -439,6 +446,7 @@ trait DatabaseBase
             'queries' => ['title.search("Captain America")'],
         ]);
 
+        $this->assertEquals($documents['headers']['status-code'], 200);
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
         $this->assertCount(1, $documents['body']['documents']);
 
@@ -449,6 +457,7 @@ trait DatabaseBase
             'queries' => ['title.search("Homecoming")'],
         ]);
 
+        $this->assertEquals($documents['headers']['status-code'], 200);
         $this->assertEquals(2017, $documents['body']['documents'][0]['releaseYear']);
         $this->assertCount(1, $documents['body']['documents']);
 
@@ -459,6 +468,7 @@ trait DatabaseBase
             'queries' => ['title.search("spider")'],
         ]);
 
+        $this->assertEquals($documents['headers']['status-code'], 200);
         $this->assertEquals(2019, $documents['body']['documents'][0]['releaseYear']);
         $this->assertEquals(2017, $documents['body']['documents'][1]['releaseYear']);
         $this->assertCount(2, $documents['body']['documents']);
@@ -742,7 +752,7 @@ trait DatabaseBase
         // $this->assertEquals('Minimum value must be lesser than maximum value', $invalidRange['body']['message']);
 
         // wait for worker to add attributes
-        sleep(15);
+        sleep(2);
 
         $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',

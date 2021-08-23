@@ -288,7 +288,8 @@ $logs = $this->getParam('logs', null);
                                 </td>
 
                                 <td data-title="">
-                                    <form class="pull-end"
+                                    <form data-ls-if="{{index.status}} !== 'deleting'"
+                                        class="pull-end"
                                         data-analytics
                                         data-analytics-activity
                                         data-analytics-event="submit"
@@ -307,7 +308,7 @@ $logs = $this->getParam('logs', null);
 
                                         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                                         <input type="hidden" name="collectionId" data-ls-bind="{{project-collection.$id}}" />
-                                        <input type="hidden" name="indexId" data-ls-bind="{{index.$id}}" />
+                                        <input type="hidden" name="indexId" data-ls-bind="{{index.key}}" />
 
                                         <button class="danger small">Delete</button>
                                     </form>

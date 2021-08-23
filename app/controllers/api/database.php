@@ -210,7 +210,7 @@ App::get('/v1/database/collections')
         }
 
         $response->dynamic(new Document([
-            'collections' => $dbForInternal->find('collections', $queries, $limit, $offset, ['_id'], [$orderType]),
+            'collections' => $dbForInternal->find('collections', $queries, $limit, $offset, [], [$orderType], $afterCollection ?? null),
             'sum' => $dbForInternal->count('collections', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_COLLECTION_LIST);
     });
@@ -1065,24 +1065,18 @@ App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
             throw new Exception('Collection not found', 404);
         }
 
-        /** @var Document[] $indexes */
-        $indexes = $collection->getAttribute('indexes');
+        $index = $dbForInternal->getDocument('indexes', $collectionId.'_'.$indexId);
 
-        // find attribute in collection
-        $index= null;
-        foreach ($indexes as $i) {
-            if ($i->getId() === $indexId) {
-                $index = $i->setAttribute('$collection', $collectionId); // set the collectionId
-                break; // break once index is found
-            }
-        }
-
-        if (\is_null($index)) {
+        if (empty($index->getId())) {
             throw new Exception('Index not found', 404);
         }
 
+        $index = $dbForInternal->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'deleting'));
+        $dbForInternal->purgeDocument('collections', $collectionId);
+
         $database
             ->setParam('type', DATABASE_TYPE_DELETE_INDEX)
+            ->setParam('collection', $collection)
             ->setParam('document', $index)
         ;
 

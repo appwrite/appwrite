@@ -28,6 +28,14 @@ class DatabaseV1 extends Worker
         $collection = new Document($collection);
         $document = $this->args['document'] ?? [];
         $document = new Document($document);
+
+        if($collection->isEmpty()) {
+            throw new Exception('Missing collection');
+        }
+
+        if($document->isEmpty()) {
+            throw new Exception('Missing document');
+        }
         
         switch (strval($type)) {
             case DATABASE_TYPE_CREATE_ATTRIBUTE:
