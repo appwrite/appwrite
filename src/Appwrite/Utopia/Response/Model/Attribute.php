@@ -63,3 +63,4 @@ class Attribute extends Model
     {
         return Response::MODEL_ATTRIBUTE;
     }
+}

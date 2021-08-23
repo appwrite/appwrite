@@ -230,7 +230,6 @@ Database::addFilter('encrypt',
  * DB Formats
  */
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_EMAIL, function() {
-Structure::addFormat('email', function() {
     return new Email();
 }, Database::VAR_STRING);
 
