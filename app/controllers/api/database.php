@@ -69,17 +69,6 @@ $attributesCallback = function ($collectionId, $attribute, $response, $dbForInte
         }
     }
 
-    switch ($type) {
-        case Database::VAR_INTEGER:
-            $min = (is_null($min)) ? PHP_INT_MIN : \intval($min);
-            $max = (is_null($max)) ? PHP_INT_MAX : \intval($max);
-            break;
-        case Database::VAR_FLOAT:
-            $min = (is_null($min)) ? PHP_FLOAT_MIN : \floatval($min);
-            $max = (is_null($max)) ? PHP_FLOAT_MAX : \floatval($max);
-            break;
-    }
-
     try {
         $attribute = $dbForInternal->createDocument('attributes', new Document([
             '$id' => $collectionId.'_'.$attributeId,
@@ -1186,6 +1175,7 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->inject('dbForExternal')
     ->action(function ($collectionId, $queries, $limit, $offset, $after, $orderAttributes, $orderTypes, $response, $dbForInternal, $dbForExternal) {
         /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Database $dbForExternal */
 
         $collection = $dbForInternal->getDocument('collections', $collectionId);
@@ -1198,14 +1188,8 @@ App::get('/v1/database/collections/:collectionId/documents')
             return Query::parse($query);
         }, $queries);
 
-        // TODO@kodumbeats find a more efficient alternative to this
-        $schema = $collection->getArrayCopy()['attributes'];
-        $indexes = $collection->getArrayCopy()['indexes'];
-        $indexesInQueue = [];
-        // $indexesInQueue = $collection->getArrayCopy()['indexesInQueue'];
-
         // TODO@kodumbeats use strict query validation
-        $validator = new QueriesValidator(new QueryValidator($schema), $indexes, $indexesInQueue, false);
+        $validator = new QueriesValidator(new QueryValidator($collection->getAttribute('attributes', [])), $collection->getAttribute('indexes', []), false);
 
         if (!$validator->isValid($queries)) {
             throw new Exception($validator->getDescription(), 400);

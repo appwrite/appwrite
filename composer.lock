@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c43b186a794c614272806e6530ada496",
+    "content-hash": "47aa9e5f236362f9b724bfd9bb592dc4",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1984,16 +1984,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.8.0",
+            "version": "dev-feat-adjusted-query-validator",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "2645c150267aaf73c70fb8a8d1a74430c9e6f336"
+                "reference": "d32d2cfe96115e99b6dcf69318daf570934e1e55"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/2645c150267aaf73c70fb8a8d1a74430c9e6f336",
-                "reference": "2645c150267aaf73c70fb8a8d1a74430c9e6f336",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/d32d2cfe96115e99b6dcf69318daf570934e1e55",
+                "reference": "d32d2cfe96115e99b6dcf69318daf570934e1e55",
                 "shasum": ""
             },
             "require": {
@@ -2041,9 +2041,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.8.0"
+                "source": "https://github.com/utopia-php/database/tree/feat-adjusted-query-validator"
             },
-            "time": "2021-08-16T17:19:07+00:00"
+            "time": "2021-08-23T06:11:57+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -6254,9 +6254,18 @@
             "time": "2015-12-17T08:42:14+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-feat-adjusted-query-validator",
+            "alias": "0.10.0",
+            "alias_normalized": "0.10.0.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

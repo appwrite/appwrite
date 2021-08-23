@@ -437,44 +437,46 @@ trait DatabaseBase
     /**
      * @depends testCreateDocument
      */
-    public function testDocumentsListSuccessSearch(array $data):array
-    {
-        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => ['title.search("Captain America")'],
-        ]);
+    // public function testDocumentsListSuccessSearch(array $data):array
+    // {
+    //     $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id'],
+    //     ], $this->getHeaders()), [
+    //         'queries' => ['title.search("Captain America")'],
+    //     ]);
 
-        $this->assertEquals($documents['headers']['status-code'], 200);
-        $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
-        $this->assertCount(1, $documents['body']['documents']);
+    //     var_dump($documents);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => ['title.search("Homecoming")'],
-        ]);
+    //     $this->assertEquals($documents['headers']['status-code'], 200);
+    //     $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
+    //     $this->assertCount(1, $documents['body']['documents']);
 
-        $this->assertEquals($documents['headers']['status-code'], 200);
-        $this->assertEquals(2017, $documents['body']['documents'][0]['releaseYear']);
-        $this->assertCount(1, $documents['body']['documents']);
+    //     $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id'],
+    //     ], $this->getHeaders()), [
+    //         'queries' => ['title.search("Homecoming")'],
+    //     ]);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => ['title.search("spider")'],
-        ]);
+    //     $this->assertEquals($documents['headers']['status-code'], 200);
+    //     $this->assertEquals(2017, $documents['body']['documents'][0]['releaseYear']);
+    //     $this->assertCount(1, $documents['body']['documents']);
 
-        $this->assertEquals($documents['headers']['status-code'], 200);
-        $this->assertEquals(2019, $documents['body']['documents'][0]['releaseYear']);
-        $this->assertEquals(2017, $documents['body']['documents'][1]['releaseYear']);
-        $this->assertCount(2, $documents['body']['documents']);
+    //     $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id'],
+    //     ], $this->getHeaders()), [
+    //         'queries' => ['title.search("spider")'],
+    //     ]);
 
-        return [];
-    }
+    //     $this->assertEquals($documents['headers']['status-code'], 200);
+    //     $this->assertEquals(2019, $documents['body']['documents'][0]['releaseYear']);
+    //     $this->assertEquals(2017, $documents['body']['documents'][1]['releaseYear']);
+    //     $this->assertCount(2, $documents['body']['documents']);
+
+    //     return [];
+    // }
     // TODO@kodumbeats test for empty searches and misformatted queries
 
     /**

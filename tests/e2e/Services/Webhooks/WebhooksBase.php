@@ -21,6 +21,7 @@ trait WebhooksBase
             'name' => 'Actors',
             'read' => ['role:all'],
             'write' => ['role:all'],
+            'permission' => 'document',
         ]);
         
         $this->assertEquals($actors['headers']['status-code'], 201);
@@ -72,9 +73,9 @@ trait WebhooksBase
         ]);
 
         $this->assertEquals($firstName['headers']['status-code'], 201);
-        $this->assertEquals($firstName['body']['$id'], 'firstName');
+        $this->assertEquals($firstName['body']['key'], 'firstName');
         $this->assertEquals($lastName['headers']['status-code'], 201);
-        $this->assertEquals($lastName['body']['$id'], 'lastName');
+        $this->assertEquals($lastName['body']['key'], 'lastName');
 
         // wait for database worker to kick in
         sleep(10);
@@ -88,8 +89,8 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertNotEmpty($webhook['data']['$id']);
-        $this->assertEquals($webhook['data']['$id'], 'lastName');
+        $this->assertNotEmpty($webhook['data']['key']);
+        $this->assertEquals($webhook['data']['key'], 'lastName');
         
         // TODO@kodumbeats test webhook for removing attribute
 
