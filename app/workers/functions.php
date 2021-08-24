@@ -296,229 +296,36 @@ class FunctionsV1 extends Worker
      */
     public function execute(string $trigger, string $projectId, string $executionId, Database $database, Document $function, string $event = '', string $eventData = '', string $data = '', array $webhooks = [], string $userId = '', string $jwt = ''): void
     {
-        global $list;
-
-        $runtimes = Config::getParam('runtimes');
-
-        Authorization::disable();
-        $tag = $database->getDocument($function->getAttribute('tag', ''));
-        Authorization::reset();
-
-        if($tag->getAttribute('functionId') !== $function->getId()) {
-            throw new Exception('Tag not found', 404);
-        }
-
-        Authorization::disable();
-
-        $execution = (!empty($executionId)) ? $database->getDocument($executionId) : $database->createDocument([
-            '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
-            '$permissions' => [
-                'read' => [],
-                'write' => [],
-            ],
-            'dateCreated' => time(),
+        $ch = \curl_init();
+        \curl_setopt($ch, CURLOPT_URL, "http://executor:8080/v1/execute");
+        \curl_setopt($ch, CURLOPT_POST, true);
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+            'trigger' => $trigger,
+            'projectId' => $projectId,
+            'executionId' => $executionId,
             'functionId' => $function->getId(),
-            'trigger' => $trigger, // http / schedule / event
-            'status' => 'processing', // waiting / processing / completed / failed
-            'exitCode' => 0,
-            'stdout' => '',
-            'stderr' => '',
-            'time' => 0,
-        ]);
-
-        if(false === $execution || ($execution instanceof Document && $execution->isEmpty())) {
-            throw new Exception('Failed to create or read execution');
-        }
-        
-        Authorization::reset();
-
-        $runtime = (isset($runtimes[$function->getAttribute('runtime', '')]))
-            ? $runtimes[$function->getAttribute('runtime', '')]
-            : null;
-
-        if(\is_null($runtime)) {
-            throw new Exception('Runtime "'.$function->getAttribute('runtime', '').'" is not supported');
-        }
-
-        $vars = \array_merge($function->getAttribute('vars', []), [
-            'APPWRITE_FUNCTION_ID' => $function->getId(),
-            'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
-            'APPWRITE_FUNCTION_TAG' => $tag->getId(),
-            'APPWRITE_FUNCTION_TRIGGER' => $trigger,
-            'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
-            'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
-            'APPWRITE_FUNCTION_EVENT' => $event,
-            'APPWRITE_FUNCTION_EVENT_DATA' => $eventData,
-            'APPWRITE_FUNCTION_DATA' => $data,
-            'APPWRITE_FUNCTION_USER_ID' => $userId,
-            'APPWRITE_FUNCTION_JWT' => $jwt,
-            'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
-        ]);
-
-        \array_walk($vars, function (&$value, $key) {
-            $key = $this->filterEnvKey($key);
-            $value = \escapeshellarg((empty($value)) ? '' : $value);
-            $value = "--env {$key}={$value}";
-        });
-
-        $tagPath = $tag->getAttribute('path', '');
-        $tagPathTarget = '/tmp/project-'.$projectId.'/'.$tag->getId().'/code.tar.gz';
-        $tagPathTargetDir = \pathinfo($tagPathTarget, PATHINFO_DIRNAME);
-        $container = 'appwrite-function-'.$tag->getId();
-        $command = \escapeshellcmd($tag->getAttribute('command', ''));
-
-        if(!\is_readable($tagPath)) {
-            throw new Exception('Code is not readable: '.$tag->getAttribute('path', ''));
-        }
-
-        if (!\file_exists($tagPathTargetDir)) {
-            if (!\mkdir($tagPathTargetDir, 0755, true)) {
-                throw new Exception('Can\'t create directory '.$tagPathTargetDir);
-            }
-        }
-        
-        if (!\file_exists($tagPathTarget)) {
-            if(!\copy($tagPath, $tagPathTarget)) {
-                throw new Exception('Can\'t create temporary code file '.$tagPathTarget);
-            }
-        }
-
-        if(isset($list[$container]) && !$list[$container]['online']) { // Remove conatiner if not online
-            $stdout = '';
-            $stderr = '';
-            
-            if(Console::execute("docker rm {$container}", '', $stdout, $stderr, 30) !== 0) {
-                throw new Exception('Failed to remove offline container: '.$stderr);
-            }
-
-            unset($list[$container]);
-        }
-
-        /**
-         * Limit CPU Usage - DONE
-         * Limit Memory Usage - DONE
-         * Limit Network Usage
-         * Limit Storage Usage (//--storage-opt size=120m \)
-         * Make sure no access to redis, mariadb, influxdb or other system services
-         * Make sure no access to NFS server / storage volumes
-         * Access Appwrite REST from internal network for improved performance
-         */
-        if(!isset($list[$container])) { // Create contianer if not ready
-            $stdout = '';
-            $stderr = '';
-    
-            $executionStart = \microtime(true);
-            $executionTime = \time();
-            $cpus = App::getEnv('_APP_FUNCTIONS_CPUS', '');
-            $memory = App::getEnv('_APP_FUNCTIONS_MEMORY', '');
-            $swap = App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '');
-            $exitCode = Console::execute("docker run ".
-                " -d".
-                " --entrypoint=\"\"".
-                (empty($cpus) ? "" : (" --cpus=".$cpus)).
-                (empty($memory) ? "" : (" --memory=".$memory."m")).
-                (empty($swap) ? "" : (" --memory-swap=".$swap."m")).
-                " --name={$container}".
-                " --label appwrite-type=function".
-                " --label appwrite-created={$executionTime}".
-                " --volume {$tagPathTargetDir}:/tmp:rw".
-                " --workdir /usr/local/src".
-                " ".\implode(" ", $vars).
-                " {$runtime['image']}".
-                " tail -f /dev/null"
-            , '', $stdout, $stderr, 30);
-
-            if($exitCode !== 0) {
-                throw new Exception('Failed to create function environment: '.$stderr);
-            }
-
-            $exitCodeUntar = Console::execute("docker exec ".
-                $container.
-                " sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz'"
-                , '', $stdout, $stderr, 60);
-
-            if($exitCodeUntar !== 0) {
-                throw new Exception('Failed to extract tar: '.$stderr);
-            }
-
-            $executionEnd = \microtime(true);
-
-            $list[$container] = [
-                'name' => $container,
-                'online' => true,
-                'status' => 'Up',
-                'labels' => [
-                    'appwrite-type' => 'function',
-                    'appwrite-created' => $executionTime,
-                ],
-            ];
-
-            Console::info("Function created in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
-        }
-        else {
-            Console::info('Container is ready to run');
-        }
-        
-        $stdout = '';
-        $stderr = '';
-
-        $executionStart = \microtime(true);
-        
-        $exitCode = Console::execute("docker exec ".\implode(" ", $vars)." {$container} {$command}"
-            , '', $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
-
-        $executionEnd = \microtime(true);
-        $executionTime = ($executionEnd - $executionStart);
-        $functionStatus = ($exitCode === 0) ? 'completed' : 'failed';
-
-        Console::info("Function executed in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
-
-        Authorization::disable();
-        
-        $execution = $database->updateDocument(array_merge($execution->getArrayCopy(), [
-            'tagId' => $tag->getId(),
-            'status' => $functionStatus,
-            'exitCode' => $exitCode,
-            'stdout' => \mb_substr($stdout, -4000), // log last 4000 chars output
-            'stderr' => \mb_substr($stderr, -4000), // log last 4000 chars output
-            'time' => $executionTime,
+            'event' => $event,
+            'eventData' => $eventData,
+            'data' => $data,
+            'webhooks' => $webhooks,
+            'userId' => $userId,
+            'jwt' => $jwt,
         ]));
-        
-        Authorization::reset();
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900) + 200); // + 200 for safety margin
+        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+        ]);
 
-        if (false === $function) {
-            throw new Exception('Failed saving execution to DB', 500);
+        $response = \curl_exec($ch);
+
+        $error = \curl_error($ch);
+        if (!empty($error)) {
+            Console::error('Curl error: '.$error);
         }
 
-        $executionModel = new Execution();
-        $executionUpdate = new Event('v1-webhooks', 'WebhooksV1');
-
-        $executionUpdate
-            ->setParam('projectId', $projectId)
-            ->setParam('userId', $userId)
-            ->setParam('webhooks', $webhooks)
-            ->setParam('event', 'functions.executions.update')
-            ->setParam('eventData', $execution->getArrayCopy(array_keys($executionModel->getRules())));
-
-        $executionUpdate->trigger();
-
-        $usage = new Event('v1-usage', 'UsageV1');
-
-        $usage
-            ->setParam('projectId', $projectId)
-            ->setParam('functionId', $function->getId())
-            ->setParam('functionExecution', 1)
-            ->setParam('functionStatus', $functionStatus)
-            ->setParam('functionExecutionTime', $executionTime * 1000) // ms
-            ->setParam('networkRequestSize', 0)
-            ->setParam('networkResponseSize', 0)
-        ;
-        
-        if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-            $usage->trigger();
-        }
-
-        $this->cleanup();
+        \curl_close($ch);
     }
 
     /**

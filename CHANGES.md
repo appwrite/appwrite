@@ -1,3 +1,7 @@
+# Unreleased Version 0.11.0
+- Added ability to create syncronous function executions
+- Introduced new execution model for functions
+
 # Version 0.9.3
 
 ## Bugs

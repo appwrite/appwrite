@@ -313,6 +313,57 @@ services:
       - DOCKERHUB_PULL_USERNAME
       - DOCKERHUB_PULL_PASSWORD
 
+  appwrite-executor:
+    entrypoint:
+      - php
+      - -e
+      - app/executor.php
+      - -dopcache.preload=opcache.preload=/usr/src/code/app/preload.php
+    container_name: appwrite-executor
+    ports:
+      - "8080:8080"
+    build:
+      context: .
+      args: 
+        - DEBUG=true
+        - TESTING=true
+        - VERSION=dev
+    networks:
+      appwrite:
+        aliases:
+          - executor
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - appwrite-functions:/storage/functions:rw
+      - /tmp:/tmp:rw
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./dev:/usr/local/dev
+    depends_on:
+      - redis
+      - mariadb
+    environment:
+      - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_FUNCTIONS_TIMEOUT
+      - _APP_FUNCTIONS_CONTAINERS
+      - _APP_FUNCTIONS_RUNTIMES
+      - _APP_FUNCTIONS_CPUS
+      - _APP_FUNCTIONS_MEMORY
+      - _APP_FUNCTIONS_MEMORY_SWAP
+      - _APP_USAGE_STATS
+      - DOCKERHUB_PULL_USERNAME
+      - DOCKERHUB_PULL_PASSWORD
+
   appwrite-worker-mails:
     entrypoint: worker-mails
     container_name: appwrite-worker-mails
@@ -547,4 +598,5 @@ volumes:
   appwrite-functions:
   appwrite-influxdb:
   appwrite-config:
+  appwrite-executor:
   # appwrite-chronograf:

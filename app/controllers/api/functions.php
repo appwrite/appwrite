@@ -22,6 +22,7 @@ use Utopia\Validator\WhiteList;
 use Utopia\Config\Config;
 use Cron\CronExpression;
 use Utopia\Exception;
+use Utopia\Validator\Boolean;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -353,41 +354,31 @@ App::patch('/v1/functions/:functionId/tag')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Database\Document $project */
 
-        $function = $projectDB->getDocument($functionId);
-        $tag = $projectDB->getDocument($tag);
-
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception('Function not found', 404);
-        }
-
-        if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
-            throw new Exception('Tag not found', 404);
-        }
-
-        $schedule = $function->getAttribute('schedule', '');
-        $cron = (empty($function->getAttribute('tag')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-        $next = (empty($function->getAttribute('tag')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : null;
-
-        $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
-            'tag' => $tag->getId(),
-            'scheduleNext' => $next,
+        $ch = \curl_init();
+        \curl_setopt($ch, CURLOPT_URL, "http://executor:8080/v1/tag");
+        \curl_setopt($ch, CURLOPT_POST, true);
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+            'functionId' => $functionId,
+            'tagId' => $tag
         ]));
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'X-Appwrite-Project: '.$project->getId(),
+        ]);
 
-        if ($next) { // Init first schedule
-            ResqueScheduler::enqueueAt($next, 'v1-functions', 'FunctionsV1', [
-                'projectId' => $project->getId(),
-                'webhooks' => $project->getAttribute('webhooks', []),
-                'functionId' => $function->getId(),
-                'executionId' => null,
-                'trigger' => 'schedule',
-            ]);  // Async task rescheduale
+        $executorResponse = \curl_exec($ch);
+
+        $error = \curl_error($ch);
+        if (!empty($error)) {
+            throw new Exception('Curl error: ' . $error, 500);
         }
 
-        if (false === $function) {
-            throw new Exception('Failed saving function to DB', 500);
-        }
+        \curl_close($ch);
 
-        $response->dynamic($function, Response::MODEL_FUNCTION);
+        $response->dynamic(new Document(json_decode($executorResponse, true)), Response::MODEL_EXECUTION);
     });
 
 App::delete('/v1/functions/:functionId')
@@ -506,7 +497,7 @@ App::post('/v1/functions/:functionId/tags')
             'dateCreated' => time(),
             'command' => $command,
             'path' => $path,
-            'size' => $size,
+            'size' => $size
         ]);
 
         if (false === $tag) {
@@ -684,12 +675,12 @@ App::post('/v1/functions/:functionId/executions')
     ->label('abuse-time', 60)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('data', '', new Text(8192), 'String of custom data to send to function.', true)
-    // ->param('async', 1, new Range(0, 1), 'Execute code asynchronously. Pass 1 for true, 0 for false. Default value is 1.', true)
+    ->param('async', 1, new Range(0, 1), 'Execute code asynchronously. Pass 1 for true, 0 for false. Default value is 1.', true)
     ->inject('response')
     ->inject('project')
     ->inject('projectDB')
     ->inject('user')
-    ->action(function ($functionId, $data, /*$async,*/ $response, $project, $projectDB, $user) {
+    ->action(function ($functionId, $data, $async, $response, $project, $projectDB, $user) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
@@ -736,7 +727,7 @@ App::post('/v1/functions/:functionId/executions')
             'exitCode' => 0,
             'stdout' => '',
             'stderr' => '',
-            'time' => 0,
+            'time' => 0
         ]);
 
         Authorization::reset();
@@ -766,21 +757,55 @@ App::post('/v1/functions/:functionId/executions')
             }
         }
 
-        Resque::enqueue('v1-functions', 'FunctionsV1', [
-            'projectId' => $project->getId(),
-            'webhooks' => $project->getAttribute('webhooks', []),
-            'functionId' => $function->getId(),
-            'executionId' => $execution->getId(),
-            'trigger' => 'http',
-            'data' => $data,
-            'userId' => $user->getId(),
-            'jwt' => $jwt,
-        ]);
+        if ($async) {
+            Resque::enqueue('v1-functions', 'FunctionsV1', [
+                'projectId' => $project->getId(),
+                'webhooks' => $project->getAttribute('webhooks', []),
+                'functionId' => $function->getId(),
+                'executionId' => $execution->getId(),
+                'trigger' => 'http',
+                'data' => $data,
+                'userId' => $user->getId(),
+                'jwt' => $jwt
+            ]);
 
-        $response
+            return $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($execution, Response::MODEL_EXECUTION)
-        ;
+            ->dynamic($execution, Response::MODEL_EXECUTION);
+        }
+            // Directly execute function.
+            $ch = \curl_init();
+            \curl_setopt($ch, CURLOPT_URL, "http://executor:8080/v1/execute");
+            \curl_setopt($ch, CURLOPT_POST, true);
+            \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+                'trigger' => 'http',
+                'projectId' => $project->getId(),
+                'executionId' => $execution->getId(),
+                'functionId' => $function->getId(),
+                'data' => $data,
+                'webhooks' => $project->getAttribute('webhooks', []),
+                'userId' => $user->getId(),
+                'jwt' => $jwt,
+            ]));
+            \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            \curl_setopt($ch, CURLOPT_TIMEOUT, App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900) + 200); // + 200 for safety margin
+            \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+            \curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json',
+            ]);
+    
+            $responseExecute = \curl_exec($ch);
+    
+            $error = \curl_error($ch);
+            if (!empty($error)) {
+                Console::error('Curl error: '.$error);
+            }
+    
+            \curl_close($ch);
+
+            $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic(new Document(json_decode($responseExecute, true)), Response::MODEL_SYNC_EXECUTION);
     });
 
 App::get('/v1/functions/:functionId/executions')

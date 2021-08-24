@@ -20,6 +20,7 @@ use Appwrite\Utopia\Response\Model\Domain;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
+use Appwrite\Utopia\Response\Model\SyncExecution;
 use Appwrite\Utopia\Response\Model\File;
 use Appwrite\Utopia\Response\Model\Func;
 use Appwrite\Utopia\Response\Model\JWT;
@@ -105,6 +106,7 @@ class Response extends SwooleResponse
     const MODEL_TAG = 'tag';
     const MODEL_TAG_LIST = 'tagList';
     const MODEL_EXECUTION = 'execution';
+    const MODEL_SYNC_EXECUTION = 'syncExecution';
     const MODEL_EXECUTION_LIST = 'executionList';
     
     // Project
@@ -188,6 +190,7 @@ class Response extends SwooleResponse
             ->setModel(new Func())
             ->setModel(new Tag())
             ->setModel(new Execution())
+            ->setModel(new SyncExecution())
             ->setModel(new Project())
             ->setModel(new Webhook())
             ->setModel(new Key())
