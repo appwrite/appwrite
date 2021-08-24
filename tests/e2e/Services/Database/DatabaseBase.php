@@ -169,7 +169,7 @@ trait DatabaseBase
             'required' => true,
             'min' => 1,
             'max' => 5,
-            'default' => 3
+            // 'default' => 3
         ]);
 
         $float = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/float', array_merge([
@@ -181,7 +181,7 @@ trait DatabaseBase
             'required' => true,
             'min' => 1.5,
             'max' => 5.5,
-            'default' => 3.5
+            // 'default' => 3.5
         ]);
 
         $boolean = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/boolean', array_merge([
@@ -209,7 +209,7 @@ trait DatabaseBase
         $this->assertEquals(true, $email['body']['required']);
         $this->assertEquals(false, $email['body']['array']);
 
-        $this->assertEquals('email', $string['body']['format']);
+        $this->assertEquals('email', $email['body']['format']);
 
         $this->assertEquals(201, $ip['headers']['status-code']);
         $this->assertEquals('ip', $ip['body']['key']);
@@ -238,7 +238,7 @@ trait DatabaseBase
 
         $this->assertEquals(1, $integer['body']['min']);
         $this->assertEquals(5, $integer['body']['max']);
-        $this->assertEquals(3, $integer['body']['default']);
+        // $this->assertEquals(3, $integer['body']['default']);
 
         $this->assertEquals(201, $float['headers']['status-code']);
         $this->assertEquals('float', $float['body']['key']);
@@ -249,7 +249,7 @@ trait DatabaseBase
 
         $this->assertEquals(1.5, $float['body']['min']);
         $this->assertEquals(5.5, $float['body']['max']);
-        $this->assertEquals(3.5, $float['body']['default']);
+        // $this->assertEquals(3.5, $float['body']['default']);
 
         $this->assertEquals(201, $boolean['headers']['status-code']);
         $this->assertEquals('boolean', $boolean['body']['key']);
@@ -260,7 +260,7 @@ trait DatabaseBase
 
 
         // wait for database worker to create attributes
-        sleep(2);
+        sleep(5);
 
         $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
