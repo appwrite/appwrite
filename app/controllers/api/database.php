@@ -42,7 +42,7 @@ use DeviceDetector\DeviceDetector;
  *
  * @return Document Newly created attribute document
  */
-function attributesCallback($collectionId, $attribute, $response, $dbForInternal, $database, $audits): Document
+function createAttribute($collectionId, $attribute, $response, $dbForInternal, $database, $audits): Document
 {
 
     $attributeId = $attribute->getId();
@@ -473,7 +473,7 @@ App::post('/v1/database/collections/:collectionId/attributes/string')
             throw new Exception($validator->getDescription(), 400);
         }
 
-        $attribute = attributesCallback($collectionId, new Document([
+        $attribute = createAttribute($collectionId, new Document([
             '$id' => $attributeId,
             'type' => Database::VAR_STRING,
             'size' => $size,
@@ -512,7 +512,7 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
-        $attribute = attributesCallback($collectionId, new Document([
+        $attribute = createAttribute($collectionId, new Document([
             '$id' => $attributeId,
             'type' => Database::VAR_STRING,
             'size' => 254,
@@ -552,7 +552,7 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
-        $attribute = attributesCallback($collectionId, new Document([
+        $attribute = createAttribute($collectionId, new Document([
             '$id' => $attributeId,
             'type' => Database::VAR_STRING,
             'size' => 39,
@@ -592,7 +592,7 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
-        $attribute = attributesCallback($collectionId, new Document([
+        $attribute = createAttribute($collectionId, new Document([
             '$id' => $attributeId,
             'type' => Database::VAR_STRING,
             'size' => 2000,
@@ -643,7 +643,7 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
             throw new Exception($validator->getDescription(), 400);
         }
 
-        $attribute = attributesCallback($collectionId, new Document([
+        $attribute = createAttribute($collectionId, new Document([
             '$id' => $attributeId,
             'type' => Database::VAR_INTEGER,
             'size' => 0,
@@ -698,7 +698,7 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
             throw new Exception($validator->getDescription(), 400);
         }
 
-        $attribute = attributesCallback($collectionId, new Document([
+        $attribute = createAttribute($collectionId, new Document([
             '$id' => $attributeId,
             'type' => Database::VAR_FLOAT,
             'required' => $required,
@@ -742,7 +742,7 @@ App::post('/v1/database/collections/:collectionId/attributes/boolean')
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
 
-        $attribute = attributesCallback($collectionId, new Document([
+        $attribute = createAttribute($collectionId, new Document([
             '$id' => $attributeId,
             'type' => Database::VAR_BOOLEAN,
             'size' => 0,
