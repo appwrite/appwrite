@@ -500,7 +500,7 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('attributeId', '', new Key(), 'Attribute ID.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
+    ->param('default', null, new Email(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForInternal')
@@ -511,12 +511,6 @@ App::post('/v1/database/collections/:collectionId/attributes/email')
         /** @var Utopia\Database\Database $dbForInternal*/
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
-
-        // Ensure attribute default is valid email
-        $validator = new Email();
-        if (!is_null($default) && !$validator->isValid($default)) {
-            throw new Exception($validator->getDescription(), 400);
-        }
 
         $attribute = attributesCallback($collectionId, new Document([
             '$id' => $attributeId,
@@ -546,7 +540,7 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('attributeId', '', new Key(), 'Attribute ID.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
+    ->param('default', null, new IP(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForInternal')
@@ -557,12 +551,6 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
         /** @var Utopia\Database\Database $dbForInternal*/
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
-
-        // Ensure attribute default is valid IP address
-        $validator = new IP();
-        if (!is_null($default) && !$validator->isValid($default)) {
-            throw new Exception($validator->getDescription(), 400);
-        }
 
         $attribute = attributesCallback($collectionId, new Document([
             '$id' => $attributeId,
@@ -592,7 +580,7 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('attributeId', '', new Key(), 'Attribute ID.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
+    ->param('default', null, new URL(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForInternal')
@@ -603,12 +591,6 @@ App::post('/v1/database/collections/:collectionId/attributes/url')
         /** @var Utopia\Database\Database $dbForExternal*/
         /** @var Appwrite\Event\Event $database */
         /** @var Appwrite\Event\Event $audits */
-
-        // Ensure attribute default is valid URL
-        $validator = new URL();
-        if (!is_null($default) && !$validator->isValid($default)) {
-            throw new Exception($validator->getDescription(), 400);
-        }
 
         $attribute = attributesCallback($collectionId, new Document([
             '$id' => $attributeId,
