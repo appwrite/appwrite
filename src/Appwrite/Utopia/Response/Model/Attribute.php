@@ -10,23 +10,23 @@ class Attribute extends Model
     public function __construct()
     {
         $this
-            ->addRule('$collection', [
+            ->addRule('key', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Collection ID.',
+                'description' => 'Attribute Key.',
                 'default' => '',
-                'example' => '5e5ea5c16d55',
-            ])
-            ->addRule('$id', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Attribute ID.',
-                'default' => '',
-                'example' => '60ccf71b98a2d',
+                'example' => 'fullName',
             ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Attribute type.',
                 'default' => '',
                 'example' => 'string',
+            ])
+            ->addRule('status', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Attribute status. Possible values: `available`, `processing`, `deleting`, or `failed`',
+                'default' => '',
+                'example' => 'available',
             ])
             ->addRule('size', [
                 'type' => self::TYPE_STRING,

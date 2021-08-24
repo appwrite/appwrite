@@ -6,6 +6,12 @@
 - Grouped oAuth related attributes in project collection. Introduced new attribute `providers` and removed all attributes related to OAuth2 providers. All OAuth2 attributes are grouped under `providers`
 - Project model changed, `userAuth<AuthMethod>` => `auth<AuthMethod>` example `userAuthEmailPassword` => `authEmailPassword`, also `userOauth2<Provider>...` => `provider<Provider>...` example `userOauth2GithubAppid` => `providerGithubAppid`
 
+# Version 0.9.4
+
+## Security
+
+- Fixed security vulnerability that exposes project ID's from other admin users (#1453)
+
 # Version 0.9.3
 
 ## Bugs
