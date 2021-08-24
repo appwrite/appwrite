@@ -831,13 +831,14 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
         ])]);
 
         $type = $attribute->getAttribute('type');
-        $format = json_decode($attribute->getAttribute('format'), true);
+        $format = $attribute->getAttribute('format');
+        $formatOptions = $attribute->getAttribute('formatOptions');
 
         $model = match($type) {
             Database::VAR_BOOLEAN => Response::MODEL_ATTRIBUTE_BOOLEAN,
             Database::VAR_INTEGER => Response::MODEL_ATTRIBUTE_INTEGER,
             Database::VAR_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,
-            Database::VAR_STRING => match($format['name']) {
+            Database::VAR_STRING => match($format) {
                 APP_DATABASE_ATTRIBUTE_URL => Response::MODEL_ATTRIBUTE_EMAIL,
                 APP_DATABASE_ATTRIBUTE_IP => Response::MODEL_ATTRIBUTE_IP,
                 APP_DATABASE_ATTRIBUTE_URL => Response::MODEL_ATTRIBUTE_URL,
@@ -845,6 +846,18 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
             },
             default => Response::MODEL_ATTRIBUTE,
         };
+
+        // Format response if options are provided
+        // And response model needs to be modified
+        if (!empty($formatOptions) &&
+            ($type === Response::MODEL_ATTRIBUTE_INTEGER ||
+            $type === Response::MODEL_ATTRIBUTE_FLOAT))
+        {
+            $attribute->setAttribute('min', $formatOptions['min'], $type);
+            $attribute->setAttribute('max', $formatOptions['max'], $type);
+            // unset($attribute['format']);
+            // unset($attribute['formatOptions']);
+        }
         
         $response->dynamic($attribute, $model);
     });

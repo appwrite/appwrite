@@ -12,15 +12,19 @@ class AttributeInteger extends Attribute
         parent::__construct();
 
         $this
-            ->addRule('format', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Integer format.',
+            ->addRule('min', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Minimum value to enforce for new documents.',
                 'default' => null,
-                'example' => \json_encode([
-                    'name' => APP_DATABASE_ATTRIBUTE_INT_RANGE,
-                    'min' => 0,
-                    'max' => 10,
-                ]),
+                'example' => 1,
+                'array' => false,
+                'require' => false,
+            ])
+            ->addRule('max', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Maximum value to enforce for new documents.',
+                'default' => null,
+                'example' => 10,
                 'array' => false,
                 'require' => false,
             ])
