@@ -382,7 +382,7 @@ services:
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
       - MYSQL_USER=user
       - MYSQL_PASSWORD=${_APP_DB_PASS}
-    command: 'mysqld --innodb-flush-method=fsync --wait_timeout=86400' # add ' --query_cache_size=0' for DB tests
+    command: 'mysqld --innodb-flush-method=fsync' # add ' --query_cache_size=0' for DB tests
     # command: mv /var/lib/mysql/ib_logfile0 /var/lib/mysql/ib_logfile0.bu && mv /var/lib/mysql/ib_logfile1 /var/lib/mysql/ib_logfile1.bu
 
   # smtp:
