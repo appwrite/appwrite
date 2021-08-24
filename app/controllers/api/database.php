@@ -657,6 +657,13 @@ App::post('/v1/database/collections/:collectionId/attributes/integer')
             ],
         ]), $response, $dbForInternal, $database, $audits);
 
+        $formatOptions = $attribute->getAttribute('formatOptions', []);
+
+        if (!empty($formatOptions)) {
+            $attribute->setAttribute('min', \intval($formatOptions['min']));
+            $attribute->setAttribute('max', \intval($formatOptions['max']));
+        }
+
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_INTEGER);
     });
 
@@ -711,6 +718,13 @@ App::post('/v1/database/collections/:collectionId/attributes/float')
                 'max' => $max,
             ],
         ]), $response, $dbForInternal, $database, $audits);
+
+        $formatOptions = $attribute->getAttribute('formatOptions', []);
+
+        if (!empty($formatOptions)) {
+            $attribute->setAttribute('min', \floatval($formatOptions['min']));
+            $attribute->setAttribute('max', \floatval($formatOptions['max']));
+        }
 
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_FLOAT);
     });
