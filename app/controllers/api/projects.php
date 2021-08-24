@@ -290,6 +290,9 @@ App::get('/v1/projects/:projectId/usage')
 
         $documentsCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['database.documents.count'])], 0, ['time'], [Database::ORDER_DESC]);
         $documentsTotal = $documentsCount ? $documentsCount->getAttribute('value', 0) : 0;
+
+        $collectionsCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['database.collections.count'])], 0, ['time'], [Database::ORDER_DESC]);
+        $collectionsTotal = $collectionsCount ? $collectionsCount->getAttribute('value', 0) : 0;
         
         $storageTotal = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['storage.total'])], 0, ['time'], [Database::ORDER_DESC]);
         $storage = $storageTotal ? $storageTotal->getAttribute('value', 0) : 0;
@@ -319,6 +322,10 @@ App::get('/v1/projects/:projectId/usage')
             'documents' => [
                 'data' => [],
                 'total' => $documentsTotal,
+            ],
+            'collections' => [
+                'data' => [],
+                'total' => $collectionsTotal,
             ],
             'users' => [
                 'data' => [],
