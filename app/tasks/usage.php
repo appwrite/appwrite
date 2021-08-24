@@ -41,6 +41,7 @@ use Utopia\Database\Validator\Authorization;
  * users.update
  * users.delete
  * users.sessions.create
+ * users.sessions.{provider}.create
  * users.sessions.delete
  *
  * Functions
@@ -162,6 +163,9 @@ $cli
                 'table' => 'appwrite_usage_users_delete',
             ],
             'users.sessions.create' => [
+                'table' => 'appwrite_usage_users_sessions_create',
+            ],
+            'users.sessions.provider.create' => [
                 'table' => 'appwrite_usage_users_sessions_create',
                 'groupBy' => 'provider',
             ],
