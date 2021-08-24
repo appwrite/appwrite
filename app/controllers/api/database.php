@@ -1372,3 +1372,4 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         ;
 
         $response->noContent();
+    });
