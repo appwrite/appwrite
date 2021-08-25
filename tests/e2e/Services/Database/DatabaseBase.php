@@ -130,7 +130,8 @@ trait DatabaseBase
         ]), [
             'attributeId' => 'string',
             'size' => 16,
-            'required' => true,
+            'required' => false,
+            'default' => 'default',
         ]);
 
         $email = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/email', array_merge([
@@ -139,7 +140,8 @@ trait DatabaseBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'attributeId' => 'email',
-            'required' => true,
+            'required' => false,
+            'default' => 'default@example.com',
         ]);
 
         $ip = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/ip', array_merge([
@@ -148,7 +150,8 @@ trait DatabaseBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'attributeId' => 'ip',
-            'required' => true,
+            'required' => false,
+            'default' => '192.0.2.0',
         ]);
 
         $url = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/url', array_merge([
@@ -157,7 +160,8 @@ trait DatabaseBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'attributeId' => 'url',
-            'required' => true,
+            'required' => false,
+            'default' => 'http://example.com',
         ]);
 
         $integer = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
@@ -166,10 +170,10 @@ trait DatabaseBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'attributeId' => 'integer',
-            'required' => true,
+            'required' => false,
             'min' => 1,
             'max' => 5,
-            // 'default' => 3
+            'default' => 3
         ]);
 
         $float = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/float', array_merge([
@@ -178,10 +182,10 @@ trait DatabaseBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'attributeId' => 'float',
-            'required' => true,
+            'required' => false,
             'min' => 1.5,
             'max' => 5.5,
-            // 'default' => 3.5
+            'default' => 3.5
         ]);
 
         $boolean = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/boolean', array_merge([
@@ -190,67 +194,73 @@ trait DatabaseBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'attributeId' => 'boolean',
-            'required' => true,
+            'required' => false,
+            'default' => true,
         ]);
 
         $this->assertEquals(201, $string['headers']['status-code']);
         $this->assertEquals('string', $string['body']['key']);
         $this->assertEquals('string', $string['body']['type']);
         $this->assertEquals('processing', $string['body']['status']);
-        $this->assertEquals(true, $string['body']['required']);
+        $this->assertEquals(false, $string['body']['required']);
         $this->assertEquals(false, $string['body']['array']);
         $this->assertEquals(16, $string['body']['size']);
+        $this->assertEquals('default', $string['body']['default']);
 
         $this->assertEquals(201, $email['headers']['status-code']);
         $this->assertEquals('email', $email['body']['key']);
         $this->assertEquals('string', $email['body']['type']);
         $this->assertEquals('processing', $email['body']['status']);
-        $this->assertEquals(true, $email['body']['required']);
+        $this->assertEquals(false, $email['body']['required']);
         $this->assertEquals(false, $email['body']['array']);
         $this->assertEquals('email', $email['body']['format']);
+        $this->assertEquals('default@example.com', $email['body']['default']);
 
         $this->assertEquals(201, $ip['headers']['status-code']);
         $this->assertEquals('ip', $ip['body']['key']);
         $this->assertEquals('string', $ip['body']['type']);
         $this->assertEquals('processing', $ip['body']['status']);
-        $this->assertEquals(true, $ip['body']['required']);
+        $this->assertEquals(false, $ip['body']['required']);
         $this->assertEquals(false, $ip['body']['array']);
         $this->assertEquals('ip', $ip['body']['format']);
+        $this->assertEquals('192.0.2.0', $ip['body']['default']);
 
         $this->assertEquals(201, $url['headers']['status-code']);
         $this->assertEquals('url', $url['body']['key']);
         $this->assertEquals('string', $url['body']['type']);
         $this->assertEquals('processing', $url['body']['status']);
-        $this->assertEquals(true, $url['body']['required']);
+        $this->assertEquals(false, $url['body']['required']);
         $this->assertEquals(false, $url['body']['array']);
         $this->assertEquals('url', $url['body']['format']);
+        $this->assertEquals('http://example.com', $url['body']['default']);
 
         $this->assertEquals(201, $integer['headers']['status-code']);
         $this->assertEquals('integer', $integer['body']['key']);
         $this->assertEquals('integer', $integer['body']['type']);
         $this->assertEquals('processing', $integer['body']['status']);
-        $this->assertEquals(true, $integer['body']['required']);
+        $this->assertEquals(false, $integer['body']['required']);
         $this->assertEquals(false, $integer['body']['array']);
         $this->assertEquals(1, $integer['body']['min']);
         $this->assertEquals(5, $integer['body']['max']);
-        // $this->assertEquals(3, $integer['body']['default']);
+        $this->assertEquals(3, $integer['body']['default']);
 
         $this->assertEquals(201, $float['headers']['status-code']);
         $this->assertEquals('float', $float['body']['key']);
         $this->assertEquals('double', $float['body']['type']);
         $this->assertEquals('processing', $float['body']['status']);
-        $this->assertEquals(true, $float['body']['required']);
+        $this->assertEquals(false, $float['body']['required']);
         $this->assertEquals(false, $float['body']['array']);
         $this->assertEquals(1.5, $float['body']['min']);
         $this->assertEquals(5.5, $float['body']['max']);
-        // $this->assertEquals(3.5, $float['body']['default']);
+        $this->assertEquals(3.5, $float['body']['default']);
 
         $this->assertEquals(201, $boolean['headers']['status-code']);
         $this->assertEquals('boolean', $boolean['body']['key']);
         $this->assertEquals('boolean', $boolean['body']['type']);
         $this->assertEquals('processing', $boolean['body']['status']);
-        $this->assertEquals(true, $boolean['body']['required']);
+        $this->assertEquals(false, $boolean['body']['required']);
         $this->assertEquals(false, $boolean['body']['array']);
+        $this->assertEquals(true, $boolean['body']['default']);
 
         // wait for database worker to create attributes
         sleep(5);
@@ -304,6 +314,7 @@ trait DatabaseBase
         $this->assertEquals($string['body']['required'], $stringResponse['body']['required']);
         $this->assertEquals($string['body']['array'], $stringResponse['body']['array']);
         $this->assertEquals(16, $stringResponse['body']['size']);
+        $this->assertEquals($string['body']['default'], $stringResponse['body']['default']);
 
         $this->assertEquals(200, $emailResponse['headers']['status-code']);
         $this->assertEquals($email['body']['key'], $emailResponse['body']['key']);
@@ -312,6 +323,7 @@ trait DatabaseBase
         $this->assertEquals($email['body']['required'], $emailResponse['body']['required']);
         $this->assertEquals($email['body']['array'], $emailResponse['body']['array']);
         $this->assertEquals($email['body']['format'], $emailResponse['body']['format']);
+        $this->assertEquals($email['body']['default'], $emailResponse['body']['default']);
 
         $this->assertEquals(200, $ipResponse['headers']['status-code']);
         $this->assertEquals($ip['body']['key'], $ipResponse['body']['key']);
@@ -320,6 +332,7 @@ trait DatabaseBase
         $this->assertEquals($ip['body']['required'], $ipResponse['body']['required']);
         $this->assertEquals($ip['body']['array'], $ipResponse['body']['array']);
         $this->assertEquals($ip['body']['format'], $ipResponse['body']['format']);
+        $this->assertEquals($ip['body']['default'], $ipResponse['body']['default']);
 
         $this->assertEquals(200, $urlResponse['headers']['status-code']);
         $this->assertEquals($url['body']['key'], $urlResponse['body']['key']);
@@ -328,6 +341,7 @@ trait DatabaseBase
         $this->assertEquals($url['body']['required'], $urlResponse['body']['required']);
         $this->assertEquals($url['body']['array'], $urlResponse['body']['array']);
         $this->assertEquals($url['body']['format'], $urlResponse['body']['format']);
+        $this->assertEquals($url['body']['default'], $urlResponse['body']['default']);
 
         $this->assertEquals(200, $integerResponse['headers']['status-code']);
         $this->assertEquals($integer['body']['key'], $integerResponse['body']['key']);
@@ -337,7 +351,7 @@ trait DatabaseBase
         $this->assertEquals($integer['body']['array'], $integerResponse['body']['array']);
         $this->assertEquals($integer['body']['min'], $integerResponse['body']['min']);
         $this->assertEquals($integer['body']['max'], $integerResponse['body']['max']);
-        // $this->assertEquals(3, $integer['body']['default']);
+        $this->assertEquals($integer['body']['default'], $integerResponse['body']['default']);
 
         $this->assertEquals(200, $floatResponse['headers']['status-code']);
         $this->assertEquals($float['body']['key'], $floatResponse['body']['key']);
@@ -347,7 +361,7 @@ trait DatabaseBase
         $this->assertEquals($float['body']['array'], $floatResponse['body']['array']);
         $this->assertEquals($float['body']['min'], $floatResponse['body']['min']);
         $this->assertEquals($float['body']['max'], $floatResponse['body']['max']);
-        // $this->assertEquals(3.5, $float['body']['default']);
+        $this->assertEquals($float['body']['default'], $floatResponse['body']['default']);
 
         $this->assertEquals(200, $booleanResponse['headers']['status-code']);
         $this->assertEquals($boolean['body']['key'], $booleanResponse['body']['key']);
@@ -355,6 +369,7 @@ trait DatabaseBase
         $this->assertEquals('available', $booleanResponse['body']['status']);
         $this->assertEquals($boolean['body']['required'], $booleanResponse['body']['required']);
         $this->assertEquals($boolean['body']['array'], $booleanResponse['body']['array']);
+        $this->assertEquals($boolean['body']['default'], $booleanResponse['body']['default']);
 
         $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
@@ -363,7 +378,7 @@ trait DatabaseBase
         ])); 
 
         // TODO@kodumbeats test for proper attribute response in collection
-        var_dump($collection);
+        // var_dump($collection);
 
         $this->assertIsArray($collection['body']['attributes']);
         $this->assertCount(7, $collection['body']['attributes']);
