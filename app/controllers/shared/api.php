@@ -40,7 +40,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
         ->setParam('{userId}', $user->getId())
         ->setParam('{userAgent}', $request->getUserAgent(''))
         ->setParam('{ip}', $request->getIP())
-        ->setParam('{url}', $request->getHostname().$route->getURL())
+        ->setParam('{url}', $request->getHostname().$route->getPath())
     ;
 
     //TODO make sure we get array here

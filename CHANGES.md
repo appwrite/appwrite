@@ -1,6 +1,10 @@
 # Unreleased Version 0.11.0
 - Added ability to create syncronous function executions
 - Introduced new execution model for functions
+# Version 0.9.4
+## Security
+
+- Fixed security vulnerability that exposes project ID's from other admin users (#1453)
 
 # Version 0.9.3
 
