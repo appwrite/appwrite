@@ -307,9 +307,6 @@ class DatabaseCustomServerTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 404);
     }
 
-    /**
-     * @depends testDeleteCollection
-     */
     public function testAttributeCountLimit()
     {
         $collection = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
@@ -317,6 +314,7 @@ class DatabaseCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
+            'collectionId' => 'unique()',
             'name' => 'attributeCountLimit',
             'read' => ['role:all'],
             'write' => ['role:all'],
@@ -351,9 +349,8 @@ class DatabaseCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $tooMany['headers']['status-code']);
-        $this->assertEquals('Column limit reached. Cannot create new attribute.', $tooMany['body']['message']);
+        $this->assertEquals('Attribute limit exceeded', $tooMany['body']['message']);
     }
-
 
     public function testIndexLimitException()
     {
