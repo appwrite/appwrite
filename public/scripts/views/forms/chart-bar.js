@@ -8,7 +8,7 @@
       let populateChart = () => {
         let history = element.dataset?.history;
         if (history == 0) {
-          history = new Array(10).fill({
+          history = new Array(12).fill({
             percentage: 0,
             value: 0
           });

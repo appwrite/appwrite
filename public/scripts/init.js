@@ -53,7 +53,7 @@ document.addEventListener("account.create", function () {
   });
 });
 window.addEventListener("load", () => {
-  const bars = 10;
+  const bars = 12;
   const realtime = window.ls.container.get('realtime');
   let current = {};
   window.ls.container.get('console').subscribe('project', event => {

@@ -4,7 +4,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 ?>
 
 <div class="cover margin-bottom-small">
-    <div class="zone xl margin-bottom-xl margin-top-small">
+    <div class="zone xxl margin-bottom-xl margin-top-small">
         <h1 class="margin-bottom-small"
             data-service="projects.get"
             data-event="load,project.update,projects.createPlatform,projects.updatePlatform,projects.deletePlatform"
@@ -96,16 +96,16 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
                         <div class="chart-metric">
                             <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.requests.total|statsTotal}}">N/A</span></div>
-                            <div class="metric margin-bottom-small">Requests <span class="tooltip" data-tooltip="Total number of API requests"><i class="icon-info-circled"></i></span></div>
+                            <div class="unit margin-start-no margin-bottom-small">Requests</div>
                         </div>
                     </div>
                     <div class="col span-3">
                         <div class="value margin-bottom-small">
                             <span class="sum" data-ls-bind="{{realtime.current|accessProject}}" data-default="0">0</span>
                         </div>
-                        <div class="metric margin-bottom-small">Connections</div>
-                        <div class="chart-bar margin-bottom-small" data-ls-attrs="data-history={{realtime.history|accessProject}}" data-forms-chart-bars="{{realtime.history|accessProject}}"></div>
-                        <div class="metric">Connections per 5 seconds</div>
+                        <div class="unit margin-start-no margin-bottom-small">Connections</div>
+                        <div class="chart-bar margin-top-small margin-bottom-small" data-ls-attrs="data-history={{realtime.history|accessProject}}" data-forms-chart-bars="{{realtime.history|accessProject}}"></div>
+                        <div class="text-fade-dark text-size-small">Activity last 60 seconds</div>
                     </div>
                 </div>
             </div>
