@@ -80,7 +80,7 @@ $cli
                     $defaultHTTPPort => $defaultHTTPPort,
                     $defaultHTTPSPort => $defaultHTTPSPort
                 ];
-                Console::warning('Traefik not found.');
+                Console::warning('Traefik not found. Falling back to default ports.');
             }
 
             if($oldVersion) {
