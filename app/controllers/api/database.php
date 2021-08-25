@@ -91,16 +91,20 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
 
     $dbForInternal->purgeDocument('collections', $collectionId);
 
+    // Pass clone of $attribute object to workers
+    // so we can later modify Document to fit response model
+    $clone = clone $attribute;
+
     $database
         ->setParam('type', DATABASE_TYPE_CREATE_ATTRIBUTE)
         ->setParam('collection', $collection)
-        ->setParam('document', $attribute)
+        ->setParam('document', $clone)
     ;
 
     $audits
         ->setParam('event', 'database.attributes.create')
         ->setParam('resource', 'database/collection/'.$collection->getId())
-        ->setParam('data', $attribute)
+        ->setParam('data', $clone)
     ;
 
     $response->setStatusCode(Response::STATUS_CODE_CREATED);
