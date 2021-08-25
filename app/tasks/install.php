@@ -73,7 +73,15 @@ $cli
             $compose = new Compose($data);
             $appwrite = $compose->getService('appwrite');
             $oldVersion = ($appwrite) ? $appwrite->getImageVersion() : null;
-            $ports = $compose->getService('traefik')->getPorts();
+            try {
+                $ports = $compose->getService('traefik')->getPorts();
+            } catch (\Throwable $th) {
+                $ports = [
+                    $defaultHTTPPort => $defaultHTTPPort,
+                    $defaultHTTPSPort => $defaultHTTPSPort
+                ];
+                Console::warning('Traefik not found.');
+            }
 
             if($oldVersion) {
                 foreach($compose->getServices() as $service) { // Fetch all env vars from previous compose file
@@ -171,7 +179,7 @@ $cli
             ->setParam('organization', $organization)
             ->setParam('image', $image)
         ;
-        
+
         $templateForEnv
             ->setParam('vars', $input)
         ;
