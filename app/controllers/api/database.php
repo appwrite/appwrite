@@ -55,7 +55,8 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
     $formatOptions = $attribute->getAttribute('formatOptions', []);
     $filters = $attribute->getAttribute('filters', []); // filters are hidden from the endpoint 
     $default = $attribute->getAttribute('default', null);
-    $default = (empty($default)) ? null : (int)$default;
+    // $default = (empty($default)) ? null : (int)$default;
+    $defaultEncoded = (\is_null($default)) ? '' : json_encode(['value'=>$default]);
 
     $collection = $dbForInternal->getDocument('collections', $collectionId);
 
@@ -69,6 +70,11 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
         }
     }
 
+    // Must throw here since dbForExternal->createAttribute is performed by db worker
+    if ($required && $default) {
+        throw new Exception('Cannot set default value for required attribute', 400);
+    }
+
     try {
         $attribute = $dbForInternal->createDocument('attributes', new Document([
             '$id' => $collectionId.'_'.$attributeId,
@@ -79,7 +85,7 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
             'size' => $size,
             'required' => $required,
             'signed' => $signed,
-            'default' => $default,
+            'default' => $defaultEncoded,
             'array' => $array,
             'format' => $format,
             'formatOptions' => $formatOptions,
@@ -90,6 +96,9 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
     }
 
     $dbForInternal->purgeDocument('collections', $collectionId);
+
+    // Only attributes table needs $default encoded as a string, reset before response
+    $attribute->setAttribute('default', $default);
 
     // Pass clone of $attribute object to workers
     // so we can later modify Document to fit response model
@@ -869,6 +878,9 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
         };
 
         // Format response 
+        $default = \json_decode($attribute->getAttribute('default', []), true)['value'] ?? null;
+        $attribute->setAttribute('default', $default);
+
         if ($model === Response::MODEL_ATTRIBUTE_INTEGER || $model === Response::MODEL_ATTRIBUTE_FLOAT)
         {
             $attribute->setAttribute('min', $formatOptions['min']);
