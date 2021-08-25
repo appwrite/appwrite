@@ -835,19 +835,22 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
             throw new Exception('Collection not found', 404);
         }
 
-        $attributes = $collection->getAttributes();
+        // Search for matching attribute in collection
+        $attribute = null;
+        $attributes = $collection->getAttribute('attributes'); /** @var Document[] $attributes */
 
-        // Search for attribute
-        $attributeIndex = array_search($attributeId, array_column($attributes, '$id'));
+        foreach ($attributes as $a) {
+            if ($a->getId() === $attributeId) {
+                $attribute = $a;
+                break; // stop once the attribute is found
+            }
+        }
 
-        if ($attributeIndex === false) {
+        if (\is_null($attribute)) {
             throw new Exception('Attribute not found', 404);
         }
 
-        $attribute = new Document([\array_merge($attributes[$attributeIndex], [
-            'collectionId' => $collectionId,
-        ])]);
-
+        // Select response model based on type and format
         $type = $attribute->getAttribute('type');
         $format = $attribute->getAttribute('format');
         $formatOptions = $attribute->getAttribute('formatOptions');
@@ -857,7 +860,7 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
             Database::VAR_INTEGER => Response::MODEL_ATTRIBUTE_INTEGER,
             Database::VAR_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,
             Database::VAR_STRING => match($format) {
-                APP_DATABASE_ATTRIBUTE_URL => Response::MODEL_ATTRIBUTE_EMAIL,
+                APP_DATABASE_ATTRIBUTE_EMAIL => Response::MODEL_ATTRIBUTE_EMAIL,
                 APP_DATABASE_ATTRIBUTE_IP => Response::MODEL_ATTRIBUTE_IP,
                 APP_DATABASE_ATTRIBUTE_URL => Response::MODEL_ATTRIBUTE_URL,
                 default => Response::MODEL_ATTRIBUTE_STRING,
@@ -865,16 +868,11 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
             default => Response::MODEL_ATTRIBUTE,
         };
 
-        // Format response if options are provided
-        // And response model needs to be modified
-        if (!empty($formatOptions) &&
-            ($type === Response::MODEL_ATTRIBUTE_INTEGER ||
-            $type === Response::MODEL_ATTRIBUTE_FLOAT))
+        // Format response 
+        if ($model === Response::MODEL_ATTRIBUTE_INTEGER || $model === Response::MODEL_ATTRIBUTE_FLOAT)
         {
-            $attribute->setAttribute('min', $formatOptions['min'], $type);
-            $attribute->setAttribute('max', $formatOptions['max'], $type);
-            // unset($attribute['format']);
-            // unset($attribute['formatOptions']);
+            $attribute->setAttribute('min', $formatOptions['min']);
+            $attribute->setAttribute('max', $formatOptions['max']);
         }
         
         $response->dynamic($attribute, $model);
