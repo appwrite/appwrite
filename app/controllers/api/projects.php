@@ -280,7 +280,6 @@ App::get('/v1/projects/:projectId/usage')
         $usersTotal = $projectDB->getSum();
 
         // Documents
-
         $collections = $projectDB->getCollection([
             'limit' => 100,
             'offset' => 0,
