@@ -9,7 +9,7 @@ $image = $this->getParam('image', '');
 
 services:
   traefik:
-    image: traefik:2.3
+    image: traefik:2.5
     container_name: appwrite-traefik
     command:
       - --providers.file.directory=/storage/config
@@ -344,7 +344,7 @@ services:
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
-    command: 'mysqld --innodb-flush-method=fsync --wait_timeout=86400'
+    command: 'mysqld --innodb-flush-method=fsync'
 
   redis:
     image: redis:6.0-alpine3.12

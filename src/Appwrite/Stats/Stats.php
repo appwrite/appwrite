@@ -175,7 +175,7 @@ class Stats
         }
 
         if ($storage >= 1) {
-            $tags = ",projectId={$projectId},bucketId={($this->params['bucketId'] ?? '')}";
+            $tags = ",projectId={$projectId},bucketId=" . ($this->params['bucketId'] ?? '');
             $this->statsd->count('storage.all' . $tags, $storage);
         }
 
