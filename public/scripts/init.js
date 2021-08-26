@@ -52,17 +52,20 @@ document.addEventListener("account.create", function () {
     window.location = '/auth/signup?failure=1';
   });
 });
-window.addEventListener("load", () => {
+window.addEventListener("load", async () => {
   const bars = 12;
   const realtime = window.ls.container.get('realtime');
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
   let current = {};
   window.ls.container.get('console').subscribe('project', event => {
     for (var project in event.payload) {
       current[project] = event.payload[project] ?? 0;
     }
   });
-  setInterval(() => {
+
+  while (true) {
     let newHistory = {};
+    let createdHistory = false;
     for (const project in current) {
       let history = realtime?.history ?? {};
 
@@ -87,6 +90,7 @@ window.addEventListener("load", () => {
       }, 0);
 
       history = history.map(({ percentage, value }) => {
+        createdHistory = true;
         percentage = value === 0 ? 0 : ((Math.round((value / highest) * 10) / 10) * 100);
         if (percentage > 100) percentage = 100;
         else if (percentage == 0 && value != 0) percentage = 5;
@@ -98,8 +102,29 @@ window.addEventListener("load", () => {
       })
       newHistory[project] = history;
     }
+
+    // Check if history was created to show current connections immediately
+    if (createdHistory) {
+      let currentSnapshot = { ...current };
+      for (let index = .1; index <= 1; index += .05) {
+        let currentTransition = { ...current };
+        for (const project in current) {
+          if (project in newHistory) {
+            let base = newHistory[project][bars - 2].value;
+            let cur = currentSnapshot[project];
+            let offset = (cur - base) * index;
+            currentTransition[project] = base + Math.floor(offset);
+          }
+        }
+        realtime.setCurrent(currentTransition);
+        await sleep(250);
+      }
+    } else {
+      realtime.setCurrent(history);
+      await sleep(5000);
+    }
+
     realtime.setHistory(newHistory);
-    realtime.setCurrent(current);
-  }, 5000);
+  }
 });
 

@@ -17,7 +17,7 @@
         }
         element.innerHTML = '';
         history.forEach(({ percentage, value }, index) => {
-          const seconds = 50- (index * 5)
+          const seconds = 60 - (index * 5);
           const bar = document.createElement('span');
           bar.classList.add('bar');
           bar.classList.add(`bar-${percentage}`);
