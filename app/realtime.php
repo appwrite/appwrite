@@ -476,12 +476,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $message = json_decode($message, true);
 
         if (is_null($message) || (!array_key_exists('type', $message) && !array_key_exists('data', $message))) {
-            $response = [
-                'code' => 1003,
-                'message' => 'Message format is wrong.'
-            ];
-            $server->close($connection, 1003);
-            $server->send([$connection], json_encode($response));
+            throw new Exception('Message format is not valid.', 1003);
         }
 
         switch ($message['type']) {
