@@ -6,7 +6,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use stdClass;
 
-class CollectionUsage extends Model
+class BucketsUsage extends Model
 {
     public function __construct()
     {
@@ -17,37 +17,30 @@ class CollectionUsage extends Model
                 'default' => '',
                 'example' => '30d',
             ])
-            ->addRule('documents.count', [
+            ->addRule('files.create', [
                 'type' => Response::MODEL_METRIC_LIST,
-                'description' => 'Aggregated stats for total number of documents.',
+                'description' => 'Aggregated stats for files created.',
                 'default' => [],
                 'example' => new stdClass,
                 'array' => true 
             ])
-            ->addRule('documents.create', [
+            ->addRule('files.read', [
                 'type' => Response::MODEL_METRIC_LIST,
-                'description' => 'Aggregated stats for documents created.',
+                'description' => 'Aggregated stats for files read.',
                 'default' => [],
                 'example' => new stdClass,
                 'array' => true 
             ])
-            ->addRule('documents.read', [
+            ->addRule('files.update', [
                 'type' => Response::MODEL_METRIC_LIST,
-                'description' => 'Aggregated stats for documents read.',
+                'description' => 'Aggregated stats for files updated.',
                 'default' => [],
                 'example' => new stdClass,
                 'array' => true 
             ])
-            ->addRule('documents.update', [
+            ->addRule('files.delete', [
                 'type' => Response::MODEL_METRIC_LIST,
-                'description' => 'Aggregated stats for documents updated.',
-                'default' => [],
-                'example' => new stdClass,
-                'array' => true 
-            ])
-            ->addRule('documents.delete', [
-                'type' => Response::MODEL_METRIC_LIST,
-                'description' => 'Aggregated stats for documents deleted.',
+                'description' => 'Aggregated stats for files deleted.',
                 'default' => [],
                 'example' => new stdClass,
                 'array' => true 
@@ -62,7 +55,7 @@ class CollectionUsage extends Model
      */
     public function getName():string
     {
-        return 'CollectionUsage';
+        return 'BucketsUsage';
     }
 
     /**
@@ -72,6 +65,6 @@ class CollectionUsage extends Model
      */
     public function getType():string
     {
-        return Response::MODEL_COLLECTION_USAGE;
+        return Response::MODEL_BUCKETS_USAGE;
     }
 }

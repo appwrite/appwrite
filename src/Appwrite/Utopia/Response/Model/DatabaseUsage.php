@@ -12,10 +12,10 @@ class DatabaseUsage extends Model
     {
         $this
             ->addRule('range', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'The value of this metric at a timestamp.',
-                'default' => 0,
-                'example' => 1,
+                'type' => self::TYPE_STRING,
+                'description' => 'The time range of the usage stats.',
+                'default' => '',
+                'example' => '30d',
             ])
             ->addRule('documents.count', [
                 'type' => Response::MODEL_METRIC_LIST,

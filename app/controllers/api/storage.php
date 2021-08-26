@@ -651,6 +651,9 @@ App::get('/v1/storage/usage')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_STORAGE_USAGE)
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForInternal')
@@ -658,71 +661,11 @@ App::get('/v1/storage/usage')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
+        $usage = [];
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $period = [
                 '24h' => [
-                    'period' => '30m',
-                    'limit' => 48,
-                ],
-                '7d' => [
-                    'period' => '1d',
-                    'limit' => 7,
-                ],
-                '30d' => [
-                    'period' => '1d',
-                    'limit' => 30,
-                ],
-                '90d' => [
-                    'period' => '1d',
-                    'limit' => 90,
-                ],
-            ];
-
-            Authorization::disable();
-
-            $storageTotal = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['storage.total'])], 0, ['time'], [Database::ORDER_DESC]);
-            $storage = $storageTotal ? $storageTotal->getAttribute('value', 0) : 0;
-
-            $filesCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['storage.files.count'])], 0, ['time'], [Database::ORDER_DESC]);
-            $filesTotal = $filesCount ? $filesCount->getAttribute('value', 0) : 0;
-
-            Authorization::reset();
-
-            $response->json([
-                'range' => $range,
-                'storage' => [
-                    'total' => $storage,
-                ],
-                'files' => [
-                    'total' => $filesTotal,
-                ],
-            ]);
-        } else {
-            $response->json([]);
-        }
-    });
-
-App::get('/v1/storage/:bucketId/usage')
-    ->desc('Get usage stats for a storage bucket')
-    ->groups(['api', 'storage'])
-    ->label('scope', 'files.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'storage')
-    ->label('sdk.method', 'getUsage')
-    ->param('bucketId', '', new UID(), 'Bucket unique ID.')
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
-    ->inject('response')
-    ->inject('dbForInternal')
-    ->action(function ($bucketId, $range, $response, $dbForInternal) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForInternal */
-
-        // TODO: Check if the storage bucket exists else throw 404 
-        $stats = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-            $period = [
-                '24h' => [
-                    'period' => '30m',
+                    'period' => '15m',
                     'limit' => 48,
                 ],
                 '7d' => [
@@ -742,12 +685,11 @@ App::get('/v1/storage/:bucketId/usage')
             Authorization::disable();
 
             $metrics = [
-                "storage.buckets.$bucketId.files.create",
-                "storage.buckets.$bucketId.files.read",
-                "storage.buckets.$bucketId.files.update",
-                "storage.buckets.$bucketId.files.delete"
+                "storage.total",
+                "storage.files.count"
             ];
 
+            $stats = [];
             foreach ($metrics as $metric) {
                 $requestDocs = $dbForInternal->find('stats', [
                     new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
@@ -761,68 +703,94 @@ App::get('/v1/storage/:bucketId/usage')
                         'date' => $requestDoc->getAttribute('time'),
                     ];
                 }
-
                 $stats[$metric] = array_reverse($stats[$metric]);
             }
 
+            $usage = new Document([
+                'range' => $range,
+                'storage' => $stats['storage.total'],
+                'files' => $stats['storage.files.count']
+            ]);
+        }
+
+        $response->dynamic($usage, Response::MODEL_STORAGE_USAGE);
+    });
+
+App::get('/v1/storage/:bucketId/usage')
+    ->desc('Get usage stats for a storage bucket')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'files.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'getUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BUCKETS_USAGE)
+    ->param('bucketId', '', new UID(), 'Bucket unique ID.')
+    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->action(function ($bucketId, $range, $response, $dbForInternal) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
+
+        // TODO: Check if the storage bucket exists else throw 404 
+        
+        $usage = [];
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+            $period = [
+                '24h' => [
+                    'period' => '30m',
+                    'limit' => 48,
+                ],
+                '7d' => [
+                    'period' => '1d',
+                    'limit' => 7,
+                ],
+                '30d' => [
+                    'period' => '1d',
+                    'limit' => 30,
+                ],
+                '90d' => [
+                    'period' => '1d',
+                    'limit' => 90,
+                ],
+            ];
+
+            Authorization::disable();
+            $metrics = [
+                "storage.buckets.$bucketId.files.create",
+                "storage.buckets.$bucketId.files.read",
+                "storage.buckets.$bucketId.files.update",
+                "storage.buckets.$bucketId.files.delete"
+            ];
+
+            $stats = [];
+            foreach ($metrics as $metric) {
+                $requestDocs = $dbForInternal->find('stats', [
+                    new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
+                    new Query('metric', Query::TYPE_EQUAL, [$metric]),
+                ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
+
+                $stats[$metric] = [];
+                foreach ($requestDocs as $requestDoc) {
+                    $stats[$metric][] = [
+                        'value' => $requestDoc->getAttribute('value'),
+                        'date' => $requestDoc->getAttribute('time'),
+                    ];
+                }
+                $stats[$metric] = array_reverse($stats[$metric]);
+            }
             Authorization::reset();
 
-            $create = $stats["storage.buckets.$bucketId.files.create"] ?? [];
-            $read = $stats["storage.buckets.$bucketId.files.read"] ?? [];
-            $update = $stats["storage.buckets.$bucketId.files.update"] ?? [];
-            $delete = $stats["storage.buckets.$bucketId.files.delete"] ?? [];
-
-
-            // 'name' => [
-            //     [
-            //         [
-            //             'value' => '',
-            //             'date' => 'unix timestamp'
-            //         ]
-            //     ]
-            // ]
-
-            // $res = [
-            //     'range' => '',
-            //     'name' => [
-            //         [
-            //             'value' => ,
-            //             'date' => 
-            //         ]
-            //     ],
-            //     'nameTotal' => [
-
-            //     ]
-            // ];
-
-            $response->json([
+            $usage = new Document([
                 'range' => $range,
-                'create' => [
-                    'data' => $create,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $create)),
-                ],
-                'read' => [
-                    'data' => $read,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $read)),
-                ],
-                'update' => [
-                    'data' => $update,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $update)),
-                ],
-                'delete' => [
-                    'data' => $delete,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $delete)),
-                ],
+                'files.create' => $stats["storage.buckets.$bucketId.files.create"],
+                'files.read' => $stats["storage.buckets.$bucketId.files.read"],
+                'files.update' => $stats["storage.buckets.$bucketId.files.update"],
+                'files.delete' => $stats["storage.buckets.$bucketId.files.delete"]
             ]);
-        } else {
-            $response->json([]);
         }
+
+        $response->dynamic($usage, Response::MODEL_BUCKETS_USAGE);
     });

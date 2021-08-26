@@ -12,6 +12,7 @@ use Appwrite\Utopia\Response\Model\None;
 use Appwrite\Utopia\Response\Model\Any;
 use Appwrite\Utopia\Response\Model\Attribute;
 use Appwrite\Utopia\Response\Model\BaseList;
+use Appwrite\Utopia\Response\Model\BucketsUsage;
 use Appwrite\Utopia\Response\Model\Collection;
 use Appwrite\Utopia\Response\Model\CollectionUsage;
 use Appwrite\Utopia\Response\Model\Continent;
@@ -45,6 +46,7 @@ use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\Mock; // Keep last
+use Appwrite\Utopia\Response\Model\StorageUsage;
 use stdClass;
 
 /**
@@ -88,6 +90,8 @@ class Response extends SwooleResponse
     const MODEL_FILE = 'file';
     const MODEL_FILE_LIST = 'fileList';
     const MODEL_BUCKET = 'bucket'; // - Missing
+    const MODEL_BUCKETS_USAGE = 'bucketsUsage';
+    const MODEL_STORAGE_USAGE = 'storageUsage';
 
     // Locale
     const MODEL_LOCALE = 'locale';
@@ -198,6 +202,8 @@ class Response extends SwooleResponse
             ->setModel(new JWT())
             ->setModel(new Locale())
             ->setModel(new File())
+            ->setModel(new StorageUsage())
+            ->setModel(new BucketsUsage())
             ->setModel(new Team())
             ->setModel(new Membership())
             ->setModel(new Func())
