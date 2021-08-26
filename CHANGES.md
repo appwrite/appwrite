@@ -1,3 +1,14 @@
+# Version 0.10.0 (NOT RELEASED YET)
+
+## Features
+- Added Realtime (#948)
+- Added Realtime statistics to the console (#948)
+- Refactored E-Mail template (#1422)
+- Improved locale management (#1440)
+- Added `$permissions` to execution response (#948)
+
+## Bugs
+- Fixed MariaDB timeout after 24 hours (#1510)
 # Version 0.9.4
 
 ## Security
