@@ -10,23 +10,17 @@ class Metric extends Model
     public function __construct()
     {
         $this
-            ->addRule('message', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Error message.',
-                'default' => '',
-                'example' => 'Not found',
+            ->addRule('value', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'The value of this metric at the timestamp.',
+                'default' => -1,
+                'example' => 1,
             ])
-            ->addRule('code', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Error code.',
-                'default' => '',
-                'example' => '404',
-            ])
-            ->addRule('version', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Server version number.',
-                'default' => '',
-                'example' => '1.0',
+            ->addRule('timestamp', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'The UNIX timestamp at which this metric was aggregated.',
+                'default' => 0,
+                'example' => 1592981250
             ])
         ;
     }

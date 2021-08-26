@@ -245,13 +245,16 @@ App::get('/v1/database/collections/:collectionId')
         $response->dynamic($collection, Response::MODEL_COLLECTION);
     });
 
-    App::get('/v1/database/usage')
+App::get('/v1/database/usage')
     ->desc('Get usage stats for the database')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'getUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_DATABASE_USAGE)
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForInternal')
@@ -261,11 +264,11 @@ App::get('/v1/database/collections/:collectionId')
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Registry\Registry $register */
 
-        $stats = [];
+        $usage = [];
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $period = [
                 '24h' => [
-                    'period' => '30m',
+                    'period' => '15m',
                     'limit' => 48,
                 ],
                 '7d' => [
@@ -285,6 +288,8 @@ App::get('/v1/database/collections/:collectionId')
             Authorization::disable();
 
             $metrics = [
+                'database.documents.count',
+                'database.collections.count',
                 'database.collections.create',
                 'database.collections.read',
                 'database.collections.update',
@@ -295,6 +300,7 @@ App::get('/v1/database/collections/:collectionId')
                 'database.documents.delete'
             ];
 
+            $stats = [];
             foreach ($metrics as $metric) {
                 $requestDocs = $dbForInternal->find('stats', [
                     new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
@@ -312,85 +318,24 @@ App::get('/v1/database/collections/:collectionId')
                 $stats[$metric] = array_reverse($stats[$metric]);
             }
 
-            $documentsCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['database.documents.count'])], 0, ['time'], [Database::ORDER_DESC]);
-            $documentsTotal = $documentsCount ? $documentsCount->getAttribute('value', 0) : 0;
-
-            $collectionsCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['database.collections.count'])], 0, ['time'], [Database::ORDER_DESC]);
-            $collectionsTotal = $collectionsCount ? $collectionsCount->getAttribute('value', 0) : 0;
-
             Authorization::reset();
 
-            $documentsCreate = $stats["database.documents.create"] ?? [];
-            $documentsRead   = $stats["database.documents.read"] ?? [];
-            $documentsUpdate = $stats["database.documents.update"] ?? [];
-            $documentsDelete = $stats["database.documents.delete"] ?? [];
-            $collectionsCreate = $stats["database.collections.create"] ?? [];
-            $collectionsRead = $stats["database.collections.read"] ?? [];
-            $collectionsUpdate = $stats["database.collections.update"] ?? [];
-            $collectionsDelete = $stats["database.collections.delete"] ?? [];
-
-            $response->json([
+            $usage = new Document([
                 'range' => $range,
-                'documents.create' => [
-                    'data' => $documentsCreate,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $documentsCreate)),
-                ],
-                'documents.read' => [
-                    'data' => $documentsRead,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $documentsRead)),
-                ],
-                'documents.update' => [
-                    'data' => $documentsUpdate,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $documentsUpdate)),
-                ],
-                'documents.delete' => [
-                    'data' => $documentsDelete,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $documentsDelete)),
-                ],
-                'collections.create' => [
-                    'data' => $collectionsCreate,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $collectionsCreate)),
-                ],
-                'collections.read' => [
-                    'data' => $collectionsRead,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $collectionsRead)),
-                ],
-                'collections.update' => [
-                    'data' => $collectionsUpdate,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $collectionsUpdate)),
-                ],
-                'collections.delete' => [
-                    'data' => $collectionsDelete,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $collectionsDelete)),
-                ],
-                'documentCount' => [
-                    'data' => [],
-                    'total' => $documentsTotal,
-                ],
-                'collectionCount' => [
-                    'data' => [],
-                    'total' => $collectionsTotal,
-                ]
+                'documents.count' => $stats["database.documents.count"],
+                'collections.count' => $stats["database.collections.count"],
+                'documents.create' =>  $stats["database.documents.create"],
+                'documents.read' =>  $stats["database.documents.read"],
+                'documents.update' => $stats["database.documents.update"],
+                'documents.delete' => $stats["database.documents.delete"],
+                'collections.create' => $stats["database.collections.create"],
+                'collections.read' =>  $stats["database.collections.read"],
+                'collections.update' => $stats["database.collections.update"],
+                'collections.delete' => $stats["database.collections.delete"],
             ]);
-        } else {
-            $response->json([]);
         }
+
+        $response->dynamic($usage, Response::MODEL_DATABASE_USAGE);
     });
 
 App::get('/v1/database/:collectionId/usage')
@@ -400,6 +345,9 @@ App::get('/v1/database/:collectionId/usage')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'getUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_COLLECTION_USAGE)
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
     ->param('collectionId', '', new UID(), 'Collection unique ID.')
     ->inject('response')
@@ -417,11 +365,11 @@ App::get('/v1/database/:collectionId/usage')
             throw new Exception('Collection not found', 404);
         }
         
-        $stats = [];
+        $usage = [];
         if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $period = [
                 '24h' => [
-                    'period' => '30m',
+                    'period' => '15m',
                     'limit' => 48,
                 ],
                 '7d' => [
@@ -441,12 +389,14 @@ App::get('/v1/database/:collectionId/usage')
             Authorization::disable();
 
             $metrics = [
+                "database.collections.$collectionId.documents.count",
                 "database.collections.$collectionId.documents.create",
                 "database.collections.$collectionId.documents.read",
                 "database.collections.$collectionId.documents.update",
                 "database.collections.$collectionId.documents.delete",
             ];
 
+            $stats = [];
             foreach ($metrics as $metric) {
                 $requestDocs = $dbForInternal->find('stats', [
                     new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
@@ -460,54 +410,22 @@ App::get('/v1/database/:collectionId/usage')
                         'date' => $requestDoc->getAttribute('time'),
                     ];
                 }
-
                 $stats[$metric] = array_reverse($stats[$metric]);
             }
-
-            $documentsCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ["database.collections.$collectionId.documents.count"])], 0, ['time'], [Database::ORDER_DESC]);
-            $documentsTotal = $documentsCount ? $documentsCount->getAttribute('value', 0) : 0;
             
             Authorization::reset();
-    
-            $create = $stats["database.collections.$collectionId.documents.create"] ?? [];
-            $read = $stats["database.collections.$collectionId.documents.read"] ?? [];
-            $update = $stats["database.collections.$collectionId.documents.update"] ?? [];
-            $delete = $stats["database.collections.$collectionId.documents.delete"] ?? [];
 
-            $response->json([
+            $usage = new Document([
                 'range' => $range,
-                'create' => [
-                    'data' => $create,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $create)),
-                ],
-                'read' => [
-                    'data' => $read,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $read)),
-                ],
-                'update' => [
-                    'data' => $update,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $update)),
-                ],
-                'delete' => [
-                    'data' => $delete,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $delete)),
-                ],
-                'documentCount' => [
-                    'data' => [],
-                    'total' => $documentsTotal,
-                ],
+                'documents.count' => $stats["database.collections.$collectionId.documents.count"],
+                'documents.create' => $stats["database.collections.$collectionId.documents.create"],
+                'documents.read' => $stats["database.collections.$collectionId.documents.read"],
+                'documents.update' =>  $stats["database.collections.$collectionId.documents.update"],
+                'documents.delete' =>  $stats["database.collections.$collectionId.documents.delete"]
             ]);
-        } else {
-            $response->json([]);
         }
+
+        $response->dynamic($usage, Response::MODEL_COLLECTION_USAGE);
     });
 
 App::get('/v1/database/collections/:collectionId/logs')
@@ -1458,6 +1376,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         $data['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; //  By default set read permissions for user
         $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; //  By default set write permissions for user
 
+        var_dump($collectionId);
         try {
             $document = $dbForExternal->createDocument($collectionId, new Document($data));
         }

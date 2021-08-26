@@ -13,9 +13,11 @@ use Appwrite\Utopia\Response\Model\Any;
 use Appwrite\Utopia\Response\Model\Attribute;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Collection;
+use Appwrite\Utopia\Response\Model\CollectionUsage;
 use Appwrite\Utopia\Response\Model\Continent;
 use Appwrite\Utopia\Response\Model\Country;
 use Appwrite\Utopia\Response\Model\Currency;
+use Appwrite\Utopia\Response\Model\DatabaseUsage;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
 use Appwrite\Utopia\Response\Model\Domain;
 use Appwrite\Utopia\Response\Model\Error;
@@ -57,6 +59,7 @@ class Response extends SwooleResponse
     const MODEL_LOG_LIST = 'logList';
     const MODEL_ERROR = 'error';
     const MODEL_METRIC = 'metric';
+    const MODEL_METRIC_LIST = 'metricList';
     const MODEL_ERROR_DEV = 'errorDev';
     const MODEL_BASE_LIST = 'baseList';
     
@@ -69,6 +72,8 @@ class Response extends SwooleResponse
     const MODEL_INDEX_LIST = 'indexList';
     const MODEL_DOCUMENT = 'document';
     const MODEL_DOCUMENT_LIST = 'documentList';
+    const MODEL_DATABASE_USAGE = 'databaseUsage';
+    const MODEL_COLLECTION_USAGE = 'collectionUsage';
 
     // Users
     const MODEL_USER = 'user';
@@ -183,6 +188,8 @@ class Response extends SwooleResponse
             ->setModel(new Attribute())
             ->setModel(new Index())
             ->setModel(new ModelDocument())
+            ->setModel(new DatabaseUsage())
+            ->setModel(new CollectionUsage())
             ->setModel(new Log())
             ->setModel(new User())
             ->setModel(new Preferences())

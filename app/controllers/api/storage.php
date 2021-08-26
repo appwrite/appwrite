@@ -647,7 +647,7 @@ App::delete('/v1/storage/files/:fileId')
 App::get('/v1/storage/usage')
     ->desc('Get usage stats for storage')
     ->groups(['api', 'storage'])
-    ->label('scope', 'storage.read')
+    ->label('scope', 'files.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getUsage')
@@ -705,7 +705,7 @@ App::get('/v1/storage/usage')
 App::get('/v1/storage/:bucketId/usage')
     ->desc('Get usage stats for a storage bucket')
     ->groups(['api', 'storage'])
-    ->label('scope', 'storage.read')
+    ->label('scope', 'files.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getUsage')
@@ -771,6 +771,29 @@ App::get('/v1/storage/:bucketId/usage')
             $read = $stats["storage.buckets.$bucketId.files.read"] ?? [];
             $update = $stats["storage.buckets.$bucketId.files.update"] ?? [];
             $delete = $stats["storage.buckets.$bucketId.files.delete"] ?? [];
+
+
+            // 'name' => [
+            //     [
+            //         [
+            //             'value' => '',
+            //             'date' => 'unix timestamp'
+            //         ]
+            //     ]
+            // ]
+
+            // $res = [
+            //     'range' => '',
+            //     'name' => [
+            //         [
+            //             'value' => ,
+            //             'date' => 
+            //         ]
+            //     ],
+            //     'nameTotal' => [
+
+            //     ]
+            // ];
 
             $response->json([
                 'range' => $range,
