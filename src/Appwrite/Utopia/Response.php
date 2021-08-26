@@ -47,6 +47,7 @@ use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\Mock; // Keep last
+use Appwrite\Utopia\Response\Model\ProjectUsage;
 use Appwrite\Utopia\Response\Model\StorageUsage;
 use Appwrite\Utopia\Response\Model\UsersUsage;
 use stdClass;
@@ -127,6 +128,7 @@ class Response extends SwooleResponse
     // Project
     const MODEL_PROJECT = 'project';
     const MODEL_PROJECT_LIST = 'projectList';
+    const MODEL_PROJECT_USAGE = 'projectUsage';
     const MODEL_WEBHOOK = 'webhook';
     const MODEL_WEBHOOK_LIST = 'webhookList';
     const MODEL_KEY = 'key';
@@ -216,6 +218,7 @@ class Response extends SwooleResponse
             ->setModel(new Tag())
             ->setModel(new Execution())
             ->setModel(new Project())
+            ->setModel(new ProjectUsage())
             ->setModel(new Webhook())
             ->setModel(new Key())
             ->setModel(new Domain())

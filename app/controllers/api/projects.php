@@ -223,6 +223,9 @@ App::get('/v1/projects/:projectId/usage')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT_USAGE)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
@@ -241,11 +244,11 @@ App::get('/v1/projects/:projectId/usage')
             throw new Exception('Project not found', 404);
         }
 
-        $stats = [];
+        $usage = [];
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $period = [
                 '24h' => [
-                    'period' => '30m',
+                    'period' => '15m',
                     'limit' => 48,
                 ],
                 '7d' => [
@@ -266,7 +269,17 @@ App::get('/v1/projects/:projectId/usage')
 
             Authorization::disable();
 
-            $metrics = ['requests', 'network', 'executions'];
+            $metrics = [
+                'requests', 
+                'network', 
+                'executions',
+                'users.count',
+                'database.documents.count',
+                'database.collections.count',
+                'storage.total'
+            ];
+
+            $stats = [];
             foreach ($metrics as $metric) {
                 $requestDocs = $dbForInternal->find('stats', [
                     new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
@@ -282,59 +295,23 @@ App::get('/v1/projects/:projectId/usage')
                 }
 
                 $stats[$metric] = array_reverse($stats[$metric]);
-            }
+            }    
+
+            Authorization::reset();
+
+            $usage = new Document([
+                'range' => $range,
+                'requests' => $stats['requests'],
+                'network' => $stats['network'],
+                'functions' => $stats['executions'],
+                'documents' => $stats['database.documents.count'],
+                'collections' => $stats['database.collections.count'],
+                'users' => $stats['users.count'],
+                'storage' => $stats['storage.total']
+            ]);
         }
 
-        $usersCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['users.count'])], 0, ['time'], [Database::ORDER_DESC]);
-        $usersTotal = $usersCount ? $usersCount->getAttribute('value', 0) : 0;
-
-        $documentsCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['database.documents.count'])], 0, ['time'], [Database::ORDER_DESC]);
-        $documentsTotal = $documentsCount ? $documentsCount->getAttribute('value', 0) : 0;
-
-        $collectionsCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['database.collections.count'])], 0, ['time'], [Database::ORDER_DESC]);
-        $collectionsTotal = $collectionsCount ? $collectionsCount->getAttribute('value', 0) : 0;
-        
-        $storageTotal = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['storage.total'])], 0, ['time'], [Database::ORDER_DESC]);
-        $storage = $storageTotal ? $storageTotal->getAttribute('value', 0) : 0;
-
-        Authorization::reset();
-
-        $response->json([
-            'range' => $range,
-            'requests' => [
-                'data' => $stats['requests'] ?? [],
-                'total' => \array_sum(\array_map(function ($item) {
-                    return $item['value'];
-                }, $stats['requests'] ?? [])),
-            ],
-            'network' => [
-                'data' => \array_map(function ($value) {return ['value' => \round($value['value'] / 1000000, 2), 'date' => $value['date']];}, $stats['network'] ?? []), // convert bytes to mb
-                'total' => \array_sum(\array_map(function ($item) {
-                    return $item['value'];
-                }, $stats['network'] ?? [])),
-            ],
-            'functions' => [
-                'data' => $stats['executions'] ?? [],
-                'total' => \array_sum(\array_map(function ($item) {
-                    return $item['value'];
-                }, $stats['executions'] ?? [])),
-            ],
-            'documents' => [
-                'data' => [],
-                'total' => $documentsTotal,
-            ],
-            'collections' => [
-                'data' => [],
-                'total' => $collectionsTotal,
-            ],
-            'users' => [
-                'data' => [],
-                'total' => $usersTotal,
-            ],
-            'storage' => [
-                'total' => $storage,
-            ],
-        ]);
+        $response->dynamic($usage, Response::MODEL_PROJECT_USAGE);
     });
 
 App::patch('/v1/projects/:projectId')
