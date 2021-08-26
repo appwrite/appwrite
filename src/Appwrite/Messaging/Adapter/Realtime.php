@@ -226,16 +226,8 @@ class Realtime extends Adapter
                     if (!empty($userId)) {
                         $channels['account.' . $userId] = $value;
                     }
-                    unset($channels['account']);
                     break;
             }
-        }
-
-        if (\array_key_exists('account', $channels)) {
-            if ($userId) {
-                $channels['account.' . $userId] = $channels['account'];
-            }
-            unset($channels['account']);
         }
 
         return $channels;

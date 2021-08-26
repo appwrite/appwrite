@@ -206,7 +206,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             foreach ($stats as $projectId => $value) {
                 $event = [
                     'project' => 'console',
-                    'roles' => ['team:'.$value['teamId']],
+                    'roles' => ['team:' . $value['teamId']],
                     'data' => [
                         'event' => 'stats.connections',
                         'channels' => ['project'],
@@ -446,9 +446,90 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     }
 });
 
-$server->onMessage(function (int $connection, string $message) use ($server) {
-    $server->send([$connection], 'Sending messages is not allowed.');
-    $server->close($connection, 1003);
+$server->onMessage(function (int $connection, string $message) use ($server, $register, $realtime, $containerId) {
+    try {
+        $db = $register->get('dbPool')->get();
+        $cache = $register->get('redisPool')->get();
+
+        $projectDB = new Database();
+        $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
+        $projectDB->setNamespace('app_' . $realtime->connections[$connection]['projectId']);
+        $projectDB->setMocks(Config::getParam('collections', []));
+
+        /*
+         * Abuse Check
+         *
+         * Abuse limits are sending 32 times per minute and connection.
+         */
+        $timeLimit = new TimeLimit('url:{url},conection:{connection}', 32, 60, $db);
+        $timeLimit
+            ->setNamespace('app_' . $realtime->connections[$connection]['projectId'])
+            ->setParam('{connection}', $connection)
+            ->setParam('{container}', $containerId);
+
+        $abuse = new Abuse($timeLimit);
+
+        if ($abuse->check() && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+            throw new Exception('Too many messages', 1013);
+        }
+
+        $message = json_decode($message, true);
+
+        if (is_null($message) || (!array_key_exists('type', $message) && !array_key_exists('data', $message))) {
+            $response = [
+                'code' => 1003,
+                'message' => 'Message format is wrong.'
+            ];
+            $server->close($connection, 1003);
+            $server->send([$connection], json_encode($response));
+        }
+
+        switch ($message['type']) {
+            case 'authentication':
+                if (!array_key_exists('session', $message['data'])) {
+                    throw new Exception('Payload not valid.', 1003);
+                }
+
+                $session = Auth::decodeSession($message['data']['session']);
+                Auth::$unique = $session['id'];
+                Auth::$secret = $session['secret'];
+
+                $user = $projectDB->getDocument(Auth::$unique);
+
+                if (
+                    empty($user->getId()) // Check a document has been found in the DB
+                    || Database::SYSTEM_COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
+                    || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret) // Validate user has valid login token
+                ) {
+                    // cookie not valid
+                    throw new Exception('Session not valid.', 1003);
+                }
+
+                $roles = Auth::getRoles($user);
+                $channels = Realtime::convertChannels(array_flip($realtime->connections[$connection]['channels']), $user->getId());
+                $realtime->subscribe($realtime->connections[$connection]['projectId'], $connection, $roles, $channels);
+
+                break;
+
+            default:
+                throw new Exception('Message type not valid.', 1003);
+                break;
+        }
+    } catch (\Throwable $th) {
+        $response = [
+            'code' => $th->getCode(),
+            'message' => $th->getMessage()
+        ];
+
+        $server->send([$connection], json_encode($response));
+
+        if ($th->getCode() === 1008) {
+            $server->close($connection, $th->getCode());
+        }
+    } finally {
+        $register->get('dbPool')->put($db);
+        $register->get('redisPool')->put($cache);
+    }
 });
 
 $server->onClose(function (int $connection) use ($realtime, $stats) {
