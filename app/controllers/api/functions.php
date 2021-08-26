@@ -146,6 +146,9 @@ App::get('/v1/functions/:functionId/usage')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_FUNCTIONS_USAGE)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d']), 'Date range.', true)
     ->inject('response')
@@ -164,130 +167,11 @@ App::get('/v1/functions/:functionId/usage')
             throw new Exception('Function not found', 404);
         }
         
+        $usage = [];
         if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $period = [
                 '24h' => [
-                    'start' => DateTime::createFromFormat('U', \strtotime('-24 hours')),
-                    'end' => DateTime::createFromFormat('U', \strtotime('+1 hour')),
-                    'group' => '30m',
-                ],
-                '7d' => [
-                    'start' => DateTime::createFromFormat('U', \strtotime('-7 days')),
-                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                    'group' => '1d',
-                ],
-                '30d' => [
-                    'start' => DateTime::createFromFormat('U', \strtotime('-30 days')),
-                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                    'group' => '1d',
-                ],
-                '90d' => [
-                    'start' => DateTime::createFromFormat('U', \strtotime('-90 days')),
-                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                    'group' => '1d',
-                ],
-            ];
-    
-            $client = $register->get('influxdb');
-    
-            $executions = [];
-            $failures = [];
-            $compute = [];
-    
-            if ($client) {
-                $start = $period[$range]['start']->format(DateTime::RFC3339);
-                $end = $period[$range]['end']->format(DateTime::RFC3339);
-                $database = $client->selectDB('telegraf');
-    
-                // Executions
-                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-                $points = $result->getPoints();
-    
-                foreach ($points as $point) {
-                    $executions[] = [
-                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                        'date' => \strtotime($point['time']),
-                    ];
-                }
-    
-                // Failures
-                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' AND "functionStatus"=\'failed\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-                $points = $result->getPoints();
-    
-                foreach ($points as $point) {
-                    $failures[] = [
-                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                        'date' => \strtotime($point['time']),
-                    ];
-                }
-    
-                // Compute
-                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_time" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-                $points = $result->getPoints();
-    
-                foreach ($points as $point) {
-                    $compute[] = [
-                        'value' => round((!empty($point['value'])) ? $point['value'] / 1000 : 0, 2), // minutes
-                        'date' => \strtotime($point['time']),
-                    ];
-                }
-            }
-    
-            $response->json([
-                'range' => $range,
-                'executions' => [
-                    'data' => $executions,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $executions)),
-                ],
-                'failures' => [
-                    'data' => $failures,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $failures)),
-                ],
-                'compute' => [
-                    'data' => $compute,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $compute)),
-                ],
-            ]);
-        } else {
-            $response->json([]);
-        }
-    });
-
-App::get('/v1/functions/:functionId/usage2')
-    ->desc('Get Function Usage')
-    ->groups(['api', 'functions'])
-    ->label('scope', 'functions.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'getUsage')
-    ->param('functionId', '', new UID(), 'Function unique ID.')
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d']), 'Date range.', true)
-    ->inject('response')
-    ->inject('project')
-    ->inject('dbForInternal')
-    ->inject('register')
-    ->action(function ($functionId, $range, $response, $project, $dbForInternal, $register) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Database $dbForInternal */
-        /** @var Utopia\Registry\Registry $register */
-
-        $function = $dbForInternal->getDocument('functions', $functionId);
-
-        if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404);
-        }
-        
-        if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-            $period = [
-                '24h' => [
-                    'period' => '30m',
+                    'period' => '15m',
                     'limit' => 48,
                 ],
                 '7d' => [
@@ -306,7 +190,13 @@ App::get('/v1/functions/:functionId/usage2')
             
             Authorization::disable();
 
-            $metrics = ["functions.$functionId.executions", "functions.$functionId.failures", "functions.$functionId.compute"];
+            $metrics = [
+                "functions.$functionId.executions", 
+                "functions.$functionId.failures", 
+                "functions.$functionId.compute"
+            ];
+
+            $stats = [];
             foreach ($metrics as $metric) {
                 $requestDocs = $dbForInternal->find('stats', [
                     new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
@@ -325,35 +215,16 @@ App::get('/v1/functions/:functionId/usage2')
             }
 
             Authorization::reset();
-    
-            $executions = $stats["functions.$functionId.executions"] ?? [];
-            $failures = $stats["functions.$functionId.failures"] ?? [];
-            $compute = $stats["functions.$functionId.compute"] ?? [];
 
-            $response->json([
+            $usage = new Document([
                 'range' => $range,
-                'executions' => [
-                    'data' => $executions,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $executions)),
-                ],
-                'failures' => [
-                    'data' => $failures,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $failures)),
-                ],
-                'compute' => [
-                    'data' => $compute,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $compute)),
-                ],
+                'functions.executions' => $stats["functions.$functionId.executions"],
+                'functions.failures' => $stats["functions.$functionId.failures"],
+                'functions.compute' => $stats["functions.$functionId.compute"]
             ]);
-        } else {
-            $response->json([]);
         }
+
+        $response->dynamic($usage, Response::MODEL_FUNCTIONS_USAGE);
     });
 
 App::put('/v1/functions/:functionId')
