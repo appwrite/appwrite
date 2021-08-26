@@ -58,7 +58,7 @@ window.addEventListener("load", async () => {
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
   let current = {};
   window.ls.container.get('console').subscribe('project', event => {
-    for (var project in event.payload) {
+    for (let project in event.payload) {
       current[project] = event.payload[project] ?? 0;
     }
   });
@@ -103,25 +103,20 @@ window.addEventListener("load", async () => {
       newHistory[project] = history;
     }
 
-    // Check if history was created to show current connections immediately
-    if (createdHistory) {
-      let currentSnapshot = { ...current };
-      for (let index = .1; index <= 1; index += .05) {
-        let currentTransition = { ...current };
-        for (const project in current) {
-          if (project in newHistory) {
-            let base = newHistory[project][bars - 2].value;
-            let cur = currentSnapshot[project];
-            let offset = (cur - base) * index;
-            currentTransition[project] = base + Math.floor(offset);
-          }
+    let currentSnapshot = { ...current };
+    for (let index = .1; index <= 1; index += .05) {
+      let currentTransition = { ...currentSnapshot };
+      for (const project in current) {
+        if (project in newHistory) {
+          let base = newHistory[project][bars - 2].value;
+          let cur = currentSnapshot[project];
+          let offset = (cur - base) * index;
+          currentTransition[project] = base + Math.floor(offset);
         }
-        realtime.setCurrent(currentTransition);
-        await sleep(250);
       }
-    } else {
-      realtime.setCurrent(history);
-      await sleep(5000);
+
+      realtime.setCurrent(currentTransition);
+      await sleep(250);
     }
 
     realtime.setHistory(newHistory);
