@@ -56,6 +56,7 @@ class Response extends SwooleResponse
     const MODEL_LOG = 'log';
     const MODEL_LOG_LIST = 'logList';
     const MODEL_ERROR = 'error';
+    const MODEL_METRIC = 'metric';
     const MODEL_ERROR_DEV = 'errorDev';
     const MODEL_BASE_LIST = 'baseList';
     

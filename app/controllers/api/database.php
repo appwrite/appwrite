@@ -1,8 +1,6 @@
 <?php
 
 use Appwrite\Database\Validator\Authorization;
-use Appwrite\Utopia\Response;
-use Appwrite\Database\Validator\CustomId;
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Audit\Audit;
