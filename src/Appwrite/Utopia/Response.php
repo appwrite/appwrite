@@ -47,6 +47,7 @@ use Appwrite\Utopia\Response\Model\Webhook;
 use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\Mock; // Keep last
 use Appwrite\Utopia\Response\Model\StorageUsage;
+use Appwrite\Utopia\Response\Model\UsersUsage;
 use stdClass;
 
 /**
@@ -80,6 +81,7 @@ class Response extends SwooleResponse
     // Users
     const MODEL_USER = 'user';
     const MODEL_USER_LIST = 'userList';
+    const MODEL_USERS_USAGE = 'usersUsage';
     const MODEL_SESSION = 'session';
     const MODEL_SESSION_LIST = 'sessionList';
     const MODEL_TOKEN = 'token';
@@ -196,6 +198,7 @@ class Response extends SwooleResponse
             ->setModel(new CollectionUsage())
             ->setModel(new Log())
             ->setModel(new User())
+            ->setModel(new UsersUsage())
             ->setModel(new Preferences())
             ->setModel(new Session())
             ->setModel(new Token())

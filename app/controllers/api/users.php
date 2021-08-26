@@ -18,6 +18,7 @@ use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Validator\UID;
 use DeviceDetector\DeviceDetector;
 use Appwrite\Database\Validator\CustomId;
+use Appwrite\Utopia\Response\Model;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
 
@@ -616,6 +617,9 @@ App::get('/v1/users/usage')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USERS_USAGE)
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForInternal')
@@ -624,11 +628,11 @@ App::get('/v1/users/usage')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $stats = [];
+        $usage = [];
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $period = [
                 '24h' => [
-                    'period' => '30m',
+                    'period' => '15m',
                     'limit' => 48,
                 ],
                 '7d' => [
@@ -646,8 +650,8 @@ App::get('/v1/users/usage')
             ];
 
             Authorization::disable();
-
             $metrics = [
+                "users.count",
                 "users.create",
                 "users.read",
                 "users.update",
@@ -656,6 +660,7 @@ App::get('/v1/users/usage')
                 "users.sessions.delete"
             ];
 
+            $stats = [];
             foreach ($metrics as $metric) {
                 $requestDocs = $dbForInternal->find('stats', [
                     new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
@@ -672,63 +677,21 @@ App::get('/v1/users/usage')
 
                 $stats[$metric] = array_reverse($stats[$metric]);
             }
-
-            $usersCount = $dbForInternal->findOne('stats', [new Query('metric', Query::TYPE_EQUAL, ['users.count'])], 0, ['time'], [Database::ORDER_DESC]);
-            $usersTotal = $usersCount ? $usersCount->getAttribute('value', 0) : 0;
-
+            
             Authorization::reset();
 
-            $create = $stats["users.create"] ?? [];
-            $read = $stats["users.read"] ?? [];
-            $update = $stats["users.update"] ?? [];
-            $delete = $stats["users.delete"] ?? [];
-            $sessionsCreate = $stats["users.sessions.create"] ?? [];
-            $sessionsDelete = $stats["users.sessions.delete"] ?? [];
-
-            $response->json([
+            $usage = new Document([
                 'range' => $range,
-                'users' => [
-                    'data' => [],
-                    'total' => $usersTotal,
-                ],
-                'create' => [
-                    'data' => $create,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $create)),
-                ],
-                'read' => [
-                    'data' => $read,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $read)),
-                ],
-                'update' => [
-                    'data' => $update,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $update)),
-                ],
-                'delete' => [
-                    'data' => $delete,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $delete)),
-                ],
-                'sessionsCreate' => [
-                    'data' => $sessionsCreate,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $sessionsCreate)),
-                ],
-                'sessionsDelete' => [
-                    'data' => $sessionsDelete,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $sessionsDelete)),
-                ]
+                'users.count' => $stats["users.count"],
+                'users.create' => $stats["users.create"],
+                'users.read' => $stats["users.read"],
+                'users.update' => $stats["users.update"],
+                'users.delete' => $stats["users.delete"],
+                'sessions.create' => $stats["users.sessions.create"],
+                'sessions.delete' => $stats["users.sessions.delete"]
             ]);
-        } else {
-            $response->json([]);
+
         }
+
+        $response->dynamic($usage, Response::MODEL_USERS_USAGE);
     });
