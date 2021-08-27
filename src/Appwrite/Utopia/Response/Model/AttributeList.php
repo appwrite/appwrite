@@ -25,7 +25,7 @@ class AttributeList extends Model
                 'getNestedType' => function(Document $attribute) {
                     return match($attribute->getAttribute('type')) {
                         self::TYPE_BOOLEAN => Response::MODEL_ATTRIBUTE_BOOLEAN,
-                        self::TYPE_INTEGER=> Response::MODEL_ATTRIBUTE_INTEGER,
+                        self::TYPE_INTEGER => Response::MODEL_ATTRIBUTE_INTEGER,
                         self::TYPE_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,
                         self::TYPE_STRING => match($attribute->getAttribute('format')) {
                             APP_DATABASE_ATTRIBUTE_EMAIL => Response::MODEL_ATTRIBUTE_EMAIL,

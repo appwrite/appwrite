@@ -13,18 +13,18 @@ class AttributeFloat extends Attribute
 
         $this
             ->addRule('min', [
-                'type' => self::TYPE_INTEGER,
+                'type' => self::TYPE_FLOAT,
                 'description' => 'Minimum value to enforce for new documents.',
                 'default' => null,
-                'example' => 1,
+                'example' => 1.5,
                 'array' => false,
                 'require' => false,
             ])
             ->addRule('max', [
-                'type' => self::TYPE_INTEGER,
+                'type' => self::TYPE_FLOAT,
                 'description' => 'Maximum value to enforce for new documents.',
                 'default' => null,
-                'example' => 10,
+                'example' => 10.5,
                 'array' => false,
                 'require' => false,
             ])

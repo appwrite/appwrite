@@ -8,7 +8,7 @@ abstract class Model
 {
     const TYPE_STRING = 'string';
     const TYPE_INTEGER = 'integer';
-    const TYPE_FLOAT = 'float';
+    const TYPE_FLOAT = 'double';
     const TYPE_BOOLEAN = 'boolean';
     const TYPE_JSON = 'json';
 
