@@ -186,10 +186,32 @@ DatabaseOld::addFilter('encrypt',
  */
 Database::addFilter('defaultValue',
     function($value) {
-        return \json_encode(['value' => $value]);
+        return json_encode(['value' => $value]);
     },
     function($value) {
-        return \json_decode($value, true)['value'];
+        return json_decode($value, true)['value'];
+    }
+);
+
+Database::addFilter('range',
+    function($value, Document $attribute) {
+        if ($attribute->isSet('min')) {
+            $attribute->removeAttribute('min');
+        }
+        if ($attribute->isSet('max')) {
+            $attribute->removeAttribute('max');
+        }
+        return $value;
+    },
+    function($value, Document $attribute) {
+        $formatOptions = json_decode($attribute->getAttribute('formatOptions', []), true);
+        if (isset($formatOptions['min']) || isset($formatOptions['max'])) {
+            $attribute
+                ->setAttribute('min', $formatOptions['min'])
+                ->setAttribute('max', $formatOptions['max'])
+            ;
+        }
+        return $value;
     }
 );
 

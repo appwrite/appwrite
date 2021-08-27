@@ -214,7 +214,7 @@ $collections = [
                 'required' => false,
                 'default' => new stdClass,
                 'array' => false,
-                'filters' => ['json'],
+                'filters' => ['json', 'range'],
             ],
             [
                 '$id' => 'filters',

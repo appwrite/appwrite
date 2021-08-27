@@ -800,7 +800,9 @@ App::get('/v1/database/collections/:collectionId/attributes')
             throw new Exception('Collection not found', 404);
         }
 
-        $attributes = $collection->getAttribute('attributes', []);
+        $attributes = $dbForInternal->find('attributes', [
+            new Query('collectionId', Query::TYPE_EQUAL, [$collection->getId()])
+        ], 100);
 
         $response->dynamic(new Document([
             'sum' => \count($attributes),
@@ -833,18 +835,9 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
             throw new Exception('Collection not found', 404);
         }
 
-        // Search for matching attribute in collection
-        $attribute = null;
-        $attributes = $collection->getAttribute('attributes'); /** @var Document[] $attributes */
+        $attribute = $dbForInternal->getDocument('attributes', $attributeId);
 
-        foreach ($attributes as $a) {
-            if ($a->getId() === $attributeId) {
-                $attribute = $a;
-                break; // stop once the attribute is found
-            }
-        }
-
-        if (\is_null($attribute)) {
+        if ($attribute === false) {
             throw new Exception('Attribute not found', 404);
         }
 
@@ -867,9 +860,7 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
         };
 
         // Format response 
-        $default = \json_decode($attribute->getAttribute('default', []), true)['value'] ?? null;
-        $attribute->setAttribute('default', $default);
-
+        // TODO@kodumbeats test if this is necessary with range filter
         if ($model === Response::MODEL_ATTRIBUTE_INTEGER || $model === Response::MODEL_ATTRIBUTE_FLOAT)
         {
             $attribute->setAttribute('min', $formatOptions['min']);
