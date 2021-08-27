@@ -26,7 +26,7 @@ Before making any changes, you will need to fork Appwrite's repository to keep b
 
 This will redirect you from `github.com/appwrite/appwrite` to `github.com/YOUR_USERNAME/appwrite`, meaning all changes you do are only done inside your repository. Once you are there, click the highlighted `Code` button, copy the URL and clone the repository to your computer using `git clone` command:
 
-```bash
+```shell
 $ git clone COPIED_URL
 ```
 
@@ -141,7 +141,40 @@ Finally, load your translation file in `init.php` by following a pattern similar
 
 >  Please make sure to keep both `codes.php` and `init.php` in the alphabetical order A-Z.
 
-## 4. Raise a pull request
+## 4. Test the translations
+
+To test if the translation is properly loaded, we will send a GET request to get a list of EU countries.
+
+First of all, we need to start a local instance of Appwrite. Thanks to Docker, this can be done using one command.
+
+```shell
+$ docker-compose up -d
+```
+
+If this is your first time running Appwrite, it may take up to few minutes to download all images and start all containers. Once everything is started, you should see Appwrite running on `http://localhost:80`. When you visit this URL, it will ask you to sign up. After that, it will show you your empty dashboard where you need to create a new project - give it any name you want. Then you need to go to `Settings` of the project and copy `Project-ID`.
+
+If you are lost in the Appwrite dashboard, check out our [Article about Appwrite's dashboard](https://dev.to/appwrite/30daysofappwrite-appwrite-dashboard-15cc).
+
+
+Now, let's send the request. We will be editing headers of the request, so you will need a tool to do that, such as Postman or Insomnia.
+
+First, let's see English translations. Let's set request type to `GET`, URL to `https://localhost/v1/locale/countries/eu` and add `X-Appwrite-Project` header.
+
+![English test](images/test-en.png)
+
+> Make sure to use your own project ID for the header.
+
+After firing the request, we can see countries named `Austria, Belgium, Bulgaria...` So far, we are getting English translations of the country names.
+
+Once we add `X-Appwrite-Locale` header and send the request again, we will get the names in a specific language.
+
+![Czech test](images/test-cs.png)
+
+> Make sure to replace the locale code with the language code you are writing translations for.
+
+If you can see countries names translated, everything works, and you are ready for the last step. 😊
+
+## 5. Raise a pull request
 
 First of all, commit the changes with the message `Added Slovak translations` and push it. This will publish a new branch to your forked version of Appwrite. If you visit it at `github.com/YOUR_USERNAME_appwrite`, you will see a new alert saying you are ready to submit a pull request. Follow the steps GitHub provides, and at the end, you will have your pull request submitted.
 
