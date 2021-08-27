@@ -6,12 +6,12 @@ import { check } from 'k6';
 
 export let options = {
     stages: [
-        { 
-            duration: '10s', 
+        {
+            duration: '10s',
             target: 500
         },
-        { 
-            duration: '1m', 
+        {
+            duration: '1m',
             target: 500
         },
     ],
@@ -21,7 +21,7 @@ export default function () {
     // const url = new URL('wss://appwrite-realtime.monitor-api.com/v1/realtime');
     // url.searchParams.append('project', '604249e6b1a9f');
     const url = new URL('ws://localhost/v1/realtime');
-    url.searchParams.append('project', 'console');
+    url.searchParams.append('project', '612625394933c');
     url.searchParams.append('channels[]', 'files');
 
     const res = ws.connect(url.toString(), function (socket) {
@@ -41,10 +41,18 @@ export default function () {
             check(payload, {
                 'connection opened': (r) => connection,
                 'message received': (r) => checked,
-                'channels are right': (r) => r === `{"files":0}`
+                'channels are right': (r) => r === JSON.stringify({
+                    "type": "connected",
+                    "data": {
+                        "channels": [
+                            "files"
+                        ],
+                        "user": null
+                    }
+                })
             })
             socket.close();
-          }, 5000);
+        }, 5000);
     });
 
     check(res, { 'status is 101': (r) => r && r.status === 101 });

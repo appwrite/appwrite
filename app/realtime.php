@@ -204,6 +204,10 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             }
 
             foreach ($stats as $projectId => $value) {
+                if (!array_key_exists($projectId, $payload)) {
+                    continue;
+                }
+
                 $event = [
                     'project' => 'console',
                     'roles' => ['team:' . $value['teamId']],
@@ -451,8 +455,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         if (App::isDevelopment()) {
             Console::error("[Error] Connection Error");
-            Console::error("[Error] Code: " . $response['code']);
-            Console::error("[Error] Message: " . $response['message']);
+            Console::error("[Error] Code: " . $response['data']['code']);
+            Console::error("[Error] Message: " . $response['data']['message']);
         }
 
         if ($th instanceof PDOException) {
