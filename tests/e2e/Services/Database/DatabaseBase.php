@@ -100,11 +100,10 @@ trait DatabaseBase
         return $data;
     }
 
-    // /**
-    //  * @depends testCreateAttributes
-    //  */
-    // public function testAttributeResponseModels(array $data): array
-    public function testAttributeResponseModels()
+    /**
+     * @depends testCreateAttributes
+     */
+    public function testAttributeResponseModels(array $data): array
     {
         $collection= $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
             'content-type' => 'application/json',
@@ -448,16 +447,12 @@ trait DatabaseBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        // var_dump($collection);
-
         $this->assertEquals(200, $collection['headers']['status-code']);
 
         $attributes = $collection['body']['attributes'];
 
         $this->assertIsArray($attributes);
         $this->assertCount(7, $attributes);
-
-        var_dump($attributes);
 
         $this->assertEquals($stringResponse['body']['key'], $attributes[0]['key']);
         $this->assertEquals($stringResponse['body']['type'], $attributes[0]['type']);
@@ -516,7 +511,7 @@ trait DatabaseBase
         $this->assertEquals($booleanResponse['body']['array'], $attributes[6]['array']);
         $this->assertEquals($booleanResponse['body']['default'], $attributes[6]['default']);
 
-        // return $data;
+        return $data;
     }
 
     /**

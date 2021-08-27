@@ -846,7 +846,6 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
         // Select response model based on type and format
         $type = $attribute->getAttribute('type');
         $format = $attribute->getAttribute('format');
-        $formatOptions = $attribute->getAttribute('formatOptions');
 
         $model = match($type) {
             Database::VAR_BOOLEAN => Response::MODEL_ATTRIBUTE_BOOLEAN,
@@ -861,14 +860,6 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
             default => Response::MODEL_ATTRIBUTE,
         };
 
-        // Format response 
-        // TODO@kodumbeats test if this is necessary with range filter
-        if ($model === Response::MODEL_ATTRIBUTE_INTEGER || $model === Response::MODEL_ATTRIBUTE_FLOAT)
-        {
-            $attribute->setAttribute('min', $formatOptions['min']);
-            $attribute->setAttribute('max', $formatOptions['max']);
-        }
-        
         $response->dynamic($attribute, $model);
     });
 
