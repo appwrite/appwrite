@@ -149,11 +149,11 @@ class MessagingTest extends TestCase
         ];
 
         $channels = Realtime::convertChannels($channels, $user->getId());
-        $this->assertCount(3, $channels);
+        $this->assertCount(4, $channels);
         $this->assertArrayHasKey('files', $channels);
         $this->assertArrayHasKey('documents', $channels);
         $this->assertArrayHasKey('documents.789', $channels);
-        $this->assertArrayNotHasKey('account', $channels);
+        $this->assertArrayHasKey('account', $channels);
         $this->assertArrayNotHasKey('account.456', $channels);
     }
 
@@ -187,12 +187,12 @@ class MessagingTest extends TestCase
 
         $channels = Realtime::convertChannels($channels, $user->getId());
 
-        $this->assertCount(4, $channels);
+        $this->assertCount(5, $channels);
         $this->assertArrayHasKey('files', $channels);
         $this->assertArrayHasKey('documents', $channels);
         $this->assertArrayHasKey('documents.789', $channels);
         $this->assertArrayHasKey('account.123', $channels);
-        $this->assertArrayNotHasKey('account', $channels);
+        $this->assertArrayHasKey('account', $channels);
         $this->assertArrayNotHasKey('account.456', $channels);
     }
 }

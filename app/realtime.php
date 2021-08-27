@@ -8,6 +8,7 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\Utopia\Response;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Swoole\Runtime;
@@ -19,7 +20,6 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Swoole\Request;
-use Utopia\Swoole\Response;
 use Utopia\WebSocket\Server;
 use Utopia\WebSocket\Adapter;
 
@@ -206,7 +206,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             foreach ($stats as $projectId => $value) {
                 $event = [
                     'project' => 'console',
-                    'roles' => ['team:'.$value['teamId']],
+                    'roles' => ['team:' . $value['teamId']],
                     'data' => [
                         'event' => 'stats.connections',
                         'channels' => ['project'],
@@ -217,7 +217,10 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     ]
                 ];
 
-                $server->send($realtime->getSubscribers($event), json_encode($event['data']));
+                $server->send($realtime->getSubscribers($event), json_encode([
+                    'type' => 'event',
+                    'data' => $event['data']
+                ]));
             }
 
             $register->get('dbPool')->put($db);
@@ -240,7 +243,10 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 ]
             ];
 
-            $server->send($realtime->getSubscribers($event), json_encode($event['data']));
+            $server->send($realtime->getSubscribers($event), json_encode([
+                'type' => 'event',
+                'data' => $event['data']
+            ]));
         }
     });
 
@@ -305,7 +311,10 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                 $server->send(
                     $receivers,
-                    json_encode($event['data'])
+                    json_encode([
+                        'type' => 'event',
+                        'data' => $event['data']
+                    ])
                 );
 
                 if (($num = count($receivers)) > 0) {
@@ -328,6 +337,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 $server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime) {
     $app = new App('UTC');
     $request = new Request($request);
+    $response = new Response(new SwooleResponse());
 
     /** @var PDO $db */
     $db = $register->get('dbPool')->get();
@@ -348,8 +358,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         return $request;
     });
 
-    App::setResource('response', function () {
-        return new Response(new SwooleResponse());
+    App::setResource('response', function () use ($response) {
+        return $response;
     });
 
     try {
@@ -411,7 +421,15 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         $realtime->subscribe($project->getId(), $connection, $roles, $channels);
 
-        $server->send([$connection], json_encode($channels));
+        $user = empty($user->getId()) ? null : $response->output($user, Response::MODEL_USER);
+
+        $server->send([$connection], json_encode([
+            'type' => 'connected',
+            'data' => [
+                'channels' => array_keys($channels),
+                'user' => $user
+            ]
+        ]));
 
         $stats->set($project->getId(), [
             'projectId' => $project->getId(),
@@ -421,8 +439,11 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $stats->incr($project->getId(), 'connectionsTotal');
     } catch (\Throwable $th) {
         $response = [
-            'code' => $th->getCode(),
-            'message' => $th->getMessage()
+            'type' => 'error',
+            'data' => [
+                'code' => $th->getCode(),
+                'message' => $th->getMessage()
+            ]
         ];
 
         $server->send([$connection], json_encode($response));
@@ -446,9 +467,99 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     }
 });
 
-$server->onMessage(function (int $connection, string $message) use ($server) {
-    $server->send([$connection], 'Sending messages is not allowed.');
-    $server->close($connection, 1003);
+$server->onMessage(function (int $connection, string $message) use ($server, $register, $realtime, $containerId) {
+    try {
+        $response = new Response(new SwooleResponse());
+        $db = $register->get('dbPool')->get();
+        $cache = $register->get('redisPool')->get();
+
+        $projectDB = new Database();
+        $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
+        $projectDB->setNamespace('app_' . $realtime->connections[$connection]['projectId']);
+        $projectDB->setMocks(Config::getParam('collections', []));
+
+        /*
+         * Abuse Check
+         *
+         * Abuse limits are sending 32 times per minute and connection.
+         */
+        $timeLimit = new TimeLimit('url:{url},conection:{connection}', 32, 60, $db);
+        $timeLimit
+            ->setNamespace('app_' . $realtime->connections[$connection]['projectId'])
+            ->setParam('{connection}', $connection)
+            ->setParam('{container}', $containerId);
+
+        $abuse = new Abuse($timeLimit);
+
+        if ($abuse->check() && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+            throw new Exception('Too many messages', 1013);
+        }
+
+        $message = json_decode($message, true);
+
+        if (is_null($message) || (!array_key_exists('type', $message) && !array_key_exists('data', $message))) {
+            throw new Exception('Message format is not valid.', 1003);
+        }
+
+        switch ($message['type']) {
+            case 'authentication':
+                if (!array_key_exists('session', $message['data'])) {
+                    throw new Exception('Payload is not valid.', 1003);
+                }
+
+                $session = Auth::decodeSession($message['data']['session']);
+                Auth::$unique = $session['id'];
+                Auth::$secret = $session['secret'];
+
+                $user = $projectDB->getDocument(Auth::$unique);
+
+                if (
+                    empty($user->getId()) // Check a document has been found in the DB
+                    || Database::SYSTEM_COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
+                    || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret) // Validate user has valid login token
+                ) {
+                    // cookie not valid
+                    throw new Exception('Session is not valid.', 1003);
+                }
+
+                $roles = Auth::getRoles($user);
+                $channels = Realtime::convertChannels(array_flip($realtime->connections[$connection]['channels']), $user->getId());
+                $realtime->subscribe($realtime->connections[$connection]['projectId'], $connection, $roles, $channels);
+
+                $user = $response->output($user, Response::MODEL_USER);
+                $server->send([$connection], json_encode([
+                    'type' => 'response',
+                    'data' => [
+                        'to' => 'authentication',
+                        'success' => true,
+                        'user' => $user
+                    ]
+                ]));
+
+                break;
+
+            default:
+                throw new Exception('Message type is not valid.', 1003);
+                break;
+        }
+    } catch (\Throwable $th) {
+        $response = [
+            'type' => 'error',
+            'data' => [
+                'code' => $th->getCode(),
+                'message' => $th->getMessage()
+            ]
+        ];
+
+        $server->send([$connection], json_encode($response));
+
+        if ($th->getCode() === 1008) {
+            $server->close($connection, $th->getCode());
+        }
+    } finally {
+        $register->get('dbPool')->put($db);
+        $register->get('redisPool')->put($cache);
+    }
 });
 
 $server->onClose(function (int $connection) use ($realtime, $stats) {

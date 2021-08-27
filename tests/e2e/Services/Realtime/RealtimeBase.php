@@ -32,9 +32,7 @@ trait RealtimeBase
          * Test for SUCCESS
          */
         $client = $this->getWebsocket(['documents']);
-        $this->assertEquals(json_encode([
-            'documents' => 0
-        ]), $client->receive());
+        $this->assertNotEmpty($client->receive());
         $client->close();
 
         /**
@@ -42,15 +40,23 @@ trait RealtimeBase
          */
         $client = $this->getWebsocket(['documents'], ['origin' => 'http://appwrite.unknown']);
         $payload = json_decode($client->receive(), true);
-        $this->assertEquals(1008, $payload['code']);
-        $this->assertEquals('Invalid Origin. Register your new client (appwrite.unknown) as a new Web platform on your project console dashboard', $payload['message']);
+
+        $this->assertArrayHasKey('type', $payload);
+        $this->assertArrayHasKey('data', $payload);
+        $this->assertEquals('error', $payload['type']);
+        $this->assertEquals(1008, $payload['data']['code']);
+        $this->assertEquals('Invalid Origin. Register your new client (appwrite.unknown) as a new Web platform on your project console dashboard', $payload['data']['message']);
         $this->expectException(ConnectionException::class); // Check if server disconnnected client
         $client->close();
 
         $client = $this->getWebsocket();
         $payload = json_decode($client->receive(), true);
-        $this->assertEquals(1008, $payload['code']);
-        $this->assertEquals('Missing channels', $payload['message']);
+
+        $this->assertArrayHasKey('type', $payload);
+        $this->assertArrayHasKey('data', $payload);
+        $this->assertEquals('error', $payload['type']);
+        $this->assertEquals(1008, $payload['data']['code']);
+        $this->assertEquals('Missing channels', $payload['data']['message']);
         $this->expectException(ConnectionException::class); // Check if server disconnnected client
         $client->close();
 
@@ -60,8 +66,12 @@ trait RealtimeBase
             ]
         ]);
         $payload = json_decode($client->receive(), true);
-        $this->assertEquals(1008, $payload['code']);
-        $this->assertEquals('Missing or unknown project ID', $payload['message']);
+
+        $this->assertArrayHasKey('type', $payload);
+        $this->assertArrayHasKey('data', $payload);
+        $this->assertEquals('error', $payload['type']);
+        $this->assertEquals(1008, $payload['data']['code']);
+        $this->assertEquals('Missing or unknown project ID', $payload['data']['message']);
         $this->expectException(ConnectionException::class); // Check if server disconnnected client
         $client->close();
 
@@ -71,8 +81,12 @@ trait RealtimeBase
             ]
         ]);
         $payload = json_decode($client->receive(), true);
-        $this->assertEquals(1008, $payload['code']);
-        $this->assertEquals('Missing or unknown project ID', $payload['message']);
+
+        $this->assertArrayHasKey('type', $payload);
+        $this->assertArrayHasKey('data', $payload);
+        $this->assertEquals('error', $payload['type']);
+        $this->assertEquals(1008, $payload['data']['code']);
+        $this->assertEquals('Missing or unknown project ID', $payload['data']['message']);
         $this->expectException(ConnectionException::class); // Check if server disconnnected client
         $client->close();
     }
@@ -87,23 +101,49 @@ trait RealtimeBase
             'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session
         ];
 
-        $client = $this->getWebsocket(['documents']);
+        $client = $this->getWebsocket(['documents'], $headers);
         $response = json_decode($client->receive(), true);
-        $this->assertCount(1, $response);
-        $this->assertArrayHasKey('documents', $response);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertNotEmpty($response['data']['user']);
+        $this->assertCount(1, $response['data']['channels']);
+        $this->assertContains('documents', $response['data']['channels']);
+        $this->assertEquals($userId, $response['data']['user']['$id']);
+
         $client->close();
 
         $client = $this->getWebsocket(['account'], $headers);
         $response = json_decode($client->receive(), true);
-        $this->assertCount(1, $response);
-        $this->assertArrayHasKey('account.' . $userId, $response);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertNotEmpty($response['data']['user']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertContains('account', $response['data']['channels']);
+        $this->assertContains('account.' . $userId, $response['data']['channels']);
+        $this->assertEquals($userId, $response['data']['user']['$id']);
+
         $client->close();
 
         $client = $this->getWebsocket(['account', 'documents', 'account.123'], $headers);
         $response = json_decode($client->receive(), true);
-        $this->assertCount(2, $response);
-        $this->assertArrayHasKey('documents', $response);
-        $this->assertArrayHasKey('account.' . $userId, $response);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertNotEmpty($response['data']['user']);
+        $this->assertCount(3, $response['data']['channels']);
+        $this->assertContains('documents', $response['data']['channels']);
+        $this->assertContains('account', $response['data']['channels']);
+        $this->assertContains('account.' . $userId, $response['data']['channels']);
+        $this->assertEquals($userId, $response['data']['user']['$id']);
+
         $client->close();
 
         $client = $this->getWebsocket([
@@ -119,20 +159,135 @@ trait RealtimeBase
             'documents.1',
             'documents.2',
         ], $headers);
+
         $response = json_decode($client->receive(), true);
 
-        $this->assertCount(11, $response);
-        $this->assertArrayHasKey('account.' . $userId, $response);
-        $this->assertArrayHasKey('files', $response);
-        $this->assertArrayHasKey('files.1', $response);
-        $this->assertArrayHasKey('collections', $response);
-        $this->assertArrayHasKey('collections.1', $response);
-        $this->assertArrayHasKey('collections.1.documents', $response);
-        $this->assertArrayHasKey('collections.2', $response);
-        $this->assertArrayHasKey('collections.2.documents', $response);
-        $this->assertArrayHasKey('documents', $response);
-        $this->assertArrayHasKey('documents.1', $response);
-        $this->assertArrayHasKey('documents.2', $response);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertNotEmpty($response['data']['user']);
+        $this->assertCount(12, $response['data']['channels']);
+        $this->assertContains('account', $response['data']['channels']);
+        $this->assertContains('account.' . $userId, $response['data']['channels']);
+        $this->assertContains('files', $response['data']['channels']);
+        $this->assertContains('files.1', $response['data']['channels']);
+        $this->assertContains('collections', $response['data']['channels']);
+        $this->assertContains('collections.1', $response['data']['channels']);
+        $this->assertContains('collections.1.documents', $response['data']['channels']);
+        $this->assertContains('collections.2', $response['data']['channels']);
+        $this->assertContains('collections.2.documents', $response['data']['channels']);
+        $this->assertContains('documents', $response['data']['channels']);
+        $this->assertContains('documents.1', $response['data']['channels']);
+        $this->assertContains('documents.2', $response['data']['channels']);
+        $this->assertEquals($userId, $response['data']['user']['$id']);
+
+        $client->close();
+    }
+
+    public function testManualAuthentication()
+    {
+        $user = $this->getUser();
+        $userId = $user['$id'] ?? '';
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $client = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost'
+        ]);
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(1, $response['data']['channels']);
+        $this->assertContains('account', $response['data']['channels']);
+
+        $client->send(\json_encode([
+            'type' => 'authentication',
+            'data' => [
+                'session' => $session
+            ]
+        ]));
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('response', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertEquals('authentication', $response['data']['to']);
+        $this->assertTrue($response['data']['success']);
+        $this->assertNotEmpty($response['data']['user']);
+        $this->assertEquals($userId, $response['data']['user']['$id']);
+
+        /**
+         * Test for FAILURE
+         */
+        $client->send(\json_encode([
+            'type' => 'authentication',
+            'data' => [
+                'session' => 'invalid_session'
+            ]
+        ]));
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('error', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertEquals(1003, $response['data']['code']);
+        $this->assertEquals('Session is not valid.', $response['data']['message']);
+
+        $client->send(\json_encode([
+            'type' => 'authentication',
+            'data' => []
+        ]));
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('error', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertEquals(1003, $response['data']['code']);
+        $this->assertEquals('Payload is not valid.', $response['data']['message']);
+
+        $client->send(\json_encode([
+            'type' => 'unknown',
+            'data' => [
+                'session' => 'invalid_session'
+            ]
+        ]));
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('error', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertEquals(1003, $response['data']['code']);
+        $this->assertEquals('Message type is not valid.', $response['data']['message']);
+
+        $client->send(\json_encode([
+            'test' => '123',
+        ]));
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('error', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertEquals(1003, $response['data']['code']);
+        $this->assertEquals('Message format is not valid.', $response['data']['message']);
+
+
         $client->close();
     }
 
@@ -148,8 +303,16 @@ trait RealtimeBase
             'cookie' => 'a_session_'.$projectId.'=' . $session
         ]);
         $response = json_decode($client->receive(), true);
-        $this->assertCount(1, $response);
-        $this->assertArrayHasKey('account.' . $userId, $response);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertContains('account', $response['data']['channels']);
+        $this->assertContains('account.' . $userId, $response['data']['channels']);
+        $this->assertNotEmpty($response['data']['user']);
+        $this->assertEquals($userId, $response['data']['user']['$id']);
 
         /**
          * Test Account Name Event
@@ -167,14 +330,18 @@ trait RealtimeBase
 
         $response = json_decode($client->receive(), true);
 
-        $this->assertCount(2, $response['channels']);
-        $this->assertArrayHasKey('timestamp', $response);
-        $this->assertContains('account', $response['channels']);
-        $this->assertContains('account.' . $userId, $response['channels']);
-        $this->assertEquals('account.update.name', $response['event']);
-        $this->assertNotEmpty($response['payload']);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertContains('account', $response['data']['channels']);
+        $this->assertContains('account.' . $userId, $response['data']['channels']);
+        $this->assertEquals('account.update.name', $response['data']['event']);
+        $this->assertNotEmpty($response['data']['payload']);
 
-        $this->assertEquals($name, $response['payload']['name']);
+        $this->assertEquals($name, $response['data']['payload']['name']);
 
 
         /**
@@ -192,14 +359,18 @@ trait RealtimeBase
 
         $response = json_decode($client->receive(), true);
 
-        $this->assertCount(2, $response['channels']);
-        $this->assertArrayHasKey('timestamp', $response);
-        $this->assertContains('account', $response['channels']);
-        $this->assertContains('account.' . $userId, $response['channels']);
-        $this->assertEquals('account.update.password', $response['event']);
-        $this->assertNotEmpty($response['payload']);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertContains('account', $response['data']['channels']);
+        $this->assertContains('account.' . $userId, $response['data']['channels']);
+        $this->assertEquals('account.update.password', $response['data']['event']);
+        $this->assertNotEmpty($response['data']['payload']);
 
-        $this->assertEquals($name, $response['payload']['name']);
+        $this->assertEquals($name, $response['data']['payload']['name']);
 
         /**
          * Test Account Email Update
@@ -216,14 +387,18 @@ trait RealtimeBase
 
         $response = json_decode($client->receive(), true);
 
-        $this->assertCount(2, $response['channels']);
-        $this->assertArrayHasKey('timestamp', $response);
-        $this->assertContains('account', $response['channels']);
-        $this->assertContains('account.' . $userId, $response['channels']);
-        $this->assertEquals('account.update.email', $response['event']);
-        $this->assertNotEmpty($response['payload']);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertContains('account', $response['data']['channels']);
+        $this->assertContains('account.' . $userId, $response['data']['channels']);
+        $this->assertEquals('account.update.email', $response['data']['event']);
+        $this->assertNotEmpty($response['data']['payload']);
 
-        $this->assertEquals('torsten@appwrite.io', $response['payload']['email']);
+        $this->assertEquals('torsten@appwrite.io', $response['data']['payload']['email']);
 
         /**
          * Test Account Verification Create
@@ -239,11 +414,15 @@ trait RealtimeBase
 
         $response = json_decode($client->receive(), true);
 
-        $this->assertCount(2, $response['channels']);
-        $this->assertArrayHasKey('timestamp', $response);
-        $this->assertContains('account', $response['channels']);
-        $this->assertContains('account.' . $userId, $response['channels']);
-        $this->assertEquals('account.verification.create', $response['event']);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertContains('account', $response['data']['channels']);
+        $this->assertContains('account.' . $userId, $response['data']['channels']);
+        $this->assertEquals('account.verification.create', $response['data']['event']);
 
         $lastEmail = $this->getLastEmail();
         $verification = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
@@ -263,11 +442,15 @@ trait RealtimeBase
 
         $response = json_decode($client->receive(), true);
 
-        $this->assertCount(2, $response['channels']);
-        $this->assertArrayHasKey('timestamp', $response);
-        $this->assertContains('account', $response['channels']);
-        $this->assertContains('account.' . $userId, $response['channels']);
-        $this->assertEquals('account.verification.update', $response['event']);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertContains('account', $response['data']['channels']);
+        $this->assertContains('account.' . $userId, $response['data']['channels']);
+        $this->assertEquals('account.verification.update', $response['data']['event']);
 
         /**
          * Test Acoount Prefs Update
@@ -286,12 +469,16 @@ trait RealtimeBase
 
         $response = json_decode($client->receive(), true);
 
-        $this->assertCount(2, $response['channels']);
-        $this->assertArrayHasKey('timestamp', $response);
-        $this->assertContains('account', $response['channels']);
-        $this->assertContains('account.' . $userId, $response['channels']);
-        $this->assertEquals('account.update.prefs', $response['event']);
-        $this->assertNotEmpty($response['payload']);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertContains('account', $response['data']['channels']);
+        $this->assertContains('account.' . $userId, $response['data']['channels']);
+        $this->assertEquals('account.update.prefs', $response['data']['event']);
+        $this->assertNotEmpty($response['data']['payload']);
 
         /**
          * Test Account Session Create
@@ -310,12 +497,16 @@ trait RealtimeBase
 
         $response = json_decode($client->receive(), true);
 
-        $this->assertCount(2, $response['channels']);
-        $this->assertArrayHasKey('timestamp', $response);
-        $this->assertContains('account', $response['channels']);
-        $this->assertContains('account.' . $userId, $response['channels']);
-        $this->assertEquals('account.sessions.create', $response['event']);
-        $this->assertNotEmpty($response['payload']);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertContains('account', $response['data']['channels']);
+        $this->assertContains('account.' . $userId, $response['data']['channels']);
+        $this->assertEquals('account.sessions.create', $response['data']['event']);
+        $this->assertNotEmpty($response['data']['payload']);
 
         /**
          * Test Account Session Delete
@@ -329,12 +520,16 @@ trait RealtimeBase
 
         $response = json_decode($client->receive(), true);
 
-        $this->assertCount(2, $response['channels']);
-        $this->assertArrayHasKey('timestamp', $response);
-        $this->assertContains('account', $response['channels']);
-        $this->assertContains('account.' . $userId, $response['channels']);
-        $this->assertEquals('account.sessions.delete', $response['event']);
-        $this->assertNotEmpty($response['payload']);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertContains('account', $response['data']['channels']);
+        $this->assertContains('account.' . $userId, $response['data']['channels']);
+        $this->assertEquals('account.sessions.delete', $response['data']['event']);
+        $this->assertNotEmpty($response['data']['payload']);
 
         /**
          * Test Account Create Recovery
@@ -353,12 +548,16 @@ trait RealtimeBase
         $lastEmail = $this->getLastEmail();
         $recovery = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
 
-        $this->assertCount(2, $response['channels']);
-        $this->assertArrayHasKey('timestamp', $response);
-        $this->assertContains('account', $response['channels']);
-        $this->assertContains('account.' . $userId, $response['channels']);
-        $this->assertEquals('account.recovery.create', $response['event']);
-        $this->assertNotEmpty($response['payload']);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertContains('account', $response['data']['channels']);
+        $this->assertContains('account.' . $userId, $response['data']['channels']);
+        $this->assertEquals('account.recovery.create', $response['data']['event']);
+        $this->assertNotEmpty($response['data']['payload']);
 
         $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
             'origin' => 'http://localhost',
@@ -373,12 +572,16 @@ trait RealtimeBase
 
         $response = json_decode($client->receive(), true);
 
-        $this->assertCount(2, $response['channels']);
-        $this->assertArrayHasKey('timestamp', $response);
-        $this->assertContains('account', $response['channels']);
-        $this->assertContains('account.' . $userId, $response['channels']);
-        $this->assertEquals('account.recovery.update', $response['event']);
-        $this->assertNotEmpty($response['payload']);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertContains('account', $response['data']['channels']);
+        $this->assertContains('account.' . $userId, $response['data']['channels']);
+        $this->assertEquals('account.recovery.update', $response['data']['event']);
+        $this->assertNotEmpty($response['data']['payload']);
 
         $client->close();
     }
@@ -393,10 +596,18 @@ trait RealtimeBase
             'origin' => 'http://localhost',
             'cookie' => 'a_session_'.$projectId.'=' . $session
         ]);
+
         $response = json_decode($client->receive(), true);
-        $this->assertCount(2, $response);
-        $this->assertArrayHasKey('documents', $response);
-        $this->assertArrayHasKey('collections', $response);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertContains('documents', $response['data']['channels']);
+        $this->assertContains('collections', $response['data']['channels']);
+        $this->assertNotEmpty($response['data']['user']);
+        $this->assertEquals($user['$id'], $response['data']['user']['$id']);
 
         /**
          * Test Collection Create
@@ -431,12 +642,16 @@ trait RealtimeBase
 
         $response = json_decode($client->receive(), true);
 
-        $this->assertArrayHasKey('timestamp', $response);
-        $this->assertCount(2, $response['channels']);
-        $this->assertContains('collections', $response['channels']);
-        $this->assertContains('collections.' . $actors['body']['$id'], $response['channels']);
-        $this->assertEquals('database.collections.create', $response['event']);
-        $this->assertNotEmpty($response['payload']);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertContains('collections', $response['data']['channels']);
+        $this->assertContains('collections.' . $actors['body']['$id'], $response['data']['channels']);
+        $this->assertEquals('database.collections.create', $response['data']['event']);
+        $this->assertNotEmpty($response['data']['payload']);
 
         $data = ['actorsId' => $actors['body']['$id']];
 
@@ -457,13 +672,17 @@ trait RealtimeBase
 
         $response = json_decode($client->receive(), true);
 
-        $this->assertArrayHasKey('timestamp', $response);
-        $this->assertCount(3, $response['channels']);
-        $this->assertContains('documents', $response['channels']);
-        $this->assertContains('documents.' . $document['body']['$id'], $response['channels']);
-        $this->assertContains('collections.' . $actors['body']['$id'] . '.documents', $response['channels']);
-        $this->assertEquals('database.documents.create', $response['event']);
-        $this->assertNotEmpty($response['payload']);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertCount(3, $response['data']['channels']);
+        $this->assertContains('documents', $response['data']['channels']);
+        $this->assertContains('documents.' . $document['body']['$id'], $response['data']['channels']);
+        $this->assertContains('collections.' . $actors['body']['$id'] . '.documents', $response['data']['channels']);
+        $this->assertEquals('database.documents.create', $response['data']['event']);
+        $this->assertNotEmpty($response['data']['payload']);
 
         $data['documentId'] = $document['body']['$id'];
 
@@ -484,16 +703,20 @@ trait RealtimeBase
 
         $response = json_decode($client->receive(), true);
 
-        $this->assertArrayHasKey('timestamp', $response);
-        $this->assertCount(3, $response['channels']);
-        $this->assertContains('documents', $response['channels']);
-        $this->assertContains('documents.' . $data['documentId'], $response['channels']);
-        $this->assertContains('collections.' . $data['actorsId'] . '.documents', $response['channels']);
-        $this->assertEquals('database.documents.update', $response['event']);
-        $this->assertNotEmpty($response['payload']);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertCount(3, $response['data']['channels']);
+        $this->assertContains('documents', $response['data']['channels']);
+        $this->assertContains('documents.' . $data['documentId'], $response['data']['channels']);
+        $this->assertContains('collections.' . $data['actorsId'] . '.documents', $response['data']['channels']);
+        $this->assertEquals('database.documents.update', $response['data']['event']);
+        $this->assertNotEmpty($response['data']['payload']);
 
-        $this->assertEquals($response['payload']['firstName'], 'Chris1');
-        $this->assertEquals($response['payload']['lastName'], 'Evans2');
+        $this->assertEquals($response['data']['payload']['firstName'], 'Chris1');
+        $this->assertEquals($response['data']['payload']['lastName'], 'Evans2');
 
         /**
          * Test Document Delete
@@ -520,13 +743,17 @@ trait RealtimeBase
 
         $response = json_decode($client->receive(), true);
 
-        $this->assertArrayHasKey('timestamp', $response);
-        $this->assertCount(3, $response['channels']);
-        $this->assertContains('documents', $response['channels']);
-        $this->assertContains('documents.' . $document['body']['$id'], $response['channels']);
-        $this->assertContains('collections.' . $data['actorsId'] . '.documents', $response['channels']);
-        $this->assertEquals('database.documents.delete', $response['event']);
-        $this->assertNotEmpty($response['payload']);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertCount(3, $response['data']['channels']);
+        $this->assertContains('documents', $response['data']['channels']);
+        $this->assertContains('documents.' . $document['body']['$id'], $response['data']['channels']);
+        $this->assertContains('collections.' . $data['actorsId'] . '.documents', $response['data']['channels']);
+        $this->assertEquals('database.documents.delete', $response['data']['event']);
+        $this->assertNotEmpty($response['data']['payload']);
 
         $client->close();
     }
@@ -542,8 +769,15 @@ trait RealtimeBase
             'cookie' => 'a_session_'.$projectId.'=' . $session
         ]);
         $response = json_decode($client->receive(), true);
-        $this->assertCount(1, $response);
-        $this->assertArrayHasKey('files', $response);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(1, $response['data']['channels']);
+        $this->assertContains('files', $response['data']['channels']);
+        $this->assertNotEmpty($response['data']['user']);
+        $this->assertEquals($user['$id'], $response['data']['user']['$id']);
 
         /**
          * Test File Create
@@ -560,12 +794,16 @@ trait RealtimeBase
 
         $response = json_decode($client->receive(), true);
 
-        $this->assertArrayHasKey('timestamp', $response);
-        $this->assertCount(2, $response['channels']);
-        $this->assertContains('files', $response['channels']);
-        $this->assertContains('files.' . $file['body']['$id'], $response['channels']);
-        $this->assertEquals('storage.files.create', $response['event']);
-        $this->assertNotEmpty($response['payload']);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertContains('files', $response['data']['channels']);
+        $this->assertContains('files.' . $file['body']['$id'], $response['data']['channels']);
+        $this->assertEquals('storage.files.create', $response['data']['event']);
+        $this->assertNotEmpty($response['data']['payload']);
 
         $data = ['fileId' => $file['body']['$id']];
 
@@ -582,12 +820,16 @@ trait RealtimeBase
 
         $response = json_decode($client->receive(), true);
 
-        $this->assertArrayHasKey('timestamp', $response);
-        $this->assertCount(2, $response['channels']);
-        $this->assertContains('files', $response['channels']);
-        $this->assertContains('files.' . $file['body']['$id'], $response['channels']);
-        $this->assertEquals('storage.files.update', $response['event']);
-        $this->assertNotEmpty($response['payload']);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertContains('files', $response['data']['channels']);
+        $this->assertContains('files.' . $file['body']['$id'], $response['data']['channels']);
+        $this->assertEquals('storage.files.update', $response['data']['event']);
+        $this->assertNotEmpty($response['data']['payload']);
 
         /**
          * Test File Delete
@@ -599,12 +841,16 @@ trait RealtimeBase
 
         $response = json_decode($client->receive(), true);
 
-        $this->assertArrayHasKey('timestamp', $response);
-        $this->assertCount(2, $response['channels']);
-        $this->assertContains('files', $response['channels']);
-        $this->assertContains('files.' . $file['body']['$id'], $response['channels']);
-        $this->assertEquals('storage.files.delete', $response['event']);
-        $this->assertNotEmpty($response['payload']);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertContains('files', $response['data']['channels']);
+        $this->assertContains('files.' . $file['body']['$id'], $response['data']['channels']);
+        $this->assertEquals('storage.files.delete', $response['data']['event']);
+        $this->assertNotEmpty($response['data']['payload']);
 
         $client->close();
     }
@@ -619,9 +865,17 @@ trait RealtimeBase
             'origin' => 'http://localhost',
             'cookie' => 'a_session_'.$projectId.'=' . $session
         ]);
+
         $response = json_decode($client->receive(), true);
-        $this->assertCount(1, $response);
-        $this->assertArrayHasKey('executions', $response);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(1, $response['data']['channels']);
+        $this->assertContains('executions', $response['data']['channels']);
+        $this->assertNotEmpty($response['data']['user']);
+        $this->assertEquals($user['$id'], $response['data']['user']['$id']);
 
         /**
          * Test File Create
@@ -678,21 +932,29 @@ trait RealtimeBase
         $response = json_decode($client->receive(), true);
         $responseUpdate = json_decode($client->receive(), true);
 
-        $this->assertArrayHasKey('timestamp', $response);
-        $this->assertCount(3, $response['channels']);
-        $this->assertContains('executions', $response['channels']);
-        $this->assertContains('executions.' . $execution['body']['$id'], $response['channels']);
-        $this->assertContains('functions.' . $execution['body']['functionId'], $response['channels']);
-        $this->assertEquals('functions.executions.create', $response['event']);
-        $this->assertNotEmpty($response['payload']);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertCount(3, $response['data']['channels']);
+        $this->assertContains('executions', $response['data']['channels']);
+        $this->assertContains('executions.' . $execution['body']['$id'], $response['data']['channels']);
+        $this->assertContains('functions.' . $execution['body']['functionId'], $response['data']['channels']);
+        $this->assertEquals('functions.executions.create', $response['data']['event']);
+        $this->assertNotEmpty($response['data']['payload']);
 
-        $this->assertArrayHasKey('timestamp', $responseUpdate);
-        $this->assertCount(3, $responseUpdate['channels']);
-        $this->assertContains('executions', $responseUpdate['channels']);
-        $this->assertContains('executions.' . $execution['body']['$id'], $responseUpdate['channels']);
-        $this->assertContains('functions.' . $execution['body']['functionId'], $responseUpdate['channels']);
-        $this->assertEquals('functions.executions.update', $responseUpdate['event']);
-        $this->assertNotEmpty($responseUpdate['payload']);
+        $this->assertArrayHasKey('type', $responseUpdate);
+        $this->assertArrayHasKey('data', $responseUpdate);
+        $this->assertEquals('event', $responseUpdate['type']);
+        $this->assertNotEmpty($responseUpdate['data']);
+        $this->assertArrayHasKey('timestamp', $responseUpdate['data']);
+        $this->assertCount(3, $responseUpdate['data']['channels']);
+        $this->assertContains('executions', $responseUpdate['data']['channels']);
+        $this->assertContains('executions.' . $execution['body']['$id'], $responseUpdate['data']['channels']);
+        $this->assertContains('functions.' . $execution['body']['functionId'], $responseUpdate['data']['channels']);
+        $this->assertEquals('functions.executions.update', $responseUpdate['data']['event']);
+        $this->assertNotEmpty($responseUpdate['data']['payload']);
 
         $client->close();
     }
@@ -710,8 +972,14 @@ trait RealtimeBase
 
         $response = json_decode($client->receive(), true);
 
-        $this->assertCount(1, $response);
-        $this->assertArrayHasKey('teams', $response);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(1, $response['data']['channels']);
+        $this->assertContains('teams', $response['data']['channels']);
+        $this->assertNotEmpty($response['data']['user']);
+        $this->assertEquals($user['$id'], $response['data']['user']['$id']);
 
         /**
          * Test Team Create
@@ -730,12 +998,16 @@ trait RealtimeBase
 
         $response = json_decode($client->receive(), true);
 
-        $this->assertArrayHasKey('timestamp', $response);
-        $this->assertCount(2, $response['channels']);
-        $this->assertContains('teams', $response['channels']);
-        $this->assertContains('teams.' . $teamId, $response['channels']);
-        $this->assertEquals('teams.create', $response['event']);
-        $this->assertNotEmpty($response['payload']);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertContains('teams', $response['data']['channels']);
+        $this->assertContains('teams.' . $teamId, $response['data']['channels']);
+        $this->assertEquals('teams.create', $response['data']['event']);
+        $this->assertNotEmpty($response['data']['payload']);
 
         /**
          * Test Team Update
@@ -752,12 +1024,16 @@ trait RealtimeBase
 
         $response = json_decode($client->receive(), true);
 
-        $this->assertArrayHasKey('timestamp', $response);
-        $this->assertCount(2, $response['channels']);
-        $this->assertContains('teams', $response['channels']);
-        $this->assertContains('teams.' . $teamId, $response['channels']);
-        $this->assertEquals('teams.update', $response['event']);
-        $this->assertNotEmpty($response['payload']);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertContains('teams', $response['data']['channels']);
+        $this->assertContains('teams.' . $teamId, $response['data']['channels']);
+        $this->assertEquals('teams.update', $response['data']['event']);
+        $this->assertNotEmpty($response['data']['payload']);
 
         $client->close();
 
@@ -782,8 +1058,14 @@ trait RealtimeBase
 
         $response = json_decode($client->receive(), true);
 
-        $this->assertCount(1, $response);
-        $this->assertArrayHasKey('memberships', $response);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(1, $response['data']['channels']);
+        $this->assertContains('memberships', $response['data']['channels']);
+        $this->assertNotEmpty($response['data']['user']);
+        $this->assertEquals($user['$id'], $response['data']['user']['$id']);
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamId.'/memberships', array_merge([
             'content-type' => 'application/json',
@@ -805,12 +1087,17 @@ trait RealtimeBase
         ]);
 
         $response = json_decode($client->receive(), true);
-        $this->assertArrayHasKey('timestamp', $response);
-        $this->assertCount(2, $response['channels']);
-        $this->assertContains('memberships', $response['channels']);
-        $this->assertContains('memberships.' . $membershipId, $response['channels']);
-        $this->assertEquals('teams.memberships.update', $response['event']);
-        $this->assertNotEmpty($response['payload']);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertContains('memberships', $response['data']['channels']);
+        $this->assertContains('memberships.' . $membershipId, $response['data']['channels']);
+        $this->assertEquals('teams.memberships.update', $response['data']['event']);
+        $this->assertNotEmpty($response['data']['payload']);
 
         $client->close();
     }
