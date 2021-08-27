@@ -6,7 +6,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use stdClass;
 
-class CollectionUsage extends Model
+class UsageProject extends Model
 {
     public function __construct()
     {
@@ -17,37 +17,51 @@ class CollectionUsage extends Model
                 'default' => '',
                 'example' => '30d',
             ])
-            ->addRule('documents.count', [
+            ->addRule('requests', [
                 'type' => Response::MODEL_METRIC_LIST,
-                'description' => 'Aggregated stats for total number of documents.',
+                'description' => 'Aggregated stats for number of requests.',
                 'default' => [],
                 'example' => new stdClass,
                 'array' => true 
             ])
-            ->addRule('documents.create', [
+            ->addRule('network', [
                 'type' => Response::MODEL_METRIC_LIST,
-                'description' => 'Aggregated stats for documents created.',
+                'description' => 'Aggregated stats for consumed bandwidth.',
                 'default' => [],
                 'example' => new stdClass,
                 'array' => true 
             ])
-            ->addRule('documents.read', [
+            ->addRule('functions', [
                 'type' => Response::MODEL_METRIC_LIST,
-                'description' => 'Aggregated stats for documents read.',
+                'description' => 'Aggregated stats for function executions.',
                 'default' => [],
                 'example' => new stdClass,
                 'array' => true 
             ])
-            ->addRule('documents.update', [
+            ->addRule('documents', [
                 'type' => Response::MODEL_METRIC_LIST,
-                'description' => 'Aggregated stats for documents updated.',
+                'description' => 'Aggregated stats for number of documents.',
                 'default' => [],
                 'example' => new stdClass,
                 'array' => true 
             ])
-            ->addRule('documents.delete', [
+            ->addRule('collections', [
                 'type' => Response::MODEL_METRIC_LIST,
-                'description' => 'Aggregated stats for documents deleted.',
+                'description' => 'Aggregated stats for number of collections.',
+                'default' => [],
+                'example' => new stdClass,
+                'array' => true 
+            ])
+            ->addRule('users', [
+                'type' => Response::MODEL_METRIC_LIST,
+                'description' => 'Aggregated stats for number of users.',
+                'default' => [],
+                'example' => new stdClass,
+                'array' => true 
+            ])
+            ->addRule('functions', [
+                'type' => Response::MODEL_METRIC_LIST,
+                'description' => 'Aggregated stats for the occupied storage size.',
                 'default' => [],
                 'example' => new stdClass,
                 'array' => true 
@@ -62,16 +76,16 @@ class CollectionUsage extends Model
      */
     public function getName():string
     {
-        return 'CollectionUsage';
+        return 'UsageProject';
     }
 
     /**
-     * Get Collection
+     * Get Type
      * 
      * @return string
      */
     public function getType():string
     {
-        return Response::MODEL_COLLECTION_USAGE;
+        return Response::MODEL_USAGE_PROJECT;
     }
 }

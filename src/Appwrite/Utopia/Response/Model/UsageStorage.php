@@ -6,7 +6,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use stdClass;
 
-class StorageUsage extends Model
+class UsageStorage extends Model
 {
     public function __construct()
     {
@@ -45,12 +45,12 @@ class StorageUsage extends Model
     }
 
     /**
-     * Get Collection
+     * Get Type
      * 
      * @return string
      */
     public function getType():string
     {
-        return Response::MODEL_STORAGE_USAGE;
+        return Response::MODEL_USAGE_STORAGE;
     }
 }

@@ -6,7 +6,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use stdClass;
 
-class BucketsUsage extends Model
+class UsageBuckets extends Model
 {
     public function __construct()
     {
@@ -55,16 +55,16 @@ class BucketsUsage extends Model
      */
     public function getName():string
     {
-        return 'BucketsUsage';
+        return 'UsageBuckets';
     }
 
     /**
-     * Get Collection
+     * Get Type
      * 
      * @return string
      */
     public function getType():string
     {
-        return Response::MODEL_BUCKETS_USAGE;
+        return Response::MODEL_USAGE_BUCKETS;
     }
 }

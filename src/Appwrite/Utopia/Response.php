@@ -12,13 +12,10 @@ use Appwrite\Utopia\Response\Model\None;
 use Appwrite\Utopia\Response\Model\Any;
 use Appwrite\Utopia\Response\Model\Attribute;
 use Appwrite\Utopia\Response\Model\BaseList;
-use Appwrite\Utopia\Response\Model\BucketsUsage;
 use Appwrite\Utopia\Response\Model\Collection;
-use Appwrite\Utopia\Response\Model\CollectionUsage;
 use Appwrite\Utopia\Response\Model\Continent;
 use Appwrite\Utopia\Response\Model\Country;
 use Appwrite\Utopia\Response\Model\Currency;
-use Appwrite\Utopia\Response\Model\DatabaseUsage;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
 use Appwrite\Utopia\Response\Model\Domain;
 use Appwrite\Utopia\Response\Model\Error;
@@ -26,7 +23,6 @@ use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
 use Appwrite\Utopia\Response\Model\File;
 use Appwrite\Utopia\Response\Model\Func;
-use Appwrite\Utopia\Response\Model\FunctionsUsage;
 use Appwrite\Utopia\Response\Model\Index;
 use Appwrite\Utopia\Response\Model\JWT;
 use Appwrite\Utopia\Response\Model\Key;
@@ -47,8 +43,13 @@ use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\Mock; // Keep last
-use Appwrite\Utopia\Response\Model\ProjectUsage;
-use Appwrite\Utopia\Response\Model\StorageUsage;
+use Appwrite\Utopia\Response\Model\UsageBuckets;
+use Appwrite\Utopia\Response\Model\UsageCollection;
+use Appwrite\Utopia\Response\Model\UsageDatabase;
+use Appwrite\Utopia\Response\Model\UsageFunctions;
+use Appwrite\Utopia\Response\Model\UsageProject;
+use Appwrite\Utopia\Response\Model\UsageStorage;
+use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\UsersUsage;
 use stdClass;
 
@@ -67,6 +68,13 @@ class Response extends SwooleResponse
     const MODEL_METRIC_LIST = 'metricList';
     const MODEL_ERROR_DEV = 'errorDev';
     const MODEL_BASE_LIST = 'baseList';
+    const MODEL_USAGE_DATABASE = 'usageDatabase';
+    const MODEL_USAGE_COLLECTION = 'usageCollection';
+    const MODEL_USAGE_USERS = 'usageUsers';
+    const MODEL_USAGE_BUCKETS = 'usageBuckets';
+    const MODEL_USAGE_STORAGE = 'usageStorage';
+    const MODEL_USAGE_FUNCTIONS = 'usageFunctions';
+    const MODEL_USAGE_PROJECT = 'usageProject';
     
     // Database
     const MODEL_COLLECTION = 'collection';
@@ -77,13 +85,10 @@ class Response extends SwooleResponse
     const MODEL_INDEX_LIST = 'indexList';
     const MODEL_DOCUMENT = 'document';
     const MODEL_DOCUMENT_LIST = 'documentList';
-    const MODEL_DATABASE_USAGE = 'databaseUsage';
-    const MODEL_COLLECTION_USAGE = 'collectionUsage';
 
     // Users
     const MODEL_USER = 'user';
     const MODEL_USER_LIST = 'userList';
-    const MODEL_USERS_USAGE = 'usersUsage';
     const MODEL_SESSION = 'session';
     const MODEL_SESSION_LIST = 'sessionList';
     const MODEL_TOKEN = 'token';
@@ -94,8 +99,6 @@ class Response extends SwooleResponse
     const MODEL_FILE = 'file';
     const MODEL_FILE_LIST = 'fileList';
     const MODEL_BUCKET = 'bucket'; // - Missing
-    const MODEL_BUCKETS_USAGE = 'bucketsUsage';
-    const MODEL_STORAGE_USAGE = 'storageUsage';
 
     // Locale
     const MODEL_LOCALE = 'locale';
@@ -119,7 +122,6 @@ class Response extends SwooleResponse
     // Functions
     const MODEL_FUNCTION = 'function';
     const MODEL_FUNCTION_LIST = 'functionList';
-    const MODEL_FUNCTIONS_USAGE = 'functionsUsage';
     const MODEL_TAG = 'tag';
     const MODEL_TAG_LIST = 'tagList';
     const MODEL_EXECUTION = 'execution';
@@ -128,7 +130,6 @@ class Response extends SwooleResponse
     // Project
     const MODEL_PROJECT = 'project';
     const MODEL_PROJECT_LIST = 'projectList';
-    const MODEL_PROJECT_USAGE = 'projectUsage';
     const MODEL_WEBHOOK = 'webhook';
     const MODEL_WEBHOOK_LIST = 'webhookList';
     const MODEL_KEY = 'key';
@@ -198,27 +199,20 @@ class Response extends SwooleResponse
             ->setModel(new Attribute())
             ->setModel(new Index())
             ->setModel(new ModelDocument())
-            ->setModel(new DatabaseUsage())
-            ->setModel(new CollectionUsage())
             ->setModel(new Log())
             ->setModel(new User())
-            ->setModel(new UsersUsage())
             ->setModel(new Preferences())
             ->setModel(new Session())
             ->setModel(new Token())
             ->setModel(new JWT())
             ->setModel(new Locale())
             ->setModel(new File())
-            ->setModel(new StorageUsage())
-            ->setModel(new BucketsUsage())
             ->setModel(new Team())
             ->setModel(new Membership())
             ->setModel(new Func())
-            ->setModel(new FunctionsUsage())
             ->setModel(new Tag())
             ->setModel(new Execution())
             ->setModel(new Project())
-            ->setModel(new ProjectUsage())
             ->setModel(new Webhook())
             ->setModel(new Key())
             ->setModel(new Domain())
@@ -228,6 +222,13 @@ class Response extends SwooleResponse
             ->setModel(new Language())
             ->setModel(new Currency())
             ->setModel(new Phone())
+            ->setModel(new UsageDatabase())
+            ->setModel(new UsageCollection())
+            ->setModel(new UsageUsers())
+            ->setModel(new UsageStorage())
+            ->setModel(new UsageBuckets())
+            ->setModel(new UsageFunctions())
+            ->setModel(new UsageProject())
             // Verification
             // Recovery
             // Tests (keep last)

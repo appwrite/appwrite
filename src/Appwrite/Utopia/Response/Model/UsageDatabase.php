@@ -6,7 +6,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use stdClass;
 
-class DatabaseUsage extends Model
+class UsageDatabase extends Model
 {
     public function __construct()
     {
@@ -97,16 +97,16 @@ class DatabaseUsage extends Model
      */
     public function getName():string
     {
-        return 'DatabaseUsage';
+        return 'UsageDatabase';
     }
 
     /**
-     * Get Collection
+     * Get Type
      * 
      * @return string
      */
     public function getType():string
     {
-        return Response::MODEL_DATABASE_USAGE;
+        return Response::MODEL_USAGE_DATABASE;
     }
 }

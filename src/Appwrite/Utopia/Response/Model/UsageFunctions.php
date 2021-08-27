@@ -6,7 +6,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use stdClass;
 
-class FunctionsUsage extends Model
+class UsageFunctions extends Model
 {
     public function __construct()
     {
@@ -48,16 +48,16 @@ class FunctionsUsage extends Model
      */
     public function getName():string
     {
-        return 'FunctionsUsage';
+        return 'UsageFunctions';
     }
 
     /**
-     * Get Collection
+     * Get Type
      * 
      * @return string
      */
     public function getType():string
     {
-        return Response::MODEL_FUNCTIONS_USAGE;
+        return Response::MODEL_USAGE_FUNCTIONS;
     }
 }

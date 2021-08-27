@@ -1376,7 +1376,6 @@ App::post('/v1/database/collections/:collectionId/documents')
         $data['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? []; //  By default set read permissions for user
         $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; //  By default set write permissions for user
 
-        var_dump($collectionId);
         try {
             $document = $dbForExternal->createDocument($collectionId, new Document($data));
         }
