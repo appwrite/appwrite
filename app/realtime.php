@@ -498,7 +498,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         switch ($message['type']) {
             case 'authentication':
                 if (!array_key_exists('session', $message['data'])) {
-                    throw new Exception('Payload not valid.', 1003);
+                    throw new Exception('Payload is not valid.', 1003);
                 }
 
                 $session = Auth::decodeSession($message['data']['session']);
@@ -513,7 +513,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                     || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret) // Validate user has valid login token
                 ) {
                     // cookie not valid
-                    throw new Exception('Session not valid.', 1003);
+                    throw new Exception('Session is not valid.', 1003);
                 }
 
                 $roles = Auth::getRoles($user);
@@ -533,7 +533,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 break;
 
             default:
-                throw new Exception('Message type not valid.', 1003);
+                throw new Exception('Message type is not valid.', 1003);
                 break;
         }
     } catch (\Throwable $th) {
