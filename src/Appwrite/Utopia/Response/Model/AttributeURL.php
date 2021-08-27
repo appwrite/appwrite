@@ -3,9 +3,9 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model\AttributeString;
+use Appwrite\Utopia\Response\Model\Attribute;
 
-class AttributeURL extends AttributeString
+class AttributeURL extends Attribute
 {
     public function __construct()
     {
