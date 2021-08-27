@@ -39,21 +39,21 @@ $runtimes = Config::getParam('runtimes');
 Swoole\Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_CURL);
 
 // Warmup: make sure images are ready to run fast 🚀
-Co\run(function() use ($runtimes, $orchestration) {
-    foreach($runtimes as $runtime) {
-        go(function() use ($runtime, $orchestration) {
-            Console::info('Warming up '.$runtime['name'].' '.$runtime['version'].' environment...');
+// Co\run(function() use ($runtimes, $orchestration) {
+//     foreach($runtimes as $runtime) {
+//         go(function() use ($runtime, $orchestration) {
+//             Console::info('Warming up '.$runtime['name'].' '.$runtime['version'].' environment...');
                 
-            $response = $orchestration->pull($runtime['image']);
+//             $response = $orchestration->pull($runtime['image']);
 
-            if ($response) {
-                Console::success("Successfully Warmed up {$runtime['name']} {$runtime['version']}!");
-            } else {
-                Console::error("Failed to Warmup {$runtime['name']} {$runtime['version']}!");
-            }
-        });
-    }
-});
+//             if ($response) {
+//                 Console::success("Successfully Warmed up {$runtime['name']} {$runtime['version']}!");
+//             } else {
+//                 Console::error("Failed to Warmup {$runtime['name']} {$runtime['version']}!");
+//             }
+//         });
+//     }
+// });
 
 /**
  * List function servers
@@ -409,40 +409,60 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
     $exitCode = 0;
 
+    $errNo = -1;
+    $attempts = 0;
+    $max = 5;
+
+    $executorResponse = '';
+
     // cURL request to runtime
-    $ch = \curl_init();
-    \curl_setopt($ch, CURLOPT_URL, "http://".$container.":3000/");
-    \curl_setopt($ch, CURLOPT_POST, true);
-    \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-        'path' => '/usr/code',
-        'file' => 'index.js',
-        'env' => $vars,
-        'payload' => $data
-    ]));
-    \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    \curl_setopt($ch, CURLOPT_TIMEOUT, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
-    \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+    do {
+        $attempts++;
+        $ch = \curl_init();
+        \curl_setopt($ch, CURLOPT_URL, "http://".$container.":3000/");
+        \curl_setopt($ch, CURLOPT_POST, true);
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+            'path' => '/usr/code',
+            'file' => 'index.js',
+            'env' => $vars,
+            'payload' => $data
+        ]));
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
+        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+    
+        $executorResponse = \curl_exec($ch);
 
-    $executorResponse = \curl_exec($ch);
+        $error = \curl_error($ch);
+        
+        $errNo = \curl_errno($ch);
 
-    $error = \curl_error($ch);
-    if (!empty($error)) {
+        \curl_close($ch);
+        if ($errNo != CURLE_COULDNT_CONNECT) {
+            break;
+        }
+
+        sleep(1);
+    } while ($attempts < $max);
+
+    if ($attempts >= 5) {
+        $stderr = 'Failed to connect to executor runtime after 5 attempts.';
+        $exitCode = 124;
+    }
+    
+    if ($errNo !== 0 && $errNo != CURLE_COULDNT_CONNECT) {
         throw new Exception('Curl error: ' . $error, 500);
     }
 
-    \curl_close($ch);
-
     $executionData = json_decode($executorResponse, true);
-    if (\is_null($executionData)) {
-        throw new Exception('Failed to decode JSON response', 500);
-    }
+
     if (isset($executionData['code'])) {
         $exitCode = $executionData['code'];
     }
 
     if ($exitCode === 500) {
         $stderr = $executionData['message'];
-    } else {
+    } else if ($exitCode === 0) {
         $stdout = $executorResponse;
     }
 

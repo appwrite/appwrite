@@ -355,7 +355,7 @@ App::patch('/v1/functions/:functionId/tag')
         /** @var Appwrite\Database\Document $project */
 
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://executor:8080/v1/tag");
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/tag");
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
             'functionId' => $functionId,
@@ -775,7 +775,7 @@ App::post('/v1/functions/:functionId/executions')
         }
             // Directly execute function.
             $ch = \curl_init();
-            \curl_setopt($ch, CURLOPT_URL, "http://executor:8080/v1/execute");
+            \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/execute");
             \curl_setopt($ch, CURLOPT_POST, true);
             \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
                 'trigger' => 'http',

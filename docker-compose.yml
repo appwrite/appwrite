@@ -319,7 +319,6 @@ services:
       - -e
       - app/executor.php
       - -dopcache.preload=opcache.preload=/usr/src/code/app/preload.php
-    container_name: appwrite-executor
     ports:
       - "8080:8080"
     build:
@@ -330,8 +329,6 @@ services:
         - VERSION=dev
     networks:
       appwrite:
-        aliases:
-          - executor
       runtimes:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
