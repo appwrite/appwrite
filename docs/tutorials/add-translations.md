@@ -6,16 +6,44 @@ This document is part of the Appwrite contributors' guide. Before you continue r
 
 ### Agenda
 
-Appwrite's Locale API, Email Templates ( and soon our Dashboard ) has support for returning responses in your own locale based on the value of the `X-Appwrite-Locale` header. Behind the scenes, we use the value in this header to find the correct translation file for the locale. This guide will walk you through the process of adding a new Locale to Appwrite. 
+Appwrite's Locale API, Email Templates ( and soon our Dashboard ) has support for returning responses in your own locale based on the value of the `X-Appwrite-Locale` header. Behind the scenes, we use the value of this header to find the correct translation file for the locale. This guide will walk you through the process of adding a new Locale to Appwrite. 
 
-You can help in three distinct ways 
-* Adding support for new locales.
-* Helping us with existing incomplete translations. 
-* Reviewing existing translations for correctness.
+You can help in three distinct ways:
+* Adding support for new locales
+* Helping us with existing incomplete translations
+* Reviewing existing translations for correctness
 
-You can choose to contribute either directly on [**Github**](#contributing-with-github) or using [**POEditor**](#contributing-with-po-editor) if you prefer a GUI.
 
-### Contributing with Github
+## Prerequisites
+
+It's really easy to contribute to an open-sourced projects, but when using GitHub, there are a few steps we need to follow. This section will take you step-by-step through the process of preparing your own local version of Appwrite, where you can make any changes without affecting Appwrite right away.
+
+> If you are experienced with GitHub or have made a pull request before, you can skip to `Generate the translations`.
+
+###  Fork the Appwrite repository
+
+Before making any changes, you will need to fork Appwrite's repository to keep branches on the official repo clean. To do that, visit the [Appwrite Github repository](https://github.com/appwrite/appwrite) and click on the fork button.
+
+![Fork button](images/fork.png)
+
+This will redirect you from `github.com/appwrite/appwrite` to `github.com/YOUR_USERNAME/appwrite`, meaning all changes you do are only done inside your repository. Once you are there, click the highlighted `Code` button, copy the URL and clone the repository to your computer using `git clone` command:
+
+```bash
+$ git clone COPIED_URL
+```
+
+> To fork a repository, you will need a basic understanding of CLI and git-cli binaries installed. If you are a beginner, we recommend you to use `Github Desktop`. It is a really clean and simple visual Git client.
+
+Finally, you will need to create a `feat-XXX-YYY-translation` branch based on the `locale` branch and switch to it. The `XXX` should represent issue ID and `YYY` the language name.
+
+
+## Generate the translations
+
+You can choose to contribute either directly on [**GitHub**](#contributing-with-github) or using [**POEditor**](#contributing-with-po-editor) if you prefer a GUI.
+
+### Manually using GitHub
+
+> Skip this part and jump to PO Editor section if you want to use graphical interface.
 
 We maintain a [`locale branch`](https://github.com/appwrite/appwrite/tree/locale/) under the [appwrite/appwrite repo](https://github.com/appwrite/appwrite/) exclusively for translations related PRs. Here are a few files that you need to refer to help with your contribution.
 
@@ -50,7 +78,7 @@ We maintain a [`locale branch`](https://github.com/appwrite/appwrite/tree/locale
 
 3. **languages.php**
 
-    [languages.php](https://github.com/appwrite/appwrite/blob/locale/app/config/locale/languages.php) contains all the languages listed in **[ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)**. You can use this file to find your language code when making a contribution for your language. 
+    [languages.php](https://github.com/appwrite/appwrite/blob/locale/app/config/locale/languages.php) contains all the languages listed in **[ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)**. You can use this link to find your language code when making a contribution for your language. 
 
 Great, let's start. First, find the code of the language you want to add. For example, if you want to add support for **Spanish**, you can find the code for Spanish in [languages.php](https://github.com/appwrite/appwrite/blob/locale/app/config/locale/languages.php#L202).
 
@@ -67,16 +95,10 @@ Next, choose a reference language. If English is your reference language, copy t
     ... ...
 }
 ```
-Add your language code to [codes.php](https://github.com/appwrite/appwrite/blob/locale/app/config/locale/codes.php#L14) in the following format
-```php
-    ...
-    'es', // Spanish
-    ...
-```
 
-Finally, load your translation file in `init.php` by following a pattern similar to the [existing languages](https://github.com/appwrite/appwrite/blob/locale/app/init.php#L269).
+### Visually using PO Editor
 
-### Contributing with PO Editor
+> Skip this part if you followed the GitHub approach
 
 We use [PO Editor](https://poeditor.com/) to manage all our translations in a convenient way. The first step is to join the Appwrite Project on PO Editor using [our invite link](https://poeditor.com/join/project?hash=BNrWbRXyk6). 
 
@@ -98,9 +120,30 @@ You're now ready to start contributing. On the left, you'll find the string to b
 
 ![Reference Language](images/reference-language.png)
 
-Once you're happy with your translations, you can export them. Head over to the **Exports** tab and choose the **Key-Value JSON** option only. Download the file and you can then follow the steps similar to the Github approach. 
+Once you're happy with your translations, you can export them. Head over to the **Exports** tab and choose the **Key-Value JSON** option only. Download the file and you can then follow the steps similar to the Github approach.
 
 ![Exporting](images/export.png)
+
+> **Attention! 🛑** There are two JSON exports. Please make sure to export the one saying `Key-value JSON`. Refer to the screenshot if you are not sure which one is correct.
+
+After exporting a JSON file, we need to rename it to follow the **[ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)** standards. You can use this link to find your language code when making a contribution for your language. For example, Spanish translation should have file called `es.json`.
+
+## Add the translations to the project
+
+Add your language code to [codes.php](https://github.com/appwrite/appwrite/blob/locale/app/config/locale/codes.php#L14) in the following format.
+```php
+    ...
+    'es', // Spanish
+    ...
+```
+
+Finally, load your translation file in `init.php` by following a pattern similar to the [existing languages](https://github.com/appwrite/appwrite/blob/locale/app/init.php#L270).
+
+>  Please make sure to keep both `codes.php` and `init.php` in the alphabetical order A-Z.
+
+## Raise a pull request
+
+First of all, commit the changes with the message `Added Slovak translations` and push it. This will publish a new branch to your forked version of Appwrite. If you visit it at `github.com/YOUR_USERNAME_appwrite`, you will see a new alert saying you are ready to submit a pull request. Follow the steps GitHub provides, and at the end, you will have your pull request submitted.
 
 ### 🤕 Stuck ? 
 If you need any help with the contribution, feel free to head over to [our discord channel](https://appwrite.io/discord) and we'll be happy to help you out.
