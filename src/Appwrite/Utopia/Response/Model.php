@@ -68,8 +68,14 @@ abstract class Model
 
     /**
      * Add a New Rule
+     * If rule is an array of documents with varying models
+     * Pass callable $getNestedType that accepts Document and returns the nested response type
+     *
+     * @param string $key
+     * @param array $options
+     * @param callable $getNestedType function(Document $value): string
      */
-    protected function addRule(string $key, array $options): self
+    protected function addRule(string $key, array $options, callable $getNestedType = null): self
     {
         $this->rules[$key] = array_merge([
             'require' => true,
@@ -78,6 +84,7 @@ abstract class Model
             'default' => null,
             'example' => '',
             'array' => false,
+            'getNestedType' => $getNestedType
         ], $options);
 
         return $this;

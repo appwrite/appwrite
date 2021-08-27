@@ -340,11 +340,12 @@ class Response extends SwooleResponse
 
                 foreach ($data[$key] as &$item) {
                     if ($item instanceof Document) {
-                        if (!array_key_exists($rule['type'], $this->models)) {
-                            throw new Exception('Missing model for rule: '. $rule['type']);
+                        $ruleType = (!\is_null($rule['getNestedType'])) ? $rule['getNestedType']($item) : $rule['type'];
+                        if (!array_key_exists($ruleType, $this->models)) {
+                            throw new Exception('Missing model for rule: '. $ruleType);
                         }
 
-                        $item = $this->output($item, $rule['type']);
+                        $item = $this->output($item, $ruleType);
                     }
                 }
             }
