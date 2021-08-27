@@ -208,19 +208,19 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     'project' => 'console',
                     'roles' => ['team:' . $value['teamId']],
                     'data' => [
-                        'type' => 'event',
-                        'data' => [
-                            'event' => 'stats.connections',
-                            'channels' => ['project'],
-                            'timestamp' => time(),
-                            'payload' => [
-                                $projectId => $payload[$projectId]
-                            ]
+                        'event' => 'stats.connections',
+                        'channels' => ['project'],
+                        'timestamp' => time(),
+                        'payload' => [
+                            $projectId => $payload[$projectId]
                         ]
                     ]
                 ];
 
-                $server->send($realtime->getSubscribers($event), json_encode($event['data']));
+                $server->send($realtime->getSubscribers($event), json_encode([
+                    'type' => 'event',
+                    'data' => $event['data']
+                ]));
             }
 
             $register->get('dbPool')->put($db);
@@ -236,17 +236,17 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 'project' => 'console',
                 'roles' => ['role:guest'],
                 'data' => [
-                    'type' => 'event',
-                    'data' => [
-                        'event' => 'test.event',
-                        'channels' => ['tests'],
-                        'timestamp' => time(),
-                        'payload' => $payload
-                    ]
+                    'event' => 'test.event',
+                    'channels' => ['tests'],
+                    'timestamp' => time(),
+                    'payload' => $payload
                 ]
             ];
 
-            $server->send($realtime->getSubscribers($event), json_encode($event['data']));
+            $server->send($realtime->getSubscribers($event), json_encode([
+                'type' => 'event',
+                'data' => $event['data']
+            ]));
         }
     });
 
