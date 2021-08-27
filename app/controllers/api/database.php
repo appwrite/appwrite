@@ -55,8 +55,6 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
     $formatOptions = $attribute->getAttribute('formatOptions', []);
     $filters = $attribute->getAttribute('filters', []); // filters are hidden from the endpoint 
     $default = $attribute->getAttribute('default', null);
-    // $default = (empty($default)) ? null : (int)$default;
-    $defaultEncoded = (\is_null($default)) ? '' : json_encode(['value'=>$default]);
 
     $collection = $dbForInternal->getDocument('collections', $collectionId);
 
@@ -85,7 +83,7 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
             'size' => $size,
             'required' => $required,
             'signed' => $signed,
-            'default' => $defaultEncoded,
+            'default' => $default,
             'array' => $array,
             'format' => $format,
             'formatOptions' => $formatOptions,
@@ -96,9 +94,6 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
     }
 
     $dbForInternal->purgeDocument('collections', $collectionId);
-
-    // Only attributes table needs $default encoded as a string, reset before response
-    $attribute->setAttribute('default', $default);
 
     // Pass clone of $attribute object to workers
     // so we can later modify Document to fit response model
@@ -805,13 +800,7 @@ App::get('/v1/database/collections/:collectionId/attributes')
             throw new Exception('Collection not found', 404);
         }
 
-        $attributes = $collection->getAttributes();
-
-        $attributes = array_map(function ($attribute) use ($collection) {
-            return new Document([\array_merge($attribute, [
-                'collectionId' => $collection->getId(),
-            ])]);
-        }, $attributes);
+        $attributes = $collection->getAttribute('attributes', []);
 
         $response->dynamic(new Document([
             'sum' => \count($attributes),

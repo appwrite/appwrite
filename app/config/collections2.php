@@ -174,7 +174,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['defaultValue'],
             ],
             [
                 '$id' => 'signed',

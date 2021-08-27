@@ -145,7 +145,7 @@ if(!empty($user) || !empty($pass)) {
 }
 
 /**
- * DB Filters
+ * Old DB Filters
  */
 DatabaseOld::addFilter('json',
     function($value) {
@@ -178,6 +178,18 @@ DatabaseOld::addFilter('encrypt',
         $key = App::getEnv('_APP_OPENSSL_KEY_V'.$value['version']);
 
         return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+    }
+);
+
+/**
+ * New DB Filters
+ */
+Database::addFilter('defaultValue',
+    function($value) {
+        return \json_encode(['value' => $value]);
+    },
+    function($value) {
+        return \json_decode($value, true)['value'];
     }
 );
 
