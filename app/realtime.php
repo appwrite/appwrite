@@ -305,7 +305,10 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                 $server->send(
                     $receivers,
-                    json_encode($event['data'])
+                    json_encode([
+                        'type' => 'event',
+                        'data' => $event['data']
+                    ])
                 );
 
                 if (($num = count($receivers)) > 0) {
@@ -421,8 +424,11 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $stats->incr($project->getId(), 'connectionsTotal');
     } catch (\Throwable $th) {
         $response = [
-            'code' => $th->getCode(),
-            'message' => $th->getMessage()
+            'type' => 'error',
+            'data' => [
+                'code' => $th->getCode(),
+                'message' => $th->getMessage()
+            ]
         ];
 
         $server->send([$connection], json_encode($response));
@@ -504,6 +510,14 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 $channels = Realtime::convertChannels(array_flip($realtime->connections[$connection]['channels']), $user->getId());
                 $realtime->subscribe($realtime->connections[$connection]['projectId'], $connection, $roles, $channels);
 
+                $server->send([$connection], json_encode([
+                    'type' => 'response',
+                    'data' => [
+                        'to' => 'authentication',
+                        'success' => true
+                    ]
+                ]));
+
                 break;
 
             default:
@@ -512,8 +526,11 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         }
     } catch (\Throwable $th) {
         $response = [
-            'code' => $th->getCode(),
-            'message' => $th->getMessage()
+            'type' => 'error',
+            'data' => [
+                'code' => $th->getCode(),
+                'message' => $th->getMessage()
+            ]
         ];
 
         $server->send([$connection], json_encode($response));
