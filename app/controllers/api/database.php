@@ -254,7 +254,7 @@ App::get('/v1/database/usage')
     ->label('sdk.method', 'getUsage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DATABASE_USAGE)
+    ->label('sdk.response.model', Response::MODEL_USAGE_DATABASE)
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForInternal')
@@ -335,7 +335,7 @@ App::get('/v1/database/usage')
             ]);
         }
 
-        $response->dynamic($usage, Response::MODEL_DATABASE_USAGE);
+        $response->dynamic($usage, Response::MODEL_USAGE_DATABASE);
     });
 
 App::get('/v1/database/:collectionId/usage')
@@ -347,7 +347,7 @@ App::get('/v1/database/:collectionId/usage')
     ->label('sdk.method', 'getUsage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_COLLECTION_USAGE)
+    ->label('sdk.response.model', Response::MODEL_USAGE_COLLECTION)
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
     ->param('collectionId', '', new UID(), 'Collection unique ID.')
     ->inject('response')
@@ -425,7 +425,7 @@ App::get('/v1/database/:collectionId/usage')
             ]);
         }
 
-        $response->dynamic($usage, Response::MODEL_COLLECTION_USAGE);
+        $response->dynamic($usage, Response::MODEL_USAGE_COLLECTION);
     });
 
 App::get('/v1/database/collections/:collectionId/logs')

@@ -225,7 +225,7 @@ App::get('/v1/projects/:projectId/usage')
     ->label('sdk.method', 'getUsage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT_USAGE)
+    ->label('sdk.response.model', Response::MODEL_USAGE_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
@@ -311,7 +311,7 @@ App::get('/v1/projects/:projectId/usage')
             ]);
         }
 
-        $response->dynamic($usage, Response::MODEL_PROJECT_USAGE);
+        $response->dynamic($usage, Response::MODEL_USAGE_PROJECT);
     });
 
 App::patch('/v1/projects/:projectId')

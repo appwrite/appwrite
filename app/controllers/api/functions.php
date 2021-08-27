@@ -148,7 +148,7 @@ App::get('/v1/functions/:functionId/usage')
     ->label('sdk.method', 'getUsage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_FUNCTIONS_USAGE)
+    ->label('sdk.response.model', Response::MODEL_USAGE_FUNCTIONS)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d']), 'Date range.', true)
     ->inject('response')
@@ -224,7 +224,7 @@ App::get('/v1/functions/:functionId/usage')
             ]);
         }
 
-        $response->dynamic($usage, Response::MODEL_FUNCTIONS_USAGE);
+        $response->dynamic($usage, Response::MODEL_USAGE_FUNCTIONS);
     });
 
 App::put('/v1/functions/:functionId')

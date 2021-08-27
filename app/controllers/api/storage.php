@@ -653,7 +653,7 @@ App::get('/v1/storage/usage')
     ->label('sdk.method', 'getUsage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_STORAGE_USAGE)
+    ->label('sdk.response.model', Response::MODEL_USAGE_STORAGE)
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForInternal')
@@ -713,7 +713,7 @@ App::get('/v1/storage/usage')
             ]);
         }
 
-        $response->dynamic($usage, Response::MODEL_STORAGE_USAGE);
+        $response->dynamic($usage, Response::MODEL_USAGE_STORAGE);
     });
 
 App::get('/v1/storage/:bucketId/usage')
@@ -725,7 +725,7 @@ App::get('/v1/storage/:bucketId/usage')
     ->label('sdk.method', 'getUsage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_BUCKETS_USAGE)
+    ->label('sdk.response.model', Response::MODEL_USAGE_BUCKETS)
     ->param('bucketId', '', new UID(), 'Bucket unique ID.')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
@@ -792,5 +792,5 @@ App::get('/v1/storage/:bucketId/usage')
             ]);
         }
 
-        $response->dynamic($usage, Response::MODEL_BUCKETS_USAGE);
+        $response->dynamic($usage, Response::MODEL_USAGE_BUCKETS);
     });

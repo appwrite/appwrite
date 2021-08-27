@@ -619,7 +619,7 @@ App::get('/v1/users/usage')
     ->label('sdk.method', 'getUsage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USERS_USAGE)
+    ->label('sdk.response.model', Response::MODEL_USAGE_USERS)
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForInternal')
@@ -693,5 +693,5 @@ App::get('/v1/users/usage')
 
         }
 
-        $response->dynamic($usage, Response::MODEL_USERS_USAGE);
+        $response->dynamic($usage, Response::MODEL_USAGE_USERS);
     });
