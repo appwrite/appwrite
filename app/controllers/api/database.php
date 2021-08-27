@@ -14,6 +14,7 @@ use Utopia\Validator\JSON;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\QueryValidator;
@@ -22,6 +23,7 @@ use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\UID;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Appwrite\Database\Validator\CustomId;
 use Appwrite\Network\Validator\Email;
@@ -962,6 +964,16 @@ App::post('/v1/database/collections/:collectionId/indexes')
             throw new Exception('Collection not found', 404);
         }
 
+        $count = $dbForInternal->count('indexes', [
+            new Query('collectionId', Query::TYPE_EQUAL, [$collectionId])
+        ], 61);
+
+        $limit = 64 - MariaDB::getNumberOfDefaultIndexes();
+
+        if ($count >= $limit) {
+            throw new Exception('Index limit exceeded', 400);
+        }
+
         // Convert Document[] to array of attribute metadata
         $oldAttributes = \array_map(function ($a) {
             return $a->getArrayCopy();
@@ -986,7 +998,6 @@ App::post('/v1/database/collections/:collectionId/indexes')
             $lengths[$key] = ($attributeType === Database::VAR_STRING) ? $attributeSize : null;
         }
 
-        // TODO@kodumbeats should $lengths be a part of the response model?
         try {
             $index = $dbForInternal->createDocument('indexes', new Document([
                 '$id' => $collectionId.'_'.$indexId,
@@ -999,7 +1010,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
                 'orders' => $orders,
             ]));
         } catch (DuplicateException $th) {
-            throw new Exception('Attribute already exists', 409);
+            throw new Exception('Index already exists', 409);
         }
 
         $dbForInternal->purgeDocument('collections', $collectionId);

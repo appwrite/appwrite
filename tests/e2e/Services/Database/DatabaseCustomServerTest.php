@@ -306,4 +306,102 @@ class DatabaseCustomServerTest extends Scope
 
         $this->assertEquals($response['headers']['status-code'], 404);
     }
+
+    public function testIndexLimitException()
+    {
+        $collection = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => 'testLimitException',
+            'name' => 'testLimitException',
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+            'permission' => 'document',
+        ]);
+
+        $this->assertEquals($collection['headers']['status-code'], 201);
+        $this->assertEquals($collection['body']['name'], 'testLimitException');
+
+        $collectionId = $collection['body']['$id'];
+
+        // add unique attributes for indexing
+        for ($i=0; $i < 64; $i++) {
+            // $this->assertEquals(true, static::getDatabase()->createAttribute('indexLimit', "test{$i}", Database::VAR_STRING, 16, true));
+            $attribute = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/string', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'attributeId' => "attribute{$i}",
+                'size' => 64,
+                'required' => true,
+            ]);
+
+            $this->assertEquals($attribute['headers']['status-code'], 201);
+        }
+
+        sleep(5);
+
+        $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals($collection['headers']['status-code'], 200);
+        $this->assertEquals($collection['body']['name'], 'testLimitException');
+        $this->assertIsArray($collection['body']['attributes']);
+        $this->assertIsArray($collection['body']['indexes']);
+        $this->assertCount(64, $collection['body']['attributes']);
+        $this->assertCount(0, $collection['body']['indexes']);
+
+        // testing for indexLimit = 64
+        // MariaDB, MySQL, and MongoDB create 3 indexes per new collection
+        // Add up to the limit, then check if the next index throws IndexLimitException
+        for ($i=0; $i < 61; $i++) {
+            // $this->assertEquals(true, static::getDatabase()->createIndex('indexLimit', "index{$i}", Database::INDEX_KEY, ["test{$i}"], [16]));
+            $index = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/indexes', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'indexId' => "key_attribute{$i}",
+                'type' => 'key',
+                'attributes' => ["attribute{$i}"],
+            ]);
+
+            $this->assertEquals(201, $index['headers']['status-code']);
+            $this->assertEquals("key_attribute{$i}", $index['body']['key']);
+        }
+
+        sleep(5);
+
+        $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals($collection['headers']['status-code'], 200);
+        $this->assertEquals($collection['body']['name'], 'testLimitException');
+        $this->assertIsArray($collection['body']['attributes']);
+        $this->assertIsArray($collection['body']['indexes']);
+        $this->assertCount(64, $collection['body']['attributes']);
+        $this->assertCount(61, $collection['body']['indexes']);
+
+        $tooMany = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'indexId' => 'tooMany',
+            'type' => 'key',
+            'attributes' => ['attribute61'],
+        ]);
+
+        $this->assertEquals(400, $tooMany['headers']['status-code']);
+        $this->assertEquals('Index limit exceeded', $tooMany['body']['message']);
+    }
 }

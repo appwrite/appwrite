@@ -423,13 +423,13 @@ $auth = $this->getParam('auth', []);
                 data-scope="console">
                 <ul class="tiles cell-3 margin-bottom-small">
                     <?php foreach ($providers as $provider => $data):
-    if (isset($data['enabled']) && !$data['enabled']) {continue;}
-    if (isset($data['mock']) && $data['mock']) {continue;}
-    $sandbox = $data['sandbox'] ?? false;
-    $form = $data['form'] ?? false;
-    $name = $data['name'] ?? 'Unknown';
-    $beta = $data['beta'] ?? false;
-    ?>
+                        if (isset($data['enabled']) && !$data['enabled']) {continue;}
+                        // if (isset($data['mock']) && $data['mock']) {continue;}
+                        $sandbox = $data['sandbox'] ?? false;
+                        $form = $data['form'] ?? false;
+                        $name = $data['name'] ?? 'Unknown';
+                        $beta = $data['beta'] ?? false;
+                        ?>
 	                        <li class="<?php echo (isset($data['enabled']) && !$data['enabled']) ? 'dev-feature' : ''; ?>">
 	                            <div data-ui-modal class="modal close" data-button-alias="none" data-open-event="provider-update-<?php echo $provider; ?>">
 	                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>

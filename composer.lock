@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "95e162b8789c0727b4afac3191962fff",
+    "content-hash": "31670d6cc60a22007b4ed59a7dc9448f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1987,14 +1987,8 @@
             "version": "dev-feat-adjust-encodeAttribute",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/database.git",
+                "url": "https://github.com/utopia-php/database",
                 "reference": "5ef32ec85143daf78796e7826453244d24f8a86a"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/5ef32ec85143daf78796e7826453244d24f8a86a",
-                "reference": "5ef32ec85143daf78796e7826453244d24f8a86a",
-                "shasum": ""
             },
             "require": {
                 "ext-mongodb": "*",
@@ -2017,7 +2011,11 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Database"
+                }
+            },
             "license": [
                 "MIT"
             ],
@@ -2039,10 +2037,6 @@
                 "upf",
                 "utopia"
             ],
-            "support": {
-                "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/feat-adjust-encodeAttribute"
-            },
             "time": "2021-08-27T20:39:51+00:00"
         },
         {
