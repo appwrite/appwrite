@@ -11,6 +11,7 @@ use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\None;
 use Appwrite\Utopia\Response\Model\Any;
 use Appwrite\Utopia\Response\Model\Attribute;
+use Appwrite\Utopia\Response\Model\AttributeList;
 use Appwrite\Utopia\Response\Model\AttributeString;
 use Appwrite\Utopia\Response\Model\AttributeInteger;
 use Appwrite\Utopia\Response\Model\AttributeFloat;
@@ -170,7 +171,6 @@ class Response extends SwooleResponse
             ->setModel(new ErrorDev())
             // Lists
             ->setModel(new BaseList('Collections List', self::MODEL_COLLECTION_LIST, 'collections', self::MODEL_COLLECTION))
-            ->setModel(new BaseList('Attributes List', self::MODEL_ATTRIBUTE_LIST, 'attributes', self::MODEL_ATTRIBUTE))
             ->setModel(new BaseList('Indexes List', self::MODEL_INDEX_LIST, 'indexes', self::MODEL_INDEX))
             ->setModel(new BaseList('Documents List', self::MODEL_DOCUMENT_LIST, 'documents', self::MODEL_DOCUMENT))
             ->setModel(new BaseList('Users List', self::MODEL_USER_LIST, 'users', self::MODEL_USER))
@@ -195,6 +195,7 @@ class Response extends SwooleResponse
             // Entities
             ->setModel(new Collection())
             ->setModel(new Attribute())
+            ->setModel(new AttributeList())
             ->setModel(new AttributeString())
             ->setModel(new AttributeInteger())
             ->setModel(new AttributeFloat())
