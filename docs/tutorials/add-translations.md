@@ -16,7 +16,7 @@ You can help in three distinct ways:
 
 It's really easy to contribute to an open-sourced projects, but when using GitHub, there are a few steps we need to follow. This section will take you step-by-step through the process of preparing your own local version of Appwrite, where you can make any changes without affecting Appwrite right away.
 
-> If you are experienced with GitHub or have made a pull request before, you can skip to `Generate the translations`.
+> If you are experienced with GitHub or have made a pull request before, you can skip to [Generate the translations](#2-generate-the-translations).
 
 ###  1.1 Fork the Appwrite repository
 
@@ -37,7 +37,7 @@ Finally, you will need to create a `feat-XXX-YYY-translation` branch based on th
 
 ## 2. Generate the translations
 
-You can choose to contribute either directly on [**GitHub**](#2.1-manually-using-github) or using [**POEditor**](#2.2-visually-using-po-editor) if you prefer a GUI.
+You can choose to contribute either directly on [**GitHub**](#21-manually-using-github) or using [**POEditor**](#22-visually-using-po-editor) if you prefer a GUI.
 
 ### 2.1 Manually using GitHub
 
