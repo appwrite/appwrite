@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "45963af754680568d89330a4f37c40d1",
+    "content-hash": "9d5d3107489a374a84612765ee3ae4c5",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1908,6 +1908,55 @@
             "time": "2021-07-24T11:35:55+00:00"
         },
         {
+            "name": "utopia-php/orchestration",
+            "version": "dev-exp1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/PineappleIOnic/orchestration.git",
+                "reference": "26b4d08fd72a00a1e2b41e11876e97566036db48"
+            },
+            "require": {
+                "php": ">=8.0",
+                "utopia-php/cli": "0.11.*"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.3",
+                "vimeo/psalm": "4.0.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Orchestration\\": "src/Orchestration"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Orchestration"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "eldad@appwrite.io"
+                }
+            ],
+            "description": "Lite & fast micro PHP abstraction library for container orchestration",
+            "keywords": [
+                "docker",
+                "framework",
+                "kubernetes",
+                "orchestration",
+                "php",
+                "swarm",
+                "upf",
+                "utopia"
+            ],
+            "time": "2021-08-27T09:04:09+00:00"
+        },
+        {
             "name": "utopia-php/preloader",
             "version": "0.2.4",
             "source": {
@@ -2452,16 +2501,16 @@
         },
         {
             "name": "composer/package-versions-deprecated",
-            "version": "1.11.99.2",
+            "version": "1.11.99.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/composer/package-versions-deprecated.git",
-                "reference": "c6522afe5540d5fc46675043d3ed5a45a740b27c"
+                "reference": "fff576ac850c045158a250e7e27666e146e78d18"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/composer/package-versions-deprecated/zipball/c6522afe5540d5fc46675043d3ed5a45a740b27c",
-                "reference": "c6522afe5540d5fc46675043d3ed5a45a740b27c",
+                "url": "https://api.github.com/repos/composer/package-versions-deprecated/zipball/fff576ac850c045158a250e7e27666e146e78d18",
+                "reference": "fff576ac850c045158a250e7e27666e146e78d18",
                 "shasum": ""
             },
             "require": {
@@ -2505,7 +2554,7 @@
             "description": "Composer plugin that provides efficient querying for installed package versions (no runtime IO)",
             "support": {
                 "issues": "https://github.com/composer/package-versions-deprecated/issues",
-                "source": "https://github.com/composer/package-versions-deprecated/tree/1.11.99.2"
+                "source": "https://github.com/composer/package-versions-deprecated/tree/1.11.99.3"
             },
             "funding": [
                 {
@@ -2521,7 +2570,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-05-24T07:46:03+00:00"
+            "time": "2021-08-17T13:49:14+00:00"
         },
         {
             "name": "composer/semver",
@@ -6067,7 +6116,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/orchestration": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

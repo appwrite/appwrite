@@ -332,6 +332,7 @@ services:
       appwrite:
         aliases:
           - executor
+      runtimes:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-functions:/storage/functions:rw
@@ -588,6 +589,7 @@ services:
 networks:
   gateway:
   appwrite:
+  runtimes:
 
 volumes:
   appwrite-mariadb:

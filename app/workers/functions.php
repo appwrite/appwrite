@@ -318,7 +318,7 @@ class FunctionsV1 extends Worker
             'Content-Type: application/json',
         ]);
 
-        $response = \curl_exec($ch);
+        \curl_exec($ch);
 
         $error = \curl_error($ch);
         if (!empty($error)) {
