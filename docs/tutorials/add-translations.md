@@ -40,8 +40,9 @@ Finally, you will need to create a `feat-XXX-YYY-translation` branch based on th
 You can choose to contribute either directly on [**GitHub**](#21-manually-using-github) or using [**POEditor**](#22-visually-using-po-editor) if you prefer a GUI.
 
 ### 2.1 Manually using GitHub
+ 
+> Proceed to [Visually using PO Editor](#22-visually-using-po-editor) if you want to use graphical interface instead.
 
-> Skip this part and jump to PO Editor section if you want to use graphical interface.
 
 We maintain a [`locale branch`](https://github.com/appwrite/appwrite/tree/locale/) under the [appwrite/appwrite repo](https://github.com/appwrite/appwrite/) exclusively for translations related PRs. Here are a few files that you need to refer to help with your contribution.
 
@@ -96,7 +97,7 @@ Next, choose a reference language. If English is your reference language, copy t
 
 ### 2.2 Visually using PO Editor
 
-> Skip this part if you followed the GitHub approach
+> Proceed to [Add the translations to the project](#3-add-the-translations-to-the-project) if you already followed the GitHub approach.
 
 We use [PO Editor](https://poeditor.com/) to manage all our translations in a convenient way. The first step is to join the Appwrite Project on PO Editor using [our invite link](https://poeditor.com/join/project?hash=BNrWbRXyk6). 
 
