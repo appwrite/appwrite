@@ -208,11 +208,14 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     'project' => 'console',
                     'roles' => ['team:' . $value['teamId']],
                     'data' => [
-                        'event' => 'stats.connections',
-                        'channels' => ['project'],
-                        'timestamp' => time(),
-                        'payload' => [
-                            $projectId => $payload[$projectId]
+                        'type' => 'event',
+                        'data' => [
+                            'event' => 'stats.connections',
+                            'channels' => ['project'],
+                            'timestamp' => time(),
+                            'payload' => [
+                                $projectId => $payload[$projectId]
+                            ]
                         ]
                     ]
                 ];
@@ -233,10 +236,13 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 'project' => 'console',
                 'roles' => ['role:guest'],
                 'data' => [
-                    'event' => 'test.event',
-                    'channels' => ['tests'],
-                    'timestamp' => time(),
-                    'payload' => $payload
+                    'type' => 'event',
+                    'data' => [
+                        'event' => 'test.event',
+                        'channels' => ['tests'],
+                        'timestamp' => time(),
+                        'payload' => $payload
+                    ]
                 ]
             ];
 
