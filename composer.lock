@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "aac413429914bd9299a7ae722f00cef8",
+    "content-hash": "95e162b8789c0727b4afac3191962fff",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -355,16 +355,16 @@
         },
         {
             "name": "composer/package-versions-deprecated",
-            "version": "1.11.99.2",
+            "version": "1.11.99.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/composer/package-versions-deprecated.git",
-                "reference": "c6522afe5540d5fc46675043d3ed5a45a740b27c"
+                "reference": "fff576ac850c045158a250e7e27666e146e78d18"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/composer/package-versions-deprecated/zipball/c6522afe5540d5fc46675043d3ed5a45a740b27c",
-                "reference": "c6522afe5540d5fc46675043d3ed5a45a740b27c",
+                "url": "https://api.github.com/repos/composer/package-versions-deprecated/zipball/fff576ac850c045158a250e7e27666e146e78d18",
+                "reference": "fff576ac850c045158a250e7e27666e146e78d18",
                 "shasum": ""
             },
             "require": {
@@ -408,7 +408,7 @@
             "description": "Composer plugin that provides efficient querying for installed package versions (no runtime IO)",
             "support": {
                 "issues": "https://github.com/composer/package-versions-deprecated/issues",
-                "source": "https://github.com/composer/package-versions-deprecated/tree/1.11.99.2"
+                "source": "https://github.com/composer/package-versions-deprecated/tree/1.11.99.3"
             },
             "funding": [
                 {
@@ -424,7 +424,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-05-24T07:46:03+00:00"
+            "time": "2021-08-17T13:49:14+00:00"
         },
         {
             "name": "dragonmantank/cron-expression",
@@ -1984,16 +1984,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-feat-adjusted-query-validator",
+            "version": "dev-feat-adjust-encodeAttribute",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "cb73391371f70ddb54bc0000064b15c5f173cb7a"
+                "reference": "5ef32ec85143daf78796e7826453244d24f8a86a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/cb73391371f70ddb54bc0000064b15c5f173cb7a",
-                "reference": "cb73391371f70ddb54bc0000064b15c5f173cb7a",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/5ef32ec85143daf78796e7826453244d24f8a86a",
+                "reference": "5ef32ec85143daf78796e7826453244d24f8a86a",
                 "shasum": ""
             },
             "require": {
@@ -2041,9 +2041,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/feat-adjusted-query-validator"
+                "source": "https://github.com/utopia-php/database/tree/feat-adjust-encodeAttribute"
             },
-            "time": "2021-08-23T14:18:47+00:00"
+            "time": "2021-08-27T20:39:51+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -6257,7 +6257,7 @@
     "aliases": [
         {
             "package": "utopia-php/database",
-            "version": "dev-feat-adjusted-query-validator",
+            "version": "dev-feat-adjust-encodeAttribute",
             "alias": "0.10.0",
             "alias_normalized": "0.10.0.0"
         }
@@ -6287,5 +6287,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.0.0"
+    "plugin-api-version": "2.1.0"
 }
