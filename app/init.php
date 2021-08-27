@@ -189,6 +189,9 @@ Database::addFilter('defaultValue',
         return json_encode(['value' => $value]);
     },
     function($value) {
+        if (is_null($value)) {
+            return null;
+        }
         return json_decode($value, true)['value'];
     }
 );
