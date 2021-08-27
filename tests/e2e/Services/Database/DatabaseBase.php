@@ -371,13 +371,83 @@ trait DatabaseBase
         $this->assertEquals($boolean['body']['array'], $booleanResponse['body']['array']);
         $this->assertEquals($boolean['body']['default'], $booleanResponse['body']['default']);
 
-        $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
+        $attributes = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId . '/attributes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ])); 
 
-        // TODO@kodumbeats test for proper attribute response in collection
+        $this->assertEquals(200, $attributes['headers']['status-code']);
+        $this->assertEquals(7, $attributes['body']['sum']);
+
+        $attributes = $attributes['body']['attributes'];
+
+        $this->assertIsArray($attributes);
+        $this->assertCount(7, $attributes);
+
+        $this->assertEquals($stringResponse['body']['key'], $attributes[0]['key']);
+        $this->assertEquals($stringResponse['body']['type'], $attributes[0]['type']);
+        $this->assertEquals($stringResponse['body']['status'], $attributes[0]['status']);
+        $this->assertEquals($stringResponse['body']['required'], $attributes[0]['required']);
+        $this->assertEquals($stringResponse['body']['array'], $attributes[0]['array']);
+        $this->assertEquals($stringResponse['body']['size'], $attributes[0]['size']);
+        $this->assertEquals($stringResponse['body']['default'], $attributes[0]['default']);
+
+        $this->assertEquals($emailResponse['body']['key'], $attributes[1]['key']);
+        $this->assertEquals($emailResponse['body']['type'], $attributes[1]['type']);
+        $this->assertEquals($emailResponse['body']['status'], $attributes[1]['status']);
+        $this->assertEquals($emailResponse['body']['required'], $attributes[1]['required']);
+        $this->assertEquals($emailResponse['body']['array'], $attributes[1]['array']);
+        $this->assertEquals($emailResponse['body']['default'], $attributes[1]['default']);
+        $this->assertEquals($emailResponse['body']['format'], $attributes[1]['format']);
+
+        $this->assertEquals($ipResponse['body']['key'], $attributes[2]['key']);
+        $this->assertEquals($ipResponse['body']['type'], $attributes[2]['type']);
+        $this->assertEquals($ipResponse['body']['status'], $attributes[2]['status']);
+        $this->assertEquals($ipResponse['body']['required'], $attributes[2]['required']);
+        $this->assertEquals($ipResponse['body']['array'], $attributes[2]['array']);
+        $this->assertEquals($ipResponse['body']['default'], $attributes[2]['default']);
+        $this->assertEquals($ipResponse['body']['format'], $attributes[2]['format']);
+
+        $this->assertEquals($urlResponse['body']['key'], $attributes[3]['key']);
+        $this->assertEquals($urlResponse['body']['type'], $attributes[3]['type']);
+        $this->assertEquals($urlResponse['body']['status'], $attributes[3]['status']);
+        $this->assertEquals($urlResponse['body']['required'], $attributes[3]['required']);
+        $this->assertEquals($urlResponse['body']['array'], $attributes[3]['array']);
+        $this->assertEquals($urlResponse['body']['default'], $attributes[3]['default']);
+        $this->assertEquals($urlResponse['body']['format'], $attributes[3]['format']);
+
+        $this->assertEquals($integerResponse['body']['key'], $attributes[4]['key']);
+        $this->assertEquals($integerResponse['body']['type'], $attributes[4]['type']);
+        $this->assertEquals($integerResponse['body']['status'], $attributes[4]['status']);
+        $this->assertEquals($integerResponse['body']['required'], $attributes[4]['required']);
+        $this->assertEquals($integerResponse['body']['array'], $attributes[4]['array']);
+        $this->assertEquals($integerResponse['body']['default'], $attributes[4]['default']);
+        $this->assertEquals($integerResponse['body']['min'], $attributes[4]['min']);
+        $this->assertEquals($integerResponse['body']['max'], $attributes[4]['max']);
+
+        $this->assertEquals($floatResponse['body']['key'], $attributes[5]['key']);
+        $this->assertEquals($floatResponse['body']['type'], $attributes[5]['type']);
+        $this->assertEquals($floatResponse['body']['status'], $attributes[5]['status']);
+        $this->assertEquals($floatResponse['body']['required'], $attributes[5]['required']);
+        $this->assertEquals($floatResponse['body']['array'], $attributes[5]['array']);
+        $this->assertEquals($floatResponse['body']['default'], $attributes[5]['default']);
+        $this->assertEquals($floatResponse['body']['min'], $attributes[5]['min']);
+        $this->assertEquals($floatResponse['body']['max'], $attributes[5]['max']);
+
+        $this->assertEquals($booleanResponse['body']['key'], $attributes[6]['key']);
+        $this->assertEquals($booleanResponse['body']['type'], $attributes[6]['type']);
+        $this->assertEquals($booleanResponse['body']['status'], $attributes[6]['status']);
+        $this->assertEquals($booleanResponse['body']['required'], $attributes[6]['required']);
+        $this->assertEquals($booleanResponse['body']['array'], $attributes[6]['array']);
+        $this->assertEquals($booleanResponse['body']['default'], $attributes[6]['default']);
+
+        $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
         // var_dump($collection);
 
         $this->assertIsArray($collection['body']['attributes']);
