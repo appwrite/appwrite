@@ -8,6 +8,7 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\Utopia\Response;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Swoole\Runtime;
@@ -19,7 +20,6 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Swoole\Request;
-use Utopia\Swoole\Response;
 use Utopia\WebSocket\Server;
 use Utopia\WebSocket\Adapter;
 
@@ -331,6 +331,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 $server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime) {
     $app = new App('UTC');
     $request = new Request($request);
+    $response = new Response(new SwooleResponse());
 
     /** @var PDO $db */
     $db = $register->get('dbPool')->get();
@@ -351,8 +352,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         return $request;
     });
 
-    App::setResource('response', function () {
-        return new Response(new SwooleResponse());
+    App::setResource('response', function () use ($response) {
+        return $response;
     });
 
     try {
@@ -414,7 +415,15 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         $realtime->subscribe($project->getId(), $connection, $roles, $channels);
 
-        $server->send([$connection], json_encode($channels));
+        $user = empty($user->getId()) ? null : $response->output($user, Response::MODEL_USER);
+
+        $server->send([$connection], json_encode([
+            'type' => 'connected',
+            'data' => [
+                'channels' => array_keys($channels),
+                'user' => $user
+            ]
+        ]));
 
         $stats->set($project->getId(), [
             'projectId' => $project->getId(),
@@ -454,6 +463,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
 $server->onMessage(function (int $connection, string $message) use ($server, $register, $realtime, $containerId) {
     try {
+        $response = new Response(new SwooleResponse());
         $db = $register->get('dbPool')->get();
         $cache = $register->get('redisPool')->get();
 
@@ -510,11 +520,13 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 $channels = Realtime::convertChannels(array_flip($realtime->connections[$connection]['channels']), $user->getId());
                 $realtime->subscribe($realtime->connections[$connection]['projectId'], $connection, $roles, $channels);
 
+                $user = $response->output($user, Response::MODEL_USER);
                 $server->send([$connection], json_encode([
                     'type' => 'response',
                     'data' => [
                         'to' => 'authentication',
-                        'success' => true
+                        'success' => true,
+                        'user' => $user
                     ]
                 ]));
 
