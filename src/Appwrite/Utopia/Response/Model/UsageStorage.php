@@ -19,7 +19,7 @@ class UsageStorage extends Model
             ])
             ->addRule('storage', [
                 'type' => Response::MODEL_METRIC_LIST,
-                'description' => 'Aggregated stats for the occupied storage size.',
+                'description' => 'Aggregated stats for the occupied storage size (in bytes).',
                 'default' => [],
                 'example' => new stdClass,
                 'array' => true 
