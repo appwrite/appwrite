@@ -1140,7 +1140,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         }
 
         // Check collection permissions when enforced
-        if ($collection->getAttribute('enforce') === 'collection') {
+        if ($collection->getAttribute('permission') === 'collection') {
             $validator = new Authorization($collection, 'write');
             if (!$validator->isValid($collection->getWrite())) {
                 throw new Exception('Unauthorized permissions', 401);
@@ -1153,7 +1153,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? []; //  By default set write permissions for user
 
         try {
-            if ($collection->getAttribute('enforce') === 'collection') {
+            if ($collection->getAttribute('permission') === 'collection') {
                 /** @var Document $document */
                 $document = Authorization::skip(function() use ($dbForExternal, $collectionId, $data) {
                     return $dbForExternal->createDocument($collectionId, new Document($data));
@@ -1212,7 +1212,7 @@ App::get('/v1/database/collections/:collectionId/documents')
         }
 
         // Check collection permissions when enforced
-        if ($collection->getAttribute('enforce') === 'collection') {
+        if ($collection->getAttribute('permission') === 'collection') {
             $validator = new Authorization($collection, 'read');
             if (!$validator->isValid($collection->getRead())) {
                 throw new Exception('Unauthorized permissions', 401);
@@ -1238,7 +1238,7 @@ App::get('/v1/database/collections/:collectionId/documents')
             }
         }
 
-        if ($collection->getAttribute('enforce') === 'collection') {
+        if ($collection->getAttribute('permission') === 'collection') {
             /** @var Document[] $documents */
             $documents = Authorization::skip(function() use ($dbForExternal, $collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $afterDocument) {
                 return $dbForExternal->find($collectionId, $queries, $limit, $offset, $orderAttributes, $orderTypes, $afterDocument ?? null);
@@ -1281,14 +1281,14 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
         }
 
         // Check collection permissions when enforced
-        if ($collection->getAttribute('enforce') === 'collection') {
+        if ($collection->getAttribute('permission') === 'collection') {
             $validator = new Authorization($collection, 'read');
             if (!$validator->isValid($collection->getRead())) {
                 throw new Exception('Unauthorized permissions', 401);
             }
         }
 
-        if ($collection->getAttribute('enforce') === 'collection') {
+        if ($collection->getAttribute('permission') === 'collection') {
             /** @var Document $document */
             $document = Authorization::skip(function() use ($dbForExternal, $collectionId, $documentId) {
                 return $dbForExternal->getDocument($collectionId, $documentId);
@@ -1338,7 +1338,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         }
 
         // Check collection permissions when enforced
-        if ($collection->getAttribute('enforce') === 'collection') {
+        if ($collection->getAttribute('permission') === 'collection') {
             $validator = new Authorization($collection, 'write');
             if (!$validator->isValid($collection->getWrite())) {
                 throw new Exception('Unauthorized permissions', 401);
@@ -1369,7 +1369,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         $data['$write'] = (is_null($write)) ? ($document->getWrite() ?? []) : $write; // By default inherit write permissions
 
         try {
-            if ($collection->getAttribute('enforce') === 'collection') {
+            if ($collection->getAttribute('permission') === 'collection') {
                 /** @var Document $document */
                 $document = Authorization::skip(function() use ($dbForExternal, $collection, $document, $data) {
                     return $dbForExternal->updateDocument($collection->getId(), $document->getId(), new Document($data));
@@ -1425,14 +1425,14 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         }
 
         // Check collection permissions when enforced
-        if ($collection->getAttribute('enforce') === 'collection') {
+        if ($collection->getAttribute('permission') === 'collection') {
             $validator = new Authorization($collection, 'write');
             if (!$validator->isValid($collection->getWrite())) {
                 throw new Exception('Unauthorized permissions', 401);
             }
         }
 
-        if ($collection->getAttribute('enforce') === 'collection') {
+        if ($collection->getAttribute('permission') === 'collection') {
             /** @var Document $document */
             $document = Authorization::skip(function() use ($dbForExternal, $collectionId, $documentId) {
                 return $dbForExternal->getDocument($collectionId, $documentId);
