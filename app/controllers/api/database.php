@@ -802,9 +802,7 @@ App::get('/v1/database/collections/:collectionId/attributes')
             throw new Exception('Collection not found', 404);
         }
 
-        $attributes = $dbForInternal->find('attributes', [
-            new Query('collectionId', Query::TYPE_EQUAL, [$collection->getId()])
-        ], 100);
+        $attributes = $collection->getAttribute('attributes');
 
         $response->dynamic(new Document([
             'sum' => \count($attributes),
@@ -837,9 +835,9 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
             throw new Exception('Collection not found', 404);
         }
 
-        $attribute = $dbForInternal->getDocument('attributes', $attributeId);
+        $attribute = $collection->find('$id', $attributeId, 'attributes');
 
-        if ($attribute === false) {
+        if (!$attribute) {
             throw new Exception('Attribute not found', 404);
         }
 
