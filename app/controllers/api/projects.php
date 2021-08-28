@@ -267,8 +267,6 @@ App::get('/v1/projects/:projectId/usage')
 
             $dbForInternal->setNamespace('project_' . $projectId . '_internal');
 
-            Authorization::disable();
-
             $metrics = [
                 'requests', 
                 'network', 
@@ -280,24 +278,24 @@ App::get('/v1/projects/:projectId/usage')
             ];
 
             $stats = [];
-            foreach ($metrics as $metric) {
-                $requestDocs = $dbForInternal->find('stats', [
-                    new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
-                    new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
 
-                $stats[$metric] = [];
-                foreach ($requestDocs as $requestDoc) {
-                    $stats[$metric][] = [
-                        'value' => $requestDoc->getAttribute('value'),
-                        'date' => $requestDoc->getAttribute('time'),
-                    ];
-                }
-
-                $stats[$metric] = array_reverse($stats[$metric]);
-            }    
-
-            Authorization::reset();
+            Authorization::skip(function() use ($dbForInternal, $period, $range, $metrics, &$stats) {
+                foreach ($metrics as $metric) {
+                    $requestDocs = $dbForInternal->find('stats', [
+                        new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
+                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
+                    ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
+    
+                    $stats[$metric] = [];
+                    foreach ($requestDocs as $requestDoc) {
+                        $stats[$metric][] = [
+                            'value' => $requestDoc->getAttribute('value'),
+                            'date' => $requestDoc->getAttribute('time'),
+                        ];
+                    }
+                    $stats[$metric] = array_reverse($stats[$metric]);
+                }    
+            });
 
             $usage = new Document([
                 'range' => $range,

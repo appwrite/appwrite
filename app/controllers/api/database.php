@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Database\Validator\Authorization;
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Audit\Audit;
@@ -29,6 +28,7 @@ use Utopia\Database\Exception\Structure as StructureException;
 use Appwrite\Utopia\Response;
 use Appwrite\Database\Validator\CustomId;
 use DeviceDetector\DeviceDetector;
+use Utopia\Database\Validator\Authorization;
 
 $attributesCallback = function ($collectionId, $attribute, $response, $dbForInternal, $database, $audits, $usage) {
     /** @var Utopia\Database\Document $attribute*/
@@ -287,8 +287,6 @@ App::get('/v1/database/usage')
                 ],
             ];
 
-            Authorization::disable();
-
             $metrics = [
                 'database.documents.count',
                 'database.collections.count',
@@ -303,24 +301,24 @@ App::get('/v1/database/usage')
             ];
 
             $stats = [];
-            foreach ($metrics as $metric) {
-                $requestDocs = $dbForInternal->find('stats', [
-                    new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
-                    new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
 
-                $stats[$metric] = [];
-                foreach ($requestDocs as $requestDoc) {
-                    $stats[$metric][] = [
-                        'value' => $requestDoc->getAttribute('value'),
-                        'date' => $requestDoc->getAttribute('time'),
-                    ];
-                }
-
-                $stats[$metric] = array_reverse($stats[$metric]);
-            }
-
-            Authorization::reset();
+            Authorization::skip(function() use ($dbForInternal, $period, $range, $metrics, &$stats) {
+                foreach ($metrics as $metric) {
+                    $requestDocs = $dbForInternal->find('stats', [
+                        new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
+                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
+                    ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
+    
+                    $stats[$metric] = [];
+                    foreach ($requestDocs as $requestDoc) {
+                        $stats[$metric][] = [
+                            'value' => $requestDoc->getAttribute('value'),
+                            'date' => $requestDoc->getAttribute('time'),
+                        ];
+                    }
+                    $stats[$metric] = array_reverse($stats[$metric]);
+                }    
+            });
 
             $usage = new Document([
                 'range' => $range,
@@ -387,8 +385,6 @@ App::get('/v1/database/:collectionId/usage')
                     'limit' => 90,
                 ],
             ];
-            
-            Authorization::disable();
 
             $metrics = [
                 "database.collections.$collectionId.documents.count",
@@ -399,23 +395,24 @@ App::get('/v1/database/:collectionId/usage')
             ];
 
             $stats = [];
-            foreach ($metrics as $metric) {
-                $requestDocs = $dbForInternal->find('stats', [
-                    new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
-                    new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
 
-                $stats[$metric] = [];
-                foreach ($requestDocs as $requestDoc) {
-                    $stats[$metric][] = [
-                        'value' => $requestDoc->getAttribute('value'),
-                        'date' => $requestDoc->getAttribute('time'),
-                    ];
-                }
-                $stats[$metric] = array_reverse($stats[$metric]);
-            }
-            
-            Authorization::reset();
+            Authorization::skip(function() use ($dbForInternal, $period, $range, $metrics, &$stats) {
+                foreach ($metrics as $metric) {
+                    $requestDocs = $dbForInternal->find('stats', [
+                        new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
+                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
+                    ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
+    
+                    $stats[$metric] = [];
+                    foreach ($requestDocs as $requestDoc) {
+                        $stats[$metric][] = [
+                            'value' => $requestDoc->getAttribute('value'),
+                            'date' => $requestDoc->getAttribute('time'),
+                        ];
+                    }
+                    $stats[$metric] = array_reverse($stats[$metric]);
+                }    
+            });
 
             $usage = new Document([
                 'range' => $range,
