@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "aac413429914bd9299a7ae722f00cef8",
+    "content-hash": "175f077512c575216c4c88f1d33c6d00",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1987,14 +1987,8 @@
             "version": "dev-feat-adjusted-query-validator",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/database.git",
+                "url": "https://github.com/utopia-php/database",
                 "reference": "cb73391371f70ddb54bc0000064b15c5f173cb7a"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/cb73391371f70ddb54bc0000064b15c5f173cb7a",
-                "reference": "cb73391371f70ddb54bc0000064b15c5f173cb7a",
-                "shasum": ""
             },
             "require": {
                 "ext-mongodb": "*",
@@ -2017,7 +2011,11 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Database"
+                }
+            },
             "license": [
                 "MIT"
             ],
@@ -2039,10 +2037,6 @@
                 "upf",
                 "utopia"
             ],
-            "support": {
-                "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/feat-adjusted-query-validator"
-            },
             "time": "2021-08-23T14:18:47+00:00"
         },
         {
