@@ -1230,6 +1230,7 @@ App::get('/v1/database/collections/:collectionId/documents')
             throw new Exception($validator->getDescription(), 400);
         }
 
+        $afterDocument = null;
         if (!empty($after)) {
             $afterDocument = $dbForExternal->getDocument($collectionId, $after);
 

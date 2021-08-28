@@ -1112,14 +1112,14 @@ trait DatabaseBase
         ]), [
             'collectionId' => 'unique()',
             'name' => 'enforceCollectionPermissions',
-            'enforce' => 'collection',
+            'permission' => 'collection',
             'read' => [$user],
             'write' => [$user]
         ]);
 
         $this->assertEquals($collection['headers']['status-code'], 201);
         $this->assertEquals($collection['body']['name'], 'enforceCollectionPermissions');
-        $this->assertEquals($collection['body']['enforce'], 'collection');
+        $this->assertEquals($collection['body']['permission'], 'collection');
 
         $collectionId = $collection['body']['$id'];
 
@@ -1136,7 +1136,7 @@ trait DatabaseBase
         ]);
 
         $this->assertEquals(201, $attribute['headers']['status-code'], 201);
-        $this->assertEquals('attribute', $attribute['body']['$id']);
+        $this->assertEquals('attribute', $attribute['body']['key']);
 
         // wait for db to add attribute
         sleep(2);
@@ -1148,11 +1148,11 @@ trait DatabaseBase
         ]), [
             'indexId' => 'key_attribute',
             'type' => 'key',
-            'attributes' => [$attribute['body']['$id']],
+            'attributes' => [$attribute['body']['key']],
         ]);
 
         $this->assertEquals(201, $index['headers']['status-code']);
-        $this->assertEquals('key_attribute', $index['body']['$id']);
+        $this->assertEquals('key_attribute', $index['body']['key']);
 
         // wait for db to add attribute
         sleep(2);
@@ -1190,7 +1190,7 @@ trait DatabaseBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'enforceCollectionPermissions',
-            'enforce' => 'collection',
+            'permission' => 'collection',
             'read' => [$user],
             'write' => []
         ]);
@@ -1224,7 +1224,7 @@ trait DatabaseBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'enforceCollectionPermissions',
-            'enforce' => 'collection',
+            'permission' => 'collection',
             'read' => [],
             'write' => []
         ]);
@@ -1236,6 +1236,6 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
 
-        $this->assertEquals(401, $documents['headers']['status-code']);
+        $this->assertEquals(404, $documents['headers']['status-code']);
     }
 }
