@@ -1141,7 +1141,7 @@ App::post('/v1/database/collections/:collectionId/documents')
 
         // Check collection permissions when enforced
         if ($collection->getAttribute('permission') === 'collection') {
-            $validator = new Authorization($collection, 'write');
+            $validator = new Authorization('write');
             if (!$validator->isValid($collection->getWrite())) {
                 throw new Exception('Unauthorized permissions', 401);
             }
@@ -1213,7 +1213,7 @@ App::get('/v1/database/collections/:collectionId/documents')
 
         // Check collection permissions when enforced
         if ($collection->getAttribute('permission') === 'collection') {
-            $validator = new Authorization($collection, 'read');
+            $validator = new Authorization('read');
             if (!$validator->isValid($collection->getRead())) {
                 throw new Exception('Unauthorized permissions', 401);
             }
@@ -1234,7 +1234,7 @@ App::get('/v1/database/collections/:collectionId/documents')
             $afterDocument = $dbForExternal->getDocument($collectionId, $after);
 
             if ($afterDocument->isEmpty()) {
-                throw new Exception("Document \'{$after}\' for the \'after\' value not found.", 400);
+                throw new Exception("Document '{$after}' for the 'after' value not found.", 400);
             }
         }
 
@@ -1282,7 +1282,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
 
         // Check collection permissions when enforced
         if ($collection->getAttribute('permission') === 'collection') {
-            $validator = new Authorization($collection, 'read');
+            $validator = new Authorization('read');
             if (!$validator->isValid($collection->getRead())) {
                 throw new Exception('Unauthorized permissions', 401);
             }
@@ -1339,7 +1339,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
 
         // Check collection permissions when enforced
         if ($collection->getAttribute('permission') === 'collection') {
-            $validator = new Authorization($collection, 'write');
+            $validator = new Authorization('write');
             if (!$validator->isValid($collection->getWrite())) {
                 throw new Exception('Unauthorized permissions', 401);
             }
@@ -1426,7 +1426,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
 
         // Check collection permissions when enforced
         if ($collection->getAttribute('permission') === 'collection') {
-            $validator = new Authorization($collection, 'write');
+            $validator = new Authorization('write');
             if (!$validator->isValid($collection->getWrite())) {
                 throw new Exception('Unauthorized permissions', 401);
             }
