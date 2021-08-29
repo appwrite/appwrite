@@ -46,7 +46,7 @@
                 mode: '',
             };
             this.headers = {
-                'x-sdk-version': 'appwrite:web:2.0.0',
+                'x-sdk-version': 'appwrite:web:2.1.0',
                 'X-Appwrite-Response-Format': '0.9.0',
             };
             this.account = {
@@ -471,6 +471,14 @@
                  * choice. Each OAuth2 provider should be enabled from the Appwrite console
                  * first. Use the success and failure arguments to provide a redirect URL's
                  * back to your app when login is completed.
+                 *
+                 * If there is already an active session, the new session will be attached to
+                 * the logged-in account. If there are no active sessions, the server will
+                 * attempt to look for a user with the same email address as the email
+                 * received from the OAuth2 provider and attach the new session to the
+                 * existing user. If no matching user is found - the server will create a new
+                 * user..
+                 *
                  *
                  * @param {string} provider
                  * @param {string} success
@@ -3567,14 +3575,17 @@
                 /**
                  * Create Team Membership
                  *
-                 * Use this endpoint to invite a new member to join your team. An email with a
-                 * link to join the team will be sent to the new member email address if the
-                 * member doesn't exist in the project it will be created automatically.
+                 * Use this endpoint to invite a new member to join your team. If initiated
+                 * from Client SDK, an email with a link to join the team will be sent to the
+                 * new member's email address if the member doesn't exist in the project it
+                 * will be created automatically. If initiated from server side SDKs, new
+                 * member will automatically be added to the team.
                  *
                  * Use the 'URL' parameter to redirect the user from the invitation email back
                  * to your app. When the user is redirected, use the [Update Team Membership
                  * Status](/docs/client/teams#teamsUpdateMembershipStatus) endpoint to allow
-                 * the user to accept the invitation to the team.
+                 * the user to accept the invitation to the team.  While calling from side
+                 * SDKs the redirect url can be empty string.
                  *
                  * Please note that in order to avoid a [Redirect
                  * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
@@ -3827,6 +3838,33 @@
                     }, payload);
                 }),
                 /**
+                 * Update Email
+                 *
+                 * Update the user email by its unique ID.
+                 *
+                 * @param {string} userId
+                 * @param {string} email
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateEmail: (userId, email) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof email === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "email"');
+                    }
+                    let path = '/users/{userId}/email'.replace('{userId}', userId);
+                    let payload = {};
+                    if (typeof email !== 'undefined') {
+                        payload['email'] = email;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * Get User Logs
                  *
                  * Get a user activity logs list by its unique ID.
@@ -3843,6 +3881,60 @@
                     let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Update Name
+                 *
+                 * Update the user name by its unique ID.
+                 *
+                 * @param {string} userId
+                 * @param {string} name
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateName: (userId, name) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof name === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "name"');
+                    }
+                    let path = '/users/{userId}/name'.replace('{userId}', userId);
+                    let payload = {};
+                    if (typeof name !== 'undefined') {
+                        payload['name'] = name;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Update Password
+                 *
+                 * Update the user password by its unique ID.
+                 *
+                 * @param {string} userId
+                 * @param {string} password
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updatePassword: (userId, password) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof password === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "password"');
+                    }
+                    let path = '/users/{userId}/password'.replace('{userId}', userId);
+                    let payload = {};
+                    if (typeof password !== 'undefined') {
+                        payload['password'] = password;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
                         'content-type': 'application/json',
                     }, payload);
                 }),
