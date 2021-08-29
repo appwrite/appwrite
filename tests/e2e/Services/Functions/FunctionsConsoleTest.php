@@ -5,80 +5,75 @@ namespace Tests\E2E\Services\Database;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Client;
+use Tests\E2E\Scopes\SideConsole;
 
-class DatabaseConsoleTest extends Scope
+class FunctionsConsoleTest extends Scope
 {
     use ProjectCustom;
+    use SideConsole;
 
-    public function getHeaders():array
+    public function testCreateFunction():array
     {
-        return [
-            'origin' => 'http://localhost',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-            'x-appwrite-mode' => 'admin'
-        ];
-    }
-
-    public function testCreateCollection():array
-    {
-        /**
-         * Test for SUCCESS
-         */
-        $movies = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'collectionId' => 'unique()',
-            'name' => 'Movies',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
-            'permission' => 'document',
+            'functionId' => 'unique()',
+            'name' => 'Test',
+            'execute' => ['user:'.$this->getUser()['$id']],
+            'runtime' => 'php-8.0',
+            'vars' => [
+                'funcKey1' => 'funcValue1',
+                'funcKey2' => 'funcValue2',
+                'funcKey3' => 'funcValue3',
+            ],
+            'events' => [
+                'account.create',
+                'account.delete',
+            ],
+            'schedule' => '0 0 1 1 *',
+            'timeout' => 10,
         ]);
 
-        $this->assertEquals($movies['headers']['status-code'], 201);
-        $this->assertEquals($movies['body']['name'], 'Movies');
+        $this->assertEquals(201, $function['headers']['status-code']);
 
-        return ['moviesId' => $movies['body']['$id']];
+        return [
+            'functionId' => $function['body']['$id']
+        ];
     }
     
-    public function testGetDatabaseUsage()
-    {
-        /**
-         * Test for SUCCESS
-         */
-
-        $response = $this->client->call(Client::METHOD_GET, '/database/usage', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id']
-        ], $this->getHeaders()), [
-            'range' => '24h'
-        ]);
-
-        $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['documents.count']);
-        $this->assertIsArray($response['body']['collections.count']);
-        $this->assertIsArray($response['body']['documents.create']);
-        $this->assertIsArray($response['body']['documents.read']);
-        $this->assertIsArray($response['body']['documents.update']);
-        $this->assertIsArray($response['body']['documents.delete']);
-        $this->assertIsArray($response['body']['collections.create']);
-        $this->assertIsArray($response['body']['collections.read']);
-        $this->assertIsArray($response['body']['collections.update']);
-        $this->assertIsArray($response['body']['collections.delete']);
-    }
-
-
     /**
-     * @depends testCreateCollection
+     * @depends testCreateFunction
      */
     public function testGetCollectionUsage(array $data)
     {
         /**
+         * Test for FAILURE
+         */
+
+        $response = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/usage', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+            'range' => '232h'
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/functions/randomFunctionId/usage', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+            'range' => '24h'
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        /**
          * Test for SUCCESS
          */
 
-        $response = $this->client->call(Client::METHOD_GET, '/database/'.$data['moviesId'].'/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
@@ -87,11 +82,9 @@ class DatabaseConsoleTest extends Scope
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['documents.count']);
-        $this->assertIsArray($response['body']['documents.create']);
-        $this->assertIsArray($response['body']['documents.read']);
-        $this->assertIsArray($response['body']['documents.update']);
-        $this->assertIsArray($response['body']['documents.delete']);
+        $this->assertIsArray($response['body']['functions.executions']);
+        $this->assertIsArray($response['body']['functions.failures']);
+        $this->assertIsArray($response['body']['functions.compute']);
     }
     
 }

@@ -37,6 +37,19 @@ class DatabaseConsoleTest extends Scope
     public function testGetDatabaseUsage()
     {
         /**
+         * Test for FAILURE
+         */
+
+        $response = $this->client->call(Client::METHOD_GET, '/database/usage', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+            'range' => '32h'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+        
+        /**
          * Test for SUCCESS
          */
 
@@ -68,9 +81,30 @@ class DatabaseConsoleTest extends Scope
     public function testGetCollectionUsage(array $data)
     {
         /**
-         * Test for SUCCESS
+         * Test for FAILURE
          */
 
+        $response = $this->client->call(Client::METHOD_GET, '/database/'.$data['moviesId'].'/usage', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+            'range' => '32h'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_GET, '/database/randomCollectionId/usage', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+            'range' => '24h'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 404);
+
+        /**
+         * Test for SUCCESS
+         */
         $response = $this->client->call(Client::METHOD_GET, '/database/'.$data['moviesId'].'/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
