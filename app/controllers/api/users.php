@@ -410,7 +410,7 @@ App::patch('/v1/users/:userId/name')
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'users.update.name')
-            ->setParam('resource', 'users/'.$user->getId())
+            ->setParam('resource', 'user/'.$user->getId())
         ;
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -450,7 +450,7 @@ App::patch('/v1/users/:userId/password')
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'users.update.password')
-            ->setParam('resource', 'users/'.$user->getId())
+            ->setParam('resource', 'user/'.$user->getId())
         ;
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -494,7 +494,7 @@ App::patch('/v1/users/:userId/email')
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.update.email')
-            ->setParam('resource', 'users/'.$user->getId())
+            ->setParam('resource', 'user/'.$user->getId())
         ;
 
         $response->dynamic($user, Response::MODEL_USER);
