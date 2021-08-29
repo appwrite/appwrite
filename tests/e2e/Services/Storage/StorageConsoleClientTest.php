@@ -30,7 +30,6 @@ class StorageConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-
         $response = $this->client->call(Client::METHOD_GET, '/storage/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
@@ -82,8 +81,9 @@ class StorageConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals(count($response['body']), 5);
+        $this->assertEquals(count($response['body']), 6);
         $this->assertEquals($response['body']['range'], '24h');
+        $this->assertIsArray($response['body']['files.count']);
         $this->assertIsArray($response['body']['files.create']);
         $this->assertIsArray($response['body']['files.read']);
         $this->assertIsArray($response['body']['files.update']);

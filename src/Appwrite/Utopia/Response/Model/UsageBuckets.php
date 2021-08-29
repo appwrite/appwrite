@@ -17,6 +17,13 @@ class UsageBuckets extends Model
                 'default' => '',
                 'example' => '30d',
             ])
+            ->addRule('files.count', [
+                'type' => Response::MODEL_METRIC_LIST,
+                'description' => 'Aggregated stats for total number of files in this bucket.',
+                'default' => [],
+                'example' => new stdClass,
+                'array' => true 
+            ])
             ->addRule('files.create', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for files created.',

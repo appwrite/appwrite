@@ -759,6 +759,7 @@ App::get('/v1/storage/:bucketId/usage')
             ];
 
             $metrics = [
+                "storage.buckets.$bucketId.files.count",
                 "storage.buckets.$bucketId.files.create",
                 "storage.buckets.$bucketId.files.read",
                 "storage.buckets.$bucketId.files.update",
@@ -787,6 +788,7 @@ App::get('/v1/storage/:bucketId/usage')
 
             $usage = new Document([
                 'range' => $range,
+                'files.count' => $stats["storage.buckets.$bucketId.files.count"],
                 'files.create' => $stats["storage.buckets.$bucketId.files.create"],
                 'files.read' => $stats["storage.buckets.$bucketId.files.read"],
                 'files.update' => $stats["storage.buckets.$bucketId.files.update"],
