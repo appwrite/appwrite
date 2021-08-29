@@ -7,7 +7,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SideConsole;
 
-class FunctionsConsoleTest extends Scope
+class FunctionsConsoleClientTest extends Scope
 {
     use ProjectCustom;
     use SideConsole;
@@ -81,6 +81,7 @@ class FunctionsConsoleTest extends Scope
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(count($response['body']), 4);
         $this->assertEquals($response['body']['range'], '24h');
         $this->assertIsArray($response['body']['functions.executions']);
         $this->assertIsArray($response['body']['functions.failures']);

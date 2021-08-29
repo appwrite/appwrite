@@ -7,7 +7,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SideConsole;
 
-class DatabaseConsoleTest extends Scope
+class DatabaseConsoleClientTest extends Scope
 {
     use ProjectCustom;
     use SideConsole;
@@ -61,6 +61,7 @@ class DatabaseConsoleTest extends Scope
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(count($response['body']), 11);
         $this->assertEquals($response['body']['range'], '24h');
         $this->assertIsArray($response['body']['documents.count']);
         $this->assertIsArray($response['body']['collections.count']);
@@ -113,6 +114,7 @@ class DatabaseConsoleTest extends Scope
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(count($response['body']), 6);
         $this->assertEquals($response['body']['range'], '24h');
         $this->assertIsArray($response['body']['documents.count']);
         $this->assertIsArray($response['body']['documents.create']);
