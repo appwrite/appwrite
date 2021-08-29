@@ -28,7 +28,7 @@ $params = $this->getParam('params', []);
                 <thead>
                     <tr>
                         <th width="120">Date</th>
-                        <th width="180">Initiator</th>
+                        <th width="180">By</th>
                         <th>Event</th>
                         <th width="110">Location</th>
                         <th width="90">IP</th>
@@ -37,7 +37,7 @@ $params = $this->getParam('params', []);
                 <tbody data-ls-loop="logs.logs" data-ls-as="log" class="text-size-small">
                     <tr>
                         <td data-title="Date: "><span class="text-fade" data-ls-bind="{{log.time|dateTime}}"></span></td>
-                        <td data-title="Initiator: ">
+                        <td data-title="By: ">
                             <span data-ls-if="{{log.userName|escape}} !== '' && {{log.mode}} === ''"><i class="icon-user"></i>&nbsp; <a data-ls-attrs="href=/console/users/user?id={{log.userId}}&project={{router.params.project}}" data-ls-bind="{{log.userName}}"></a></span>
                             <span data-ls-if="{{log.userName|escape}} === '' && {{log.userEmail}} !== '' && {{log.mode}} !== 'key'"><i class="icon-user"></i>&nbsp; Unknown</span>
                             <span data-ls-if="{{log.userName|escape}} === '' && {{log.userEmail}} === '' && {{log.mode}} !== 'key'"><i class="icon-user"></i>&nbsp; Anonymous User</span>
