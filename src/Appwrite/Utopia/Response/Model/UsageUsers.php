@@ -62,7 +62,7 @@ class UsageUsers extends Model
             ->addRule('sessions.provider.create', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for sessions created for a provider ( email, anonymous or oauth2 ).',
-                'default' => null,
+                'default' => [],
                 'example' => new stdClass,
                 'array' => true 
             ])
