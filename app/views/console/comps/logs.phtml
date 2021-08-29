@@ -1,78 +1,88 @@
 <?php
 $interval = floor((int)$this->getParam('interval', 0) / 86400);
+$method = $this->getParam('method', '');
+$params = $this->getParam('params', []);
 ?>
 <div
+    data-service="<?php echo $method; ?>"
     data-service="database.listCollectionLogs"
-    data-param-collection-id="{{router.params.id}}"
+    <?php foreach($params as $key => $value): ?>
+    data-param-<?php echo $key; ?>="<?php echo $value; ?>"
+    <?php endforeach; ?>
     data-scope="sdk"
     data-event="load"
-    data-name="project-collection-logs">
-
-    <div class="box margin-bottom">
-        <div data-ls-if="0 == {{project-collection-logs.logs.length}}">
+    data-name="logs">
+    <div data-ls-if="0 == {{logs.logs.length}}">
+        <div class="box margin-bottom">
             <h3 class="margin-bottom-small text-bold">No Logs Found</h3>
 
             <p class="margin-bottom-no">Logs are retained for <?php echo $this->escape($interval); ?> days.</p>
         </div>
-
-        <table class="vertical small" data-ls-if="0 != {{project-collection-logs.logs.length}}">
-            <thead>
-                <tr>
-                    <th width="120">Date</th>
-                    <th width="180">Initiator</th>
-                    <th>Event</th>
-                    <th width="110">Location</th>
-                    <th width="90">IP</th>
-                </tr>
-            </thead>
-            <tbody data-ls-loop="project-collection-logs.logs" data-ls-as="log" class="text-size-small">
-                <tr>
-                    <td data-title="Date: "><span class="text-fade" data-ls-bind="{{log.time|dateTime}}"></span></td>
-                    <td data-title="Initiator: ">
-                        <span data-ls-if="{{log.userName|escape}} !== '' && {{log.mode}} === ''"><i class="icon-user"></i>&nbsp; <a data-ls-attrs="href=/console/users/user?id={{log.userId}}&project={{router.params.project}}" data-ls-bind="{{log.userName}}"></a></span>
-                        <span data-ls-if="{{log.userName|escape}} === '' && {{log.userEmail}} !== '' && {{log.mode}} !== 'key'"><i class="icon-user"></i>&nbsp; Unknown</span>
-                        <span data-ls-if="{{log.userName|escape}} === '' && {{log.userEmail}} === '' && {{log.mode}} !== 'key'"><i class="icon-user"></i>&nbsp; Anonymous User</span>
-                        <span data-ls-if="{{log.mode}} === 'admin'">
-                            <img src="" data-ls-attrs="src={{log.userName|avatar}}" data-size="45" alt="User Avatar" class="avatar xxs inline margin-end-small" loading="lazy" width="30" height="30" /> <span data-ls-bind="{{log.userName}}"></span> <span class="text-fade text-size-xs">(Admin)</span>
-                        </span>
-                        <span data-ls-if="{{log.mode}} === 'key'"> <i class="icon-key"></i>&nbsp; API Key</span>
-                    </td>
-                    <td data-title="Event: "><span data-ls-bind="{{log.event}}"></span></td>
-                    <td data-title="Location: ">
-                        <img onerror="this.onerror=null;this.className='avatar xxs hide'" data-ls-attrs="src={{env.API}}/avatars/flags/{{log.countryCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline margin-end-small" />
-                        <span data-ls-bind="{{log.countryName}}"></span>
-                    </td>
-                    <td data-title="IP: "><span data-ls-bind="{{log.ip}}"></span></td>
-                </tr>
-            </tbody>
-        </table>
     </div>
-</div>
 
-<div class="pull-end text-align-center paging">
-    <form
-        data-service="database.listCollectionLogs"
-        data-event="submit"
-        data-param-collection-id="{{router.params.id}}"
-        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-        data-param-order-type="DESC"
-        data-scope="sdk"
-        data-name="project-collection-logs"
-        data-success="state"
-        data-success-param-state-keys="search,offset">
-        <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-collection-logs.sum}}" class="margin-end-small round small" aria-label="Back"><i class="icon-left-open"></i></button>
-    </form>
+    <div data-ls-if="0 != {{logs.logs.length}}">
+        <div class="margin-bottom-small margin-top-negative text-align-end text-size-small text-fade">Showing logs from the last <?php echo $this->escape($interval); ?> days</div>
 
-    <form
-        data-service="database.listCollectionLogs"
-        data-event="submit"
-        data-param-collection-id="{{router.params.id}}"
-        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-        data-param-order-type="DESC"
-        data-scope="sdk"
-        data-name="project-collection-logs"
-        data-success="state"
-        data-success-param-state-keys="search,offset">
-        <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-collection-logs.sum}}" class="margin-start-small round small" aria-label="Next"><i class="icon-right-open"></i></button>
-    </form>
+        <div class="box margin-bottom">
+            <table class="vertical small">
+                <thead>
+                    <tr>
+                        <th width="120">Date</th>
+                        <th width="180">Initiator</th>
+                        <th>Event</th>
+                        <th width="110">Location</th>
+                        <th width="90">IP</th>
+                    </tr>
+                </thead>
+                <tbody data-ls-loop="logs.logs" data-ls-as="log" class="text-size-small">
+                    <tr>
+                        <td data-title="Date: "><span class="text-fade" data-ls-bind="{{log.time|dateTime}}"></span></td>
+                        <td data-title="Initiator: ">
+                            <span data-ls-if="{{log.userName|escape}} !== '' && {{log.mode}} === ''"><i class="icon-user"></i>&nbsp; <a data-ls-attrs="href=/console/users/user?id={{log.userId}}&project={{router.params.project}}" data-ls-bind="{{log.userName}}"></a></span>
+                            <span data-ls-if="{{log.userName|escape}} === '' && {{log.userEmail}} !== '' && {{log.mode}} !== 'key'"><i class="icon-user"></i>&nbsp; Unknown</span>
+                            <span data-ls-if="{{log.userName|escape}} === '' && {{log.userEmail}} === '' && {{log.mode}} !== 'key'"><i class="icon-user"></i>&nbsp; Anonymous User</span>
+                            <span data-ls-if="{{log.mode}} === 'admin'">
+                                <img src="" data-ls-attrs="src={{log.userName|avatar}}" data-size="45" alt="User Avatar" class="avatar xxs inline margin-end-small" loading="lazy" width="30" height="30" /> <span data-ls-bind="{{log.userName}}"></span> <span class="text-fade text-size-xs">(Admin)</span>
+                            </span>
+                            <span data-ls-if="{{log.mode}} === 'key'"> <i class="icon-key"></i>&nbsp; API Key</span>
+                        </td>
+                        <td data-title="Event: "><span data-ls-bind="{{log.event}}"></span></td>
+                        <td data-title="Location: ">
+                            <img onerror="this.onerror=null;this.className='avatar xxs hide'" data-ls-attrs="src={{env.API}}/avatars/flags/{{log.countryCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline margin-end-small" />
+                            <span data-ls-bind="{{log.countryName}}"></span>
+                        </td>
+                        <td data-title="IP: "><span data-ls-bind="{{log.ip}}"></span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pull-end text-align-center paging">
+            <form
+                data-service="database.listCollectionLogs"
+                data-event="submit"
+                data-param-collection-id="{{router.params.id}}"
+                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-order-type="DESC"
+                data-scope="sdk"
+                data-name="logs"
+                data-success="state"
+                data-success-param-state-keys="search,offset">
+                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{logs.sum}}" class="margin-end-small round small" aria-label="Back"><i class="icon-left-open"></i></button>
+            </form>
+
+            <form
+                data-service="database.listCollectionLogs"
+                data-event="submit"
+                data-param-collection-id="{{router.params.id}}"
+                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-order-type="DESC"
+                data-scope="sdk"
+                data-name="logs"
+                data-success="state"
+                data-success-param-state-keys="search,offset">
+                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{logs.sum}}" class="margin-start-small round small" aria-label="Next"><i class="icon-right-open"></i></button>
+            </form>
+        </div>
+    </div>
 </div>

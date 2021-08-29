@@ -1256,6 +1256,109 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
+App::get('/v1/database/collections/:collectionId/documents/:documentId/logs')
+    ->desc('List Document Logs')
+    ->groups(['api', 'database'])
+    ->label('scope', 'documents.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'database')
+    ->label('sdk.method', 'listDocumentLogs')
+    ->label('sdk.description', '/docs/references/database/get-document-logs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_LOG_LIST)
+    ->param('collectionId', '', new UID(), 'Collection unique ID.')
+    ->param('documentId', null, new UID(), 'Document unique ID.')
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->inject('dbForExternal')
+    ->inject('locale')
+    ->inject('geodb')
+    ->action(function ($collectionId, $documentId, $response, $dbForInternal, $dbForExternal, $locale, $geodb) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Document $project */
+        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Utopia\Database\Database $dbForExternal */
+        /** @var Utopia\Locale\Locale $locale */
+        /** @var MaxMind\Db\Reader $geodb */
+
+        $collection = $dbForInternal->getDocument('collections', $collectionId);
+
+        if ($collection->isEmpty()) {
+            throw new Exception('Collection not found', 404);
+        }
+
+        $document = $dbForExternal->getDocument($collectionId, $documentId);
+
+        if ($document->isEmpty()) {
+            throw new Exception('No document found', 404);
+        }
+
+        $audit = new Audit($dbForInternal);
+
+        $logs = $audit->getLogsByResource('database/document/'.$document->getId());
+
+        $output = [];
+
+        foreach ($logs as $i => &$log) {
+            $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
+
+            $dd = new DeviceDetector($log['userAgent']);
+
+            $dd->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+
+            $dd->parse();
+
+            $os = $dd->getOs();
+            $osCode = (isset($os['short_name'])) ? $os['short_name'] : '';
+            $osName = (isset($os['name'])) ? $os['name'] : '';
+            $osVersion = (isset($os['version'])) ? $os['version'] : '';
+
+            $client = $dd->getClient();
+            $clientType = (isset($client['type'])) ? $client['type'] : '';
+            $clientCode = (isset($client['short_name'])) ? $client['short_name'] : '';
+            $clientName = (isset($client['name'])) ? $client['name'] : '';
+            $clientVersion = (isset($client['version'])) ? $client['version'] : '';
+            $clientEngine = (isset($client['engine'])) ? $client['engine'] : '';
+            $clientEngineVersion = (isset($client['engine_version'])) ? $client['engine_version'] : '';
+
+            $output[$i] = new Document([
+                'event' => $log['event'],
+                'userId' => $log['userId'],
+                'userEmail' => $log['data']['userEmail'] ?? null,
+                'userName' => $log['data']['userName'] ?? null,
+                'mode' => $log['data']['mode'] ?? null,
+                'ip' => $log['ip'],
+                'time' => $log['time'],
+
+                'osCode' => $osCode,
+                'osName' => $osName,
+                'osVersion' => $osVersion,
+                'clientType' => $clientType,
+                'clientCode' => $clientCode,
+                'clientName' => $clientName,
+                'clientVersion' => $clientVersion,
+                'clientEngine' => $clientEngine,
+                'clientEngineVersion' => $clientEngineVersion,
+                'deviceName' => $dd->getDeviceName(),
+                'deviceBrand' => $dd->getBrandName(),
+                'deviceModel' => $dd->getModel(),
+            ]);
+
+            $record = $geodb->get($log['ip']);
+
+            if ($record) {
+                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+            } else {
+                $output[$i]['countryCode'] = '--';
+                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
+            }
+        }
+
+        $response->dynamic(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
+    });
+
 App::patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Update Document')
     ->groups(['api', 'database'])
