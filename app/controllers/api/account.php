@@ -1066,17 +1066,15 @@ App::patch('/v1/account/email')
         }
 
         $email = \strtolower($email);
-        $profile = $dbForInternal->findOne('users', [new Query('email', Query::TYPE_EQUAL, [\strtolower($email)])]); // Get user by email address
-
-        if ($profile) {
-            throw new Exception('User already registered', 400);
-        }
-
-        $user = $dbForInternal->updateDocument('users', $user->getId(), $user
+        try {
+            $user = $dbForInternal->updateDocument('users', $user->getId(), $user
                 ->setAttribute('password', $isAnonymousUser ? Auth::passwordHash($password) : $user->getAttribute('password', ''))
                 ->setAttribute('email', $email)
                 ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
-        );
+            );
+        } catch(Duplicate $th) {
+            throw new Exception('Email already exists', 409);
+        }
 
         $audits
             ->setParam('userId', $user->getId())

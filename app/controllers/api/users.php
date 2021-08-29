@@ -484,14 +484,12 @@ App::patch('/v1/users/:userId/email')
             throw new Exception('User not found', 404);
         }
 
-        $email = \strtolower($email);
-        $profile = $dbForInternal->findOne('users', [new Query('email', Query::TYPE_EQUAL, [\strtolower($email)])]); // Get user by email address
-
-        if ($profile) {
+        $email = \strtolower($email);        
+        try {
+            $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('email', $email));
+        } catch(Duplicate $th) {
             throw new Exception('Email already exists', 409);
         }
-
-        $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('email', $email));
 
         $audits
             ->setParam('userId', $user->getId())
