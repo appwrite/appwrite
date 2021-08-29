@@ -621,10 +621,11 @@ App::get('/v1/users/usage')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_USERS)
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+    ->param('provider', '', new WhiteList(['email', 'anonymous', 'oauth2-google', 'oauth2-apple'], true), 'Provider Name.', true)
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('register')
-    ->action(function ($range, $response, $dbForInternal) {
+    ->action(function ($range, $provider, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
@@ -656,6 +657,7 @@ App::get('/v1/users/usage')
                 "users.update",
                 "users.delete",
                 "users.sessions.create",
+                "users.sessions.$provider.create",
                 "users.sessions.delete"
             ];
 
@@ -687,6 +689,7 @@ App::get('/v1/users/usage')
                 'users.update' => $stats["users.update"],
                 'users.delete' => $stats["users.delete"],
                 'sessions.create' => $stats["users.sessions.create"],
+                'sessions.provider.create' => $stats["users.sessions.$provider.create"],
                 'sessions.delete' => $stats["users.sessions.delete"]
             ]);
 
