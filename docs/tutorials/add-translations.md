@@ -14,7 +14,7 @@ You can help in three distinct ways:
 
 ## 1. Prerequisites
 
-It's really easy to contribute to an open-sourced projects, but when using GitHub, there are a few steps we need to follow. This section will take you step-by-step through the process of preparing your own local version of Appwrite, where you can make any changes without affecting Appwrite right away.
+It's really easy to contribute to an open-sourced project, but when using GitHub, there are a few steps we need to follow. This section will take you step-by-step through the process of preparing your own local version of Appwrite, where you can make any changes without affecting Appwrite right away.
 
 > If you are experienced with GitHub or have made a pull request before, you can skip to [Generate the translations](#2-generate-the-translations).
 

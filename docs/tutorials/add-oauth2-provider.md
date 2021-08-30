@@ -10,7 +10,7 @@ As of the writing of these lines, we do not accept any minor OAuth2 providers. F
 
 ## 1. Prerequisites
 
-It's really easy to contribute to an open-sourced projects, but when using GitHub, there are a few steps we need to follow. This section will take you step-by-step through the process of preparing your own local version of Appwrite, where you can make any changes without affecting Appwrite right away.
+It's really easy to contribute to an open-sourced project, but when using GitHub, there are a few steps we need to follow. This section will take you step-by-step through the process of preparing your own local version of Appwrite, where you can make any changes without affecting Appwrite right away.
 
 > If you are experienced with GitHub or have made a pull request before, you can skip to [Implement new provider](#2-implement-new-provider).
 
