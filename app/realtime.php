@@ -454,9 +454,9 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $server->close($connection, $th->getCode());
 
         if (App::isDevelopment()) {
-            Console::error("[Error] Connection Error");
-            Console::error("[Error] Code: " . $response['data']['code']);
-            Console::error("[Error] Message: " . $response['data']['message']);
+            Console::error('[Error] Connection Error');
+            Console::error('[Error] Code: ' . $response['data']['code']);
+            Console::error('[Error] Message: ' . $response['data']['message']);
         }
 
         if ($th instanceof PDOException) {
@@ -506,6 +506,9 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         }
 
         switch ($message['type']) {
+            /**
+             * This type is used to authenticate.
+             */
             case 'authentication':
                 if (!array_key_exists('session', $message['data'])) {
                     throw new Exception('Payload is not valid.', 1003);
