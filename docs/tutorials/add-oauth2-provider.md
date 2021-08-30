@@ -42,7 +42,7 @@ app/config/providers.php
 
 Make sure to fill in all data needed and that your provider array key name:
 
-- is in [camelCase](https://en.wikipedia.org/wiki/Camel_case) format 
+- is in [`camelCase`](https://en.wikipedia.org/wiki/Camel_case) format 
 - has no spaces or special characters
 
 >  Please make sure to keep the list of providers in `providers.php` in the alphabetical order A-Z.
@@ -56,7 +56,7 @@ Add a logo image to your new provider in this path: `public/images/users`. Your 
 Once you have finished setting up all the metadata for the new provider, you need to start coding.
 
 Create a new file `XXX.php` where `XXX` is the name of the OAuth provider in [`PascalCase`](https://stackoverflow.com/a/41769355/7659504) in this location
-"`bash
+```bash
 src/Appwrite/Auth/OAuth2/XXX.php
 ```
 
@@ -64,7 +64,7 @@ Inside this file, create a new class that extends the basic OAuth2 provider abst
 
 Once a new class is created, you can start to implement your new provider's login flow. We have prepared a starting point for Oauth provider class below, but you should also consider looking at other provider's implementation and try to follow the same standards.
 
-```injectablephp
+```php
 <?php
 
 namespace Appwrite\Auth\OAuth2;
