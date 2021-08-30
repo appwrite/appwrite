@@ -1,8 +1,8 @@
-# Adding a New OAuth2 Provider 🛡
+# Adding a new OAuth2 provider 🛡
 
 This document is part of the Appwrite contributors' guide. Before you continue reading this document make sure you have read the [Code of Conduct](https://github.com/appwrite/appwrite/blob/master/CODE_OF_CONDUCT.md) and the [Contributing Guide](https://github.com/appwrite/appwrite/blob/master/CONTRIBUTING.md).
 
-## Getting Started
+## Getting started
 
 OAuth2 providers help users to log in to the apps and websites without the need to provide passwords or any other type of credentials. Appwrite's goal is to have support from as many **major** OAuth2 providers as possible.
 
@@ -156,7 +156,7 @@ class [PROVIDER NAME] extends OAuth2
 
 Please mention in your documentation what resources or API docs you used to implement the provider's OAuth2 protocol.
 
-## 3. Test Your Provider
+## 3. Test your provider
 
 After you finished adding your new provider to Appwrite, you should be able to see it in your Appwrite console. Navigate to 'Project > Users > Providers' and check your new provider's settings form.
 
