@@ -18,8 +18,14 @@ Console::success(APP_NAME.' deletes worker v1 has started'."\n");
 
 class DeletesV1 extends Worker
 {
+    /**
+     * @var array
+     */
     public $args = [];
 
+    /**
+     * @var Database
+     */
     protected $consoleDB = null;
 
     public function init(): void
@@ -33,7 +39,7 @@ class DeletesV1 extends Worker
         
         switch (strval($type)) {
             case DELETE_TYPE_DOCUMENT:
-                $document = $this->args['document'] ?? '';
+                $document = $this->args['document'] ?? [];
                 $document = new Document($document);
                 
                 switch ($document->getCollection()) {
@@ -87,7 +93,8 @@ class DeletesV1 extends Worker
      * @param Document $document teams document
      * @param string $projectId
      */
-    protected function deleteMemberships(Document $document, $projectId) {
+    protected function deleteMemberships(Document $document, string $projectId): void
+    {
         $teamId = $document->getAttribute('teamId', '');
 
         // Delete Memberships
@@ -99,7 +106,7 @@ class DeletesV1 extends Worker
     /**
      * @param Document $document project document
      */
-    protected function deleteProject(Document $document)
+    protected function deleteProject(Document $document): void
     {
         $projectId = $document->getId();
         // Delete all DBs
@@ -118,7 +125,7 @@ class DeletesV1 extends Worker
      * @param Document $document user document
      * @param string $projectId
      */
-    protected function deleteUser(Document $document, $projectId)
+    protected function deleteUser(Document $document, string $projectId): void
     {
         $userId = $document->getId();
 
@@ -143,9 +150,9 @@ class DeletesV1 extends Worker
     /**
      * @param int $timestamp
      */
-    protected function deleteExecutionLogs($timestamp) 
+    protected function deleteExecutionLogs(int $timestamp): void
     {
-        $this->deleteForProjectIds(function($projectId) use ($timestamp) {
+        $this->deleteForProjectIds(function(string $projectId) use ($timestamp) {
             if (!($dbForInternal = $this->getInternalDB($projectId))) {
                 throw new Exception('Failed to get projectDB for project '.$projectId);
             }
@@ -160,7 +167,7 @@ class DeletesV1 extends Worker
     /**
      * @param int $timestamp
      */
-    protected function deleteAbuseLogs($timestamp) 
+    protected function deleteAbuseLogs(int $timestamp): void
     {
         if($timestamp == 0) {
             throw new Exception('Failed to delete audit logs. No timestamp provided');
@@ -180,7 +187,7 @@ class DeletesV1 extends Worker
     /**
      * @param int $timestamp
      */
-    protected function deleteAuditLogs($timestamp)
+    protected function deleteAuditLogs(int $timestamp): void
     {
         if($timestamp == 0) {
             throw new Exception('Failed to delete audit logs. No timestamp provided');
@@ -198,7 +205,7 @@ class DeletesV1 extends Worker
      * @param Document $document function document
      * @param string $projectId
      */
-    protected function deleteFunction(Document $document, $projectId)
+    protected function deleteFunction(Document $document, string $projectId): void
     {
         $dbForInternal = $this->getInternalDB($projectId);
         $device = new Local(APP_STORAGE_FUNCTIONS.'/app-'.$projectId);
@@ -255,7 +262,7 @@ class DeletesV1 extends Worker
     /**
      * @param callable $callback
      */
-    protected function deleteForProjectIds(callable $callback)
+    protected function deleteForProjectIds(callable $callback): void
     {
         $count = 0;
         $chunk = 0;
@@ -266,11 +273,11 @@ class DeletesV1 extends Worker
         $executionStart = \microtime(true);
 
         while($sum === $limit) {
-            $chunk++;
-
             Authorization::disable();
-            $projects = $this->getConsoleDB()->find('projects', [], $limit);
+            $projects = $this->getConsoleDB()->find('projects', [], $limit, ($chunk * $limit));
             Authorization::reset();
+
+            $chunk++;
 
             $projectIds = array_map (function ($project) { 
                 return $project->getId(); 
@@ -295,7 +302,7 @@ class DeletesV1 extends Worker
      * @param Database $database
      * @param callable $callback
      */
-    protected function deleteByGroup(string $collection, array $queries, Database $database, callable $callback = null)
+    protected function deleteByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
     {
         $count = 0;
         $chunk = 0;
@@ -331,9 +338,8 @@ class DeletesV1 extends Worker
 
     /**
      * @param Document $document certificates document 
-     * @return Database
      */
-    protected function deleteCertificates(Document $document)
+    protected function deleteCertificates(Document $document): void
     {
         $domain = $document->getAttribute('domain');
         $directory = APP_STORAGE_CERTIFICATES . '/' . $domain;
