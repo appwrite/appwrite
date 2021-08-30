@@ -23,6 +23,8 @@ use Utopia\Validator\WhiteList;
 use Utopia\Audit\Audit;
 use Utopia\Abuse\Adapters\TimeLimit;
 
+// TODO: Meldiron is lazy person from JS who uses "" instead of ''. Yell at him if this comment is still here. We dont want "" in PHP
+
 App::init(function ($project) {
     /** @var Utopia\Database\Document $project */
 
