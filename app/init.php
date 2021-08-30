@@ -30,6 +30,7 @@ use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Stats\Stats;
 use Utopia\App;
+use Utopia\CLI\Console;
 use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Locale\Locale;
@@ -181,6 +182,7 @@ Database::addFilter('subQueryAttributes',
         return null;
     },
     function($value, Document $document, Database $database) {
+        // TODO: Maybe implement pagination?
         return $database
             ->find('attributes', [
                 new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
@@ -193,6 +195,7 @@ Database::addFilter('subQueryIndexes',
         return null;
     },
     function($value, Document $document, Database $database) {
+        // TODO: Maybe implement pagination?
         return $database
             ->find('indexes', [
                 new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
@@ -205,10 +208,91 @@ Database::addFilter('subQueryProjectPlatforms',
         return null;
     },
     function($value, Document $document, Database $database) {
+        // TODO: Implement pagination
         return $database
             ->find('projectsPlatforms', [
-                new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
+                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
             ], 100, 0, []);
+    }
+);
+
+Database::addFilter('subQueryProjectDomains',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        // TODO: Implement pagination
+        return $database
+            ->find('projectDomains', [
+                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+            ], 100, 0, []);
+    }
+);
+
+Database::addFilter('subQueryProjectKeys',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        // TODO: Implement pagination
+        return $database
+            ->find('projectKeys', [
+                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+            ], 100, 0, []);
+    }
+);
+
+Database::addFilter('subQueryProjectWebhooks',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        // TODO: Implement pagination
+        return $database
+            ->find('projectWebhooks', [
+                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+            ], 100, 0, []);
+    }
+);
+
+Database::addFilter('subQueryProjectServices',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        // TODO: Implement pagination
+        $services = $database
+            ->find('projectsServices', [
+                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+            ], 100, 0, []);
+
+        $responseJson = [];
+        foreach($services as $service) {
+            $responseJson[$service->getAttribute("key")] = $service->getAttribute("status", true);
+        }
+
+        return $responseJson;
+    }
+);
+
+Database::addFilter('subQueryProjectProviders',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        // TODO: Implement pagination
+        $providers = $database
+            ->find('projectProviders', [
+                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+            ], 100, 0, []);
+
+        $responseJson = [];
+        foreach($providers as $provider) {
+            $responseJson[$provider->getAttribute("key") . 'Appid'] = $provider->getAttribute("appId");
+            $responseJson[$provider->getAttribute("key") . 'Secret'] = $provider->getAttribute("appSecret");
+        }
+
+        return $responseJson;
     }
 );
 

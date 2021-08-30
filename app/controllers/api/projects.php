@@ -7,6 +7,7 @@ use Appwrite\Network\Validator\Domain as DomainValidator;
 use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Response;
 use Utopia\App;
+use Utopia\CLI\CLI;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -92,13 +93,16 @@ App::post('/v1/projects')
             'legalCity' => $legalCity,
             'legalAddress' => $legalAddress,
             'legalTaxId' => $legalTaxId,
-            'services' => new stdClass(),
-            'platforms' => [],
-            'webhooks' => [],
-            'keys' => [],
-            'domains' => [],
-            'auths' => $auths,
+            'services' => null,
+            'platforms' => null,
+            'providers' => null,
+            'webhooks' => null,
+            'keys' => null,
+            'domains' => null,
+            'auths' => null
         ]));
+
+        // TODO: Implement write of auths from $auths
 
         $collections = Config::getParam('collections2', []); /** @var array $collections */
 
@@ -468,12 +472,13 @@ App::patch('/v1/projects/:projectId/service')
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), function($element) {return $element['optional'];})), true), 'Service name.')
-    ->param('status', null, new Boolean(), 'Service status.')
+    ->param('status', true, new Boolean(), 'Service status.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $service, $status, $response, $dbForConsole) {
+    ->action(function ($projectId, $serviceKey, $status, $response, $dbForConsole) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
+        /** @var Boolean $status */
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -481,11 +486,37 @@ App::patch('/v1/projects/:projectId/service')
             throw new Exception('Project not found', 404);
         }
 
-        $services = $project->getAttribute('services', []);
-        $services[$service] = $status;
+        $service = $dbForConsole->findOne("projectsServices", [
+            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()]),
+            new Query('key', Query::TYPE_EQUAL, [$serviceKey]),
+        ]);
 
-        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('services', $services));
+        // TODO: Implement delete method. Do we delete for "true" or for "false"? Same for auth!!!!
+        if($service == false || $service->isEmpty()) {
+            $teamId = $project->getAttribute("teamId");
 
+            $service = new Document([
+                '$id' => $dbForConsole->getId(),
+                '$read' => ['team:' . $teamId],
+                '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
+                'projectId' => $project->getId(),
+                'key' => $serviceKey,
+                'status' => $status,
+            ]);
+
+            $dbForConsole->createDocument("projectsServices", $service);
+
+            $dbForConsole->purgeDocument('projects', $project->getId());
+        } else {
+            if($service->getAttribute("status") != $status) {
+                $service->setAttribute("status", $status);
+                $dbForConsole->updateDocument("projectsServices", $service->getId(), $service);
+
+                $dbForConsole->purgeDocument('projects', $project->getId());
+            }
+        }
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
@@ -505,7 +536,7 @@ App::patch('/v1/projects/:projectId/oauth2')
     ->param('secret', '', new text(512), 'Provider secret key. Max length: 512 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $provider, $appId, $secret, $response, $dbForConsole) {
+    ->action(function ($projectId, $providerKey, $appId, $secret, $response, $dbForConsole) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
 
@@ -515,12 +546,41 @@ App::patch('/v1/projects/:projectId/oauth2')
             throw new Exception('Project not found', 404);
         }
 
-        $providers = $project->getAttribute('providers', []);
-        $providers[$provider . 'Appid'] = $appId;
-        $providers[$provider . 'Secret'] = $secret;
+        $provider = $dbForConsole->findOne("projectProviders", [
+            new Query('key', Query::TYPE_EQUAL, [$providerKey]),
+            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()]),
+        ]);
 
-        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('providers', $providers));
+        if($provider && !$provider->isEmpty()) {
+            // Provider exists
 
+            $provider->setAttribute("appId", $appId)
+                    ->setAttribute("appSecret", $secret);
+
+            $dbForConsole->updateDocument("projectProviders", $provider->getId(), $provider);
+
+            $dbForConsole->purgeDocument("projects", $project->getId());
+        } else {
+            // Provider does not exist yet
+
+            $teamId = $project->getAttribute("teamId");
+
+            $provider = new Document([
+                '$id' => $dbForConsole->getId(),
+                '$read' => ['team:' . $teamId],
+                '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
+                'projectId' => $project->getId(),
+                'key' => $providerKey,
+                'appId' => $appId,
+                'appSecret' => $secret
+            ]);
+
+            $dbForConsole->createDocument("projectProviders", $provider);
+
+            $dbForConsole->purgeDocument("projects", $project->getId());
+        }
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
@@ -674,8 +734,13 @@ App::post('/v1/projects/:projectId/webhooks')
 
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
 
+        $teamId = $project->getAttribute("teamId");
+
         $webhook = new Document([
             '$id' => $dbForConsole->getId(),
+            '$read' => ['team:' . $teamId],
+            '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
+            'projectId' => $project->getId(),
             'name' => $name,
             'events' => $events,
             'url' => $url,
@@ -684,9 +749,9 @@ App::post('/v1/projects/:projectId/webhooks')
             'httpPass' => $httpPass,
         ]);
 
-        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
-                ->setAttribute('webhooks', $webhook, Document::SET_TYPE_APPEND)
-        );
+        $webhook = $dbForConsole->createDocument("projectWebhooks", $webhook);
+
+        $dbForConsole->purgeDocument("projects", $project->getId());
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
@@ -715,7 +780,9 @@ App::get('/v1/projects/:projectId/webhooks')
             throw new Exception('Project not found', 404);
         }
 
-        $webhooks = $project->getAttribute('webhooks', []);
+        $webhooks = $dbForConsole->find("projectWebhooks", [
+            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
+        ]);
 
         $response->dynamic(new Document([
             'webhooks' => $webhooks,
@@ -747,9 +814,9 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
             throw new Exception('Project not found', 404);
         }
 
-        $webhook = $project->find('$id', $webhookId, 'webhooks');
+        $webhook = $dbForConsole->getDocument('projectWebhooks', $webhookId);
 
-        if (empty($webhook) || !$webhook instanceof Document) {
+        if ($webhook->isEmpty()) {
             throw new Exception('Webhook not found', 404);
         }
 
@@ -788,22 +855,23 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
 
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
 
-        $webhook = $project->find('$id', $webhookId, 'webhooks');
+        $webhook = $dbForConsole->getDocument('projectWebhooks', $webhookId);
 
-        if (empty($webhook) || !$webhook instanceof Document) {
+        if ($webhook->isEmpty()) {
             throw new Exception('Webhook not found', 404);
         }
 
-        $project->findAndReplace('$id', $webhook->getId(), $webhook
-                ->setAttribute('name', $name)
-                ->setAttribute('events', $events)
-                ->setAttribute('url', $url)
-                ->setAttribute('security', $security)
-                ->setAttribute('httpUser', $httpUser)
-                ->setAttribute('httpPass', $httpPass)
-            , 'webhooks');
+        $webhook
+            ->setAttribute('name', $name)
+            ->setAttribute('events', $events)
+            ->setAttribute('url', $url)
+            ->setAttribute('security', $security)
+            ->setAttribute('httpUser', $httpUser)
+            ->setAttribute('httpPass', $httpPass);
 
-        $dbForConsole->updateDocument('projects', $project->getId(), $project);
+        $dbForConsole->updateDocument("projectWebhooks", $webhook->getId(), $webhook);
+
+        $dbForConsole->purgeDocument('projects', $project->getId());
 
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
@@ -831,11 +899,15 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
             throw new Exception('Project not found', 404);
         }
 
-        if (!$project->findAndRemove('$id', $webhookId, 'webhooks')) {
+        $webhook = $dbForConsole->getDocument("projectWebhooks", $webhookId);
+
+        if($webhook->isEmpty()) {
             throw new Exception('Webhook not found', 404);
         }
 
-        $dbForConsole->updateDocument('projects', $project->getId(), $project);
+        $dbForConsole->deleteDocument("projectWebhooks", $webhook->getId());
+
+        $dbForConsole->purgeDocument('projects', $project->getId());
 
         $response->noContent();
     });
@@ -867,18 +939,24 @@ App::post('/v1/projects/:projectId/keys')
             throw new Exception('Project not found', 404);
         }
 
+        $teamId = $project->getAttribute("teamId");
+
         $key = new Document([
             '$id' => $dbForConsole->getId(),
+            '$read' => ['team:' . $teamId],
+            '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
+            'projectId' => $project->getId(),
             'name' => $name,
             'scopes' => $scopes,
             'secret' => \bin2hex(\random_bytes(128)),
         ]);
 
-        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
-                ->setAttribute('keys', $key, Document::SET_TYPE_APPEND)
-        );
+        $key = $dbForConsole->createDocument("projectKeys", $key);
+
+        $dbForConsole->purgeDocument("projects", $project->getId());
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        var_dump(Response::STATUS_CODE_CREATED);
         $response->dynamic($key, Response::MODEL_KEY);
     });
 
@@ -905,7 +983,10 @@ App::get('/v1/projects/:projectId/keys')
             throw new Exception('Project not found', 404);
         }
 
-        $keys = $project->getAttribute('keys', []);
+        // TODO: Implement pagination
+        $keys = $dbForConsole->find("projectKeys", [
+            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()]),
+        ]);
 
         $response->dynamic(new Document([
             'keys' => $keys,
@@ -928,15 +1009,18 @@ App::get('/v1/projects/:projectId/keys/:keyId')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function ($projectId, $keyId, $response, $dbForConsole) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForConsole */
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception('Project not found', 404);
         }
 
-        $key = $project->find('$id', $keyId, 'keys');
+        $key = $dbForConsole->getDocument("projectKeys", $keyId);
 
-        if (empty($key) || !$key instanceof Document) {
+        if ($key->isEmpty()) {
             throw new Exception('Key not found', 404);
         }
 
@@ -969,18 +1053,18 @@ App::put('/v1/projects/:projectId/keys/:keyId')
             throw new Exception('Project not found', 404);
         }
 
-        $key = $project->find('$id', $keyId, 'keys');
+        $key = $dbForConsole->getDocument("projectKeys", $keyId);
 
-        if (empty($key) || !$key instanceof Document) {
+        if ($key->isEmpty()) {
             throw new Exception('Key not found', 404);
         }
 
-        $project->findAndReplace('$id', $key->getId(), $key
-                ->setAttribute('name', $name)
-                ->setAttribute('scopes', $scopes)
-            , 'keys');
+        $key->setAttribute('name', $name)
+            ->setAttribute('scopes', $scopes);
 
-        $dbForConsole->updateDocument('projects', $project->getId(), $project);
+        $dbForConsole->updateDocument("projectKeys", $key->getId(), $key);
+
+        $dbForConsole->purgeDocument('projects', $project->getId());
 
         $response->dynamic($key, Response::MODEL_KEY);
     });
@@ -1008,11 +1092,15 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
             throw new Exception('Project not found', 404);
         }
 
-        if (!$project->findAndRemove('$id', $keyId, 'keys')) {
+        $key = $dbForConsole->getDocument("projectKeys", $keyId);
+
+        if($key->isEmpty()) {
             throw new Exception('Key not found', 404);
         }
 
-        $dbForConsole->updateDocument('projects', $project->getId(), $project);
+        $dbForConsole->deleteDocument("projectKeys", $key->getId());
+
+        $dbForConsole->purgeDocument('projects', $project->getId());
 
         $response->noContent();
     });
@@ -1050,10 +1138,10 @@ App::post('/v1/projects/:projectId/platforms')
         $teamId = $project->getAttribute("teamId");
 
         $platform = new Document([
-            'projectId' => $project->getId(),
             '$id' => $dbForConsole->getId(),
             '$read' => ['team:' . $teamId],
             '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
+            'projectId' => $project->getId(),
             'type' => $type,
             'name' => $name,
             'key' => $key,
@@ -1063,7 +1151,8 @@ App::post('/v1/projects/:projectId/platforms')
             'dateUpdated' => \time(),
         ]);
 
-        $dbForConsole->createDocument("projectsPlatforms", $platform);
+        $platform = $dbForConsole->createDocument("projectsPlatforms", $platform);
+
         $dbForConsole->purgeDocument('projects', $project->getId());
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -1087,14 +1176,13 @@ App::get('/v1/projects/:projectId/platforms')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
 
-        // TODO: Implement pagination
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception('Project not found', 404);
         }
 
+        // TODO: Implement pagination
         $platforms = $dbForConsole->find('projectsPlatforms', [
             new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
         ]);
@@ -1131,7 +1219,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
 
         $platform = $dbForConsole->getDocument("projectsPlatforms", $platformId);
 
-        if (empty($platform) || !$platform instanceof Document) {
+        if ($platform->isEmpty()) {
             throw new Exception('Platform not found', 404);
         }
 
@@ -1168,7 +1256,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
 
         $platform = $dbForConsole->getDocument("projectsPlatforms", $platformId);
 
-        if (empty($platform) || !$platform instanceof Document) {
+        if ($platform->isEmpty()) {
             throw new Exception('Platform not found', 404);
         }
 
@@ -1247,9 +1335,12 @@ App::post('/v1/projects/:projectId/domains')
             throw new Exception('Project not found', 404);
         }
 
-        $document = $project->find('domain', $domain, 'domains');
+        $document = $dbForConsole->findOne("projectDomains", [
+            new Query('domain', Query::TYPE_EQUAL, [$domain]),
+            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()]),
+        ]);
 
-        if ($document) {
+        if ($document && !$document->isEmpty()) {
             throw new Exception('Domain already exists', 409);
         }
 
@@ -1259,10 +1350,15 @@ App::post('/v1/projects/:projectId/domains')
             throw new Exception('Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.', 500);
         }
 
+        $teamId = $project->getAttribute("teamId");
+
         $domain = new Domain($domain);
 
         $domain = new Document([
             '$id' => $dbForConsole->getId(),
+            '$read' => ['team:' . $teamId],
+            '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
+            'projectId' => $project->getId(),
             'updated' => \time(),
             'domain' => $domain->get(),
             'tld' => $domain->getSuffix(),
@@ -1271,9 +1367,9 @@ App::post('/v1/projects/:projectId/domains')
             'certificateId' => null,
         ]);
 
-        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
-                ->setAttribute('domains', $domain, Document::SET_TYPE_APPEND)
-        );
+        $domain = $dbForConsole->createDocument("projectDomains", $domain);
+
+        $dbForConsole->purgeDocument("projects", $project->getId());
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($domain, Response::MODEL_DOMAIN);
@@ -1302,7 +1398,8 @@ App::get('/v1/projects/:projectId/domains')
             throw new Exception('Project not found', 404);
         }
 
-        $domains = $project->getAttribute('domains', []);
+        // TODO: Implement pagination
+        $domains = $dbForConsole->find("projectDomains", []);
 
         $response->dynamic(new Document([
             'domains' => $domains,
@@ -1334,9 +1431,9 @@ App::get('/v1/projects/:projectId/domains/:domainId')
             throw new Exception('Project not found', 404);
         }
 
-        $domain = $project->find('$id', $domainId, 'domains');
+        $domain = $dbForConsole->getDocument("projectDomains", $domainId);
 
-        if (empty($domain) || !$domain instanceof Document) {
+        if ($domain->isEmpty()) {
             throw new Exception('Domain not found', 404);
         }
 
@@ -1367,9 +1464,9 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
             throw new Exception('Project not found', 404);
         }
 
-        $domain = $project->find('$id', $domainId, 'domains');
+        $domain = $dbForConsole->getDocument("projectDomains", $domainId);
 
-        if (empty($domain) || !$domain instanceof Document) {
+        if ($domain->isEmpty()) {
             throw new Exception('Domain not found', 404);
         }
 
@@ -1389,11 +1486,10 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
             throw new Exception('Failed to verify domain', 401);
         }
 
-        $project->findAndReplace('$id', $domain->getId(), $domain
-                ->setAttribute('verification', true)
-            , 'domains');
+        $domain->setAttribute("verification", true);
 
-        $dbForConsole->updateDocument('projects', $project->getId(), $project);
+        $dbForConsole->updateDocument("projectDomains", $domain->getId(), $domain);
+        $dbForConsole->purgeDocument("projects", $project->getId());
 
         // Issue a TLS certificate when domain is verified
         Resque::enqueue('v1-certificates', 'CertificatesV1', [
@@ -1428,13 +1524,15 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
             throw new Exception('Project not found', 404);
         }
 
-        $domain = $project->find('$id', $domainId, 'domains');
+        $domain = $dbForConsole->getDocument("projectDomains", $domainId);
 
-        if (!$project->findAndRemove('$id', $domainId, 'domains')) {
+        if ($domain->isEmpty()) {
             throw new Exception('Domain not found', 404);
         }
 
-        $dbForConsole->updateDocument('projects', $project->getId(), $project);
+        $dbForConsole->deleteDocument("projectDomains", $domain->getId());
+
+        $dbForConsole->purgeDocument("projects", $project->getId());
 
         $deletes
             ->setParam('type', DELETE_TYPE_CERTIFICATES)
