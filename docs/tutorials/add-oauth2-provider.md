@@ -10,7 +10,7 @@ As of the writing of these lines, we do not accept any minor OAuth2 providers. F
 
 ## 1. Prerequisites
 
-It's really easy to contribute to an open-sourced project, but when using GitHub, there are a few steps we need to follow. This section will take you step-by-step through the process of preparing your own local version of Appwrite, where you can make any changes without affecting Appwrite right away.
+It's really easy to contribute to an open source project, but when using GitHub, there are a few steps we need to follow. This section will take you step-by-step through the process of preparing your own local version of Appwrite, where you can make any changes without affecting Appwrite right away.
 
 > If you are experienced with GitHub or have made a pull request before, you can skip to [Implement new provider](#2-implement-new-provider).
 
@@ -34,7 +34,7 @@ Finally, you will need to create a `feat-XXX-YYY-oauth` branch based on the `mas
 
 ### 2.1 List your new provider
 
-The first step in adding a new OAuth2 provider is to add it to the list in providers config file array, located at:
+The first step in adding a new OAuth2 provider is to add it to the list of providers located at:
 
 ```
 app/config/providers.php
@@ -55,9 +55,9 @@ Add a logo image to your new provider in this path: `public/images/users`. Your 
 
 Once you have finished setting up all the metadata for the new provider, you need to start coding.
 
-Create a new file `XXX.php` where `XXX` is the name of the OAuth provider in `CamelCase` with the first letter in upper case in this location
+Create a new file `XXX.php` where `XXX` is the name of the OAuth provider in [`PascalCase`](https://stackoverflow.com/a/41769355/7659504) in this location
 "`bash
-src/Appwrite/Auth/OAuth
+src/Appwrite/Auth/OAuth2/XXX.php
 ```
 
 Inside this file, create a new class that extends the basic OAuth2 provider abstract class. Note that the class name should start with a capital letter, as PHP FIG standards suggest.
@@ -172,7 +172,7 @@ If everything goes well, raise a pull request and be ready to respond to any fee
 
 ## 4. Raise a pull request
 
-First of all, commit the changes with the message `Added Slovak translations` and push it. This will publish a new branch to your forked version of Appwrite. If you visit it at `github.com/YOUR_USERNAME_appwrite`, you will see a new alert saying you are ready to submit a pull request. Follow the steps GitHub provides, and at the end, you will have your pull request submitted.
+First of all, commit the changes with the message `Added XXX OAuth2 Provider` and push it. This will publish a new branch to your forked version of Appwrite. If you visit it at `github.com/YOUR_USERNAME/appwrite`, you will see a new alert saying you are ready to submit a pull request. Follow the steps GitHub provides, and at the end, you will have your pull request submitted.
 
 ## 🤕 Stuck ?
 If you need any help with the contribution, feel free to head over to [our discord channel](https://appwrite.io/discord) and we'll be happy to help you out.
