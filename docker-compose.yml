@@ -39,7 +39,7 @@ services:
     build:
       context: .
       args:
-        - DEBUG=true
+        - DEBUG=false
         - TESTING=true
         - VERSION=dev
     ports: 
