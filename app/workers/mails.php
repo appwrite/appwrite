@@ -58,6 +58,9 @@ class MailsV1 extends Worker
             case MAIL_TYPE_VERIFICATION:
                 $subject = $locale->getText("$prefix.subject");
                 break;
+            case MAIL_TYPE_MAGIC_SESSION:
+                $subject = $locale->getText("$prefix.subject");
+                break;
             default:
                 throw new Exception('Undefined Mail Type : ' . $type, 500);
         }
@@ -132,6 +135,8 @@ class MailsV1 extends Worker
                 return 'emails.invitation';
             case MAIL_TYPE_VERIFICATION:
                 return 'emails.verification';
+            case MAIL_TYPE_MAGIC_SESSION:
+                return 'emails.magicSession';
             default:
                 throw new Exception('Undefined Mail Type : ' . $type, 500);
         }
