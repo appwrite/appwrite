@@ -92,7 +92,21 @@ $logs = $this->getParam('logs', null);
                                                     <div data-ls-if="{{attribute.required}}" class="text-size-xs text-danger text-fade">required</div>
                                                     <div data-ls-if="!{{attribute.required}}" class="text-size-xs text-fade">optional</div>
                                                 </label>
-                                                <div data-ls-template="template-{{attribute.type}}" data-type="script"></div>
+
+                                                <div data-ls-if="!{{attribute.array}}" data-ls-template="template-{{attribute.type}}" data-type="script"></div>
+
+                                                <div data-ls-if="{{attribute.array}}" class="margin-bottom">
+                                                    <div data-forms-clone="" data-label="Add Attribute" data-target="attributes-section" data-first="1">
+                                                        <div class="row responsive thin margin-bottom-tiny">
+                                                            <div class="col span-11 margin-bottom-small">
+                                                                <div data-ls-template="template-{{attribute.type}}" data-type="script"></div>
+                                                            </div>
+                                                            <div class="col span-1 margin-bottom-small">
+                                                                <button type="button" data-remove class="dark danger small round pull-end" style="margin-top: 10px;"><i class="icon-cancel"></i></button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </li>
                                         </ul>
                                     </fieldset>
@@ -169,15 +183,16 @@ $logs = $this->getParam('logs', null);
                         <?php echo $logs->render(); ?>                
                     </li>
                 <?php endif; ?>
-                <!-- <li data-ls-if="{{project-document.$id}}" data-state="/console/database/document/activity?id={{router.params.id}}&collection={{router.params.collection}}&project={{router.params.project}}">
-                    <h2>Activity</h2>
-                </li> -->
             </ul>
         </div>
     </div>
 </div>
 
 <script type="text/html" id="template-string">
+    <textarea data-forms-text-resize data-forms-text-direction data-ls-attrs="name={{attribute.key}}" data-ls-bind="{{project-document|documentAttribute}}"></textarea>
+</script>
+
+<script type="text/html" id="template-string-array">
     <textarea data-forms-text-resize data-forms-text-direction data-ls-attrs="name={{attribute.key}}" data-ls-bind="{{project-document|documentAttribute}}"></textarea>
 </script>
 
