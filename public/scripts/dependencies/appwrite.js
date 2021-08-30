@@ -3909,6 +3909,33 @@
                     }, payload);
                 }),
                 /**
+                 * Update Email
+                 *
+                 * Update the user email by its unique ID.
+                 *
+                 * @param {string} userId
+                 * @param {string} email
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateEmail: (userId, email) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof email === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "email"');
+                    }
+                    let path = '/users/{userId}/email'.replace('{userId}', userId);
+                    let payload = {};
+                    if (typeof email !== 'undefined') {
+                        payload['email'] = email;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * Get User Logs
                  *
                  * Get a user activity logs list by its unique ID.
@@ -3925,6 +3952,60 @@
                     let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Update Name
+                 *
+                 * Update the user name by its unique ID.
+                 *
+                 * @param {string} userId
+                 * @param {string} name
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateName: (userId, name) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof name === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "name"');
+                    }
+                    let path = '/users/{userId}/name'.replace('{userId}', userId);
+                    let payload = {};
+                    if (typeof name !== 'undefined') {
+                        payload['name'] = name;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Update Password
+                 *
+                 * Update the user password by its unique ID.
+                 *
+                 * @param {string} userId
+                 * @param {string} password
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updatePassword: (userId, password) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof password === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "password"');
+                    }
+                    let path = '/users/{userId}/password'.replace('{userId}', userId);
+                    let payload = {};
+                    if (typeof password !== 'undefined') {
+                        payload['password'] = password;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
                         'content-type': 'application/json',
                     }, payload);
                 }),
