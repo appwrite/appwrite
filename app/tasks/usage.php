@@ -17,13 +17,13 @@ use Utopia\Database\Validator\Authorization;
  * Metrics We collect
  *
  * General
- * 
+ *
  * requests
  * network
  * executions
- * 
+ *
  * Database
- * 
+ *
  * database.collections.create
  * database.collections.read
  * database.collections.update
@@ -36,16 +36,16 @@ use Utopia\Database\Validator\Authorization;
  * database.collections.{collectionId}.documents.read
  * database.collections.{collectionId}.documents.update
  * database.collections.{collectionId}.documents.delete
- * 
+ *
  * Storage
- * 
+ *
  * storage.buckets.{bucketId}.files.create
  * storage.buckets.{bucketId}.files.read
  * storage.buckets.{bucketId}.files.update
  * storage.buckets.{bucketId}.files.delete
- * 
+ *
  * Users
- * 
+ *
  * users.create
  * users.read
  * users.update
@@ -203,7 +203,7 @@ $cli
         $attempts = 0;
         $max = 10;
         $sleep = 1;
-        
+
         do { // connect to db
             try {
                 $attempts++;
@@ -219,7 +219,7 @@ $cli
             }
         } while ($attempts < $max);
 
-        // TODO use inject 
+        // TODO use inject
         $cacheAdapter = new Cache(new Redis($redis));
         $dbForProject = new Database(new MariaDB($db), $cacheAdapter);
         $dbForConsole = new Database(new MariaDB($db), $cacheAdapter);
@@ -242,7 +242,7 @@ $cli
             $client = $register->get('influxdb');
             if ($client) {
                 $database = $client->selectDB('telegraf');
-                
+
                 // sync data
                 foreach ($globalMetrics as $metric => $options) { //for each metrics
                     foreach ($periods as $period) { // aggregate data for each period
@@ -252,10 +252,10 @@ $cli
                         }
                         $end = DateTime::createFromFormat('U', \strtotime('now'))->format(DateTime::RFC3339);
 
-                        $table = $options['table']; //which influxdb table to query for this metric
-                        $groupBy = empty($options['groupBy']) ? '' : ', "' . $options['groupBy'] . '"'; //some sub level metrics may be grouped by other tags like collectionId, bucketId, etc
+                        $table = $options['table']; //Which influxdb table to query for this metric
+                        $groupBy = empty($options['groupBy']) ? '' : ', "' . $options['groupBy'] . '"'; //Some sub level metrics may be grouped by other tags like collectionId, bucketId, etc
 
-                        $filters = $options['filters'] ?? [];
+                        $filters = $options['filters'] ?? []; // Some metrics might have additional filters, like function's status
                         if (!empty($filters)) {
                             $filters = ' AND ' . implode(' AND ', array_map(function ($filter, $value) {
                                 return '"' . $filter . '"=\'' . $value . '\'';
@@ -263,7 +263,7 @@ $cli
                         }
 
                         $result = $database->query('SELECT sum(value) AS "value" FROM "' . $table . '" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\'' . (empty($filters) ? '' : $filters) . ' GROUP BY time(' . $period['key'] . '), "projectId"' . $groupBy . ' FILL(null)');
-                        
+
                         $points = $result->getPoints();
                         foreach ($points as $point) {
                             $projectId = $point['projectId'];
@@ -271,7 +271,7 @@ $cli
                             if (!empty($projectId) && $projectId != 'console') {
                                 $dbForProject->setNamespace('project_' . $projectId . '_internal');
                                 $metricUpdated = $metric;
-                                
+
                                 if (!empty($groupBy)) {
                                     $groupedBy = $point[$options['groupBy']] ?? '';
                                     if (empty($groupedBy)) {
@@ -281,9 +281,9 @@ $cli
                                 }
 
                                 $time = \strtotime($point['time']);
-                                $id = \md5($time . '_' . $period['key'] . '_' . $metricUpdated); //construct unique id for each metric using time, period and metric
+                                $id = \md5($time . '_' . $period['key'] . '_' . $metricUpdated); //Construct unique id for each metric using time, period and metric
                                 $value = (!empty($point['value'])) ? $point['value'] : 0;
-                                
+
                                 try {
                                     $document = $dbForProject->getDocument('stats', $id);
                                     if ($document->isEmpty()) {
@@ -310,19 +310,19 @@ $cli
             }
 
             /**
-             * Aggregate MariaDB every 15 minutes
-             * Some of the queries here might contain full-table scans.
-             */
+         * Aggregate MariaDB every 15 minutes
+         * Some of the queries here might contain full-table scans.
+         */
             if ($iterations % 30 == 0) { // Every 15 minutes
                 // Aggregate number of objects in database
                 // Get count of all the documents per collection -
                 // Buckets will have the same
 
                 $latestProject = null;
-                
+
                 do {
                     $projects = $dbForConsole->find('projects', [], 100, orderAfter:$latestProject);
-                    
+
                     if (empty($projects)) {
                         continue;
                     }
@@ -330,20 +330,45 @@ $cli
                     $latestProject = $projects[array_key_last($projects)];
 
                     foreach ($projects as $project) {
-                        $id = $project->getId();
+                        $projectId = $project->getId();
 
                         // Get total storage
-                        $dbForProject->setNamespace('project_' . $id . '_internal');
+                        $dbForProject->setNamespace('project_' . $projectId . '_internal');
                         $storageTotal = $dbForProject->sum('files', 'sizeOriginal') + $dbForProject->sum('tags', 'size');
 
-                        $dbForProject->createDocument('stats', new Document([
-                            '$id' => $dbForProject->getId(),
-                            'period' => '15m',
-                            'time' => time(),
-                            'metric' => 'storage.total',
-                            'value' => $storageTotal,
-                            'type' => 1,
-                        ]));
+                        $time = (int) (floor(time() / 1800) * 1800); // Time rounded to nearest 30 minutes
+                        $id = \md5($time . '_30m_storage.total'); //Construct unique id for each metric using time, period and metric
+                        $document = $dbForProject->getDocument('stats', $id);
+                        if ($document->isEmpty()) {
+                            $dbForProject->createDocument('stats', new Document([
+                                '$id' => $id,
+                                'period' => '30m',
+                                'time' => $time,
+                                'metric' => 'storage.total',
+                                'value' => $storageTotal,
+                                'type' => 1,
+                            ]));
+                        } else {
+                            $dbForProject->updateDocument('stats', $document->getId(),
+                                $document->setAttribute('value', $storageTotal));
+                        }
+                        
+                        $time = (int) (floor(time() / 86400) * 86400); // Time rounded to nearest day
+                        $id = \md5($time . '_1d_storage.total'); //Construct unique id for each metric using time, period and metric
+                        $document = $dbForProject->getDocument('stats', $id);
+                        if ($document->isEmpty()) {
+                            $dbForProject->createDocument('stats', new Document([
+                                '$id' => $id,
+                                'period' => '1d',
+                                'time' => $time,
+                                'metric' => 'storage.total',
+                                'value' => $storageTotal,
+                                'type' => 1,
+                            ]));
+                        } else {
+                            $dbForProject->updateDocument('stats', $document->getId(),
+                                $document->setAttribute('value', $storageTotal));
+                        }
 
                         $collections = [
                             'users' => [
@@ -352,7 +377,7 @@ $cli
                             'collections' => [
                                 'metricPrefix' => 'database',
                                 'namespace' => 'internal',
-                                'subCollections' => [ // TODO better document this key
+                                'subCollections' => [ // Some collections, like collections and later buckets have child collections that need counting
                                     'documents' => [
                                         'namespace' => 'external',
                                     ],
@@ -366,20 +391,45 @@ $cli
 
                         foreach ($collections as $collection => $options) {
                             try {
-                                $dbForProject->setNamespace("project_{$id}_{$options['namespace']}");
+                                $dbForProject->setNamespace("project_{$projectId}_{$options['namespace']}");
                                 $count = $dbForProject->count($collection);
-                                $dbForProject->setNamespace("project_{$id}_internal");
+                                $dbForProject->setNamespace("project_{$projectId}_internal");
                                 $metricPrefix = $options['metricPrefix'] ?? '';
                                 $metric = empty($metricPrefix) ? "{$collection}.count" : "{$metricPrefix}.{$collection}.count";
-                                
-                                $dbForProject->createDocument('stats', new Document([
-                                    '$id' => $dbForProject->getId(),
-                                    'time' => time(),
-                                    'period' => '15m',
-                                    'metric' => $metric,
-                                    'value' => $count,
-                                    'type' => 1,
-                                ]));
+
+                                $time = (int) (floor(time() / 1800) * 1800); // Time rounded to nearest 30 minutes
+                                $id = \md5($time . '_30m_' . $metric); //Construct unique id for each metric using time, period and metric
+                                $document = $dbForProject->getDocument('stats', $id);
+                                if ($document->isEmpty()) {
+                                    $dbForProject->createDocument('stats', new Document([
+                                        '$id' => $id,
+                                        'time' => $time,
+                                        'period' => '30m',
+                                        'metric' => $metric,
+                                        'value' => $count,
+                                        'type' => 1,
+                                    ]));
+                                } else {
+                                    $dbForProject->updateDocument('stats', $document->getId(),
+                                        $document->setAttribute('value', $count));
+                                }
+
+                                $time = (int) (floor(time() / 86400) * 86400); // Time rounded to nearest day
+                                $id = \md5($time . '_1d_' . $metric); //Construct unique id for each metric using time, period and metric
+                                $document = $dbForProject->getDocument('stats', $id);
+                                if ($document->isEmpty()) {
+                                    $dbForProject->createDocument('stats', new Document([
+                                        '$id' => $id,
+                                        'time' => $time,
+                                        'period' => '1d',
+                                        'metric' => $metric,
+                                        'value' => $count,
+                                        'type' => 1,
+                                    ]));
+                                } else {
+                                    $dbForProject->updateDocument('stats', $document->getId(),
+                                        $document->setAttribute('value', $count));
+                                }
 
                                 $subCollections = $options['subCollections'] ?? [];
 
@@ -391,8 +441,8 @@ $cli
                                 $subCollectionCounts = []; //total project level count of sub collections
 
                                 do {
-                                    $dbForProject->setNamespace("project_{$id}_{$options['namespace']}");
-                                    $parents = $dbForProject->find($collection, [], 100, orderAfter:$latestParent);
+                                    $dbForProject->setNamespace("project_{$projectId}_{$options['namespace']}");
+                                    $parents = $dbForProject->find($collection, [], 100, orderAfter:$latestParent); // Get all the parents for the sub collections for example for documents, this will get all the collections
 
                                     if (empty($parents)) {
                                         continue;
@@ -401,37 +451,95 @@ $cli
                                     $latestParent = $parents[array_key_last($parents)];
 
                                     foreach ($parents as $parent) {
-                                        foreach ($subCollections as $subCollection => $subOptions) {
-                                            $dbForProject->setNamespace("project_{$id}_{$subOptions['namespace']}");
+                                        foreach ($subCollections as $subCollection => $subOptions) { // Sub collection counts, like database.collections.collectionId.documents.count
+                                            $dbForProject->setNamespace("project_{$projectId}_{$subOptions['namespace']}");
                                             $count = $dbForProject->count($parent->getId());
-                                            $subCollectionsCounts[$subCollection] = ($subCollectionCounts[$subCollection] ?? 0) + $count;
 
-                                            $dbForProject->setNamespace("project_{$id}_internal");
+                                            $subCollectionCounts[$subCollection] = ($subCollectionCounts[$subCollection] ?? 0) + $count; // Project level counts for sub collections like database.documents.count
 
-                                            $dbForProject->createDocument('stats', new Document([
-                                                '$id' => $dbForProject->getId(),
-                                                'time' => time(),
-                                                'period' => '15m',
-                                                'metric' => empty($metricPrefix) ? "{$collection}.{$parent->getId()}.{$subCollection}.count" : "{$metricPrefix}.{$collection}.{$parent->getId()}.{$subCollection}.count",
-                                                'value' => $count,
-                                                'type' => 1,
-                                            ]));
+                                            $dbForProject->setNamespace("project_{$projectId}_internal");
+
+                                            $metric = empty($metricPrefix) ? "{$collection}.{$parent->getId()}.{$subCollection}.count" : "{$metricPrefix}.{$collection}.{$parent->getId()}.{$subCollection}.count";
+                                            $time = (int) (floor(time() / 1800) * 1800); // Time rounded to nearest 30 minutes
+                                            $id = \md5($time . '_30m_' . $metric); //Construct unique id for each metric using time, period and metric
+                                            $document = $dbForProject->getDocument('stats', $id);
+                                            if ($document->isEmpty()) {
+                                                $dbForProject->createDocument('stats', new Document([
+                                                    '$id' => $id,
+                                                    'time' => $time,
+                                                    'period' => '30m',
+                                                    'metric' => $metric,
+                                                    'value' => $count,
+                                                    'type' => 1,
+                                                ]));
+                                            } else {
+                                                $dbForProject->updateDocument('stats', $document->getId(),
+                                                $document->setAttribute('value', $count));
+                                            }
+
+                                            $time = (int) (floor(time() / 86400) * 86400); // Time rounded to nearest day
+                                            $id = \md5($time . '_1d_' . $metric); //Construct unique id for each metric using time, period and metric
+                                            $document = $dbForProject->getDocument('stats', $id);
+                                            if ($document->isEmpty()) {
+                                                $dbForProject->createDocument('stats', new Document([
+                                                    '$id' => $id,
+                                                    'time' => $time,
+                                                    'period' => '1d',
+                                                    'metric' => $metric,
+                                                    'value' => $count,
+                                                    'type' => 1,
+                                                ]));
+                                            } else {
+                                                $dbForProject->updateDocument('stats', $document->getId(),
+                                                $document->setAttribute('value', $count));
+                                            }
                                         }
                                     }
                                 } while (!empty($parents));
 
-                                foreach ($subCollectionsCounts as $subCollection => $count) {
-                                    $dbForProject->setNamespace("project_{$id}_internal");
-                                    $dbForProject->createDocument('stats', new Document([
-                                        '$id' => $dbForProject->getId(),
-                                        'time' => time(),
-                                        'period' => '15m',
-                                        'metric' => empty($metricPrefix) ? "{$subCollection}.count" : "{$metricPrefix}.{$subCollection}.count",
-                                        'value' => $count,
-                                        'type' => 1,
-                                    ]));
+                                /**
+                                 * Inserting project level counts for sub collections like database.documents.count
+                                 */
+                                foreach ($subCollectionCounts as $subCollection => $count) {
+                                    $dbForProject->setNamespace("project_{$projectId}_internal");
+
+                                    $metric = empty($metricPrefix) ? "{$subCollection}.count" : "{$metricPrefix}.{$subCollection}.count";
+
+                                    $time = (int) (floor(time() / 1800) * 1800); // Time rounded to nearest 30 minutes
+                                    $id = \md5($time . '_30m_' . $metric); //Construct unique id for each metric using time, period and metric
+                                    $document = $dbForProject->getDocument('stats', $id);
+                                    if ($document->isEmpty()) {
+                                        $dbForProject->createDocument('stats', new Document([
+                                            '$id' => $id,
+                                            'time' => $time,
+                                            'period' => '30m',
+                                            'metric' => $metric,
+                                            'value' => $count,
+                                            'type' => 1,
+                                        ]));
+                                    } else {
+                                        $dbForProject->updateDocument('stats', $document->getId(),
+                                        $document->setAttribute('value', $count));
+                                    }
+
+                                    $time = (int) (floor(time() / 86400) * 86400); // Time rounded to nearest day
+                                    $id = \md5($time . '_1d_' . $metric); //Construct unique id for each metric using time, period and metric
+                                    $document = $dbForProject->getDocument('stats', $id);
+                                    if ($document->isEmpty()) {
+                                        $dbForProject->createDocument('stats', new Document([
+                                            '$id' => $id,
+                                            'time' => $time,
+                                            'period' => '1d',
+                                            'metric' => $metric,
+                                            'value' => $count,
+                                            'type' => 1,
+                                        ]));
+                                    } else {
+                                        $dbForProject->updateDocument('stats', $document->getId(),
+                                        $document->setAttribute('value', $count));
+                                    }
                                 }
-                            } catch (\Exception $e) {
+                            } catch (\Exception$e) {
                                 Console::warning("Failed to save database counters data for project {$collection}: {$e->getMessage()}");
                             }
                         }
@@ -442,7 +550,7 @@ $cli
             $iterations++;
             $loopTook = microtime(true) - $loopStart;
             $now = date('d-m-Y H:i:s', time());
-            
+
             Console::info("[{$now}] Aggregation took {$loopTook} seconds");
         }, $interval);
     });
