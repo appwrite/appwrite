@@ -22,7 +22,7 @@ Before making any changes, you will need to fork Appwrite's repository to keep b
 
 This will redirect you from `github.com/appwrite/appwrite` to `github.com/YOUR_USERNAME/appwrite`, meaning all changes you do are only done inside your repository. Once you are there, click the highlighted `Code` button, copy the URL and clone the repository to your computer using `git clone` command:
 
-"`shell
+```shell
 $ git clone COPIED_URL
 ```
 
