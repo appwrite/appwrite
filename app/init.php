@@ -200,6 +200,18 @@ Database::addFilter('subQueryIndexes',
     }
 );
 
+Database::addFilter('subQueryProjectPlatforms',
+    function($value) {
+        return null;
+    },
+    function($value, Document $document, Database $database) {
+        return $database
+            ->find('projectsPlatforms', [
+                new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
+            ], 100, 0, []);
+    }
+);
+
 Database::addFilter('encrypt',
     function($value) {
         $key = App::getEnv('_APP_OPENSSL_KEY_V1');

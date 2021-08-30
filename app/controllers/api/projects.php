@@ -1047,8 +1047,13 @@ App::post('/v1/projects/:projectId/platforms')
             throw new Exception('Project not found', 404);
         }
 
+        $teamId = $project->getAttribute("teamId");
+
         $platform = new Document([
+            'projectId' => $project->getId(),
             '$id' => $dbForConsole->getId(),
+            '$read' => ['team:' . $teamId],
+            '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
             'type' => $type,
             'name' => $name,
             'key' => $key,
@@ -1058,9 +1063,8 @@ App::post('/v1/projects/:projectId/platforms')
             'dateUpdated' => \time(),
         ]);
 
-        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
-                ->setAttribute('platforms', $platform, Document::SET_TYPE_APPEND)
-        );
+        $dbForConsole->createDocument("projectsPlatforms", $platform);
+        $dbForConsole->purgeDocument('projects', $project->getId());
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($platform, Response::MODEL_PLATFORM);
@@ -1083,13 +1087,17 @@ App::get('/v1/projects/:projectId/platforms')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
 
+        // TODO: Implement pagination
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception('Project not found', 404);
         }
 
-        $platforms = $project->getAttribute('platforms', []);
+        $platforms = $dbForConsole->find('projectsPlatforms', [
+            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
+        ]);
 
         $response->dynamic(new Document([
             'platforms' => $platforms,
@@ -1121,7 +1129,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
             throw new Exception('Project not found', 404);
         }
 
-        $platform = $project->find('$id', $platformId, 'platforms');
+        $platform = $dbForConsole->getDocument("projectsPlatforms", $platformId);
 
         if (empty($platform) || !$platform instanceof Document) {
             throw new Exception('Platform not found', 404);
@@ -1158,7 +1166,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
             throw new Exception('Project not found', 404);
         }
 
-        $platform = $project->find('$id', $platformId, 'platforms');
+        $platform = $dbForConsole->getDocument("projectsPlatforms", $platformId);
 
         if (empty($platform) || !$platform instanceof Document) {
             throw new Exception('Platform not found', 404);
@@ -1172,15 +1180,9 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
             ->setAttribute('hostname', $hostname)
         ;
 
-        $project->findAndReplace('$id', $platform->getId(), $platform
-                ->setAttribute('name', $name)
-                ->setAttribute('dateUpdated', \time())
-                ->setAttribute('key', $key)
-                ->setAttribute('store', $store)
-                ->setAttribute('hostname', $hostname)
-            , 'platforms');
+        $dbForConsole->updateDocument('projectsPlatforms', $platform->getId(), $platform);
 
-        $dbForConsole->updateDocument('projects', $project->getId(), $project);
+        $dbForConsole->purgeDocument('projects', $project->getId());
 
         $response->dynamic($platform, Response::MODEL_PLATFORM);
     });
@@ -1208,11 +1210,13 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
             throw new Exception('Project not found', 404);
         }
 
-        if (!$project->findAndRemove('$id', $platformId, 'platforms')) {
+        $deleteRecord = $dbForConsole->deleteDocument("projectsPlatforms", $platformId);
+
+        if($deleteRecord == false) {
             throw new Exception('Platform not found', 404);
         }
 
-        $dbForConsole->updateDocument('projects', $project->getId(), $project);
+        $dbForConsole->purgeDocument('projects', $project->getId());
 
         $response->noContent();
     });
