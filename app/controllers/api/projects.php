@@ -190,6 +190,8 @@ App::get('/v1/projects/:projectId/usage')
             throw new Exception('Project not found', 404);
         }
 
+        $projectDB->setNamespace('app_'.$project->getId());
+
         if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
 
             $period = [
@@ -292,7 +294,6 @@ App::get('/v1/projects/:projectId/usage')
 
 
         // Users
-
         $projectDB->getCollection([
             'limit' => 0,
             'offset' => 0,
@@ -304,7 +305,6 @@ App::get('/v1/projects/:projectId/usage')
         $usersTotal = $projectDB->getSum();
 
         // Documents
-
         $collections = $projectDB->getCollection([
             'limit' => 100,
             'offset' => 0,
