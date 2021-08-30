@@ -310,17 +310,14 @@ $cli
             }
 
             /**
-         * Aggregate MariaDB every 15 minutes
-         * Some of the queries here might contain full-table scans.
-         */
-            if ($iterations % 30 == 0) { // Every 15 minutes
-                // Aggregate number of objects in database
-                // Get count of all the documents per collection -
-                // Buckets will have the same
+             * Aggregate MariaDB every 15 minutes
+             * Some of the queries here might contain full-table scans.
+             */
+            if ($iterations % 30 == 0) { // Every 15 minutes aggregate number of objects in database
 
                 $latestProject = null;
 
-                do {
+                do { // Loop over all the projects
                     $projects = $dbForConsole->find('projects', [], 100, orderAfter:$latestProject);
 
                     if (empty($projects)) {
@@ -440,7 +437,7 @@ $cli
                                 $latestParent = null;
                                 $subCollectionCounts = []; //total project level count of sub collections
 
-                                do {
+                                do { // Loop over all the parent collection document for each sub collection
                                     $dbForProject->setNamespace("project_{$projectId}_{$options['namespace']}");
                                     $parents = $dbForProject->find($collection, [], 100, orderAfter:$latestParent); // Get all the parents for the sub collections for example for documents, this will get all the collections
 
