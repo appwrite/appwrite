@@ -803,7 +803,7 @@ App::put('/v1/account/sessions/url')
             throw new Exception('User not found', 404);
         }
 
-        $token = Auth::tokenVerify($profile->getAttribute('tokens', []), Auth::TOKEN_TYPE_VERIFICATION, $secret);
+        $token = Auth::tokenVerify($profile->getAttribute('tokens', []), Auth::TOKEN_TYPE_MAGIC_URL, $secret);
 
         if (!$token) {
             throw new Exception('Invalid login token', 401);
