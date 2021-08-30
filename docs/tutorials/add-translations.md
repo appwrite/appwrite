@@ -176,7 +176,7 @@ If you can see countries names translated, everything works, and you are ready f
 
 ## 5. Raise a pull request
 
-First of all, commit the changes with the message `Added Slovak translations` and push it. This will publish a new branch to your forked version of Appwrite. If you visit it at `github.com/YOUR_USERNAME_appwrite`, you will see a new alert saying you are ready to submit a pull request. Follow the steps GitHub provides, and at the end, you will have your pull request submitted.
+First of all, commit the changes with the message `Added YYY translations` where `YYY` is the translated language and push it. This will publish a new branch to your forked version of Appwrite. If you visit it at `github.com/YOUR_USERNAME_appwrite`, you will see a new alert saying you are ready to submit a pull request. Follow the steps GitHub provides, and at the end, you will have your pull request submitted.
 
 ## 🤕 Stuck ?
 If you need any help with the contribution, feel free to head over to [our discord channel](https://appwrite.io/discord) and we'll be happy to help you out.
