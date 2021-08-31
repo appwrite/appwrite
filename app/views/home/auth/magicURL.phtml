@@ -10,11 +10,14 @@
         document.getElementById('message').style.display = 'block';
     }, 25);
 
-    <?php echo "const userId = '" . $this->getParam('userId') . "';"; ?>
-    <?php echo "const secret = '" . $this->getParam('secret') . "';"; ?>
-    <?php echo "const project = '" . $this->getParam('project') . "';"; ?>
+    const urlSearchParams = new URLSearchParams(window.location.search);
+    const {
+        userId,
+        secret,
+        project
+    } = Object.fromEntries(urlSearchParams.entries());
 
-const formData = new FormData();
+    const formData = new FormData();
     formData.append('userId', userId);
     formData.append('secret', secret);
 
