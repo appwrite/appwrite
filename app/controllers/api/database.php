@@ -109,7 +109,7 @@ function createAttribute($collectionId, $attribute, $response, $dbForInternal, $
 
     $audits
         ->setParam('event', 'database.attributes.create')
-        ->setParam('resource', 'database/collection/'.$collection->getId())
+        ->setParam('resource', 'collection/'.$collection->getId())
         ->setParam('data', $clone)
     ;
 
@@ -165,7 +165,7 @@ App::post('/v1/database/collections')
 
         $audits
             ->setParam('event', 'database.collections.create')
-            ->setParam('resource', 'database/collection/'.$collection->getId())
+            ->setParam('resource', 'collection/'.$collection->getId())
             ->setParam('data', $collection->getArrayCopy())
         ;
 
@@ -275,7 +275,7 @@ App::get('/v1/database/collections/:collectionId/logs')
 
         $audit = new Audit($dbForInternal);
 
-        $logs = $audit->getLogsByResource('database/collection/'.$collection->getId());
+        $logs = $audit->getLogsByResource('collection/'.$collection->getId());
 
         $output = [];
 
@@ -391,7 +391,7 @@ App::put('/v1/database/collections/:collectionId')
 
         $audits
             ->setParam('event', 'database.collections.update')
-            ->setParam('resource', 'database/collection/'.$collection->getId())
+            ->setParam('resource', 'collection/'.$collection->getId())
             ->setParam('data', $collection->getArrayCopy())
         ;
 
@@ -441,7 +441,7 @@ App::delete('/v1/database/collections/:collectionId')
 
         $audits
             ->setParam('event', 'database.collections.delete')
-            ->setParam('resource', 'database/collection/'.$collection->getId())
+            ->setParam('resource', 'collection/'.$collection->getId())
             ->setParam('data', $collection->getArrayCopy())
         ;
 
@@ -913,7 +913,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:attributeId')
 
         $audits
             ->setParam('event', 'database.attributes.delete')
-            ->setParam('resource', 'database/collection/'.$collection->getId())
+            ->setParam('resource', 'collection/'.$collection->getId())
             ->setParam('data', $attribute->getArrayCopy())
         ;
 
@@ -1012,7 +1012,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
 
         $audits
             ->setParam('event', 'database.indexes.create')
-            ->setParam('resource', 'database/collection/'.$collection->getId())
+            ->setParam('resource', 'collection/'.$collection->getId())
             ->setParam('data', $index->getArrayCopy())
         ;
 
@@ -1151,7 +1151,7 @@ App::delete('/v1/database/collections/:collectionId/indexes/:indexId')
 
         $audits
             ->setParam('event', 'database.indexes.delete')
-            ->setParam('resource', 'database/collection/'.$collection->getId())
+            ->setParam('resource', 'collection/'.$collection->getId())
             ->setParam('data', $index->getArrayCopy())
         ;
 
@@ -1220,7 +1220,7 @@ App::post('/v1/database/collections/:collectionId/documents')
 
         $audits
             ->setParam('event', 'database.documents.create')
-            ->setParam('resource', 'database/document/'.$document->getId())
+            ->setParam('resource', 'document/'.$document->getId())
             ->setParam('data', $document->getArrayCopy())
         ;
 
@@ -1383,13 +1383,16 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         catch (AuthorizationException $exception) {
             throw new Exception('Unauthorized permissions', 401);
         }
+        catch (DuplicateException $exception) {
+            throw new Exception('Document already exists', 409);
+        }
         catch (StructureException $exception) {
-            throw new Exception('Bad structure. '.$exception->getMessage(), 400);
+            throw new Exception($exception->getMessage(), 400);
         }
 
         $audits
             ->setParam('event', 'database.documents.update')
-            ->setParam('resource', 'database/document/'.$document->getId())
+            ->setParam('resource', 'document/'.$document->getId())
             ->setParam('data', $document->getArrayCopy())
         ;
 
@@ -1440,7 +1443,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
 
         $audits
             ->setParam('event', 'database.documents.delete')
-            ->setParam('resource', 'database/document/'.$document->getId())
+            ->setParam('resource', 'document/'.$document->getId())
             ->setParam('data', $document->getArrayCopy()) // Audit document in case of malicious or disastrous action
         ;
 
