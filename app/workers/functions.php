@@ -16,6 +16,7 @@ use Utopia\Config\Config;
 use Utopia\Orchestration\Orchestration;
 use Utopia\Orchestration\Adapter\DockerAPI;
 use Utopia\Orchestration\Container;
+use Utopia\Orchestration\Exception\Orchestration as OrchestrationException;
 use Utopia\Orchestration\Exception\Timeout as TimeoutException;
 
 require_once __DIR__.'/../workers.php';
@@ -433,7 +434,7 @@ class FunctionsV1 extends Worker
         else {
             Console::info('Container is ready to run');
         }
-        
+
         $stdout = '';
         $stderr = '';
 
@@ -451,6 +452,9 @@ class FunctionsV1 extends Worker
                 timeout: $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
         } catch (TimeoutException $e) {
             $exitCode = 124;
+        } catch (OrchestrationException $e) {
+            $stderr = $e->getMessage();
+            $exitCode = 1;
         }
 
         $executionEnd = \microtime(true);
@@ -460,7 +464,7 @@ class FunctionsV1 extends Worker
         Console::info('Function executed in ' . ($executionEnd - $executionStart) . ' seconds, status: ' . $functionStatus);
 
         Authorization::disable();
-        
+
         $execution = $database->updateDocument(array_merge($execution->getArrayCopy(), [
             'tagId' => $tag->getId(),
             'status' => $functionStatus,
