@@ -698,6 +698,7 @@ App::post('/v1/account/sessions/magic-url')
 
             Authorization::reset();
             $mails->setParam('event', 'users.create');
+            $audits->setParam('event', 'users.create');
         }
 
         $loginSecret = Auth::tokenGenerator();
@@ -740,7 +741,6 @@ App::post('/v1/account/sessions/magic-url')
         $url = Template::unParseURL($url);
 
         $mails
-            ->setParam('event', ($userAdded ?? false) ? 'users.create' : '')
             ->setParam('from', $project->getId())
             ->setParam('recipient', $user->getAttribute('email'))
             ->setParam('url', $url)
@@ -763,7 +763,6 @@ App::post('/v1/account/sessions/magic-url')
 
         $audits
             ->setParam('userId', $user->getId())
-            ->setParam('event', ($userAdded ?? false) ? 'users.create' : '')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 

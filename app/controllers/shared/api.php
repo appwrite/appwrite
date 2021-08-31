@@ -141,6 +141,12 @@ App::init(function ($utopia, $request, $response, $project, $user) {
             }
             break;
 
+        case 'magic-url':
+            if($project->getAttribute('usersAuthMagicURL', true) === false) {
+                throw new Exception('Magic URL authentication is disabled for this project', 501);
+            }
+            break;
+
         case 'anonymous':
             if($project->getAttribute('usersAuthAnonymous', true) === false) {
                 throw new Exception('Anonymous authentication is disabled for this project', 501);
