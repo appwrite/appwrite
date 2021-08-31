@@ -166,7 +166,6 @@ $register->set('dbPool', function () { // Register DB connection
     $dbPass = App::getEnv('_APP_DB_PASS', '');
     $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
 
-
     $pool = new PDOPool((new PDOConfig())
         ->withHost($dbHost)
         ->withPort($dbPort)
@@ -174,6 +173,9 @@ $register->set('dbPool', function () { // Register DB connection
         ->withCharset('utf8mb4')
         ->withUsername($dbUser)
         ->withPassword($dbPass)
+        ->withOptions([
+            PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
+        ])
     , 16);
 
     return $pool;
