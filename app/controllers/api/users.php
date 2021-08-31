@@ -18,6 +18,7 @@ use Utopia\Database\Validator\UID;
 use DeviceDetector\DeviceDetector;
 use Appwrite\Database\Validator\CustomId;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -621,7 +622,7 @@ App::get('/v1/users/usage')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_USERS)
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
-    ->param('provider', '', new WhiteList(['email', 'anonymous', 'oauth2-google', 'oauth2-apple'], true), 'Provider Name.', true)
+    ->param('provider', '', new WhiteList(\array_merge(['email', 'anonymous'], \array_map(function($value) { return "oauth-".$value; }, \array_keys(Config::getParam('providers', [])))), true), 'Provider Name.', true)
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('register')

@@ -51,7 +51,6 @@ use Appwrite\Utopia\Response\Model\UsageFunctions;
 use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
-use Appwrite\Utopia\Response\Model\UsersUsage;
 use stdClass;
 
 /**
@@ -195,7 +194,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Languages List', self::MODEL_LANGUAGE_LIST, 'languages', self::MODEL_LANGUAGE))
             ->setModel(new BaseList('Currencies List', self::MODEL_CURRENCY_LIST, 'currencies', self::MODEL_CURRENCY))
             ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
-            ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metric', self::MODEL_METRIC))
+            ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
             // Entities
             ->setModel(new Collection())
             ->setModel(new Attribute())
@@ -224,6 +223,7 @@ class Response extends SwooleResponse
             ->setModel(new Language())
             ->setModel(new Currency())
             ->setModel(new Phone())
+            ->setModel(new Metric())
             ->setModel(new UsageDatabase())
             ->setModel(new UsageCollection())
             ->setModel(new UsageUsers())
@@ -231,7 +231,6 @@ class Response extends SwooleResponse
             ->setModel(new UsageBuckets())
             ->setModel(new UsageFunctions())
             ->setModel(new UsageProject())
-            ->setModel(new Metric())
             // Verification
             // Recovery
             // Tests (keep last)
