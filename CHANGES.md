@@ -1,8 +1,14 @@
+# Version 0.10.0 (Not Released Yet)
+- Switch from using Docker CLI to Docker API by intergrating [utopia-php/orchestration](https://github.com/utopia-php/orchestration)
+- Added DOCKERHUB_PULL_USERNAME, DOCKERHUB_PULL_PASSWORD and DOCKERHUB_PULL_EMAIL env variables for pulling from
+  private DockerHub repos
+
 # Version 0.9.4
 
 ## Security
 
 - Fixed security vulnerability that exposes project ID's from other admin users (#1453)
+
 
 # Version 0.9.3
 
