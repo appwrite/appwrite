@@ -645,6 +645,10 @@ App::post('/v1/account/sessions/magic-url')
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $mails */
 
+        if(empty(App::getEnv('_APP_SMTP_HOST'))) {
+            throw new Exception('SMTP Disabled', 503);
+        }
+
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
