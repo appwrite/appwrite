@@ -10,9 +10,9 @@
         document.getElementById('message').style.display = 'block';
     }, 25);
 
-    <?php echo "var userId = '" . $this->getParam('userId') . "';"; ?>
-    <?php echo "var secret = '" . $this->getParam('secret') . "';"; ?>
-    <?php echo "var project = '" . $this->getParam('project') . "';"; ?>
+    <?php echo "const userId = '" . $this->getParam('userId') . "';"; ?>
+    <?php echo "const secret = '" . $this->getParam('secret') . "';"; ?>
+    <?php echo "const project = '" . $this->getParam('project') . "';"; ?>
 
 const formData = new FormData();
     formData.append('userId', userId);

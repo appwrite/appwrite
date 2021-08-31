@@ -697,7 +697,7 @@ App::post('/v1/account/sessions/magic-url')
             ], ['email' => $email]);
 
             Authorization::reset();
-            $userAdded = true;
+            $mails->setParam('event', 'users.create');
         }
 
         $loginSecret = Auth::tokenGenerator();
@@ -720,7 +720,7 @@ App::post('/v1/account/sessions/magic-url')
         $token = $projectDB->createDocument($token->getArrayCopy());
 
         if (false === $token) {
-            throw new Exception('Failed saving verification to DB', 500);
+            throw new Exception('Failed saving token to DB', 500);
         }
 
         $user->setAttribute('tokens', $token, Document::SET_TYPE_APPEND);
