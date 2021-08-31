@@ -184,7 +184,7 @@ DatabaseOld::addFilter('encrypt',
 /**
  * New DB Filters
  */
-Database::addFilter('defaultValue',
+Database::addFilter('casting',
     function($value) {
         return json_encode(['value' => $value]);
     },
