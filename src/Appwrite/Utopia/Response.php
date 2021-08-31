@@ -33,6 +33,7 @@ use Appwrite\Utopia\Response\Model\Team;
 use Appwrite\Utopia\Response\Model\Locale;
 use Appwrite\Utopia\Response\Model\Log;
 use Appwrite\Utopia\Response\Model\Membership;
+use Appwrite\Utopia\Response\Model\Metric;
 use Appwrite\Utopia\Response\Model\Permissions;
 use Appwrite\Utopia\Response\Model\Phone;
 use Appwrite\Utopia\Response\Model\Platform;
@@ -194,6 +195,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Languages List', self::MODEL_LANGUAGE_LIST, 'languages', self::MODEL_LANGUAGE))
             ->setModel(new BaseList('Currencies List', self::MODEL_CURRENCY_LIST, 'currencies', self::MODEL_CURRENCY))
             ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
+            ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metric', self::MODEL_METRIC))
             // Entities
             ->setModel(new Collection())
             ->setModel(new Attribute())
@@ -229,6 +231,7 @@ class Response extends SwooleResponse
             ->setModel(new UsageBuckets())
             ->setModel(new UsageFunctions())
             ->setModel(new UsageProject())
+            ->setModel(new Metric())
             // Verification
             // Recovery
             // Tests (keep last)
