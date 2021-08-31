@@ -1,0 +1,35 @@
+<div class="zone large padding margin-top" id="message" style="display: none">
+    <h1 class="margin-bottom">Missing Redirect URL</h1>
+    <p>Your Magic URL login flow is missing a proper redirect URL. Please check the
+        <a href="https://<?php echo APP_DOMAIN; ?>/docs/client/account?sdk=web#createMagicURLSession">Magic URL docs</a>
+        and send request for new session with a valid redirect URL.</p>
+</div>
+
+<script>
+    setTimeout(function () {
+        document.getElementById('message').style.display = 'block';
+    }, 25);
+
+    <?php echo "var userId = '" . $this->getParam('userId') . "';"; ?>
+    <?php echo "var secret = '" . $this->getParam('secret') . "';"; ?>
+    <?php echo "var project = '" . $this->getParam('project') . "';"; ?>
+
+const formData = new FormData();
+    formData.append('userId', userId);
+    formData.append('secret', secret);
+
+    const res = fetch(window.location.origin + '/v1/account/sessions/magic-url', {
+        method: 'PUT',
+        body: formData,
+        headers: {
+            ["x-appwrite-project"]: project
+        }
+    }).then(response => response.json())
+    .then(data => {
+        if(data.$id) {
+            window.location = 'appwrite-callback-' + project + '://'+window.location.search;
+        }
+    })
+
+</script>
+<hr />

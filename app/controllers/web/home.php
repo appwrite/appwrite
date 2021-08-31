@@ -197,6 +197,35 @@ App::get('/auth/oauth2/success')
         ;
     });
 
+App::get('/auth/magic-url')
+    ->groups(['web', 'home'])
+    ->label('permission', 'public')
+    ->label('scope', 'home')
+    ->inject('request')
+    // ->inject('response')
+    ->inject('layout')
+    ->action(function ($request, $layout) {
+        /** @var Utopia\Swoole\Request $request */
+        /** @var Utopia\Swoole\Response $response */
+
+        $page = new View(__DIR__.'/../../views/home/auth/magicURL.phtml');
+        
+        $userId = $request->getQuery('userId');
+        $secret = $request->getQuery('secret');
+        $project = $request->getQuery('project');
+        $page
+            ->setParam('userId', $userId)
+            ->setParam('secret', $secret)
+            ->setParam('project', $project);
+
+        $layout
+            ->setParam('title', APP_NAME)
+            ->setParam('body', $page)
+            ->setParam('header', [])
+            ->setParam('footer', [])
+        ;
+    });
+
 App::get('/auth/oauth2/failure')
     ->groups(['web', 'home'])
     ->label('permission', 'public')

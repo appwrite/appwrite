@@ -616,6 +616,7 @@ App::post('/v1/account/sessions/magic-url')
     ->desc('Create Magic URL session')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
+    ->label('auth.type', 'magic-url')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createMagicURLSession')
@@ -730,8 +731,12 @@ App::post('/v1/account/sessions/magic-url')
             throw new Exception('Failed to save user to DB', 500);
         }
 
+        if(empty($url)) {
+            $url = $request->getProtocol().'://'.$request->getHostname().'/auth/magic-url/success';
+        }
+
         $url = Template::parseURL($url);
-        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $loginSecret, 'expire' => $expire]);
+        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $loginSecret, 'expire' => $expire, 'project' => $project->getId()]);
         $url = Template::unParseURL($url);
 
         $mails
@@ -848,6 +853,10 @@ App::put('/v1/account/sessions/magic-url')
 
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500);
+        }
+        
+        if (!$projectDB->deleteDocument($token)) {
+            throw new Exception('Failed to remove login token from DB', 500);
         }
 
         $audits
