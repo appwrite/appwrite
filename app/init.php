@@ -468,7 +468,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
         } catch (JWTException $error) {
             throw new Exception('Failed to verify JWT. '.$error->getMessage(), 401);
         }
-        
+
         $jwtUserId = $payload['userId'] ?? '';
         $jwtSessionId = $payload['sessionId'] ?? '';
 
