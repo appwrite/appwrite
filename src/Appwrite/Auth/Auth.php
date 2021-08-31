@@ -39,7 +39,7 @@ class Auth
      */
     const SESSION_PROVIDER_EMAIL = 'email';
     const SESSION_PROVIDER_ANONYMOUS = 'anonymous';
-    const SESSION_PROVIDER_MAGIC_URL = 'magicUrl';
+    const SESSION_PROVIDER_MAGIC_URL = 'magic-url';
 
     /**
      * Token Expiration times.
