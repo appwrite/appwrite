@@ -12,6 +12,12 @@ notifications:
   email:
   - team@appwrite.io
 
+env:
+  - COMPOSE_INTERACTIVE_NO_CLI=1
+  - DOCKER_BUILDKIT=1
+  - COMPOSE_DOCKER_CLI_BUILD=1
+  - BUILDKIT_PROGRESS=plain
+
 before_install:
 - curl -fsSL https://get.docker.com | sh
 - echo '{"experimental":"enabled"}' | sudo tee /etc/docker/daemon.json
@@ -25,13 +31,12 @@ before_install:
 - docker --version
 - docker buildx create --use
 - chmod -R u+x ./.travis-ci
-- export COMPOSE_INTERACTIVE_NO_CLI=1
 # Only pass a single runtime for CI stability
 - echo "_APP_FUNCTIONS_RUNTIMES=php-8.0" >> .env
 
 install:
 - docker-compose pull
-- DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 BUILDKIT_PROGRESS=plain docker-compose build
+- docker-compose build
 - docker-compose up -d
 - sleep 10
 
