@@ -39,7 +39,7 @@ class MailsV1 extends Worker
         $prefix = $this->getPrefix($type);
         $locale = new Locale($this->args['locale']);
 
-        if (!$this->doesLocaleExist($locale, $prefix)) {
+        if (!$this->doesLocaleExist($locale, $type)) {
             $locale->setDefault('en');
         }
 
@@ -48,15 +48,15 @@ class MailsV1 extends Worker
         $subject = '';
         switch ($type) {
             case MAIL_TYPE_RECOVERY:
-                $subject = $locale->getText("$prefix.subject");
+                $subject = $locale->getText($this->getTranslationKey($type, "subject"));
                 break;
             case MAIL_TYPE_INVITATION:
-                $subject = \sprintf($locale->getText("$prefix.subject"), $this->args['team'], $project);
+                $subject = \sprintf($locale->getText($this->getTranslationKey($type, "subject")), $this->args['team'], $project);
                 $body->setParam('{{owner}}', $this->args['owner']);
                 $body->setParam('{{team}}', $this->args['team']);
                 break;
             case MAIL_TYPE_VERIFICATION:
-                $subject = $locale->getText("$prefix.subject");
+                $subject = $locale->getText($this->getTranslationKey($type, "subject"));
                 break;
             default:
                 throw new Exception('Undefined Mail Type : ' . $type, 500);
@@ -64,13 +64,13 @@ class MailsV1 extends Worker
 
         $body
             ->setParam('{{subject}}', $subject)
-            ->setParam('{{hello}}', $locale->getText("$prefix.hello"))
+            ->setParam('{{hello}}', $locale->getText($this->getTranslationKey($type, "hello")))
             ->setParam('{{name}}', $name)
-            ->setParam('{{body}}', $locale->getText("$prefix.body"))
+            ->setParam('{{body}}', $locale->getText($this->getTranslationKey($type, "body")))
             ->setParam('{{redirect}}', $url)
-            ->setParam('{{footer}}', $locale->getText("$prefix.footer"))
-            ->setParam('{{thanks}}', $locale->getText("$prefix.thanks"))
-            ->setParam('{{signature}}', $locale->getText("$prefix.signature"))
+            ->setParam('{{footer}}', $locale->getText($this->getTranslationKey($type, "footer")))
+            ->setParam('{{thanks}}', $locale->getText($this->getTranslationKey($type, "thanks")))
+            ->setParam('{{signature}}', $locale->getText($this->getTranslationKey($type, "signature")))
             ->setParam('{{project}}', $project)
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{bg-body}}', '#f7f7f7')
@@ -118,9 +118,9 @@ class MailsV1 extends Worker
 
     /**
      * Returns a prefix from a mail type
-     * 
+     *
      * @param $type
-     * 
+     *
      * @return string
      */
     protected function getPrefix(string $type): string
@@ -138,17 +138,75 @@ class MailsV1 extends Worker
     }
 
     /**
+     * Returns a key that can be used to get translation from $locale->geText().
+     * $keyType can currently be one of: subject, hello, body, footer, thanks, signature
+     *
+     * @param $emailType
+     * @param $keyType
+     *
+     * @return string
+     */
+    protected function getTranslationKey(string $emailType, $keyType): string
+    {
+        switch ($emailType) {
+            case MAIL_TYPE_RECOVERY:
+                $keys = [
+                    'subject' => 'emails.recovery.subject',
+                    'hello' => 'emails.recovery.hello',
+                    'body' => 'emails.recovery.body',
+                    'footer' => 'emails.recovery.footer',
+                    'thanks' => 'emails.recovery.thanks',
+                    'signature' => 'emails.recovery.signature',
+                ];
+
+                return $keys[$keyType];
+            case MAIL_TYPE_INVITATION:
+                $keys = [
+                    'subject' => 'emails.invitation.subject',
+                    'hello' => 'emails.invitation.hello',
+                    'body' => 'emails.invitation.body',
+                    'footer' => 'emails.invitation.footer',
+                    'thanks' => 'emails.invitation.thanks',
+                    'signature' => 'emails.invitation.signature',
+                ];
+
+                return $keys[$keyType];
+            case MAIL_TYPE_VERIFICATION:
+                $keys = [
+                    'subject' => 'emails.verification.subject',
+                    'hello' => 'emails.verification.hello',
+                    'body' => 'emails.verification.body',
+                    'footer' => 'emails.verification.footer',
+                    'thanks' => 'emails.verification.thanks',
+                    'signature' => 'emails.verification.signature',
+                ];
+
+                return $keys[$keyType];
+            default:
+                throw new Exception('Undefined Mail Type : ' . $emailType, 500);
+        }
+    }
+
+    /**
      * Returns true if all the required terms in a locale exist. False otherwise
      * 
      * @param $locale
-     * @param $prefix
+     * @param $type
      * 
      * @return bool
      */
-    protected function doesLocaleExist(Locale $locale, string $prefix): bool
+    protected function doesLocaleExist(Locale $locale, string $type): bool
     {
 
-        if (!$locale->getText('emails.sender') || !$locale->getText("$prefix.hello") || !$locale->getText("$prefix.subject") || !$locale->getText("$prefix.body") || !$locale->getText("$prefix.footer") || !$locale->getText("$prefix.thanks") || !$locale->getText("$prefix.signature")) {
+        if (
+            !$locale->getText('emails.sender') ||
+            !$locale->getText($this->getTranslationKey($type, "hello")) ||
+            !$locale->getText($this->getTranslationKey($type, "subject")) ||
+            !$locale->getText($this->getTranslationKey($type, "body")) ||
+            !$locale->getText($this->getTranslationKey($type, "footer")) ||
+            !$locale->getText($this->getTranslationKey($type, "thanks")) ||
+            !$locale->getText($this->getTranslationKey($type, "signature"))
+        ) {
             return false;
         }
 
