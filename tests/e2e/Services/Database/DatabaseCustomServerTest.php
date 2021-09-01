@@ -398,8 +398,8 @@ class DatabaseCustomServerTest extends Scope
             'required' => true,
         ]);
 
-        // $this->assertEquals(400, $tooWide['headers']['status-code']);
-        // $this->assertEquals('Attribute limit exceeded', $tooWide['body']['message']);
+        $this->assertEquals(400, $tooWide['headers']['status-code']);
+        $this->assertEquals('Attribute limit exceeded', $tooWide['body']['message']);
     }
 
     public function testIndexLimitException()
