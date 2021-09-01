@@ -6,14 +6,17 @@
 - Refactored E-Mail template (#1422)
 - Improved locale management (#1440)
 - Added `$permissions` to execution response (#948)
-
+- Switch from using Docker CLI to Docker API by intergrating [utopia-php/orchestration](https://github.com/utopia-php/orchestration)
+- Added DOCKERHUB_PULL_USERNAME, DOCKERHUB_PULL_PASSWORD and DOCKERHUB_PULL_EMAIL env variables for pulling from private DockerHub repos
 ## Bugs
 - Fixed MariaDB timeout after 24 hours (#1510)
+
 # Version 0.9.4
 
 ## Security
 
 - Fixed security vulnerability that exposes project ID's from other admin users (#1453)
+
 
 # Version 0.9.3
 
