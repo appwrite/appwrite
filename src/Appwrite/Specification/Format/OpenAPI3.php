@@ -27,7 +27,7 @@ class OpenAPI3 extends Format
      * Recursively get all used models
      * 
      * @param object $model
-     * @param array    $models
+     * @param array $models
      *
      * @return void
      */

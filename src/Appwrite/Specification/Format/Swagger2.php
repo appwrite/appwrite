@@ -27,7 +27,7 @@ class Swagger2 extends Format
      * Recursively get all used models
      * 
      * @param object $model
-     * @param array    $models
+     * @param array $models
      *
      * @return void
      */
@@ -378,8 +378,6 @@ class Swagger2 extends Format
         foreach ($this->models as $model) {
             $this->getUsedModels($model, $usedModels);
         }
-
-        // var_dump($usedModels);
 
         foreach ($this->models as $model) {
             if (!in_array($model->getType(), $usedModels)) {
