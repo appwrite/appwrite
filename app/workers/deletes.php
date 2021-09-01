@@ -21,9 +21,7 @@ Console::success(APP_NAME.' deletes worker v1 has started'."\n");
 
 class DeletesV1 extends Worker
 {
-    public $args = [];
-
-    protected $consoleDB = null;
+    protected Database $consoleDB = null;
 
     public function init(): void
     {
@@ -31,9 +29,9 @@ class DeletesV1 extends Worker
 
     public function run(): void
     {
-        $projectId = isset($this->args['projectId']) ? $this->args['projectId'] : '';   
+        $projectId = isset($this->args['projectId']) ? $this->args['projectId'] : '';
         $type = $this->args['type'];
-        
+
         switch (strval($type)) {
             case DELETE_TYPE_DOCUMENT:
                 $document = $this->args['document'];

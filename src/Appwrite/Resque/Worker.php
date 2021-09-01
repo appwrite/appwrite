@@ -4,7 +4,7 @@ namespace Appwrite\Resque;
 
 abstract class Worker
 {
-    public $args = [];
+    public array $args = [];
 
     abstract public function init(): void;
 
@@ -17,7 +17,7 @@ abstract class Worker
         $this->init();
     }
 
-    public function perform()
+    public function perform(): void
     {
         $this->run();
     }

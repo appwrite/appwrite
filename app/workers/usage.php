@@ -11,11 +11,6 @@ Console::success(APP_NAME.' usage worker v1 has started');
 
 class UsageV1 extends Worker
 {
-    /**
-     * @var array
-     */
-    public $args = [];
-
     public function init(): void
     {
     }
@@ -33,7 +28,7 @@ class UsageV1 extends Worker
 
         $networkRequestSize = $this->args['networkRequestSize'] ?? 0;
         $networkResponseSize = $this->args['networkResponseSize'] ?? 0;
-        
+
         $httpMethod = $this->args['httpMethod'] ?? '';
         $httpRequest = $this->args['httpRequest'] ?? 0;
 

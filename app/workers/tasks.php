@@ -17,11 +17,6 @@ Console::success(APP_NAME.' tasks worker v1 has started');
 
 class TasksV1 extends Worker
 {
-    /**
-     * @var array
-     */
-    public $args = [];
-
     public function init(): void
     {
     }

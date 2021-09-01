@@ -11,8 +11,6 @@ Console::success(APP_NAME.' webhooks worker v1 has started');
 
 class WebhooksV1 extends Worker
 {
-    public $args = [];
-
     public function init(): void
     {
     }
@@ -37,7 +35,7 @@ class WebhooksV1 extends Worker
             $name = $webhook['name'] ?? '';
             $signature = $webhook['signature'] ?? 'not-yet-implemented';
             $url = $webhook['url'] ?? '';
-            $security = (bool) $webhook['security'] ?? true;
+            $security = (bool) ($webhook['security'] ?? true);
             $httpUser = $webhook['httpUser'] ?? null;
             $httpPass = $webhook['httpPass'] ?? null;
 
