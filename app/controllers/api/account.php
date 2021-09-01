@@ -795,8 +795,13 @@ App::put('/v1/account/sessions/magic-url')
     ->inject('geodb')
     ->inject('audits')
     ->action(function ($userId, $secret, $request, $response, $projectDB, $locale, $geodb, $audits) {
+        /** @var string $userId */
+        /** @var string $secret */
+        /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
+        /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
 
         $profile = $projectDB->getCollectionFirst([ // Get user by user ID
@@ -846,6 +851,7 @@ App::put('/v1/account/sessions/magic-url')
             throw new Exception('Failed saving session to DB', 500);
         }
 
+        $profile->setAttribute('emailVerification', true);
         $profile->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
 
         $user = $projectDB->updateDocument($profile->getArrayCopy());
@@ -853,7 +859,7 @@ App::put('/v1/account/sessions/magic-url')
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500);
         }
-        
+
         if (!$projectDB->deleteDocument($token)) {
             throw new Exception('Failed to remove login token from DB', 500);
         }
