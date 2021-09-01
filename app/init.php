@@ -203,61 +203,61 @@ Database::addFilter('subQueryIndexes',
     }
 );
 
-Database::addFilter('subQueryProjectPlatforms',
+Database::addFilter('subQueryPlatforms',
     function($value) {
         return null;
     },
     function($value, Document $document, Database $database) {
         return $database
-            ->find('projectsPlatforms', [
+            ->find('platforms', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
             ], 5000, 0, []);
     }
 );
 
-Database::addFilter('subQueryProjectDomains',
+Database::addFilter('subQueryDomains',
     function($value) {
         return null;
     },
     function($value, Document $document, Database $database) {
         return $database
-            ->find('projectDomains', [
+            ->find('domains', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
             ], 5000, 0, []);
     }
 );
 
-Database::addFilter('subQueryProjectKeys',
+Database::addFilter('subQueryKeys',
     function($value) {
         return null;
     },
     function($value, Document $document, Database $database) {
         return $database
-            ->find('projectKeys', [
+            ->find('keys', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
             ], 5000, 0, []);
     }
 );
 
-Database::addFilter('subQueryProjectWebhooks',
+Database::addFilter('subQueryWebhooks',
     function($value) {
         return null;
     },
     function($value, Document $document, Database $database) {
         return $database
-            ->find('projectWebhooks', [
+            ->find('webhooks', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
             ], 5000, 0, []);
     }
 );
 
-Database::addFilter('subQueryProjectServices',
+Database::addFilter('subQueryServices',
     function($value) {
         return null;
     },
     function($value, Document $document, Database $database) {
         $services = $database
-            ->find('projectsServices', [
+            ->find('services', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
             ], 5000, 0, []);
 
@@ -270,13 +270,13 @@ Database::addFilter('subQueryProjectServices',
     }
 );
 
-Database::addFilter('subQueryProjectProviders',
+Database::addFilter('subQueryProviders',
     function($value) {
         return null;
     },
     function($value, Document $document, Database $database) {
         $providers = $database
-            ->find('projectProviders', [
+            ->find('providers', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
             ], 5000, 0, []);
 

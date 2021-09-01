@@ -478,7 +478,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => ['subQueryProjectServices'],
+                'filters' => ['subQueryServices'],
             ],
             [
                 '$id' => 'auths',
@@ -500,7 +500,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => ['subQueryProjectProviders'],
+                'filters' => ['subQueryProviders'],
             ],
             [
                 '$id' => 'platforms',
@@ -511,7 +511,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => ['subQueryProjectPlatforms'],
+                'filters' => ['subQueryPlatforms'],
             ],
             [
                 '$id' => 'webhooks',
@@ -522,7 +522,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => ['subQueryProjectWebhooks'],
+                'filters' => ['subQueryWebhooks'],
             ],
             [
                 '$id' => 'keys',
@@ -533,7 +533,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => ['subQueryProjectKeys'],
+                'filters' => ['subQueryKeys'],
             ],
             [
                 '$id' => 'domains',
@@ -544,7 +544,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => ['subQueryProjectDomains'],
+                'filters' => ['subQueryDomains'],
             ],
         ],
         'indexes' => [
@@ -558,10 +558,10 @@ $collections = [
         ],
     ],
 
-    'projectsPlatforms' => [
+    'platforms' => [
         '$collection' => Database::METADATA,
-        '$id' => 'projectsPlatforms',
-        'name' => 'projectsPlatforms',
+        '$id' => 'platforms',
+        'name' => 'platforms',
         'attributes' => [
             [
                 '$id' => 'projectId',
@@ -663,10 +663,10 @@ $collections = [
         ],
     ],
 
-    'projectsServices' => [
+    'services' => [
         '$collection' => Database::METADATA,
-        '$id' => 'projectsServices',
-        'name' => 'projectsServices',
+        '$id' => 'services',
+        'name' => 'services',
         'attributes' => [
             [
                 '$id' => 'projectId',
@@ -713,10 +713,10 @@ $collections = [
         ],
     ],
 
-    'projectProviders' => [
+    'providers' => [
         '$collection' => Database::METADATA,
-        '$id' => 'projectProviders',
-        'name' => 'projectProviders',
+        '$id' => 'providers',
+        'name' => 'providers',
         'attributes' => [
             [
                 '$id' => 'projectId',
@@ -774,10 +774,10 @@ $collections = [
         ],
     ],
 
-    'projectDomains' => [
+    'domains' => [
         '$collection' => Database::METADATA,
-        '$id' => 'projectDomains',
-        'name' => 'projectDomains',
+        '$id' => 'domains',
+        'name' => 'domains',
         'attributes' => [
             [
                 '$id' => 'projectId',
@@ -868,10 +868,10 @@ $collections = [
         ],
     ],
 
-    'projectKeys' => [
+    'keys' => [
         '$collection' => Database::METADATA,
-        '$id' => 'projectKeys',
-        'name' => 'projectKeys',
+        '$id' => 'keys',
+        'name' => 'keys',
         'attributes' => [
             [
                 '$id' => 'projectId',
@@ -929,10 +929,10 @@ $collections = [
         ],
     ],
 
-    'projectWebhooks' => [
+    'webhooks' => [
         '$collection' => Database::METADATA,
-        '$id' => 'projectWebhooks',
-        'name' => 'projectWebhooks',
+        '$id' => 'webhooks',
+        'name' => 'webhooks',
         'attributes' => [
             [
                 '$id' => 'projectId',
