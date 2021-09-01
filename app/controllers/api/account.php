@@ -799,7 +799,7 @@ App::put('/v1/account/sessions/magic-url')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
 
-        $profile = $projectDB->getCollectionFirst([ // Get user by email address
+        $profile = $projectDB->getCollectionFirst([ // Get user by user ID
             'limit' => 1,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_USERS,
