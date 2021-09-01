@@ -1159,6 +1159,9 @@ trait DatabaseBase
         sleep(2);
 
         $document1 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
             'documentId' => 'unique()',
             'data' => [
                 'attribute' => 'one',
