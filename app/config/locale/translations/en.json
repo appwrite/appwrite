@@ -1,4 +1,11 @@
 {
+    "home.auth.signin.title": "Sign In",
+    "home.auth.signin.submit-button": "Sign In",
+    "home.auth.signin.description": "Login using email and password",
+    "home.auth.signin.submit-error": "Login failed. Please check your credentials.",
+    "home.auth.signin.input-password-placeholder": "Password",
+    "home.auth.signin.input-password-error": "Six or more characters",
+    "home.auth.signin.input-email-placeholder": "Email",
     "settings.inspire": "\"The art of being wise is the art of knowing what to overlook.\"",
     "settings.locale": "en",
     "settings.direction": "ltr",

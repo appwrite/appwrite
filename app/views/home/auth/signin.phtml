@@ -1,5 +1,9 @@
 <?php
 $root = ($this->getParam('root') !== 'disabled');
+
+$locale = $this->getParam("locale");
+/** @var Utopia\Locale\Locale $locale */
+
 ?>
 <div class="zone medium"
     data-service="account.get"
@@ -12,12 +16,13 @@ $root = ($this->getParam('root') !== 'disabled');
 
     <div data-ls-if="{{account}} === undefined">
         <h1 class="zone xl margin-bottom-large margin-top">
-            Sign In
+            <?php echo $locale->getText("home.auth.signin.title"); ?>
         </h1>
 
-        <div class="text-danger margin-bottom-large" data-ls-if="{{router.params.failure}} >= 1">Login failed. Please check your credentials.</div>
 
-        <p>Login using email and password</p>
+        <div class="text-danger margin-bottom-large" data-ls-if="{{router.params.failure}} >= 1"><?php echo $locale->getText("home.auth.signin.submit-error"); ?></div>
+
+        <p><?php echo $locale->getText("home.auth.signin.description"); ?></p>
 
         <form name="account.createSession"
             data-analytics
@@ -35,11 +40,11 @@ $root = ($this->getParam('root') !== 'disabled');
             data-failure-param-alert-text="Login failed. Please check your credentials."
             data-failure-param-alert-classname="error">
 
-            <input name="email" type="email" class="full-width" autocomplete="email" placeholder="Email" required>
+            <input name="email" type="email" class="full-width" autocomplete="email" placeholder="<?php echo $locale->getText("home.auth.signin.input-email-placeholder"); ?>" required>
 
-            <input name="password" type="password" class="full-width" autocomplete="off" placeholder="Password" required pattern=".{6,}" title="Six or more characters">
+            <input name="password" type="password" class="full-width" autocomplete="off" placeholder="<?php echo $locale->getText("home.auth.signin.input-password-placeholder"); ?>" required pattern=".{6,}" title="<?php echo $locale->getText("home.auth.signin.input-password-error"); ?>">
 
-            <button>Sign In</button>
+            <button><?php echo $locale->getText("home.auth.signin.submit-button"); ?></button>
         </form>
         
         <br />

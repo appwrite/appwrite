@@ -83,12 +83,15 @@ App::get('/auth/signin')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('layout')
-    ->action(function ($layout) {
+    ->inject("locale")
+    ->action(function ($layout, $locale) {
         /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
 
         $page = new View(__DIR__.'/../../views/home/auth/signin.phtml');
 
         $page
+            ->setParam("locale", $locale)
             ->setParam('root', App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled'))
         ;
 
