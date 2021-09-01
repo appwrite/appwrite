@@ -55,6 +55,7 @@
         "utopia-php/image": "0.5.*",
         "resque/php-resque": "1.3.6",
         "matomo/device-detector": "4.2.3",
+        "utopia-php/orchestration": "0.2.0",
         "dragonmantank/cron-expression": "3.1.0",
         "influxdb/influxdb-php": "1.15.2",
         "phpmailer/phpmailer": "6.5.0",
