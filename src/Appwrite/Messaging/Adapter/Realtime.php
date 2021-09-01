@@ -35,7 +35,7 @@ class Realtime extends Adapter
     public array $subscriptions = [];
 
     /**
-     * Adds a subscribtion.
+     * Adds a subscription.
      * 
      * @param string $projectId 
      * @param mixed $identifier 
