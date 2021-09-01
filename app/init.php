@@ -184,11 +184,10 @@ Database::addFilter('subQueryAttributes',
         return null;
     },
     function($value, Document $document, Database $database) {
-        // TODO: Maybe implement pagination?
         return $database
             ->find('attributes', [
                 new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
-            ], 100, 0, []);
+            ], 5000, 0, []);
     }
 );
 
@@ -197,11 +196,10 @@ Database::addFilter('subQueryIndexes',
         return null;
     },
     function($value, Document $document, Database $database) {
-        // TODO: Maybe implement pagination?
         return $database
             ->find('indexes', [
                 new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
-            ], 100, 0, []);
+            ], 5000, 0, []);
     }
 );
 
@@ -210,11 +208,10 @@ Database::addFilter('subQueryProjectPlatforms',
         return null;
     },
     function($value, Document $document, Database $database) {
-        // TODO: Implement pagination
         return $database
             ->find('projectsPlatforms', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
-            ], 100, 0, []);
+            ], 5000, 0, []);
     }
 );
 
@@ -223,11 +220,10 @@ Database::addFilter('subQueryProjectDomains',
         return null;
     },
     function($value, Document $document, Database $database) {
-        // TODO: Implement pagination
         return $database
             ->find('projectDomains', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
-            ], 100, 0, []);
+            ], 5000, 0, []);
     }
 );
 
@@ -236,11 +232,10 @@ Database::addFilter('subQueryProjectKeys',
         return null;
     },
     function($value, Document $document, Database $database) {
-        // TODO: Implement pagination
         return $database
             ->find('projectKeys', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
-            ], 100, 0, []);
+            ], 5000, 0, []);
     }
 );
 
@@ -249,11 +244,10 @@ Database::addFilter('subQueryProjectWebhooks',
         return null;
     },
     function($value, Document $document, Database $database) {
-        // TODO: Implement pagination
         return $database
             ->find('projectWebhooks', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
-            ], 100, 0, []);
+            ], 5000, 0, []);
     }
 );
 
@@ -262,15 +256,14 @@ Database::addFilter('subQueryProjectServices',
         return null;
     },
     function($value, Document $document, Database $database) {
-        // TODO: Implement pagination
         $services = $database
             ->find('projectsServices', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
-            ], 100, 0, []);
+            ], 5000, 0, []);
 
         $responseJson = [];
         foreach($services as $service) {
-            $responseJson[$service->getAttribute("key")] = $service->getAttribute("status", true);
+            $responseJson[$service->getAttribute('key')] = $service->getAttribute('status', true);
         }
 
         return $responseJson;
@@ -282,16 +275,15 @@ Database::addFilter('subQueryProjectProviders',
         return null;
     },
     function($value, Document $document, Database $database) {
-        // TODO: Implement pagination
         $providers = $database
             ->find('projectProviders', [
                 new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
-            ], 100, 0, []);
+            ], 5000, 0, []);
 
         $responseJson = [];
         foreach($providers as $provider) {
-            $responseJson[$provider->getAttribute("key") . 'Appid'] = $provider->getAttribute("appId");
-            $responseJson[$provider->getAttribute("key") . 'Secret'] = $provider->getAttribute("appSecret");
+            $responseJson[$provider->getAttribute('key') . 'Appid'] = $provider->getAttribute('appId');
+            $responseJson[$provider->getAttribute('key') . 'Secret'] = $provider->getAttribute('appSecret');
         }
 
         return $responseJson;
