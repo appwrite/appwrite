@@ -142,6 +142,8 @@ if(!empty($user) || !empty($pass)) {
 
 /**
  * DB Filters
+ *
+ * Make sure the value of an attribute that uses sub-query filters is set to 'null' otherwise the filters might not work properly
  */
 DatabaseOld::addFilter('json',
     function($value) {

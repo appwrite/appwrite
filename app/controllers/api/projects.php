@@ -495,12 +495,10 @@ App::patch('/v1/projects/:projectId/service')
 
         // TODO: Implement delete method. Do we delete for "true" or for "false"? Same for auth!!!!
         if($service == false || $service->isEmpty()) {
-            $teamId = $project->getAttribute("teamId");
-
             $service = new Document([
                 '$id' => $dbForConsole->getId(),
-                '$read' => ['team:' . $teamId],
-                '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
+                '$read' => ['role:all'],
+                '$write' => ['role:all'],
                 'projectId' => $project->getId(),
                 'key' => $serviceKey,
                 'status' => $status,
@@ -565,12 +563,10 @@ App::patch('/v1/projects/:projectId/oauth2')
         } else {
             // Provider does not exist yet
 
-            $teamId = $project->getAttribute("teamId");
-
             $provider = new Document([
                 '$id' => $dbForConsole->getId(),
-                '$read' => ['team:' . $teamId],
-                '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
+                '$read' => ['role:all'],
+                '$write' => ['role:all'],
                 'projectId' => $project->getId(),
                 'key' => $providerKey,
                 'appId' => $appId,
@@ -736,12 +732,10 @@ App::post('/v1/projects/:projectId/webhooks')
 
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
 
-        $teamId = $project->getAttribute("teamId");
-
         $webhook = new Document([
             '$id' => $dbForConsole->getId(),
-            '$read' => ['team:' . $teamId],
-            '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
+            '$read' => ['role:all'],
+            '$write' => ['role:all'],
             'projectId' => $project->getId(),
             'name' => $name,
             'events' => $events,
@@ -941,12 +935,10 @@ App::post('/v1/projects/:projectId/keys')
             throw new Exception('Project not found', 404);
         }
 
-        $teamId = $project->getAttribute("teamId");
-
         $key = new Document([
             '$id' => $dbForConsole->getId(),
-            '$read' => ['team:' . $teamId],
-            '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
+            '$read' => ['role:all'],
+            '$write' => ['role:all'],
             'projectId' => $project->getId(),
             'name' => $name,
             'scopes' => $scopes,
@@ -958,7 +950,6 @@ App::post('/v1/projects/:projectId/keys')
         $dbForConsole->purgeDocument("projects", $project->getId());
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        var_dump(Response::STATUS_CODE_CREATED);
         $response->dynamic($key, Response::MODEL_KEY);
     });
 
@@ -1137,12 +1128,10 @@ App::post('/v1/projects/:projectId/platforms')
             throw new Exception('Project not found', 404);
         }
 
-        $teamId = $project->getAttribute("teamId");
-
         $platform = new Document([
             '$id' => $dbForConsole->getId(),
-            '$read' => ['team:' . $teamId],
-            '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
+            '$read' => ['role:all'],
+            '$write' => ['role:all'],
             'projectId' => $project->getId(),
             'type' => $type,
             'name' => $name,
@@ -1352,14 +1341,12 @@ App::post('/v1/projects/:projectId/domains')
             throw new Exception('Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.', 500);
         }
 
-        $teamId = $project->getAttribute("teamId");
-
         $domain = new Domain($domain);
 
         $domain = new Document([
             '$id' => $dbForConsole->getId(),
-            '$read' => ['team:' . $teamId],
-            '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
+            '$read' => ['role:all'],
+            '$write' => ['role:all'],
             'projectId' => $project->getId(),
             'updated' => \time(),
             'domain' => $domain->get(),
