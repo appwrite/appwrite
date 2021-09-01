@@ -13,6 +13,7 @@ notifications:
   - team@appwrite.io
 
 env:
+  - DOCKER_COMPOSE_VERSION=1.29.2
   - COMPOSE_INTERACTIVE_NO_CLI=1
   - DOCKER_BUILDKIT=1
   - COMPOSE_DOCKER_CLI_BUILD=1
@@ -29,6 +30,11 @@ before_install:
     echo "${DOCKERHUB_PULL_PASSWORD}" | docker login --username "${DOCKERHUB_PULL_USERNAME}" --password-stdin
   fi
 - docker --version
+- sudo rm /usr/local/bin/docker-compose
+- curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+- chmod +x docker-compose
+- sudo mv docker-compose /usr/local/bin
+- docker-compose --version
 - docker buildx create --use
 - chmod -R u+x ./.travis-ci
 # Only pass a single runtime for CI stability
