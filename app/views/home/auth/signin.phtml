@@ -51,7 +51,7 @@ $locale = $this->getParam("locale");
         <br />
 
         <div class="text-line-high-large text-align-center">
-            <a href="/auth/recovery">Forgot password?</a><?php if(!$root): ?> or don't have an account? <b><a href="/auth/signup">Sign up now</a></b><?php endif; ?>
+            <a href="/auth/recovery"><?php echo $locale->getText("home.auth.signin.forgot-password-chunk1"); ?></a><?php if(!$root): ?> <?php echo $locale->getText("home.auth.signin.forgot-password-chunk2"); ?> <b><a href="/auth/signup"><?php echo $locale->getText("home.auth.signin.forgot-password-chunk3"); ?></a></b><?php endif; ?>
         </div>
     </div>
     
