@@ -56,17 +56,6 @@ $attributesCallback = function ($collectionId, $attribute, $response, $dbForInte
         throw new Exception('Collection not found', 404);
     }
 
-    $count = $dbForInternal->count('attributes', [
-        new Query('collectionId', Query::TYPE_EQUAL, [$collectionId])
-    ], 1012);
-
-    // 1017 limit minus default attributes and one buffer for virtual columns
-    $limit = 1017 - MariaDB::getNumberOfDefaultAttributes() - 1;
-
-    if ($count >= $limit) {
-        throw new Exception('Attribute limit exceeded', 400);
-    }
-
     // TODO@kodumbeats how to depend on $size for Text validator length
     // Ensure attribute default is within required size
     if ($size > 0 && !\is_null($default)) {
@@ -82,8 +71,7 @@ $attributesCallback = function ($collectionId, $attribute, $response, $dbForInte
         }
     }
 
-    try {
-        $attribute = $dbForInternal->createDocument('attributes', new Document([
+    $attribute = new Document([
             '$id' => $collectionId.'_'.$attributeId,
             'key' => $attributeId,
             'collectionId' => $collectionId,
@@ -96,8 +84,16 @@ $attributesCallback = function ($collectionId, $attribute, $response, $dbForInte
             'array' => $array,
             'format' => $format,
             'formatOptions' => $formatOptions,
-            'filters' => $filters,
-        ]));
+    ]);
+
+    try {
+        $dbForInternal->checkAttribute($collection, $attribute);
+    } catch (LimitException $exception) {
+        throw new Exception('Attribute limit exceeded', 400);
+    }
+
+    try {
+        $attribute = $dbForInternal->createDocument('attributes', $attribute);
     } catch (DuplicateException $th) {
         throw new Exception('Attribute already exists', 409);
     } catch (LimitException $e) {
