@@ -16,23 +16,11 @@ class SyncExecution extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('exitCode', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Execution Exit Code.',
-                'default' => 0,
-                'example' => 0,
-            ])
-            ->addRule('stdout', [
+            ->addRule('response', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Execution Stdout.',
+                'description' => 'Execution Response.',
                 'default' => '',
                 'example' => 'Hello World!',
-            ])
-            ->addRule('stderr', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Execution Stderr.',
-                'default' => '',
-                'example' => 'An error occoured: ....... example',
             ])
             ->addRule('time', [
                 'type' => self::TYPE_INTEGER,

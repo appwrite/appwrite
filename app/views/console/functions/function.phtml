@@ -100,7 +100,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                                             </form>
     
                                             <b data-ls-bind="{{tag.$id}}"></b> &nbsp;
-                                            <span class="text-fade" data-ls-bind="{{tag.command}}"></span>
+                                            <span class="text-fade" data-ls-bind="{{tag.entrypoint}}"></span>
                                             <div class="text-size-small margin-top-small clear">
                                                 <span class="pull-start" data-ls-bind="Created {{tag.dateCreated|timeSince}} &nbsp; | &nbsp; {{tag.size|humanFileSize}}{{tag.size|humanFileUnit}}"></span>
 
@@ -599,7 +599,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
             <div class="margin-bottom">
                 <textarea type="hidden" data-ls-bind="appwrite functions createTag \
     --functionId={{project-function.$id}} \
-    --command='mycommand' \
+    --entrypoint='scriptFile' \
     --code='/myrepo/myfunction'" data-forms-code="bash" data-lang="bash" data-lang-label="Bash"></textarea>
             </div>
 
@@ -608,7 +608,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
             <div class="margin-bottom">
                 <textarea type="hidden" data-ls-bind="appwrite functions createTag `
     --functionId={{project-function.$id}} `
-    --command='mycommand' `
+    --entrypoint='scriptFile' `
     --code='/myrepo/myfunction'" data-forms-code="powershell" data-lang="powershell" data-lang-label="PowerShell"></textarea>
             </div>
 
@@ -634,8 +634,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                 
                 <input type="hidden" name="functionId" data-ls-bind="{{router.params.id}}" />
 
-                <label for="tag-command">Command</label>
-                <input type="text" id="tag-command" name="command" required autocomplete="off" class="margin-bottom" placeholder="node main.js" />
+                <label for="tag-entrypoint">Entrypoint</label>
+                <input type="text" id="tag-entrypoint" name="entrypoint" required autocomplete="off" class="margin-bottom" placeholder="main.js" />
 
                 <label for="tag-code">Gzipped Code (tar.gz file)</label>
                 <input type="file" name="code" id="tag-code" size="1" required accept="application/x-gzip,.gz">

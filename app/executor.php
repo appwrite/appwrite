@@ -423,10 +423,12 @@ function execute(string $trigger, string $projectId, string $executionId, string
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
             'path' => '/usr/code',
-            'file' => 'index.js',
+            'file' => $tag->getAttribute('entrypoint', ''),
             'env' => $vars,
-            'payload' => $data
+            'payload' => $data,
+            'timeout' => $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900))
         ]));
+
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         \curl_setopt($ch, CURLOPT_TIMEOUT, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
         \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
@@ -518,9 +520,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
     return [
         'status' => $functionStatus,
-        'exitCode' => $exitCode,
-        'stdout' => $stdout,
-        'stderr' => $stderr,
+        'response' => $stdout,
         'time' => $executionTime
     ];
 }

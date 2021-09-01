@@ -1580,28 +1580,28 @@
                  * learn more about code packaging in the [Appwrite Cloud Functions
                  * tutorial](/docs/functions).
                  *
-                 * Use the "command" param to set the entry point used to execute your code.
+                 * Use the "entrypoint" param to set the entry point used to execute your code.
                  *
                  * @param {string} functionId
-                 * @param {string} command
+                 * @param {string} entrypoint
                  * @param {File} code
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createTag: (functionId, command, code) => __awaiter(this, void 0, void 0, function* () {
+                createTag: (functionId, entrypoint, code) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
-                    if (typeof command === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "command"');
+                    if (typeof entrypoint === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "entrypoint"');
                     }
                     if (typeof code === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "code"');
                     }
                     let path = '/functions/{functionId}/tags'.replace('{functionId}', functionId);
                     let payload = {};
-                    if (typeof command !== 'undefined') {
-                        payload['command'] = command;
+                    if (typeof entrypoint !== 'undefined') {
+                        payload['entrypoint'] = entrypoint;
                     }
                     if (typeof code !== 'undefined') {
                         payload['code'] = code;

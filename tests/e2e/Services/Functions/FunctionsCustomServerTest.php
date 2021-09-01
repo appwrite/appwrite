@@ -182,7 +182,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'command' => 'php index.php',
+            'entrypoint' => 'index.php',
             'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
         ]);
 
@@ -191,7 +191,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $tag['headers']['status-code']);
         $this->assertNotEmpty($tag['body']['$id']);
         $this->assertIsInt($tag['body']['dateCreated']);
-        $this->assertEquals('php index.php', $tag['body']['command']);
+        $this->assertEquals('php index.php', $tag['body']['entrypoint']);
         $this->assertGreaterThan(10000, $tag['body']['size']);
        
         /**
@@ -454,7 +454,7 @@ class FunctionsCustomServerTest extends Scope
     {
         $name = 'php-8.0';
         $code = realpath(__DIR__ . '/../../../resources/functions').'/timeout.tar.gz';
-        $command = 'php index.php';
+        $entrypoint = 'php index.php';
         $timeout = 2;
 
         $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
@@ -477,7 +477,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'command' => $command,
+            'entrypoint' => $entrypoint,
             'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
         ]);
 
@@ -532,7 +532,7 @@ class FunctionsCustomServerTest extends Scope
     {
         $name = 'php-8.0';
         $code = realpath(__DIR__ . '/../../../resources/functions').'/php-fn.tar.gz';
-        $command = 'php index.php';
+        $entrypoint = 'index.php';
         $timeout = 2;
 
         $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
@@ -555,7 +555,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'command' => $command,
+            'entrypoint' => $entrypoint,
             'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
         ]);
 

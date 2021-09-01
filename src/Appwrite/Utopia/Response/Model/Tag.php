@@ -28,9 +28,9 @@ class Tag extends Model
                 'default' => 0,
                 'example' => 1592981250,
             ])
-            ->addRule('command', [
+            ->addRule('entrypoint', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The entrypoint command in use to execute the tag code.',
+                'description' => 'The entrypoint file to use to execute the tag code.',
                 'default' => '',
                 'example' => 'enabled',
             ])
