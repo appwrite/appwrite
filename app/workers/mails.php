@@ -47,17 +47,13 @@ class MailsV1 extends Worker
         $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
         $subject = '';
         switch ($type) {
-            case MAIL_TYPE_RECOVERY:
-                $subject = $locale->getText("$prefix.subject");
-                break;
             case MAIL_TYPE_INVITATION:
                 $subject = \sprintf($locale->getText("$prefix.subject"), $this->args['team'], $project);
                 $body->setParam('{{owner}}', $this->args['owner']);
                 $body->setParam('{{team}}', $this->args['team']);
                 break;
+            case MAIL_TYPE_RECOVERY:
             case MAIL_TYPE_VERIFICATION:
-                $subject = $locale->getText("$prefix.subject");
-                break;
             case MAIL_TYPE_MAGIC_SESSION:
                 $subject = $locale->getText("$prefix.subject");
                 break;
