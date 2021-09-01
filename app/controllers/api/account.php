@@ -757,7 +757,7 @@ App::post('/v1/account/sessions/magic-url')
             ))
         ;
 
-        $token  // Hide secret for clients, sp
+        $token  // Hide secret for clients
             ->setAttribute('secret',
                 ($isPrivilegedUser || $isAppUser) ? $loginSecret : '');
 
