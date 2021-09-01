@@ -145,7 +145,7 @@ App::post('/v1/storage/files')
 
         $audits
             ->setParam('event', 'storage.files.create')
-            ->setParam('resource', 'storage/files/'.$file->getId())
+            ->setParam('resource', 'file/'.$file->getId())
         ;
 
         $usage
@@ -539,7 +539,7 @@ App::put('/v1/storage/files/:fileId')
 
         $audits
             ->setParam('event', 'storage.files.update')
-            ->setParam('resource', 'storage/files/'.$file->getId())
+            ->setParam('resource', 'file/'.$file->getId())
         ;
 
         $response->dynamic($file, Response::MODEL_FILE);
@@ -585,7 +585,7 @@ App::delete('/v1/storage/files/:fileId')
         
         $audits
             ->setParam('event', 'storage.files.delete')
-            ->setParam('resource', 'storage/files/'.$file->getId())
+            ->setParam('resource', 'file/'.$file->getId())
         ;
 
         $usage

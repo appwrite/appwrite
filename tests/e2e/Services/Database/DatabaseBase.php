@@ -1102,6 +1102,7 @@ trait DatabaseBase
         return $data;
     }
 
+
     public function testEnforceCollectionPermissions()
     {
         $user = 'user:' . $this->getUser()['$id'];
@@ -1158,9 +1159,6 @@ trait DatabaseBase
         sleep(2);
 
         $document1 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
             'documentId' => 'unique()',
             'data' => [
                 'attribute' => 'one',
@@ -1237,5 +1235,87 @@ trait DatabaseBase
         ]));
 
         $this->assertEquals(404, $documents['headers']['status-code']);
+    }
+
+    /**
+     * @depends testDefaultPermissions
+     */
+    public function testUniqueIndexDuplicate(array $data): array
+    {
+        $uniqueIndex = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'indexId' => 'unique_title',
+            'type' => 'unique',
+            'attributes' => ['title'],
+        ]);
+
+        $this->assertEquals($uniqueIndex['headers']['status-code'], 201);
+
+        sleep(2);
+
+        // test for failure
+        $duplicate = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'unique()',
+            'data' => [
+                'title' => 'Captain America',
+                'releaseYear' => 1944,
+                'actors' => [
+                    'Chris Evans',
+                    'Samuel Jackson',
+                ]
+            ],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
+        ]);
+
+        $this->assertEquals(409, $duplicate['headers']['status-code']);
+
+        // Test for exception when updating document to conflict
+        $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'unique()',
+            'data' => [
+                'title' => 'Captain America 5',
+                'releaseYear' => 1944,
+                'actors' => [
+                    'Chris Evans',
+                    'Samuel Jackson',
+                ]
+            ],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
+        ]);
+
+        $this->assertEquals(201, $document['headers']['status-code']);
+
+        // Test for exception when updating document to conflict
+        $duplicate = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $data['moviesId'] . '/documents/' . $document['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'unique()',
+            'data' => [
+                'title' => 'Captain America',
+                'releaseYear' => 1944,
+                'actors' => [
+                    'Chris Evans',
+                    'Samuel Jackson',
+                ]
+            ],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
+        ]);
+
+        $this->assertEquals(409, $duplicate['headers']['status-code']);
+
+        return $data;
     }
 }

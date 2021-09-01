@@ -117,7 +117,7 @@ App::post('/v1/account')
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.create')
-            ->setParam('resource', 'users/' . $user->getId())
+            ->setParam('resource', 'user/' . $user->getId())
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -164,7 +164,7 @@ App::post('/v1/account/sessions')
             $audits
                 //->setParam('userId', $profile->getId())
                 ->setParam('event', 'account.sessions.failed')
-                ->setParam('resource', 'users/'.($profile ? $profile->getId() : ''))
+                ->setParam('resource', 'user/'.($profile ? $profile->getId() : ''))
             ;
 
             throw new Exception('Invalid credentials', 401); // Wrong password or username
@@ -205,7 +205,7 @@ App::post('/v1/account/sessions')
         $audits
             ->setParam('userId', $profile->getId())
             ->setParam('event', 'account.sessions.create')
-            ->setParam('resource', 'users/' . $profile->getId())
+            ->setParam('resource', 'user/' . $profile->getId())
         ;
 
         if (!Config::getParam('domainVerification')) {
@@ -539,7 +539,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.sessions.create')
-            ->setParam('resource', 'users/' . $user->getId())
+            ->setParam('resource', 'user/' . $user->getId())
             ->setParam('data', ['provider' => $provider])
         ;
 
@@ -683,7 +683,7 @@ App::post('/v1/account/sessions/anonymous')
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.sessions.create')
-            ->setParam('resource', 'users/' . $user->getId())
+            ->setParam('resource', 'user/' . $user->getId())
         ;
 
         if (!Config::getParam('domainVerification')) {
@@ -983,7 +983,7 @@ App::patch('/v1/account/name')
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.update.name')
-            ->setParam('resource', 'users/' . $user->getId())
+            ->setParam('resource', 'user/' . $user->getId())
         ;
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -1026,7 +1026,7 @@ App::patch('/v1/account/password')
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.update.password')
-            ->setParam('resource', 'users/' . $user->getId())
+            ->setParam('resource', 'user/' . $user->getId())
         ;
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -1066,22 +1066,20 @@ App::patch('/v1/account/email')
         }
 
         $email = \strtolower($email);
-        $profile = $dbForInternal->findOne('users', [new Query('email', Query::TYPE_EQUAL, [\strtolower($email)])]); // Get user by email address
-
-        if ($profile) {
-            throw new Exception('User already registered', 400);
-        }
-
-        $user = $dbForInternal->updateDocument('users', $user->getId(), $user
+        try {
+            $user = $dbForInternal->updateDocument('users', $user->getId(), $user
                 ->setAttribute('password', $isAnonymousUser ? Auth::passwordHash($password) : $user->getAttribute('password', ''))
                 ->setAttribute('email', $email)
                 ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
-        );
+            );
+        } catch(Duplicate $th) {
+            throw new Exception('Email already exists', 409);
+        }
 
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.update.email')
-            ->setParam('resource', 'users/' . $user->getId())
+            ->setParam('resource', 'user/' . $user->getId())
         ;
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -1114,7 +1112,7 @@ App::patch('/v1/account/prefs')
 
         $audits
             ->setParam('event', 'account.update.prefs')
-            ->setParam('resource', 'users/' . $user->getId())
+            ->setParam('resource', 'user/' . $user->getId())
         ;
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -1159,7 +1157,7 @@ App::delete('/v1/account')
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.delete')
-            ->setParam('resource', 'users/' . $user->getId())
+            ->setParam('resource', 'user/' . $user->getId())
             ->setParam('data', $user->getArrayCopy())
         ;
 
@@ -1225,7 +1223,7 @@ App::delete('/v1/account/sessions/:sessionId')
                 $audits
                     ->setParam('userId', $user->getId())
                     ->setParam('event', 'account.sessions.delete')
-                    ->setParam('resource', '/user/' . $user->getId())
+                    ->setParam('resource', 'user/' . $user->getId())
                 ;
 
                 $session->setAttribute('current', false);
@@ -1298,7 +1296,7 @@ App::delete('/v1/account/sessions')
             $audits
                 ->setParam('userId', $user->getId())
                 ->setParam('event', 'account.sessions.delete')
-                ->setParam('resource', '/user/' . $user->getId())
+                ->setParam('resource', 'user/' . $user->getId())
             ;
 
             if (!Config::getParam('domainVerification')) {
@@ -1430,7 +1428,7 @@ App::post('/v1/account/recovery')
         $audits
             ->setParam('userId', $profile->getId())
             ->setParam('event', 'account.recovery.create')
-            ->setParam('resource', 'users/' . $profile->getId())
+            ->setParam('resource', 'user/' . $profile->getId())
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -1505,7 +1503,7 @@ App::put('/v1/account/recovery')
         $audits
             ->setParam('userId', $profile->getId())
             ->setParam('event', 'account.recovery.update')
-            ->setParam('resource', 'users/' . $profile->getId())
+            ->setParam('resource', 'user/' . $profile->getId())
         ;
 
         $response->dynamic($recovery, Response::MODEL_TOKEN);
@@ -1599,7 +1597,7 @@ App::post('/v1/account/verification')
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.verification.create')
-            ->setParam('resource', 'users/' . $user->getId())
+            ->setParam('resource', 'user/' . $user->getId())
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -1665,7 +1663,7 @@ App::put('/v1/account/verification')
         $audits
             ->setParam('userId', $profile->getId())
             ->setParam('event', 'account.verification.update')
-            ->setParam('resource', 'users/' . $user->getId())
+            ->setParam('resource', 'user/' . $user->getId())
         ;
 
         $response->dynamic($verification, Response::MODEL_TOKEN);

@@ -399,7 +399,7 @@ App::post('/v1/teams/:teamId/memberships')
         $audits
             ->setParam('userId', $invitee->getId())
             ->setParam('event', 'teams.memberships.create')
-            ->setParam('resource', 'teams/'.$teamId)
+            ->setParam('resource', 'team/'.$teamId)
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -561,7 +561,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'teams.memberships.update')
-            ->setParam('resource', 'teams/'.$teamId)
+            ->setParam('resource', 'team/'.$teamId)
         ;
 
         $response->dynamic($membership, Response::MODEL_MEMBERSHIP);
@@ -686,7 +686,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'teams.memberships.update.status')
-            ->setParam('resource', 'teams/'.$teamId)
+            ->setParam('resource', 'team/'.$teamId)
         ;
 
         if (!Config::getParam('domainVerification')) {
@@ -779,7 +779,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         $audits
             ->setParam('userId', $membership->getAttribute('userId'))
             ->setParam('event', 'teams.memberships.delete')
-            ->setParam('resource', 'teams/'.$teamId)
+            ->setParam('resource', 'team/'.$teamId)
         ;
 
         $events
