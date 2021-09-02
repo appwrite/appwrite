@@ -111,7 +111,7 @@ return [
             [
                 'key' => 'android',
                 'name' => 'Android',
-                'version' => '0.1.0',
+                'version' => '0.2.0',
                 'url' => 'https://github.com/appwrite/sdk-for-android',
                 'package' => 'https://search.maven.org/artifact/io.appwrite/sdk-for-android',
                 'enabled' => true,
