@@ -410,9 +410,9 @@ class FunctionsV1 extends Worker
             $executionStart = \microtime(true);
             $executionTime = \time();
 
-            $orchestration->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', '1'));
-            $orchestration->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', '256'));
-            $orchestration->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '256'));
+            $orchestration->setCpus((int) App::getEnv('_APP_FUNCTIONS_CPUS', 0));
+            $orchestration->setMemory((int) App::getEnv('_APP_FUNCTIONS_MEMORY', 256));
+            $orchestration->setSwap((int) App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 256));
 
             foreach ($vars as &$value) {
                 $value = strval($value);
