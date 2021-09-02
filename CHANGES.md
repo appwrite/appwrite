@@ -7,12 +7,14 @@
 - Refactored E-Mail template (#1422)
 - Improved locale management (#1440)
 - Added `$permissions` to execution response (#948)
-- Switch from using Docker CLI to Docker API by intergrating [utopia-php/orchestration](https://github.com/utopia-php/orchestration)
-- Added DOCKERHUB_PULL_USERNAME, DOCKERHUB_PULL_PASSWORD and DOCKERHUB_PULL_EMAIL env variables for pulling from private DockerHub repos
+- Switch from using Docker CLI to Docker API by intergrating [utopia-php/orchestration](https://github.com/utopia-php/orchestration) (#1420)
+- Added DOCKERHUB_PULL_USERNAME, DOCKERHUB_PULL_PASSWORD and DOCKERHUB_PULL_EMAIL env variables for pulling from private DockerHub repos (#1420)
 - Added `updateName`, `updateEmail` and `updatePassword` to Users service and console (#1547)
 
 ## Bugs
 - Fixed MariaDB timeout after 24 hours (#1510)
+- Fixed upgrading installation with customized `docker-compose.yml` file (#1513)
+- Fixed usage stats on the dashboard displaying invalid total users count (#1514)
 
 # Version 0.9.4
 
