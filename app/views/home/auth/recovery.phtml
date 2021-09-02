@@ -6,10 +6,10 @@ $locale = $this->getParam("locale");
 ?>
 <div class="zone medium">
     <h1 class="zone xl margin-bottom-large margin-top">
-        <?php echo $locale->getText("home.auth.recovery.title"); ?>
+        <?php echo $locale->getText('home.auth.recovery.title'); ?>
     </h1>
 
-    <small class="pull-end text-size-small"><?php echo $locale->getText("home.auth.shared.fields-required-info"); ?></small>
+    <small class="pull-end text-size-small"><?php echo $locale->getText('home.auth.shared.fields-required-info'); ?></small>
 
     <form name="account.createRecovery"
         data-analytics
@@ -21,26 +21,26 @@ $locale = $this->getParam("locale");
         data-scope="console"
         data-event="submit"
         data-success="alert"
-        data-success-param-alert-text="<?php echo $locale->getText("home.auth.recovery.submit-success"); ?>"
+        data-success-param-alert-text="<?php echo $locale->getText('home.auth.recovery.submit-success'); ?>"
         data-failure="alert"
-        data-failure-param-alert-text="<?php echo $locale->getText("home.auth.recovery.submit-error"); ?>"
+        data-failure-param-alert-text="<?php echo $locale->getText('home.auth.recovery.submit-error'); ?>"
         data-failure-param-alert-classname="error">
 
-        <label><?php echo $locale->getText("home.auth.recovery.input-label-email"); ?></label>
-        <input name="email" type="email" class="full-width" autocomplete="email" placeholder="<?php echo $locale->getText("home.auth.recovery.input-placeholder-email"); ?>" required>
+        <label><?php echo $locale->getText('home.auth.recovery.input-label-email'); ?></label>
+        <input name="email" type="email" class="full-width" autocomplete="email" placeholder="<?php echo $locale->getText('home.auth.recovery.input-placeholder-email'); ?>" required>
 
         <input name="url" type="hidden" data-ls-bind="{{env.ENDPOINT}}/auth/recovery/reset" />
 
         <?php if(!$smtpEnabled): ?>
         <div class="box note padding-tiny warning margin-bottom text-align-center">
-            <i class="icon-warning"></i> <?php echo $locale->getText("home.auth.recovery.warning-smtp-chunk1"); ?> <a href="https://appwrite.io/docs/email-delivery" target="_blank" rel="noopener"><?php echo $locale->getText("home.auth.recovery.warning-smtp-chunk2"); ?> <i class="icon-link-ext"></i></a>
+            <i class="icon-warning"></i> <?php echo $locale->getText('home.auth.recovery.warning-smtp-chunk1'); ?> <a href="https://appwrite.io/docs/email-delivery" target="_blank" rel="noopener"><?php echo $locale->getText('home.auth.recovery.warning-smtp-chunk2'); ?> <i class="icon-link-ext"></i></a>
         </div>
         <?php endif; ?>
         
-        <button type="submit" class="btn btn-primary"<?php if(!$smtpEnabled): ?> disabled<?php endif; ?>><i class="fa fa-sign-in"></i> <?php echo $locale->getText("home.auth.recovery.button-submit"); ?></button>
+        <button type="submit" class="btn btn-primary"<?php if(!$smtpEnabled): ?> disabled<?php endif; ?>><i class="fa fa-sign-in"></i> <?php echo $locale->getText('home.auth.recovery.button-submit'); ?></button>
     </form>
 </div>
 
 <div class="zone medium text-align-center">
-    <a href="/auth/signin"><?php echo $locale->getText("home.auth.recovery.button-back"); ?></a>
+    <a href="/auth/signin"><?php echo $locale->getText('home.auth.recovery.button-back'); ?></a>
 </div>

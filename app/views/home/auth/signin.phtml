@@ -16,13 +16,13 @@ $locale = $this->getParam("locale");
 
     <div data-ls-if="{{account}} === undefined">
         <h1 class="zone xl margin-bottom-large margin-top">
-            <?php echo $locale->getText("home.auth.signin.title"); ?>
+            <?php echo $locale->getText('home.auth.signin.title'); ?>
         </h1>
 
 
-        <div class="text-danger margin-bottom-large" data-ls-if="{{router.params.failure}} >= 1"><?php echo $locale->getText("home.auth.signin.submit-error"); ?></div>
+        <div class="text-danger margin-bottom-large" data-ls-if="{{router.params.failure}} >= 1"><?php echo $locale->getText('home.auth.signin.submit-error'); ?></div>
 
-        <p><?php echo $locale->getText("home.auth.signin.description"); ?></p>
+        <p><?php echo $locale->getText('home.auth.signin.description'); ?></p>
 
         <form name="account.createSession"
             data-analytics
@@ -37,21 +37,21 @@ $locale = $this->getParam("locale");
             data-success-param-trigger-events="account.createSession"
             data-success-param-redirect-url="/console"
             data-failure="alert"
-            data-failure-param-alert-text="<?php echo $locale->getText("home.auth.signin.submit-error"); ?>"
+            data-failure-param-alert-text="<?php echo $locale->getText('home.auth.signin.submit-error'); ?>"
             data-failure-param-alert-classname="error">
 
-            <input name="email" type="email" class="full-width" autocomplete="email" placeholder="<?php echo $locale->getText("home.auth.signin.input-placeholder-email"); ?>" required>
+            <input name="email" type="email" class="full-width" autocomplete="email" placeholder="<?php echo $locale->getText('home.auth.signin.input-placeholder-email'); ?>" required>
 
-            <input name="password" type="password" class="full-width" autocomplete="off" placeholder="<?php echo $locale->getText("home.auth.signin.input-placeholder-password"); ?>" required pattern=".{6,}" title="<?php echo $locale->getText("shared.input-password-error"); ?>">
+            <input name="password" type="password" class="full-width" autocomplete="off" placeholder="<?php echo $locale->getText('home.auth.signin.input-placeholder-password'); ?>" required pattern=".{6,}" title="<?php echo $locale->getText('shared.input-password-error'); ?>">
 
-            <button><?php echo $locale->getText("home.auth.signin.button-submit"); ?></button>
+            <button><?php echo $locale->getText('home.auth.signin.button-submit'); ?></button>
         </form>
         
         <br />
         <br />
 
         <div class="text-line-high-large text-align-center">
-            <a href="/auth/recovery"><?php echo $locale->getText("home.auth.signin.forgot-password-chunk1"); ?></a><?php if(!$root): ?> <?php echo $locale->getText("home.auth.signin.forgot-password-chunk2"); ?> <b><a href="/auth/signup"><?php echo $locale->getText("home.auth.signin.forgot-password-chunk3"); ?></a></b><?php endif; ?>
+            <a href="/auth/recovery"><?php echo $locale->getText('home.auth.signin.forgot-password-chunk1'); ?></a><?php if(!$root): ?> <?php echo $locale->getText('home.auth.signin.forgot-password-chunk2'); ?> <b><a href="/auth/signup"><?php echo $locale->getText('home.auth.signin.forgot-password-chunk3'); ?></a></b><?php endif; ?>
         </div>
     </div>
     

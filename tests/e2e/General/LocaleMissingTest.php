@@ -84,7 +84,7 @@ class LocaleMissingTest extends Scope
 
             // Split string into a way that each item starts with the translation key
             // The item may start with ' or "
-            $fileChunks = explode("->getText(", $fileContent);
+            $fileChunks = explode('->getText(', $fileContent);
 
             // If we split and get 1 item, it means string has not been found
             if(count($fileChunks) <= 1) {

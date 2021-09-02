@@ -13,12 +13,12 @@ $locale = $this->getParam("locale");
     data-success-param-redirect-url="/console"
     data-success-param-trigger-events="account.get">
     <h1 class="zone xl margin-bottom-large margin-top">
-        <?php echo $locale->getText("home.auth.signup.title"); ?>
+        <?php echo $locale->getText('home.auth.signup.title'); ?>
     </h1>
 
-    <div class="text-danger margin-bottom-large" data-ls-if="{{router.params.failure}} == 1"><?php echo $locale->getText("home.auth.signup.submit-error"); ?></div>
+    <div class="text-danger margin-bottom-large" data-ls-if="{{router.params.failure}} == 1"><?php echo $locale->getText('home.auth.signup.submit-error'); ?></div>
 
-    <small class="pull-end text-size-small"><?php echo $locale->getText("home.auth.shared.fields-required-info"); ?></small>
+    <small class="pull-end text-size-small"><?php echo $locale->getText('home.auth.shared.fields-required-info'); ?></small>
 
     <form name="account.create"
         data-analytics
@@ -34,43 +34,43 @@ $locale = $this->getParam("locale");
         data-success-param-trigger-events="account.create"
         data-success-param-redirect-url="/console"
         data-failure="alert"
-        data-failure-param-alert-text="<?php echo $locale->getText("home.auth.signup.submit-error"); ?>"
+        data-failure-param-alert-text="<?php echo $locale->getText('home.auth.signup.submit-error'); ?>"
         data-failure-param-alert-classname="error">
 
         <?php if($root): ?>
-            <p><?php echo $locale->getText("home.auth.signup.root-account-info"); ?></p>
+            <p><?php echo $locale->getText('home.auth.signup.root-account-info'); ?></p>
         <?php endif; ?>
 
-        <label><?php echo $locale->getText("home.auth.signup.input-label-name"); ?></label>
+        <label><?php echo $locale->getText('home.auth.signup.input-label-name'); ?></label>
         <input name="name" type="text" autocomplete="name" placeholder="" required maxlength="128">
 
-        <label><?php echo $locale->getText("home.auth.signup.input-label-email"); ?></label>
+        <label><?php echo $locale->getText('home.auth.signup.input-label-email'); ?></label>
         <input name="email" type="email" autocomplete="email" placeholder="" required data-ls-bind="{{router.params.email}}">
 
-        <label><?php echo $locale->getText("home.auth.signup.input-label-password"); ?></label>
-        <input name="password" type="password" autocomplete="off" placeholder="" required data-forms-password-meter pattern=".{6,}" title="<?php echo $locale->getText("shared.input-password-error"); ?>">
+        <label><?php echo $locale->getText('home.auth.signup.input-label-password'); ?></label>
+        <input name="password" type="password" autocomplete="off" placeholder="" required data-forms-password-meter pattern=".{6,}" title="<?php echo $locale->getText('shared.input-password-error'); ?>">
 
         <div class="agree margin-top-large margin-bottom-large">
             <div class="pull-start margin-end-small margin-bottom">
                 <input type="checkbox" required />
             </div>
-            <?php echo $locale->getText("home.auth.signup.agree-terms-chunk1"); ?> <a data-ls-attrs="href={{env.HOME}}/policy/terms" tabindex="-1" target="_blank" rel="noopener"><?php echo $locale->getText("home.auth.signup.agree-terms-chunk2"); ?>s</a> <?php echo $locale->getText("home.auth.signup.agree-terms-chunk3"); ?> <a data-ls-attrs="href={{env.HOME}}/policy/privacy" target="_blank" tabindex="-1" rel="noopener"><?php echo $locale->getText("home.auth.signup.agree-terms-chunk4"); ?></a>
+            <?php echo $locale->getText('home.auth.signup.agree-terms-chunk1'); ?> <a data-ls-attrs="href={{env.HOME}}/policy/terms" tabindex="-1" target="_blank" rel="noopener"><?php echo $locale->getText('home.auth.signup.agree-terms-chunk2'); ?>s</a> <?php echo $locale->getText('home.auth.signup.agree-terms-chunk3'); ?> <a data-ls-attrs="href={{env.HOME}}/policy/privacy" target="_blank" tabindex="-1" rel="noopener"><?php echo $locale->getText('home.auth.signup.agree-terms-chunk4'); ?></a>
         </div>
 
         <div class="newsletter margin-top margin-bottom-large">
             <div class="pull-start margin-end-small margin-bottom">
                 <input id="newsletter" type="checkbox" />
             </div>
-            <?php echo $locale->getText("home.auth.signup.agree-newsletter-chunk1"); ?> <a data-ls-attrs="href={{env.HOME}}/updates" tabindex="-1" target="_blank" rel="noopener"><?php echo $locale->getText("home.auth.signup.agree-newsletter-chunk2"); ?></a> <span class="text-fade">(<?php echo $locale->getText("home.auth.signup.agree-newsletter-chunk3"); ?>)</span>.
+            <?php echo $locale->getText('home.auth.signup.agree-newsletter-chunk1'); ?> <a data-ls-attrs="href={{env.HOME}}/updates" tabindex="-1" target="_blank" rel="noopener"><?php echo $locale->getText('home.auth.signup.agree-newsletter-chunk2'); ?></a> <span class="text-fade">(<?php echo $locale->getText('home.auth.signup.agree-newsletter-chunk3'); ?>)</span>.
         </div>
 
-        <button type="submit"><?php echo $locale->getText("home.auth.signup.button-submit"); ?></button>
+        <button type="submit"><?php echo $locale->getText('home.auth.signup.button-submit'); ?></button>
     </form>
 
 </div>
 
 <?php if(!$root): ?>
 <div class="zone medium text-align-center">
-    <a href="/auth/signin"><?php echo $locale->getText("home.auth.signup.existing-account-link"); ?></a>
+    <a href="/auth/signin"><?php echo $locale->getText('home.auth.signup.existing-account-link'); ?></a>
 </div>
 <?PHP endif; ?>

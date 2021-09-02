@@ -19,18 +19,18 @@ $locale = $this->getParam("locale");
         data-param-secret="{{router.params.secret}}"
         data-success="redirect,alert,trigger"
         data-success-param-redirect-url="/console?project={{router.params.project}}"
-        data-success-param-alert-text="<?php echo $locale->getText("home.auth.join.submit-success"); ?>"
+        data-success-param-alert-text="<?php echo $locale->getText('home.auth.join.submit-success'); ?>"
         data-success-param-trigger-events="teams.updateMembershipStatus"
         data-failure="redirect,alert"
         data-success-param-redirect-url="/console"
-        data-failure-param-alert-text="<?php echo $locale->getText("home.auth.join.submit-error"); ?>"
+        data-failure-param-alert-text="<?php echo $locale->getText('home.auth.join.submit-error'); ?>"
         data-failure-param-alert-classname="error">
 
-        <div class="text-danger margin-bottom-large" data-ls-if="{{router.params.failure}} == 1"><?php echo $locale->getText("home.auth.join.submit-error"); ?></div>
+        <div class="text-danger margin-bottom-large" data-ls-if="{{router.params.failure}} == 1"><?php echo $locale->getText('home.auth.join.submit-error'); ?></div>
         
-        <h2 class="margin-bottom-small"><?php echo $locale->getText("home.auth.join.title"); ?></h2>
+        <h2 class="margin-bottom-small"><?php echo $locale->getText('home.auth.join.title'); ?></h2>
 
-        <p><?php echo $locale->getText("home.auth.join.description"); ?> <?php echo APP_NAME; ?></p>
+        <p><?php echo $locale->getText('home.auth.join.description'); ?> <?php echo APP_NAME; ?></p>
         
         <!-- 
          ! BE AWRARE ! This block has not been localized.
@@ -55,12 +55,12 @@ $locale = $this->getParam("locale");
                 <input type="checkbox" required />
             </div>
 
-            <?php echo $locale->getText("home.auth.join.agree-terms-chunk1"); ?> <a href="/policy/terms" target="_blank"><?php echo $locale->getText("home.auth.join.agree-terms-chunk2"); ?></a> <?php echo $locale->getText("home.auth.join.agree-terms-chunk3"); ?> <a href="/policy/privacy" target="_blank"><?php echo $locale->getText("home.auth.join.agree-terms-chunk4"); ?></a>.
+            <?php echo $locale->getText('home.auth.join.agree-terms-chunk1'); ?> <a href="/policy/terms" target="_blank"><?php echo $locale->getText('home.auth.join.agree-terms-chunk2'); ?></a> <?php echo $locale->getText('home.auth.join.agree-terms-chunk3'); ?> <a href="/policy/privacy" target="_blank"><?php echo $locale->getText('home.auth.join.agree-terms-chunk4'); ?></a>.
         </div>
 
         <div class="clear">
-            <button class="pull-start margin-end"><?php echo $locale->getText("home.auth.join.button-submit"); ?></button>
-            <a href="/" class="button reverse pull-start"><?php echo $locale->getText("home.auth.join.button-cancel"); ?></a>
+            <button class="pull-start margin-end"><?php echo $locale->getText('home.auth.join.button-submit'); ?></button>
+            <a href="/" class="button reverse pull-start"><?php echo $locale->getText('home.auth.join.button-cancel'); ?></a>
         </div>
     </form>
 </section>

@@ -10,15 +10,15 @@ $locale = $this->getParam("locale");
 ?>
 
 <section class="zone large margin-top padding">
-    <h1 class="margin-bottom"><?php echo $locale->getText("general.error.title"); ?> <?php echo $code; ?></h1>
+    <h1 class="margin-bottom"><?php echo $locale->getText('general.error.title'); ?> <?php echo $code; ?></h1>
 
     <p><?php echo $message; ?></p>
 
-    <small><?php echo $locale->getText("general.error.error-id-title"); ?>: <?php echo $errorID; ?></small>
+    <small><?php echo $locale->getText('general.error.error-id-title'); ?>: <?php echo $errorID; ?></small>
 
     <?php if (!empty($projectURL)): ?>
         <hr class="margin-top margin-bottom" />
 
-        <p><a href="<?php echo $this->escape($projectURL); ?>" rel="noopener"><?php echo $locale->getText("general.error.button-back"); ?> <?php echo $projectName; ?></a></p>
+        <p><a href="<?php echo $this->escape($projectURL); ?>" rel="noopener"><?php echo $locale->getText('general.error.button-back'); ?> <?php echo $projectName; ?></a></p>
     <?php endif; ?>
 </section>
