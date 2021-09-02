@@ -105,7 +105,7 @@ class DeletesV1 extends Worker
             // Delete Usage stats
             $this->deleteByGroup('stats', [
                 new Query('time', Query::TYPE_LESSER, [$timestamp1d]),
-                new Query('period', Query::TYPE_EQUAL, ['1d', '15m']),
+                new Query('period', Query::TYPE_EQUAL, ['1d']),
             ], $dbForInternal);
 
             $this->deleteByGroup('stats', [
