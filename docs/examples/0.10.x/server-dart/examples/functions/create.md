@@ -13,7 +13,7 @@ void main() { // Init SDK
   Future result = functions.create(
     name: '[NAME]',
     execute: [],
-    runtime: 'java-11.0',
+    runtime: 'dotnet-5.0',
   );
 
   result

@@ -13,4 +13,4 @@ $client
 
 $functions = new Functions($client);
 
-$result = $functions->create('[NAME]', [], 'java-11.0');
+$result = $functions->create('[NAME]', [], 'dotnet-5.0');

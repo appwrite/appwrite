@@ -11,7 +11,7 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-let promise = functions.create('[NAME]', [], 'java-11.0');
+let promise = functions.create('[NAME]', [], 'dotnet-5.0');
 
 promise.then(function (response) {
     console.log(response);

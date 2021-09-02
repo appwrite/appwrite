@@ -1,13 +1,16 @@
-# Version 0.10.0 (NOT RELEASED YET)
+# Version 0.10.0
 
 ## Features
 - Added Realtime (#948)
 - Added Realtime statistics to the console (#948)
+- Added Magic URL login (#1552)
 - Refactored E-Mail template (#1422)
 - Improved locale management (#1440)
 - Added `$permissions` to execution response (#948)
 - Switch from using Docker CLI to Docker API by intergrating [utopia-php/orchestration](https://github.com/utopia-php/orchestration)
 - Added DOCKERHUB_PULL_USERNAME, DOCKERHUB_PULL_PASSWORD and DOCKERHUB_PULL_EMAIL env variables for pulling from private DockerHub repos
+- Added `updateName`, `updateEmail` and `updatePassword` to Users service and console (#1547)
+
 ## Bugs
 - Fixed MariaDB timeout after 24 hours (#1510)
 
