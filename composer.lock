@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0a782184d016e458ff18f20a2c49ccfb",
+    "content-hash": "86c1d7779c0c083c4493e154d6bb3ee0",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2231,6 +2231,64 @@
             "time": "2021-02-04T14:14:49+00:00"
         },
         {
+            "name": "utopia-php/websocket",
+            "version": "0.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/websocket.git",
+                "reference": "808317ef4ea0683c2c82dee5d543b1c8378e2e1b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/808317ef4ea0683c2c82dee5d543b1c8378e2e1b",
+                "reference": "808317ef4ea0683c2c82dee5d543b1c8378e2e1b",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.5.5",
+                "swoole/ide-helper": "4.6.6",
+                "textalk/websocket": "1.5.2",
+                "vimeo/psalm": "^4.8.1",
+                "workerman/workerman": "^4.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\WebSocket\\": "src/WebSocket"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "eldad@appwrite.io"
+                },
+                {
+                    "name": "Torsten Dittmann",
+                    "email": "torsten@appwrite.io"
+                }
+            ],
+            "description": "A simple abstraction for WebSocket servers.",
+            "keywords": [
+                "framework",
+                "php",
+                "upf",
+                "utopia",
+                "websocket"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/websocket/issues",
+                "source": "https://github.com/utopia-php/websocket/tree/0.0.1"
+            },
+            "time": "2021-07-11T13:09:44+00:00"
+        },
+        {
             "name": "webmozart/assert",
             "version": "1.10.0",
             "source": {
@@ -2458,16 +2516,16 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.12.1",
+            "version": "0.14.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "8e3c4a0a4159152d428602ffc3a2a4947e72c609"
+                "reference": "7a30fac0de583559b9c4cdd8308ab5a1f5803e60"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/8e3c4a0a4159152d428602ffc3a2a4947e72c609",
-                "reference": "8e3c4a0a4159152d428602ffc3a2a4947e72c609",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/7a30fac0de583559b9c4cdd8308ab5a1f5803e60",
+                "reference": "7a30fac0de583559b9c4cdd8308ab5a1f5803e60",
                 "shasum": ""
             },
             "require": {
@@ -2501,9 +2559,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.12.1"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.14.0"
             },
-            "time": "2021-07-29T07:50:02+00:00"
+            "time": "2021-09-02T09:50:30+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",
@@ -5834,6 +5892,55 @@
                 }
             ],
             "time": "2021-08-26T08:00:08+00:00"
+        },
+        {
+            "name": "textalk/websocket",
+            "version": "1.5.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Textalk/websocket-php.git",
+                "reference": "b93249453806a2dd46495de46d76fcbcb0d8dee8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Textalk/websocket-php/zipball/b93249453806a2dd46495de46d76fcbcb0d8dee8",
+                "reference": "b93249453806a2dd46495de46d76fcbcb0d8dee8",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.2 | ^8.0",
+                "psr/log": "^1.0"
+            },
+            "require-dev": {
+                "php-coveralls/php-coveralls": "^2.0",
+                "phpunit/phpunit": "^8.0|^9.0",
+                "squizlabs/php_codesniffer": "^3.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "WebSocket\\": "lib"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "ISC"
+            ],
+            "authors": [
+                {
+                    "name": "Fredrik Liljegren"
+                },
+                {
+                    "name": "Sören Jensen",
+                    "email": "soren@abicart.se"
+                }
+            ],
+            "description": "WebSocket client and server",
+            "support": {
+                "issues": "https://github.com/Textalk/websocket-php/issues",
+                "source": "https://github.com/Textalk/websocket-php/tree/1.5.2"
+            },
+            "time": "2021-02-12T15:39:23+00:00"
         },
         {
             "name": "theseer/tokenizer",

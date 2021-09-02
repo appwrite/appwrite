@@ -20,6 +20,7 @@
             <directory>./tests/e2e/General</directory>
             <directory>./tests/e2e/Scopes</directory>
             <directory>./tests/e2e/Services/Account</directory>
+            <directory>./tests/e2e/Services/Realtime</directory>
             <directory>./tests/e2e/Services/Avatars</directory>
             <directory>./tests/e2e/Services/Database</directory>
             <directory>./tests/e2e/Services/Health</directory>

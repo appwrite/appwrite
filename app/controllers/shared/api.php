@@ -1,7 +1,9 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
+use Appwrite\Messaging\Adapter\Realtime;
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Abuse\Abuse;
@@ -21,6 +23,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     /** @var Appwrite\Event\Event $usage */
     /** @var Appwrite\Event\Event $deletes */
     /** @var Appwrite\Event\Event $functions */
+    /** @var PDO $db */
 
     Storage::setDevice('files', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
     Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId()));
@@ -111,7 +114,6 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
 
 }, ['utopia', 'request', 'response', 'project', 'user', 'register', 'events', 'audits', 'usage', 'deletes', 'db'], 'api');
 
-
 App::init(function ($utopia, $request, $response, $project, $user) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
@@ -138,6 +140,12 @@ App::init(function ($utopia, $request, $response, $project, $user) {
         case 'emailPassword':
             if($project->getAttribute('usersAuthEmailPassword', true) === false) {
                 throw new Exception('Email / Password authentication is disabled for this project', 501);
+            }
+            break;
+
+        case 'magic-url':
+            if($project->getAttribute('usersAuthMagicURL', true) === false) {
+                throw new Exception('Magic URL authentication is disabled for this project', 501);
             }
             break;
 
@@ -175,7 +183,6 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
     /** @var Appwrite\Event\Event $audits */
     /** @var Appwrite\Event\Event $usage */
     /** @var Appwrite\Event\Event $deletes */
-    /** @var Appwrite\Event\Event $functions */
     /** @var bool $mode */
 
     if (!empty($events->getParam('event'))) {
@@ -195,6 +202,23 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
             ->setQueue('v1-functions')
             ->setClass('FunctionsV1')
             ->trigger();
+
+        if ($project->getId() !== 'console') {
+            $payload = new Document($response->getPayload());
+            $target = Realtime::fromPayload($events->getParam('event'), $payload);
+
+            Realtime::send(
+                $project->getId(), 
+                $response->getPayload(), 
+                $events->getParam('event'), 
+                $target['channels'], 
+                $target['roles'], 
+                [
+                    'permissionsChanged' => $target['permissionsChanged'], 
+                    'userId' => $events->getParam('userId')
+                ]
+            );
+        }
     }
     
     if (!empty($audits->getParam('event'))) {

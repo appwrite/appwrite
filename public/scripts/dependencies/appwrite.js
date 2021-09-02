@@ -39,6 +39,7 @@
         constructor() {
             this.config = {
                 endpoint: 'https://appwrite.io/v1',
+                endpointRealtime: '',
                 project: '',
                 key: '',
                 jwt: '',
@@ -46,8 +47,78 @@
                 mode: '',
             };
             this.headers = {
-                'x-sdk-version': 'appwrite:web:2.0.0',
+                'x-sdk-version': 'appwrite:web:2.1.0',
                 'X-Appwrite-Response-Format': '0.9.0',
+            };
+            this.realtime = {
+                socket: undefined,
+                timeout: undefined,
+                channels: {},
+                lastMessage: undefined,
+                createSocket: () => {
+                    var _a, _b;
+                    const channels = new URLSearchParams();
+                    channels.set('project', this.config.project);
+                    for (const property in this.realtime.channels) {
+                        channels.append('channels[]', property);
+                    }
+                    if (((_a = this.realtime.socket) === null || _a === void 0 ? void 0 : _a.readyState) === WebSocket.OPEN) {
+                        this.realtime.socket.close();
+                    }
+                    this.realtime.socket = new WebSocket(this.config.endpointRealtime + '/realtime?' + channels.toString());
+                    (_b = this.realtime.socket) === null || _b === void 0 ? void 0 : _b.addEventListener('message', this.realtime.authenticate);
+                    for (const channel in this.realtime.channels) {
+                        this.realtime.channels[channel].forEach(callback => {
+                            var _a;
+                            (_a = this.realtime.socket) === null || _a === void 0 ? void 0 : _a.addEventListener('message', callback);
+                        });
+                    }
+                    this.realtime.socket.addEventListener('close', event => {
+                        var _a, _b, _c;
+                        if (((_b = (_a = this.realtime) === null || _a === void 0 ? void 0 : _a.lastMessage) === null || _b === void 0 ? void 0 : _b.type) === 'error' && ((_c = this.realtime) === null || _c === void 0 ? void 0 : _c.lastMessage.data).code === 1008) {
+                            return;
+                        }
+                        console.error('Realtime got disconnected. Reconnect will be attempted in 1 second.', event.reason);
+                        setTimeout(() => {
+                            this.realtime.createSocket();
+                        }, 1000);
+                    });
+                },
+                authenticate: (event) => {
+                    var _a, _b;
+                    const message = JSON.parse(event.data);
+                    if (message.type === 'connected') {
+                        const cookie = JSON.parse((_a = window.localStorage.getItem('cookieFallback')) !== null && _a !== void 0 ? _a : "{}");
+                        const session = cookie === null || cookie === void 0 ? void 0 : cookie[`a_session_${this.config.project}`];
+                        const data = message.data;
+                        if (session && !data.user) {
+                            (_b = this.realtime.socket) === null || _b === void 0 ? void 0 : _b.send(JSON.stringify({
+                                type: "authentication",
+                                data: {
+                                    session
+                                }
+                            }));
+                        }
+                    }
+                },
+                onMessage: (channel, callback) => (event) => {
+                    try {
+                        const message = JSON.parse(event.data);
+                        this.realtime.lastMessage = message;
+                        if (message.type === 'event') {
+                            let data = message.data;
+                            if (data.channels && data.channels.includes(channel)) {
+                                callback(data);
+                            }
+                        }
+                        else if (message.type === 'error') {
+                            throw message.data;
+                        }
+                    }
+                    catch (e) {
+                        console.error(e);
+                    }
+                }
             };
             this.account = {
                 /**
@@ -471,6 +542,14 @@
                  * choice. Each OAuth2 provider should be enabled from the Appwrite console
                  * first. Use the success and failure arguments to provide a redirect URL's
                  * back to your app when login is completed.
+                 *
+                 * If there is already an active session, the new session will be attached to
+                 * the logged-in account. If there are no active sessions, the server will
+                 * attempt to look for a user with the same email address as the email
+                 * received from the OAuth2 provider and attach the new session to the
+                 * existing user. If no matching user is found - the server will create a new
+                 * user..
+                 *
                  *
                  * @param {string} provider
                  * @param {string} success
@@ -3567,14 +3646,17 @@
                 /**
                  * Create Team Membership
                  *
-                 * Use this endpoint to invite a new member to join your team. An email with a
-                 * link to join the team will be sent to the new member email address if the
-                 * member doesn't exist in the project it will be created automatically.
+                 * Use this endpoint to invite a new member to join your team. If initiated
+                 * from Client SDK, an email with a link to join the team will be sent to the
+                 * new member's email address if the member doesn't exist in the project it
+                 * will be created automatically. If initiated from server side SDKs, new
+                 * member will automatically be added to the team.
                  *
                  * Use the 'URL' parameter to redirect the user from the invitation email back
                  * to your app. When the user is redirected, use the [Update Team Membership
                  * Status](/docs/client/teams#teamsUpdateMembershipStatus) endpoint to allow
-                 * the user to accept the invitation to the team.
+                 * the user to accept the invitation to the team.  While calling from side
+                 * SDKs the redirect url can be empty string.
                  *
                  * Please note that in order to avoid a [Redirect
                  * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
@@ -3827,6 +3909,33 @@
                     }, payload);
                 }),
                 /**
+                 * Update Email
+                 *
+                 * Update the user email by its unique ID.
+                 *
+                 * @param {string} userId
+                 * @param {string} email
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateEmail: (userId, email) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof email === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "email"');
+                    }
+                    let path = '/users/{userId}/email'.replace('{userId}', userId);
+                    let payload = {};
+                    if (typeof email !== 'undefined') {
+                        payload['email'] = email;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * Get User Logs
                  *
                  * Get a user activity logs list by its unique ID.
@@ -3843,6 +3952,60 @@
                     let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Update Name
+                 *
+                 * Update the user name by its unique ID.
+                 *
+                 * @param {string} userId
+                 * @param {string} name
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateName: (userId, name) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof name === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "name"');
+                    }
+                    let path = '/users/{userId}/name'.replace('{userId}', userId);
+                    let payload = {};
+                    if (typeof name !== 'undefined') {
+                        payload['name'] = name;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Update Password
+                 *
+                 * Update the user password by its unique ID.
+                 *
+                 * @param {string} userId
+                 * @param {string} password
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updatePassword: (userId, password) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof password === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "password"');
+                    }
+                    let path = '/users/{userId}/password'.replace('{userId}', userId);
+                    let payload = {};
+                    if (typeof password !== 'undefined') {
+                        payload['password'] = password;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
                         'content-type': 'application/json',
                     }, payload);
                 }),
@@ -4025,6 +4188,18 @@
          */
         setEndpoint(endpoint) {
             this.config.endpoint = endpoint;
+            this.config.endpointRealtime = this.config.endpointRealtime || this.config.endpoint.replace("https://", "wss://").replace("http://", "ws://");
+            return this;
+        }
+        /**
+         * Set Realtime Endpoint
+         *
+         * @param {string} endpointRealtime
+         *
+         * @returns {this}
+         */
+        setEndpointRealtime(endpointRealtime) {
+            this.config.endpointRealtime = endpointRealtime;
             return this;
         }
         /**
@@ -4092,6 +4267,55 @@
             this.headers['X-Appwrite-Mode'] = value;
             this.config.mode = value;
             return this;
+        }
+        /**
+         * Subscribes to Appwrite events and passes you the payload in realtime.
+         *
+         * @param {string|string[]} channels
+         * Channel to subscribe - pass a single channel as a string or multiple with an array of strings.
+         *
+         * Possible channels are:
+         * - account
+         * - collections
+         * - collections.[ID]
+         * - collections.[ID].documents
+         * - documents
+         * - documents.[ID]
+         * - files
+         * - files.[ID]
+         * - executions
+         * - executions.[ID]
+         * - functions.[ID]
+         * - teams
+         * - teams.[ID]
+         * - memberships
+         * - memberships.[ID]
+         * @param {(payload: RealtimeMessage) => void} callback Is called on every realtime update.
+         * @returns {() => void} Unsubscribes from events.
+         */
+        subscribe(channels, callback) {
+            let channelArray = typeof channels === 'string' ? [channels] : channels;
+            let savedChannels = [];
+            channelArray.forEach((channel, index) => {
+                if (!(channel in this.realtime.channels)) {
+                    this.realtime.channels[channel] = [];
+                }
+                savedChannels[index] = {
+                    name: channel,
+                    index: (this.realtime.channels[channel].push(this.realtime.onMessage(channel, callback)) - 1)
+                };
+                clearTimeout(this.realtime.timeout);
+                this.realtime.timeout = window === null || window === void 0 ? void 0 : window.setTimeout(() => {
+                    this.realtime.createSocket();
+                }, 1);
+            });
+            return () => {
+                savedChannels.forEach(channel => {
+                    var _a;
+                    (_a = this.realtime.socket) === null || _a === void 0 ? void 0 : _a.removeEventListener('message', this.realtime.channels[channel.name][channel.index]);
+                    this.realtime.channels[channel.name].splice(channel.index, 1);
+                });
+            };
         }
         call(method, url, headers = {}, params = {}) {
             var _a, _b;

@@ -408,7 +408,7 @@
 
   .dashboard {
     padding: 20px;
-    overflow: hidden;
+    overflow: visible;
     position: relative;
     z-index: 1;
     margin-bottom: 2px;
@@ -522,6 +522,44 @@
       padding: 0;
       border: none;
     }
+
+    .chart-bar {
+      height: 4rem;
+      width: auto;
+      display: flex;
+      align-items: flex-end;
+
+      @media @desktops {
+        padding-right: 15px;
+      }
+
+      .bar {
+        width: 12.5%;
+        background-color: var(--config-color-chart-fade);
+        margin: 0 2px;
+        border-top: 2px solid var(--config-color-chart);
+
+        &:hover {
+          background-color: var(--config-color-chart);
+        }
+
+        .bar-loop (@i) when (@i > -1) {
+          &.bar-@{i} {
+            height: ~"@{i}%";
+          }
+          &.bar-@{i} when(@i = 0) {
+            border-top: 1px solid var(--config-color-chart);
+          }
+          .bar-loop(@i - 10);
+        }
+
+        .bar-loop (100);
+
+        &.bar-5 {
+          height: 5%;
+        }
+      }
+    }
   }
 
   .chart-metric {
@@ -587,10 +625,10 @@
       }
 
       &:nth-child(1), &.blue {
-        color: #29b5d9;
+        color: var(--config-color-chart);
 
         &::before {
-          background: #29b5d9;
+          background: var(--config-color-chart);
         }
       }
 

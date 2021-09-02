@@ -72,7 +72,7 @@ $cli
             $sum = \count($projects);
             $offset = $offset + $limit;
             $count = $count + $sum;
-            
+
             if ($sum > 0) {
                 Console::log('Fetched '.$count.'/'.$consoleDB->getSum().' projects...');
             }

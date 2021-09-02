@@ -466,7 +466,7 @@ fieldset {
     white-space: nowrap;
     background: var(--config-color-tooltip-background);
     border-radius: 5px;
-    bottom: 26px;
+    bottom: calc(100% + 6px);
     color: var(--config-color-tooltip-text);
     content: attr(data-tooltip);
     padding: 5px 15px;
@@ -483,22 +483,23 @@ fieldset {
     border: solid;
     border-color: var(--config-color-tooltip-background) transparent;
     border-width: 6px 6px 0 6px;
-    bottom: 20px;
+    bottom: 100%;
     content: "";
     position: absolute;
     z-index: 99;
-    .func-start(5px);
+    .func-start(3px);
   }
 
-  &.down:hover:after {
-    top: 26px;
-    bottom: inherit;
-  }
-
-  &.down:hover:before {
-    top: 20px;
-    border-width: 0 6px 6px 6px;
-    bottom: inherit;
+  &.down:hover {
+    &:after {
+      top: calc(100% + 6px);
+      bottom: inherit;
+    }
+    &:before {
+      top: 100%;
+      border-width: 0 6px 6px 6px;
+      bottom: inherit;
+    }
   }
 }
 
