@@ -74,6 +74,7 @@ const DELETE_TYPE_CERTIFICATES = 'certificates';
 const DELETE_TYPE_REALTIME = 'realtime';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
+const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
 const MAIL_TYPE_RECOVERY = 'recovery';
 const MAIL_TYPE_INVITATION = 'invitation';
 // Auth Types
