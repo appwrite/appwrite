@@ -16,7 +16,7 @@
 [![Translate](https://img.shields.io/badge/translate-f02e65?style=flat-square)](docs/tutorials/add-translations.md)
 <!-- [![Swag Store](https://img.shields.io/badge/swag%20store-f02e65?style=flat-square)](https://store.appwrite.io) -->
 
-[**Appwrite 0.9 has been released! Learn what's new!**](https://dev.to/appwrite/announcing-appwrite-0-9-the-open-source-firebase-alternative-53ho)
+[**Appwrite 0.10 has been released! Learn what's new!**](https://dev.to/appwrite/it-s-here-announcing-appwrite-0-10-and-the-new-appwrite-realtime-api-lbm)
 
 Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker<nobr> microservices. Appwrite abstracts the complexity and repetitiveness required to build a modern backend API from scratch and allows you to build secure apps faster.
 
