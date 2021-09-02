@@ -120,6 +120,28 @@ class DatabaseV1 extends Worker
             $dbForInternal->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'failed'));
         }
 
+        // the underlying database removes/rebuilds indexes when attribute is removed
+        // update indexes table with changes
+        /** @var Document[] $indexes */
+        $indexes = $collection->getAttribute('indexes', []);
+
+        foreach ($indexes as $index) {
+            /** @var string[] $attributes */
+            $attributes  = $index->getAttribute('attributes');
+            $found = array_search($key, $attributes);
+
+            if ($found !== false) {
+                $remove = [$attributes[$found]];
+                $attributes = array_diff($attributes, $remove); // remove attribute from array
+
+                if (empty($attributes)) {
+                    $dbForInternal->deleteDocument('indexes', $index->getId());
+                } else {
+                    $dbForInternal->updateDocument('indexes', $index->getId(), $index->setAttribute('attributes', $attributes, Document::SET_TYPE_ASSIGN));
+                }
+            }
+        }
+
         $dbForInternal->purgeDocument('collections', $collectionId);
     }
 
