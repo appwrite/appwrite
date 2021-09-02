@@ -56,11 +56,12 @@ $cli
         $usageStatsRetention30m = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_30M', '129600');//36 hours
         $usageStatsRetention1d = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_1D', '8640000'); // 100 days
 
-        Console::loop(function() use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention){
+        Console::loop(function() use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d) {
             $time = date('d-m-Y H:i:s', time());
             Console::info("[{$time}] Notifying deletes workers every {$interval} seconds");
             notifyDeleteExecutionLogs($executionLogsRetention);
             notifyDeleteAbuseLogs($abuseLogsRetention);
             notifyDeleteAuditLogs($auditLogRetention);
+            notifyDeleteUsageStats($usageStatsRetention30m, $usageStatsRetention1d);
         }, $interval);
     });
