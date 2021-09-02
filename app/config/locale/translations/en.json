@@ -5,6 +5,9 @@
 
     "shared.footer.version": "version",
     "shared.loading": "Loading...",
+
+    "shared.select-all": "Select All",
+    "shared.unselect-all": "Unselect All",
     "shared.header.alt-logo": "Appwrite Logo",
     "shared.header.alt-logo-light": "Appwrite Light Logo",
     "shared.header.alt-logo-dark": "Appwrite Dark Logo",
@@ -41,11 +44,48 @@
     "console.comps.header.menu-item-storage": "Storage",
     "console.comps.header.menu-item-users": "Users",
     "console.comps.header.menu-item-functions": "Functions",
-    "console.comps.header.menu-item-tasks": "tasks",
-    "console.comps.header.menu-item-webhooks": "webhooks",
-    "console.comps.header.menu-item-api-keys": "API Keys",
+    "console.comps.header.menu-item-tasks": "Tasks",
+    "console.comps.header.menu-item-webhooks": "Webhooks",
+    "console.comps.header.menu-item-keys": "API Keys",
     "console.comps.header.menu-item-settings": "Settings",
 
+
+    "console.keys.index.title": "API Keys",
+    "console.keys.index.no-keys-title": "No API Keys Found",
+    "console.keys.index.no-keys-description": "You haven't created any API keys for your project yet.",
+
+
+    "console.keys.index.update-title": "Update API Key",
+    "console.keys.index.update-button-open": "Update",
+    "console.keys.index.update-submit-success": "Updated API key successfully",
+    "console.keys.index.update-submit-error": "Failed to update API key",
+    "console.keys.index.update-button-submit": "Save",
+    "console.keys.index.update-button-cancel": "Cancel",
+    "console.keys.index.update-label-name": "Name",
+
+    "console.keys.index.scopes-info": "scopes granted",
+    "console.keys.index.button-show-secret": "Show Secret",
+
+    "console.keys.index.secret-title": "API Key Secret",
+    "console.keys.index.secret-button-cancel": "Close",
+
+    "console.keys.index.delete-button-open": "Delete",
+    "console.keys.index.delete-submit-success": "Deleted API key successfully",
+    "console.keys.index.delete-submit-error": "Failed to delete API key",
+    "console.keys.index.delete-submit-confirm": "Are you sure you want to delete this API key?",
+
+
+    "console.keys.index.shared-label-scopes-chunk1": "Scopes",
+    "console.keys.index.shared-label-scopes-chunk2": "Learn more",
+
+    "console.keys.index.add-key-modal-title": "Add API Key",
+    "console.keys.index.add-key-button": "Add API Keys",
+    "console.keys.index.add-key-submit-error": "Failed to create API key",
+    "console.keys.index.add-key-submit-success": "Created API key successfully",
+    "console.keys.index.add-key-button-submit": "Create",
+    "console.keys.index.add-key-button-cancel": "Cancel",
+    "console.keys.index.add-key-label-name": "Name",
+    "console.keys.index.add-key-label-name-tooltip": "Choose any name that will help you distinguish between your different API keys.",
 
     "console.account.index.title": "Your Account",
     "console.account.index.overview": "Overview",

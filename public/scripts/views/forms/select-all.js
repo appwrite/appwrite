@@ -7,8 +7,8 @@
         let select = document.createElement("button");
         let unselect = document.createElement("button");
   
-        select.textContent = 'Select All';
-        unselect.textContent = 'Unselect All';
+        select.textContent = element.dataset.formsSelectAllText || 'Select All';
+        unselect.textContent = element.dataset.formsUnselectAllText || 'Unselect All';
   
         select.classList.add('link');
         select.classList.add('margin-top-tiny');

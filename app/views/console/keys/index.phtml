@@ -10,7 +10,7 @@ $locale = $this->getParam("locale");
         <a data-ls-attrs="href=/console/home?project={{router.params.project}}" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> <?php echo $locale->getText('console.shared-button-back-to-home'); ?></a>
         <br />
 
-        <span>API Keys</span>
+        <span><?php echo $locale->getText('console.keys.index.title'); ?></span>
     </h1>
 </div>
 <div class="zone xl"
@@ -23,9 +23,9 @@ $locale = $this->getParam("locale");
     data-success-param-trigger-events="projects.listKeys">
 
     <div data-ls-if="0 == {{console-keys.sum}} || undefined == {{console-keys.sum}}" class="box margin-top margin-bottom">
-        <h3 class="margin-bottom-small text-bold">No API Keys Found</h3>
+        <h3 class="margin-bottom-small text-bold"><?php echo $locale->getText('console.keys.index.no-keys-title'); ?></h3>
 
-        <p class="margin-bottom-no">You haven't created any API keys for your project yet.</p>
+        <p class="margin-bottom-no"><?php echo $locale->getText('console.keys.index.no-keys-description'); ?></p>
     </div>
 
     <div class="box margin-bottom" data-ls-if="0 != {{console-keys.sum}}">
@@ -34,7 +34,7 @@ $locale = $this->getParam("locale");
                 <div data-ui-modal class="modal box close" data-button-alias="none" data-open-event="key-update-{{key.$id}}">
                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                    <h1>Update API Key</h1>
+                    <h1><?php echo $locale->getText('console.keys.index.update-title'); ?></h1>
 
                     <form
                         data-analytics
@@ -46,20 +46,20 @@ $locale = $this->getParam("locale");
                         data-scope="console"
                         data-event="submit"
                         data-success="alert,trigger"
-                        data-success-param-alert-text="Updated API key successfully"
+                        data-success-param-alert-text="<?php echo $locale->getText('console.keys.index.update-submit-error'); ?>"
                         data-success-param-trigger-events="projects.updateKey"
                         data-failure="alert"
-                        data-failure-param-alert-text="Failed to update API key"
+                        data-failure-param-alert-text="<?php echo $locale->getText('console.keys.index.update-submit-success'); ?>"
                         data-failure-param-alert-classname="error">
 
                         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                         <input type="hidden" name="keyId" data-ls-bind="{{key.$id}}" />
 
-                        <label data-ls-attrs="for=name-{{key.$id}}">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different API keys."><i class="icon-question"></i></span></label>
+                        <label data-ls-attrs="for=name-{{key.$id}}"><?php echo $locale->getText('console.keys.index.update-label-name'); ?> <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different API keys."><i class="icon-question"></i></span></label>
                         <input type="text" class="full-width" data-ls-attrs="id=name-{{key.$id}}" name="name" required autocomplete="off" data-ls-bind="{{key.name}}" maxlength="128" />
 
-                        <section data-forms-select-all>
-                            <label data-ls-attrs="for=scopes-{{key.$id}}">Scopes (<a data-ls-attrs="href={{env.HOME}}/docs/keys" target="_blank" rel="noopener">Learn more</a>)</label>
+                        <section data-forms-select-all data-forms-select-all-text="<?php echo $locale->getText('shared.select-all'); ?>" data-forms-unselect-all-text="<?php echo $locale->getText('shared.unselect-all'); ?>">
+                            <label data-ls-attrs="for=scopes-{{key.$id}}"><?php echo $locale->getText('console.keys.index.shared-label-scopes-chunk1'); ?> (<a data-ls-attrs="href={{env.HOME}}/docs/keys" target="_blank" rel="noopener"><?php echo $locale->getText('console.keys.index.shared-label-scopes-chunk2'); ?></a>)</label>
                             <div class="row responsive thin">
                                 <?php foreach ($scopes as $i => $scope) : ?>
                                     <div class="col span-6 text-one-liner margin-bottom text-height-large text-size-small" title="<?php echo $scope; ?>">
@@ -78,7 +78,7 @@ $locale = $this->getParam("locale");
 
                         <hr class="margin-top-no" />
 
-                        <button type="submit">Save</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                        <button type="submit"><?php echo $locale->getText('console.keys.index.update-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.keys.index.update-button-cancel'); ?></button>
                     </form>
                 </div>
 
@@ -91,28 +91,28 @@ $locale = $this->getParam("locale");
                     data-service="projects.deleteKey"
                     data-scope="console"
                     data-event="key-delete-{{key.$id}}"
-                    data-confirm="Are you sure you want to delete this API key?"
+                    data-confirm="<?php echo $locale->getText('console.keys.index.delete-submit-confirm'); ?>"
                     data-success="alert,trigger"
-                    data-success-param-alert-text="Deleted API key successfully"
+                    data-success-param-alert-text="<?php echo $locale->getText('console.keys.index.delete-submit-success'); ?>"
                     data-success-param-trigger-events="projects.deleteKey"
                     data-failure="alert"
-                    data-failure-param-alert-text="Failed to delete API key"
+                    data-failure-param-alert-text="<?php echo $locale->getText('console.keys.index.delete-submit-error'); ?>"
                     data-failure-param-alert-classname="error">
 
                     <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                     <input type="hidden" name="keyId" data-ls-bind="{{key.$id}}" />
                 </form>
 
-                <button class="pull-end desktops-only margin-start-small" data-ls-ui-trigger="key-update-{{key.$id}}">Update</button>
-                <button class="pull-end reverse desktops-only margin-small" data-ls-ui-trigger="key-delete-{{key.$id}}">Delete</button>
+                <button class="pull-end desktops-only margin-start-small" data-ls-ui-trigger="key-update-{{key.$id}}"><?php echo $locale->getText('console.keys.index.update-button-open'); ?></button>
+                <button class="pull-end reverse desktops-only margin-small" data-ls-ui-trigger="key-delete-{{key.$id}}"><?php echo $locale->getText('console.keys.index.delete-button-open'); ?></button>
 
-                <div class="margin-bottom-tiny"><span data-ls-bind="{{key.name}}"></span> <small>(<span data-ls-bind="{{key.scopes.length}}"></span> scopes granted)</small></div>
+                <div class="margin-bottom-tiny"><span data-ls-bind="{{key.name}}"></span> <small>(<span data-ls-bind="{{key.scopes.length}}"></span> <?php echo $locale->getText('console.keys.index.scopes-info'); ?>)</small></div>
 
                 <div class="clear">
-                    <div data-ui-modal class="modal box close" data-button-text="Show Secret" data-button-class="link pull-start margin-end-small margin-top-tiny">
+                    <div data-ui-modal class="modal box close" data-button-text="<?php echo $locale->getText('console.keys.index.button-show-secret'); ?>" data-button-class="link pull-start margin-end-small margin-top-tiny">
                         <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                        <h1>API Key Secret</h1>
+                        <h1><?php echo $locale->getText('console.keys.index.secret-title'); ?></h1>
 
                         <form>
                             <div class="input-copy">
@@ -122,7 +122,7 @@ $locale = $this->getParam("locale");
                             <hr />
 
                             <div>
-                                <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.keys.index.secret-button-cancel'); ?></button>
                             </div>
                         </form>
                     </div>
@@ -135,10 +135,10 @@ $locale = $this->getParam("locale");
     </div>
 
     <div class="clear">
-        <div data-ui-modal class="modal box close" data-button-text="Add API Key">
+        <div data-ui-modal class="modal box close" data-button-text="<?php echo $locale->getText('console.keys.index.add-key-modal-title'); ?>">
             <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-            <h1>Add API Keys</h1>
+            <h1><?php echo $locale->getText('console.keys.index.add-key-button'); ?></h1>
 
             <form
                 data-analytics
@@ -150,19 +150,19 @@ $locale = $this->getParam("locale");
                 data-scope="console"
                 data-event="submit"
                 data-success="alert,trigger,reset"
-                data-success-param-alert-text="Created API key successfully"
+                data-success-param-alert-text="<?php echo $locale->getText('console.keys.index.add-key-submit-success'); ?>"
                 data-success-param-trigger-events="projects.createKey"
                 data-failure="alert"
-                data-failure-param-alert-text="Failed to create API key"
+                data-failure-param-alert-text="<?php echo $locale->getText('console.keys.index.add-key-submit-error'); ?>"
                 data-failure-param-alert-classname="error">
 
                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
 
-                <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different API keys."><i class="icon-question"></i></span></label>
+                <label for="name"><?php echo $locale->getText('console.keys.index.add-key-label-name'); ?> <span class="tooltip large" data-tooltip="<?php echo $locale->getText('console.keys.index.add-key-label-name-tooltip'); ?>"><i class="icon-question"></i></span></label>
                 <input type="text" class="full-width" id="name" name="name" required autocomplete="off" maxlength="128" />
 
-                <section data-forms-select-all>
-                    <label for="scopes">Scopes (<a data-ls-attrs="href={{env.HOME}}/docs/keys" target="_blank" rel="noopener">Learn more</a>)</label>
+                <section data-forms-select-all data-forms-select-all-text="<?php echo $locale->getText('shared.select-all'); ?>" data-forms-unselect-all-text="<?php echo $locale->getText('shared.unselect-all'); ?>">
+                    <label for="scopes"><?php echo $locale->getText('console.keys.index.shared-label-scopes-chunk1'); ?> (<a data-ls-attrs="href={{env.HOME}}/docs/keys" target="_blank" rel="noopener"><?php echo $locale->getText('console.keys.index.shared-label-scopes-chunk2'); ?></a>)</label>
                     <div class="row responsive thin">
                         <?php foreach ($scopes as $i => $scope) : ?>
                             <div class="col span-6 text-one-liner margin-bottom text-height-large text-size-small" title="<?php echo $scope; ?>">
@@ -181,7 +181,7 @@ $locale = $this->getParam("locale");
 
                 <hr class="margin-top-no" />
 
-                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                <button type="submit"><?php echo $locale->getText('console.keys.index.add-key-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.keys.index.add-key-button-cancel'); ?></button>
             </form>
         </div>
     </div>
