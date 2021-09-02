@@ -1729,7 +1729,7 @@ $collections = [
         ],
     ],
     'buckets' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'buckets',
         '$permissions' => ['read' => ['*']],
         'name' => 'Buckets',

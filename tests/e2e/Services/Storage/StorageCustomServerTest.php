@@ -22,6 +22,7 @@ class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'bucketId' => 'unique()',
             'name' => 'Test Bucket',
         ]);
         $this->assertEquals(201, $bucket['headers']['status-code']);
@@ -43,6 +44,7 @@ class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'bucketId' => 'unique()',
             'name' => '',
         ]);
         $this->assertEquals(400, $bucket['headers']['status-code']);
@@ -121,14 +123,15 @@ class StorageCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $id, array_merge([
+        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'bucketId' => 'unique()',
             'name' => 'Test Bucket Updated',
             'enabled' => false,
         ]);
-        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $this->assertEquals(200, $bucket['headers']['status-code']);
         $this->assertNotEmpty($bucket['body']['$id']);
         $this->assertIsInt($bucket['body']['dateCreated']);
         $this->assertIsArray($bucket['body']['$read']);
@@ -143,7 +146,7 @@ class StorageCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $id, array_merge([
+        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
