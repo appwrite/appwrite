@@ -426,6 +426,11 @@ App::delete('/v1/database/collections/:collectionId')
             throw new Exception('Failed to remove collection from DB', 500);
         }
 
+        $deletes
+            ->setParam('type', DELETE_TYPE_DOCUMENT)
+            ->setParam('document', $collection)
+        ;
+
         $events
             ->setParam('eventData', $response->output($collection, Response::MODEL_COLLECTION))
         ;
