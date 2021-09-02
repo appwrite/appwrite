@@ -85,7 +85,7 @@ $locale = $this->getParam("locale");
                                         </a>
                                     </td>
                                     <td data-title="Email: ">
-                                        <small data-ls-bind="{{user.email}}"></span>
+                                        <span data-ls-bind="{{user.email}}"></span>
                                     </td>
                                     <td data-title="Status: ">
                                         <span data-ls-if="{{user.emailVerification}} === true">
@@ -305,8 +305,8 @@ $locale = $this->getParam("locale");
         </li>
         
         <li data-state="/console/users/providers?project={{router.params.project}}">
-            <p data-ls-if="{{console-project.usersAuthLimit}} == 0" class="text-fade text-size-small margin-bottom pull-end">Unlimited Users <span class="link" data-ls-ui-trigger="project-update-auth-users-limit">Set Limit</a></p>
-            <p data-ls-if="{{console-project.usersAuthLimit}} != 0" class="text-fade text-size-small margin-bottom pull-end"><span data-ls-bind="{{console-project.usersAuthLimit|statsTotal}}"></span> Users allowed <span class="link" data-ls-ui-trigger="project-update-auth-users-limit">Change Limit</a></p>
+            <p data-ls-if="{{console-project.usersAuthLimit}} == 0" class="text-fade text-size-small margin-bottom pull-end">Unlimited Users <span class="link" data-ls-ui-trigger="project-update-auth-users-limit">Set Limit</span></p>
+            <p data-ls-if="{{console-project.usersAuthLimit}} != 0" class="text-fade text-size-small margin-bottom pull-end"><span data-ls-bind="{{console-project.usersAuthLimit|statsTotal}}"></span> Users allowed <span class="link" data-ls-ui-trigger="project-update-auth-users-limit">Change Limit</span></p>
             
             <h2>Settings</h2>
 
