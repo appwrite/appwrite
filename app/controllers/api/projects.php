@@ -222,6 +222,8 @@ App::get('/v1/projects/:projectId/usage')
             $requests = [];
             $network = [];
             $functions = [];
+            $realtimeConnections = [];
+            $realtimeMessages = [];
     
             if ($client) {
                 $start = $period[$range]['start']->format(DateTime::RFC3339);
@@ -260,11 +262,34 @@ App::get('/v1/projects/:projectId/usage')
                         'date' => \strtotime($point['time']),
                     ];
                 }
+
+                // Realtime Connections
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_realtime_clients" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+                $points = $result->getPoints();
+    
+                foreach ($points as $point) {
+                    $realtimeConnections[] = [
+                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
+                        'date' => \strtotime($point['time']),
+                    ];
+                }
+                // Realtime Messages
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_realtime_messages" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+                $points = $result->getPoints();
+    
+                foreach ($points as $point) {
+                    $realtimeMessages[] = [
+                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
+                        'date' => \strtotime($point['time']),
+                    ];
+                }
             }
         } else {
             $requests = [];
             $network = [];
             $functions = [];
+            $realtimeConnections = [];
+            $realtimeMessages = [];
         }
 
 
@@ -326,6 +351,18 @@ App::get('/v1/projects/:projectId/usage')
                 'total' => \array_sum(\array_map(function ($item) {
                     return $item['value'];
                 }, $functions)),
+            ],
+            'realtimeConnections' => [
+                'data' => $realtimeConnections,
+                'total' => \array_sum(\array_map(function ($item) {
+                    return $item['value'];
+                }, $realtimeConnections)),
+            ],
+            'realtimeMessages' => [
+                'data' => $realtimeMessages,
+                'total' => \array_sum(\array_map(function ($item) {
+                    return $item['value'];
+                }, $realtimeMessages)),
             ],
             'collections' => [
                 'data' => $collections,

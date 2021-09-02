@@ -37,7 +37,10 @@ class UsageV1 extends Worker
         $functionExecutionTime = $this->args['functionExecutionTime'] ?? 0;
         $functionStatus = $this->args['functionStatus'] ?? '';
 
-        $tags = ",project={$projectId},version=" . App::getEnv('_APP_VERSION', 'UNKNOWN');
+        $realtimeConnections = $this->args['realtimeConnections'] ?? 0;
+        $realtimeMessages = $this->args['realtimeMessages'] ?? 0;
+
+        $tags = ",project={$projectId},version=".App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         // the global namespace is prepended to every key (optional)
         $statsd->setNamespace('appwrite.usage');
@@ -51,9 +54,17 @@ class UsageV1 extends Worker
             $statsd->count('executions.time' . $tags . ',functionId=' . $functionId, $functionExecutionTime);
         }
 
-        $statsd->count('network.inbound' . $tags, $networkRequestSize);
-        $statsd->count('network.outbound' . $tags, $networkResponseSize);
-        $statsd->count('network.all' . $tags, $networkRequestSize + $networkResponseSize);
+        if($realtimeConnections >= 1) {
+            $statsd->count('realtime.clients'.$tags, $realtimeConnections);
+        }
+
+        if($realtimeMessages >= 1) {
+            $statsd->count('realtime.messages'.$tags, $realtimeMessages);
+        }
+
+        $statsd->count('network.inbound'.$tags, $networkRequestSize);
+        $statsd->count('network.outbound'.$tags, $networkResponseSize);
+        $statsd->count('network.all'.$tags, $networkRequestSize + $networkResponseSize);
 
         if ($storage >= 1) {
             $statsd->count('storage.all' . $tags, $storage);

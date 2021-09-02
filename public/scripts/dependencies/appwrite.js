@@ -39,6 +39,7 @@
         constructor() {
             this.config = {
                 endpoint: 'https://appwrite.io/v1',
+                endpointRealtime: '',
                 project: '',
                 key: '',
                 jwt: '',
@@ -48,6 +49,76 @@
             this.headers = {
                 'x-sdk-version': 'appwrite:web:2.1.0',
                 'X-Appwrite-Response-Format': '0.9.0',
+            };
+            this.realtime = {
+                socket: undefined,
+                timeout: undefined,
+                channels: {},
+                lastMessage: undefined,
+                createSocket: () => {
+                    var _a, _b;
+                    const channels = new URLSearchParams();
+                    channels.set('project', this.config.project);
+                    for (const property in this.realtime.channels) {
+                        channels.append('channels[]', property);
+                    }
+                    if (((_a = this.realtime.socket) === null || _a === void 0 ? void 0 : _a.readyState) === WebSocket.OPEN) {
+                        this.realtime.socket.close();
+                    }
+                    this.realtime.socket = new WebSocket(this.config.endpointRealtime + '/realtime?' + channels.toString());
+                    (_b = this.realtime.socket) === null || _b === void 0 ? void 0 : _b.addEventListener('message', this.realtime.authenticate);
+                    for (const channel in this.realtime.channels) {
+                        this.realtime.channels[channel].forEach(callback => {
+                            var _a;
+                            (_a = this.realtime.socket) === null || _a === void 0 ? void 0 : _a.addEventListener('message', callback);
+                        });
+                    }
+                    this.realtime.socket.addEventListener('close', event => {
+                        var _a, _b, _c;
+                        if (((_b = (_a = this.realtime) === null || _a === void 0 ? void 0 : _a.lastMessage) === null || _b === void 0 ? void 0 : _b.type) === 'error' && ((_c = this.realtime) === null || _c === void 0 ? void 0 : _c.lastMessage.data).code === 1008) {
+                            return;
+                        }
+                        console.error('Realtime got disconnected. Reconnect will be attempted in 1 second.', event.reason);
+                        setTimeout(() => {
+                            this.realtime.createSocket();
+                        }, 1000);
+                    });
+                },
+                authenticate: (event) => {
+                    var _a, _b;
+                    const message = JSON.parse(event.data);
+                    if (message.type === 'connected') {
+                        const cookie = JSON.parse((_a = window.localStorage.getItem('cookieFallback')) !== null && _a !== void 0 ? _a : "{}");
+                        const session = cookie === null || cookie === void 0 ? void 0 : cookie[`a_session_${this.config.project}`];
+                        const data = message.data;
+                        if (session && !data.user) {
+                            (_b = this.realtime.socket) === null || _b === void 0 ? void 0 : _b.send(JSON.stringify({
+                                type: "authentication",
+                                data: {
+                                    session
+                                }
+                            }));
+                        }
+                    }
+                },
+                onMessage: (channel, callback) => (event) => {
+                    try {
+                        const message = JSON.parse(event.data);
+                        this.realtime.lastMessage = message;
+                        if (message.type === 'event') {
+                            let data = message.data;
+                            if (data.channels && data.channels.includes(channel)) {
+                                callback(data);
+                            }
+                        }
+                        else if (message.type === 'error') {
+                            throw message.data;
+                        }
+                    }
+                    catch (e) {
+                        console.error(e);
+                    }
+                }
             };
             this.account = {
                 /**
@@ -4117,6 +4188,18 @@
          */
         setEndpoint(endpoint) {
             this.config.endpoint = endpoint;
+            this.config.endpointRealtime = this.config.endpointRealtime || this.config.endpoint.replace("https://", "wss://").replace("http://", "ws://");
+            return this;
+        }
+        /**
+         * Set Realtime Endpoint
+         *
+         * @param {string} endpointRealtime
+         *
+         * @returns {this}
+         */
+        setEndpointRealtime(endpointRealtime) {
+            this.config.endpointRealtime = endpointRealtime;
             return this;
         }
         /**
@@ -4184,6 +4267,55 @@
             this.headers['X-Appwrite-Mode'] = value;
             this.config.mode = value;
             return this;
+        }
+        /**
+         * Subscribes to Appwrite events and passes you the payload in realtime.
+         *
+         * @param {string|string[]} channels
+         * Channel to subscribe - pass a single channel as a string or multiple with an array of strings.
+         *
+         * Possible channels are:
+         * - account
+         * - collections
+         * - collections.[ID]
+         * - collections.[ID].documents
+         * - documents
+         * - documents.[ID]
+         * - files
+         * - files.[ID]
+         * - executions
+         * - executions.[ID]
+         * - functions.[ID]
+         * - teams
+         * - teams.[ID]
+         * - memberships
+         * - memberships.[ID]
+         * @param {(payload: RealtimeMessage) => void} callback Is called on every realtime update.
+         * @returns {() => void} Unsubscribes from events.
+         */
+        subscribe(channels, callback) {
+            let channelArray = typeof channels === 'string' ? [channels] : channels;
+            let savedChannels = [];
+            channelArray.forEach((channel, index) => {
+                if (!(channel in this.realtime.channels)) {
+                    this.realtime.channels[channel] = [];
+                }
+                savedChannels[index] = {
+                    name: channel,
+                    index: (this.realtime.channels[channel].push(this.realtime.onMessage(channel, callback)) - 1)
+                };
+                clearTimeout(this.realtime.timeout);
+                this.realtime.timeout = window === null || window === void 0 ? void 0 : window.setTimeout(() => {
+                    this.realtime.createSocket();
+                }, 1);
+            });
+            return () => {
+                savedChannels.forEach(channel => {
+                    var _a;
+                    (_a = this.realtime.socket) === null || _a === void 0 ? void 0 : _a.removeEventListener('message', this.realtime.channels[channel.name][channel.index]);
+                    this.realtime.channels[channel.name].splice(channel.index, 1);
+                });
+            };
         }
         call(method, url, headers = {}, params = {}) {
             var _a, _b;

@@ -26,6 +26,7 @@ use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
+use Appwrite\Event\Realtime;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\App;
 use Utopia\View;
@@ -70,6 +71,7 @@ const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_CERTIFICATES = 'certificates';
+const DELETE_TYPE_REALTIME = 'realtime';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
@@ -421,10 +423,10 @@ App::setResource('user', function($mode, $project, $console, $request, $response
             $request->getCookie(Auth::$cookieName.'_legacy', '')));// Get fallback session from old clients (no SameSite support)
 
     // Get fallback session from clients who block 3rd-party cookies
-    $response->addHeader('X-Debug-Fallback', 'false');
+    if($response) $response->addHeader('X-Debug-Fallback', 'false');
 
     if(empty($session['id']) && empty($session['secret'])) {
-        $response->addHeader('X-Debug-Fallback', 'true');
+        if($response) $response->addHeader('X-Debug-Fallback', 'true');
         $fallback = $request->getHeader('x-fallback-cookies', '');
         $fallback = \json_decode($fallback, true);
         $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
@@ -435,8 +437,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
 
     if (APP_MODE_ADMIN !== $mode) {
         $user = $projectDB->getDocument(Auth::$unique);
-    }
-    else {
+    } else {
         $user = $consoleDB->getDocument(Auth::$unique);
 
         $user
@@ -468,7 +469,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
         } catch (JWTException $error) {
             throw new Exception('Failed to verify JWT. '.$error->getMessage(), 401);
         }
-        
+
         $jwtUserId = $payload['userId'] ?? '';
         $jwtSessionId = $payload['sessionId'] ?? '';
 

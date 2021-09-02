@@ -6,6 +6,7 @@ use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
+use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
 use Appwrite\Utopia\Response\Model\Execution;
 use Cron\CronExpression;
@@ -531,6 +532,16 @@ class FunctionsV1 extends Worker
 
         $executionUpdate->trigger();
 
+        $target = Realtime::fromPayload('functions.executions.update', $execution);
+
+        Realtime::send(
+            $projectId, 
+            $execution->getArrayCopy(), 
+            'functions.executions.update', 
+            $target['channels'], 
+            $target['roles']
+        );
+
         $usage = new Event('v1-usage', 'UsageV1');
 
         $usage
@@ -540,7 +551,8 @@ class FunctionsV1 extends Worker
             ->setParam('functionStatus', $functionStatus)
             ->setParam('functionExecutionTime', $executionTime * 1000) // ms
             ->setParam('networkRequestSize', 0)
-            ->setParam('networkResponseSize', 0);
+            ->setParam('networkResponseSize', 0)
+        ;
 
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $usage->trigger();
