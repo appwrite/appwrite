@@ -13,7 +13,7 @@ void main() { // Init SDK
   Future result = functions.createTag(
     functionId: '[FUNCTION_ID]',
     command: '[COMMAND]',
-    code: await MultipartFile.fromFile('./path-to-files/image.jpg', 'image.jpg'),
+    code: await MultipartFile.fromPath('code', './path-to-files/image.jpg', 'image.jpg'),
   );
 
   result

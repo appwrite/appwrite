@@ -11,7 +11,7 @@ public void main() {
     functions.create(
         name = "[NAME]",
         execute = listOf(),
-        runtime = "java-11.0",
+        runtime = "dotnet-5.0",
         new Continuation<Response>() {
             @NotNull
             @Override

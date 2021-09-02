@@ -1,7 +1,7 @@
 appwrite functions create \
         --name="[NAME]" \
         --execute="" \
-        --runtime="java-11.0" \
+        --runtime="dotnet-5.0" \
         --vars="{}" \
         --events="" \
         --schedule="" \

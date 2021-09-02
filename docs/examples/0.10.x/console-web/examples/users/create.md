@@ -1,4 +1,4 @@
-let sdk = new Appwrite();
+const sdk = new Appwrite();
 
 sdk
     .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint

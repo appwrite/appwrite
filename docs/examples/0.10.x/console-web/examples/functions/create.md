@@ -1,11 +1,11 @@
-let sdk = new Appwrite();
+const sdk = new Appwrite();
 
 sdk
     .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-let promise = sdk.functions.create('[NAME]', [], 'java-11.0');
+let promise = sdk.functions.create('[NAME]', [], 'dotnet-5.0');
 
 promise.then(function (response) {
     console.log(response); // Success

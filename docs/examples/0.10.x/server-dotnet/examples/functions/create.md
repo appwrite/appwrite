@@ -10,4 +10,4 @@ client
 
 Functions functions = new Functions(client);
 
-HttpResponseMessage result = await functions.Create("[NAME]", [List<object>], "java-11.0");
+HttpResponseMessage result = await functions.Create("[NAME]", [List<object>], "dotnet-5.0");
