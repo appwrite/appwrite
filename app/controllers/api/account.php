@@ -733,7 +733,7 @@ App::post('/v1/account/sessions/magic-url')
         }
 
         if(empty($url)) {
-            $url = $request->getProtocol().'://'.$request->getHostname().'/auth/magic-url/success';
+            $url = $request->getProtocol().'://'.$request->getHostname().'/auth/magic-url';
         }
 
         $url = Template::parseURL($url);
