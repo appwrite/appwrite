@@ -32,12 +32,14 @@ class Auth
     const TOKEN_TYPE_VERIFICATION = 2;
     const TOKEN_TYPE_RECOVERY = 3;
     const TOKEN_TYPE_INVITE = 4;
+    const TOKEN_TYPE_MAGIC_URL = 5;
 
     /**
      * Session Providers.
      */
     const SESSION_PROVIDER_EMAIL = 'email';
     const SESSION_PROVIDER_ANONYMOUS = 'anonymous';
+    const SESSION_PROVIDER_MAGIC_URL = 'magic-url';
 
     /**
      * Token Expiration times.
