@@ -62,7 +62,7 @@ App::post('/v1/storage/buckets')
         $bucketId = $bucketId == 'unique()' ? $dbForInternal->getId() : $bucketId;
         try {
             $dbForInternal->createCollection('bucket_' . $bucketId, [
-                [
+                new Document([
                     '$id' => 'dateCreated',
                     'type' => Database::VAR_INTEGER,
                     'format' => '',
@@ -72,8 +72,8 @@ App::post('/v1/storage/buckets')
                     'default' => null,
                     'array' => false,
                     'filters' => [],
-                ],
-                [
+                ]),
+                new Document([
                     'array' => false,
                     '$id' => 'bucketId',
                     'type' => Database::VAR_STRING,
@@ -84,8 +84,8 @@ App::post('/v1/storage/buckets')
                     'default' => null,
                     'array' => false,
                     'filters' => [],
-                ],
-                [
+                ]),
+                new Document([
                     '$id' => 'name',
                     'type' => Database::VAR_STRING,
                     'format' => '',
@@ -95,8 +95,8 @@ App::post('/v1/storage/buckets')
                     'default' => null,
                     'array' => false,
                     'filters' => [],
-                ],
-                [
+                ]),
+                new Document([
                     '$id' => 'path',
                     'type' => Database::VAR_STRING,
                     'format' => '',
@@ -106,8 +106,8 @@ App::post('/v1/storage/buckets')
                     'default' => null,
                     'array' => false,
                     'filters' => [],
-                ],
-                [
+                ]),
+                new Document([
                     '$id' => 'signature',
                     'type' => Database::VAR_STRING,
                     'format' => '',
@@ -117,8 +117,8 @@ App::post('/v1/storage/buckets')
                     'default' => null,
                     'array' => false,
                     'filters' => [],
-                ],
-                [
+                ]),
+                new Document([
                     '$id' => 'mimeType',
                     'type' => Database::VAR_STRING,
                     'format' => '',
@@ -128,8 +128,8 @@ App::post('/v1/storage/buckets')
                     'default' => null,
                     'array' => false,
                     'filters' => [],
-                ],
-                [
+                ]),
+                new Document([
                     '$id' => 'sizeOriginal',
                     'type' => Database::VAR_INTEGER,
                     'format' => '',
@@ -139,8 +139,8 @@ App::post('/v1/storage/buckets')
                     'default' => null,
                     'array' => false,
                     'filters' => [],
-                ],
-                [
+                ]),
+                new Document([
                     '$id' => 'sizeActual',
                     'type' => Database::VAR_INTEGER,
                     'format' => '',
@@ -150,8 +150,8 @@ App::post('/v1/storage/buckets')
                     'default' => null,
                     'array' => false,
                     'filters' => [],
-                ],
-                [
+                ]),
+                new Document([
                     '$id' => 'algorithm',
                     'type' => Database::VAR_STRING,
                     'format' => '',
@@ -161,8 +161,8 @@ App::post('/v1/storage/buckets')
                     'default' => null,
                     'array' => false,
                     'filters' => [],
-                ],
-                [
+                ]),
+                new Document([
                     '$id' => 'comment',
                     'type' => Database::VAR_STRING,
                     'format' => '',
@@ -172,8 +172,8 @@ App::post('/v1/storage/buckets')
                     'default' => null,
                     'array' => false,
                     'filters' => [],
-                ],
-                [
+                ]),
+                new Document([
                     '$id' => 'openSSLVersion',
                     'type' => Database::VAR_STRING,
                     'format' => '',
@@ -183,8 +183,8 @@ App::post('/v1/storage/buckets')
                     'default' => null,
                     'array' => false,
                     'filters' => [],
-                ],
-                [
+                ]),
+                new Document([
                     '$id' => 'openSSLCipher',
                     'type' => Database::VAR_STRING,
                     'format' => '',
@@ -194,8 +194,8 @@ App::post('/v1/storage/buckets')
                     'default' => null,
                     'array' => false,
                     'filters' => [],
-                ],
-                [
+                ]),
+                new Document([
                     '$id' => 'openSSLTag',
                     'type' => Database::VAR_STRING,
                     'format' => '',
@@ -205,8 +205,8 @@ App::post('/v1/storage/buckets')
                     'default' => null,
                     'array' => false,
                     'filters' => [],
-                ],
-                [
+                ]),
+                new Document([
                     '$id' => 'openSSLIV',
                     'type' => Database::VAR_STRING,
                     'format' => '',
@@ -216,25 +216,25 @@ App::post('/v1/storage/buckets')
                     'default' => null,
                     'array' => false,
                     'filters' => [],
-                ],
+                ]),
             ], [
-                [
+                new Document([
                     '$id' => '_key_bucket',
                     'type' => Database::INDEX_KEY,
                     'attributes' => ['bucketId'],
                     'lengths' => [Database::LENGTH_KEY],
                     'orders' => [Database::ORDER_ASC],
-                ],
-                [
+                ]),
+                new Document([
                     '$id' => '_fulltext_name',
                     'type' => Database::INDEX_FULLTEXT,
                     'attributes' => ['name'],
                     'lengths' => [1024],
                     'orders' => [Database::ORDER_ASC],
-                ],
+                ]),
             ]);
 
-            $data = $dbForInternal->createDocument('buckets', new Document([
+            $bucket = $dbForInternal->createDocument('buckets', new Document([
                 '$id' => $bucketId,
                 '$collection' => 'buckets',
                 'dateCreated' => \time(),
@@ -255,12 +255,12 @@ App::post('/v1/storage/buckets')
 
         $audits
             ->setParam('event', 'storage.buckets.create')
-            ->setParam('resource', 'storage/buckets/' . $data->getId())
-            ->setParam('data', $data->getArrayCopy())
+            ->setParam('resource', 'storage/buckets/' . $bucket->getId())
+            ->setParam('data', $bucket->getArrayCopy())
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($data, Response::MODEL_BUCKET);
+        $response->dynamic($bucket, Response::MODEL_BUCKET);
     });
 
 App::get('/v1/storage/buckets')
