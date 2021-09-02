@@ -508,7 +508,7 @@ App::patch('/v1/projects/:projectId/oauth2')
     ->param('secret', '', new text(512), 'Provider secret key. Max length: 512 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($projectId, $providerKey, $appId, $secret, $response, $dbForConsole) {
+    ->action(function ($projectId, $provider, $appId, $secret, $response, $dbForConsole) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
 
@@ -517,11 +517,6 @@ App::patch('/v1/projects/:projectId/oauth2')
         if ($project->isEmpty()) {
             throw new Exception('Project not found', 404);
         }
-
-        $provider = $dbForConsole->findOne('providers', [
-            new Query('key', Query::TYPE_EQUAL, [$providerKey]),
-            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()]),
-        ]);
 
         $providers = $project->getAttribute('providers', []);
         $providers[$provider . 'Appid'] = $appId;
