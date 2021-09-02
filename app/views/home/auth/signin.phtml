@@ -42,9 +42,9 @@ $locale = $this->getParam("locale");
 
             <input name="email" type="email" class="full-width" autocomplete="email" placeholder="<?php echo $locale->getText("home.auth.signin.input-placeholder-email"); ?>" required>
 
-            <input name="password" type="password" class="full-width" autocomplete="off" placeholder="<?php echo $locale->getText("home.auth.signin.input-placeholder-password"); ?>" required pattern=".{6,}" title="<?php echo $locale->getText("home.auth.shared.input-password-error"); ?>">
+            <input name="password" type="password" class="full-width" autocomplete="off" placeholder="<?php echo $locale->getText("home.auth.signin.input-placeholder-password"); ?>" required pattern=".{6,}" title="<?php echo $locale->getText("shared.input-password-error"); ?>">
 
-            <button><?php echo $locale->getText("home.auth.signin.submit-button"); ?></button>
+            <button><?php echo $locale->getText("home.auth.signin.button-submit"); ?></button>
         </form>
         
         <br />

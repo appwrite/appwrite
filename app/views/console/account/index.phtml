@@ -1,16 +1,21 @@
+<?php
+$locale = $this->getParam("locale");
+/** @var Utopia\Locale\Locale $locale */
+?>
+
 <div class="cover">
     <h1 class="zone xl margin-bottom-large">
-        <a data-ls-attrs="href=/console" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> Home</a>
+        <a data-ls-attrs="href=/console" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> <?php echo $locale->getText("console.shared-button-back-to-home"); ?></a>
         <br />
 
-        <span>Your Account</span>
+        <span><?php echo $locale->getText("console.account.index.title"); ?></span>
     </h1>
 </div>
 
 <div class="zone xl">
     <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
         <li data-state="/console/account">
-            <h2 class="margin-bottom">Overview</h2>
+            <h2 class="margin-bottom"><?php echo $locale->getText("console.account.index.overview"); ?></h2>
             
             <div
                 data-service="account.get"
@@ -22,7 +27,7 @@
 
                 <div class="row responsive force-reverse">
                     <div class="col span-3 text-align-center margin-bottom">
-                        <img src="" data-ls-attrs="src={{account|avatar}}" data-size="200" height="150" alt="User Avatar" class="avatar huge huge margin-bottom-small" />
+                        <img src="" data-ls-attrs="src={{account|avatar}}" data-size="200" height="150" alt="<?php echo $locale->getText("console.account.index.overview-alt-avatar"); ?>" class="avatar huge huge margin-bottom-small" />
                     </div>
 
                     <div class="col span-9">
@@ -38,20 +43,20 @@
                                     data-scope="console"
                                     data-event="submit"
                                     data-success="trigger,alert"
-                                    data-success-param-alert-text="Your name was updated successfully"
+                                    data-success-param-alert-text="<?php echo $locale->getText("console.account.index.overview-update-name-submit-success"); ?>"
                                     data-success-param-trigger-events="account.update"
                                     data-failure="alert"
-                                    data-failure-param-alert-text="Failed to update your name"
+                                    data-failure-param-alert-text="<?php echo $locale->getText("console.account.index.overview-update-name-submit-error"); ?>"
                                     data-failure-param-alert-classname="error">
 
-                                    <label for="name">Name</label>
+                                    <label for="name"><?php echo $locale->getText("console.account.index.overview-update-name-label-name"); ?></label>
 
                                     <div class="row responsive">
                                         <div class="col span-8 margin-bottom-small">
                                             <input name="name" id="name" type="text" autocomplete="off" data-ls-bind="{{account.name}}" required class="margin-bottom-no" maxlength="128">
                                         </div>
                                         <div class="col span-4">
-                                            <button type="submit" class="fill margin-bottom-no">Update Name</button>
+                                            <button type="submit" class="fill margin-bottom-no"><?php echo $locale->getText("console.account.index.overview-update-name-button-submit"); ?></button>
                                         </div>
                                     </div>
                                 </form>
@@ -69,29 +74,29 @@
                                 data-scope="console"
                                 data-event="submit"
                                 data-success="trigger,alert"
-                                data-success-param-alert-text="Email address updated successfully"
+                                data-success-param-alert-text="<?php echo $locale->getText("console.account.index.overview-update-email-submit-success"); ?>"
                                 data-success-param-trigger-events="account-update,modal-close" 
                                 data-failure="alert"
-                                data-failure-param-alert-text="Failed updating email address"
+                                data-failure-param-alert-text="<?php echo $locale->getText("console.account.index.overview-update-email-submit-error"); ?>"
                                 data-failure-param-alert-classname="error">
 
-                                <label>Email</label>
+                                <label><?php echo $locale->getText("console.account.index.overview-update-email-label-email"); ?></label>
                                 <div class="row responsive">
                                     <div class="col span-8 margin-bottom-small">
-                                        <input name="email" type="email" class="margin-bottom-no" autocomplete="off" placeholder="me@example.com" data-ls-bind="{{account.email}}" required>
+                                        <input name="email" type="email" class="margin-bottom-no" autocomplete="off" placeholder="<?php echo $locale->getText("console.account.index.overview-update-email-placeholder-email"); ?>" data-ls-bind="{{account.email}}" required>
                                     </div>
                                     <div class="col span-4">
-                                        <div data-ui-modal class="modal box close width-small height-small" data-button-text="Update Email" data-button-class="fill">
-                                            <h3>Confirm Password</h3>
+                                        <div data-ui-modal class="modal box close width-small height-small" data-button-text="<?php echo $locale->getText("console.account.index.overview-update-email-title"); ?>" data-button-class="fill">
+                                            <h3><?php echo $locale->getText("console.account.index.overview-update-email-subtitle"); ?></h3>
                                             
                                             <hr />
 
-                                            <label>Password</label>
+                                            <label><?php echo $locale->getText("console.account.index.overview-update-email-label-password"); ?></label>
                                             <input name="password" type="password" class="full-width" autocomplete="off" placeholder="" required>
                                             
                                             <hr />
 
-                                            <button type="submit" class="margin-bottom-no">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                            <button type="submit" class="margin-bottom-no"><?php echo $locale->getText("console.account.index.overview-update-email-button-submit"); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText("console.account.index.overview-update-email-button-cancel"); ?></button>
                                         </div>
                                     </div>
                                 </div>
@@ -99,8 +104,8 @@
 
                             <hr />
 
-                            <div data-ui-modal class="modal box close width-small" data-button-text="Update Password" data-button-class="">
-                                <h1>Update Password</h1>
+                            <div data-ui-modal class="modal box close width-small" data-button-text="<?php echo $locale->getText("console.account.index.overview-update-password-button-submit"); ?>" data-button-class="">
+                                <h1><?php echo $locale->getText("console.account.index.overview-update-password-title"); ?></h1>
 
                                 <form name="update-password"
                                     data-analytics
@@ -113,21 +118,21 @@
                                     data-event="submit"
                                     data-success="trigger,alert,reset"
                                     data-success-param-trigger-events="account-update"
-                                    data-success-param-alert-text="Password updated successfully"
+                                    data-success-param-alert-text="<?php echo $locale->getText("console.account.index.overview-update-password-submit-success"); ?>"
                                     data-failure="alert"
-                                    data-failure-param-alert-text="Failed updating password"
+                                    data-failure-param-alert-text="<?php echo $locale->getText("console.account.index.overview-update-password-submit-error"); ?>"
                                     data-failure-param-alert-classname="error">
 
-                                    <label>Current Password</label>
+                                    <label><?php echo $locale->getText("console.account.index.overview-update-password-label-current-password"); ?></label>
                                     <input name="oldPassword" type="password" class="full-width" autocomplete="off" placeholder="" required>
 
-                                    <label>New Password</label>
+                                    <label><?php echo $locale->getText("console.account.index.overview-update-password-label-new-password"); ?></label>
                                     <input name="password" type="password" class="full-width" autocomplete="off" placeholder="" required data-forms-password-meter>
 
                                     <hr />
 
                                     <footer>
-                                        <button type="submit">Update Password</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                        <button type="submit"><?php echo $locale->getText("console.account.index.overview-update-password-button-submit"); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText("console.account.index.overview-update-password-button-cancel"); ?></button>
                                     </footer>
                                 </form>
                             </div>
@@ -146,12 +151,12 @@
                                 data-success="trigger"
                                 data-success-param-trigger-events="account.deleteSession"
                                 data-failure="alert"
-                                data-failure-param-alert-text="Logout failed"
+                                data-failure-param-alert-text="<?php echo $locale->getText("console.account.index.overview-form-logout-submit-error"); ?>"
                                 data-failure-param-alert-classname="error">
 
                                 <input type="hidden" name="sessionId" value="current">
 
-                                <button class="fill danger icon fill"><i class="icon-login"></i> Logout</button>
+                                <button class="fill danger icon fill"><i class="icon-login"></i> <?php echo $locale->getText("console.account.index.overview-form-logout-button-submit"); ?></button>
                             </form>
                         </div>
 
@@ -161,14 +166,14 @@
                 <div class="row responsive">
                     <div class="col span-9">
 
-                        <h3 class="text-danger">Danger Zone</h3>
+                        <h3 class="text-danger"><?php echo $locale->getText("console.account.index.overview-dangerzone-title"); ?></h3>
 
                         <div class="box danger">
-                            <p>This is the area where you can delete your account.</p>
+                            <p><?php echo $locale->getText("console.account.index.overview-dangerzone-description-chunk1"); ?></p>
 
-                            <p>By deleting your account you will lose access to any of your teams and shared data.</p>
+                            <p><?php echo $locale->getText("console.account.index.overview-dangerzone-description-chunk2"); ?></p>
 
-                            <p>PLEASE NOTE: Account deletion is irreversible.</p>
+                            <p><?php echo $locale->getText("console.account.index.overview-dangerzone-description-chunk3"); ?></p>
 
                             <form class="inline"
                                 data-analytics
@@ -179,13 +184,13 @@
                                 data-service="account.delete"
                                 data-scope="console"
                                 data-event="submit"
-                                data-confirm="Are you sure you want to delete your account?"
+                                data-confirm="<?php echo $locale->getText("console.account.index.overview-dangerzone-confirm"); ?>"
                                 data-success="trigger"
                                 data-success-param-trigger-events="account.delete"
                                 data-failure="alert"
-                                data-failure-param-alert-text="Account deactivation failed"
+                                data-failure-param-alert-text="<?php echo $locale->getText("console.account.index.overview-dangerzone-error"); ?>"
                                 data-failure-param-alert-classname="error">
-                                <button class="danger reverse">Delete Account</button>
+                                <button class="danger reverse"><?php echo $locale->getText("console.account.index.overview-dangerzone-button-submit"); ?></button>
                             </form>
                         </div>
                     </div>
@@ -194,7 +199,7 @@
             </div>
         </li>
         <li data-state="/console/account/sessions">
-            <h2>Sessions</h2>
+            <h2><?php echo $locale->getText("console.account.index.sessions"); ?></h2>
 
             <div class="box margin-bottom"
                 data-service="account.getSessions"
@@ -215,15 +220,15 @@
                                 data-service="account.deleteSession"
                                 data-scope="console"
                                 data-event="submit"
-                                data-loading="Loading..."
+                                data-loading="<?php echo $locale->getText("shared.loading"); ?>"
                                 data-success="trigger"
                                 data-success-param-trigger-events="account.deleteRemoteSession"
                                 data-failure="alert"
-                                data-failure-param-alert-text="Logout from Session Failed"
+                                data-failure-param-alert-text="<?php echo $locale->getText("console.account.index.sessions-current-logout-submit-error"); ?>"
                                 data-failure-param-alert-classname="error">
 
                                 <input type="hidden" name="sessionId" data-ls-bind="{{session.$id}}">
-                                <button class="danger">Logout</button>
+                                <button class="danger"><?php echo $locale->getText("console.account.index.sessions-current-logout-button-submit"); ?></button>
                             </form>
                         </span>
 
@@ -238,15 +243,15 @@
                                 data-service="account.deleteSession"
                                 data-scope="console"
                                 data-event="submit"
-                                data-loading="Loading..."
+                                data-loading="<?php echo $locale->getText("shared.loading"); ?>"
                                 data-success="trigger,redirect"
                                 data-success-param-trigger-events="account.deleteSession"
                                 data-success-param-redirect-url="/"
                                 data-failure="alert"
-                                data-failure-param-alert-text="Logout from Session Failed"
+                                  data-failure-param-alert-text="<?php echo $locale->getText("console.account.index.sessions-current-logout-submit-error"); ?>"
                                 data-failure-param-alert-classname="error">
                                 <input type="hidden" name="sessionId" data-ls-bind="{{session.$id}}">
-                                <button class="danger">Logout</button>
+                                <button class="danger"><?php echo $locale->getText("console.account.index.sessions-current-logout-button-submit"); ?></button>
                             </form>
                         </span>
 
@@ -258,11 +263,11 @@
                             </div>
                         </div>
 
-                        <span data-ls-if="(!{{log.clientName}})">Unknown</span>
-                        <span data-ls-if="({{log.clientName}})" data-ls-bind="{{session.clientName}}"></span> <span data-ls-bind="{{session.clientVersion}}"></span> on <span data-ls-bind="{{session.deviceModel}}"></span> <span data-ls-bind="{{session.osName}}"></span> <span data-ls-bind="{{session.osVersion}}"></span>
+                        <span data-ls-if="(!{{log.clientName}})"><?php echo $locale->getText("console.account.index.shared-client-unknown"); ?></span>
+                        <span data-ls-if="({{log.clientName}})" data-ls-bind="{{session.clientName}}"></span> <span data-ls-bind="{{session.clientVersion}}"></span> <?php echo $locale->getText("console.account.index.shared-client-joiner"); ?> <span data-ls-bind="{{session.deviceModel}}"></span> <span data-ls-bind="{{session.osName}}"></span> <span data-ls-bind="{{session.osVersion}}"></span>
                         &nbsp;
                         <span data-ls-if="true == {{session.current}}">
-                            <span class="tag green">Current Session</span>
+                            <span class="tag green"><?php echo $locale->getText("console.account.index.sessions-info-current"); ?></span>
                         </span>
 
                         <div class="margin-top-small">
@@ -286,14 +291,14 @@
                 data-success-param-trigger-events="account.deleteSession"
                 data-success-param-redirect-url="/"
                 data-failure="alert"
-                data-failure-param-alert-text="Logout from All Sessions Failed"
+                data-failure-param-alert-text="<?php echo $locale->getText("console.account.index.sessions-logout-submit-error"); ?>"
                 data-failure-param-alert-classname="error">
                 <input type="hidden" name="id" value="0">
-                <button class="danger">Logout from all sessions</button>
+                <button class="danger"><?php echo $locale->getText("console.account.index.sessions-logout-button-submit"); ?></button>
             </form>
         </li>
         <li data-state="/console/account/activity">
-            <h2>Activity</h2>
+            <h2><?php echo $locale->getText("console.account.index.activity"); ?></h2>
 
             <div
                 data-service="account.getLogs"
@@ -305,27 +310,27 @@
                     <table class="vertical small">
                         <thead>
                             <tr>
-                                <th width="140">Date</th>
-                                <th width="175">Event</th>
-                                <th>Client</th>
-                                <th width="90">Location</th>
-                                <th width="90">IP</th>
+                                <th width="140"><?php echo $locale->getText("console.account.index.activity-table-column-date"); ?></th>
+                                <th width="175"><?php echo $locale->getText("console.account.index.activity-table-column-event"); ?></th>
+                                <th><?php echo $locale->getText("console.account.index.activity-table-column-client"); ?></th>
+                                <th width="90"><?php echo $locale->getText("console.account.index.activity-table-column-location"); ?></th>
+                                <th width="90"><?php echo $locale->getText("console.account.index.activity-table-column-ip"); ?></th>
                             </tr>
                         </thead>
                         <tbody data-ls-loop="securityLogs.logs" data-ls-as="log">
                             <tr>
-                                <td data-title="Date: "><span data-ls-bind="{{log.time|dateTime}}"></span></td>
-                                <td data-title="Event: "><span data-ls-bind="{{log.event}}"></span></td>
-                                <td data-title="Client: ">
+                                <td data-title="<?php echo $locale->getText("console.account.index.activity-table-column-date"); ?>: "><span data-ls-bind="{{log.time|dateTime}}"></span></td>
+                                <td data-title="<?php echo $locale->getText("console.account.index.activity-table-column-event"); ?>: "><span data-ls-bind="{{log.event}}"></span></td>
+                                <td data-title="<?php echo $locale->getText("console.account.index.activity-table-column-client"); ?>: ">
                                     <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.clientCode|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.clientName}},alt={{log.clientName}}" class="avatar xxs inline margin-end-small" />
-                                    <span data-ls-if="(!{{log.clientName}})">Unknown</span>
-                                    <span data-ls-if="({{log.clientName}})" data-ls-bind="{{log.clientName}} {{log.clientVersion}} on {{log.model}} {{log.osName}} {{log.osVersion}}"></span>
+                                    <span data-ls-if="(!{{log.clientName}})"><?php echo $locale->getText("console.account.index.shared-client-unknown"); ?></span>
+                                    <span data-ls-if="({{log.clientName}})" data-ls-bind="{{log.clientName}} {{log.clientVersion}} <?php echo $locale->getText("console.account.index.shared-client-joiner"); ?> {{log.model}} {{log.osName}} {{log.osVersion}}"></span>
                                 </td>
-                                <td data-title="Location: ">
+                                <td data-title="<?php echo $locale->getText("console.account.index.activity-table-column-location"); ?>: ">
                                     <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-attrs="src={{env.API}}/avatars/flags/{{log.countryCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline margin-end-small" />
                                     <span data-ls-bind="{{log.geo.countryName}}"></span>
                                 </td>
-                                <td data-title="IP: "><span data-ls-bind="{{log.ip}}"></span></td>
+                                <td data-title="<?php echo $locale->getText("console.account.index.activity-table-column-ip"); ?>: "><span data-ls-bind="{{log.ip}}"></span></td>
                             </tr>
                         </tbody>
                     </table>

@@ -1,7 +1,12 @@
+<?php
+$locale = $this->getParam("locale");
+/** @var Utopia\Locale\Locale $locale */
+?>
+
 <header class="clear" data-version>
     <a href="/console" class="logo pull-start">
-        <img src="/images/appwrite.svg" alt="Appwrite Light Logo" class="force-light" loading="lazy" />
-        <img src="/images/appwrite-footer-dark.svg" alt="Appwrite Dark Logo" class="force-dark" loading="lazy" />
+        <img src="/images/appwrite.svg" alt="<?php echo $locale->getText("shared.header.alt-logo-light"); ?>" class="force-light" loading="lazy" />
+        <img src="/images/appwrite-footer-dark.svg" alt="<?php echo $locale->getText("shared.header.alt-logo-dark"); ?>" class="force-dark" loading="lazy" />
     </a>
 
     <div class="change-project pull-start desktops-only">
@@ -14,13 +19,13 @@
                     data-switch
                     data-ls-bind="{{router.params.project}}"
                     data-unsync="1"
-                    data-ls-loop="projects.projects" data-ls-as="option" aria-label="Switch Project">
+                    data-ls-loop="projects.projects" data-ls-as="option" aria-label="<?php echo $locale->getText("console.comps.header.label-project-switch"); ?>">
                     <option data-ls-attrs="value={{option.$id}}" data-ls-bind="{{option.name}}"></option>
                 </select>
             </label>
         </div>
 
-        <button style="overflow: visible;" class="project-only setup-new tooltip round down pull-end" aria-label="Quick Start" data-tooltip="Create a new project"><i class="icon-plus"></i></button>
+        <button style="overflow: visible;" class="project-only setup-new tooltip round down pull-end" aria-label="<?php echo $locale->getText("console.comps.header.label-quick-start"); ?>" data-tooltip="<?php echo $locale->getText("console.comps.header.label-project-new"); ?>"><i class="icon-plus"></i></button>
     </div>
 
     <div class="account-box pull-end"
@@ -34,21 +39,21 @@
         data-failure-param-trigger-events="account.deleteSession">
 
         <div class="console-back">
-            <a href="/console" class="link-return-animation--end">Back to Console &nbsp;<i class="icon-right-open"></i></a>
+            <a href="/console" class="link-return-animation--end"><?php echo $locale->getText("console.comps.header.button.back-to-console"); ?> &nbsp;<i class="icon-right-open"></i></a>
         </div>
 
         <div class="account link pull-end clear">
-            <img src="" data-ls-attrs="src={{account|avatar}}" alt="User Avatar" class="avatar margin-start pull-end" />
+            <img src="" data-ls-attrs="src={{account|avatar}}" alt="<?php echo $locale->getText("console.comps.header.alt-avatar-user"); ?>" class="avatar margin-start pull-end" />
             <span class="name pull-end desktops-only" data-ls-bind="{{account.name}}"></span>
         </div>
 
-        <div class="console-index drop-list bottom end" data-ls-ui-open="" data-button-text="" data-button-aria="Account Options" data-button-icon="" data-button-selector="[data-toggler]" data-button-class="account-button" data-blur="1">
+        <div class="console-index drop-list bottom end" data-ls-ui-open="" data-button-text="<?php echo $locale->getText("console.comps.header.label-account-options"); ?>" data-button-aria="" data-button-icon="" data-button-selector="[data-toggler]" data-button-class="account-button" data-blur="1">
             <ul class="margin-top-large arrow-end">
                 <li>
-                    <a href="/console/account"><i class="icon-user"></i> &nbsp; Your Account</a>
+                    <a href="/console/account"><i class="icon-user"></i> &nbsp; <?php echo $locale->getText("console.comps.header.options-your-account"); ?></a>
                 </li>
                 <li>
-                    <span class="link"><i class="icon-sun-inv force-dark pull-start"></i><i class="icon-moon-inv force-light pull-start"></i> &nbsp; Change Theme
+                    <span class="link"><i class="icon-sun-inv force-dark pull-start"></i><i class="icon-moon-inv force-light pull-start"></i> &nbsp; <?php echo $locale->getText("console.comps.header.options-change-theme"); ?>
                         <div class="pull-end switch-theme">
                             <button data-general-theme
                                 data-analytics
@@ -66,16 +71,16 @@
 
     </div>
 
-    <nav class="project-only" data-ls-ui-open="" data-button-class="round icon-btn phones-only tablets-only" data-button-aria="Navigation" data-button-icon="icon-dot-3">
+    <nav class="project-only" data-ls-ui-open="" data-button-class="round icon-btn phones-only tablets-only" data-button-aria="<?php echo $locale->getText("console.comps.header.label-menu"); ?>" data-button-icon="icon-dot-3">
         <a class="logo" href="/console"
             data-analytics
             data-analytics-event="click"
             data-analytics-category="console/navigation"
             data-analytics-label="Logo Link">
-            <img src="/images/appwrite-nav.svg" loading="lazy" alt="Appwrite Logo" class="nav" />
+            <img src="/images/appwrite-nav.svg" loading="lazy" alt="<?php echo $locale->getText("shared.header.alt-logo"); ?>" class="nav" />
 
-            <img src="/images/appwrite.svg" loading="lazy" alt="Appwrite Light Logo" class="top force-light" loading="lazy" />
-            <img src="/images/appwrite-footer-dark.svg" loading="lazy" alt="Appwrite Dark Logo" class="top force-dark" loading="lazy" />
+            <img src="/images/appwrite.svg" loading="lazy" alt="<?php echo $locale->getText("shared.header.alt-logo-light"); ?>" class="top force-light" loading="lazy" />
+            <img src="/images/appwrite-footer-dark.svg" loading="lazy" alt="<?php echo $locale->getText("shared.header.alt-logo-dark"); ?>" class="top force-dark" loading="lazy" />
         </a>
 
         <div data-ui-highlight class="container">
@@ -88,12 +93,12 @@
                         data-analytics-category="console/navigation"
                         data-analytics-label="Home Link">
                         <i class="icon-home"></i>
-                        Home
+                        <?php echo $locale->getText("console.comps.header.menu-item-home"); ?>
                     </a>
                 </li>
             </ul>
 
-            <b class="subtitle">DEVELOP</b>
+            <b class="subtitle"><?php echo $locale->getText("console.comps.header.menu-group-develop"); ?></b>
 
             <ul class="links">
                 <li>
@@ -103,7 +108,7 @@
                         data-analytics-category="console/navigation"
                         data-analytics-label="Database Link">
                         <i class="icon-database"></i>
-                        Database
+                        <?php echo $locale->getText("console.comps.header.menu-item-database"); ?>
                     </a>
                 </li>
                 <li>
@@ -113,7 +118,7 @@
                         data-analytics-category="console/navigation"
                         data-analytics-label="Storage Link">
                         <i class="icon-folder"></i>
-                        Storage
+                        <?php echo $locale->getText("console.comps.header.menu-item-storage"); ?>
                     </a>
                 </li>
                 <li>
@@ -123,7 +128,7 @@
                         data-analytics-category="console/navigation"
                         data-analytics-label="Users Link">
                         <i class="icon-users"></i>
-                        Users
+                        <?php echo $locale->getText("console.comps.header.menu-item-users"); ?>
                     </a>
                 </li>
                 <li>
@@ -134,12 +139,12 @@
                         data-analytics-label="Functions Link"
                         class="link-animation-disabled">
                         <i class="icon-lightning"></i>
-                        Functions
+                        <?php echo $locale->getText("console.comps.header.menu-item-functions"); ?>
                     </a>
                 </li>
             </ul>
 
-            <b class="subtitle">MANAGE</b>
+            <b class="subtitle"><?php echo $locale->getText("console.comps.header.menu-group-manage"); ?></b>
 
             <ul class="links">
                 <li>
@@ -149,7 +154,7 @@
                         data-analytics-category="console/navigation"
                         data-analytics-label="Tasks Link">
                         <i class="icon-clock"></i>
-                        Tasks
+                        <?php echo $locale->getText("console.comps.header.menu-item-tasks"); ?>
                     </a>
                 </li>
                 <li>
@@ -159,7 +164,7 @@
                         data-analytics-category="console/navigation"
                         data-analytics-label="Webhooks Links">
                         <i class="icon-link"></i>
-                        Webhooks
+                        <?php echo $locale->getText("console.comps.header.menu-item-webhooks"); ?>
                     </a>
                 </li>
                 <li>
@@ -169,7 +174,7 @@
                         data-analytics-category="console/navigation"
                         data-analytics-label="API Keys Link">
                         <i class="icon-key-inv"></i>
-                        API Keys
+                        <?php echo $locale->getText("console.comps.header.menu-item-api-keys"); ?>
                     </a>
                 </li>
             </ul>
@@ -182,7 +187,7 @@
                     data-analytics-event="click"
                     data-analytics-category="console/navigation"
                     data-analytics-label="Settings Link">
-                    <i class="icon-cog"></i> Settings</a>
+                    <i class="icon-cog"></i> <?php echo $locale->getText("console.comps.header.menu-item-settings"); ?></a>
             </li>
         </ul>
     </nav>
@@ -196,12 +201,12 @@
 
 <div class="load-screen" data-ls-ui-loader>
     <div class="animation"><div></div><div></div><div></div><div></div></div>
-    <img src="/images/appwrite.svg" alt="Appwrite Light Logo" class="force-light" loading="lazy" />
-    <img src="/images/appwrite-footer-dark.svg" alt="Appwrite Dark Logo" class="force-dark" loading="lazy" />
+    <img src="/images/appwrite.svg" alt="<?php echo $locale->getText("shared.header.alt-logo-light"); ?>" class="force-light" loading="lazy" />
+    <img src="/images/appwrite-footer-dark.svg" alt="<?php echo $locale->getText("shared.header.alt-logo-dark"); ?>" class="force-dark" loading="lazy" />
 </div>
 
 <div data-ui-modal class="modal box close sticky-footer" data-button-alias=".setup-new" data-button-icon="icon-plus" data-button-class="project-only" data-open-event="create-project">
-    <h1>Create Project</h1>
+    <h1><?php echo $locale->getText("console.comps.header.modal-new-project-title"); ?></h1>
 
     <form
         data-setup
@@ -210,13 +215,13 @@
         data-analytics-event="submit"
         data-analytics-category="console"
         data-analytics-label="Create Project">
-        <p>Appwrite projects are containers for your resources and apps across different platforms.</p>
+        <p><?php echo $locale->getText("console.comps.header.modal-new-project-description"); ?></p>
 
-        <label>Name</label>
+        <label><?php echo $locale->getText("console.comps.header.modal-new-project-input-label-name"); ?></label>
         <input type="text" class="full-width margin-bottom-xl" name="name" required autocomplete="off" maxlength="128" />
 
         <footer>
-            <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+            <button type="submit"><?php echo $locale->getText("console.comps.header.modal-new-project-button-submit"); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText("console.comps.header.modal-new-project-button-cancel"); ?></button>
         </footer>
     </form>
 </div>

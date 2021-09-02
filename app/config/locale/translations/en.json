@@ -2,11 +2,122 @@
 
     "layouts.default.cookie-info": "We are using cookies to make this website easier to use.",
 
+
+    "shared.footer.version": "version",
+    "shared.loading": "Loading...",
+    "shared.header.alt-logo": "Appwrite Logo",
+    "shared.header.alt-logo-light": "Appwrite Light Logo",
+    "shared.header.alt-logo-dark": "Appwrite Dark Logo",
+    "shared.input-password-error": "Six or more characters",
+
     "general.error.title": "Error",
     "general.error.error-id-title": "Error ID",
     "general.error.button-back": "Back to",
 
-    "home.auth.shared.input-password-error": "Six or more characters",
+    "console.comps.footer.button-docs": "Docs",
+    "console.comps.footer.button-open-issue": "Open an Issue",
+
+
+    "console.shared-button-back-to-home": "Home",
+
+    "console.comps.header.label-menu": "Navigation",
+    "console.comps.header.label-project-switch": "Switch Project",
+    "console.comps.header.label-project-new": "Create a new project",
+    "console.comps.header.label-quick-start": "Quick Start",
+    "console.comps.header.label-account-options": "Account Options",
+    "console.comps.header.options-your-account": "Your Account",
+    "console.comps.header.options-change-theme": "Change Theme",
+    "console.comps.header.button.back-to-console": "Back to Console",
+    "console.comps.header.alt-avatar-user": "User Avatar",
+    "console.comps.header.modal-new-project-title": "Create Project",
+    "console.comps.header.modal-new-project-description": "Appwrite projects are containers for your resources and apps across different platforms.",
+    "console.comps.header.modal-new-project-input-label-name": "Name",
+    "console.comps.header.modal-new-project-button-submit": "Create",
+    "console.comps.header.modal-new-project-button-cancel": "Cancel",
+    "console.comps.header.menu-group-develop": "DEVELOP",
+    "console.comps.header.menu-group-manage": "MANAGE",
+    "console.comps.header.menu-item-home": "Home",
+    "console.comps.header.menu-item-database": "Database",
+    "console.comps.header.menu-item-storage": "Storage",
+    "console.comps.header.menu-item-users": "Users",
+    "console.comps.header.menu-item-functions": "Functions",
+    "console.comps.header.menu-item-tasks": "tasks",
+    "console.comps.header.menu-item-webhooks": "webhooks",
+    "console.comps.header.menu-item-api-keys": "API Keys",
+    "console.comps.header.menu-item-settings": "Settings",
+
+
+    "console.account.index.title": "Your Account",
+    "console.account.index.overview": "Overview",
+    "console.account.index.sessions": "Sessions",
+    "console.account.index.activity": "Activity",
+
+
+    "console.account.index.overview-update-password-button-submit": "Update Password",
+    "console.account.index.overview-update-password-title": "Update Password",
+    "console.account.index.overview-update-password-button-cancel": "Cancel",
+    "console.account.index.overview-update-password-label-current-password": "Current Password",
+    "console.account.index.overview-update-password-label-new-password": "New Password",
+    "console.account.index.overview-update-password-submit-error": "Failed updating password",
+    "console.account.index.overview-update-password-submit-success": "Password updated successfully",
+
+
+    "console.account.index.overview-update-name-button-submit": "Update Name",
+    "console.account.index.overview-update-name-label-name": "Name",
+    "console.account.index.overview-update-name-submit-error": "Failed to update your name",
+    "console.account.index.overview-update-name-submit-success": "Your name was updated successfully",
+
+
+    "console.account.index.overview-update-email-submit-error": "Failed updating email address",
+    "console.account.index.overview-update-email-submit-success": "Email address updated successfully",
+
+    "console.account.index.overview-update-email-placeholder-email": "me@example.com",
+    "console.account.index.overview-update-email-label-email": "Email",
+
+    "console.account.index.overview-update-email-label-password": "Password",
+    "console.account.index.overview-update-email-button-submit": "Update",
+    "console.account.index.overview-update-email-title": "Update Email",
+    "console.account.index.overview-update-email-subtitle": "Confirm Password",
+    "console.account.index.overview-update-email-button-cancel": "Cancel",
+
+
+
+    "console.account.index.overview-form-logout-button-submit": "Logout",
+    "console.account.index.overview-form-logout-submit-error": "Logout failed",
+
+
+
+    "console.account.index.overview-alt-avatar": "User Avatar",
+
+
+    "console.account.index.overview-dangerzone-title": "Danger Zone",
+    "console.account.index.overview-dangerzone-description-chunk1": "This is the area where you can delete your account.",
+    "console.account.index.overview-dangerzone-description-chunk2": "By deleting your account you will lose access to any of your teams and shared data.",
+    "console.account.index.overview-dangerzone-description-chunk3": "PLEASE NOTE: Account deletion is irreversible.",
+    "console.account.index.overview-dangerzone-confirm": "Are you sure you want to delete your account?",
+    "console.account.index.overview-dangerzone-error": "Account deactivation failed",
+    "console.account.index.overview-dangerzone-button-submit": "Delete Account",
+
+
+    "console.account.index.sessions-logout-submit-error": "Logout from All Sessions Failed",
+    "console.account.index.sessions-logout-button-submit": "Logout from all sessions",
+
+    "console.account.index.sessions-info-current": "Current Session",
+
+    "console.account.index.sessions-current-logout-submit-error": "Logout from Session Failed",
+    "console.account.index.sessions-current-logout-button-submit": "Logout",
+
+
+    "console.account.index.activity-table-column-date": "Date",
+    "console.account.index.activity-table-column-event": "Event",
+    "console.account.index.activity-table-column-client": "Client",
+    "console.account.index.activity-table-column-location": "Location",
+    "console.account.index.activity-table-column-ip": "IP",
+
+    "console.account.index.shared-client-unknown": "Unknown",
+    "console.account.index.shared-client-joiner": "on",
+
+
     "home.auth.shared.fields-required-info": "* All fields are required",
 
     "home.auth.recovery.title": "Password Recovery",
@@ -15,7 +126,7 @@
     "home.auth.recovery.input-label-email": "Email",
     "home.auth.recovery.input-placeholder-email": "me@example.com",
     "home.auth.recovery.button-back": "Back to sign in",
-    "home.auth.recovery.submit-button": "Recover",
+    "home.auth.recovery.button-submit": "Recover",
     "home.auth.recovery.warning-smtp-chunk1": "SMTP connection is disabled.",
     "home.auth.recovery.warning-smtp-chunk2": "Learn more",
 
@@ -28,23 +139,19 @@
     "home.auth.join.submit-error": "Failed to join team. Please try again later",
     "home.auth.join.title": "Invitation",
     "home.auth.join.description": "You have been invited to join a team project on ",
-    "home.auth.join.submit-button": "Accept",
-    "home.auth.join.cancel-invitation": "Cancel",
+    "home.auth.join.button-submit": "Accept",
+    "home.auth.join.button-cancel": "Cancel",
     "home.auth.join.agree-terms-chunk1": "By accepting the invitation, you agree to the",
     "home.auth.join.agree-terms-chunk2": "Terms and Conditions",
     "home.auth.join.agree-terms-chunk3": "and",
     "home.auth.join.agree-terms-chunk4": "Privacy Policy",
-
-    "home.auth.comps.footer.version": "version",
-    "home.auth.comps.header.logo-alt-light": "Appwrite Light Logo",
-    "home.auth.comps.header.logo-alt-dark": "Appwrite Dark Logo",
 
     "home.auth.recovery.reset.title": "Password Reset",
     "home.auth.recovery.reset.submit-error": "Password Reset Failed",
     "home.auth.recovery.reset.submit-success":  "Password Reset Completed",
     "home.auth.recovery.reset.input-label-password": "Password",
     "home.auth.recovery.reset.input-label-password-confirm": "Confirm Password",
-    "home.auth.recovery.reset.submit-button": "Apply",
+    "home.auth.recovery.reset.button-submit": "Apply",
 
     "home.auth.signup.title": "Sign Up",
     "home.auth.signup.submit-error": "Registration Failed. Please try again later",
@@ -52,7 +159,7 @@
     "home.auth.signup.input-label-name": "Name",
     "home.auth.signup.input-label-email": "Email",
     "home.auth.signup.input-label-password": "Password",
-    "home.auth.signup.submit-button": "Sign Up",
+    "home.auth.signup.button-submit": "Sign Up",
     "home.auth.signup.existing-account-link": "Already have an account?",
     "home.auth.signup.agree-terms-chunk1": "By signing up, you agree to the",
     "home.auth.signup.agree-terms-chunk2": "Terms and Conditions",
@@ -63,7 +170,7 @@
     "home.auth.signup.agree-newsletter-chunk3": "optional",
 
     "home.auth.signin.title": "Sign In",
-    "home.auth.signin.submit-button": "Sign In",
+    "home.auth.signin.button-submit": "Sign In",
     "home.auth.signin.description": "Login using email and password",
     "home.auth.signin.submit-error": "Login failed. Please check your credentials.",
     "home.auth.signin.input-placeholder-password": "Password",

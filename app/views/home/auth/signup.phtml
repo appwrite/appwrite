@@ -48,7 +48,7 @@ $locale = $this->getParam("locale");
         <input name="email" type="email" autocomplete="email" placeholder="" required data-ls-bind="{{router.params.email}}">
 
         <label><?php echo $locale->getText("home.auth.signup.input-label-password"); ?></label>
-        <input name="password" type="password" autocomplete="off" placeholder="" required data-forms-password-meter pattern=".{6,}" title="<?php echo $locale->getText("home.auth.shared.input-password-error"); ?>">
+        <input name="password" type="password" autocomplete="off" placeholder="" required data-forms-password-meter pattern=".{6,}" title="<?php echo $locale->getText("shared.input-password-error"); ?>">
 
         <div class="agree margin-top-large margin-bottom-large">
             <div class="pull-start margin-end-small margin-bottom">
@@ -64,7 +64,7 @@ $locale = $this->getParam("locale");
             <?php echo $locale->getText("home.auth.signup.agree-newsletter-chunk1"); ?> <a data-ls-attrs="href={{env.HOME}}/updates" tabindex="-1" target="_blank" rel="noopener"><?php echo $locale->getText("home.auth.signup.agree-newsletter-chunk2"); ?></a> <span class="text-fade">(<?php echo $locale->getText("home.auth.signup.agree-newsletter-chunk3"); ?>)</span>.
         </div>
 
-        <button type="submit"><?php echo $locale->getText("home.auth.signup.submit-button"); ?></button>
+        <button type="submit"><?php echo $locale->getText("home.auth.signup.button-submit"); ?></button>
     </form>
 
 </div>

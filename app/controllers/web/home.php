@@ -12,13 +12,18 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 
-App::init(function ($layout) {
+App::init(function ($layout, $locale) {
     /** @var Utopia\View $layout */
+    /** @var Utopia\Locale\Locale $locale */
 
     $header = new View(__DIR__.'/../../views/home/comps/header.phtml');
     $footer = new View(__DIR__.'/../../views/home/comps/footer.phtml');
 
+    $header
+        ->setParam('locale', $locale);
+
     $footer
+        ->setParam('locale', $locale)
         ->setParam('version', App::getEnv('_APP_VERSION', 'UNKNOWN'))
     ;
 
@@ -30,7 +35,7 @@ App::init(function ($layout) {
         ->setParam('header', [$header])
         ->setParam('footer', [$footer])
     ;
-}, ['layout'], 'home');
+}, ['layout', 'locale'], 'home');
 
 App::shutdown(function ($response, $layout) {
     /** @var Appwrite\Utopia\Response $response */

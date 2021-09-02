@@ -89,14 +89,17 @@ App::get('/console/account')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
+    ->inject('locale')
+    ->action(function ($layout, $locale) {
         /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
 
         $page = new View(__DIR__.'/../../views/console/account/index.phtml');
 
         $cc = new View(__DIR__.'/../../views/console/forms/credit-card.phtml');
 
         $page
+            ->setParam('locale', $locale)
             ->setParam('cc', $cc)
         ;
 
@@ -141,14 +144,17 @@ App::get('/console/settings')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
+    ->inject('locale')
+    ->action(function ($layout, $locale) {
         /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
 
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         $page = new View(__DIR__.'/../../views/console/settings/index.phtml');
 
         $page
+            ->setParam('locale', $locale)
             ->setParam('customDomainsEnabled', ($target->isKnown() && !$target->isTest()))
             ->setParam('customDomainsTarget', $target->get())
             ->setParam('smtpEnabled', (!empty(App::getEnv('_APP_SMTP_HOST'))))
@@ -164,12 +170,15 @@ App::get('/console/webhooks')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
+    ->inject('locale')
+    ->action(function ($layout, $locale) {
         /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
 
         $page = new View(__DIR__.'/../../views/console/webhooks/index.phtml');
 
         $page
+            ->setParam('locale', $locale)
             ->setParam('events', Config::getParam('events', []))
         ;
         
@@ -183,13 +192,17 @@ App::get('/console/keys')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
+    ->inject('locale')
+    ->action(function ($layout, $locale) {
         /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
 
         $scopes = array_keys(Config::getParam('scopes'));
         $page = new View(__DIR__.'/../../views/console/keys/index.phtml');
 
-        $page->setParam('scopes', $scopes);
+        $page
+            ->setParam('locale', $locale)
+            ->setParam('scopes', $scopes);
 
         $layout
             ->setParam('title', APP_NAME.' - API Keys')
@@ -201,10 +214,15 @@ App::get('/console/tasks')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
+    ->inject('locale')
+    ->action(function ($layout, $locale) {
         /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
 
         $page = new View(__DIR__.'/../../views/console/tasks/index.phtml');
+
+        $page
+            ->setParam("locale", $locale);
 
         $layout
             ->setParam('title', APP_NAME.' - Tasks')
@@ -216,10 +234,15 @@ App::get('/console/database')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
+    ->inject('locale')
+    ->action(function ($layout, $locale) {
         /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
 
         $page = new View(__DIR__.'/../../views/console/database/index.phtml');
+
+        $page
+            ->setParam("locale", $locale);
 
         $layout
             ->setParam('title', APP_NAME.' - Database')
@@ -305,11 +328,15 @@ App::get('/console/storage')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
+    ->inject('locale')
+    ->action(function ($layout, $locale) {
         /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
+
         $page = new View(__DIR__.'/../../views/console/storage/index.phtml');
         
         $page
+            ->setParam('locale', $locale)
             ->setParam('home', App::getEnv('_APP_HOME', 0))
             ->setParam('fileLimit', App::getEnv('_APP_STORAGE_LIMIT', 0))
             ->setParam('fileLimitHuman', Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0)))
@@ -325,12 +352,15 @@ App::get('/console/users')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
+    ->inject('locale')
+    ->action(function ($layout, $locale) {
         /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
 
         $page = new View(__DIR__.'/../../views/console/users/index.phtml');
 
         $page
+            ->setParam('locale', $locale)
             ->setParam('auth', Config::getParam('auth'))
             ->setParam('providers', Config::getParam('providers'))
         ;
@@ -376,10 +406,15 @@ App::get('/console/functions')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
+    ->inject('locale')
+    ->action(function ($layout, $locale) {
+        /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
+
         $page = new View(__DIR__.'/../../views/console/functions/index.phtml');
 
         $page
+            ->setParam('locale', $locale)
             ->setParam('runtimes', Config::getParam('runtimes'))
         ;
 
@@ -395,6 +430,8 @@ App::get('/console/functions/function')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function ($layout) {
+        /** @var Utopia\View $layout */
+
         $page = new View(__DIR__.'/../../views/console/functions/function.phtml');
 
         $page
@@ -417,6 +454,8 @@ App::get('/console/version')
     ->label('scope', 'console')
     ->inject('response')
     ->action(function ($response) {
+        /** @var Appwrite\Utopia\Response $response */
+
         try {
             $version = \json_decode(@\file_get_contents(App::getEnv('_APP_HOME', 'http://localhost').'/v1/health/version'), true);
             

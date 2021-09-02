@@ -33,11 +33,11 @@ $locale = $this->getParam("locale");
         <input type="hidden" name="secret" data-ls-bind="{{router.params.secret}}">
 
         <label><?php echo $locale->getText("home.auth.recovery.reset.input-label-password"); ?></label>
-        <input name="password" type="password" autocomplete="off" placeholder="" required data-forms-password-meter pattern=".{6,}" title="<?php echo $locale->getText("home.auth.shared.input-password-error"); ?>">
+        <input name="password" type="password" autocomplete="off" placeholder="" required data-forms-password-meter pattern=".{6,}" title="<?php echo $locale->getText("shared.input-password-error"); ?>">
 
         <label><?php echo $locale->getText("home.auth.recovery.reset.input-label-password-confirm"); ?></label>
-        <input name="passwordAgain" type="password" autocomplete="off" placeholder="" required data-forms-password-meter pattern=".{6,}" title="<?php echo $locale->getText("home.auth.shared.input-password-error"); ?>">
+        <input name="passwordAgain" type="password" autocomplete="off" placeholder="" required data-forms-password-meter pattern=".{6,}" title="<?php echo $locale->getText("shared.input-password-error"); ?>">
 
-        <button type="submit" class="btn btn-primary"><i class="fa fa-sign-in"></i><?php echo $locale->getText("home.auth.recovery.reset.submit-button"); ?></button>
+        <button type="submit" class="btn btn-primary"><i class="fa fa-sign-in"></i><?php echo $locale->getText("home.auth.recovery.reset.button-submit"); ?></button>
     </form>
 </div>
