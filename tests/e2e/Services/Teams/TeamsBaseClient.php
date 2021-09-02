@@ -141,6 +141,35 @@ trait TeamsBaseClient
     /**
      * @depends testCreateTeamMembership
      */
+    public function testListTeamMemberships($data): void
+    {
+        $memberships = $this->client->call(Client::METHOD_GET, '/teams/'.$data['teamUid'].'/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $memberships['headers']['status-code']);
+        $this->assertIsInt($memberships['body']['sum']);
+        $this->assertNotEmpty($memberships['body']['memberships']);
+        $this->assertCount(2, $memberships['body']['memberships']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/'.$data['teamUid'].'/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'after' => $memberships['body']['memberships'][0]['$id']
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['sum']);
+        $this->assertNotEmpty($response['body']['memberships']);
+        $this->assertCount(1, $response['body']['memberships']);
+        $this->assertEquals($memberships['body']['memberships'][1]['$id'], $response['body']['memberships'][0]['$id']);
+    }
+
+    /**
+     * @depends testCreateTeamMembership
+     */
     public function testUpdateTeamMembership($data):array
     {
         $teamUid = $data['teamUid'] ?? '';
@@ -384,8 +413,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(1, $response['body']['memberships']);
+        $this->assertEquals(404, $response['headers']['status-code']);
 
         return [];
     }

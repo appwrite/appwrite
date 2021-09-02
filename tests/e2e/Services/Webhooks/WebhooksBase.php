@@ -17,9 +17,11 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
+            'collectionId' => 'unique()',
             'name' => 'Actors',
             'read' => ['role:all'],
             'write' => ['role:all'],
+            'permission' => 'document',
         ]);
         
         $this->assertEquals($actors['headers']['status-code'], 201);
@@ -50,34 +52,30 @@ trait WebhooksBase
      */
     public function testCreateAttributes(array $data): array
     {
-        $firstName = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['actorsId'] . '/attributes', array_merge([
+        $firstName = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['actorsId'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'id' => 'firstName',
-            'type' => 'string',
+            'attributeId' => 'firstName',
             'size' => 256,
             'required' => true,
         ]);
 
-        $lastName = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['actorsId'] . '/attributes', array_merge([
+        $lastName = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['actorsId'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'id' => 'lastName',
-            'type' => 'string',
+            'attributeId' => 'lastName',
             'size' => 256,
             'required' => true,
         ]);
 
         $this->assertEquals($firstName['headers']['status-code'], 201);
-        $this->assertEquals($firstName['body']['$collection'], $data['actorsId']);
-        $this->assertEquals($firstName['body']['$id'], 'firstName');
+        $this->assertEquals($firstName['body']['key'], 'firstName');
         $this->assertEquals($lastName['headers']['status-code'], 201);
-        $this->assertEquals($lastName['body']['$collection'], $data['actorsId']);
-        $this->assertEquals($lastName['body']['$id'], 'lastName');
+        $this->assertEquals($lastName['body']['key'], 'lastName');
 
         // wait for database worker to kick in
         sleep(10);
@@ -91,8 +89,8 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertNotEmpty($webhook['data']['$id']);
-        $this->assertEquals($webhook['data']['$id'], 'lastName');
+        $this->assertNotEmpty($webhook['data']['key']);
+        $this->assertEquals($webhook['data']['key'], 'lastName');
         
         // TODO@kodumbeats test webhook for removing attribute
 
@@ -108,6 +106,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'documentId' => 'unique()',
             'data' => [
                 'firstName' => 'Chris',
                 'lastName' => 'Evans',
@@ -193,6 +192,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'documentId' => 'unique()',
             'data' => [
                 'firstName' => 'Bradly',
                 'lastName' => 'Cooper',
@@ -322,6 +322,7 @@ trait WebhooksBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'fileId' => 'unique()',
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'read' => ['role:all'],
             'write' => ['role:all'],
@@ -479,6 +480,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'teamId' => 'unique()',
             'name' => 'Arsenal'
         ]);
 
@@ -556,6 +558,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'teamId' => 'unique()',
             'name' => 'Chelsea'
         ]);
 

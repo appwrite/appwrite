@@ -4,9 +4,7 @@ use Utopia\App;
 use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
-use Appwrite\Database\Database;
-use Appwrite\Database\Validator\Authorization;
-use Appwrite\Database\Validator\UID;
+use Utopia\Database\Validator\UID;
 use Utopia\Storage\Storage;
 
 App::init(function ($layout) {
@@ -142,6 +140,7 @@ App::get('/console/settings')
         $page = new View(__DIR__.'/../../views/console/settings/index.phtml');
 
         $page
+            ->setParam('services', array_filter(Config::getParam('services'), function($element) {return $element['optional'];}))
             ->setParam('customDomainsEnabled', ($target->isKnown() && !$target->isTest()))
             ->setParam('customDomainsTarget', $target->get())
             ->setParam('smtpEnabled', (!empty(App::getEnv('_APP_SMTP_HOST'))))
@@ -189,21 +188,6 @@ App::get('/console/keys')
             ->setParam('body', $page);
     });
 
-App::get('/console/tasks')
-    ->groups(['web', 'console'])
-    ->label('permission', 'public')
-    ->label('scope', 'console')
-    ->inject('layout')
-    ->action(function ($layout) {
-        /** @var Utopia\View $layout */
-
-        $page = new View(__DIR__.'/../../views/console/tasks/index.phtml');
-
-        $layout
-            ->setParam('title', APP_NAME.' - Tasks')
-            ->setParam('body', $page);
-    });
-
 App::get('/console/database')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
@@ -226,25 +210,19 @@ App::get('/console/database/collection')
     ->param('id', '', new UID(), 'Collection unique ID.')
     ->inject('response')
     ->inject('layout')
-    ->inject('projectDB')
-    ->action(function ($id, $response, $layout, $projectDB) {
+    ->action(function ($id, $response, $layout) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\View $layout */
-        /** @var Appwrite\Database\Database $projectDB */
 
-        Authorization::disable();
-        $collection = $projectDB->getDocument($id, false);
-        Authorization::reset();
+        $logs = new View(__DIR__.'/../../views/console/comps/logs.phtml');
 
-        if ($collection->isEmpty() || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-            throw new Exception('Collection not found', 404);
-        }
+        $logs
+            ->setParam('interval', App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 0))
+        ;
 
         $page = new View(__DIR__.'/../../views/console/database/collection.phtml');
-
-        $page
-            ->setParam('collection', $collection)
-        ;
+        
+        $page->setParam('logs', $logs);
         
         $layout
             ->setParam('title', APP_NAME.' - Database Collection')
@@ -264,25 +242,14 @@ App::get('/console/database/document')
     ->label('scope', 'console')
     ->param('collection', '', new UID(), 'Collection unique ID.')
     ->inject('layout')
-    ->inject('projectDB')
-    ->action(function ($collection, $layout, $projectDB) {
+    ->action(function ($collection, $layout) {
         /** @var Utopia\View $layout */
-        /** @var Appwrite\Database\Database $projectDB */
-
-        Authorization::disable();
-        $collection = $projectDB->getDocument($collection, false);
-        Authorization::reset();
-
-        if ($collection->isEmpty() || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-            throw new Exception('Collection not found', 404);
-        }
 
         $page = new View(__DIR__.'/../../views/console/database/document.phtml');
         $searchFiles = new View(__DIR__.'/../../views/console/database/search/files.phtml');
         $searchDocuments = new View(__DIR__.'/../../views/console/database/search/documents.phtml');
 
         $page
-            ->setParam('db', $projectDB)
             ->setParam('collection', $collection)
             ->setParam('searchFiles', $searchFiles)
             ->setParam('searchDocuments', $searchDocuments)

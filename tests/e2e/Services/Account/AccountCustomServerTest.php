@@ -26,6 +26,7 @@ class AccountCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
+            'userId' => 'unique()',
             'email' => $email,
             'password' => $password,
             'name' => $name,

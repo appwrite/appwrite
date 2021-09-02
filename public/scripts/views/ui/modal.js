@@ -93,6 +93,7 @@
           if(element.type !== 'hidden'
             && element.type !== 'button'
             && element.type !== 'submit'
+            && !element.disabled
           ) {
             element.focus();
             break;

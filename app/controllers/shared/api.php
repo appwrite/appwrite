@@ -9,7 +9,7 @@ use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 
-App::init(function ($utopia, $request, $response, $project, $user, $register, $events, $audits, $usage, $deletes, $database, $dbForInternal) {
+App::init(function ($utopia, $request, $response, $project, $user, $events, $audits, $usage, $deletes, $database, $dbForInternal, $mode) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
@@ -18,7 +18,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     /** @var Utopia\Registry\Registry $register */
     /** @var Appwrite\Event\Event $events */
     /** @var Appwrite\Event\Event $audits */
-    /** @var Appwrite\Event\Event $usage */
+    /** @var Appwrite\Stats\Stats $usage */
     /** @var Appwrite\Event\Event $deletes */
     /** @var Appwrite\Event\Event $database */
     /** @var Appwrite\Event\Event $functions */
@@ -41,10 +41,10 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
         ->setParam('{userId}', $user->getId())
         ->setParam('{userAgent}', $request->getUserAgent(''))
         ->setParam('{ip}', $request->getIP())
-        ->setParam('{url}', $request->getHostname().$route->getURL())
+        ->setParam('{url}', $request->getHostname().$route->getPath())
     ;
 
-    //TODO make sure we get array here
+    // TODO make sure we get array here
 
     foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
         if(!empty($value)) {
@@ -89,6 +89,9 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     $audits
         ->setParam('projectId', $project->getId())
         ->setParam('userId', $user->getId())
+        ->setParam('userEmail', $user->getAttribute('email'))
+        ->setParam('userName', $user->getAttribute('name'))
+        ->setParam('mode', $mode)
         ->setParam('event', '')
         ->setParam('resource', '')
         ->setParam('userAgent', $request->getUserAgent(''))
@@ -113,21 +116,12 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     $database
         ->setParam('projectId', $project->getId())
     ;
-}, ['utopia', 'request', 'response', 'project', 'user', 'register', 'events', 'audits', 'usage', 'deletes', 'database', 'dbForInternal'], 'api');
+}, ['utopia', 'request', 'response', 'project', 'user', 'events', 'audits', 'usage', 'deletes', 'database', 'dbForInternal', 'mode'], 'api');
 
-
-App::init(function ($utopia, $request, $response, $project, $user) {
+App::init(function ($utopia, $request, $project) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
-    /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\Database\Document $project */
-    /** @var Utopia\Database\Document $user */
-    /** @var Utopia\Registry\Registry $register */
-    /** @var Appwrite\Event\Event $events */
-    /** @var Appwrite\Event\Event $audits */
-    /** @var Appwrite\Event\Event $usage */
-    /** @var Appwrite\Event\Event $deletes */
-    /** @var Appwrite\Event\Event $functions */
 
     $route = $utopia->match($request);
 
@@ -138,27 +132,28 @@ App::init(function ($utopia, $request, $response, $project, $user) {
         return;
     }
 
+    $auths = $project->getAttribute('auths', []);
     switch ($route->getLabel('auth.type', '')) {
         case 'emailPassword':
-            if($project->getAttribute('usersAuthEmailPassword', true) === false) {
+            if(($auths['emailPassword'] ?? true) === false) {
                 throw new Exception('Email / Password authentication is disabled for this project', 501);
             }
             break;
 
         case 'anonymous':
-            if($project->getAttribute('usersAuthAnonymous', true) === false) {
+            if(($auths['anonymous'] ?? true) === false) {
                 throw new Exception('Anonymous authentication is disabled for this project', 501);
             }
             break;
 
         case 'invites':
-            if($project->getAttribute('usersAuthInvites', true) === false) {
+            if(($auths['invites'] ?? true) === false) {
                 throw new Exception('Invites authentication is disabled for this project', 501);
             }
             break;
 
         case 'jwt':
-            if($project->getAttribute('usersAuthJWT', true) === false) {
+            if(($auths['JWT'] ?? true) === false) {
                 throw new Exception('JWT authentication is disabled for this project', 501);
             }
             break;
@@ -168,16 +163,16 @@ App::init(function ($utopia, $request, $response, $project, $user) {
             break;
     }
 
-}, ['utopia', 'request', 'response', 'project', 'user'], 'auth');
+}, ['utopia', 'request', 'project'], 'auth');
 
-App::shutdown(function ($utopia, $request, $response, $project, $events, $audits, $usage, $deletes, $database, $mode) {
+App::shutdown(function ($utopia, $request, $response, $project, $register, $events, $audits, $usage, $deletes, $database, $mode) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\Database\Document $project */
     /** @var Appwrite\Event\Event $events */
     /** @var Appwrite\Event\Event $audits */
-    /** @var Appwrite\Event\Event $usage */
+    /** @var Appwrite\Stats\Stats $usage */
     /** @var Appwrite\Event\Event $deletes */
     /** @var Appwrite\Event\Event $database */
     /** @var Appwrite\Event\Event $functions */
@@ -217,14 +212,14 @@ App::shutdown(function ($utopia, $request, $response, $project, $events, $audits
     $route = $utopia->match($request);
     if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled' 
         && $project->getId()
-        && $mode !== APP_MODE_ADMIN //TODO: add check to make sure user is admin
+        && $mode !== APP_MODE_ADMIN // TODO: add check to make sure user is admin
         && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage on admin mode
         
         $usage
             ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
             ->setParam('networkResponseSize', $response->getSize())
-            ->trigger()
+            ->submit()
         ;
     }
 
-}, ['utopia', 'request', 'response', 'project', 'events', 'audits', 'usage', 'deletes', 'database', 'mode'], 'api');
+}, ['utopia', 'request', 'response', 'project', 'register', 'events', 'audits', 'usage', 'deletes', 'database', 'mode'], 'api');

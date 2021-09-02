@@ -143,16 +143,6 @@
 
             <ul class="links">
                 <li>
-                    <a data-ls-attrs="href=/console/tasks?project={{router.params.project}}"
-                        data-analytics
-                        data-analytics-event="click"
-                        data-analytics-category="console/navigation"
-                        data-analytics-label="Tasks Link">
-                        <i class="icon-clock"></i>
-                        Tasks
-                    </a>
-                </li>
-                <li>
                     <a data-ls-attrs="href=/console/webhooks?project={{router.params.project}}"
                         data-analytics
                         data-analytics-event="click"
@@ -212,6 +202,17 @@
         data-analytics-label="Create Project">
         <p>Appwrite projects are containers for your resources and apps across different platforms.</p>
 
+        <label>Project ID</label>
+        <input
+            type="hidden"
+            data-custom-id
+            data-id-type="auto"
+            data-validator="projects.get"
+            required
+            maxlength="36"
+            class=""
+            name="projectId" />
+        
         <label>Name</label>
         <input type="text" class="full-width margin-bottom-xl" name="name" required autocomplete="off" maxlength="128" />
 

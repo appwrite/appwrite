@@ -3,30 +3,31 @@
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
+use Appwrite\Database\Validator\CustomId;
 use Appwrite\Detector\Detector;
-use Appwrite\Template\Template;
-use Appwrite\OpenSSL\OpenSSL;
-use Appwrite\URL\URL as URLParser;
-use Appwrite\Utopia\Response;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Host;
 use Appwrite\Network\Validator\URL;
+use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Template\Template;
+use Appwrite\URL\URL as URLParser;
+use Appwrite\Utopia\Response;
 use Utopia\App;
-use Utopia\Exception;
-use Utopia\Config\Config;
-use Utopia\Validator\Assoc;
-use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
-use Utopia\Validator\ArrayList;
 use Utopia\Audit\Audit;
+use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Utopia\Exception;
+use Utopia\Validator\ArrayList;
+use Utopia\Validator\Assoc;
+use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
-$oauthDefaultSuccess = App::getEnv('_APP_HOME').'/auth/oauth2/success';
-$oauthDefaultFailure = App::getEnv('_APP_HOME').'/auth/oauth2/failure';
+$oauthDefaultSuccess = App::getEnv('_APP_HOME') . '/auth/oauth2/success';
+$oauthDefaultFailure = App::getEnv('_APP_HOME') . '/auth/oauth2/failure';
 
 App::post('/v1/account')
     ->desc('Create Account')
@@ -42,6 +43,7 @@ App::post('/v1/account')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->label('abuse-limit', 10)
+    ->param('userId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
@@ -50,7 +52,7 @@ App::post('/v1/account')
     ->inject('project')
     ->inject('dbForInternal')
     ->inject('audits')
-    ->action(function ($email, $password, $name, $request, $response, $project, $dbForInternal, $audits) {
+    ->action(function ($userId, $email, $password, $name, $request, $response, $project, $dbForInternal, $audits) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
@@ -71,12 +73,12 @@ App::post('/v1/account')
             }
         }
 
-        $limit = $project->getAttribute('usersAuthLimit', 0);
+        $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
         if ($limit !== 0) {
             $sum = $dbForInternal->count('users', [], APP_LIMIT_USERS);
 
-            if($sum >= $limit) {
+            if ($sum >= $limit) {
                 throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
             }
         }
@@ -84,11 +86,11 @@ App::post('/v1/account')
         Authorization::disable();
 
         try {
-            $userId = $dbForInternal->getId();
+            $userId = $userId == 'unique()' ? $dbForInternal->getId() : $userId;
             $user = $dbForInternal->createDocument('users', new Document([
                 '$id' => $userId,
                 '$read' => ['role:all'],
-                '$write' => ['user:'.$userId],
+                '$write' => ['user:' . $userId],
                 'email' => $email,
                 'emailVerification' => false,
                 'status' => true,
@@ -108,14 +110,14 @@ App::post('/v1/account')
 
         Authorization::reset();
 
-        Authorization::unsetRole('role:'.Auth::USER_ROLE_GUEST);
-        Authorization::setRole('user:'.$user->getId());
-        Authorization::setRole('role:'.Auth::USER_ROLE_MEMBER);
+        Authorization::unsetRole('role:' . Auth::USER_ROLE_GUEST);
+        Authorization::setRole('user:' . $user->getId());
+        Authorization::setRole('role:' . Auth::USER_ROLE_MEMBER);
 
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.create')
-            ->setParam('resource', 'users/'.$user->getId())
+            ->setParam('resource', 'user/' . $user->getId())
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -155,14 +157,14 @@ App::post('/v1/account/sessions')
 
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
-        
-        $profile = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [$email])], 1); // Get user by email address
+
+        $profile = $dbForInternal->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
 
         if (!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'))) {
             $audits
                 //->setParam('userId', $profile->getId())
-                ->setParam('event', 'account.sesssions.failed')
-                ->setParam('resource', 'users/'.($profile ? $profile->getId() : ''))
+                ->setParam('event', 'account.sessions.failed')
+                ->setParam('resource', 'user/'.($profile ? $profile->getId() : ''))
             ;
 
             throw new Exception('Invalid credentials', 401); // Wrong password or username
@@ -190,11 +192,11 @@ App::post('/v1/account/sessions')
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()
         ));
 
-        Authorization::setRole('user:'.$profile->getId());
+        Authorization::setRole('user:' . $profile->getId());
 
         $session = $dbForInternal->createDocument('sessions', $session
-            ->setAttribute('$read', ['user:'.$profile->getId()])
-            ->setAttribute('$write', ['user:'.$profile->getId()])
+                ->setAttribute('$read', ['user:' . $profile->getId()])
+                ->setAttribute('$write', ['user:' . $profile->getId()])
         );
 
         $profile->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
@@ -203,7 +205,7 @@ App::post('/v1/account/sessions')
         $audits
             ->setParam('userId', $profile->getId())
             ->setParam('event', 'account.sessions.create')
-            ->setParam('resource', 'users/'.$profile->getId())
+            ->setParam('resource', 'user/' . $profile->getId())
         ;
 
         if (!Config::getParam('domainVerification')) {
@@ -211,31 +213,27 @@ App::post('/v1/account/sessions')
                 ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($profile->getId(), $secret)]))
             ;
         }
-        
+
         $response
-            ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($profile->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($profile->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
-        $countries = $locale->getText('countries');
-
-        $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
-        ? $countries[strtoupper($session->getAttribute('countryCode'))]
-        : $locale->getText('locale.country.unknown');
+        $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
         ;
-        
+
         $response->dynamic($session, Response::MODEL_SESSION);
     });
 
 App::get('/v1/account/sessions/oauth2/:provider')
     ->desc('Create Account Session with OAuth2')
     ->groups(['api', 'account'])
-    ->label('error', __DIR__.'/../../views/general/error.phtml')
+    ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('scope', 'public')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
@@ -246,9 +244,9 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->label('sdk.methodType', 'webAuth')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('providers'), function($node) {return (!$node['mock']);}))).'.')
-    ->param('success', $oauthDefaultSuccess, function ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
-    ->param('failure', $oauthDefaultFailure, function ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('providers'), function ($node) {return (!$node['mock']);}))) . '.')
+    ->param('success', $oauthDefaultSuccess, function ($clients) {return new Host($clients);}, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->param('failure', $oauthDefaultFailure, function ($clients) {return new Host($clients);}, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->param('scopes', [], new ArrayList(new Text(128)), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes.', true)
     ->inject('request')
     ->inject('response')
@@ -260,25 +258,25 @@ App::get('/v1/account/sessions/oauth2/:provider')
 
         $protocol = $request->getProtocol();
         $callback = $protocol.'://'.$request->getHostname().'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
-        $appId = $project->getAttribute('usersOauth2'.\ucfirst($provider).'Appid', '');
-        $appSecret = $project->getAttribute('usersOauth2'.\ucfirst($provider).'Secret', '{}');
+        $appId = $project->getAttribute('providers', [])[$provider.'Appid'] ?? '';
+        $appSecret = $project->getAttribute('providers', [])[$provider.'Secret'] ?? '{}';
 
         if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = App::getEnv('_APP_OPENSSL_KEY_V'.$appSecret['version']);
+            $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
             $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
         }
 
         if (empty($appId) || empty($appSecret)) {
-            throw new Exception('This provider is disabled. Please configure the provider app ID and app secret key from your '.APP_NAME.' console to continue.', 412);
+            throw new Exception('This provider is disabled. Please configure the provider app ID and app secret key from your ' . APP_NAME . ' console to continue.', 412);
         }
 
-        $classname = 'Appwrite\\Auth\\OAuth2\\'.\ucfirst($provider);
+        $className = 'Appwrite\\Auth\\OAuth2\\'.\ucfirst($provider);
 
-        if (!\class_exists($classname)) {
+        if (!\class_exists($className)) {
             throw new Exception('Provider is not supported', 501);
         }
 
-        $oauth2 = new $classname($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure], $scopes);
+        $oauth2 = new $className($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure], $scopes);
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -289,7 +287,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
 App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->desc('OAuth2 Callback')
     ->groups(['api', 'account'])
-    ->label('error', __DIR__.'/../../views/general/error.phtml')
+    ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('scope', 'public')
     ->label('docs', false)
     ->param('projectId', '', new Text(1024), 'Project unique ID.')
@@ -304,18 +302,18 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
 
         $domain = $request->getHostname();
         $protocol = $request->getProtocol();
-        
+
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect($protocol.'://'.$domain.'/v1/account/sessions/oauth2/'.$provider.'/redirect?'
-                .\http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
+            ->redirect($protocol . '://' . $domain . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
+                . \http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
     });
 
 App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->desc('OAuth2 Callback')
     ->groups(['api', 'account'])
-    ->label('error', __DIR__.'/../../views/general/error.phtml')
+    ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('scope', 'public')
     ->label('origin', '*')
     ->label('docs', false)
@@ -331,18 +329,18 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
 
         $domain = $request->getHostname();
         $protocol = $request->getProtocol();
-        
+
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect($protocol.'://'.$domain.'/v1/account/sessions/oauth2/'.$provider.'/redirect?'
-                .\http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
+            ->redirect($protocol . '://' . $domain . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
+                . \http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
     });
 
 App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->desc('OAuth2 Redirect')
     ->groups(['api', 'account'])
-    ->label('error', __DIR__.'/../../views/general/error.phtml')
+    ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('event', 'account.sessions.create')
     ->label('scope', 'public')
     ->label('abuse-limit', 50)
@@ -367,32 +365,31 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
-        
+
         $protocol = $request->getProtocol();
-        $callback = $protocol.'://'.$request->getHostname().'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
+        $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
         $validateURL = new URL();
-
-        $appId = $project->getAttribute('usersOauth2'.\ucfirst($provider).'Appid', '');
-        $appSecret = $project->getAttribute('usersOauth2'.\ucfirst($provider).'Secret', '{}');
+        $appId = $project->getAttribute('providers', [])[$provider.'Appid'] ?? '';
+        $appSecret = $project->getAttribute('providers', [])[$provider.'Secret'] ?? '{}';
 
         if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = App::getEnv('_APP_OPENSSL_KEY_V'.$appSecret['version']);
+            $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
             $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
         }
 
-        $classname = 'Appwrite\\Auth\\OAuth2\\'.\ucfirst($provider);
+        $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
 
-        if (!\class_exists($classname)) {
+        if (!\class_exists($className)) {
             throw new Exception('Provider is not supported', 501);
         }
 
-        $oauth2 = new $classname($appId, $appSecret, $callback);
+        $oauth2 = new $className($appId, $appSecret, $callback);
 
         if (!empty($state)) {
             try {
                 $state = \array_merge($defaultState, $oauth2->parseState($state));
-            } catch (\Exception $exception) {
+            } catch (\Exception$exception) {
                 throw new Exception('Failed to parse login state params as passed from OAuth2 provider');
             }
         } else {
@@ -406,7 +403,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         if (!empty($state['failure']) && !$validateURL->isValid($state['failure'])) {
             throw new Exception('Invalid redirect URL for failure login', 400);
         }
-        
+
         $state['failure'] = null;
         $accessToken = $oauth2->getAccessToken($code);
 
@@ -419,7 +416,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         $oauth2ID = $oauth2->getUserID($accessToken);
-        
+
         if (empty($oauth2ID)) {
             if (!empty($state['failure'])) {
                 $response->redirect($state['failure'], 301, 0);
@@ -431,39 +428,39 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $sessions = $user->getAttribute('sessions', []);
         $current = Auth::sessionVerify($sessions, Auth::$secret);
 
-        if($current) { // Delete current session of new one.
-            foreach ($sessions as $key => $session) { /** @var Document $session */
+        if ($current) { // Delete current session of new one.
+            foreach ($sessions as $key => $session) {/** @var Document $session */
                 if ($current === $session['$id']) {
                     unset($sessions[$key]);
-                    
+
                     $dbForInternal->deleteDocument('sessions', $session->getId());
                     $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('sessions', $sessions));
                 }
             }
         }
 
-        $user = ($user->isEmpty()) ? $dbForInternal->findFirst('sessions', [ // Get user by provider id
+        $user = ($user->isEmpty()) ? $dbForInternal->findOne('sessions', [ // Get user by provider id
             new Query('provider', QUERY::TYPE_EQUAL, [$provider]),
             new Query('providerUid', QUERY::TYPE_EQUAL, [$oauth2ID]),
-        ], 1) : $user;
+        ]) : $user;
 
         if ($user === false || $user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
             $name = $oauth2->getUserName($accessToken);
             $email = $oauth2->getUserEmail($accessToken);
 
-            $user = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [$email])], 1); // Get user by email address
+            $user = $dbForInternal->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
 
             if ($user === false || $user->isEmpty()) { // Last option -> create the user, generate random password
-                $limit = $project->getAttribute('usersAuthLimit', 0);
-        
+                $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
+
                 if ($limit !== 0) {
                     $sum = $dbForInternal->count('users', [], APP_LIMIT_COUNT);
 
-                    if($sum >= $limit) {
+                    if ($sum >= $limit) {
                         throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
                     }
                 }
-                
+
                 Authorization::disable();
 
                 try {
@@ -471,7 +468,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     $user = $dbForInternal->createDocument('users', new Document([
                         '$id' => $userId,
                         '$read' => ['role:all'],
-                        '$write' => ['user:'.$userId],
+                        '$write' => ['user:' . $userId],
                         'email' => $email,
                         'emailVerification' => true,
                         'status' => true, // Email should already be authenticated by OAuth2 provider
@@ -530,11 +527,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             ->setAttribute('sessions', $session, Document::SET_TYPE_APPEND)
         ;
 
-        Authorization::setRole('user:'.$user->getId());
+        Authorization::setRole('user:' . $user->getId());
 
         $session = $dbForInternal->createDocument('sessions', $session
-            ->setAttribute('$read', ['user:'.$user->getId()])
-            ->setAttribute('$write', ['user:'.$user->getId()])
+                ->setAttribute('$read', ['user:' . $user->getId()])
+                ->setAttribute('$write', ['user:' . $user->getId()])
         );
 
         $user = $dbForInternal->updateDocument('users', $user->getId(), $user);
@@ -542,7 +539,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.sessions.create')
-            ->setParam('resource', 'users/'.$user->getId())
+            ->setParam('resource', 'user/' . $user->getId())
             ->setParam('data', ['provider' => $provider])
         ;
 
@@ -553,7 +550,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
             ;
         }
-        
+
         // Add keys for non-web platforms - TODO - add verification phase to aviod session sniffing
         if (parse_url($state['success'], PHP_URL_PATH) === parse_url($oauthDefaultSuccess, PHP_URL_PATH)) {
             $state['success'] = URLParser::parse($state['success']);
@@ -569,7 +566,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->redirect($state['success'])
         ;
@@ -618,12 +615,12 @@ App::post('/v1/account/sessions/anonymous')
             throw new Exception('Cannot create an anonymous user when logged in.', 401);
         }
 
-        $limit = $project->getAttribute('usersAuthLimit', 0);
+        $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
         if ($limit !== 0) {
             $sum = $dbForInternal->count('users', [], APP_LIMIT_COUNT);
 
-            if($sum >= $limit) {
+            if ($sum >= $limit) {
                 throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
             }
         }
@@ -633,8 +630,8 @@ App::post('/v1/account/sessions/anonymous')
         $userId = $dbForInternal->getId();
         $user = $dbForInternal->createDocument('users', new Document([
             '$id' => $userId,
-            '$read' => ['role:all'], 
-            '$write' => ['user:'.$userId],
+            '$read' => ['role:all'],
+            '$write' => ['user:' . $userId],
             'email' => null,
             'emailVerification' => false,
             'status' => true,
@@ -673,11 +670,11 @@ App::post('/v1/account/sessions/anonymous')
             $detector->getDevice()
         ));
 
-        Authorization::setRole('user:'.$user->getId());
+        Authorization::setRole('user:' . $user->getId());
 
         $session = $dbForInternal->createDocument('sessions', $session
-            ->setAttribute('$read', ['user:'.$user->getId()])
-            ->setAttribute('$write', ['user:'.$user->getId()])
+                ->setAttribute('$read', ['user:' . $user->getId()])
+                ->setAttribute('$write', ['user:' . $user->getId()])
         );
 
         $user = $dbForInternal->updateDocument('users', $user->getId(),
@@ -686,7 +683,7 @@ App::post('/v1/account/sessions/anonymous')
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.sessions.create')
-            ->setParam('resource', 'users/'.$user->getId())
+            ->setParam('resource', 'user/' . $user->getId())
         ;
 
         if (!Config::getParam('domainVerification')) {
@@ -696,7 +693,7 @@ App::post('/v1/account/sessions/anonymous')
         }
 
         $response
-            ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
@@ -726,17 +723,17 @@ App::post('/v1/account/jwt')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_JWT)
     ->label('abuse-limit', 10)
-    ->label('abuse-key', 'url:{url},userId:{param-userId}')
+    ->label('abuse-key', 'url:{url},userId:{userId}')
     ->inject('response')
     ->inject('user')
     ->action(function ($response, $user) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
-            
+
         $sessions = $user->getAttribute('sessions', []);
         $current = new Document();
 
-        foreach ($sessions as $session) { 
+        foreach ($sessions as $session) {
             /** @var Utopia\Database\Document $session */
 
             if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
@@ -744,10 +741,10 @@ App::post('/v1/account/jwt')
             }
         }
 
-        if($current->isEmpty()) {
+        if ($current->isEmpty()) {
             throw new Exception('No valid session found', 401);
         }
-        
+
         $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -823,13 +820,10 @@ App::get('/v1/account/sessions')
         /** @var Utopia\Locale\Locale $locale */
 
         $sessions = $user->getAttribute('sessions', []);
-        $countries = $locale->getText('countries');
         $current = Auth::sessionVerify($sessions, Auth::$secret);
 
-        foreach ($sessions as $key => $session) { /** @var Document $session */
-            $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
-            ? $countries[strtoupper($session->getAttribute('countryCode'))]
-            : $locale->getText('locale.country.unknown');
+        foreach ($sessions as $key => $session) {/** @var Document $session */
+            $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
             $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', ($current == $session->getId()) ? true : false);
@@ -869,8 +863,6 @@ App::get('/v1/account/logs')
 
         $audit = new Audit($dbForInternal);
 
-        $countries = $locale->getText('countries');
-
         $logs = $audit->getLogsByUserAndEvents($user->getId(), [
             'account.create',
             'account.delete',
@@ -905,8 +897,8 @@ App::get('/v1/account/logs')
             $record = $geodb->get($log['ip']);
 
             if ($record) {
-                $output[$i]['countryCode'] = (isset($countries[$record['country']['iso_code']])) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
+                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));        
             } else {
                 $output[$i]['countryCode'] = '--';
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
@@ -939,23 +931,23 @@ App::get('/v1/account/sessions/:sessionId')
         /** @var Utopia\Locale\Locale $locale */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $sessions   = $user->getAttribute('sessions', []);
-        $sessionId  = ($sessionId === 'current')
-            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
-            : $sessionId;
+        $sessions = $user->getAttribute('sessions', []);
+        $sessionId = ($sessionId === 'current')
+        ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
+        : $sessionId;
 
-        foreach ($sessions as $session) { /** @var Document $session */
+        foreach ($sessions as $session) {/** @var Document $session */
             if ($sessionId == $session->getId()) {
 
                 $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
-                    ? $countries[strtoupper($session->getAttribute('countryCode'))]
-                    : $locale->getText('locale.country.unknown');
+                ? $countries[strtoupper($session->getAttribute('countryCode'))]
+                : $locale->getText('locale.country.unknown');
 
                 $session
                     ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
                     ->setAttribute('countryName', $countryName)
                 ;
-                    
+
                 return $response->dynamic($session, Response::MODEL_SESSION);
             }
         }
@@ -991,7 +983,7 @@ App::patch('/v1/account/name')
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.update.name')
-            ->setParam('resource', 'users/'.$user->getId())
+            ->setParam('resource', 'user/' . $user->getId())
         ;
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -1027,14 +1019,14 @@ App::patch('/v1/account/password')
         }
 
         $user = $dbForInternal->updateDocument('users', $user->getId(), $user
-            ->setAttribute('password', Auth::passwordHash($password))
-            ->setAttribute('passwordUpdate', \time())
+                ->setAttribute('password', Auth::passwordHash($password))
+                ->setAttribute('passwordUpdate', \time())
         );
 
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.update.password')
-            ->setParam('resource', 'users/'.$user->getId())
+            ->setParam('resource', 'user/' . $user->getId())
         ;
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -1074,22 +1066,20 @@ App::patch('/v1/account/email')
         }
 
         $email = \strtolower($email);
-        $profile = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [\strtolower($email)])], 1); // Get user by email address
-
-        if ($profile) {
-            throw new Exception('User already registered', 400);
+        try {
+            $user = $dbForInternal->updateDocument('users', $user->getId(), $user
+                ->setAttribute('password', $isAnonymousUser ? Auth::passwordHash($password) : $user->getAttribute('password', ''))
+                ->setAttribute('email', $email)
+                ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
+            );
+        } catch(Duplicate $th) {
+            throw new Exception('Email already exists', 409);
         }
-
-        $user = $dbForInternal->updateDocument('users', $user->getId(), $user
-            ->setAttribute('password', $isAnonymousUser ? Auth::passwordHash($password) : $user->getAttribute('password', ''))
-            ->setAttribute('email', $email)
-            ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
-        );
 
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.update.email')
-            ->setParam('resource', 'users/'.$user->getId())
+            ->setParam('resource', 'user/' . $user->getId())
         ;
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -1122,7 +1112,7 @@ App::patch('/v1/account/prefs')
 
         $audits
             ->setParam('event', 'account.update.prefs')
-            ->setParam('resource', 'users/'.$user->getId())
+            ->setParam('resource', 'user/' . $user->getId())
         ;
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -1156,18 +1146,18 @@ App::delete('/v1/account')
         $protocol = $request->getProtocol();
         $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('status', false));
 
-        //TODO delete all tokens or only current session?
-        //TODO delete all user data according to GDPR. Make sure everything is backed up and backups are deleted later
+        // TODO delete all tokens or only current session?
+        // TODO delete all user data according to GDPR. Make sure everything is backed up and backups are deleted later
         /*
-         * Data to delete
-         * * Tokens
-         * * Memberships
-         */
+     * Data to delete
+     * * Tokens
+     * * Memberships
+     */
 
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.delete')
-            ->setParam('resource', 'users/'.$user->getId())
+            ->setParam('resource', 'user/' . $user->getId())
             ->setParam('data', $user->getArrayCopy())
         ;
 
@@ -1182,7 +1172,7 @@ App::delete('/v1/account')
         }
 
         $response
-            ->addCookie(Auth::$cookieName.'_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->noContent()
         ;
@@ -1219,12 +1209,12 @@ App::delete('/v1/account/sessions/:sessionId')
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
-            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
-            : $sessionId;
-                
+        ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
+        : $sessionId;
+
         $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($sessions as $key => $session) { /** @var Document $session */
+        foreach ($sessions as $key => $session) {/** @var Document $session */
             if ($sessionId == $session->getId()) {
                 unset($sessions[$key]);
 
@@ -1233,17 +1223,17 @@ App::delete('/v1/account/sessions/:sessionId')
                 $audits
                     ->setParam('userId', $user->getId())
                     ->setParam('event', 'account.sessions.delete')
-                    ->setParam('resource', '/user/'.$user->getId())
+                    ->setParam('resource', 'user/' . $user->getId())
                 ;
 
                 $session->setAttribute('current', false);
-                
+
                 if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
                     $session
                         ->setAttribute('current', true)
                         ->setAttribute('countryName', (isset($countries[strtoupper($session->getAttribute('countryCode'))])) ? $countries[strtoupper($session->getAttribute('countryCode'))] : $locale->getText('locale.country.unknown'))
                     ;
-                    
+
                     if (!Config::getParam('domainVerification')) {
                         $response
                             ->addHeader('X-Fallback-Cookies', \json_encode([]))
@@ -1251,7 +1241,7 @@ App::delete('/v1/account/sessions/:sessionId')
                     }
 
                     $response
-                        ->addCookie(Auth::$cookieName.'_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+                        ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
                         ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
                     ;
                 }
@@ -1300,13 +1290,13 @@ App::delete('/v1/account/sessions')
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($sessions as $session) { /** @var Document $session */
+        foreach ($sessions as $session) {/** @var Document $session */
             $dbForInternal->deleteDocument('sessions', $session->getId());
 
             $audits
                 ->setParam('userId', $user->getId())
                 ->setParam('event', 'account.sessions.delete')
-                ->setParam('resource', '/user/'.$user->getId())
+                ->setParam('resource', 'user/' . $user->getId())
             ;
 
             if (!Config::getParam('domainVerification')) {
@@ -1323,14 +1313,14 @@ App::delete('/v1/account/sessions')
             if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
                 $session->setAttribute('current', true);
                 $response
-                    ->addCookie(Auth::$cookieName.'_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+                    ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
                     ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
                 ;
             }
         }
 
         $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('sessions', []));
-                    
+
         $events
             ->setParam('eventData', $response->output(new Document([
                 'sessions' => $sessions,
@@ -1356,7 +1346,7 @@ App::post('/v1/account/recovery')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', new Email(), 'User email.')
-    ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients'])
+    ->param('url', '', function ($clients) {return new Host($clients);}, 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients'])
     ->inject('request')
     ->inject('response')
     ->inject('dbForInternal')
@@ -1379,7 +1369,7 @@ App::post('/v1/account/recovery')
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
         $email = \strtolower($email);
-        $profile = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [$email])], 1); // Get user by email address
+        $profile = $dbForInternal->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
 
         if (!$profile) {
             throw new Exception('User not found', 404);
@@ -1401,8 +1391,8 @@ App::post('/v1/account/recovery')
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
         ]);
-            
-        Authorization::setRole('user:'.$profile->getId());
+
+        Authorization::setRole('user:' . $profile->getId());
 
         $profile->setAttribute('tokens', $recovery, Document::SET_TYPE_APPEND);
 
@@ -1412,50 +1402,33 @@ App::post('/v1/account/recovery')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
-        $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
-        $content = new Template(__DIR__.'/../../config/locale/translations/templates/'.$locale->getText('account.emails.recovery.body'));
-        $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
-
-        $body
-            ->setParam('{{content}}', $content->render(false))
-            ->setParam('{{cta}}', $cta->render())
-            ->setParam('{{title}}', $locale->getText('account.emails.recovery.title'))
-            ->setParam('{{direction}}', $locale->getText('settings.direction'))
-            ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
-            ->setParam('{{name}}', $profile->getAttribute('name'))
-            ->setParam('{{redirect}}', $url)
-            ->setParam('{{bg-body}}', '#f7f7f7')
-            ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{bg-cta}}', '#073b4c')
-            ->setParam('{{text-content}}', '#000000')
-            ->setParam('{{text-cta}}', '#ffffff')
-        ;
-
         $mails
             ->setParam('event', 'account.recovery.create')
-            ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name')))
+            ->setParam('from', $project->getId())
             ->setParam('recipient', $profile->getAttribute('email', ''))
             ->setParam('name', $profile->getAttribute('name', ''))
-            ->setParam('subject', $locale->getText('account.emails.recovery.title'))
-            ->setParam('body', $body->render())
+            ->setParam('url', $url)
+            ->setParam('locale', $locale->default)
+            ->setParam('project', $project->getAttribute('name', ['[APP-NAME]']))
+            ->setParam('type', MAIL_TYPE_RECOVERY)
             ->trigger();
         ;
 
         $events
             ->setParam('eventData',
                 $response->output($recovery->setAttribute('secret', $secret),
-                Response::MODEL_TOKEN
-            ))
+                    Response::MODEL_TOKEN
+                ))
         ;
 
-        $recovery  // Hide secret for clients, sp
+        $recovery // Hide secret for clients, sp
             ->setAttribute('secret',
                 ($isPrivilegedUser || $isAppUser) ? $secret : '');
 
         $audits
             ->setParam('userId', $profile->getId())
             ->setParam('event', 'account.recovery.create')
-            ->setParam('resource', 'users/'.$profile->getId())
+            ->setParam('resource', 'user/' . $profile->getId())
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -1487,7 +1460,7 @@ App::put('/v1/account/recovery')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
-    
+
         if ($password !== $passwordAgain) {
             throw new Exception('Passwords must match', 400);
         }
@@ -1505,21 +1478,21 @@ App::put('/v1/account/recovery')
             throw new Exception('Invalid recovery token', 401);
         }
 
-        Authorization::setRole('user:'.$profile->getId());
+        Authorization::setRole('user:' . $profile->getId());
 
         $profile = $dbForInternal->updateDocument('users', $profile->getId(), $profile
-            ->setAttribute('password', Auth::passwordHash($password))
-            ->setAttribute('passwordUpdate', \time())
-            ->setAttribute('emailVerification', true)
+                ->setAttribute('password', Auth::passwordHash($password))
+                ->setAttribute('passwordUpdate', \time())
+                ->setAttribute('emailVerification', true)
         );
 
         /**
-         * We act like we're updating and validating
-         *  the recovery token but actually we don't need it anymore.
-         */
+     * We act like we're updating and validating
+     *  the recovery token but actually we don't need it anymore.
+     */
 
         foreach ($tokens as $key => $token) {
-            if($recovery === $token->getId()) {
+            if ($recovery === $token->getId()) {
                 $recovery = $token;
                 unset($tokens[$key]);
             }
@@ -1530,7 +1503,7 @@ App::put('/v1/account/recovery')
         $audits
             ->setParam('userId', $profile->getId())
             ->setParam('event', 'account.recovery.update')
-            ->setParam('resource', 'users/'.$profile->getId())
+            ->setParam('resource', 'user/' . $profile->getId())
         ;
 
         $response->dynamic($recovery, Response::MODEL_TOKEN);
@@ -1549,7 +1522,7 @@ App::post('/v1/account/verification')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TOKEN)
     ->label('abuse-limit', 10)
-    ->label('abuse-key', 'url:{url},email:{param-email}')
+    ->label('abuse-key', 'url:{url},userId:{userId}')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add built-in confirm page
     ->inject('request')
     ->inject('response')
@@ -1577,7 +1550,7 @@ App::post('/v1/account/verification')
         $verificationSecret = Auth::tokenGenerator();
 
         $expire = \time() + Auth::TOKEN_EXPIRATION_CONFIRM;
-        
+
         $verification = new Document([
             '$id' => $dbForInternal->getId(),
             'userId' => $user->getId(),
@@ -1587,8 +1560,8 @@ App::post('/v1/account/verification')
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
         ]);
-            
-        Authorization::setRole('user:'.$user->getId());
+
+        Authorization::setRole('user:' . $user->getId());
 
         $user->setAttribute('tokens', $verification, Document::SET_TYPE_APPEND);
 
@@ -1598,50 +1571,33 @@ App::post('/v1/account/verification')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
-        $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
-        $content = new Template(__DIR__.'/../../config/locale/translations/templates/'.$locale->getText('account.emails.verification.body'));
-        $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
-
-        $body
-            ->setParam('{{content}}', $content->render(false))
-            ->setParam('{{cta}}', $cta->render())
-            ->setParam('{{title}}', $locale->getText('account.emails.verification.title'))
-            ->setParam('{{direction}}', $locale->getText('settings.direction'))
-            ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
-            ->setParam('{{name}}', $user->getAttribute('name'))
-            ->setParam('{{redirect}}', $url)
-            ->setParam('{{bg-body}}', '#f7f7f7')
-            ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{bg-cta}}', '#073b4c')
-            ->setParam('{{text-content}}', '#000000')
-            ->setParam('{{text-cta}}', '#ffffff')
-        ;
-
         $mails
             ->setParam('event', 'account.verification.create')
-            ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name')))
+            ->setParam('from', $project->getId())
             ->setParam('recipient', $user->getAttribute('email'))
             ->setParam('name', $user->getAttribute('name'))
-            ->setParam('subject', $locale->getText('account.emails.verification.title'))
-            ->setParam('body', $body->render())
+            ->setParam('url', $url)
+            ->setParam('locale', $locale->default)
+            ->setParam('project', $project->getAttribute('name', ['[APP-NAME]']))
+            ->setParam('type', MAIL_TYPE_VERIFICATION)
             ->trigger()
         ;
 
         $events
             ->setParam('eventData',
                 $response->output($verification->setAttribute('secret', $verificationSecret),
-                Response::MODEL_TOKEN
-            ))
+                    Response::MODEL_TOKEN
+                ))
         ;
 
-        $verification  // Hide secret for clients, sp
+        $verification // Hide secret for clients, sp
             ->setAttribute('secret',
                 ($isPrivilegedUser || $isAppUser) ? $verificationSecret : '');
 
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.verification.create')
-            ->setParam('resource', 'users/'.$user->getId())
+            ->setParam('resource', 'user/' . $user->getId())
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -1687,16 +1643,16 @@ App::put('/v1/account/verification')
             throw new Exception('Invalid verification token', 401);
         }
 
-        Authorization::setRole('user:'.$profile->getId());
+        Authorization::setRole('user:' . $profile->getId());
 
         $profile = $dbForInternal->updateDocument('users', $profile->getId(), $profile->setAttribute('emailVerification', true));
 
         /**
-         * We act like we're updating and validating
-         *  the verification token but actually we don't need it anymore.
-         */
+     * We act like we're updating and validating
+     *  the verification token but actually we don't need it anymore.
+     */
         foreach ($tokens as $key => $token) {
-            if($token->getId() === $verification) {
+            if ($token->getId() === $verification) {
                 $verification = $token;
                 unset($tokens[$key]);
             }
@@ -1707,7 +1663,7 @@ App::put('/v1/account/verification')
         $audits
             ->setParam('userId', $profile->getId())
             ->setParam('event', 'account.verification.update')
-            ->setParam('resource', 'users/'.$user->getId())
+            ->setParam('resource', 'user/' . $user->getId())
         ;
 
         $response->dynamic($verification, Response::MODEL_TOKEN);

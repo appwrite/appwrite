@@ -32,6 +32,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'fileId' => 'unique()',
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'read' => ['role:all'],
             'write' => ['role:all'],
@@ -284,7 +285,9 @@ trait StorageBase
         $file8 = $this->client->call(Client::METHOD_GET, '/storage/buckets/empty/files/' . $data['fileId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), [
+            'limit' => 2
+        ]);
 
         $this->assertEquals(404, $file8['headers']['status-code']);
 

@@ -5,7 +5,6 @@ use Appwrite\Auth\Validator\Password;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Exception;
-use Utopia\Validator;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\WhiteList;
 use Appwrite\Network\Validator\Email;
@@ -17,6 +16,8 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Validator\UID;
 use DeviceDetector\DeviceDetector;
+use Appwrite\Database\Validator\CustomId;
+use Utopia\Database\Query;
 
 App::post('/v1/users')
     ->desc('Create User')
@@ -30,19 +31,20 @@ App::post('/v1/users')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($email, $password, $name, $response, $dbForInternal) {
+    ->action(function ($userId, $email, $password, $name, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
         $email = \strtolower($email);
 
         try {
-            $userId = $dbForInternal->getId();
+            $userId = $userId == 'unique()' ? $dbForInternal->getId() : $userId;
             $user = $dbForInternal->createDocument('users', new Document([
                 '$id' => $userId,
                 '$read' => ['role:all'],
@@ -82,14 +84,23 @@ App::get('/v1/users')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('after', '', new UID(), 'ID of the user used as the starting point for the query, excluding the user itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($search, $limit, $offset, $orderType, $response, $dbForInternal) {
+    ->action(function ($search, $limit, $offset, $after, $orderType, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
-        $results = $dbForInternal->find('users', [], $limit, $offset, ['_id'], [$orderType]);
+        if (!empty($after)) {
+            $afterUser = $dbForInternal->getDocument('users', $after);
+
+            if ($afterUser->isEmpty()) {
+                throw new Exception('User for after not found', 400);
+            }
+        }
+
+        $results = $dbForInternal->find('users', [], $limit, $offset, [], [$orderType], $afterUser ?? null);
         $sum = $dbForInternal->count('users', [], APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
@@ -181,14 +192,12 @@ App::get('/v1/users/:userId/sessions')
         }
 
         $sessions = $user->getAttribute('sessions', []);
-        $countries = $locale->getText('countries');
 
         foreach ($sessions as $key => $session) { 
             /** @var Document $session */
 
-            $session->setAttribute('countryName', (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
-                ? $countries[strtoupper($session->getAttribute('countryCode'))]
-                : $locale->getText('locale.country.unknown'));
+            $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+            $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', false);
 
             $sessions[$key] = $session;
@@ -230,8 +239,6 @@ App::get('/v1/users/:userId/logs')
         }
 
         $audit = new Audit($dbForInternal);
-        
-        $countries = $locale->getText('countries');
 
         $logs = $audit->getLogsByUserAndEvents($user->getId(), [
             'account.create',
@@ -297,8 +304,8 @@ App::get('/v1/users/:userId/logs')
             $record = $geodb->get($log['ip']);
 
             if ($record) {
-                $output[$i]['countryCode'] = (isset($countries[$record['country']['iso_code']])) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = (isset($countries[$record['country']['iso_code']])) ? $countries[$record['country']['iso_code']] : $locale->getText('locale.country.unknown');
+                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
             } else {
                 $output[$i]['countryCode'] = '--';
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
@@ -366,6 +373,129 @@ App::patch('/v1/users/:userId/verification')
         }
 
         $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', $emailVerification));
+
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::patch('/v1/users/:userId/name')
+    ->desc('Update Name')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.update.name')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'updateName')
+    ->label('sdk.description', '/docs/references/users/update-user-name.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.')
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->inject('audits')
+    ->action(function ($userId, $name, $response, $dbForInternal, $audits) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Appwrite\Event\Event $audits */
+        
+        $user = $dbForInternal->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception('User not found', 404);
+        }
+
+        $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('name', $name));
+
+        $audits
+            ->setParam('userId', $user->getId())
+            ->setParam('event', 'users.update.name')
+            ->setParam('resource', 'user/'.$user->getId())
+        ;
+
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::patch('/v1/users/:userId/password')
+    ->desc('Update Password')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.update.password')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'updatePassword')
+    ->label('sdk.description', '/docs/references/users/update-user-password.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('password', '', new Password(), 'New user password. Must be between 6 to 32 chars.')
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->inject('audits')
+    ->action(function ($userId, $password, $response, $dbForInternal, $audits) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Appwrite\Event\Event $audits */
+
+        $user = $dbForInternal->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception('User not found', 404);
+        }
+
+        $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('password', Auth::passwordHash($password))
+            ->setAttribute('passwordUpdate', \time()));
+
+        $audits
+            ->setParam('userId', $user->getId())
+            ->setParam('event', 'users.update.password')
+            ->setParam('resource', 'user/'.$user->getId())
+        ;
+
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::patch('/v1/users/:userId/email')
+    ->desc('Update Email')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.update.email')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'updateEmail')
+    ->label('sdk.description', '/docs/references/users/update-user-email.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('email', '', new Email(), 'User email.')
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->inject('audits')
+    ->action(function ($userId, $email, $response, $dbForInternal, $audits) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Appwrite\Event\Event $audits */
+
+        $user = $dbForInternal->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception('User not found', 404);
+        }
+
+        $email = \strtolower($email);        
+        try {
+            $user = $dbForInternal->updateDocument('users', $user->getId(), $user->setAttribute('email', $email));
+        } catch(Duplicate $th) {
+            throw new Exception('Email already exists', 409);
+        }
+
+        $audits
+            ->setParam('userId', $user->getId())
+            ->setParam('event', 'account.update.email')
+            ->setParam('resource', 'user/'.$user->getId())
+        ;
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -447,7 +577,6 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
             }
         }
 
-        // TODO : Response filter implementation
         $response->noContent();
     });
 
@@ -538,6 +667,5 @@ App::delete('/v1/users/:userId')
             ->setParam('eventData', $response->output($user, Response::MODEL_USER))
         ;
 
-        // TODO : Response filter implementation
         $response->noContent();
     });

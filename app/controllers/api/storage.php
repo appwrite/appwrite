@@ -11,6 +11,7 @@ use Utopia\Validator\HexColor;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Filesystem;
 use Appwrite\ClamAV\Network;
+use Appwrite\Database\Validator\CustomId;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Storage\Storage;
@@ -269,6 +270,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FILE)
     ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
+    ->param('fileId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('file', [], new File(), 'Binary file.', false)
     ->param('read', null, new ArrayList(new Text(64)), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('write', null, new ArrayList(new Text(64)), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
@@ -278,7 +280,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->inject('user')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($bucketId, $file, $read, $write, $request, $response, $dbForInternal, $user, $audits, $usage) {
+    ->action(function ($bucketId, $fileId, $file, $read, $write, $request, $response, $dbForInternal, $user, $audits, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
@@ -373,6 +375,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $sizeActual = $device->getFileSize($path);
         
         $data = [
+            '$id' => $fileId == 'unique()' ? $dbForInternal->getId() : $fileId,
             '$read' => (is_null($read) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $read ?? [], // By default set read permissions for user
             '$write' => (is_null($write) && !$user->isEmpty()) ? ['user:'.$user->getId()] : $write ?? [], // By default set write permissions for user
             'dateCreated' => \time(),
@@ -398,7 +401,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
         $audits
             ->setParam('event', 'storage.files.create')
-            ->setParam('resource', 'storage/files/'.$file->getId())
+            ->setParam('resource', 'file/'.$file->getId())
         ;
 
         $usage
@@ -426,10 +429,11 @@ App::get('/v1/storage/buckets/:bucketId/files')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('after', '', new UID(), 'ID of the file used as the starting point for the query, excluding the file itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($bucketId, $search, $limit, $offset, $orderType, $response, $dbForInternal) {
+    ->action(function ($bucketId, $search, $limit, $offset, $after, $orderType, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
@@ -445,8 +449,16 @@ App::get('/v1/storage/buckets/:bucketId/files')
             $queries[] = [new Query('name', Query::TYPE_SEARCH, [$search])];
         }
 
+        if (!empty($after)) {
+            $afterFile = $dbForInternal->getDocument('files', $after);
+
+            if ($afterFile->isEmpty()) {
+                throw new Exception("File '{$after}' for the 'after' value not found.", 400);
+            }
+        }
+
         $response->dynamic(new Document([
-            'files' => $dbForInternal->find('files', $queries, $limit, $offset, ['_id'], [$orderType]),
+            'files' => $dbForInternal->find('files', $queries, $limit, $offset, [], [$orderType], $afterFile ?? null),
             'sum' => $dbForInternal->count('files', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_FILE_LIST);
     });
@@ -832,7 +844,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $audits
             ->setParam('event', 'storage.files.update')
-            ->setParam('resource', 'storage/files/'.$file->getId())
+            ->setParam('resource', 'file/'.$file->getId())
         ;
 
         $response->dynamic($file, Response::MODEL_FILE);
@@ -886,7 +898,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         
         $audits
             ->setParam('event', 'storage.files.delete')
-            ->setParam('resource', 'storage/files/'.$file->getId())
+            ->setParam('resource', 'file/'.$file->getId())
         ;
 
         $usage

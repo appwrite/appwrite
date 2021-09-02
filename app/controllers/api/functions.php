@@ -2,6 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
+use Appwrite\Database\Validator\CustomId;
 use Utopia\Database\Validator\UID;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Validator\File;
@@ -38,6 +39,7 @@ App::post('/v1/functions')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
+    ->param('functionId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
     ->param('execute', [], new ArrayList(new Text(64)), 'An array of strings with execution permissions. By default no user is granted with any execute permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
@@ -47,11 +49,12 @@ App::post('/v1/functions')
     ->param('timeout', 15, new Range(1, 900), 'Function maximum execution time in seconds.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($name, $execute, $runtime, $vars, $events, $schedule, $timeout, $response, $dbForInternal) {
+    ->action(function ($functionId, $name, $execute, $runtime, $vars, $events, $schedule, $timeout, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
         $function = $dbForInternal->createDocument('functions', new Document([
+            '$id' => $functionId == 'unique()' ? $dbForInternal->getId() : $functionId,
             'execute' => $execute,
             'dateCreated' => time(),
             'dateUpdated' => time(),
@@ -85,17 +88,26 @@ App::get('/v1/functions')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('after', '', new UID(), 'ID of the function used as the starting point for the query, excluding the function itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($search, $limit, $offset, $orderType, $response, $dbForInternal) {
+    ->action(function ($search, $limit, $offset, $after, $orderType, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
         $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
 
+        if (!empty($after)) {
+            $afterFunction = $dbForInternal->getDocument('functions', $after);
+
+            if ($afterFunction->isEmpty()) {
+                throw new Exception("Function '{$after}' for the 'after' value not found.", 400);
+            }
+        }
+
         $response->dynamic(new Document([
-            'functions' => $dbForInternal->find('functions', $queries, $limit, $offset, ['_id'], [$orderType]),
+            'functions' => $dbForInternal->find('functions', $queries, $limit, $offset, [], [$orderType], $afterFunction ?? null),
             'sum' => $dbForInternal->count('functions', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_FUNCTION_LIST);
     });
@@ -470,6 +482,7 @@ App::post('/v1/functions/:functionId/tags')
         }
         
         $tag = $dbForInternal->createDocument('tags', new Document([
+            '$id' => $dbForInternal->getId(),
             '$read' => [],
             '$write' => [],
             'functionId' => $function->getId(),
@@ -502,10 +515,11 @@ App::get('/v1/functions/:functionId/tags')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('after', '', new UID(), 'ID of the tag used as the starting point for the query, excluding the tag itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($functionId, $search, $limit, $offset, $orderType, $response, $dbForInternal) {
+    ->action(function ($functionId, $search, $limit, $offset, $after, $orderType, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
@@ -516,8 +530,16 @@ App::get('/v1/functions/:functionId/tags')
         }
 
         $queries[] = new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]);
-        
-        $results = $dbForInternal->find('tags', $queries, $limit, $offset, ['_id'], [$orderType]);
+
+        if (!empty($after)) {
+            $afterTag = $dbForInternal->getDocument('tags', $after);
+
+            if ($afterTag->isEmpty()) {
+                throw new Exception("Tag '{$after}' for the 'after' value not found.", 400);
+            }
+        }
+
+        $results = $dbForInternal->find('tags', $queries, $limit, $offset, [], [$orderType], $afterTag ?? null);
         $sum = $dbForInternal->count('tags', $queries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
@@ -678,6 +700,7 @@ App::post('/v1/functions/:functionId/executions')
         Authorization::disable();
 
         $execution = $dbForInternal->createDocument('executions', new Document([
+            '$id' => $dbForInternal->getId(),
             '$read' => (!$user->isEmpty()) ? ['user:' . $user->getId()] : [],
             '$write' => [],
             'dateCreated' => time(),
@@ -743,12 +766,13 @@ App::get('/v1/functions/:functionId/executions')
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('after', '', new UID(), 'ID of the execution used as the starting point for the query, excluding the execution itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($functionId, $limit, $offset, $response, $dbForInternal) {
+    ->action(function ($functionId, $limit, $offset, $after, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
-        
+
         Authorization::disable();
         $function = $dbForInternal->getDocument('functions', $functionId);
         Authorization::reset();
@@ -757,10 +781,18 @@ App::get('/v1/functions/:functionId/executions')
             throw new Exception('Function not found', 404);
         }
 
+        if (!empty($after)) {
+            $afterExecution = $dbForInternal->getDocument('executions', $after);
+
+            if ($afterExecution->isEmpty()) {
+                throw new Exception("Execution '{$after}' for the 'after' value not found.", 400);
+            }
+        }
+
         $results = $dbForInternal->find('executions', [
             new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]),
-        ], $limit, $offset, ['_id'], [Database::ORDER_DESC]);
-        
+        ], $limit, $offset, [], [Database::ORDER_DESC], $afterExecution ?? null);
+
         $sum = $dbForInternal->count('executions', [
             new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]),
         ], APP_LIMIT_COUNT);
