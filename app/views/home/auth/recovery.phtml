@@ -1,12 +1,15 @@
 <?php
 $smtpEnabled = $this->getParam('smtpEnabled', false);
+
+$locale = $this->getParam("locale");
+/** @var Utopia\Locale\Locale $locale */
 ?>
 <div class="zone medium">
     <h1 class="zone xl margin-bottom-large margin-top">
-        Password Recovery
+        <?php echo $locale->getText("home.auth.recovery.title"); ?>
     </h1>
 
-    <small class="pull-end text-size-small">* All fields are required</small>
+    <small class="pull-end text-size-small"><?php echo $locale->getText("home.auth.shared.fields-required-info"); ?></small>
 
     <form name="account.createRecovery"
         data-analytics
@@ -18,26 +21,26 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
         data-scope="console"
         data-event="submit"
         data-success="alert"
-        data-success-param-alert-text="We have sent you a mail with a password reset link"
+        data-success-param-alert-text="<?php echo $locale->getText("home.auth.recovery.submit-success"); ?>"
         data-failure="alert"
-        data-failure-param-alert-text="Password recovery failed"
+        data-failure-param-alert-text="<?php echo $locale->getText("home.auth.recovery.submit-error"); ?>"
         data-failure-param-alert-classname="error">
 
-        <label>Email</label>
-        <input name="email" type="email" class="full-width" autocomplete="email" placeholder="me@example.com" required>
+        <label><?php echo $locale->getText("home.auth.recovery.input-label-email"); ?></label>
+        <input name="email" type="email" class="full-width" autocomplete="email" placeholder="<?php echo $locale->getText("home.auth.recovery.input-placeholder-email"); ?>" required>
 
         <input name="url" type="hidden" data-ls-bind="{{env.ENDPOINT}}/auth/recovery/reset" />
 
         <?php if(!$smtpEnabled): ?>
         <div class="box note padding-tiny warning margin-bottom text-align-center">
-            <i class="icon-warning"></i> SMTP connection is disabled. <a href="https://appwrite.io/docs/email-delivery" target="_blank" rel="noopener">Learn more <i class="icon-link-ext"></i></a>
+            <i class="icon-warning"></i> <?php echo $locale->getText("home.auth.recovery.warning-smtp-chunk1"); ?> <a href="https://appwrite.io/docs/email-delivery" target="_blank" rel="noopener"><?php echo $locale->getText("home.auth.recovery.warning-smtp-chunk2"); ?> <i class="icon-link-ext"></i></a>
         </div>
         <?php endif; ?>
         
-        <button type="submit" class="btn btn-primary"<?php if(!$smtpEnabled): ?> disabled<?php endif; ?>><i class="fa fa-sign-in"></i> Recover</button>
+        <button type="submit" class="btn btn-primary"<?php if(!$smtpEnabled): ?> disabled<?php endif; ?>><i class="fa fa-sign-in"></i> <?php echo $locale->getText("home.auth.recovery.submit-button"); ?></button>
     </form>
 </div>
 
 <div class="zone medium text-align-center">
-    <a href="/auth/signin">Back to sign in</a>
+    <a href="/auth/signin"><?php echo $locale->getText("home.auth.recovery.button-back"); ?></a>
 </div>

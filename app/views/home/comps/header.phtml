@@ -1,6 +1,11 @@
+<?php
+$locale = $this->getParam("locale");
+/** @var Utopia\Locale\Locale $locale */
+?>
+
 <div class="logo text-align-center margin-bottom-xl">
     <a href="/">
-        <img src="/images/appwrite.svg" alt="Appwrite Light Logo" class="force-light" loading="lazy" />
-        <img src="/images/appwrite-footer-dark.svg" alt="Appwrite Dark Logo" class="force-dark" loading="lazy" />
+        <img src="/images/appwrite.svg" alt="<?php echo $locale->getText("home.auth.comps.header.logo-alt-light"); ?>" class="force-light" loading="lazy" />
+        <img src="/images/appwrite-footer-dark.svg" alt="<?php echo $locale->getText("home.auth.comps.header.logo-alt-dark"); ?>" class="force-dark" loading="lazy" />
     </a>
 </div>

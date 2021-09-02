@@ -1,4 +1,8 @@
 <?php
 $version = $this->getParam('version', '').'.'.APP_CACHE_BUSTER;
+
+$locale = $this->getParam("locale");
+/** @var Utopia\Locale\Locale $locale */
+
 ?>
-<footer>version <?php echo $version; ?></footer>
+<footer><?php echo $locale->getText("home.auth.comps.footer.version"); ?> <?php echo $version; ?></footer>

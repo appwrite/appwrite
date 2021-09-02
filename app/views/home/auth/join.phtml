@@ -1,3 +1,8 @@
+<?php
+$locale = $this->getParam("locale");
+/** @var Utopia\Locale\Locale $locale */
+?>
+
 <section class="zone medium">
     <form class="box margin-top-large"
         data-analytics
@@ -14,20 +19,22 @@
         data-param-secret="{{router.params.secret}}"
         data-success="redirect,alert,trigger"
         data-success-param-redirect-url="/console?project={{router.params.project}}"
-        data-success-param-alert-text="Joined team successfully"
+        data-success-param-alert-text="<?php echo $locale->getText("home.auth.join.submit-success"); ?>"
         data-success-param-trigger-events="teams.updateMembershipStatus"
         data-failure="redirect,alert"
         data-success-param-redirect-url="/console"
-        data-failure-param-alert-text="Failed to join team. Please try again later"
+        data-failure-param-alert-text="<?php echo $locale->getText("home.auth.join.submit-error"); ?>"
         data-failure-param-alert-classname="error">
 
-        <div class="text-danger margin-bottom-large" data-ls-if="{{router.params.failure}} == 1">Failed to join team. Please try again later</div>
+        <div class="text-danger margin-bottom-large" data-ls-if="{{router.params.failure}} == 1"><?php echo $locale->getText("home.auth.join.submit-error"); ?></div>
         
-        <h2 class="margin-bottom-small">Invitation</h2>
+        <h2 class="margin-bottom-small"><?php echo $locale->getText("home.auth.join.title"); ?></h2>
 
-        <p>You have been invited to join a team project on <?php echo APP_NAME; ?></p>
+        <p><?php echo $locale->getText("home.auth.join.description"); ?> <?php echo APP_NAME; ?></p>
         
-        <!-- <div class=""
+        <!-- 
+         ! BE AWRARE ! This block has not been localized.
+            <div class=""
              data-service="companies.getPreview"
              data-scope="api"
              data-name="api-company"
@@ -48,12 +55,12 @@
                 <input type="checkbox" required />
             </div>
 
-            By accepting the invitation, you agree to the <a href="/policy/terms" target="_blank">Terms and Conditions</a> and <a href="/policy/privacy" target="_blank">Privacy Policy</a>.
+            <?php echo $locale->getText("home.auth.join.agree-terms-chunk1"); ?> <a href="/policy/terms" target="_blank"><?php echo $locale->getText("home.auth.join.agree-terms-chunk2"); ?></a> <?php echo $locale->getText("home.auth.join.agree-terms-chunk3"); ?> <a href="/policy/privacy" target="_blank"><?php echo $locale->getText("home.auth.join.agree-terms-chunk4"); ?></a>.
         </div>
 
         <div class="clear">
-            <button class="pull-start margin-end">Accept</button>
-            <a href="/" class="button reverse pull-start">Cancel</a>
+            <button class="pull-start margin-end"><?php echo $locale->getText("home.auth.join.submit-button"); ?></button>
+            <a href="/" class="button reverse pull-start"><?php echo $locale->getText("home.auth.join.cancel-invitation"); ?></a>
         </div>
     </form>
 </section>

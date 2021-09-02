@@ -83,7 +83,7 @@ App::get('/auth/signin')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('layout')
-    ->inject("locale")
+    ->inject('locale')
     ->action(function ($layout, $locale) {
         /** @var Utopia\View $layout */
         /** @var Utopia\Locale\Locale $locale */
@@ -91,7 +91,7 @@ App::get('/auth/signin')
         $page = new View(__DIR__.'/../../views/home/auth/signin.phtml');
 
         $page
-            ->setParam("locale", $locale)
+            ->setParam('locale', $locale)
             ->setParam('root', App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled'))
         ;
 
@@ -105,11 +105,15 @@ App::get('/auth/signup')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('layout')
-    ->action(function ($layout) {
+    ->inject('locale')
+    ->action(function ($layout, $locale) {
         /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
+
         $page = new View(__DIR__.'/../../views/home/auth/signup.phtml');
 
         $page
+            ->setParam('locale', $locale)
             ->setParam('root', App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled'))
         ;
 
@@ -123,12 +127,15 @@ App::get('/auth/recovery')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('layout')
-    ->action(function ($layout) {
+    ->inject('locale')
+    ->action(function ($layout, $locale) {
         /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
 
         $page = new View(__DIR__.'/../../views/home/auth/recovery.phtml');
 
         $page
+            ->setParam('locale', $locale)
             ->setParam('smtpEnabled', (!empty(App::getEnv('_APP_SMTP_HOST'))))
         ;
 
@@ -142,10 +149,15 @@ App::get('/auth/confirm')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('layout')
-    ->action(function ($layout) {
+    ->inject('locale')
+    ->action(function ($layout, $locale) {
         /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
 
         $page = new View(__DIR__.'/../../views/home/auth/confirm.phtml');
+
+        $page
+            ->setParam('locale', $locale);
 
         $layout
             ->setParam('title', 'Account Confirmation - '.APP_NAME)
@@ -157,10 +169,15 @@ App::get('/auth/join')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('layout')
-    ->action(function ($layout) {
+    ->inject('locale')
+    ->action(function ($layout, $locale) {
         /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
 
         $page = new View(__DIR__.'/../../views/home/auth/join.phtml');
+
+        $page
+            ->setParam('locale', $locale);
 
         $layout
             ->setParam('title', 'Invitation - '.APP_NAME)
@@ -172,10 +189,15 @@ App::get('/auth/recovery/reset')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('layout')
-    ->action(function ($layout) {
+    ->inject('locale')
+    ->action(function ($layout, $locale) {
         /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
 
         $page = new View(__DIR__.'/../../views/home/auth/recovery/reset.phtml');
+
+        $page
+            ->setParam('locale', $locale);
 
         $layout
             ->setParam('title', 'Password Reset - '.APP_NAME)
@@ -187,10 +209,15 @@ App::get('/auth/oauth2/success')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('layout')
-    ->action(function ($layout) {
+    ->inject('locale')
+    ->action(function ($layout, $locale) {
         /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
 
         $page = new View(__DIR__.'/../../views/home/auth/oauth2.phtml');
+
+        $page
+            ->setParam('locale', $locale);
 
         $layout
             ->setParam('title', APP_NAME)
@@ -205,10 +232,15 @@ App::get('/auth/oauth2/failure')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('layout')
-    ->action(function ($layout) {
+    ->inject('locale')
+    ->action(function ($layout, $locale) {
         /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
 
         $page = new View(__DIR__.'/../../views/home/auth/oauth2.phtml');
+
+        $page
+            ->setParam('locale', $locale);
 
         $layout
             ->setParam('title', APP_NAME)
@@ -224,12 +256,15 @@ App::get('/error/:code')
     ->label('scope', 'home')
     ->param('code', null, new \Utopia\Validator\Numeric(), 'Valid status code number', false)
     ->inject('layout')
-    ->action(function ($code, $layout) {
+    ->inject('locale')
+    ->action(function ($code, $layout, $locale) {
         /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
 
         $page = new View(__DIR__.'/../../views/error.phtml');
 
         $page
+            ->setParam('locale', $locale)
             ->setParam('code', $code)
         ;
 

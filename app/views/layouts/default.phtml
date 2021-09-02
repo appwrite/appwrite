@@ -122,7 +122,7 @@ if(!empty($platforms)) {
 
     <div class="loader"></div>
 
-    <div data-cookies="We are using cookies to make this website easier to use."></div>
+    <div data-cookies="<?php echo $locale->getText("layouts.default.cookie-info"); ?>"></div>
 
     <section class="alerts">
         <ul data-ls-loop="alerts.list" data-ls-as="alert">

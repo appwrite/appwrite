@@ -1,8 +1,13 @@
+<?php
+$locale = $this->getParam("locale");
+/** @var Utopia\Locale\Locale $locale */
+?>
+
 <div class="zone large padding margin-top" id="message" style="display: none">
-    <h1 class="margin-bottom">Missing Redirect URL</h1>
-    <p>Your OAuth login flow is missing a proper redirect URL. Please check the
-        <a href="https://<?php echo APP_DOMAIN; ?>/docs/client/account?sdk=web#createOAuth2Session">OAuth docs</a>
-        and send request for new session with a valid callback URL.</p>
+    <h1 class="margin-bottom"><?php echo $locale->getText("home.auth.oauth2.title"); ?></h1>
+    <p><?php echo $locale->getText("home.auth.oauth2.description-chunk1"); ?>
+        <a href="https://<?php echo APP_DOMAIN; ?>/docs/client/account?sdk=web#createOAuth2Session"><?php echo $locale->getText("home.auth.oauth2.description-chunk2"); ?></a>
+        <?php echo $locale->getText("home.auth.oauth2.description-chunk3"); ?></p>
 </div>
 
 <script>

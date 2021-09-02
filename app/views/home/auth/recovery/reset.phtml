@@ -1,9 +1,14 @@
+<?php
+$locale = $this->getParam("locale");
+/** @var Utopia\Locale\Locale $locale */
+?>
+
 <div class="zone medium">
     <h1 class="zone xl margin-bottom margin-top">
-        Password Reset
+        <?php echo $locale->getText("home.auth.recovery.reset.title"); ?>
     </h1>
 
-    <small class="pull-end text-size-small">* All fields are required</small>
+    <small class="pull-end text-size-small"><?php echo $locale->getText("home.auth.shared.fields-required-info"); ?></small>
 
     <br />
     <br />
@@ -18,21 +23,21 @@
         data-scope="console"
         data-event="submit"
         data-success="alert,redirect"
-        data-success-param-alert="Password Reset Completed"
+        data-success-param-alert="<?php echo $locale->getText("home.auth.recovery.reset.submit-success"); ?>"
         data-success-param-url="/auth/signin"
         data-failure="alert"
-        data-failure-param-alert-text="Password Reset Failed"
+        data-failure-param-alert-text="<?php echo $locale->getText("home.auth.recovery.reset.submit-error"); ?>"
         data-failure-param-alert-classname="error">
 
         <input type="hidden" name="userId" data-ls-bind="{{router.params.userId}}">
         <input type="hidden" name="secret" data-ls-bind="{{router.params.secret}}">
 
-        <label>Password</label>
-        <input name="password" type="password" autocomplete="off" placeholder="" required data-forms-password-meter pattern=".{6,}" title="Six or more characters">
+        <label><?php echo $locale->getText("home.auth.recovery.reset.input-label-password"); ?></label>
+        <input name="password" type="password" autocomplete="off" placeholder="" required data-forms-password-meter pattern=".{6,}" title="<?php echo $locale->getText("home.auth.shared.input-password-error"); ?>">
 
-        <label>Confirm Password</label>
-        <input name="passwordAgain" type="password" autocomplete="off" placeholder="" required data-forms-password-meter pattern=".{6,}" title="Six or more characters">
+        <label><?php echo $locale->getText("home.auth.recovery.reset.input-label-password-confirm"); ?></label>
+        <input name="passwordAgain" type="password" autocomplete="off" placeholder="" required data-forms-password-meter pattern=".{6,}" title="<?php echo $locale->getText("home.auth.shared.input-password-error"); ?>">
 
-        <button type="submit" class="btn btn-primary"><i class="fa fa-sign-in"></i> Apply</button>
+        <button type="submit" class="btn btn-primary"><i class="fa fa-sign-in"></i><?php echo $locale->getText("home.auth.recovery.reset.submit-button"); ?></button>
     </form>
 </div>

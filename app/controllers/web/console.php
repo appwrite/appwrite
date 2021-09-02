@@ -18,14 +18,19 @@ App::init(function ($layout) {
     ;
 }, ['layout'], 'console');
 
-App::shutdown(function ($response, $layout) {
+App::shutdown(function ($response, $layout, $locale) {
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\View $layout */
+    /** @var Utopia\Locale\Locale $locale */
 
     $header = new View(__DIR__.'/../../views/console/comps/header.phtml');
     $footer = new View(__DIR__.'/../../views/console/comps/footer.phtml');
 
+    $header
+        ->setParam('locale', $locale);
+
     $footer
+        ->setParam('locale', $locale)
         ->setParam('home', App::getEnv('_APP_HOME', ''))
         ->setParam('version', App::getEnv('_APP_VERSION', 'UNKNOWN'))
     ;
@@ -36,7 +41,7 @@ App::shutdown(function ($response, $layout) {
     ;
 
     $response->html($layout->render());
-}, ['response', 'layout'], 'console');
+}, ['response', 'layout', 'locale'], 'console');
 
 App::get('/error/:code')
     ->groups(['web', 'console'])
@@ -44,12 +49,14 @@ App::get('/error/:code')
     ->label('scope', 'home')
     ->param('code', null, new \Utopia\Validator\Numeric(), 'Valid status code number', false)
     ->inject('layout')
-    ->action(function ($code, $layout) {
+    ->action(function ($code, $layout, $locale) {
         /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
 
         $page = new View(__DIR__.'/../../views/error.phtml');
 
         $page
+            ->setParam('locale', $locale)
             ->setParam('code', $code)
         ;
 
