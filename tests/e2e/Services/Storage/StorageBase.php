@@ -373,10 +373,6 @@ trait StorageBase
 
         $this->assertEquals(404, $file['headers']['status-code']);
 
-        /**
-         * Test for FAILURE
-         */
-
         return $data;
     }
 

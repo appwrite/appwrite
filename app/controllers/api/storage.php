@@ -116,7 +116,7 @@ App::get('/v1/storage/buckets')
         }
 
         $response->dynamic(new Document([
-            'buckets' => $dbForInternal->find('buckets', $queries, $limit, $offset, ['_id'], [$orderType], $afterBucket ?? null),
+            'buckets' => $dbForInternal->find('buckets', $queries, $limit, $offset, [], [$orderType], $afterBucket ?? null),
             'sum' => $dbForInternal->count('buckets', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_BUCKET_LIST);
     });
