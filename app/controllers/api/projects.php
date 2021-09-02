@@ -93,9 +93,9 @@ App::post('/v1/projects')
             'legalCity' => $legalCity,
             'legalAddress' => $legalAddress,
             'legalTaxId' => $legalTaxId,
-            'services' => null,
+            'services' => new stdClass(),
             'platforms' => null,
-            'providers' => null,
+            'providers' => [],
             'webhooks' => null,
             'keys' => null,
             'domains' => null,
@@ -484,37 +484,10 @@ App::patch('/v1/projects/:projectId/service')
             throw new Exception('Project not found', 404);
         }
 
-        $document = $dbForConsole->findOne('services', [
-            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()]),
-            new Query('key', Query::TYPE_EQUAL, [$service]),
-        ]);
+        $services = $project->getAttribute('services', []);
+        $services[$service] = $status;
 
-        if($document == false || $document->isEmpty()) {
-            $document = new Document([
-                '$id' => $dbForConsole->getId(),
-                '$read' => ['role:all'],
-                '$write' => ['role:all'],
-                'projectId' => $project->getId(),
-                'key' => $service,
-                'status' => $status,
-            ]);
-
-            $dbForConsole->createDocument('services', $document);
-
-            $project
-                ->setAttribute('services', $document, Document::SET_TYPE_APPEND);
-
-            $dbForConsole->purgeDocument('projects', $project->getId());
-        } else {
-            if($document->getAttribute('status') != $status) {
-                $document->setAttribute('status', $status);
-                $dbForConsole->updateDocument('services', $document->getId(), $document);
-
-                $project->findAndReplace('$id', $document->getId(), $document, 'services');
-
-                $dbForConsole->purgeDocument('projects', $project->getId());
-            }
-        }
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('services', $services));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -550,37 +523,11 @@ App::patch('/v1/projects/:projectId/oauth2')
             new Query('projectId', Query::TYPE_EQUAL, [$project->getId()]),
         ]);
 
-        if($provider && !$provider->isEmpty()) {
-            // Provider exists
+        $providers = $project->getAttribute('providers', []);
+        $providers[$provider . 'Appid'] = $appId;
+        $providers[$provider . 'Secret'] = $secret;
 
-            $provider->setAttribute('appId', $appId)
-                    ->setAttribute('appSecret', $secret);
-
-            $dbForConsole->updateDocument('providers', $provider->getId(), $provider);
-
-            $project->findAndReplace('$id', $provider->getId(), $provider, 'providers');
-
-            $dbForConsole->purgeDocument('projects', $project->getId());
-        } else {
-            // Provider does not exist yet
-
-            $provider = new Document([
-                '$id' => $dbForConsole->getId(),
-                '$read' => ['role:all'],
-                '$write' => ['role:all'],
-                'projectId' => $project->getId(),
-                'key' => $providerKey,
-                'appId' => $appId,
-                'appSecret' => $secret
-            ]);
-
-            $dbForConsole->createDocument('providers', $provider);
-
-            $project
-                ->setAttribute('providers', $provider, Document::SET_TYPE_APPEND);
-
-            $dbForConsole->purgeDocument('projects', $project->getId());
-        }
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('providers', $providers));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });

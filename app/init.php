@@ -251,45 +251,6 @@ Database::addFilter('subQueryWebhooks',
     }
 );
 
-Database::addFilter('subQueryServices',
-    function($value) {
-        return null;
-    },
-    function($value, Document $document, Database $database) {
-        $services = $database
-            ->find('services', [
-                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
-            ], 5000, 0, []);
-
-        $responseJson = [];
-        foreach($services as $service) {
-            $responseJson[$service->getAttribute('key')] = $service->getAttribute('status', true);
-        }
-
-        return $responseJson;
-    }
-);
-
-Database::addFilter('subQueryProviders',
-    function($value) {
-        return null;
-    },
-    function($value, Document $document, Database $database) {
-        $providers = $database
-            ->find('providers', [
-                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
-            ], 5000, 0, []);
-
-        $responseJson = [];
-        foreach($providers as $provider) {
-            $responseJson[$provider->getAttribute('key') . 'Appid'] = $provider->getAttribute('appId');
-            $responseJson[$provider->getAttribute('key') . 'Secret'] = $provider->getAttribute('appSecret');
-        }
-
-        return $responseJson;
-    }
-);
-
 Database::addFilter('encrypt',
     function($value) {
         $key = App::getEnv('_APP_OPENSSL_KEY_V1');

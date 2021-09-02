@@ -478,7 +478,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => ['subQueryServices'],
+                'filters' => ['json'],
             ],
             [
                 '$id' => 'auths',
@@ -500,7 +500,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => ['subQueryProviders'],
+                'filters' => ['json'],
             ],
             [
                 '$id' => 'platforms',
