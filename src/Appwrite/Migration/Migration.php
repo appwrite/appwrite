@@ -97,14 +97,13 @@ abstract class Migration
 
                 foreach ($all as $document) {
                     go(function () use ($document, $callback) {
+                        if (empty($document->getId()) || empty($document->getCollection())) {
+                            Console::warning('Skipped Document due to missing ID or Collection.');
+                            return;
+                        }
 
                         $old = $document->getArrayCopy();
                         $new = call_user_func($callback, $document);
-
-                        if (empty($new->getId())) {
-                            Console::warning('Skipped Document due to missing ID.');
-                            return;
-                        }
 
                         if (!$this->check_diff_multi($new->getArrayCopy(), $old)) {
                             return;
