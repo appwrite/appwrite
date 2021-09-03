@@ -3,6 +3,8 @@
     "layouts.default.cookie-info": "We are using cookies to make this website easier to use.",
 
 
+    "shared.pagination-next": "Next",
+    "shared.pagination-back": "Back",
     "shared.footer.version": "version",
     "shared.loading": "Loading...",
 
@@ -48,6 +50,34 @@
     "console.comps.header.menu-item-webhooks": "Webhooks",
     "console.comps.header.menu-item-keys": "API Keys",
     "console.comps.header.menu-item-settings": "Settings",
+
+    "console.index.title": "Your Projects",
+    "console.index.description": "Take advantage of the Appwrite APIs and tools.",
+    "console.index.link-docs": "Docs",
+    "console.index.link-support": "Support",
+    "console.index.no-projects-title": "Get Started",
+    "console.index.no-projects-description": "No Projects Found, Create your first project now.",
+    "console.index.project-detail-apps": "apps",
+    "console.index.button-create-project": "Create Project",
+
+
+    "console.index.community-card-title": "Join The Community",
+    "console.index.community-card-description": "Join Appwrite growing developers community channels.",
+    "console.index.community-card-button-twitter": "on Twitter",
+    "console.index.community-card-button-facebook": "on Facebook",
+    "console.index.community-card-button-linkedin": "on Linkedin",
+    "console.index.community-card-button-discord": "Discord Server",
+    "console.index.community-card-button-github": "on Github",
+
+
+    "console.index.docs-card-title": "Read The Docs",
+    "console.index.docs-card-description": "Take full advantage of Appwrite APIs and tools for your new project.",
+    "console.index.docs-card-button": "Full Documentation",
+
+
+    "console.index.button-create-project": "Create",
+    "console.index.button-create-project": "Create",
+    "console.index.button-create-project": "Create",
 
 
     "console.keys.index.title": "API Keys",

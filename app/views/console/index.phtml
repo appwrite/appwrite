@@ -1,17 +1,20 @@
 <?php
 $home = $this->getParam('home', '');
+
+$locale = $this->getParam("locale");
+/** @var Utopia\Locale\Locale $locale */
 ?>
 
 <div class="cover">
     <div class="zone xl">
 
-        <h1 class="margin-bottom margin-top">Your Projects</h1>
+        <h1 class="margin-bottom margin-top"><?php echo $locale->getText('console.index.title'); ?></h1>
 
-        <p class="margin-bottom margin-top-negative-small">Take advantage of the Appwrite APIs and tools.</p>
+        <p class="margin-bottom margin-top-negative-small"><?php echo $locale->getText('console.index.description'); ?></p>
 
         <ul class="margin-bottom-xl clear">
-            <li class="pull-start margin-end margin-bottom-small"><a href="<?php echo $home; ?>/docs" target="_blank" rel="noopener" class="link-animation-enabled"><i class="icon-book-open"></i> &nbsp;Docs</a></li>
-            <li class="pull-start margin-end margin-bottom-small"><a href="<?php echo $home; ?>/support" target="_blank" rel="noopener" class="link-animation-enabled"><i class="icon-lifebuoy"></i> &nbsp;Support</a></li>
+            <li class="pull-start margin-end margin-bottom-small"><a href="<?php echo $home; ?>/docs" target="_blank" rel="noopener" class="link-animation-enabled"><i class="icon-book-open"></i> &nbsp;<?php echo $locale->getText('console.index.link-docs'); ?></a></li>
+            <li class="pull-start margin-end margin-bottom-small"><a href="<?php echo $home; ?>/support" target="_blank" rel="noopener" class="link-animation-enabled"><i class="icon-lifebuoy"></i> &nbsp;<?php echo $locale->getText('console.index.link-support'); ?></a></li>
         </ul>
     </div>
 </div>
@@ -30,9 +33,9 @@ $home = $this->getParam('home', '');
         data-success-param-trigger-events="projects.list">
 
         <div data-ls-if="0 == {{console-projects.projects.length}}" class="box margin-bottom" style="display: none">
-            <h3 class="margin-bottom-small text-bold">Get Started</h3>
+            <h3 class="margin-bottom-small text-bold"><?php echo $locale->getText('console.index.no-projects-title'); ?></h3>
 
-            <p class="margin-bottom-no">No Projects Found, Create your first project now.</p>
+            <p class="margin-bottom-no"><?php echo $locale->getText('console.index.no-projects-description'); ?></p>
         </div>
 
         <ul data-ls-loop="console-projects.projects" data-ls-as="project" data-ls-append="" class="tiles cell-3">
@@ -40,7 +43,7 @@ $home = $this->getParam('home', '');
                 <a data-ls-attrs="href=/console/home?project={{project.$id}}" class="box">
                     <div data-ls-bind="{{project.name}}" class="text-one-liner margin-bottom-tiny text-bold">&nbsp;</div>
                     
-                    <p data-ls-if="({{project.platforms.length}})" class="text-fade text-size-small" data-ls-bind="{{project.platforms.length}} apps"></p>
+                    <p data-ls-if="({{project.platforms.length}})" class="text-fade text-size-small" data-ls-bind="{{project.platforms.length}} <?php echo $locale->getText('console.index.project-detail-apps'); ?>"></p>
                     <p data-ls-if="(!{{project.platforms.length}})" class="text-fade text-size-small">&nbsp;</p>
 
                     <div>
@@ -62,7 +65,7 @@ $home = $this->getParam('home', '');
                 data-name="console-projects"
                 data-success="state"
                 data-success-param-state-keys="search,offset">
-                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{console-projects.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{console-projects.sum}}" class="margin-end round small" aria-label="<?php echo $locale->getText('shared.pagination-back'); ?>"><i class="icon-left-open"></i></button>
             </form>
 
             <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{console-projects.sum|pageTotal}}"></span>
@@ -78,41 +81,41 @@ $home = $this->getParam('home', '');
                 data-name="console-projects"
                 data-success="state"
                 data-success-param-state-keys="search,offset">
-                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{console-projects.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{console-projects.sum}}" class="margin-start round small" aria-label="<?php echo $locale->getText('shared.pagination-next'); ?>"><i class="icon-right-open"></i></button>
             </form>
         </div>
         
-        <button data-ls-ui-trigger="create-project">Create Project</button>
+        <button data-ls-ui-trigger="create-project"><?php echo $locale->getText('console.index.button-create-project'); ?></button>
     </div>
 
     <div class="row responsive">
         <div class="col span-6 margin-bottom">
             <div class="box line community">
-                <h3 class="margin-bottom-small text-size-normal">Join The Community</h3>
+                <h3 class="margin-bottom-small text-size-normal"><?php echo $locale->getText('console.index.community-card-title'); ?></h3>
         
-                <p class="text-fade">Join Appwrite growing developers community channels.</p>
+                <p class="text-fade"><?php echo $locale->getText('console.index.community-card-description'); ?></p>
         
-                <a href="<?php echo APP_SOCIAL_TWITTER; ?>" target="_blank" rel="noopener" title="<?php echo APP_NAME;?> on Twitter"
+                <a href="<?php echo APP_SOCIAL_TWITTER; ?>" target="_blank" rel="noopener" title="<?php echo APP_NAME;?> <?php echo $locale->getText('console.index.community-card-button-twitter'); ?>"
                     data-analytics
                     data-analytics-event="click"
                     data-analytics-category="console/home"
                     data-analytics-label="Twitter Link"><i class="icon-twitter"></i></a>
-                <a href="<?php echo APP_SOCIAL_FACEBOOK; ?>" target="_blank" rel="noopener" title="<?php echo APP_NAME;?> on Facebook"
+                <a href="<?php echo APP_SOCIAL_FACEBOOK; ?>" target="_blank" rel="noopener" title="<?php echo APP_NAME;?> <?php echo $locale->getText('console.index.community-card-button-facebook'); ?>"
                     data-analytics
                     data-analytics-event="click"
                     data-analytics-category="console/home"
                     data-analytics-label="Facebook Link"><i class="icon-facebook"></i></a>
-                <a href="<?php echo APP_SOCIAL_LINKEDIN; ?>" target="_blank" rel="noopener" title="<?php echo APP_NAME;?> on Linkedin"
+                <a href="<?php echo APP_SOCIAL_LINKEDIN; ?>" target="_blank" rel="noopener" title="<?php echo APP_NAME;?> <?php echo $locale->getText('console.index.community-card-button-linkedin'); ?>"
                     data-analytics
                     data-analytics-event="click"
                     data-analytics-category="console/home"
                     data-analytics-label="Linkedin Link"><i class="icon-linkedin"></i></a>
-                <a href="<?php echo APP_SOCIAL_DISCORD; ?>" target="_blank" rel="noopener" title="<?php echo APP_NAME;?> Discord Server"
+                <a href="<?php echo APP_SOCIAL_DISCORD; ?>" target="_blank" rel="noopener" title="<?php echo APP_NAME;?> <?php echo $locale->getText('console.index.community-card-button-discord'); ?>"
                     data-analytics
                     data-analytics-event="click"
                     data-analytics-category="console/home"
                     data-analytics-label="Discord Link"><i class="icon-discord"></i></a>
-                <a href="<?php echo APP_SOCIAL_GITHUB; ?>" target="_blank" rel="noopener" title="<?php echo APP_NAME;?> on Github"
+                <a href="<?php echo APP_SOCIAL_GITHUB; ?>" target="_blank" rel="noopener" title="<?php echo APP_NAME;?> <?php echo $locale->getText('console.index.community-card-button-github'); ?>"
                     data-analytics
                     data-analytics-type="click"
                     data-analytics-category="console/home"
@@ -121,11 +124,11 @@ $home = $this->getParam('home', '');
         </div>
         <div class="col span-6 margin-bottom">
             <div class="box line">
-                <h3 class="margin-bottom-small text-size-normal">Read The Docs</h3>
+                <h3 class="margin-bottom-small text-size-normal"><?php echo $locale->getText('console.index.docs-card-title'); ?></h3>
             
-                <p class="text-fade">Take full advantage of Appwrite APIs and tools for your new project.</p>
+                <p class="text-fade"><?php echo $locale->getText('console.index.docs-card-description'); ?></p>
 
-                <a data-ls-attrs="href={{env.HOME}}/docs" target="_blank" rel="noopener"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Full Documentation</a>
+                <a data-ls-attrs="href={{env.HOME}}/docs" target="_blank" rel="noopener"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> <?php echo $locale->getText('console.index.docs-card-button'); ?></a>
             </div>
         </div>
     </div>

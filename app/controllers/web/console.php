@@ -70,12 +70,15 @@ App::get('/console')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
+    ->inject('locale')
+    ->action(function ($layout, $locale) {
         /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
 
         $page = new View(__DIR__.'/../../views/console/index.phtml');
 
         $page
+            ->setParam('locale', $locale)
             ->setParam('home', App::getEnv('_APP_HOME', ''))
         ;
 
