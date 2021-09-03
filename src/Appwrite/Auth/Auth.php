@@ -283,6 +283,8 @@ class Auth
      */
     public static function getRoles(Document $user): array
     {
+        $roles = [];
+
         if (self::isPrivilegedUser(Authorization::$roles) || self::isAppUser(Authorization::$roles)) {
             if ($user->getId()) {
                 $roles[] = 'user:'.$user->getId();
