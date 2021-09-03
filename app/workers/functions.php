@@ -414,8 +414,8 @@ class FunctionsV1 extends Worker
             $orchestration->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', '256'));
             $orchestration->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '256'));
 
-            foreach ($vars as &$value) {
-                $value = strval($value);
+            foreach ($vars as $key => $value) {
+                $vars[$key] = strval($value);
             }
 
             $id = $orchestration->run(
