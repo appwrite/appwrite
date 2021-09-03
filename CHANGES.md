@@ -1,3 +1,10 @@
+# Version 0.10.1
+
+## Bugs
+- Improved error messages on Migration regarding invalid document structures (#1576)
+- Fixed Console SDK endpoint to work with multiple proxies (#1575)
+- Fixed last function environments variables being corrupt (#1577)
+
 # Version 0.10.0
 
 ## Features
