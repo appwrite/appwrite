@@ -285,7 +285,7 @@ class Auth
     {
         $roles = [];
 
-        if (self::isPrivilegedUser(Authorization::$roles) || self::isAppUser(Authorization::$roles)) {
+        if (!self::isPrivilegedUser(Authorization::$roles) && !self::isAppUser(Authorization::$roles)) {
             if ($user->getId()) {
                 $roles[] = 'user:'.$user->getId();
                 $roles[] = 'role:'.Auth::USER_ROLE_MEMBER;
