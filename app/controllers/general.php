@@ -245,6 +245,8 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
         }
     }
 
+    Authorization::setRole('role:'.Auth::USER_ROLE_APP);
+
     foreach (Auth::getRoles($user) as $authRole) {
         Authorization::setRole($authRole);
     }
