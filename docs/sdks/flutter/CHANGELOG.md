@@ -1,3 +1,6 @@
+## 1.0.2
+- Fix timestamp in Realtime Response to Integer
+
 ## 1.0.1
 - Fix null pointer exception while creating OAuth2 session
 - Export RealtimeMessage
