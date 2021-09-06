@@ -81,7 +81,7 @@ class DeletesV1 extends Worker
 
             case DELETE_TYPE_USAGE_STATS:
                 $this->deleteUsageStats($this->args['timestamp1d'], $this->args['timestamp30m']);
-                        
+                break;
             default:
                 Console::error('No delete operation for type: '.$type);
                 break;
