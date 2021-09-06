@@ -1,3 +1,19 @@
+## 1.0.2
+- Fix timestamp in Realtime Response to Integer
+
+## 1.0.1
+- Fix null pointer exception while creating OAuth2 session
+- Export RealtimeMessage
+- Export, separate IO and Browser clients for Flutter (Client and Realtime as well) and Dart (Client)
+
+## 1.0.0
+- Support for Appwrite 0.10
+- Refactored for better cross platform support
+- Exception implements `toString()` to get proper error message for unhandled exceptions
+- Introduces new Realtime service, [more on official docs](link-to-realtime-docs)
+- Breaking Signature for `MultipartFile` has changed as now we are using `http` package. [Here is the new signature for MultipartFile](https://pub.dev/documentation/http/latest/http/MultipartFile-class.html)
+- Breaking Signature for `Response` has changed, now it only exposes the `data`.
+
 ## 0.7.1
 - Fix - createOAuth2Session completing too early
 
