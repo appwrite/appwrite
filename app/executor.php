@@ -13,6 +13,7 @@ use Utopia\App;
 use Utopia\Swoole\Request;
 use Appwrite\Utopia\Response;
 use Utopia\CLI\Console;
+use Swoole\Process;
 use Swoole\Http\Server;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
@@ -24,8 +25,7 @@ use Utopia\Config\Config;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
-
-use function PHPUnit\Framework\isEmpty;
+use Cron\CronExpression;
 
 require_once __DIR__ . '/workers.php';
 
@@ -44,7 +44,7 @@ Swoole\Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_CURL);
 //         go(function() use ($runtime, $orchestration) {
 //             Console::info('Warming up '.$runtime['name'].' '.$runtime['version'].' environment...');
                 
-//             $response = $orchestration->pull($runtime['image']);
+//              $response = $orchestration->pull($runtime['image']);
 
 //             if ($response) {
 //                 Console::success("Successfully Warmed up {$runtime['name']} {$runtime['version']}!");
@@ -83,12 +83,12 @@ App::post('/v1/execute') // Define Route
     ->param('data', '', new Text(1024), '', true)
     ->param('webhooks', [], new ArrayList(new JSON()), [], true)
     ->param('userId', '', new Text(1024), '', true)
-    ->param('JWT', '', new Text(1024), '', true)
+    ->param('jwt', '', new Text(1024), '', true)
     ->inject('response')
     ->action(
-        function ($trigger, $projectId, $executionId, $functionId, $event, $eventData, $data, $webhooks, $userId, $JWT, $request, $response) {
+        function ($trigger, $projectId, $executionId, $functionId, $event, $eventData, $data, $webhooks, $userId, $jwt, $request, $response) {
             try {
-                $data = execute($trigger, $projectId, $executionId, $functionId, $event, $eventData, $data, $webhooks, $userId, $JWT);
+                $data = execute($trigger, $projectId, $executionId, $functionId, $event, $eventData, $data, $webhooks, $userId, $jwt);
                 return $response->json($data);
             } catch (Exception $e) {
                 return $response
@@ -451,12 +451,19 @@ function execute(string $trigger, string $projectId, string $executionId, string
         $stderr = 'Failed to connect to executor runtime after 5 attempts.';
         $exitCode = 124;
     }
+
+    // If timeout error
+    if ($errNo == CURLE_OPERATION_TIMEDOUT) {
+        $exitCode = 124;
+    }
     
-    if ($errNo !== 0 && $errNo != CURLE_COULDNT_CONNECT) {
+    if ($errNo !== 0 && $errNo != CURLE_COULDNT_CONNECT && $errNo != CURLE_OPERATION_TIMEDOUT) {
         throw new Exception('Curl error: ' . $error, 500);
     }
 
-    $executionData = json_decode($executorResponse, true);
+    if (!empty($executorResponse)) {
+        $executionData = json_decode($executorResponse, true);
+    }
 
     if (isset($executionData['code'])) {
         $exitCode = $executionData['code'];
@@ -528,6 +535,28 @@ function execute(string $trigger, string $projectId, string $executionId, string
 App::setMode(App::MODE_TYPE_PRODUCTION); // Define Mode
 
 $http = new Server("0.0.0.0", 8080);
+
+$http->on('start', function ($http) {
+    Process::signal(SIGINT, function () use ($http) {
+        handleShutdown();
+        $http->shutdown();
+    });
+
+    Process::signal(SIGQUIT, function () use ($http) {
+        handleShutdown();
+        $http->shutdown();
+    });
+
+    Process::signal(SIGKILL, function () use ($http) {
+        handleShutdown();
+        $http->shutdown();
+    });
+
+    Process::signal(SIGTERM, function () use ($http) {
+        handleShutdown();
+        $http->shutdown();
+    });
+});
 
 $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) {
     global $register;
@@ -625,3 +654,20 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 });
 
 $http->start();
+
+function handleShutdown() {
+    Console::info('Cleaning up containers before shutdown...');
+
+    // Remove all containers.
+    global $activeFunctions;
+    global $orchestration;
+
+    foreach ($activeFunctions as $container) {
+        try {
+            $orchestration->remove($container->getId(), true);
+            Console::info('Removed container '.$container->getName());
+        } catch (Exception $e) {
+            Console::error('Failed to remove container: '.$container->getName());
+        }
+    }
+}

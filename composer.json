@@ -24,6 +24,10 @@
         {
             "url": "https://github.com/PineappleIOnic/orchestration.git",
             "type": "git"
+        },
+        {
+            "url": "https://github.com/PineappleIOnic/php-runtimes.git",
+            "type": "git"
         }
     ],
     "require": {
@@ -42,7 +46,7 @@
         "ext-sockets": "*",
 
         "appwrite/php-clamav": "1.1.*",
-        "appwrite/php-runtimes": "0.4.*",
+        "appwrite/php-runtimes": "dev-new-runtimes",
 
         "utopia-php/framework": "0.18.*",
         "utopia-php/abuse": "0.5.*",

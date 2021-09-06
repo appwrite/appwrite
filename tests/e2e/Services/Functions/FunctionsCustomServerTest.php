@@ -191,7 +191,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $tag['headers']['status-code']);
         $this->assertNotEmpty($tag['body']['$id']);
         $this->assertIsInt($tag['body']['dateCreated']);
-        $this->assertEquals('php index.php', $tag['body']['entrypoint']);
+        $this->assertEquals('index.php', $tag['body']['entrypoint']);
         $this->assertGreaterThan(10000, $tag['body']['size']);
        
         /**
@@ -327,7 +327,6 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('PHP', $execution['body']['stdout']);
         $this->assertStringContainsString('8.0', $execution['body']['stdout']);
         $this->assertEquals('', $execution['body']['stderr']);
-        $this->assertGreaterThan(0.05, $execution['body']['time']);
         $this->assertLessThan(0.500, $execution['body']['time']);
 
         /**
@@ -454,7 +453,7 @@ class FunctionsCustomServerTest extends Scope
     {
         $name = 'php-8.0';
         $code = realpath(__DIR__ . '/../../../resources/functions').'/timeout.tar.gz';
-        $entrypoint = 'php index.php';
+        $entrypoint = 'index.php';
         $timeout = 2;
 
         $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
@@ -488,6 +487,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'functionId' => $functionId,
             'tag' => $tagId,
         ]);
 
@@ -518,7 +518,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
         $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
         $this->assertEquals($executions['body']['executions'][0]['status'], 'failed');
-        $this->assertEquals($executions['body']['executions'][0]['exitCode'], 1);
+        $this->assertEquals($executions['body']['executions'][0]['exitCode'], 124);
         $this->assertGreaterThan(2, $executions['body']['executions'][0]['time']);
         $this->assertLessThan(3, $executions['body']['executions'][0]['time']);
         $this->assertEquals($executions['body']['executions'][0]['stdout'], '');

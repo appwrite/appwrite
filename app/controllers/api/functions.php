@@ -354,6 +354,8 @@ App::patch('/v1/functions/:functionId/tag')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Database\Document $project */
 
+        $function = $projectDB->getDocument($functionId);
+
         $ch = \curl_init();
         \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/tag");
         \curl_setopt($ch, CURLOPT_POST, true);
@@ -362,7 +364,7 @@ App::patch('/v1/functions/:functionId/tag')
             'tagId' => $tag
         ]));
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        \curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
         \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
         \curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
@@ -372,13 +374,20 @@ App::patch('/v1/functions/:functionId/tag')
         $executorResponse = \curl_exec($ch);
 
         $error = \curl_error($ch);
+
         if (!empty($error)) {
             throw new Exception('Curl error: ' . $error, 500);
         }
 
+        // Check status code
+        $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        if (200 !== $statusCode) {
+            throw new Exception('Executor error: ' . $executorResponse, $statusCode);
+        }
+
         \curl_close($ch);
 
-        $response->dynamic(new Document(json_decode($executorResponse, true)), Response::MODEL_EXECUTION);
+        $response->dynamic(new Document(json_decode($executorResponse, true)), Response::MODEL_FUNCTION);
     });
 
 App::delete('/v1/functions/:functionId')

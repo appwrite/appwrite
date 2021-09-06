@@ -254,9 +254,9 @@ class FunctionsV1 extends Worker
                     'executionId' => null,
                     'trigger' => 'schedule',
                     'scheduleOriginal' => $function->getAttribute('schedule', ''),
-                ]);  // Async task rescheduale
+                ]);  // Async task reschedule
 
-                $this->execute($trigger, $projectId, $executionId, $database, $function, /*$event*/'', /*$eventData*/'', $data, $webhooks, $userId, $jwt);
+                $this->execute($trigger, $projectId, $executionId, $database, $function, $event, $eventData, $data, $webhooks, $userId, $jwt);
                 break;
 
             case 'http':
@@ -268,7 +268,7 @@ class FunctionsV1 extends Worker
                     throw new Exception('Function not found ('.$functionId.')');
                 }
 
-                $this->execute($trigger, $projectId, $executionId, $database, $function, /*$event*/'', /*$eventData*/'', $data, $webhooks, $userId, $jwt);
+                $this->execute($trigger, $projectId, $executionId, $database, $function, $event, $eventData, $data, $webhooks, $userId, $jwt);
                 break;
             
             default:
