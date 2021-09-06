@@ -248,7 +248,7 @@ App::get('/v1/projects/:projectId/usage')
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $period = [
                 '24h' => [
-                    'period' => '15m',
+                    'period' => '30m',
                     'limit' => 48,
                 ],
                 '7d' => [
