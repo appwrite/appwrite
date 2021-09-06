@@ -42,7 +42,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
         if (empty($domain->get()) || !$domain->isKnown() || $domain->isTest()) {
             $domains[$domain->get()] = false;
             Console::warning($domain->get() . ' is not a publicly accessible domain. Skipping SSL certificate generation.');
-        } elseif(str_ends_with($request->getURI(), '/.well-known/acme-challenge')) {
+        } elseif(str_starts_with($request->getURI(), '/.well-known/acme-challenge')) {
             Console::warning('Skipping SSL certificates generation on ACME challenge.');
         } else {
             Authorization::disable();
