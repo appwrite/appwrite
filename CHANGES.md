@@ -1,3 +1,8 @@
+# Version 0.10.2
+
+## Bugs
+- Fixed SSL certificates status not being update (#1592)
+- Fixed failing team invites on console (#1580)
 # Version 0.10.1
 
 ## Bugs
