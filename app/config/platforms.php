@@ -15,7 +15,7 @@ return [
             [
                 'key' => 'web',
                 'name' => 'Web',
-                'version' => '4.0.0',
+                'version' => '4.0.1',
                 'url' => 'https://github.com/appwrite/sdk-for-web',
                 'package' => 'https://www.npmjs.com/package/appwrite',
                 'enabled' => true,
@@ -62,7 +62,7 @@ return [
             [
                 'key' => 'flutter',
                 'name' => 'Flutter',
-                'version' => '1.0.0',
+                'version' => '1.0.1',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter',
                 'package' => 'https://pub.dev/packages/appwrite',
                 'enabled' => true,
@@ -156,7 +156,7 @@ return [
             [
                 'key' => 'web',
                 'name' => 'Console',
-                'version' => '3.0.0',
+                'version' => '4.0.1',
                 'url' => 'https://github.com/appwrite/sdk-for-console',
                 'package' => '',
                 'enabled' => true,
@@ -319,7 +319,7 @@ return [
             [
                 'key' => 'dart',
                 'name' => 'Dart',
-                'version' => '1.0.0',
+                'version' => '1.0.1',
                 'url' => 'https://github.com/appwrite/sdk-for-dart',
                 'package' => 'https://pub.dev/packages/dart_appwrite',
                 'enabled' => true,
