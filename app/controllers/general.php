@@ -24,14 +24,14 @@ Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
 App::init(function ($utopia, $request, $response, $console, $project, $consoleDB, $user, $locale, $clients) {
+    /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
-    /** @var Appwrite\Database\Database $consoleDB */
     /** @var Appwrite\Database\Document $console */
     /** @var Appwrite\Database\Document $project */
+    /** @var Appwrite\Database\Database $consoleDB */
     /** @var Appwrite\Database\Document $user */
     /** @var Utopia\Locale\Locale $locale */
-    /** @var bool $mode */
     /** @var array $clients */
 
     $domain = $request->getHostname();
@@ -42,6 +42,8 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
         if (empty($domain->get()) || !$domain->isKnown() || $domain->isTest()) {
             $domains[$domain->get()] = false;
             Console::warning($domain->get() . ' is not a publicly accessible domain. Skipping SSL certificate generation.');
+        } elseif(str_ends_with($request->getURI(), '/.well-known/acme-challenge')) {
+            Console::warning('Skipping SSL certificates generation on ACME challenge.');
         } else {
             Authorization::disable();
             $dbDomain = $consoleDB->getCollectionFirst([
