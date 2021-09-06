@@ -4,6 +4,7 @@ namespace Appwrite\Tests;
 
 use Appwrite\Auth\Auth;
 use Appwrite\Database\Document;
+use Appwrite\Database\Validator\Authorization;
 use PHPUnit\Framework\TestCase;
 
 class AuthTest extends TestCase
@@ -239,5 +240,77 @@ class AuthTest extends TestCase
         $this->assertContains('team:abc/moderator', $roles);
         $this->assertContains('team:def', $roles);
         $this->assertContains('team:def/guest', $roles);
+    }
+
+    public function testPrivilegedUserRoles()
+    {
+        Authorization::setRole('role:'.Auth::USER_ROLE_OWNER);
+        $user  = new Document([
+            '$id' => '123',
+            'memberships' => [
+                [
+                    'teamId' => 'abc',
+                    'roles' => [
+                        'administrator',
+                        'moderator'
+                    ]
+                ],
+                [
+                    'teamId' => 'def',
+                    'roles' => [
+                        'guest'
+                    ]
+                ]
+            ]
+        ]);
+
+        $roles = Auth::getRoles($user);
+
+        $this->assertCount(5, $roles);
+        $this->assertNotContains('role:member', $roles);
+        $this->assertNotContains('user:123', $roles);
+        $this->assertContains('team:abc', $roles);
+        $this->assertContains('team:abc/administrator', $roles);
+        $this->assertContains('team:abc/moderator', $roles);
+        $this->assertContains('team:def', $roles);
+        $this->assertContains('team:def/guest', $roles);
+
+        Authorization::reset();
+    }
+
+    public function testAppUserRoles()
+    {
+        Authorization::setRole('role:'.Auth::USER_ROLE_APP);
+        $user  = new Document([
+            '$id' => '123',
+            'memberships' => [
+                [
+                    'teamId' => 'abc',
+                    'roles' => [
+                        'administrator',
+                        'moderator'
+                    ]
+                ],
+                [
+                    'teamId' => 'def',
+                    'roles' => [
+                        'guest'
+                    ]
+                ]
+            ]
+        ]);
+
+        $roles = Auth::getRoles($user);
+
+        $this->assertCount(5, $roles);
+        $this->assertNotContains('role:member', $roles);
+        $this->assertNotContains('user:123', $roles);
+        $this->assertContains('team:abc', $roles);
+        $this->assertContains('team:abc/administrator', $roles);
+        $this->assertContains('team:abc/moderator', $roles);
+        $this->assertContains('team:def', $roles);
+        $this->assertContains('team:def/guest', $roles);
+
+        Authorization::reset();
     }
 }
