@@ -39,21 +39,21 @@ $runtimes = Config::getParam('runtimes');
 Swoole\Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_CURL);
 
 // Warmup: make sure images are ready to run fast 🚀
-// Co\run(function() use ($runtimes, $orchestration) {
-//     foreach($runtimes as $runtime) {
-//         go(function() use ($runtime, $orchestration) {
-//             Console::info('Warming up '.$runtime['name'].' '.$runtime['version'].' environment...');
+Co\run(function() use ($runtimes, $orchestration) {
+    foreach($runtimes as $runtime) {
+        go(function() use ($runtime, $orchestration) {
+            Console::info('Warming up '.$runtime['name'].' '.$runtime['version'].' environment...');
                 
-//              $response = $orchestration->pull($runtime['image']);
+             $response = $orchestration->pull($runtime['image']);
 
-//             if ($response) {
-//                 Console::success("Successfully Warmed up {$runtime['name']} {$runtime['version']}!");
-//             } else {
-//                 Console::error("Failed to Warmup {$runtime['name']} {$runtime['version']}!");
-//             }
-//         });
-//     }
-// });
+            if ($response) {
+                Console::success("Successfully Warmed up {$runtime['name']} {$runtime['version']}!");
+            } else {
+                Console::error("Failed to Warmup {$runtime['name']} {$runtime['version']}!");
+            }
+        });
+    }
+});
 
 /**
  * List function servers
@@ -659,10 +659,11 @@ function handleShutdown() {
     Console::info('Cleaning up containers before shutdown...');
 
     // Remove all containers.
-    global $activeFunctions;
     global $orchestration;
 
-    foreach ($activeFunctions as $container) {
+    $functionsToRemove = $orchestration->list(['label' => 'appwrite-type=function']);
+
+    foreach ($functionsToRemove as $container) {
         try {
             $orchestration->remove($container->getId(), true);
             Console::info('Removed container '.$container->getName());

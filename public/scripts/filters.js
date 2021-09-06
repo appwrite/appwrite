@@ -96,6 +96,7 @@ window.ls.filter
     return "< 1s";
   })
   .add("seconds2hum", function($value) {
+      var miliseconds = Math.ceil($value * 1000);
 
       var seconds = ($value).toFixed(3);
 
@@ -105,7 +106,9 @@ window.ls.filter
 
       var days = ($value / (60 * 60 * 24)).toFixed(1);
 
-      if (seconds < 60) {
+      if (miliseconds < 1000) {
+          return miliseconds + "ms";
+      } else if (seconds < 60) {
           return seconds + "s";
       } else if (minutes < 60) {
           return minutes + "m";
