@@ -27,6 +27,21 @@ return [
         'model' => Response::MODEL_USER,
         'note' => '',
     ],
+    'users.update.email' => [
+        'description' => 'This event triggers when the user email address is updated.',
+        'model' => Response::MODEL_USER,
+        'note' => '',
+    ],
+    'users.update.name' => [
+        'description' => 'This event triggers when the user name is updated.',
+        'model' => Response::MODEL_USER,
+        'note' => '',
+    ],
+    'users.update.password' => [
+        'description' => 'This event triggers when the user password is updated.',
+        'model' => Response::MODEL_USER,
+        'note' => '',
+    ],
     'account.update.prefs' => [
         'description' => 'This event triggers when the account preferences are updated.',
         'model' => Response::MODEL_USER,

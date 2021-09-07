@@ -17,6 +17,108 @@
         </h1>
     </div>
 
+    <div data-ui-modal class="modal width-medium box close" data-button-hide="on" data-open-event="open-update-name">
+        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
+        
+        <h2>Update name</h2>
+
+        <form name="users.updateName"
+            data-analytics
+            data-analytics-activity
+            data-analytics-event="submit"
+            data-analytics-category="console"
+            data-analytics-label="Update User Name"
+            data-service="users.updateName"
+            data-scope="sdk"
+            data-event="submit"
+            data-success="trigger,alert"
+            data-success-param-alert-text="User name was updated successfully"
+            data-success-param-trigger-events="users.update"
+            data-failure="alert"
+            data-failure-param-alert-text="Failed to update user name"
+            data-failure-param-alert-classname="error">
+            
+            <input type="hidden" disabled name="userId" data-ls-bind="{{user.$id}}">
+
+            <label for="name">Name</label>
+            <input name="name" id="name" type="text" autocomplete="off" data-ls-bind="{{user.name}}" required class="full-width" maxlength="128">
+
+            <hr />
+
+            <footer>
+                <button type="submit" class="">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+            </footer>
+        </form>
+    </div>
+    
+    <div data-ui-modal class="modal width-medium box close" data-button-hide="on" data-open-event="open-update-email">
+        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
+        
+        <h2>Update Email</h2>
+
+        <form name="users.updateEmail"
+            data-analytics
+            data-analytics-activity
+            data-analytics-event="submit"
+            data-analytics-category="console"
+            data-analytics-label="Update User Email"
+            data-service="users.updateEmail"
+            data-scope="sdk"
+            data-event="submit"
+            data-success="trigger,alert"
+            data-success-param-alert-text="User email was updated successfully"
+            data-success-param-trigger-events="users.update"
+            data-failure="alert"
+            data-failure-param-alert-text="Failed to update user email"
+            data-failure-param-alert-classname="error">
+            
+            <input type="hidden" disabled name="userId" data-ls-bind="{{user.$id}}">
+
+            <label for="email">Email</label>
+            <input name="email" id="email" type="text" autocomplete="off" data-ls-bind="{{user.email}}" required class="full-width" maxlength="128">
+
+            <hr />
+
+            <footer>
+                <button type="submit" class="">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+            </footer>
+        </form>
+    </div>
+
+    <div data-ui-modal class="modal width-medium box close" data-button-hide="on" data-open-event="open-update-password">
+        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
+        
+        <h2>Update Password</h2>
+
+        <form name="users.updatePassword"
+            data-analytics
+            data-analytics-activity
+            data-analytics-event="submit"
+            data-analytics-category="console"
+            data-analytics-label="Update User Password"
+            data-service="users.updatePassword"
+            data-scope="sdk"
+            data-event="submit"
+            data-success="trigger,alert"
+            data-success-param-alert-text="User password was updated successfully"
+            data-success-param-trigger-events="users.update"
+            data-failure="alert"
+            data-failure-param-alert-text="Failed to update user password"
+            data-failure-param-alert-classname="error">
+            
+            <input type="hidden" disabled name="userId" data-ls-bind="{{user.$id}}">
+
+            <label for="password">Password</label>
+            <input name="password" id="password" type="password" autocomplete="off" required class="full-width" maxlength="128">
+
+            <hr />
+
+            <footer>
+                <button type="submit" class="">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+            </footer>
+        </form>
+    </div>
+
     <div data-ui-modal class="modal width-large box close" data-button-hide="on" data-open-event="open-json">
         <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
         
@@ -134,6 +236,9 @@
                         </div>
 
                         <ul class="margin-bottom-large text-fade text-size-small">
+                        <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-update-name" class="link text-size-small">Update name</button></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-update-email" class="link text-size-small">Update Email</button></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-update-password" class="link text-size-small">Update Password</button></li>
                             <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
                         </ul>
 
