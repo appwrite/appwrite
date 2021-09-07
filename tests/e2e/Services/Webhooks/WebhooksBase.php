@@ -244,6 +244,7 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
+            'bucketId' => 'unique()',
             'name' => 'Test Bucket',
             'read' => ['role:all'],
             'write' => ['role:all']
