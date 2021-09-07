@@ -17,6 +17,11 @@ use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Validator\UID;
 use DeviceDetector\DeviceDetector;
 use Appwrite\Database\Validator\CustomId;
+use Appwrite\Utopia\Response\Model;
+use Utopia\Config\Config;
+use Utopia\Database\Database;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 
 App::post('/v1/users')
     ->desc('Create User')
@@ -604,4 +609,92 @@ App::delete('/v1/users/:userId')
             ->setParam('users.delete', 1)
         ;
         $response->noContent();
+    });
+
+App::get('/v1/users/usage')
+    ->desc('Get usage stats for the users API')
+    ->groups(['api', 'users'])
+    ->label('scope', 'users.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'getUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USAGE_USERS)
+    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+    ->param('provider', '', new WhiteList(\array_merge(['email', 'anonymous'], \array_map(function($value) { return "oauth-".$value; }, \array_keys(Config::getParam('providers', [])))), true), 'Provider Name.', true)
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->inject('register')
+    ->action(function ($range, $provider, $response, $dbForInternal) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
+
+        $usage = [];
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+            $period = [
+                '24h' => [
+                    'period' => '30m',
+                    'limit' => 48,
+                ],
+                '7d' => [
+                    'period' => '1d',
+                    'limit' => 7,
+                ],
+                '30d' => [
+                    'period' => '1d',
+                    'limit' => 30,
+                ],
+                '90d' => [
+                    'period' => '1d',
+                    'limit' => 90,
+                ],
+            ];
+
+            $metrics = [
+                "users.count",
+                "users.create",
+                "users.read",
+                "users.update",
+                "users.delete",
+                "users.sessions.create",
+                "users.sessions.$provider.create",
+                "users.sessions.delete"
+            ];
+
+            $stats = [];
+
+            Authorization::skip(function() use ($dbForInternal, $period, $range, $metrics, &$stats) {
+                foreach ($metrics as $metric) {
+                    $requestDocs = $dbForInternal->find('stats', [
+                        new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
+                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
+                    ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
+    
+                    $stats[$metric] = [];
+                    foreach ($requestDocs as $requestDoc) {
+                        $stats[$metric][] = [
+                            'value' => $requestDoc->getAttribute('value'),
+                            'date' => $requestDoc->getAttribute('time'),
+                        ];
+                    }
+                    $stats[$metric] = array_reverse($stats[$metric]);
+                }    
+            });
+
+            $usage = new Document([
+                'range' => $range,
+                'users.count' => $stats["users.count"],
+                'users.create' => $stats["users.create"],
+                'users.read' => $stats["users.read"],
+                'users.update' => $stats["users.update"],
+                'users.delete' => $stats["users.delete"],
+                'sessions.create' => $stats["users.sessions.create"],
+                'sessions.provider.create' => $stats["users.sessions.$provider.create"],
+                'sessions.delete' => $stats["users.sessions.delete"]
+            ]);
+
+        }
+
+        $response->dynamic($usage, Response::MODEL_USAGE_USERS);
     });

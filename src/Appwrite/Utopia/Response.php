@@ -33,6 +33,7 @@ use Appwrite\Utopia\Response\Model\Team;
 use Appwrite\Utopia\Response\Model\Locale;
 use Appwrite\Utopia\Response\Model\Log;
 use Appwrite\Utopia\Response\Model\Membership;
+use Appwrite\Utopia\Response\Model\Metric;
 use Appwrite\Utopia\Response\Model\Permissions;
 use Appwrite\Utopia\Response\Model\Phone;
 use Appwrite\Utopia\Response\Model\Platform;
@@ -43,6 +44,13 @@ use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\Mock; // Keep last
+use Appwrite\Utopia\Response\Model\UsageBuckets;
+use Appwrite\Utopia\Response\Model\UsageCollection;
+use Appwrite\Utopia\Response\Model\UsageDatabase;
+use Appwrite\Utopia\Response\Model\UsageFunctions;
+use Appwrite\Utopia\Response\Model\UsageProject;
+use Appwrite\Utopia\Response\Model\UsageStorage;
+use Appwrite\Utopia\Response\Model\UsageUsers;
 use stdClass;
 
 /**
@@ -56,8 +64,17 @@ class Response extends SwooleResponse
     const MODEL_LOG = 'log';
     const MODEL_LOG_LIST = 'logList';
     const MODEL_ERROR = 'error';
+    const MODEL_METRIC = 'metric';
+    const MODEL_METRIC_LIST = 'metricList';
     const MODEL_ERROR_DEV = 'errorDev';
     const MODEL_BASE_LIST = 'baseList';
+    const MODEL_USAGE_DATABASE = 'usageDatabase';
+    const MODEL_USAGE_COLLECTION = 'usageCollection';
+    const MODEL_USAGE_USERS = 'usageUsers';
+    const MODEL_USAGE_BUCKETS = 'usageBuckets';
+    const MODEL_USAGE_STORAGE = 'usageStorage';
+    const MODEL_USAGE_FUNCTIONS = 'usageFunctions';
+    const MODEL_USAGE_PROJECT = 'usageProject';
     
     // Database
     const MODEL_COLLECTION = 'collection';
@@ -177,6 +194,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Languages List', self::MODEL_LANGUAGE_LIST, 'languages', self::MODEL_LANGUAGE))
             ->setModel(new BaseList('Currencies List', self::MODEL_CURRENCY_LIST, 'currencies', self::MODEL_CURRENCY))
             ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
+            ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
             // Entities
             ->setModel(new Collection())
             ->setModel(new Attribute())
@@ -205,6 +223,14 @@ class Response extends SwooleResponse
             ->setModel(new Language())
             ->setModel(new Currency())
             ->setModel(new Phone())
+            ->setModel(new Metric())
+            ->setModel(new UsageDatabase())
+            ->setModel(new UsageCollection())
+            ->setModel(new UsageUsers())
+            ->setModel(new UsageStorage())
+            ->setModel(new UsageBuckets())
+            ->setModel(new UsageFunctions())
+            ->setModel(new UsageProject())
             // Verification
             // Recovery
             // Tests (keep last)
