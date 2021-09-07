@@ -37,10 +37,12 @@ App::post('/v1/teams')
     ->inject('response')
     ->inject('user')
     ->inject('projectDB')
-    ->action(function ($name, $roles, $response, $user, $projectDB) {
+    ->inject('events')
+    ->action(function ($name, $roles, $response, $user, $projectDB, $events) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $events */
 
         Authorization::disable();
 
@@ -88,6 +90,10 @@ App::post('/v1/teams')
             if (false === $user) {
                 throw new Exception('Failed saving user to DB', 500);
             }
+        }
+
+        if (!empty($user->getId())) {
+            $events->setParam('userId', $user->getId());
         }
 
         $response
@@ -274,6 +280,10 @@ App::post('/v1/teams/:teamId/memberships')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $mails */
 
+        if(empty(App::getEnv('_APP_SMTP_HOST'))) {
+            throw new Exception('SMTP Disabled', 503);
+        }
+        
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
         

@@ -232,6 +232,24 @@ App::get('/auth/oauth2/success')
         ;
     });
 
+App::get('/auth/magic-url')
+    ->groups(['web', 'home'])
+    ->label('permission', 'public')
+    ->label('scope', 'home')
+    ->inject('layout')
+    ->action(function ($layout) {
+        /** @var Utopia\View $layout */
+
+        $page = new View(__DIR__.'/../../views/home/auth/magicURL.phtml');
+
+        $layout
+            ->setParam('title', APP_NAME)
+            ->setParam('body', $page)
+            ->setParam('header', [])
+            ->setParam('footer', [])
+        ;
+    });
+
 App::get('/auth/oauth2/failure')
     ->groups(['web', 'home'])
     ->label('permission', 'public')

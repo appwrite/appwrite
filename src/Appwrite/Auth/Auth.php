@@ -32,12 +32,14 @@ class Auth
     const TOKEN_TYPE_VERIFICATION = 2;
     const TOKEN_TYPE_RECOVERY = 3;
     const TOKEN_TYPE_INVITE = 4;
+    const TOKEN_TYPE_MAGIC_URL = 5;
 
     /**
      * Session Providers.
      */
     const SESSION_PROVIDER_EMAIL = 'email';
     const SESSION_PROVIDER_ANONYMOUS = 'anonymous';
+    const SESSION_PROVIDER_MAGIC_URL = 'magic-url';
 
     /**
      * Token Expiration times.
@@ -270,5 +272,33 @@ class Auth
         }
 
         return false;
+    }
+
+    /**
+     * Returns all roles for a user.
+     * 
+     * @param Document $user 
+     * @return array 
+     */
+    public static function getRoles(Document $user): array
+    {
+        if ($user->getId()) {
+            $roles[] = 'user:'.$user->getId();
+            $roles[] = 'role:'.Auth::USER_ROLE_MEMBER;
+        } else {
+            return ['role:'.Auth::USER_ROLE_GUEST];
+        }
+
+        foreach ($user->getAttribute('memberships', []) as $node) {
+            if (isset($node['teamId']) && isset($node['roles'])) {
+                $roles[] = 'team:' . $node['teamId'];
+
+                foreach ($node['roles'] as $nodeRole) { // Set all team roles
+                    $roles[] = 'team:' . $node['teamId'] . '/' . $nodeRole;
+                }
+            }
+        }
+
+        return $roles;
     }
 }

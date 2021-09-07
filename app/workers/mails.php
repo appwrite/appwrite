@@ -13,11 +13,6 @@ Console::success(APP_NAME . ' mails worker v1 has started' . "\n");
 
 class MailsV1 extends Worker
 {
-    /**
-     * @var array
-     */
-    public $args = [];
-
     public function init(): void
     {
     }
@@ -56,6 +51,8 @@ class MailsV1 extends Worker
                 $body->setParam('{{team}}', $this->args['team']);
                 break;
             case MAIL_TYPE_VERIFICATION:
+                $subject = $locale->getText($this->getTranslationKey($type, "subject"));
+            case MAIL_TYPE_MAGIC_SESSION:
                 $subject = $locale->getText($this->getTranslationKey($type, "subject"));
                 break;
             default:
@@ -132,6 +129,8 @@ class MailsV1 extends Worker
                 return 'emails.invitation';
             case MAIL_TYPE_VERIFICATION:
                 return 'emails.verification';
+            case MAIL_TYPE_MAGIC_SESSION:
+                return 'emails.magicSession';
             default:
                 throw new Exception('Undefined Mail Type : ' . $type, 500);
         }
@@ -168,6 +167,17 @@ class MailsV1 extends Worker
                     'footer' => 'emails.invitation.footer',
                     'thanks' => 'emails.invitation.thanks',
                     'signature' => 'emails.invitation.signature',
+                ];
+
+                return $keys[$keyType];
+            case MAIL_TYPE_MAGIC_SESSION:
+                $keys = [
+                    'subject' => 'emails.magicSession.subject',
+                    'hello' => 'emails.magicSession.hello',
+                    'body' => 'emails.magicSession.body',
+                    'footer' => 'emails.magicSession.footer',
+                    'thanks' => 'emails.magicSession.thanks',
+                    'signature' => 'emails.magicSession.signature',
                 ];
 
                 return $keys[$keyType];
