@@ -10,14 +10,14 @@ $locale = $this->getParam("locale");
         <a data-ls-attrs="href=/console/home?project={{router.params.project}}" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> <?php echo $locale->getText('console.shared-button-back-to-home'); ?></a>
         <br />
 
-        <span>Functions</span>
+        <span><?php echo $locale->getText('console.functions.index.title'); ?></span>
     </h1>
 </div>
 
 <div class="zone xl">
     <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
         <li data-state="/console/functions?project={{router.params.project}}">
-            <h2>Functions</h2>
+            <h2><?php echo $locale->getText('console.functions.index.title'); ?></h2>
 
             <div class="zone xl"
                 data-service="functions.list"
@@ -32,22 +32,22 @@ $locale = $this->getParam("locale");
                 data-success-param-trigger-events="functions.list">
 
                 <div data-ls-if="0 == {{project-functions.functions.length}} || undefined == {{project-functions.functions.length}}" class="box margin-top margin-bottom">
-                    <h3 class="margin-bottom-small text-bold">No Functions Found</h3>
+                    <h3 class="margin-bottom-small text-bold"><?php echo $locale->getText('console.functions.index.no-functions-title'); ?></h3>
 
-                    <p class="margin-bottom-no">You haven't created any functions for your project yet.</p>
+                    <p class="margin-bottom-no"><?php echo $locale->getText('console.functions.index.no-functions-description'); ?></p>
                 </div>
 
                 <div data-ls-if="0 != {{project-functions.functions.length}}">
-                    <div class="margin-bottom-small margin-end-small text-align-end text-size-small margin-top-negative"><span data-ls-bind="{{project-functions.sum}}"></span> functions found</div>
+                    <div class="margin-bottom-small margin-end-small text-align-end text-size-small margin-top-negative"><span data-ls-bind="{{project-functions.sum}}"></span> <?php echo $locale->getText('console.functions.index.functions-sum'); ?></div>
                     
                     <div class="box margin-bottom">
                         <ul data-ls-loop="project-functions.functions" data-ls-as="function" class="list">
                             <li class="clear">
                                 <div class="pull-start margin-end avatar-container">
-                                    <img src="" data-ls-attrs="src=/images/runtimes/{{function.runtime|runtimeLogo}}?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Function Runtime" class="avatar" loading="lazy" width="60" height="60" />
+                                    <img src="" data-ls-attrs="src=/images/runtimes/{{function.runtime|runtimeLogo}}?v=<?php echo APP_CACHE_BUSTER; ?>" alt="<?php echo $locale->getText('console.functions.index.runtime-alt'); ?>" class="avatar" loading="lazy" width="60" height="60" />
                                 </div>
 
-                                <a data-ls-attrs="href=/console/functions/function?id={{function.$id}}&project={{router.params.project}}" class="button pull-end">Settings</a>
+                                <a data-ls-attrs="href=/console/functions/function?id={{function.$id}}&project={{router.params.project}}" class="button pull-end"><?php echo $locale->getText('console.functions.index.function-button-settings'); ?></a>
 
                                 <span data-ls-bind="{{function.name}}"></span>
 
@@ -68,7 +68,7 @@ $locale = $this->getParam("locale");
                         data-name="project-functions"
                         data-success="state"
                         data-success-param-state-keys="search,offset">
-                        <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-users.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                        <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-users.sum}}" class="margin-end round small" aria-label="<?php echo $locale->getText('shared.pagination-back'); ?>"><i class="icon-left-open"></i></button>
                     </form>
 
                     <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-functions.sum|pageTotal}}"></span>
@@ -83,15 +83,15 @@ $locale = $this->getParam("locale");
                         data-name="project-functions"
                         data-success="state"
                         data-success-param-state-keys="search,offset">
-                        <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-functions.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                        <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-functions.sum}}" class="margin-start round small" aria-label="<?php echo $locale->getText('shared.pagination-next'); ?>"><i class="icon-right-open"></i></button>
                     </form>
                 </div>
 
                 <div class="clear">
-                    <div data-ui-modal class="modal close box sticky-footer" data-button-text="Add Function">
+                    <div data-ui-modal class="modal close box sticky-footer" data-button-text="<?php echo $locale->getText('console.functions.index.create-button-modal'); ?>">
                         <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                        <h1>Add Function</h1>
+                        <h1><?php echo $locale->getText('console.functions.index.create-title'); ?></h1>
 
                         <form
                             data-analytics
@@ -103,17 +103,17 @@ $locale = $this->getParam("locale");
                             data-scope="sdk"
                             data-event="submit"
                             data-success="alert,trigger,reset,redirect"
-                            data-success-param-alert-text="Created function successfully"
+                            data-success-param-alert-text="<?php echo $locale->getText('console.functions.index.create-submit-success'); ?>"
                             data-success-param-trigger-events="functions.create"
                             data-success-param-redirect-url="/console/functions/function?id={{serviceData.$id}}&project={{router.params.project}}"
                             data-failure="alert"
-                            data-failure-param-alert-text="Failed to create function"
+                            data-failure-param-alert-text="<?php echo $locale->getText('console.functions.index.create-submit-error'); ?>"
                             data-failure-param-alert-classname="error">
 
-                            <label for="name">Name</label>
+                            <label for="name"><?php echo $locale->getText('console.functions.index.create-label-name'); ?></label>
                             <input type="text" id="name" name="name" required autocomplete="off" class="margin-bottom" maxlength="128" />
                             
-                            <label for="runtime">Runtimes</label>
+                            <label for="runtime"><?php echo $locale->getText('console.functions.index.create-label-runtime'); ?></label>
                             <select name="runtime" id="runtime" required class="margin-bottom-xl">
                                 <?php foreach($runtimes as $key => $runtime): ?>
                                     <option value="<?php echo $this->escape($key); ?>"><?php echo $this->escape($runtime['name']); ?> <?php echo $this->escape($runtime['version']); ?></option>
@@ -123,7 +123,7 @@ $locale = $this->getParam("locale");
                             <input id="execute" name="execute" value="" hidden/>
 
                             <footer>
-                                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                <button type="submit"><?php echo $locale->getText('console.functions.index.create-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.functions.index.create-button-cancel'); ?></button>
                             </footer>
                         </form>
                     </div>

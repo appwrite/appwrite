@@ -103,8 +103,8 @@ $locale = $this->getParam("locale");
                     <input type="hidden" name="keyId" data-ls-bind="{{key.$id}}" />
                 </form>
 
-                <button class="pull-end desktops-only margin-start-small" data-ls-ui-trigger="key-update-{{key.$id}}"><?php echo $locale->getText('console.keys.index.update-button-open'); ?></button>
-                <button class="pull-end reverse desktops-only margin-small" data-ls-ui-trigger="key-delete-{{key.$id}}"><?php echo $locale->getText('console.keys.index.delete-button-open'); ?></button>
+                <button class="pull-end desktops-only margin-start-small" data-ls-ui-trigger="key-update-{{key.$id}}"><?php echo $locale->getText('joinconsole.keys.index.update-button-modal'); ?></button>
+                <button class="pull-end reverse desktops-only margin-small" data-ls-ui-trigger="key-delete-{{key.$id}}"><?php echo $locale->getText('console.keys.index.delete-button-modal'); ?></button>
 
                 <div class="margin-bottom-tiny"><span data-ls-bind="{{key.name}}"></span> <small>(<span data-ls-bind="{{key.scopes.length}}"></span> <?php echo $locale->getText('console.keys.index.scopes-info'); ?>)</small></div>
 

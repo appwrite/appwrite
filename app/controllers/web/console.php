@@ -433,12 +433,15 @@ App::get('/console/functions/function')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
+    ->inject('locale')
+    ->action(function ($layout, $locale) {
         /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
 
         $page = new View(__DIR__.'/../../views/console/functions/function.phtml');
 
         $page
+            ->setParam('locale', $locale)
             ->setParam('events', Config::getParam('events', []))
             ->setParam('fileLimit', App::getEnv('_APP_STORAGE_LIMIT', 0))
             ->setParam('fileLimitHuman', Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0)))

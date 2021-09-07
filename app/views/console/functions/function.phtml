@@ -4,6 +4,10 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 $events = array_keys($this->getParam('events', []));
 $timeout = $this->getParam('timeout', 900);
 $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
+
+/** @var Utopia\Locale\Locale $locale */
+$locale = $this->getParam("locale");
+
 ?>
 <div
     data-service="functions.get"
