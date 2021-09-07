@@ -11,14 +11,14 @@ $locale = $this->getParam("locale");
         <a data-ls-attrs="href=/console/home?project={{router.params.project}}" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> <?php echo $locale->getText('console.shared-button-back-to-home'); ?></a>
         <br />
 
-        <span>Storage</span>
+        <span><?php echo $locale->getText('console.storage.index.title'); ?></span>
     </h1>
 </div>
 
 <div class="zone xl">
     <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
         <li data-state="/console/database?project={{router.params.project}}">
-            <h2 class="margin-bottom">Files</h2>
+            <h2 class="margin-bottom"><?php echo $locale->getText('console.storage.index.files-title'); ?></h2>
 
             <form class="box padding-small margin-bottom search"
                 data-service="storage.listFiles"
@@ -33,10 +33,10 @@ $locale = $this->getParam("locale");
                 data-success-param-state-keys="search,offset">
                 <div class="row thin responsive">
                     <div class="col span-10">
-                        <input name="search" id="searchFiles" type="search" autocomplete="off" placeholder="Search" class="margin-bottom-no" data-ls-bind="{{router.params.search}}">
+                        <input name="search" id="searchFiles" type="search" autocomplete="off" placeholder="<?php echo $locale->getText('console.storage.index.files-search-placeholder'); ?>" class="margin-bottom-no" data-ls-bind="{{router.params.search}}">
                     </div>
                     <div class="col span-2 desktops-only">
-                        <button class="fill" title="Search" aria-label="Search"><i class="icon-search"></i></button>
+                        <button class="fill" title="Search" aria-label="<?php echo $locale->getText('console.storage.index.files-search-label'); ?>"><i class="icon-search"></i></button>
                     </div>
                 </div>
             </form>
@@ -52,23 +52,23 @@ $locale = $this->getParam("locale");
                 data-name="project-files">
 
                 <div data-ls-if="0 == {{project-files.sum}}" class="box margin-bottom">
-                    <h3 class="margin-bottom-small text-bold">No Files Found</h3>
+                    <h3 class="margin-bottom-small text-bold"><?php echo $locale->getText('console.storage.index.no-files-title'); ?></h3>
 
-                    <p class="margin-bottom-no">Upload your first file to get started</p>
+                    <p class="margin-bottom-no"><?php echo $locale->getText('console.storage.index.no-files-description'); ?></p>
                 </div>
 
                 <div data-ls-if="0 != {{project-files.sum}}">
-                    <div class="margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-files.sum}}"></span> files found</div>
+                    <div class="margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-files.sum}}"></span> <?php echo $locale->getText('console.storage.index.files-sum'); ?></div>
 
                     <div class="box margin-bottom">
                         <table class="vertical">
                             <thead>
                                 <tr>
                                     <th width="40"></th>
-                                    <th>Filename</th>
-                                    <th width="140">Type</th>
-                                    <th width="100">Size</th>
-                                    <th width="120">Created</th>
+                                    <th><?php echo $locale->getText('console.storage.index.table-column-filename'); ?></th>
+                                    <th width="140"><?php echo $locale->getText('console.storage.index.table-column-type'); ?></th>
+                                    <th width="100"><?php echo $locale->getText('console.storage.index.table-column-size'); ?></th>
+                                    <th width="120"><?php echo $locale->getText('console.storage.index.table-column-created-at'); ?></th>
                                 </tr>
                             </thead>
                             <tbody data-ls-loop="project-files.files" data-ls-as="file">
@@ -76,11 +76,11 @@ $locale = $this->getParam("locale");
                                     <td class="hide">
                                         <img src="" data-ls-attrs="src={{env.ENDPOINT}}/v1/storage/files/{{file.$id}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="pull-start avatar" width="30" height="30" loading="lazy" />
                                     </td>
-                                    <td data-title="Name: " class="text-one-liner" data-ls-attrs="title={{file.name}}" >
+                                    <td data-title="<?php echo $locale->getText('console.storage.index.table-column-filename'); ?>: " class="text-one-liner" data-ls-attrs="title={{file.name}}" >
                                         <div data-ui-modal class="box modal sticky-footer width-large close" data-button-text="{{file.name}}" data-button-class="link" data-button-element="span">
                                             <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                                            <h1>Update File</h1>
+                                            <h1><?php echo $locale->getText('console.storage.index.update-title'); ?></h1>
 
                                             <hr />
 
@@ -96,25 +96,25 @@ $locale = $this->getParam("locale");
                                                         data-event="file-update-{{file.$id}}"
                                                         data-scope="sdk"
                                                         data-success="alert,trigger"
-                                                        data-success-param-alert-text="File updated successfully"
+                                                        data-success-param-alert-text="<?php echo $locale->getText('console.storage.index.update-submit-success'); ?>"
                                                         data-success-param-trigger-events="storage.updateFile"
                                                         data-failure="alert"
-                                                        data-failure-param-alert-text="Failed to update file"
+                                                        data-failure-param-alert-text="<?php echo $locale->getText('console.storage.index.update-submit-error'); ?>"
                                                         data-failure-param-alert-classname="error">
 
-                                                        <label for="files-fileId">File ID</label>
+                                                        <label for="files-fileId"><?php echo $locale->getText('console.storage.index.update-field-id'); ?></label>
                                                         <div class="input-copy">
                                                             <input data-forms-copy type="text" data-ls-attrs="id=file-id-{{file.$id}}" name="fileId" disabled data-ls-bind="{{file.$id}}" />
                                                         </div>
                                                         <input type="hidden" data-ls-attrs="id=file-folderId-{{file.$id}}" name="folderId" data-cast-to="integer" value="1">
 
-                                                        <label for="file-read">Read Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                                                        <input type="hidden" data-ls-attrs="id=file-read-{{file.$id}}" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.read}}" placeholder="User ID, Team ID or Role" />
-                                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
+                                                        <label for="file-read"><?php echo $locale->getText('shared.read-access'); ?> (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener"><?php echo $locale->getText('shared.learn-more'); ?></a>)</label>
+                                                        <input type="hidden" data-ls-attrs="id=file-read-{{file.$id}}" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.read}}" placeholder="<?php echo $locale->getText('shared.access-placeholder'); ?>" />
+                                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom"><?php echo $locale->getText('shared.permission-info'); ?></div>
                                                         
-                                                        <label for="file-write">Write Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                                                        <input type="hidden" data-ls-attrs="id=file-write-{{file.$id}}" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.write}}" placeholder="User ID, Team ID or Role" />
-                                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
+                                                        <label for="file-write"><?php echo $locale->getText('shared.write-access'); ?> (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener"><?php echo $locale->getText('shared.learn-more'); ?></a>)</label>
+                                                        <input type="hidden" data-ls-attrs="id=file-write-{{file.$id}}" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.write}}" placeholder="<?php echo $locale->getText('shared.access-placeholder'); ?>" />
+                                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom"><?php echo $locale->getText('shared.permission-info'); ?></div>
                                                     </form>
 
                                                     <form class="strip"
@@ -126,59 +126,59 @@ $locale = $this->getParam("locale");
                                                         data-service="storage.deleteFile"
                                                         data-scope="sdk"
                                                         data-event="file-delete-{{file.$id}}"
-                                                        data-confirm="Are you sure you want to delete this file?"
+                                                        data-confirm="<?php echo $locale->getText('console.storage.index.delete-submit-confirm'); ?>"
                                                         data-success="alert,trigger"
-                                                        data-success-param-alert-text="Deleted file successfully"
+                                                        data-success-param-alert-text="<?php echo $locale->getText('console.storage.index.delete-submit-success'); ?>"
                                                         data-success-param-trigger-events="storage.deleteFile"
                                                         data-failure="alert"
-                                                        data-failure-param-alert-text="Failed to delete file"
+                                                        data-failure-param-alert-text="<?php echo $locale->getText('console.storage.index.delete-submit-error'); ?>"
                                                         data-failure-param-alert-classname="error">
 
                                                         <input type="hidden" name="fileId" data-ls-bind="{{file.$id}}" />
                                                     </form>
                                                 </div>
                                                 <div class="col span-4 text-size-small">
-                                                    <div class="margin-bottom-small">File Preview</div>
+                                                    <div class="margin-bottom-small"><?php echo $locale->getText('console.storage.index.update-preview'); ?></div>
                                                     
                                                     <div class="margin-bottom-small">
                                                         <img src="" class="file-preview" data-ls-attrs="src={{env.ENDPOINT}}/v1/storage/files/{{file.$id}}/preview?width=350&height=250&project={{router.params.project}}&mode=admin" loading="lazy" width="225" height="160" />
                                                     </div>
 
                                                     <div class="margin-bottom-tiny">
-                                                        <a href="" data-ls-attrs="href={{env.ENDPOINT}}/v1/storage/files/{{file.$id}}/view?project={{router.params.project}}&mode=admin" target="_blank" rel="noopener"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> New Window <i class="icon-link-ext"></i></a>
+                                                        <a href="" data-ls-attrs="href={{env.ENDPOINT}}/v1/storage/files/{{file.$id}}/view?project={{router.params.project}}&mode=admin" target="_blank" rel="noopener"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> <?php echo $locale->getText('console.storage.index.update-preview-new-window'); ?> <i class="icon-link-ext"></i></a>
                                                     </div>
 
                                                     <div class="margin-bottom-small">
-                                                        <a href="" data-ls-attrs="href={{env.ENDPOINT}}/v1/storage/files/{{file.$id}}/download?project={{router.params.project}}&mode=admin" target="_blank" rel="noopener"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Download <i class="icon-link-ext"></i></a>
+                                                        <a href="" data-ls-attrs="href={{env.ENDPOINT}}/v1/storage/files/{{file.$id}}/download?project={{router.params.project}}&mode=admin" target="_blank" rel="noopener"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> <?php echo $locale->getText('console.storage.index.update-preview-download'); ?> <i class="icon-link-ext"></i></a>
                                                     </div>
 
                                                     <div class="margin-bottom-tiny">
-                                                        <i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Type: <span data-ls-bind="{{file.mimeType}}"></span>
+                                                        <i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> <?php echo $locale->getText('console.storage.index.table-column-type'); ?>: <span data-ls-bind="{{file.mimeType}}"></span>
                                                     </div>
                                                     <div class="margin-bottom-tiny">
-                                                        <i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Size: <span data-ls-bind="{{file.sizeOriginal|humanFileSize}}"></span>
+                                                        <i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> <?php echo $locale->getText('console.storage.index.table-column-size'); ?>: <span data-ls-bind="{{file.sizeOriginal|humanFileSize}}"></span>
                                                         <span data-ls-bind="{{file.sizeOriginal|humanFileUnit}}"></span>
                                                     </div>
                                                     <div class="margin-bottom">
-                                                        <i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Created at: <span data-ls-bind="{{file.dateCreated|dateText}}"></span>
+                                                        <i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> <?php echo $locale->getText('console.storage.index.table-column-created-at'); ?>: <span data-ls-bind="{{file.dateCreated|dateText}}"></span>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <footer>
-                                                <button class="link pull-end text-danger" data-ls-ui-trigger="file-delete-{{file.$id}},modal-close">Delete File</button>
-                                                <button type="button" data-ls-ui-trigger="file-update-{{file.$id}},modal-close">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse desktops-only-inline tablets-only-inline">Cancel</button>
+                                                <button class="link pull-end text-danger" data-ls-ui-trigger="file-delete-{{file.$id}},modal-close"><?php echo $locale->getText('console.storage.index.delete-button-submit'); ?></button>
+                                                <button type="button" data-ls-ui-trigger="file-update-{{file.$id}},modal-close"><?php echo $locale->getText('console.storage.index.update-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse desktops-only-inline tablets-only-inline"><?php echo $locale->getText('console.storage.index.update-button-cancel'); ?></button>
                                             </footer>
                                         </div>
                                     </td>
-                                    <td data-title="Type: ">
+                                    <td data-title="<?php echo $locale->getText('console.storage.index.table-column-type'); ?>: ">
                                         <span class="text-fade text-size-small" data-ls-bind="{{file.mimeType}}"></span>
                                     </td>
-                                    <td data-title="Size: ">
+                                    <td data-title="<?php echo $locale->getText('console.storage.index.table-column-size'); ?>: ">
                                         <span class="text-fade text-size-small" data-ls-bind="{{file.sizeOriginal|humanFileSize}}"></span>
                                         <span class="text-fade text-size-small" data-ls-bind="{{file.sizeOriginal|humanFileUnit}}"></span>
                                     </td>
-                                    <td data-title="Created: ">
+                                    <td data-title="<?php echo $locale->getText('console.storage.index.table-column-created-at'); ?>: ">
                                         <span class="text-fade text-size-small" data-ls-bind="{{file.dateCreated|dateText}}"></span>
                                     </td>
                                 </tr>
@@ -198,7 +198,7 @@ $locale = $this->getParam("locale");
                         data-name="project-files"
                         data-success="state"
                         data-success-param-state-keys="search,offset">
-                        <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-files.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                        <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-files.sum}}" class="margin-end round small" aria-label="<?php echo $locale->getText('shared.pagination-back'); ?>"><i class="icon-left-open"></i></button>
                     </form>
 
                     <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-files.sum|pageTotal}}"></span>
@@ -213,14 +213,14 @@ $locale = $this->getParam("locale");
                         data-name="project-files"
                         data-success="state"
                         data-success-param-state-keys="search,offset">
-                        <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-files.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                        <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-files.sum}}" class="margin-start round small" aria-label="<?php echo $locale->getText('shared.pagination-next'); ?>"><i class="icon-right-open"></i></button>
                     </form>
                 </div>
 
-                <div data-ui-modal class="box modal sticky-footer close" data-button-text="Add File">
+                <div data-ui-modal class="box modal sticky-footer close" data-button-text="<?php echo $locale->getText('console.storage.index.create-button-modal'); ?>">
                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                    <h1>Upload File</h1>
+                    <h1><?php echo $locale->getText('console.storage.index.create-title'); ?></h1>
 
                     <form
                         data-analytics
@@ -231,12 +231,12 @@ $locale = $this->getParam("locale");
                         data-service="storage.createFile"
                         data-event="submit"
                         data-scope="sdk"
-                        data-loading="Uploading File..."
+                        data-loading="<?php echo $locale->getText('console.storage.index.create-submit-loading'); ?>"
                         data-success="alert,trigger,reset"
-                        data-success-param-alert-text="File uploaded successfully"
+                        data-success-param-alert-text="<?php echo $locale->getText('console.storage.index.create-submit-success'); ?>"
                         data-success-param-trigger-events="storage.createFile"
                         data-failure="alert"
-                        data-failure-param-alert-text="Failed to upload file"
+                        data-failure-param-alert-text="<?php echo $locale->getText('console.storage.index.create-submit-error'); ?>"
                         data-failure-param-alert-classname="error">
                         <input type="hidden" name="folderId" id="files-folderId" data-cast-to="integer" value="1">
 
@@ -245,16 +245,16 @@ $locale = $this->getParam("locale");
 
                         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">(Max file size allowed: <?php echo $fileLimitHuman; ?>)</div>
 
-                        <label for="file-read">Read Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                        <input type="hidden" id="file-read" name="read" data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['*'])); ?>" placeholder="User ID, Team ID or Role" />
-                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
+                        <label for="file-read"><?php echo $locale->getText('shared.read-access'); ?> (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener"><?php echo $locale->getText('shared.learn-more'); ?></a>)</label>
+                        <input type="hidden" id="file-read" name="read" data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['*'])); ?>" placeholder="<?php echo $locale->getText('shared.access-placeholder'); ?>" />
+                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom"><?php echo $locale->getText('shared.permission-info'); ?></div>
                         
-                        <label for="file-write">Write Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                        <input type="hidden" id="file-write" name="write" data-forms-tags data-cast-to="json" value="" placeholder="User ID, Team ID or Role" />
-                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
+                        <label for="file-write"><?php echo $locale->getText('shared.write-access'); ?> (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener"><?php echo $locale->getText('shared.learn-more'); ?></a>)</label>
+                        <input type="hidden" id="file-write" name="write" data-forms-tags data-cast-to="json" value="" placeholder="<?php echo $locale->getText('shared.access-placeholder'); ?>" />
+                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom"><?php echo $locale->getText('shared.permission-info'); ?></div>
 
                         <footer>
-                            <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                            <button type="submit"><?php echo $locale->getText('console.storage.index.create-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.storage.index.create-button-cancel'); ?></button>
                         </footer>
                     </form>
                 </div>
