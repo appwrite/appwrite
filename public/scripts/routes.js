@@ -23,6 +23,10 @@ window.ls.router
     template: "/auth/join?version=" + APP_ENV.CACHEBUSTER,
     scope: "home"
   })
+  .add("/auth/magic-url", {
+    template: "/auth/magic-url?version=" + APP_ENV.CACHEBUSTER,
+    scope: "home"
+  })
   .add("/auth/oauth2/success", {
     template: "/auth/oauth2/success?version=" + APP_ENV.CACHEBUSTER,
     scope: "home"

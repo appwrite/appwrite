@@ -4,7 +4,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 ?>
 
 <div class="cover margin-bottom-small">
-    <div class="zone xl margin-bottom-xl margin-top-small">
+    <div class="zone xxl margin-bottom-xl margin-top-small">
         <h1 class="margin-bottom-small"
             data-service="projects.get"
             data-event="load,project.update,projects.createPlatform,projects.updatePlatform,projects.deletePlatform"
@@ -39,7 +39,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                     data-event="submit"
                     data-name="usage"
                     data-param-project-id="{{router.params.project}}"
-                    data-param-range="24h">
+                    data-param-range="24h"
+                    data-scope="console">
                     <button class="tick">24h</button>
                 </form>
 
@@ -53,7 +54,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                     data-service="projects.getUsage"
                     data-event="submit"
                     data-name="usage"
-                    data-param-project-id="{{router.params.project}}">
+                    data-param-project-id="{{router.params.project}}"
+                    data-scope="console">
                     <button class="tick">30d</button>
                 </form>
 
@@ -68,7 +70,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                     data-event="submit"
                     data-name="usage"
                     data-param-project-id="{{router.params.project}}"
-                    data-param-range="90d">
+                    data-param-range="90d"
+                    data-scope="console">
                     <button class="tick">90d</button>
                 </form>
 
@@ -83,8 +86,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
         data-name="usage"
         data-param-project-id="{{router.params.project}}"
         data-param-range="30d">
-
-        <?php if (!$graph && $usageStatsEnabled): ?>
+            <?php if (!$graph && $usageStatsEnabled): ?>
             <div class="box dashboard">
                 <div class="row responsive">
                     <div class="col span-9">
@@ -94,49 +96,45 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
 
                         <div class="chart-metric">
                             <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.requests.total|statsTotal}}">N/A</span></div>
-                            <div class="metric margin-bottom-small">Requests <span class="tooltip" data-tooltip="Total number of API requests"><i class="icon-info-circled"></i></span></div>
+                            <div class="unit margin-start-no margin-bottom-small">Requests</div>
                         </div>
                     </div>
                     <div class="col span-3">
                         <div class="value margin-bottom-small">
-                            <span class="sum" data-ls-bind="{{usage.network.total|humanFileSize}}" data-default="0">0</span>
-                            <span data-ls-bind="{{usage.network.total|humanFileUnit}}" class="text-size-small unit"></span>
+                            <span class="sum" data-ls-bind="{{realtime.current|accessProject}}" data-default="0">0</span>
                         </div>
-                        <div class="metric margin-bottom-small">Bandwidth</div>
-
-                        <div class="margin-top-large value small">
-                            <b class="text-size-small sum small" data-ls-bind="{{usage.functions.total|statsTotal}}" data-default="0"></b>
-                            <br />
-                            <b>Func. Executions</b>
-                        </div>
+                        <div class="unit margin-start-no margin-bottom-small">Connections</div>
+                        <div class="chart-bar margin-top-small margin-bottom-small" data-ls-attrs="data-history={{realtime.history|accessProject}}" data-forms-chart-bars="{{realtime.history|accessProject}}"></div>
+                        <div class="text-fade-dark text-size-small">Activity last 60 seconds</div>
                     </div>
                 </div>
             </div>
-        <?php endif; ?>
-
-        <div class="box dashboard">
-            <div class="row responsive">
-                <div class="col span-3">
-                    <div class="value"><span class="sum" data-ls-bind="{{usage.documents.total|statsTotal}}" data-default="0">0</span></div>
-                    <div class="margin-top-small"><b class="text-size-small unit">Documents</b></div>
-                </div>
-                <div class="col span-3">
-                    <div class="value">
-                        <span class="sum" data-ls-bind="{{usage.storage.total|humanFileSize}}" data-default="0">0</span>
-                        <span data-ls-bind="{{usage.storage.total|humanFileUnit}}" class="text-size-small unit"></span>
+            <?php endif; ?>
+            <div class="box dashboard">
+                <div class="row responsive">
+                    <div class="col span-3">
+                        <div class="value"><span class="sum" data-ls-bind="{{usage.documents.total|statsTotal}}" data-default="0">0</span></div>
+                        <div class="margin-top-small"><b class="text-size-small unit">Documents</b></div>
                     </div>
-                    <div class="margin-top-small"><b class="text-size-small unit">Storage</b></div>
-                </div>
-                <div class="col span-3">
-                    <div class="value"><span class="sum" data-ls-bind="{{usage.users.total}}" data-default="0">0</span></div>
-                    <div class="margin-top-small"><b class="text-size-small unit">Users</b></div>
-                </div>
-                <div class="col span-3">
-                    <div class="value"><span class="sum" data-ls-bind="{{usage.tasks.total}}" data-default="0">0</span></div>
-                    <div class="margin-top-small"><b class="text-size-small unit">Tasks</b></div>
+                    <div class="col span-3">
+                        <div class="value">
+                            <span class="sum" data-ls-bind="{{usage.storage.total|humanFileSize}}" data-default="0">0</span>
+                            <span data-ls-bind="{{usage.storage.total|humanFileUnit}}" class="text-size-small unit"></span>
+                        </div>
+                        <div class="margin-top-small"><b class="text-size-small unit">Storage</b></div>
+                    </div>
+                    <div class="col span-3">
+                        <div class="value"><span class="sum" data-ls-bind="{{usage.users.total}}" data-default="0">0</span></div>
+                        <div class="margin-top-small"><b class="text-size-small unit">Users</b></div>
+                    </div>
+                    <div class="col span-3">
+                        <div class="value"><span class="sum" data-ls-bind="{{usage.functions.total|statsTotal}}" data-default="0">0</span></div>
+                        <div class="margin-top-small"><b class="text-size-small unit">Executions</b></div>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 </div>
 

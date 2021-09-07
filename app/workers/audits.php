@@ -5,15 +5,13 @@ use Utopia\Audit\Audit;
 use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 use Utopia\CLI\Console;
 
-require_once __DIR__.'/../workers.php';
+require_once __DIR__ . '/../workers.php';
 
 Console::title('Audits V1 Worker');
-Console::success(APP_NAME.' audits worker v1 has started');
+Console::success(APP_NAME . ' audits worker v1 has started');
 
 class AuditsV1 extends Worker
 {
-    public $args = [];
-
     public function init(): void
     {
     }
@@ -30,9 +28,9 @@ class AuditsV1 extends Worker
         $ip = $this->args['ip'];
         $data = $this->args['data'];
         $db = $register->get('db', true);
-        
+
         $adapter = new AuditAdapter($db);
-        $adapter->setNamespace('app_'.$projectId);
+        $adapter->setNamespace('app_' . $projectId);
 
         $audit = new Audit($adapter);
 

@@ -6,6 +6,7 @@ use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
+use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
 use Appwrite\Utopia\Response\Model\Execution;
 use Cron\CronExpression;
@@ -13,49 +14,42 @@ use Swoole\Runtime;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Orchestration\Orchestration;
+use Utopia\Orchestration\Adapter\DockerAPI;
+use Utopia\Orchestration\Container;
+use Utopia\Orchestration\Exception\Orchestration as OrchestrationException;
+use Utopia\Orchestration\Exception\Timeout as TimeoutException;
 
-require_once __DIR__.'/../workers.php';
+require_once __DIR__ . '/../workers.php';
 
 Runtime::enableCoroutine(0);
 
 Console::title('Functions V1 Worker');
-Console::success(APP_NAME.' functions worker v1 has started');
+Console::success(APP_NAME . ' functions worker v1 has started');
 
 $runtimes = Config::getParam('runtimes');
+
+$dockerUser = App::getEnv('DOCKERHUB_PULL_USERNAME', null);
+$dockerPass = App::getEnv('DOCKERHUB_PULL_PASSWORD', null);
+$dockerEmail = App::getEnv('DOCKERHUB_PULL_EMAIL', null);
+$orchestration = new Orchestration(new DockerAPI($dockerUser, $dockerPass, $dockerEmail));
 
 /**
  * Warmup Docker Images
  */
 $warmupStart = \microtime(true);
 
-Co\run(function() use ($runtimes) {  // Warmup: make sure images are ready to run fast 🚀
+Co\run(function () use ($runtimes, $orchestration) {  // Warmup: make sure images are ready to run fast 🚀
+    foreach ($runtimes as $runtime) {
+        go(function () use ($runtime, $orchestration) {
+            Console::info('Warming up ' . $runtime['name'] . ' ' . $runtime['version'] . ' environment...');
 
-    $dockerUser = App::getEnv('DOCKERHUB_PULL_USERNAME', null);
-    $dockerPass = App::getEnv('DOCKERHUB_PULL_PASSWORD', null);
+            $response = $orchestration->pull($runtime['image']);
 
-    if($dockerUser) {
-        $stdout = '';
-        $stderr = '';
-
-        Console::execute('docker login --username '.$dockerUser.' --password-stdin', $dockerPass, $stdout, $stderr);
-        Console::log('Docker Login'. $stdout.$stderr);
-    }
-
-    foreach($runtimes as $runtime) {
-        go(function() use ($runtime) {
-            $stdout = '';
-            $stderr = '';
-        
-            Console::info('Warming up '.$runtime['name'].' '.$runtime['version'].' environment...');
-        
-            Console::execute('docker pull '.$runtime['image'], '', $stdout, $stderr);
-        
-            if(!empty($stdout)) {
-                Console::log($stdout);
-            }
-        
-            if(!empty($stderr)) {
-                Console::error($stderr);
+            if ($response) {
+                Console::success("Successfully Warmed up {$runtime['name']} {$runtime['version']}!");
+            } else {
+                Console::error("Failed to Warmup {$runtime['name']} {$runtime['version']}!");
             }
         });
     }
@@ -64,7 +58,7 @@ Co\run(function() use ($runtimes) {  // Warmup: make sure images are ready to ru
 $warmupEnd = \microtime(true);
 $warmupTime = $warmupEnd - $warmupStart;
 
-Console::success('Finished warmup in '.$warmupTime.' seconds');
+Console::success('Finished warmup in ' . $warmupTime . ' seconds');
 
 /**
  * List function servers
@@ -74,40 +68,17 @@ $stderr = '';
 
 $executionStart = \microtime(true);
 
-$exitCode = Console::execute('docker ps --all --format "name={{.Names}}&status={{.Status}}&labels={{.Labels}}" --filter label=appwrite-type=function'
-    , '', $stdout, $stderr, 30);
+$response = $orchestration->list(['label' => 'appwrite-type=function']);
+/** @var Container[] $list */
+$list = [];
+
+foreach ($response as $value) {
+    $list[$value->getName()] = $value;
+}
 
 $executionEnd = \microtime(true);
 
-$list = [];
-$stdout = \explode("\n", $stdout);
-
-\array_map(function($value) use (&$list) {
-    $container = [];
-
-    \parse_str($value, $container);
-
-    if(isset($container['name'])) {
-        $container = [
-            'name' => $container['name'],
-            'online' => (\substr($container['status'], 0, 2) === 'Up'),
-            'status' => $container['status'],
-            'labels' => $container['labels'],
-        ];
-
-        \array_map(function($value) use (&$container) {
-            $value = \explode('=', $value);
-            
-            if(isset($value[0]) && isset($value[1])) {
-                $container[$value[0]] = $value[1];
-            }
-        }, \explode(',', $container['labels']));
-
-        $list[$container['name']] = $container;
-    }
-}, $stdout);
-
-Console::info(count($list)." functions listed in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
+Console::info(count($list) . ' functions listed in ' . ($executionEnd - $executionStart) . ' seconds');
 
 /**
  * 1. Get event args - DONE
@@ -126,9 +97,9 @@ Console::info(count($list)." functions listed in " . ($executionEnd - $execution
 
 class FunctionsV1 extends Worker
 {
-    public $args = [];
+    public array $args = [];
 
-    public $allowed = [];
+    public array $allowed = [];
 
     public function init(): void
     {
@@ -155,7 +126,7 @@ class FunctionsV1 extends Worker
 
         $database = new Database();
         $database->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
-        $database->setNamespace('app_'.$projectId);
+        $database->setNamespace('app_' . $projectId);
         $database->setMocks(Config::getParam('collections', []));
 
         switch ($trigger) {
@@ -163,7 +134,8 @@ class FunctionsV1 extends Worker
                 $limit = 30;
                 $sum = 30;
                 $offset = 0;
-                $functions = []; /** @var Document[] $functions */
+                $functions = [];
+                /** @var Document[] $functions */
 
                 while ($sum >= $limit) {
 
@@ -176,7 +148,7 @@ class FunctionsV1 extends Worker
                         'orderType' => 'ASC',
                         'orderCast' => 'string',
                         'filters' => [
-                            '$collection='.Database::SYSTEM_COLLECTION_FUNCTIONS,
+                            '$collection=' . Database::SYSTEM_COLLECTION_FUNCTIONS,
                         ],
                     ]);
 
@@ -185,21 +157,33 @@ class FunctionsV1 extends Worker
                     $sum = \count($functions);
                     $offset = $offset + $limit;
 
-                    Console::log('Fetched '.$sum.' functions...');
+                    Console::log('Fetched ' . $sum . ' functions...');
 
-                    foreach($functions as $function) {
+                    foreach ($functions as $function) {
                         $events =  $function->getAttribute('events', []);
                         $tag =  $function->getAttribute('tag', []);
 
-                        Console::success('Itterating function: '.$function->getAttribute('name'));
+                        Console::success('Itterating function: ' . $function->getAttribute('name'));
 
-                        if(!\in_array($event, $events) || empty($tag)) {
+                        if (!\in_array($event, $events) || empty($tag)) {
                             continue;
                         }
 
-                        Console::success('Triggered function: '.$event);
+                        Console::success('Triggered function: ' . $event);
 
-                        $this->execute('event', $projectId, '', $database, $function, $event, $eventData, $data, $webhooks, $userId, $jwt);
+                        $this->execute(
+                            trigger: 'event',
+                            projectId: $projectId,
+                            executionId: '',
+                            database: $database,
+                            function: $function,
+                            event: $event,
+                            eventData: $eventData,
+                            data: $data,
+                            webhooks: $webhooks,
+                            userId: $userId,
+                            jwt: $jwt
+                        );
                     }
                 }
                 break;
@@ -224,10 +208,10 @@ class FunctionsV1 extends Worker
                 Authorization::reset();
 
                 if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-                    throw new Exception('Function not found ('.$functionId.')');
+                    throw new Exception('Function not found (' . $functionId . ')');
                 }
 
-                if($scheduleOriginal && $scheduleOriginal !== $function->getAttribute('schedule')) { // Schedule has changed from previous run, ignore this run.
+                if ($scheduleOriginal && $scheduleOriginal !== $function->getAttribute('schedule')) { // Schedule has changed from previous run, ignore this run.
                     return;
                 }
 
@@ -236,14 +220,17 @@ class FunctionsV1 extends Worker
 
                 $function
                     ->setAttribute('scheduleNext', $next)
-                    ->setAttribute('schedulePrevious', \time())
-                ;
+                    ->setAttribute('schedulePrevious', \time());
 
                 Authorization::disable();
 
                 $function = $database->updateDocument(array_merge($function->getArrayCopy(), [
                     'scheduleNext' => $next,
                 ]));
+
+                if ($function === false) {
+                    throw new Exception('Function update failed (' . $functionId . ')');
+                }
 
                 Authorization::reset();
 
@@ -256,7 +243,17 @@ class FunctionsV1 extends Worker
                     'scheduleOriginal' => $function->getAttribute('schedule', ''),
                 ]);  // Async task reschedule
 
-                $this->execute($trigger, $projectId, $executionId, $database, $function, $event, $eventData, $data, $webhooks, $userId, $jwt);
+                $this->execute(
+                    trigger: $trigger,
+                    projectId: $projectId,
+                    executionId: $executionId,
+                    database: $database,
+                    function: $function,
+                    data: $data,
+                    webhooks: $webhooks,
+                    userId: $userId,
+                    jwt: $jwt
+                );
                 break;
 
             case 'http':
@@ -265,14 +262,20 @@ class FunctionsV1 extends Worker
                 Authorization::reset();
 
                 if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-                    throw new Exception('Function not found ('.$functionId.')');
+                    throw new Exception('Function not found (' . $functionId . ')');
                 }
 
-                $this->execute($trigger, $projectId, $executionId, $database, $function, $event, $eventData, $data, $webhooks, $userId, $jwt);
-                break;
-            
-            default:
-                # code...
+                $this->execute(
+                    trigger: $trigger,
+                    projectId: $projectId,
+                    executionId: $executionId,
+                    database: $database,
+                    function: $function,
+                    data: $data,
+                    webhooks: $webhooks,
+                    userId: $userId,
+                    jwt: $jwt
+                );
                 break;
         }
     }
@@ -284,7 +287,7 @@ class FunctionsV1 extends Worker
      * @param string $projectId
      * @param string $executionId
      * @param Database $database
-     * @param Database $function
+     * @param Document $function
      * @param string $event
      * @param string $eventData
      * @param string $data
@@ -335,29 +338,30 @@ class FunctionsV1 extends Worker
      */
     public function cleanup(): void
     {
+        /** @var Container[] $list */
         global $list;
+        /** @var Orchestration $orchestration */
+        global $orchestration;
 
-        Console::success(count($list).' running containers counted');
+        Console::success(count($list) . ' running containers counted');
 
         $max = (int) App::getEnv('_APP_FUNCTIONS_CONTAINERS');
 
-        if(\count($list) > $max) {
+        if (\count($list) > $max) {
             Console::info('Starting containers cleanup');
 
-            \uasort($list, function ($item1, $item2) {
-                return (int)($item1['appwrite-created'] ?? 0) <=> (int)($item2['appwrite-created'] ?? 0);
+            \uasort($list, function (Container $item1, Container $item2) {
+                return (int)($item1->getLabels['appwrite-created'] ?? 0) <=> (int)($item2->getLabels['appwrite-created'] ?? 0);
             });
 
-            while(\count($list) > $max) {
+            while (\count($list) > $max) {
                 $first = \array_shift($list);
-                $stdout = '';
-                $stderr = '';
 
-                if(Console::execute("docker rm -f {$first['name']}", '', $stdout, $stderr, 30) !== 0) {
-                    Console::error('Failed to remove container: '.$stderr);
-                }
-                else {
-                    Console::info('Removed container: '.$first['name']);
+                try {
+                    $orchestration->remove($first->getName(), true);
+                    Console::info('Removed container: ' . $first->getName());
+                } catch (Exception $e) {
+                    Console::error('Failed to remove container: ' . $e);
                 }
             }
         }
@@ -372,7 +376,7 @@ class FunctionsV1 extends Worker
      */
     public function filterEnvKey(string $string): string
     {
-        if(empty($this->allowed)) {
+        if (empty($this->allowed)) {
             $this->allowed = array_fill_keys(\str_split('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_'), true);
         }
 
@@ -380,7 +384,7 @@ class FunctionsV1 extends Worker
         $output     = '';
 
         foreach ($string as $char) {
-            if(\array_key_exists($char, $this->allowed)) {
+            if (\array_key_exists($char, $this->allowed)) {
                 $output .= $char;
             }
         }

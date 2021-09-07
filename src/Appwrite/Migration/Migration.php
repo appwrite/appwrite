@@ -43,6 +43,9 @@ abstract class Migration
         '0.9.2' => 'V08',
         '0.9.3' => 'V08',
         '0.9.4' => 'V08',
+        '0.10.0' => 'V09',
+        '0.10.1' => 'V09',
+        '0.10.2' => 'V09',
     ];
 
     /**
@@ -96,14 +99,13 @@ abstract class Migration
 
                 foreach ($all as $document) {
                     go(function () use ($document, $callback) {
+                        if (empty($document->getId()) || empty($document->getCollection())) {
+                            Console::warning('Skipped Document due to missing ID or Collection.');
+                            return;
+                        }
 
                         $old = $document->getArrayCopy();
                         $new = call_user_func($callback, $document);
-
-                        if (empty($new->getId())) {
-                            Console::warning('Skipped Document due to missing ID.');
-                            return;
-                        }
 
                         if (!$this->check_diff_multi($new->getArrayCopy(), $old)) {
                             return;

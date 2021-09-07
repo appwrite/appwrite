@@ -1,10 +1,42 @@
 # Unreleased Version 0.11.0
 - Added ability to create syncronous function executions
 - Introduced new execution model for functions
+# Version 0.10.2
+
+## Bugs
+- Fixed SSL certificates status not being updated (#1592)
+- Fixed failing team invites on console (#1580)
+
+# Version 0.10.1
+
+## Bugs
+- Improved error messages on Migration regarding invalid document structures (#1576)
+- Fixed Console SDK endpoint to work with multiple proxies (#1575)
+- Fixed last function environments variables being corrupt (#1577)
+- Fixed `_APP_FUNCTIONS_CPUS` variable for cloud functions (#1568)
+
+# Version 0.10.0
+
+## Features
+- Added Realtime (#948)
+- Added Realtime statistics to the console (#948)
+- Added Magic URL login (#1552)
+- Refactored E-Mail template (#1422)
+- Improved locale management (#1440)
+- Added `$permissions` to execution response (#948)
+- Switch from using Docker CLI to Docker API by intergrating [utopia-php/orchestration](https://github.com/utopia-php/orchestration) (#1420)
+- Added DOCKERHUB_PULL_USERNAME, DOCKERHUB_PULL_PASSWORD and DOCKERHUB_PULL_EMAIL env variables for pulling from private DockerHub repos (#1420)
+- Added `updateName`, `updateEmail` and `updatePassword` to Users service and console (#1547)
+
+## Bugs
+- Fixed MariaDB timeout after 24 hours (#1510)
+- Fixed upgrading installation with customized `docker-compose.yml` file (#1513)
+- Fixed usage stats on the dashboard displaying invalid total users count (#1514)
 # Version 0.9.4
 ## Security
 
 - Fixed security vulnerability that exposes project ID's from other admin users (#1453)
+
 
 # Version 0.9.3
 
