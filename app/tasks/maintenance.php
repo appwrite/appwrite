@@ -43,8 +43,8 @@ $cli
         {
             Resque::enqueue(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME, [
                 'type' => DELETE_TYPE_USAGE_STATS,
-                'timestamp1d' => $interval1d,
-                'timestamp30m' => $interval30m,
+                'timestamp1d' => time() - $interval1d,
+                'timestamp30m' => time() - $interval30m,
             ]);
         }
 
