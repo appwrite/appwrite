@@ -61,7 +61,7 @@ $locale = $this->getParam("locale");
                         <label data-ls-attrs="for=name-{{webhook.$id}}">Name</label>
                         <input type="text" class="full-width" data-ls-attrs="id=name-{{webhook.$id}}" name="name" required autocomplete="off" data-ls-bind="{{webhook.name}}" maxlength="128" />
 
-                        <section data-forms-select-all>
+                        <section data-forms-select-all data-forms-select-all-text="<?php echo $locale->getText('shared.select-all'); ?>" data-forms-unselect-all-text="<?php echo $locale->getText('shared.unselect-all'); ?>">
                             <label data-ls-attrs="for=events-{{webhook.$id}}">Events</label>
                             <div class="row responsive thin">
                                 <?php foreach ($events as $i => $event) : ?>
@@ -183,7 +183,7 @@ $locale = $this->getParam("locale");
                 <label for="name">Name</label>
                 <input type="text" class="full-width" id="name" name="name" required autocomplete="off" maxlength="128" />
 
-                <section data-forms-select-all>
+                <section data-forms-select-all data-forms-select-all-text="<?php echo $locale->getText('shared.select-all'); ?>" data-forms-unselect-all-text="<?php echo $locale->getText('shared.unselect-all'); ?>">
                     <label for="events">Events</label>
                     <div class="row responsive thin">
                         <?php foreach ($events as $i => $event) : ?>

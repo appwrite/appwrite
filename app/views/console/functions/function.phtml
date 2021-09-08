@@ -435,7 +435,7 @@ $locale = $this->getParam("locale");
                 </div>
             </li>
             <li data-state="/console/functions/function/settings?id={{router.params.id}}&project={{router.params.project}}">
-                <h2>Settings</h2>
+                <h2><?php echo $locale->getText('console.functions.function.settings-title'); ?></h2>
 
                 <div class="row responsive margin-top-negative">
                     <div class="col span-8 margin-bottom">
@@ -452,28 +452,28 @@ $locale = $this->getParam("locale");
                             data-event="submit"
                             data-param-function-id="{{router.params.id}}"
                             data-success="alert,trigger"
-                            data-success-param-alert-text="Updated function successfully"
+                            data-success-param-alert-text="<?php echo $locale->getText('console.functions.function.update-success'); ?>"
                             data-success-param-trigger-events="functions.update"
                             data-failure="alert"
-                            data-failure-param-alert-text="Failed to update function"
+                            data-failure-param-alert-text="<?php echo $locale->getText('console.functions.function.update-error'); ?>"
                             data-failure-param-alert-classname="error">
 
                             <div class="box">
                                 <section class="margin-bottom-large">
-                                    <label for="name">Name</label>
-                                    <input name="name" id="function-name" type="text" autocomplete="off" data-ls-bind="{{project-function.name}}" data-forms-text-direction required placeholder="Function Name" maxlength="128" />
+                                    <label for="name"><?php echo $locale->getText('console.functions.function.update-label-name'); ?></label>
+                                    <input name="name" id="function-name" type="text" autocomplete="off" data-ls-bind="{{project-function.name}}" data-forms-text-direction required placeholder="<?php echo $locale->getText('console.functions.function.update-placeholder-name'); ?>" maxlength="128" />
 
-                                    <label for="execute">Execute Access <span class="tooltip small" data-tooltip="Choose who can execute this function using the client API."><i class="icon-info-circled"></i></span> <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
-                                    <input type="hidden" id="execute" name="execute" data-forms-tags data-cast-to="json" data-ls-bind="{{project-function.$permissions.execute}}" placeholder="User ID, Team ID or Role" />
-                                    <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
+                                    <label for="execute"><?php echo $locale->getText('console.functions.function.update-label-execute-access'); ?> <span class="tooltip small" data-tooltip="<?php echo $locale->getText('console.functions.function.update-tooltip-execute-access'); ?>"><i class="icon-info-circled"></i></span> <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener"><?php echo $locale->getText('shared.learn-more'); ?></a>)</span></label>
+                                    <input type="hidden" id="execute" name="execute" data-forms-tags data-cast-to="json" data-ls-bind="{{project-function.$permissions.execute}}" placeholder="<?php echo $locale->getText('shared.access-placeholder'); ?>" />
+                                    <div class="text-fade text-size-xs margin-top-negative-small margin-bottom"><?php echo $locale->getText('shared.permission-info'); ?></div>
 
-                                    <label for="timeout">Timeout (seconds) <span class="tooltip small" data-tooltip="Limit the execution time of your function."><i class="icon-info-circled"></i></span></label>
+                                    <label for="timeout"><?php echo $locale->getText('console.functions.function.update-label-timeout'); ?> <span class="tooltip small" data-tooltip="<?php echo $locale->getText('console.functions.function.update-tooltip-timeout'); ?>"><i class="icon-info-circled"></i></span></label>
                                     <input name="timeout" id="function-timeout" type="number" autocomplete="off" data-ls-bind="{{project-function.timeout}}" min="1" max="<?php echo $this->escape($timeout); ?>" data-cast-to="integer" />
-                                    <div class="text-size-small text-fade margin-bottom margin-top-negative-small">Max value is <?php echo $this->escape(number_format($timeout)); ?> seconds (<?php echo $this->escape((int) ($timeout / 60)); ?> minutes)</div>
+                                    <div class="text-size-small text-fade margin-bottom margin-top-negative-small"><?php echo $locale->getText('console.functions.function.update-description-timeout-chunk1'); ?> <?php echo $this->escape(number_format($timeout)); ?> <?php echo $locale->getText('console.functions.function.update-description-timeout-chunk2'); ?> (<?php echo $this->escape((int) ($timeout / 60)); ?> <?php echo $locale->getText('console.functions.function.update-description-timeout-chunk3'); ?>)</div>
                                 </section>
 
-                                <section class="margin-bottom" data-forms-select-all>
-                                    <label for="events" class="margin-bottom">Events <span class="tooltip small" data-tooltip="Choose which events should trigger this function."><i class="icon-info-circled"></i></span></label>
+                                <section class="margin-bottom" data-forms-select-all data-forms-select-all-text="<?php echo $locale->getText('shared.select-all'); ?>" data-forms-unselect-all-text="<?php echo $locale->getText('shared.unselect-all'); ?>">
+                                    <label for="events" class="margin-bottom"><?php echo $locale->getText('console.functions.function.update-label-events'); ?> <span class="tooltip small" data-tooltip="<?php echo $locale->getText('console.functions.function.update-tooltip-events'); ?>"><i class="icon-info-circled"></i></span></label>
                                     <div class="row responsive thin margin-top-small">
                                         <?php foreach ($events as $i => $event) : ?>
                                             <div class="col span-6 text-one-liner margin-bottom text-height-large text-size-small" title="<?php echo $event; ?>">
@@ -490,11 +490,11 @@ $locale = $this->getParam("locale");
                                     </div>
                                 </section>
 
-                                <label for="schedule">Schedule (CRON Syntax) <span class="tooltip small" data-tooltip="Set a CRON schedule to trigger this function."><i class="icon-info-circled"></i></span></label>
+                                <label for="schedule"><?php echo $locale->getText('console.functions.function.update-label-schedule'); ?> <span class="tooltip small" data-tooltip="<?php echo $locale->getText('console.functions.function.update-tooltip-schedule'); ?>"><i class="icon-info-circled"></i></span></label>
                                 <input type="text" id="function-schedule" class="full-width" name="schedule" autocomplete="off" data-ls-bind="{{project-function.schedule}}" placeholder="* * * * *" />
-                                <div class="text-size-small text-fade margin-bottom margin-top-negative-small">Leave blank for no schedule</div>
+                                <div class="text-size-small text-fade margin-bottom margin-top-negative-small"><?php echo $locale->getText('console.functions.function.update-description-schedule'); ?></div>
 
-                                <h3 class="margin-bottom-small">Variables <span class="tooltip small" data-tooltip="Set variables or secret keys that will be passed as env vars to your function at runtime."><i class="icon-info-circled"></i></span></h3>
+                                <h3 class="margin-bottom-small"><?php echo $locale->getText('console.functions.function.update-label-variables'); ?> <span class="tooltip small" data-tooltip="<?php echo $locale->getText('console.functions.function.update-tooltip-variables'); ?>"><i class="icon-info-circled"></i></span></h3>
 
                                 <div data-ls-if="(!{{project-function.vars.length}})">
                                     <hr class="margin-bottom margin-top-no" />
@@ -513,7 +513,7 @@ $locale = $this->getParam("locale");
                                             </div>
                                         </div>
 
-                                        <div data-forms-clone="" data-target="project-vars" data-label="Add Variable" data-first="0">
+                                        <div data-forms-clone="" data-target="project-vars" data-label="<?php echo $locale->getText('console.functions.function.update-add-variable'); ?>" data-first="0">
                                             <div class="margin-bottom-small">
                                                 <div data-forms-remove class="row thin margin-bottom-small">
                                                     <div class="col span-10">
@@ -529,41 +529,41 @@ $locale = $this->getParam("locale");
                                     <hr class="margin-bottom margin-top-small" />
                                 </div>
 
-                                <button>Update</button>
+                                <button><?php echo $locale->getText('console.functions.function.update-submit'); ?></button>
                             </div>
                         </form>
                     </div>
                     <div class="col span-4 sticky-top">
-                        <label>Function ID</label>
+                        <label><?php echo $locale->getText('console.functions.function.overview-side-function-id'); ?></label>
                         <div class="input-copy margin-bottom">
                             <input id="uid" type="text" autocomplete="off" placeholder="" data-ls-bind="{{project-function.$id}}" disabled data-forms-copy>
                         </div>
 
                         <ul class="margin-bottom-large text-fade text-size-small">
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-function.dateUpdated|dateText}}"></span></li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-function.dateCreated|dateText}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small"><?php echo $locale->getText('console.functions.function.overview-side-view-as-json'); ?></button></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <?php echo $locale->getText('console.functions.function.overview-side-last-updated'); ?>: <span data-ls-bind="{{project-function.dateUpdated|dateText}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <?php echo $locale->getText('console.functions.function.overview-side-created'); ?>: <span data-ls-bind="{{project-function.dateCreated|dateText}}"></span></li>
                         </ul>
 
                         <form name="functions.delete" class="margin-bottom"
-                            data-analytics
-                            data-analytics-activity
-                            data-analytics-event="submit"
-                            data-analytics-category="console"
-                            data-analytics-label="Delete Function"
-                            data-service="functions.delete"
-                            data-event="submit"
-                            data-param-function-id="{{router.params.id}}"
-                            data-confirm="Are you sure you want to delete this function?"
-                            data-success="alert,trigger,redirect"
-                            data-success-param-alert-text="Function deleted successfully"
-                            data-success-param-trigger-events="functions.delete"
-                            data-success-param-redirect-url="/console/functions?project={{router.params.project}}"
-                            data-failure="alert"
-                            data-failure-param-alert-text="Failed to delete function"
-                            data-failure-param-alert-classname="error">
+                              data-analytics
+                              data-analytics-activity
+                              data-analytics-event="submit"
+                              data-analytics-category="console"
+                              data-analytics-label="Delete Function"
+                              data-service="functions.delete"
+                              data-event="submit"
+                              data-param-function-id="{{router.params.id}}"
+                              data-confirm="<?php echo $locale->getText('console.functions.function.overview-side-delete-confirm'); ?>"
+                              data-success="alert,trigger,redirect"
+                              data-success-param-alert-text="<?php echo $locale->getText('console.functions.function.overview-side-delete-success'); ?>"
+                              data-success-param-trigger-events="functions.delete"
+                              data-success-param-redirect-url="/console/functions?project={{router.params.project}}"
+                              data-failure="alert"
+                              data-failure-param-alert-text="<?php echo $locale->getText('console.functions.function.overview-side-delete-error'); ?>"
+                              data-failure-param-alert-classname="error">
 
-                            <button type="submit" class="danger fill">Delete Function</button>
+                            <button type="submit" class="danger fill"><?php echo $locale->getText('console.functions.function.overview-side-delete-button'); ?></button>
                         </form>
                     </div>
                 </div>
