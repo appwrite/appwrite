@@ -23,6 +23,8 @@ use Utopia\Image\Image;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Validator\Integer;
 use Utopia\Database\Query;
 use Utopia\Storage\Validator\FileExt;
@@ -57,30 +59,208 @@ App::post('/v1/storage/buckets')
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
 
-        $data = $dbForInternal->createDocument('buckets', new Document([
-            '$id' => $bucketId == 'unique()' ? $dbForInternal->getId() : $bucketId,
-            '$collection' => 'buckets',
-            'dateCreated' => \time(),
-            'dateUpdated' => \time(),
-            'name' => $name,
-            'maximumFileSize' => $maximumFileSize,
-            'allowedFileExtensions' => $allowedFileExtensions,
-            'enabled' => $enabled,
-            'adapter' => $adapter,
-            'encryption' => $encryption,
-            'antiVirus' => $antiVirus,
-            '$read' => $read,
-            '$write' => $write,
-        ]));
+        $bucketId = $bucketId == 'unique()' ? $dbForInternal->getId() : $bucketId;
+        try {
+            $dbForInternal->createCollection('bucket_' . $bucketId, [
+                new Document([
+                    '$id' => 'dateCreated',
+                    'type' => Database::VAR_INTEGER,
+                    'format' => '',
+                    'size' => 0,
+                    'signed' => true,
+                    'required' => false,
+                    'default' => null,
+                    'array' => false,
+                    'filters' => [],
+                ]),
+                new Document([
+                    'array' => false,
+                    '$id' => 'bucketId',
+                    'type' => Database::VAR_STRING,
+                    'format' => '',
+                    'size' => Database::LENGTH_KEY,
+                    'signed' => true,
+                    'required' => false,
+                    'default' => null,
+                    'array' => false,
+                    'filters' => [],
+                ]),
+                new Document([
+                    '$id' => 'name',
+                    'type' => Database::VAR_STRING,
+                    'format' => '',
+                    'size' => 2048,
+                    'signed' => true,
+                    'required' => false,
+                    'default' => null,
+                    'array' => false,
+                    'filters' => [],
+                ]),
+                new Document([
+                    '$id' => 'path',
+                    'type' => Database::VAR_STRING,
+                    'format' => '',
+                    'size' => 2048,
+                    'signed' => true,
+                    'required' => false,
+                    'default' => null,
+                    'array' => false,
+                    'filters' => [],
+                ]),
+                new Document([
+                    '$id' => 'signature',
+                    'type' => Database::VAR_STRING,
+                    'format' => '',
+                    'size' => 2048,
+                    'signed' => true,
+                    'required' => false,
+                    'default' => null,
+                    'array' => false,
+                    'filters' => [],
+                ]),
+                new Document([
+                    '$id' => 'mimeType',
+                    'type' => Database::VAR_STRING,
+                    'format' => '',
+                    'size' => 127, // https://tools.ietf.org/html/rfc4288#section-4.2
+                    'signed' => true,
+                    'required' => false,
+                    'default' => null,
+                    'array' => false,
+                    'filters' => [],
+                ]),
+                new Document([
+                    '$id' => 'sizeOriginal',
+                    'type' => Database::VAR_INTEGER,
+                    'format' => '',
+                    'size' => 0,
+                    'signed' => true,
+                    'required' => false,
+                    'default' => null,
+                    'array' => false,
+                    'filters' => [],
+                ]),
+                new Document([
+                    '$id' => 'sizeActual',
+                    'type' => Database::VAR_INTEGER,
+                    'format' => '',
+                    'size' => 0,
+                    'signed' => true,
+                    'required' => false,
+                    'default' => null,
+                    'array' => false,
+                    'filters' => [],
+                ]),
+                new Document([
+                    '$id' => 'algorithm',
+                    'type' => Database::VAR_STRING,
+                    'format' => '',
+                    'size' => 255,
+                    'signed' => true,
+                    'required' => false,
+                    'default' => null,
+                    'array' => false,
+                    'filters' => [],
+                ]),
+                new Document([
+                    '$id' => 'comment',
+                    'type' => Database::VAR_STRING,
+                    'format' => '',
+                    'size' => 2048,
+                    'signed' => true,
+                    'required' => false,
+                    'default' => null,
+                    'array' => false,
+                    'filters' => [],
+                ]),
+                new Document([
+                    '$id' => 'openSSLVersion',
+                    'type' => Database::VAR_STRING,
+                    'format' => '',
+                    'size' => 64,
+                    'signed' => true,
+                    'required' => false,
+                    'default' => null,
+                    'array' => false,
+                    'filters' => [],
+                ]),
+                new Document([
+                    '$id' => 'openSSLCipher',
+                    'type' => Database::VAR_STRING,
+                    'format' => '',
+                    'size' => 64,
+                    'signed' => true,
+                    'required' => false,
+                    'default' => null,
+                    'array' => false,
+                    'filters' => [],
+                ]),
+                new Document([
+                    '$id' => 'openSSLTag',
+                    'type' => Database::VAR_STRING,
+                    'format' => '',
+                    'size' => 2048,
+                    'signed' => true,
+                    'required' => false,
+                    'default' => null,
+                    'array' => false,
+                    'filters' => [],
+                ]),
+                new Document([
+                    '$id' => 'openSSLIV',
+                    'type' => Database::VAR_STRING,
+                    'format' => '',
+                    'size' => 2048,
+                    'signed' => true,
+                    'required' => false,
+                    'default' => null,
+                    'array' => false,
+                    'filters' => [],
+                ]),
+            ], [
+                new Document([
+                    '$id' => '_key_bucket',
+                    'type' => Database::INDEX_KEY,
+                    'attributes' => ['bucketId'],
+                    'lengths' => [Database::LENGTH_KEY],
+                    'orders' => [Database::ORDER_ASC],
+                ]),
+                new Document([
+                    '$id' => '_fulltext_name',
+                    'type' => Database::INDEX_FULLTEXT,
+                    'attributes' => ['name'],
+                    'lengths' => [1024],
+                    'orders' => [Database::ORDER_ASC],
+                ]),
+            ]);
+
+            $bucket = $dbForInternal->createDocument('buckets', new Document([
+                '$id' => $bucketId,
+                '$collection' => 'buckets',
+                'dateCreated' => \time(),
+                'dateUpdated' => \time(),
+                'name' => $name,
+                'maximumFileSize' => $maximumFileSize,
+                'allowedFileExtensions' => $allowedFileExtensions,
+                'enabled' => $enabled,
+                'adapter' => $adapter,
+                'encryption' => $encryption,
+                'antiVirus' => $antiVirus,
+                '$read' => $read,
+                '$write' => $write,
+            ]));
+        } catch (Duplicate $th) {
+            throw new Exception('Bucket already exists', 409);
+        }
 
         $audits
             ->setParam('event', 'storage.buckets.create')
-            ->setParam('resource', 'storage/buckets/' . $data->getId())
-            ->setParam('data', $data->getArrayCopy())
+            ->setParam('resource', 'storage/buckets/' . $bucket->getId())
+            ->setParam('data', $bucket->getArrayCopy())
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($data, Response::MODEL_BUCKET);
+        $response->dynamic($bucket, Response::MODEL_BUCKET);
     });
 
 App::get('/v1/storage/buckets')
@@ -408,7 +588,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             $data['openSSLIV'] = \bin2hex($iv);
         }
 
-        $file = $dbForInternal->createDocument('files', new Document($data));
+        $file = $dbForInternal->createDocument('bucket_' . $bucket->getId(), new Document($data));
 
         $audits
             ->setParam('event', 'storage.files.create')
@@ -461,7 +641,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
         }
 
         if (!empty($after)) {
-            $afterFile = $dbForInternal->getDocument('files', $after);
+            $afterFile = $dbForInternal->getDocument('bucket_' . $bucketId, $after);
 
             if ($afterFile->isEmpty()) {
                 throw new Exception("File '{$after}' for the 'after' value not found.", 400);
@@ -469,8 +649,8 @@ App::get('/v1/storage/buckets/:bucketId/files')
         }
 
         $response->dynamic(new Document([
-            'files' => $dbForInternal->find('files', $queries, $limit, $offset, [], [$orderType], $afterFile ?? null),
-            'sum' => $dbForInternal->count('files', $queries, APP_LIMIT_COUNT),
+            'files' => $dbForInternal->find('bucket_' . $bucketId, $queries, $limit, $offset, [], [$orderType], $afterFile ?? null),
+            'sum' => $dbForInternal->count('bucket_' . $bucketId, $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_FILE_LIST);
     });
 
@@ -500,7 +680,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
             throw new Exception('Bucket not found', 404);
         }
 
-        $file = $dbForInternal->getDocument('files', $fileId);
+        $file = $dbForInternal->getDocument('bucket_' . $bucketId, $fileId);
 
         if ($file->isEmpty() || $file->getAttribute('bucketId') != $bucketId)  {
             throw new Exception('File not found', 404);
@@ -570,7 +750,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
         $key = \md5($fileId.$width.$height.$quality.$borderWidth.$borderColor.$borderRadius.$opacity.$rotation.$background.$storage.$output);
 
-        $file = $dbForInternal->getDocument('files', $fileId);
+        $file = $dbForInternal->getDocument('bucket_' . $bucketId, $fileId);
 
         if ($file->isEmpty() || $file->getAttribute('bucketId') != $bucketId) {
             throw new Exception('File not found', 404);
@@ -695,7 +875,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             throw new Exception('Bucket not found', 404);
         }
 
-        $file = $dbForInternal->getDocument('files', $fileId);
+        $file = $dbForInternal->getDocument('bucket_' . $bucketId, $fileId);
 
         if ($file->isEmpty() || $file->getAttribute('bucketId') != $bucketId) {
             throw new Exception('File not found', 404);
@@ -761,7 +941,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             throw new Exception('Bucket not found', 404);
         }
 
-        $file  = $dbForInternal->getDocument('files', $fileId);
+        $file  = $dbForInternal->getDocument('bucket_' . $bucketId, $fileId);
         $mimes = Config::getParam('storage-mimes');
 
         if ($file->isEmpty() || $file->getAttribute('bucketId') != $bucketId) {
@@ -842,13 +1022,13 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
             throw new Exception('Bucket not found', 404);
         }
 
-        $file = $dbForInternal->getDocument('files', $fileId);
+        $file = $dbForInternal->getDocument('bucket_' . $bucketId, $fileId);
 
         if ($file->isEmpty() || $file->getAttribute('bucketId') != $bucketId) {
             throw new Exception('File not found', 404);
         }
 
-        $file = $dbForInternal->updateDocument('files', $fileId, $file
+        $file = $dbForInternal->updateDocument('bucket_' . $bucketId, $fileId, $file
                 ->setAttribute('$read', $read)
                 ->setAttribute('$write', $write)
         );
@@ -893,7 +1073,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
             throw new Exception('Bucket not found', 404);
         }
 
-        $file = $dbForInternal->getDocument('files', $fileId);
+        $file = $dbForInternal->getDocument('bucket_' . $bucketId, $fileId);
 
         if ($file->isEmpty() || $file->getAttribute('bucketId') != $bucketId) {
             throw new Exception('File not found', 404);
@@ -902,7 +1082,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         $device = Storage::getDevice('files');
 
         if ($device->delete($file->getAttribute('path', ''))) {
-            if (!$dbForInternal->deleteDocument('files', $fileId)) {
+            if (!$dbForInternal->deleteDocument('bucket_' . $bucketId, $fileId)) {
                 throw new Exception('Failed to remove file from DB', 500);
             }
         }
