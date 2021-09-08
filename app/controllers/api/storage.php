@@ -218,6 +218,28 @@ App::post('/v1/storage/buckets')
                     'array' => false,
                     'filters' => [],
                 ]),
+                new Document([
+                    '$id' => 'chunksTotal',
+                    'type' => Database::VAR_INTEGER,
+                    'format' => '',
+                    'size' => 0,
+                    'signed' => false,
+                    'required' => false,
+                    'default' => null,
+                    'array' => false,
+                    'filters' => [],
+                ]),
+                new Document([
+                    '$id' => 'chunksUploaded',
+                    'type' => Database::VAR_INTEGER,
+                    'format' => '',
+                    'size' => 0,
+                    'signed' => false,
+                    'required' => false,
+                    'default' => null,
+                    'array' => false,
+                    'filters' => [],
+                ]),
             ], [
                 new Document([
                     '$id' => '_key_bucket',
