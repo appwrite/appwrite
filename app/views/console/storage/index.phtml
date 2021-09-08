@@ -33,10 +33,10 @@ $locale = $this->getParam("locale");
                 data-success-param-state-keys="search,offset">
                 <div class="row thin responsive">
                     <div class="col span-10">
-                        <input name="search" id="searchFiles" type="search" autocomplete="off" placeholder="<?php echo $locale->getText('console.storage.index.files-search-placeholder'); ?>" class="margin-bottom-no" data-ls-bind="{{router.params.search}}">
+                        <input name="search" id="searchFiles" type="search" autocomplete="off" placeholder="<?php echo $locale->getText('shared.search-placeholder'); ?>" class="margin-bottom-no" data-ls-bind="{{router.params.search}}">
                     </div>
                     <div class="col span-2 desktops-only">
-                        <button class="fill" title="Search" aria-label="<?php echo $locale->getText('console.storage.index.files-search-label'); ?>"><i class="icon-search"></i></button>
+                        <button class="fill" title="Search" aria-label="<?php echo $locale->getText('shared.search-label'); ?>"><i class="icon-search"></i></button>
                     </div>
                 </div>
             </form>

@@ -1,7 +1,5 @@
 {
-
     "layouts.default.cookie-info": "We are using cookies to make this website easier to use.",
-
 
     "shared.pagination-next": "Next",
     "shared.pagination-back": "Back",
@@ -11,11 +9,19 @@
     "shared.unselect-all": "Unselect All",
     "shared.input-password-error": "Six or more characters",
     "shared.permission-info": "Add * for wildcard access",
+    "shared.search-placeholder": "Search",
+    "shared.search-label": "Search",
+
+    "shared.graph.days90": "90d",
+    "shared.graph.days30": "30d",
+    "shared.graph.hours24": "24h",
+
+    "shared.json-view-title": "JSON View",
+    "shared.json-view-button-cancel": "Cancel",
 
     "shared.read-access": "Read Access",
     "shared.write-access": "Write Access",
     "shared.access-placeholder": "User ID, Team ID or Role",
-
 
     "shared.header.alt-logo": "Appwrite Logo",
     "shared.header.alt-logo-light": "Appwrite Light Logo",
@@ -23,14 +29,12 @@
 
     "shared.footer.version": "version",
 
-
     "general.error.title": "Error",
     "general.error.error-id-title": "Error ID",
     "general.error.button-back": "Back to",
 
     "console.comps.footer.button-docs": "Docs",
     "console.comps.footer.button-open-issue": "Open an Issue",
-
 
     "console.shared-button-back-to-home": "Home",
 
@@ -59,7 +63,80 @@
     "console.comps.header.menu-item-webhooks": "Webhooks",
     "console.comps.header.menu-item-keys": "API Keys",
     "console.comps.header.menu-item-settings": "Settings",
+    "console.comps.header.update-available-chunk1": "Appwrite version",
+    "console.comps.header.update-available-chunk2": "is available, check the",
+    "console.comps.header.update-available-chunk3": "release notes",
 
+    "console.functions.function.back-button": "Functions",
+    "console.functions.function.modal-execute-title": "Execute Function",
+    "console.functions.function.modal-execute-custom-data-label": "Custom Data",
+    "console.functions.function.modal-execute-custom-data-placeholder": "Data string (optional)",
+    "console.functions.function.modal-execute-submit-button": "Execute Now",
+    "console.functions.function.modal-execute-submit-success": "Function executed successfully",
+    "console.functions.function.modal-execute-submit-error": "Failed to execute function",
+    "console.functions.function.modal-deploy-tag-title": "Deploy a New Tag",
+    "console.functions.function.modal-deploy-tag-manual-title": "Manual",
+    "console.functions.function.modal-deploy-tag-cli-learn-more-chunk1": "Learn more about",
+    "console.functions.function.modal-deploy-tag-cli-learn-more-chunk2": "creating tags",
+    "console.functions.function.modal-deploy-tag-cli-learn-more-chunk3": "installing and using the",
+    "console.functions.function.modal-deploy-tag-cli-learn-more-chunk4": "Appwrite CLI",
+    "console.functions.function.modal-deploy-tag-manual-button-submit": "Create",
+    "console.functions.function.modal-deploy-tag-manual-button-cancel": "Cancel",
+    "console.functions.function.modal-deploy-tag-manual-submit-error": "Failed to create function tag",
+    "console.functions.function.modal-deploy-tag-manual-submit-success": "Created function tag successfully",
+    "console.functions.function.modal-deploy-tag-manual-label-command": "Command",
+    "console.functions.function.modal-deploy-tag-manual-label-gzip": "Gzipped Code (tar.gz file)",
+    "console.functions.function.modal-deploy-tag-manual-placeholder-command": "node main.js",
+    "console.functions.function.modal-deploy-tag-manual-description-gzip": "Max file size allowed",
+    "console.functions.function.overview-title": "Overview",
+    "console.functions.function.overview-runtime-alt": "Function Runtime",
+    "console.functions.function.overview-execute-button": "Execute Now",
+    "console.functions.function.overview-logs-button": "View Logs",
+    "console.functions.function.overview-tags-title": "Tags",
+    "console.functions.function.overview-tags-sum": "tags found",
+    "console.functions.function.overview-tags-no-tags-title": "No Tags Found",
+    "console.functions.function.overview-tags-no-tags-description": "You haven't deployed any tags for your function yet.",
+    "console.functions.function.overview-tags-activate-submit-button": "Activate",
+    "console.functions.function.overview-tags-activate-submit-error": "Failed to update tag",
+    "console.functions.function.overview-tags-activate-submit-success": "Tag updated successfully",
+    "console.functions.function.overview-tags-delete-submit-button": "Delete",
+    "console.functions.function.overview-tags-delete-submit-error": "Failed to delete function tag",
+    "console.functions.function.overview-tags-delete-submit-success": "Function tag deleted successfully",
+    "console.functions.function.overview-tags-delete-submit-confirm": "Are you sure you want to delete this function tag?",
+    "console.functions.function.overview-tags-deploy-button-modal": "Deploy Tag",
+    "console.functions.function.overview-tags-title": "Tags",
+    "console.functions.function.overview-side-function-id": "Function ID",
+    "console.functions.function.overview-side-view-as-json": "View as JSON",
+    "console.functions.function.overview-side-last-updated": "Last Updated",
+    "console.functions.function.overview-side-created": "Created",
+    "console.functions.function.overview-side-delete-confirm": "Are you sure you want to delete this function?",
+    "console.functions.function.overview-side-delete-error": "Failed to delete function",
+    "console.functions.function.overview-side-delete-success": "Function deleted successfully",
+    "console.functions.function.overview-side-delete-button": "Delete Function",
+    "console.functions.function.monitors-title": "Monitors",
+    "console.functions.function.monitors-stats-executions": "Executions",
+    "console.functions.function.monitors-stats-errors": "Errors",
+    "console.functions.function.monitors-stats-cpu-time": "CPU Time (seconds)",
+    "console.functions.function.logs-executions-sum": "executions found",
+    "console.functions.function.logs-title": "Logs",
+    "console.functions.function.logs-table-column-created": "Created",
+    "console.functions.function.logs-table-column-status": "Status",
+    "console.functions.function.logs-table-column-trigger": "Trigger",
+    "console.functions.function.logs-table-column-runtime": "Runtime",
+    "console.functions.function.logs-exit-code": "exit code",
+    "console.functions.function.logs-status-processing": "processing",
+    "console.functions.function.logs-status-failed": "failed",
+    "console.functions.function.logs-status-waiting": "waiting",
+    "console.functions.function.logs-status-completed": "completed",
+    "console.functions.function.logs-trigger-http": "http",
+    "console.functions.function.logs-trigger-schedule": "schedule",
+    "console.functions.function.logs-trigger-event": "event",
+    "console.functions.function.logs-button-errors": "Errors",
+    "console.functions.function.logs-button-output": "Output",
+    "console.functions.function.logs-no-output": "No output was logged.",
+    "console.functions.function.logs-no-error": "No errors were logged.",
+    "console.functions.function.logs-no-executions-title": "No Logs Founds",
+    "console.functions.function.logs-no-executions-description": "Execute your function to view execution logs.",
 
     "console.functions.index.title": "Functions",
     "console.functions.index.no-functions-title": "No Functions Found",
@@ -79,16 +156,12 @@
     "console.storage.index.title": "Storage",
     "console.storage.index.files-sum": "files found",
     "console.storage.index.files-title": "Files",
-    "console.storage.index.files-search-placeholder": "Search",
-    "console.storage.index.files-search-label": "Search",
     "console.storage.index.no-files-title": "No Files Found",
     "console.storage.index.no-files-description": "Upload your first file to get started.",
     "console.storage.index.table-column-filename": "Filename",
     "console.storage.index.table-column-type": "Type",
     "console.storage.index.table-column-size": "Size",
     "console.storage.index.table-column-created-at": "Created at",
-
-
     "console.storage.index.create-button-modal": "Add File",
     "console.storage.index.create-button-submit": "Create",
     "console.storage.index.create-button-cancel": "Cancel",
@@ -96,19 +169,15 @@
     "console.storage.index.create-submit-error": "Failed to upload file",
     "console.storage.index.create-submit-success": "File uploaded successfully",
     "console.storage.index.create-submit-loading": "Uploading File...",
-
-
     "console.storage.index.update-title": "Update File",
     "console.storage.index.update-button-submit": "Update",
     "console.storage.index.update-button-cancel": "Cancel",
-
     "console.storage.index.update-field-id": "Field ID",
     "console.storage.index.update-submit-error": "Failed to update file",
     "console.storage.index.update-submit-success": "File updated successfully",
     "console.storage.index.update-preview": "File Preview",
     "console.storage.index.update-preview-new-window": "New Window",
     "console.storage.index.update-preview-download": "Download",
-
     "console.storage.index.delete-button-submit": "Delete File",
     "console.storage.index.delete-submit-confirm": "Are you sure you want to delete this file?",
     "console.storage.index.delete-submit-success": "Deleted file successfully",
@@ -122,8 +191,6 @@
     "console.index.no-projects-description": "No Projects Found, Create your first project now.",
     "console.index.project-detail-apps": "apps",
     "console.index.button-create-project": "Create Project",
-
-
     "console.index.community-card-title": "Join The Community",
     "console.index.community-card-description": "Join Appwrite growing developers community channels.",
     "console.index.community-card-button-twitter": "on Twitter",
@@ -131,46 +198,31 @@
     "console.index.community-card-button-linkedin": "on Linkedin",
     "console.index.community-card-button-discord": "Discord Server",
     "console.index.community-card-button-github": "on Github",
-
-
     "console.index.docs-card-title": "Read The Docs",
     "console.index.docs-card-description": "Take full advantage of Appwrite APIs and tools for your new project.",
     "console.index.docs-card-button": "Full Documentation",
-
-
     "console.index.button-create-project": "Create",
-    "console.index.button-create-project": "Create",
-    "console.index.button-create-project": "Create",
-
 
     "console.keys.index.title": "API Keys",
     "console.keys.index.no-keys-title": "No API Keys Found",
     "console.keys.index.no-keys-description": "You haven't created any API keys for your project yet.",
-
-
     "console.keys.index.update-title": "Update API Key",
-    "joinconsole.keys.index.update-button-modal": "Update",
+    "console.keys.index.update-button-modal": "Update",
     "console.keys.index.update-submit-success": "Updated API key successfully",
     "console.keys.index.update-submit-error": "Failed to update API key",
     "console.keys.index.update-button-submit": "Save",
     "console.keys.index.update-button-cancel": "Cancel",
     "console.keys.index.update-label-name": "Name",
-
     "console.keys.index.scopes-info": "scopes granted",
     "console.keys.index.button-show-secret": "Show Secret",
-
     "console.keys.index.secret-title": "API Key Secret",
     "console.keys.index.secret-button-cancel": "Close",
-
     "console.keys.index.delete-button-modal": "Delete",
     "console.keys.index.delete-submit-success": "Deleted API key successfully",
     "console.keys.index.delete-submit-error": "Failed to delete API key",
     "console.keys.index.delete-submit-confirm": "Are you sure you want to delete this API key?",
-
-
     "console.keys.index.shared-label-scopes-chunk1": "Scopes",
     "console.keys.index.shared-label-scopes-chunk2": "Learn more",
-
     "console.keys.index.add-key-modal-title": "Add API Key",
     "console.keys.index.add-key-button": "Add API Keys",
     "console.keys.index.add-key-submit-error": "Failed to create API key",
@@ -184,8 +236,6 @@
     "console.account.index.overview": "Overview",
     "console.account.index.sessions": "Sessions",
     "console.account.index.activity": "Activity",
-
-
     "console.account.index.overview-update-password-button-submit": "Update Password",
     "console.account.index.overview-update-password-title": "Update Password",
     "console.account.index.overview-update-password-button-cancel": "Cancel",
@@ -193,36 +243,22 @@
     "console.account.index.overview-update-password-label-new-password": "New Password",
     "console.account.index.overview-update-password-submit-error": "Failed updating password",
     "console.account.index.overview-update-password-submit-success": "Password updated successfully",
-
-
     "console.account.index.overview-update-name-button-submit": "Update Name",
     "console.account.index.overview-update-name-label-name": "Name",
     "console.account.index.overview-update-name-submit-error": "Failed to update your name",
     "console.account.index.overview-update-name-submit-success": "Your name was updated successfully",
-
-
     "console.account.index.overview-update-email-submit-error": "Failed updating email address",
     "console.account.index.overview-update-email-submit-success": "Email address updated successfully",
-
     "console.account.index.overview-update-email-placeholder-email": "me@example.com",
     "console.account.index.overview-update-email-label-email": "Email",
-
     "console.account.index.overview-update-email-label-password": "Password",
     "console.account.index.overview-update-email-button-submit": "Update",
     "console.account.index.overview-update-email-title": "Update Email",
     "console.account.index.overview-update-email-subtitle": "Confirm Password",
     "console.account.index.overview-update-email-button-cancel": "Cancel",
-
-
-
     "console.account.index.overview-form-logout-button-submit": "Logout",
     "console.account.index.overview-form-logout-submit-error": "Logout failed",
-
-
-
     "console.account.index.overview-alt-avatar": "User Avatar",
-
-
     "console.account.index.overview-dangerzone-title": "Danger Zone",
     "console.account.index.overview-dangerzone-description-chunk1": "This is the area where you can delete your account.",
     "console.account.index.overview-dangerzone-description-chunk2": "By deleting your account you will lose access to any of your teams and shared data.",
@@ -230,26 +266,18 @@
     "console.account.index.overview-dangerzone-confirm": "Are you sure you want to delete your account?",
     "console.account.index.overview-dangerzone-error": "Account deactivation failed",
     "console.account.index.overview-dangerzone-button-submit": "Delete Account",
-
-
     "console.account.index.sessions-logout-submit-error": "Logout from All Sessions Failed",
     "console.account.index.sessions-logout-button-submit": "Logout from all sessions",
-
     "console.account.index.sessions-info-current": "Current Session",
-
     "console.account.index.sessions-current-logout-submit-error": "Logout from Session Failed",
     "console.account.index.sessions-current-logout-button-submit": "Logout",
-
-
     "console.account.index.activity-table-column-date": "Date",
     "console.account.index.activity-table-column-event": "Event",
     "console.account.index.activity-table-column-client": "Client",
     "console.account.index.activity-table-column-location": "Location",
     "console.account.index.activity-table-column-ip": "IP",
-
     "console.account.index.shared-client-unknown": "Unknown",
     "console.account.index.shared-client-joiner": "on",
-
 
     "home.auth.shared.fields-required-info": "* All fields are required",
 
@@ -311,6 +339,7 @@
     "home.auth.signin.forgot-password-chunk1": "Forgot password?",
     "home.auth.signin.forgot-password-chunk2": "or don't have an account?",
     "home.auth.signin.forgot-password-chunk3": "Sign up now",
+
     "settings.inspire": "\"The art of being wise is the art of knowing what to overlook.\"",
     "settings.locale": "en",
     "settings.direction": "ltr",

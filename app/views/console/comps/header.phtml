@@ -3,7 +3,7 @@ $locale = $this->getParam("locale");
 /** @var Utopia\Locale\Locale $locale */
 ?>
 
-<header class="clear" data-version>
+<header class="clear" data-version data-version-translation-chunk1="<?php echo $locale->getText('console.comps.header.update-available-chunk1'); ?>" data-version-translation-chunk2="<?php echo $locale->getText('console.comps.header.update-available-chunk2'); ?>" data-version-translation-chunk3="<?php echo $locale->getText('console.comps.header.update-available-chunk3'); ?>">
     <a href="/console" class="logo pull-start">
         <img src="/images/appwrite.svg" alt="<?php echo $locale->getText('shared.header.alt-logo-light'); ?>" class="force-light" loading="lazy" />
         <img src="/images/appwrite-footer-dark.svg" alt="<?php echo $locale->getText('shared.header.alt-logo-dark'); ?>" class="force-dark" loading="lazy" />
