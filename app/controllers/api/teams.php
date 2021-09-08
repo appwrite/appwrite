@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Database\Validator\CustomId;
 use Appwrite\Detector\Detector;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response;
@@ -32,12 +33,13 @@ App::post('/v1/teams')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TEAM)
+    ->param('teamId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Team name. Max length: 128 chars.')
     ->param('roles', ['owner'], new ArrayList(new Key()), 'Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.', true)
     ->inject('response')
     ->inject('user')
     ->inject('dbForInternal')
-    ->action(function ($name, $roles, $response, $user, $dbForInternal) {
+    ->action(function ($teamId, $name, $roles, $response, $user, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $user */
         /** @var Utopia\Database\Database $dbForInternal */
@@ -47,7 +49,7 @@ App::post('/v1/teams')
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
         $isAppUser = Auth::isAppUser(Authorization::$roles);
 
-        $teamId = $dbForInternal->getId();
+        $teamId = $teamId == 'unique()' ? $dbForInternal->getId() : $teamId;
         $team = $dbForInternal->createDocument('teams', new Document([
             '$id' => $teamId ,
             '$read' => ['team:'.$teamId],
@@ -97,16 +99,25 @@ App::get('/v1/teams')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('after', '', new UID(), 'ID of the team used as the starting point for the query, excluding the team itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($search, $limit, $offset, $orderType, $response, $dbForInternal) {
+    ->action(function ($search, $limit, $offset, $after, $orderType, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
         $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
 
-        $results = $dbForInternal->find('teams', $queries, $limit, $offset, ['_id'], [$orderType]);
+        if (!empty($after)) {
+            $afterTeam = $dbForInternal->getDocument('teams', $after);
+
+            if ($afterTeam->isEmpty()) {
+                throw new Exception("Team '{$after}' for the 'after' value not found.", 400);
+            }
+        }
+
+        $results = $dbForInternal->find('teams', $queries, $limit, $offset, [], [$orderType], $afterTeam ?? null);
         $sum = $dbForInternal->count('teams', $queries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
@@ -246,7 +257,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->param('email', '', new Email(), 'New team member email.')
     ->param('name', '', new Text(128), 'New team member name. Max length: 128 chars.', true)
     ->param('roles', [], new ArrayList(new Key()), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.')
-    ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add our own built-in confirm page
+    ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients'])
     ->inject('response')
     ->inject('project')
     ->inject('user')
@@ -273,11 +284,11 @@ App::post('/v1/teams/:teamId/memberships')
             throw new Exception('Team not found', 404);
         }
 
-        $invitee = $dbForInternal->findFirst('users', [new Query('email', Query::TYPE_EQUAL, [$email])], 1); // Get user by email address
+        $invitee = $dbForInternal->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
 
         if (empty($invitee)) { // Create new user if no user with same email found
 
-            $limit = $project->getAttribute('usersAuthLimit', 0);
+            $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
         
             if ($limit !== 0 && $project->getId() !== 'console') { // check users limit, console invites are allways allowed.
                 $sum = $dbForInternal->count('users', [], APP_LIMIT_USERS);
@@ -369,35 +380,18 @@ App::post('/v1/teams/:teamId/memberships')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'teamId' => $team->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
         $url = Template::unParseURL($url);
 
-        $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
-        $content = new Template(__DIR__.'/../../config/locale/translations/templates/'.$locale->getText('account.emails.invitation.body'));
-        $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
-        $title = \sprintf($locale->getText('account.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]']));
-        
-        $body
-            ->setParam('{{content}}', $content->render(false))
-            ->setParam('{{cta}}', $cta->render())
-            ->setParam('{{title}}', $title)
-            ->setParam('{{direction}}', $locale->getText('settings.direction'))
-            ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
-            ->setParam('{{team}}', $team->getAttribute('name', '[TEAM-NAME]'))
-            ->setParam('{{owner}}', $user->getAttribute('name', ''))
-            ->setParam('{{redirect}}', $url)
-            ->setParam('{{bg-body}}', '#f7f7f7')
-            ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{bg-cta}}', '#073b4c')
-            ->setParam('{{text-content}}', '#000000')
-            ->setParam('{{text-cta}}', '#ffffff')
-        ;
-
         if (!$isPrivilegedUser && !$isAppUser) { // No need of confirmation when in admin or app mode
             $mails
                 ->setParam('event', 'teams.memberships.create')
-                ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name')))
+                ->setParam('from', $project->getId())
                 ->setParam('recipient', $email)
                 ->setParam('name', $name)
-                ->setParam('subject', $title)
-                ->setParam('body', $body->render())
+                ->setParam('url', $url)
+                ->setParam('locale', $locale->default)
+                ->setParam('project', $project->getAttribute('name', ['[APP-NAME]']))
+                ->setParam('owner', $user->getAttribute('name', ''))
+                ->setParam('team', $team->getAttribute('name', '[TEAM-NAME]'))
+                ->setParam('type', MAIL_TYPE_INVITATION)
                 ->trigger()
             ;
         }
@@ -405,7 +399,7 @@ App::post('/v1/teams/:teamId/memberships')
         $audits
             ->setParam('userId', $invitee->getId())
             ->setParam('event', 'teams.memberships.create')
-            ->setParam('resource', 'teams/'.$teamId)
+            ->setParam('resource', 'team/'.$teamId)
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -430,10 +424,11 @@ App::get('/v1/teams/:teamId/memberships')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('after', '', new UID(), 'ID of the membership used as the starting point for the query, excluding the membership itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($teamId, $search, $limit, $offset, $orderType, $response, $dbForInternal) {
+    ->action(function ($teamId, $search, $limit, $offset, $after, $orderType, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
@@ -443,7 +438,15 @@ App::get('/v1/teams/:teamId/memberships')
             throw new Exception('Team not found', 404);
         }
 
-        $memberships = $dbForInternal->find('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], $limit, $offset, ['_id'], [$orderType]);
+        if (!empty($after)) {
+            $afterMembership = $dbForInternal->getDocument('memberships', $after);
+
+            if ($afterMembership->isEmpty()) {
+                throw new Exception("Membership '{$after}' for the 'after' value not found.", 400);
+            }
+        }
+
+        $memberships = $dbForInternal->find('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], $limit, $offset, [], [$orderType], $afterMembership ?? null);
         $sum = $dbForInternal->count('memberships', [new Query('teamId', Query::TYPE_EQUAL, [$teamId])], APP_LIMIT_COUNT);
         $users = [];
 
@@ -461,6 +464,42 @@ App::get('/v1/teams/:teamId/memberships')
             'memberships' => $users,
             'sum' => $sum,
         ]), Response::MODEL_MEMBERSHIP_LIST);
+    });
+
+App::get('/v1/teams/:teamId/memberships/:membershipId')
+    ->desc('Get Team Membership')
+    ->groups(['api', 'teams'])
+    ->label('scope', 'teams.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'teams')
+    ->label('sdk.method', 'getMembership')
+    ->label('sdk.description', '/docs/references/teams/get-team-member.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MEMBERSHIP_LIST)
+    ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->param('membershipId', '', new UID(), 'membership unique ID.')
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->action(function ($teamId, $membershipId, $response, $dbForInternal) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
+
+        $team = $dbForInternal->getDocument('teams', $teamId);
+
+        if ($team->isEmpty()) {
+            throw new Exception('Team not found', 404);
+        }
+
+        $membership = $dbForInternal->getDocument('memberships', $membershipId);
+
+        if($membership->isEmpty() || empty($membership->getAttribute('userId', null))) {
+            throw new Exception('Membership not found', 404);
+        }
+
+        $temp = $dbForInternal->getDocument('users', $membership->getAttribute('userId', null))->getArrayCopy(['email', 'name']);
+
+        $response->dynamic(new Document(\array_merge($temp, $membership->getArrayCopy())), Response::MODEL_MEMBERSHIP );
     });
 
 App::patch('/v1/teams/:teamId/memberships/:membershipId')
@@ -517,12 +556,12 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         $membership->setAttribute('roles', $roles);
         $membership = $dbForInternal->updateDocument('memberships', $membership->getId(), $membership);
 
-        //TODO sync updated membership in the user $profile object using TYPE_REPLACE
+        // TODO sync updated membership in the user $profile object using TYPE_REPLACE
 
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'teams.memberships.update')
-            ->setParam('resource', 'teams/'.$teamId)
+            ->setParam('resource', 'team/'.$teamId)
         ;
 
         $response->dynamic($membership, Response::MODEL_MEMBERSHIP);
@@ -647,7 +686,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'teams.memberships.update.status')
-            ->setParam('resource', 'teams/'.$teamId)
+            ->setParam('resource', 'team/'.$teamId)
         ;
 
         if (!Config::getParam('domainVerification')) {
@@ -740,7 +779,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         $audits
             ->setParam('userId', $membership->getAttribute('userId'))
             ->setParam('event', 'teams.memberships.delete')
-            ->setParam('resource', 'teams/'.$teamId)
+            ->setParam('resource', 'team/'.$teamId)
         ;
 
         $events

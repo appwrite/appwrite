@@ -91,7 +91,7 @@ class OpenAPI3 extends Format
         $usedModels = [];
 
         foreach ($this->routes as $route) { /** @var \Utopia\Route $route */
-            $url = \str_replace('/v1', '', $route->getURL());
+            $url = \str_replace('/v1', '', $route->getPath());
             $scope = $route->getLabel('scope', '');
             $hide = $route->getLabel('sdk.hide', false);
             $consumes = [$route->getLabel('sdk.request.type', 'application/json')];

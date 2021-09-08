@@ -3,7 +3,7 @@ $fileLimit = $this->getParam('fileLimit', 0);
 $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 $events = array_keys($this->getParam('events', []));
 $timeout = $this->getParam('timeout', 900);
-$usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
+$usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
 ?>
 <div
     data-service="functions.get"
@@ -23,8 +23,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
     </div>
 
     <div data-ui-modal class="modal width-large box close" data-button-hide="on" data-open-event="open-json">
-        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
-        
+        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
         <h2>JSON View</h2>
 
         <div class="margin-bottom">
@@ -37,9 +37,9 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
     <div class="zone xl">
         <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
             <li data-state="/console/functions/function?id={{router.params.id}}&project={{router.params.project}}">
-                
+
                 <h2>Overview</h2>
-                
+
                 <div class="row responsive margin-top-negative">
                     <div class="col span-8 margin-bottom">
                         <label>&nbsp;</label>
@@ -98,7 +98,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                                                 <input type="hidden" name="tag" data-ls-bind="{{tag.$id}}">
                                                 <button>Activate</button>
                                             </form>
-    
+
                                             <b data-ls-bind="{{tag.$id}}"></b> &nbsp;
                                             <span class="text-fade" data-ls-bind="{{tag.command}}"></span>
                                             <div class="text-size-small margin-top-small clear">
@@ -202,9 +202,9 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                     </div>
                 </div>
             </li>
-            <?php if($usageStatsEnabled): ?>
+            <?php if ($usageStatsEnabled): ?>
             <li data-state="/console/functions/function/monitors?id={{router.params.id}}&project={{router.params.project}}">
-                
+
                 <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '90d'"
                     data-service="functions.getUsage"
                     data-event="submit"
@@ -238,8 +238,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                 <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '24h'" disabled>24h</button>
 
                 <h2>Monitors</h2>
-                
-                <div 
+
+                <div
                     data-service="functions.getUsage"
                     data-event="load"
                     data-name="usage"
@@ -281,7 +281,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                     </ul>
                 </div>
             </li>
-            <?php endif; ?>
+            <?php endif;?>
             <li data-state="/console/functions/function/logs?id={{router.params.id}}&project={{router.params.project}}">
 
                 <div class="text-fade text-size-small pull-end margin-top" data-ls-bind="{{project-function-executions.sum}} executions found"></div>
@@ -337,7 +337,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                                         </td>
                                         <td data-title="">
                                             <div data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-title="">
-                                                
+
                                                 <button class="desktops-only pull-end link margin-start text-danger" data-ls-ui-trigger="execution-stderr-{{execution.$id}}">Errors</button>
                                                 <button class="desktops-only pull-end link margin-start" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Output</button>
 
@@ -452,8 +452,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                                     <input name="name" id="function-name" type="text" autocomplete="off" data-ls-bind="{{project-function.name}}" data-forms-text-direction required placeholder="Function Name" maxlength="128" />
 
                                     <label for="execute">Execute Access <span class="tooltip small" data-tooltip="Choose who can execute this function using the client API."><i class="icon-info-circled"></i></span> <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
-                                    <input type="hidden" id="execute" name="execute" data-forms-tags data-cast-to="json" data-ls-bind="{{project-function.$permissions.execute}}" placeholder="User ID, Team ID or Role" />
-                                    <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
+                                    <input type="hidden" id="execute" name="execute" data-forms-tags data-cast-to="json" data-ls-bind="{{project-function.execute}}" placeholder="User ID, Team ID or Role" />
+                                    <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
 
                                     <label for="timeout">Timeout (seconds) <span class="tooltip small" data-tooltip="Limit the execution time of your function."><i class="icon-info-circled"></i></span></label>
                                     <input name="timeout" id="function-timeout" type="number" autocomplete="off" data-ls-bind="{{project-function.timeout}}" min="1" max="<?php echo $this->escape($timeout); ?>" data-cast-to="integer" />
@@ -463,18 +463,18 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                                 <section class="margin-bottom" data-forms-select-all>
                                     <label for="events" class="margin-bottom">Events <span class="tooltip small" data-tooltip="Choose which events should trigger this function."><i class="icon-info-circled"></i></span></label>
                                     <div class="row responsive thin margin-top-small">
-                                        <?php foreach ($events as $i => $event) : ?>
+                                        <?php foreach ($events as $i => $event): ?>
                                             <div class="col span-6 text-one-liner margin-bottom text-height-large text-size-small" title="<?php echo $event; ?>">
                                                 <input type="checkbox" name="events" data-ls-bind="{{project-function.events}}" id="<?php echo $event; ?>" value="<?php echo $event; ?>" />
                                                 &nbsp;
                                                 <label class="inline" for="<?php echo $event; ?>"><?php echo $event; ?></label>
                                             </div>
-                                            <?php if (($i + 1) % 2 === 0) : ?>
+                                            <?php if (($i + 1) % 2 === 0): ?>
                                             </div>
                                             <div class="row responsive thin">
-                                            <?php endif; ?>
+                                            <?php endif;?>
 
-                                        <?php endforeach; ?>
+                                        <?php endforeach;?>
                                     </div>
                                 </section>
 
@@ -631,7 +631,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                 data-failure="alert"
                 data-failure-param-alert-text="Failed to create function tag"
                 data-failure-param-alert-classname="error">
-                
+
                 <input type="hidden" name="functionId" data-ls-bind="{{router.params.id}}" />
 
                 <label for="tag-command">Command</label>
@@ -649,5 +649,5 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
     </ul>
 
 
-    
+
 </div>

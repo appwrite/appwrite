@@ -7,8 +7,333 @@ $providers = Config::getParam('providers', []);
 $auth = Config::getParam('auth', []);
 
 $collections = [
+    'collections' => [
+        '$collection' => Database::METADATA,
+        '$id' => 'collections',
+        'name' => 'Collections',
+        'attributes' => [
+            [
+                '$id' => 'name',
+                'type' => Database::VAR_STRING,
+                'size' => 256,
+                'required' => true,
+                'signed' => true,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'dateCreated',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'dateUpdated',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'permission',
+                'type' => Database::VAR_STRING,
+                'size' => 64,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'attributes',
+                'type' => Database::VAR_STRING,
+                'size' => 1000000,
+                'required' => false,
+                'signed' => true,
+                'array' => false,
+                'filters' => ['subQueryAttributes'],
+            ],
+            [
+                '$id' => 'indexes',
+                'type' => Database::VAR_STRING,
+                'size' => 1000000,
+                'required' => false,
+                'signed' => true,
+                'array' => false,
+                'filters' => ['subQueryIndexes'],
+            ],
+            [
+                '$id' => 'search',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+        ],
+        'indexes' => [
+            [
+                '$id' => '_fulltext_search',
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => ['search'],
+                'lengths' => [1024],
+                'orders' => [Database::ORDER_ASC],
+            ],
+        ],
+    ],
+
+    'attributes' => [
+        '$collection' => Database::METADATA,
+        '$id' => 'attributes',
+        'name' => 'Attributes',
+        'attributes' => [
+            [
+                '$id' => 'collectionId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'key',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'type',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 256,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'status',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'size',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'required',
+                'type' => Database::VAR_BOOLEAN,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'default',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'signed',
+                'type' => Database::VAR_BOOLEAN,
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'array',
+                'type' => Database::VAR_BOOLEAN,
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'format',
+                'type' => Database::VAR_STRING,
+                'size' => 64,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'formatOptions',
+                'type' => Database::VAR_STRING,
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => new stdClass,
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
+                '$id' => 'filters',
+                'type' => Database::VAR_STRING,
+                'size' => 64,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => true,
+                'filters' => [],
+            ],
+        ],
+        'indexes' => [
+            [
+                '$id' => '_key_collection',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['collectionId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ],
+        ],
+    ],
+
+    'indexes' => [
+        '$collection' => Database::METADATA,
+        '$id' => 'indexes',
+        'name' => 'Indexes',
+        'attributes' => [
+            [
+                '$id' => 'collectionId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'key',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'type',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'status',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'attributes',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => true,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'lengths',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => true,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'orders',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 4,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => true,
+                'filters' => [],
+            ],
+        ],
+        'indexes' => [
+            [
+                '$id' => '_key_collection',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['collectionId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ],
+        ],
+    ],
+
     'projects' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'projects',
         'name' => 'Projects',
         'attributes' => [
@@ -72,17 +397,6 @@ $collections = [
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'usersAuthLimit',
-                'type' => Database::VAR_INTEGER,
-                'format' => '',
-                'size' => 0,
                 'signed' => true,
                 'required' => false,
                 'default' => null,
@@ -156,6 +470,39 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => 'services',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
+                '$id' => 'auths',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
+                '$id' => 'providers',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
                 '$id' => 'platforms',
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -189,17 +536,6 @@ $collections = [
                 'filters' => ['json'],
             ],
             [
-                '$id' => 'tasks',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 16384,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => true,
-                'filters' => ['json'],
-            ],
-            [
                 '$id' => 'domains',
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -218,12 +554,12 @@ $collections = [
                 'attributes' => ['name'],
                 'lengths' => [1024],
                 'orders' => [Database::ORDER_ASC],
-            ]
+            ],
         ],
     ],
 
     'users' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'users',
         'name' => 'Users',
         'attributes' => [
@@ -291,7 +627,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => ['json']
+                'filters' => ['json'],
             ],
             [
                 '$id' => 'registration',
@@ -367,12 +703,12 @@ $collections = [
                 'attributes' => ['email'],
                 'lengths' => [1024],
                 'orders' => [Database::ORDER_ASC],
-            ]
+            ],
         ],
     ],
 
     'sessions' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'sessions',
         'name' => 'Sessions',
         'attributes' => [
@@ -473,7 +809,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => 'osCode',
@@ -484,7 +820,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => 'osName',
@@ -495,7 +831,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => 'osVersion',
@@ -506,7 +842,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => 'clientType',
@@ -517,7 +853,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => 'clientCode',
@@ -528,7 +864,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => 'clientName',
@@ -539,7 +875,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => 'clientVersion',
@@ -550,7 +886,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => 'clientEngine',
@@ -561,7 +897,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => 'clientEngineVersion',
@@ -572,7 +908,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => 'deviceName',
@@ -583,7 +919,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => 'deviceBrand',
@@ -594,7 +930,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
             [
                 '$id' => 'deviceModel',
@@ -605,7 +941,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [],
             ],
         ],
         'indexes' => [
@@ -615,12 +951,12 @@ $collections = [
                 'attributes' => ['provider', 'providerUid'],
                 'lengths' => [100, 100],
                 'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
-            ]
+            ],
         ],
     ],
 
     'teams' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'teams',
         'name' => 'Teams',
         'attributes' => [
@@ -665,12 +1001,12 @@ $collections = [
                 'attributes' => ['name'],
                 'lengths' => [1024],
                 'orders' => [Database::ORDER_ASC],
-            ]
+            ],
         ],
     ],
 
     'memberships' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'memberships',
         'name' => 'Memberships',
         'attributes' => [
@@ -773,12 +1109,12 @@ $collections = [
                 'attributes' => ['userId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
-            ]
+            ],
         ],
     ],
-    
+
     'files' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'files',
         'name' => 'Files',
         'attributes' => [
@@ -972,12 +1308,12 @@ $collections = [
                 'attributes' => ['name'],
                 'lengths' => [1024],
                 'orders' => [Database::ORDER_ASC],
-            ]
+            ],
         ],
     ],
-    
+
     'functions' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'functions',
         'name' => 'Functions',
         'attributes' => [
@@ -990,6 +1326,17 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => true,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'name',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 2048,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
                 'filters' => [],
             ],
             [
@@ -1020,17 +1367,6 @@ $collections = [
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'name',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 2048,
                 'signed' => true,
                 'required' => false,
                 'default' => null,
@@ -1133,12 +1469,12 @@ $collections = [
                 'attributes' => ['name'],
                 'lengths' => [1024],
                 'orders' => [Database::ORDER_ASC],
-            ]
+            ],
         ],
     ],
-    
+
     'tags' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'tags',
         'name' => 'Tags',
         'attributes' => [
@@ -1206,12 +1542,12 @@ $collections = [
                 'attributes' => ['functionId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
-            ]
+            ],
         ],
     ],
 
     'executions' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'executions',
         'name' => 'Executions',
         'attributes' => [
@@ -1323,12 +1659,12 @@ $collections = [
                 'attributes' => ['functionId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
-            ]
+            ],
         ],
     ],
-    
+
     'certificates' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'certificates',
         'name' => 'Certificates',
         'attributes' => [
@@ -1413,7 +1749,7 @@ $collections = [
         ],
     ],
     'buckets' => [
-        '$collection' => Database::COLLECTIONS,
+        '$collection' => Database::METADATA,
         '$id' => 'buckets',
         '$permissions' => ['read' => ['*']],
         'name' => 'Buckets',
@@ -1532,52 +1868,5 @@ $collections = [
         ]
     ]
 ];
-
-/*
- * Add enabled OAuth2 providers to default data rules
- */
-foreach ($providers as $index => $provider) {
-    if (!$provider['enabled']) {
-        continue;
-    }
-
-    $collections['projects']['attributes'][] = [
-        '$id' => 'usersOauth2'.\ucfirst($index).'Appid',
-        'type' => Database::VAR_STRING,
-        'format' => '',
-        'size' => 16384,
-        'signed' => true,
-        'required' => false,
-        'default' => null,
-        'array' => false,
-        'filters' => [],
-    ];
-
-    $collections['projects']['attributes'][] = [
-        '$id' => 'usersOauth2'.\ucfirst($index).'Secret',
-        'type' => Database::VAR_STRING,
-        'format' => '',
-        'size' => 16384,
-        'signed' => true,
-        'required' => false,
-        'default' => null,
-        'array' => false,
-        'filters' => [],
-    ];
-}
-
-foreach ($auth as $index => $method) {
-    $collections['projects']['attributes'][] = [
-        '$id' => $method['key'] ?? '',
-        'type' => Database::VAR_BOOLEAN,
-        'format' => '',
-        'size' => 0,
-        'signed' => true,
-        'required' => false,
-        'default' => null,
-        'array' => false,
-        'filters' => [],
-    ];
-}
 
 return $collections;

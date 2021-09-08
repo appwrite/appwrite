@@ -19,8 +19,8 @@ ENV DEBUG=$DEBUG
 
 ENV PHP_REDIS_VERSION=5.3.4 \
     PHP_MONGODB_VERSION=1.9.1 \
-    PHP_SWOOLE_VERSION=v4.6.7 \
-    PHP_IMAGICK_VERSION=3.5.0 \
+    PHP_SWOOLE_VERSION=v4.7.0 \
+    PHP_IMAGICK_VERSION=3.5.1 \
     PHP_YAML_VERSION=2.2.1 \
     PHP_MAXMINDDB_VERSION=v1.10.1
 
@@ -238,8 +238,6 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-deletes && \
     chmod +x /usr/local/bin/worker-functions && \
     chmod +x /usr/local/bin/worker-mails && \
-    chmod +x /usr/local/bin/worker-tasks && \
-    chmod +x /usr/local/bin/worker-usage && \
     chmod +x /usr/local/bin/worker-webhooks
 
 # Letsencrypt Permissions
