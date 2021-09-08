@@ -72,7 +72,7 @@ $locale = $this->getParam("locale");
                             data-success="trigger"
                             data-success-param-trigger-events="functions.listTags">
 
-                            <h3><?php echo $locale->getText('console.functions.function.overview-tags-title'); ?> <span class="text-fade text-size-small pull-end margin-top-small" data-ls-bind="{{project-function-tags.sum}} <?php echo $locale->getText('console.functions.function.overview-tags-sum'); ?>"></span></h3>
+                            <h3><?php echo $locale->getText('console.functions.function.overview-tags-title'); ?> <span class="text-fade text-size-small pull-end margin-top-small" data-ls-bind="<?php echo $locale->getText('console.functions.function.overview-tags-sum'); ?>"></span></h3>
 
                             <div data-ls-if="0 == {{project-function-tags.tags.length}} || undefined == {{project-function-tags.tags.length}}" class="box margin-top margin-bottom">
                                 <h3 class="margin-bottom-small text-bold"><?php echo $locale->getText('console.functions.function.overview-tags-no-tags-title'); ?></h3>
