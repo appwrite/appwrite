@@ -59,7 +59,7 @@ $locale = $this->getParam("locale");
                         <input type="text" class="full-width" data-ls-attrs="id=name-{{key.$id}}" name="name" required autocomplete="off" data-ls-bind="{{key.name}}" maxlength="128" />
 
                         <section data-forms-select-all data-forms-select-all-text="<?php echo $locale->getText('shared.select-all'); ?>" data-forms-unselect-all-text="<?php echo $locale->getText('shared.unselect-all'); ?>">
-                            <label data-ls-attrs="for=scopes-{{key.$id}}"><?php echo $locale->getText('console.keys.index.shared-label-scopes-chunk1'); ?> (<a data-ls-attrs="href={{env.HOME}}/docs/keys" target="_blank" rel="noopener"><?php echo $locale->getText('console.keys.index.shared-label-scopes-chunk2'); ?></a>)</label>
+                            <label data-ls-attrs="for=scopes-{{key.$id}}"><?php echo $locale->getText('console.keys.index.shared-label-scopes'); ?> (<a data-ls-attrs="href={{env.HOME}}/docs/keys" target="_blank" rel="noopener"><?php echo $locale->getText('shared.learn-more'); ?></a>)</label>
                             <div class="row responsive thin">
                                 <?php foreach ($scopes as $i => $scope) : ?>
                                     <div class="col span-6 text-one-liner margin-bottom text-height-large text-size-small" title="<?php echo $scope; ?>">
@@ -162,7 +162,7 @@ $locale = $this->getParam("locale");
                 <input type="text" class="full-width" id="name" name="name" required autocomplete="off" maxlength="128" />
 
                 <section data-forms-select-all data-forms-select-all-text="<?php echo $locale->getText('shared.select-all'); ?>" data-forms-unselect-all-text="<?php echo $locale->getText('shared.unselect-all'); ?>">
-                    <label for="scopes"><?php echo $locale->getText('console.keys.index.shared-label-scopes-chunk1'); ?> (<a data-ls-attrs="href={{env.HOME}}/docs/keys" target="_blank" rel="noopener"><?php echo $locale->getText('console.keys.index.shared-label-scopes-chunk2'); ?></a>)</label>
+                    <label for="scopes"><?php echo $locale->getText('console.keys.index.shared-label-scopes'); ?> (<a data-ls-attrs="href={{env.HOME}}/docs/keys" target="_blank" rel="noopener"><?php echo $locale->getText('shared.learn-more'); ?></a>)</label>
                     <div class="row responsive thin">
                         <?php foreach ($scopes as $i => $scope) : ?>
                             <div class="col span-6 text-one-liner margin-bottom text-height-large text-size-small" title="<?php echo $scope; ?>">

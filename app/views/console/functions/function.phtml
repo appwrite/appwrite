@@ -329,19 +329,12 @@ $locale = $this->getParam("locale");
                                             <span data-ls-bind="{{execution.dateCreated|dateTime}}"></span>
                                         </td>
                                         <td data-title="<?php echo $locale->getText('console.functions.function.logs-table-column-status'); ?>: ">
-
-                                            <span data-ls-if="{{execution.status}} === 'failed'"><?php echo $locale->getText('console.functions.function.logs-status-failed'); ?></span>
-                                            <span data-ls-if="{{execution.status}} === 'waiting'"><?php echo $locale->getText('console.functions.function.logs-status-waiting'); ?></span>
-                                            <span data-ls-if="{{execution.status}} === 'processing'"><?php echo $locale->getText('console.functions.function.logs-status-processing'); ?></span>
-                                            <span data-ls-if="{{execution.status}} === 'completed'"><?php echo $locale->getText('console.functions.function.logs-status-completed'); ?></span>
+                                            <span data-ls-bind="{{execution.status}}"></span>
 
                                             <span class="text-fade text-size-small" data-ls-if="{{execution.exitCode}} !== 0" data-ls-bind=" <?php echo $locale->getText('console.functions.function.logs-exit-code'); ?>: {{execution.exitCode}}"></span>
                                         </td>
                                         <td data-title="<?php echo $locale->getText('console.functions.function.logs-table-column-trigger'); ?>: ">
-
-                                            <span data-ls-if="{{execution.trigger}} === 'http'"><?php echo $locale->getText('console.functions.function.logs-trigger-http'); ?></span>
-                                            <span data-ls-if="{{execution.trigger}} === 'schedule'"><?php echo $locale->getText('console.functions.function.logs-trigger-schedule'); ?></span>
-                                            <span data-ls-if="{{execution.trigger}} === 'event'"><?php echo $locale->getText('console.functions.function.logs-trigger-event'); ?></span>
+                                            <span data-ls-bind="{{execution.trigger}}"></span>
                                         </td>
                                         <td data-title="<?php echo $locale->getText('console.functions.function.logs-table-column-runtime'); ?>: ">
                                             <span data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-ls-bind="{{execution.time|seconds2hum}}"></span>

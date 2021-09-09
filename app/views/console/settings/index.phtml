@@ -205,12 +205,12 @@ $locale = $this->getParam("locale");
                     <h2 style="display: none;"><?php echo $locale->getText('console.settings.index.custom-domains-title'); ?></h2>
 
                     <div class="box line margin-bottom">
-                        <h3>Enable Custom Domains</h3>
+                        <h3><?php echo $locale->getText('console.settings.index.custom-domains-disabled-subtitle'); ?></h3>
                         
-                        <p>To enable <?php echo APP_NAME; ?>'s custom domain feature, you have to start your server instance with a public accessible domain name.</p>
+                        <p><?php echo $locale->getText('console.settings.index.custom-domains-disabled-description-chunk1'); ?></p>
                         
-                        <p>Start your <?php echo APP_NAME; ?> server container with the <b>_APP_DOMAIN_TARGET</b> environment variable set with a public accessible domain name that resolves to your <?php echo APP_NAME; ?> server setup.</p>
-                        <p class="margin-bottom-no">The <?php echo APP_NAME; ?> server will use your target domain to validate new custom domains and will automatically generate SSL certificates for your new domains using letsencrypt certbot.</p>
+                        <p><?php echo $locale->getText('console.settings.index.custom-domains-disabled-description-chunk2'); ?></p>
+                        <p class="margin-bottom-no"><?php echo $locale->getText('console.settings.index.custom-domains-disabled-description-chunk3'); ?></p>
                     </div>
                 <?php endif; ?>
 
@@ -269,19 +269,17 @@ $locale = $this->getParam("locale");
 
                                                 <hr />
 
-                                                REEEEE
-
-                                                <p>Add the following DNS records to your DNS provider settings to setup and verify your new custom domain.</p>
+                                                <p><?php echo $locale->getText('console.settings.index.custom-domains-modal-description'); ?></p>
 
                                                 <ol class="bullets">
                                                     <li>
-                                                        <p>Add a new CNAME record in your DNS providers settings to point your new subdomain to your <?php echo APP_NAME; ?> server with the following value:</p>
+                                                        <p><?php echo $locale->getText('console.settings.index.custom-domains-modal-point1-chunk1'); ?></p>
                                                         
                                                         <div class="ide margin-bottom-small">
                                                             <pre class="line-numbers"><code class="prism language-javascript" data-prism><?php echo $this->print($customDomainsTarget, 'escape'); ?></code></pre>
                                                         </div>
 
-                                                        <p>For example:</p>
+                                                        <p><?php echo $locale->getText('console.settings.index.custom-domains-modal-point1-chunk2'); ?></p>
 
                                                         <div class="ide margin-bottom-small">
                                                             <pre class="line-numbers"><code class="prism language-javascript" data-prism><?php echo strtolower(APP_NAME); ?>.myapp.com   CNAME   <?php echo $this->print($customDomainsTarget, 'escape'); ?></code></pre>
@@ -289,7 +287,7 @@ $locale = $this->getParam("locale");
                                                     </li>
 
                                                     <li>
-                                                        Confirm and verify your CNAME record values:
+                                                        <?php echo $locale->getText('console.settings.index.custom-domains-modal-point2'); ?>
                                                         <form class="strip"
                                                             data-analytics
                                                             data-analytics-activity
@@ -299,28 +297,28 @@ $locale = $this->getParam("locale");
                                                             data-service="projects.updateDomainVerification"
                                                             data-scope="console"
                                                             data-event="submit"
-                                                            data-loading="Verifying DNS records..."
+                                                            data-loading="<?php echo $locale->getText('console.settings.index.custom-domains-modal-submit-loading'); ?>"
                                                             data-success="alert,trigger"
-                                                            data-success-param-alert-text="Verified domain successfully"
+                                                            data-success-param-alert-text="<?php echo $locale->getText('console.settings.index.custom-domains-modal-submit-success'); ?>"
                                                             data-success-param-trigger-events="projects.updateDomainVerification"
                                                             data-failure="alert"
-                                                            data-failure-param-alert-text="Failed to verify domain, check your DNS records"
+                                                            data-failure-param-alert-text="<?php echo $locale->getText('console.settings.index.custom-domains-modal-submit-error'); ?>"
                                                             data-failure-param-alert-classname="error">
 
                                                             <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                                                             <input type="hidden" name="domainId" data-ls-bind="{{domain.$id}}" />
                                                             
-                                                            <button class="margin-top-small">Confirm & Verify</button>
+                                                            <button class="margin-top-small"><?php echo $locale->getText('console.settings.index.custom-domains-modal-submit-button'); ?></button>
                                                         </form>
                                                     </li>
                                                 </ol>
 
                                                 <div class="info margin-bottom">
-                                                    <h4 class="margin-bottom-small">SSL Certificate</h4>
-                                                    <p>After verification completes, <?php echo APP_NAME; ?> will automatically generate a secure SSL certificate for your domain. This process may take a few seconds. Certitficate renewals are automatically issued every 60 days.</p>
+                                                    <h4 class="margin-bottom-small"><?php echo $locale->getText('console.settings.index.custom-domains-modal-ssl-title'); ?></h4>
+                                                    <p><?php echo $locale->getText('console.settings.index.custom-domains-modal-ssl-description'); ?></p>
                                                 </div>
 
-                                                <button data-ui-modal-close="" type="button" class="reverse">Close Settings</button>
+                                                <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.settings.index.custom-domains-modal-close-button'); ?></button>
                                             </div>
                                         </td>
                                         <td data-title="">
@@ -333,12 +331,12 @@ $locale = $this->getParam("locale");
                                                 data-service="projects.deleteDomain"
                                                 data-scope="console"
                                                 data-event="submit"
-                                                data-confirm="Are you sure you want to delete this domain?"
+                                                data-confirm="<?php echo $locale->getText('console.settings.index.custom-domains-delete-confirm'); ?>"
                                                 data-success="alert,trigger"
-                                                data-success-param-alert-text="Deleted domain successfully"
+                                                data-success-param-alert-text="<?php echo $locale->getText('console.settings.index.custom-domains-delete-success'); ?>"
                                                 data-success-param-trigger-events="projects.deleteDomain"
                                                 data-failure="alert"
-                                                data-failure-param-alert-text="Failed to delete domain"
+                                                data-failure-param-alert-text="<?php echo $locale->getText('console.settings.index.custom-domains-delete-error'); ?>"
                                                 data-failure-param-alert-classname="error">
 
                                                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
@@ -353,10 +351,10 @@ $locale = $this->getParam("locale");
                         </div>
 
                         <div class="clear">
-                            <div data-ui-modal class="modal box close" data-button-text="Add Domain">
+                            <div data-ui-modal class="modal box close" data-button-text="<?php echo $locale->getText('console.settings.index.custom-domains-button-add-domain'); ?>">
                                 <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                                <h1>Add Domain</h1>
+                                <h1><?php echo $locale->getText('console.settings.index.custom-domains-button-add-domain'); ?></h1>
 
                                 <form
                                     data-analytics
@@ -368,20 +366,20 @@ $locale = $this->getParam("locale");
                                     data-scope="console"
                                     data-event="submit"
                                     data-success="alert,trigger,reset"
-                                    data-success-param-alert-text="Created domain successfully"
+                                    data-success-param-alert-text="<?php echo $locale->getText('console.settings.index.custom-domains-create-success'); ?>"
                                     data-success-param-trigger-events="projects.createDomain"
                                     data-failure="alert"
-                                    data-failure-param-alert-text="Failed to create domain"
+                                    data-failure-param-alert-text="<?php echo $locale->getText('console.settings.index.custom-domains-create-error'); ?>"
                                     data-failure-param-alert-classname="error">
 
                                     <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
 
-                                    <label for="name">Domain Name</label>
-                                    <input type="text" class="full-width" id="domain" name="domain" placeholder="appwrite.example.com" required autocomplete="off" title="Enter a valid domain name" pattern="^([a-zA-Z0-9][a-zA-Z0-9-_]*\.)*[a-zA-Z0-9]*[a-zA-Z0-9-_]*[[a-zA-Z0-9]+$" />
+                                    <label for="name"><?php echo $locale->getText('console.settings.index.custom-domains-create-label-domain-name'); ?></label>
+                                    <input type="text" class="full-width" id="domain" name="domain" placeholder="<?php echo $locale->getText('console.settings.index.custom-domains-create-placeholder-domain-name'); ?>" required autocomplete="off" title="<?php echo $locale->getText('console.settings.index.custom-domains-create-warning-domain-name'); ?>" pattern="^([a-zA-Z0-9][a-zA-Z0-9-_]*\.)*[a-zA-Z0-9]*[a-zA-Z0-9-_]*[[a-zA-Z0-9]+$" />
                                     
                                     <hr />
 
-                                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                    <button type="submit"><?php echo $locale->getText('console.settings.index.custom-domains-create-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.settings.index.custom-domains-create-button-close'); ?></button>
                                 </form>
                             </div>
                         </div>
@@ -389,7 +387,7 @@ $locale = $this->getParam("locale");
                 <?php endif; ?>
             </li>
             <li data-state="/console/settings/members?project={{router.params.project}}">
-                <h2>Members</h2>
+                <h2><?php echo $locale->getText('console.settings.index.members-title'); ?></h2>
 
                 <div class="zone xl"
                     data-service="teams.getMemberships"
@@ -413,16 +411,16 @@ $locale = $this->getParam("locale");
                                     data-scope="console"
                                     data-event="submit"
                                     data-success="alert,trigger"
-                                    data-success-param-alert-text="Member Removed Successfully"
+                                    data-success-param-alert-text="<?php echo $locale->getText('console.settings.index.members-delete-success'); ?>"
                                     data-success-param-trigger-events="teams.deleteMembership"
                                     data-failure="alert"
-                                    data-failure-param-alert-text="Failed to Remove Member"
+                                    data-failure-param-alert-text="<?php echo $locale->getText('console.settings.index.members-delete-error'); ?>"
                                     data-failure-param-alert-classname="error">
 
                                     <input name="teamId" data-ls-attrs="id=leave-teamId-{{member.$id}}" type="hidden" data-ls-bind="{{console-project.teamId}}">
                                     <input name="membershipId" data-ls-attrs="id=leave-membershipId-{{member.$id}}" type="hidden" data-ls-bind="{{member.$id}}">
 
-                                    <button class="danger">Leave</button>
+                                    <button class="danger"><?php echo $locale->getText('console.settings.index.members-delete-submit'); ?></button>
                                 </form>
                                 
                                 <div data-ls-if="false === {{member.confirm}}" class="pull-end margin-end">
@@ -438,13 +436,13 @@ $locale = $this->getParam("locale");
                                         data-success="trigger"
                                         data-success-param-trigger-events="teams.deleteMembership.resend"
                                         data-failure="alert"
-                                        data-failure-param-alert-text="Failed to Resend Invitation"
+                                        data-failure-param-alert-text="<?php echo $locale->getText('console.settings.index.members-resend-error'); ?>"
                                         data-failure-param-alert-classname="error">
 
                                         <input name="teamId" data-ls-attrs="id=resend-teamId-{{member.$id}}" type="hidden" data-ls-bind="{{console-project.teamId}}">
                                         <input name="membershipId" data-ls-attrs="id=resend-membershipId-{{member.$id}}" type="hidden" data-ls-bind="{{member.$id}}">
 
-                                        <button class="reverse">Resend</button>
+                                        <button class="reverse"><?php echo $locale->getText('console.settings.index.members-resend-submit'); ?></button>
                                     </form>
 
                                     <form class="pull-end"
@@ -452,10 +450,10 @@ $locale = $this->getParam("locale");
                                         data-scope="console"
                                         data-event="teams.deleteMembership.resend"
                                         data-success="alert,trigger"
-                                        data-success-param-alert-text="Invitation sent successfully"
+                                        data-success-param-alert-text="<?php echo $locale->getText('console.settings.index.members-resend-success'); ?>"
                                         data-success-param-trigger-events="teams.createMembership.resent"
                                         data-failure="alert"
-                                        data-failure-param-alert-text="Failed to send inivitation"
+                                        data-failure-param-alert-text="<?php echo $locale->getText('console.settings.index.members-resend-error'); ?>"
                                         data-failure-param-alert-classname="error">
 
                                         <input name="teamId" type="hidden" data-ls-bind="{{member.teamId}}">
@@ -466,20 +464,20 @@ $locale = $this->getParam("locale");
                                     </form>
                                 </div>
 
-                                <img src="" data-ls-attrs="src={{member|avatar}}" data-size="200" alt="User Avatar" class="avatar pull-start margin-end" loading="lazy" width="60" height="60" />
+                                <img src="" data-ls-attrs="src={{member|avatar}}" data-size="200" alt="<?php echo $locale->getText('console.settings.index.members-alt-avatar'); ?>" class="avatar pull-start margin-end" loading="lazy" width="60" height="60" />
 
                                 <div class="margin-bottom-tiny">
-                                    <span data-ls-bind="{{member.name}}"></span> &nbsp;&nbsp;<span class="tag" data-ls-bind="{{member.roles.0}}"></span> &nbsp;&nbsp;<span data-ls-if="false === {{member.confirm}}" class="tag red">Pending Approval</span>
+                                    <span data-ls-bind="{{member.name}}"></span> &nbsp;&nbsp;<span class="tag" data-ls-bind="{{member.roles.0}}"></span> &nbsp;&nbsp;<span data-ls-if="false === {{member.confirm}}" class="tag red"><?php echo $locale->getText('console.settings.index.members-pending-approval'); ?></span>
                                 </div>
                                 <span class="text-size-small text-fade" data-ls-bind="{{member.email}}"></span>
                             </li>
                         </ul>
                     </div>
 
-                    <div data-ui-modal class="modal box close width-medium" data-button-text="Invite Member" data-button-class="">
+                    <div data-ui-modal class="modal box close width-medium" data-button-text="<?php echo $locale->getText('console.settings.index.members-create-button-open'); ?>" data-button-class="">
                         <button type="button" class="close pull-end" data-ui-modal-close><i class="icon-cancel"></i></button>
 
-                        <h1>Invite Member</h1>
+                        <h1><?php echo $locale->getText('console.settings.index.members-create-button-open'); ?></h1>
 
                         <form name="teams.createTeamMembership"
                             data-analytics
@@ -490,39 +488,39 @@ $locale = $this->getParam("locale");
                             data-service="teams.createMembership"
                             data-scope="console"
                             data-event="submit"
-                            data-loading="Sending invitation, please wait..."
+                            data-loading="<?php echo $locale->getText('console.settings.index.members-create-loading'); ?>"
                             data-success="alert,trigger,reset"
-                            data-success-param-alert-text="Invitation sent successfully"
+                            data-success-param-alert-text="<?php echo $locale->getText('console.settings.index.members-create-success'); ?>"
                             data-success-param-trigger-events="teams.createMembership"
                             data-failure="alert"
-                            data-failure-param-alert-text="Failed to send invite"
+                            data-failure-param-alert-text="<?php echo $locale->getText('console.settings.index.members-create-error'); ?>"
                             data-failure-param-alert-classname="error">
 
                             <input name="teamId" id="team-teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
                             <input name="url" type="hidden" data-ls-bind="{{env.ENDPOINT}}/auth/join?project={{router.params.project}}" />
                             
-                            <label for="email">Email</label>
+                            <label for="email"><?php echo $locale->getText('console.settings.index.members-create-label-email'); ?></label>
                             <input name="email" id="email" type="email" autocomplete="email" required>
                             
-                            <label for="team-name">Name <small>(optional)</small></label>
+                            <label for="team-name"><?php echo $locale->getText('console.settings.index.members-create-label-name'); ?> <small>(<?php echo $locale->getText('shared-optional'); ?>)</small></label>
                             <input name="name" id="team-name" type="text" autocomplete="name" maxlength="128" />
 
-                            <label for="roles" style="display: none">Role</label>
-                            <select id="roles" name="roles" required data-ls-loop="env.ROLES" data-ls-as="role" data-cast-to="array" style="display: none">
-                                <option data-ls-attrs="value={{role.type}}" data-ls-bind="{{role.label}}"></option>
-                            </select>
+<!--                            <label for="roles" style="display: none">Role</label>-->
+<!--                            <select id="roles" name="roles" required data-ls-loop="env.ROLES" data-ls-as="role" data-cast-to="array" style="display: none">-->
+<!--                                <option data-ls-attrs="value={{role.type}}" data-ls-bind="{{role.label}}"></option>-->
+<!--                            </select>-->
 
                             <?php if(!$smtpEnabled): ?>
                             <div class="box note padding-tiny warning margin-bottom text-align-center">
-                                <i class="icon-warning"></i> SMTP connection is disabled. <a href="https://appwrite.io/docs/email-delivery" target="_blank" rel="noopener">Learn more <i class="icon-link-ext"></i></a>
+                                <i class="icon-warning"></i> <?php echo $locale->getText('console.settings.index.members-create-warning-smtp'); ?> <a href="https://appwrite.io/docs/email-delivery" target="_blank" rel="noopener"><?php echo $locale->getText('shared.learn-more'); ?> <i class="icon-link-ext"></i></a>
                             </div>
                             <?php endif; ?>
 
                             <hr />
 
                             <div class="clear">
-                                <button<?php if(!$smtpEnabled): ?> disabled<?php endif; ?>>Send Invite</button>
-                                &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                <button<?php if(!$smtpEnabled): ?> disabled<?php endif; ?>><?php echo $locale->getText('console.settings.index.members-create-button-submit'); ?></button>
+                                &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.settings.index.members-create-button-close'); ?></button>
                             </div>
                         </form>
                     </div>

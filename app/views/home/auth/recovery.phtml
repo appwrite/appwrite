@@ -33,7 +33,7 @@ $locale = $this->getParam("locale");
 
         <?php if(!$smtpEnabled): ?>
         <div class="box note padding-tiny warning margin-bottom text-align-center">
-            <i class="icon-warning"></i> <?php echo $locale->getText('home.auth.recovery.warning-smtp-chunk1'); ?> <a href="https://appwrite.io/docs/email-delivery" target="_blank" rel="noopener"><?php echo $locale->getText('home.auth.recovery.warning-smtp-chunk2'); ?> <i class="icon-link-ext"></i></a>
+            <i class="icon-warning"></i> <?php echo $locale->getText('home.auth.recovery.warning-smtp'); ?> <a href="https://appwrite.io/docs/email-delivery" target="_blank" rel="noopener"><?php echo $locale->getText('shared.learn-more'); ?> <i class="icon-link-ext"></i></a>
         </div>
         <?php endif; ?>
         

@@ -279,7 +279,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
         <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
         <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My Web App" maxlength="128" />
 
-        <label for="hostname">Hostname <span class="tooltip large" data-tooltip="The hostname that your website will use to interact with the <?php echo APP_NAME; ?> APIs in production or development environments. No port number required."><i class="icon-question"></i></span></label>
+        <label for="hostname">Hostname <span class="tooltip large" data-tooltip="The hostname that your website will use to interact with the Appwrite APIs in production or development environments. No port number required."><i class="icon-question"></i></span></label>
         <input name="hostname" type="text" class="margin-bottom" autocomplete="off" placeholder="localhost" required>
         
         <div class="info margin-top margin-bottom">
@@ -319,7 +319,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
         <label data-ls-attrs="for=name-{{platform.$id}}">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
         <input type="text" class="full-width" data-ls-attrs="id=name-{{platform.$id}}" name="name" required autocomplete="off" data-ls-bind="{{platform.name}}" placeholder="My Web App" maxlength="128" />
 
-        <label for="hostname">Hostname <span class="tooltip large" data-tooltip="The hostname that your website will use to interact with the <?php echo APP_NAME; ?> APIs in production or development environments. No port number required."><i class="icon-question"></i></span></label>
+        <label for="hostname">Hostname <span class="tooltip large" data-tooltip="The hostname that your website will use to interact with the Appwrite APIs in production or development environments. No port number required."><i class="icon-question"></i></span></label>
         <input name="hostname" type="text" class="margin-bottom" autocomplete="off" placeholder="localhost" data-ls-bind="{{platform.hostname}}" required />
         
         <hr />
