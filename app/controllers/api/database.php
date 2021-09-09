@@ -88,16 +88,13 @@ $attributesCallback = function ($collectionId, $attribute, $response, $dbForInte
 
     try {
         $dbForInternal->checkAttribute($collection, $attribute);
-    } catch (LimitException $exception) {
-        throw new Exception('Attribute limit exceeded', 400);
-    }
-
-    try {
         $attribute = $dbForInternal->createDocument('attributes', $attribute);
-    } catch (DuplicateException $th) {
+    }
+    catch (DuplicateException $exception) {
         throw new Exception('Attribute already exists', 409);
-    } catch (LimitException $e) {
-        throw new Exception($e->getMessage(), 400);
+    }
+    catch (LimitException $exception) {
+        throw new Exception('Attribute limit exceeded', 400);
     }
 
     $dbForInternal->purgeDocument('collections', $collectionId);
