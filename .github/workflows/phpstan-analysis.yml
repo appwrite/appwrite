@@ -1,0 +1,17 @@
+name: "PHPStan"
+
+on: [pull_request]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: php-actions/composer@v5 
+    - uses: php-actions/phpstan@v2
+      with:
+        memory_limit: 4096M
+        php_version: 8.0
+        php_extensions: swoole maxminddb
+        path: src/ app/
