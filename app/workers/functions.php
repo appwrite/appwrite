@@ -482,7 +482,7 @@ class FunctionsV1 extends Worker
         $exitCode = 0;
 
         try {
-            $exitCode = (int)!$orchestration->execute(
+            $exitCode = (int) !$orchestration->execute(
                 name: $container,
                 command: $orchestration->parseCommandString($command),
                 stdout: $stdout,
@@ -509,8 +509,8 @@ class FunctionsV1 extends Worker
             'tagId' => $tag->getId(),
             'status' => $functionStatus,
             'exitCode' => $exitCode,
-            'stdout' => \mb_substr($stdout, -4000), // log last 4000 chars output
-            'stderr' => \mb_substr($stderr, -4000), // log last 4000 chars output
+            'stdout' => \utf8_encode(\mb_substr($stdout, -4000)), // log last 4000 chars output
+            'stderr' => \utf8_encode(\mb_substr($stderr, -4000)), // log last 4000 chars output
             'time' => $executionTime
         ]));
 
@@ -535,11 +535,11 @@ class FunctionsV1 extends Worker
         $target = Realtime::fromPayload('functions.executions.update', $execution);
 
         Realtime::send(
-            $projectId, 
-            $execution->getArrayCopy(), 
-            'functions.executions.update', 
-            $target['channels'], 
-            $target['roles']
+            projectId: $projectId,
+            payload: $execution->getArrayCopy(),
+            event: 'functions.executions.update',
+            channels: $target['channels'],
+            roles: $target['roles']
         );
 
         $usage = new Event('v1-usage', 'UsageV1');
@@ -551,8 +551,7 @@ class FunctionsV1 extends Worker
             ->setParam('functionStatus', $functionStatus)
             ->setParam('functionExecutionTime', $executionTime * 1000) // ms
             ->setParam('networkRequestSize', 0)
-            ->setParam('networkResponseSize', 0)
-        ;
+            ->setParam('networkResponseSize', 0);
 
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $usage->trigger();
