@@ -110,8 +110,8 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId)
                 continue;
             }
 
-            $connections = $value['connections'];
-            $messages = $value['messages'];
+            $connections = $stats->get($projectId, 'connections');
+            $messages = $stats->get($projectId, 'messages');
 
             $usage = new Event('v1-usage', 'UsageV1');
             $usage
@@ -129,11 +129,13 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId)
             if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
                 $usage->trigger();
             }
+
+            unset($usage, $connections, $messages);
         }
         $payload = [];
         foreach ($stats as $projectId => $value) {
             if (!empty($value['connectionsTotal'])) {
-                $payload[$projectId] = $value['connectionsTotal'];
+                $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');
             }
         }
         if (empty($payload)) {
@@ -210,7 +212,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                 $event = [
                     'project' => 'console',
-                    'roles' => ['team:' . $value['teamId']],
+                    'roles' => ['team:' . $stats->get($projectId, 'teamId')],
                     'data' => [
                         'event' => 'stats.connections',
                         'channels' => ['project'],

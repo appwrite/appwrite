@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "432285e325d8c4b39da4f8d5d00d2b03",
+    "content-hash": "82b47392837605b4fb552e5c9374c4cc",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -248,16 +248,16 @@
         },
         {
             "name": "chillerlan/php-settings-container",
-            "version": "2.1.1",
+            "version": "2.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/chillerlan/php-settings-container.git",
-                "reference": "98ccc1b31b31a53bcb563465c4961879b2b93096"
+                "reference": "ec834493a88682dd69652a1eeaf462789ed0c5f5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/chillerlan/php-settings-container/zipball/98ccc1b31b31a53bcb563465c4961879b2b93096",
-                "reference": "98ccc1b31b31a53bcb563465c4961879b2b93096",
+                "url": "https://api.github.com/repos/chillerlan/php-settings-container/zipball/ec834493a88682dd69652a1eeaf462789ed0c5f5",
+                "reference": "ec834493a88682dd69652a1eeaf462789ed0c5f5",
                 "shasum": ""
             },
             "require": {
@@ -307,7 +307,7 @@
                     "type": "ko_fi"
                 }
             ],
-            "time": "2021-01-06T15:57:03+00:00"
+            "time": "2021-09-06T15:17:01+00:00"
         },
         {
             "name": "colinmollenhour/credis",
@@ -2516,16 +2516,16 @@
         },
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.14.3",
+            "version": "0.14.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "a1075a59db33fe2bba9e648bf67b3ece1debcfa4"
+                "reference": "b89a51170f99e6977df72c46522c7d931257bc28"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/a1075a59db33fe2bba9e648bf67b3ece1debcfa4",
-                "reference": "a1075a59db33fe2bba9e648bf67b3ece1debcfa4",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/b89a51170f99e6977df72c46522c7d931257bc28",
+                "reference": "b89a51170f99e6977df72c46522c7d931257bc28",
                 "shasum": ""
             },
             "require": {
@@ -2559,9 +2559,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.14.3"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.14.4"
             },
-            "time": "2021-09-06T09:32:51+00:00"
+            "time": "2021-09-07T13:23:19+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",
