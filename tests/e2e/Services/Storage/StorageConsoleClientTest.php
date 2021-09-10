@@ -61,14 +61,14 @@ class StorageConsoleClientTest extends Scope
 
         // TODO: Uncomment once we implement check for missing bucketId in the usage endpoint.
 
-        // $response = $this->client->call(Client::METHOD_GET, '/storage/randomBucketId/usage', array_merge([
-        //     'content-type' => 'application/json',
-        //     'x-appwrite-project' => $this->getProject()['$id']
-        // ], $this->getHeaders()), [
-        //     'range' => '24h'
-        // ]);
+        $response = $this->client->call(Client::METHOD_GET, '/storage/randomBucketId/usage', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+            'range' => '24h'
+        ]);
 
-        // $this->assertEquals($response['headers']['status-code'], 404);
+        $this->assertEquals($response['headers']['status-code'], 404);
 
         /**
          * Test for SUCCESS
