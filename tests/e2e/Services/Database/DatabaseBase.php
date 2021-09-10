@@ -1124,6 +1124,16 @@ trait DatabaseBase
             'required' => false,
         ]);
 
+        $enum = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/enum', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'enum',
+            'elements' => ['yes', 'no', 'maybe'],
+            'required' => false,
+        ]);
+
         $ip = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/ip', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1232,7 +1242,7 @@ trait DatabaseBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), []); 
 
-        $this->assertCount(7, $collection['body']['attributes']);
+        $this->assertCount(8, $collection['body']['attributes']);
 
         /**
          * Test for successful validation
@@ -1245,6 +1255,18 @@ trait DatabaseBase
             'documentId' => 'unique()',
             'data' => [
                 'email' => 'user@example.com',
+            ],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
+        ]);
+
+        $goodEnum = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'unique()',
+            'data' => [
+                'enum' => 'yes',
             ],
             'read' => ['user:'.$this->getUser()['$id']],
             'write' => ['user:'.$this->getUser()['$id']],
@@ -1323,6 +1345,7 @@ trait DatabaseBase
         ]);
 
         $this->assertEquals(201, $goodEmail['headers']['status-code']);
+        $this->assertEquals(201, $goodEnum['headers']['status-code']);
         $this->assertEquals(201, $goodIp['headers']['status-code']);
         $this->assertEquals(201, $goodUrl['headers']['status-code']);
         $this->assertEquals(201, $goodRange['headers']['status-code']);
@@ -1341,6 +1364,18 @@ trait DatabaseBase
             'documentId' => 'unique()',
             'data' => [
                 'email' => 'user@@example.com',
+            ],
+            'read' => ['user:'.$this->getUser()['$id']],
+            'write' => ['user:'.$this->getUser()['$id']],
+        ]);
+
+        $badEnum = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'unique()',
+            'data' => [
+                'enum' => 'badEnum',
             ],
             'read' => ['user:'.$this->getUser()['$id']],
             'write' => ['user:'.$this->getUser()['$id']],
@@ -1419,6 +1454,7 @@ trait DatabaseBase
         ]);
 
         $this->assertEquals(400, $badEmail['headers']['status-code']);
+        $this->assertEquals(400, $badEnum['headers']['status-code']);
         $this->assertEquals(400, $badIp['headers']['status-code']);
         $this->assertEquals(400, $badUrl['headers']['status-code']);
         $this->assertEquals(400, $badRange['headers']['status-code']);
@@ -1426,6 +1462,7 @@ trait DatabaseBase
         $this->assertEquals(400, $tooHigh['headers']['status-code']);
         $this->assertEquals(400, $tooLow['headers']['status-code']);
         $this->assertEquals('Invalid document structure: Attribute "email" has invalid format. Value must be a valid email address', $badEmail['body']['message']);
+        $this->assertEquals('Invalid document structure: Attribute "enum" has invalid format. Value must be one of (yes, no, maybe)', $badEnum['body']['message']);
         $this->assertEquals('Invalid document structure: Attribute "ip" has invalid format. Value must be a valid IP address', $badIp['body']['message']);
         $this->assertEquals('Invalid document structure: Attribute "url" has invalid format. Value must be a valid URL', $badUrl['body']['message']);
         $this->assertEquals('Invalid document structure: Attribute "range" has invalid format. Value must be a valid range between 1 and 10', $badRange['body']['message']);
