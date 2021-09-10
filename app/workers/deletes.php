@@ -11,7 +11,7 @@ use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\CLI\Console;
 use Utopia\Audit\Audit;
 
-require_once __DIR__.'/../workers.php';
+require_once __DIR__.'/../init.php';
 
 Console::title('Deletes V1 Worker');
 Console::success(APP_NAME.' deletes worker v1 has started'."\n");

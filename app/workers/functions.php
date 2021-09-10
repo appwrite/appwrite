@@ -13,7 +13,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
-require_once __DIR__.'/../workers.php';
+require_once __DIR__.'/../init.php';
 
 Runtime::enableCoroutine(0);
 

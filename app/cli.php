@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__.'/workers.php';
+require_once __DIR__.'/init.php';
 
 use Utopia\App;
 use Utopia\CLI\CLI;
@@ -15,6 +15,7 @@ include 'tasks/migrate.php';
 include 'tasks/sdks.php';
 include 'tasks/ssl.php';
 include 'tasks/vars.php';
+include 'tasks/usage.php';
 
 $cli
     ->task('version')
