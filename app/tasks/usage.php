@@ -38,7 +38,11 @@ use Utopia\Database\Validator\Authorization;
  * database.collections.{collectionId}.documents.delete
  *
  * Storage
- *
+ * 
+ * storage.buckets.create
+ * storage.buckets.read
+ * storage.buckets.update
+ * storage.buckets.delete
  * storage.buckets.{bucketId}.files.create
  * storage.buckets.{bucketId}.files.read
  * storage.buckets.{bucketId}.files.update
@@ -63,6 +67,7 @@ use Utopia\Database\Validator\Authorization;
  * Counters
  *
  * users.count
+ * storage.buckets.count
  * storage.files.count
  * database.collections.count
  * database.documents.count
@@ -143,6 +148,18 @@ $cli
             'database.collections.collectionId.documents.delete' => [
                 'table' => 'appwrite_usage_database_documents_delete',
                 'groupBy' => 'collectionId',
+            ],
+            'storage.buckets.create' => [
+                'table' => 'appwrite_usage_storage_buckets_create',
+            ],
+            'storage.buckets.read' => [
+                'table' => 'appwrite_usage_storage_buckets_read',
+            ],
+            'storage.buckets.update' => [
+                'table' => 'appwrite_usage_storage_buckets_update',
+            ],
+            'storage.buckets.delete' => [
+                'table' => 'appwrite_usage_storage_buckets_delete',
             ],
             'storage.buckets.bucketId.files.create' => [
                 'table' => 'appwrite_usage_storage_files_create',
@@ -380,10 +397,15 @@ $cli
                                     ],
                                 ],
                             ],
-                            'files' => [
+                            'buckets' => [
                                 'metricPrefix' => 'storage',
                                 'namespace' => 'internal',
-                            ],
+                                'subCollections' => [
+                                    'files' => [
+                                        'namespace' => 'internal',
+                                    ],
+                                ]
+                            ]
                         ];
 
                         foreach ($collections as $collection => $options) {
