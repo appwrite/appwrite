@@ -8,7 +8,8 @@ trait SideConsole
     {
         return [
             'origin' => 'http://localhost',
-            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $this->getRoot()['session'],
+            'cookie' => 'a_session_console='. $this->getRoot()['session'],
+            'x-appwrite-mode' => 'admin'
         ];
     }
 
