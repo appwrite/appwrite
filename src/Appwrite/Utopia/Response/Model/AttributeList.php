@@ -29,6 +29,7 @@ class AttributeList extends Model
                         self::TYPE_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,
                         self::TYPE_STRING => match($attribute->getAttribute('format')) {
                             APP_DATABASE_ATTRIBUTE_EMAIL => Response::MODEL_ATTRIBUTE_EMAIL,
+                            APP_DATABASE_ATTRIBUTE_ENUM => Response::MODEL_ATTRIBUTE_ENUM,
                             APP_DATABASE_ATTRIBUTE_IP => Response::MODEL_ATTRIBUTE_IP,
                             APP_DATABASE_ATTRIBUTE_URL => Response::MODEL_ATTRIBUTE_URL,
                             default => Response::MODEL_ATTRIBUTE_STRING,

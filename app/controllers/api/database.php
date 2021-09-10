@@ -900,6 +900,7 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
             Database::VAR_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,
             Database::VAR_STRING => match($format) {
                 APP_DATABASE_ATTRIBUTE_EMAIL => Response::MODEL_ATTRIBUTE_EMAIL,
+                APP_DATABASE_ATTRIBUTE_ENUM => Response::MODEL_ATTRIBUTE_ENUM,
                 APP_DATABASE_ATTRIBUTE_IP => Response::MODEL_ATTRIBUTE_IP,
                 APP_DATABASE_ATTRIBUTE_URL => Response::MODEL_ATTRIBUTE_URL,
                 default => Response::MODEL_ATTRIBUTE_STRING,

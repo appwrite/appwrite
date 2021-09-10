@@ -198,6 +198,22 @@ Database::addFilter('casting',
     }
 );
 
+Database::addFilter('enum',
+    function($value, Document $attribute) {
+        if ($attribute->isSet('elements')) {
+            $attribute->removeAttribute('elements');
+        }
+        return $value;
+    },
+    function($value, Document $attribute) {
+        $formatOptions = json_decode($attribute->getAttribute('formatOptions', []), true);
+        if (isset($formatOptions['elements'])) {
+            $attribute->setAttribute('elements', $formatOptions['elements']);
+        }
+        return $value;
+    }
+);
+
 Database::addFilter('range',
     function($value, Document $attribute) {
         if ($attribute->isSet('min')) {
