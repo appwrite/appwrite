@@ -237,10 +237,15 @@ App::get('/auth/magic-url')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('layout')
-    ->action(function ($layout) {
+    ->inject('locale')
+    ->action(function ($layout, $locale) {
         /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
 
         $page = new View(__DIR__.'/../../views/home/auth/magicURL.phtml');
+
+        $page
+            ->setParam("locale", $locale);
 
         $layout
             ->setParam('title', APP_NAME)

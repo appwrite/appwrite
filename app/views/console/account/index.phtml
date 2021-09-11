@@ -263,7 +263,7 @@ $locale = $this->getParam("locale");
                             </div>
                         </div>
 
-                        <span data-ls-if="(!{{log.clientName}})"><?php echo $locale->getText('console.account.index.shared-client-unknown'); ?></span>
+                        <span data-ls-if="(!{{log.clientName}})"><?php echo $locale->getText('shared.unknown'); ?></span>
                         <span data-ls-if="({{log.clientName}})" data-ls-bind="{{session.clientName}}"></span> <span data-ls-bind="{{session.clientVersion}}"></span> <?php echo $locale->getText('console.account.index.shared-client-joiner'); ?> <span data-ls-bind="{{session.deviceModel}}"></span> <span data-ls-bind="{{session.osName}}"></span> <span data-ls-bind="{{session.osVersion}}"></span>
                         &nbsp;
                         <span data-ls-if="true == {{session.current}}">
@@ -323,7 +323,7 @@ $locale = $this->getParam("locale");
                                 <td data-title="<?php echo $locale->getText('console.account.index.activity-table-column-event'); ?>: "><span data-ls-bind="{{log.event}}"></span></td>
                                 <td data-title="<?php echo $locale->getText('console.account.index.activity-table-column-client'); ?>: ">
                                     <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.clientCode|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.clientName}},alt={{log.clientName}}" class="avatar xxs inline margin-end-small" />
-                                    <span data-ls-if="(!{{log.clientName}})"><?php echo $locale->getText('console.account.index.shared-client-unknown'); ?></span>
+                                    <span data-ls-if="(!{{log.clientName}})"><?php echo $locale->getText('shared.unknown'); ?></span>
                                     <span data-ls-if="({{log.clientName}})" data-ls-bind="{{log.clientName}} {{log.clientVersion}} <?php echo $locale->getText('console.account.index.shared-client-joiner'); ?> {{log.model}} {{log.osName}} {{log.osVersion}}"></span>
                                 </td>
                                 <td data-title="<?php echo $locale->getText('console.account.index.activity-table-column-location'); ?>: ">
