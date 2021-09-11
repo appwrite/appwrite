@@ -154,7 +154,7 @@ class LocaleMissingTest extends Scope
         foreach ($translationKeys as $translationKey => $translationFile) {
             // Temporary solution for dynamic keys 'continents' and 'countries'
             // TODO: Remove temporary fix and implement it in a smarter way
-            if($translationKey == 'countries.' || $translationKey == 'continents.') {
+            if(\str_starts_with($translationKey, 'countries.') ||  \str_starts_with($translationKey, 'continents.')) {
                 continue;
             }
 
@@ -164,8 +164,6 @@ class LocaleMissingTest extends Scope
             }
         }
 
-
-
         if(count($missingKeys) > 0) {
             Console::log('List of missing keys:');
             var_dump($missingKeys);
@@ -173,7 +171,31 @@ class LocaleMissingTest extends Scope
             Console::success("No missing translation keys");
         }
 
+        // Find translations that are represented in en.json, but not used in the code
+        $unusedKeys = [];
+
+        foreach ($translations as $existingTranslationKey => $existingTranslationValue) {
+            // Temporary solution for dynamic keys 'continents' and 'countries'
+            // TODO: Remove temporary fix and implement it in a smarter way
+            if(\str_starts_with($existingTranslationKey, 'countries.') ||  \str_starts_with($existingTranslationKey, 'continents.') ||  \str_starts_with($existingTranslationKey, 'emails.')) {
+                continue;
+            }
+
+            // Mark as unused key if not found in the code
+            if(!array_key_exists($existingTranslationKey, $translationKeys)) {
+                array_push($unusedKeys, $existingTranslationKey);
+            }
+        }
+
+        if(count($unusedKeys) > 0) {
+            Console::log('List of unused keys:');
+            var_dump($unusedKeys);
+        } else {
+            Console::success("No unised translation keys");
+        }
+
         $this->assertEmpty($invalidChunks);
         $this->assertEmpty($missingKeys);
+        $this->assertEmpty($unusedKeys);
     }
 }
