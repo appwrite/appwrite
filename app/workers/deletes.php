@@ -215,7 +215,7 @@ class DeletesV1 extends Worker
         }  
         // Delete Dead Realtime Logs
         $this->deleteByGroup([
-            '$collection='.Database::SYSTEM_COLLECTION_REALTIME_CONNECTIONS,
+            '$collection='.Database::SYSTEM_COLLECTION_CONNECTIONS,
             'timestamp<'.$timestamp
         ], $consoleDB);
 

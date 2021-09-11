@@ -42,7 +42,6 @@ return [
         'name' => 'Phone',
         'key' => 'usersAuthPhone',
         'icon' => '/images/users/phone.png',
-        'docs' => 'https://appwrite.io/docs/client/account?sdk=web#accountCreatePhoneSession',
         'docs' => '',
         'enabled' => false,
     ],
