@@ -11,7 +11,7 @@ $locale = $this->getParam("locale");
         <a data-ls-attrs="href=/console/home?project={{router.params.project}}" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> <?php echo $locale->getText('console.shared-button-back-to-home'); ?></a>
         <br />
 
-        <span>Webhooks</span>
+        <span><?php echo $locale->getText('console.webhooks.index.title'); ?></span>
     </h1>
 </div>
 
@@ -25,19 +25,19 @@ $locale = $this->getParam("locale");
     data-success-param-trigger-events="projects.listWebhooks">
 
     <div data-ls-if="0 == {{console-webhooks.sum}} || undefined == {{console-webhooks.sum}}" class="box margin-top margin-bottom">
-        <h3 class="margin-bottom-small text-bold">No Webhooks Found</h3>
+        <h3 class="margin-bottom-small text-bold"><?php echo $locale->getText('console.webhooks.index.no-webhooks-title'); ?></h3>
 
-        <p class="margin-bottom-no">You haven't created any webhooks for your project yet.</p>
+        <p class="margin-bottom-no"><?php echo $locale->getText('console.webhooks.index.no-webhooks-description'); ?></p>
     </div>
 
     <div class="box margin-bottom" data-ls-if="0 != {{console-webhooks.sum}}">
         <ul data-ls-loop="console-webhooks.webhooks" data-ls-as="webhook" class="list">
             <li class="clear">
 
-                <div data-ui-modal class="modal close sticky-footer" data-button-text="Update" data-button-class="pull-end">
+                <div data-ui-modal class="modal close sticky-footer" data-button-text="<?php echo $locale->getText('console.webhooks.index.update-button-open'); ?>" data-button-class="pull-end">
                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                    <h1>Update Webhook</h1>
+                    <h1><?php echo $locale->getText('console.webhooks.index.update-title'); ?></h1>
 
                     <form
                         data-analytics
@@ -49,20 +49,20 @@ $locale = $this->getParam("locale");
                         data-scope="console"
                         data-event="submit"
                         data-success="alert,trigger,reset"
-                        data-success-param-alert-text="Updated webhook successfully"
+                        data-success-param-alert-text="<?php echo $locale->getText('console.webhooks.index.update-success'); ?>"
                         data-success-param-trigger-events="projects.updateWebhook"
                         data-failure="alert"
-                        data-failure-param-alert-text="Failed to update webhook"
+                        data-failure-param-alert-text="<?php echo $locale->getText('console.webhooks.index.update-error'); ?>"
                         data-failure-param-alert-classname="error">
 
                         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                         <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$id}}" />
 
-                        <label data-ls-attrs="for=name-{{webhook.$id}}">Name</label>
+                        <label data-ls-attrs="for=name-{{webhook.$id}}"><?php echo $locale->getText('console.webhooks.index.shared-label-name'); ?></label>
                         <input type="text" class="full-width" data-ls-attrs="id=name-{{webhook.$id}}" name="name" required autocomplete="off" data-ls-bind="{{webhook.name}}" maxlength="128" />
 
                         <section data-forms-select-all data-forms-select-all-text="<?php echo $locale->getText('shared.select-all'); ?>" data-forms-unselect-all-text="<?php echo $locale->getText('shared.unselect-all'); ?>">
-                            <label data-ls-attrs="for=events-{{webhook.$id}}">Events</label>
+                            <label data-ls-attrs="for=events-{{webhook.$id}}"><?php echo $locale->getText('console.webhooks.index.shared-label-events'); ?></label>
                             <div class="row responsive thin">
                                 <?php foreach ($events as $i => $event) : ?>
                                     <div class="col span-6 text-one-liner margin-bottom text-height-large text-size-small" title="<?php echo $event; ?>">
@@ -79,45 +79,45 @@ $locale = $this->getParam("locale");
                             </div>
                         </section>
 
-                        <label data-ls-attrs="for=url-{{webhook.$id}}">POST URL</label>
-                        <input type="url" class="full-width" data-ls-attrs="id=url-{{webhook.$id}}" name="url" required autocomplete="off" placeholder="https://example.com/callback" data-ls-bind="{{webhook.url}}" />
+                        <label data-ls-attrs="for=url-{{webhook.$id}}"><?php echo $locale->getText('console.webhooks.index.shared-label-post-url'); ?></label>
+                        <input type="url" class="full-width" data-ls-attrs="id=url-{{webhook.$id}}" name="url" required autocomplete="off" placeholder="<?php echo $locale->getText('console.webhooks.index.shared-placeholder-post-url'); ?>" data-ls-bind="{{webhook.url}}" />
 
-                        <div class="margin-bottom toggle" data-ls-ui-open data-button-aria="Advanced Options">
+                        <div class="margin-bottom toggle" data-ls-ui-open data-button-aria="<?php echo $locale->getText('console.webhooks.index.shared-advanced-options'); ?>">
                             <i class="icon-plus pull-end margin-top-tiny"></i>
                             <i class="icon-minus pull-end margin-top-tiny"></i>
                             
                             <h2 class="margin-bottom">
-                                Advanced Options
-                                <small class="text-size-small">(optional)</small>
+                                <?php echo $locale->getText('console.webhooks.index.shared-advanced-options'); ?>
+                                <small class="text-size-small">(<?php echo $locale->getText('shared.optional'); ?>)</small>
                             </h2>
 
                             <label data-ls-attrs="for=security-{{task.$id}}" class="margin-bottom-small">
-                                <div class="margin-bottom-small text-bold">SSL / TLS (Certificate verification)</div>
+                                <div class="margin-bottom-small text-bold"><?php echo $locale->getText('console.webhooks.index.shared-ssl-title'); ?></div>
                                         
-                                <input name="security" type="radio" required data-ls-attrs="id=secure-yes-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="true" data-cast-to="boolean" /> &nbsp; <span>Enabled</span> &nbsp;
-                                <input name="security" type="radio" required data-ls-attrs="id=secure-no-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="false" data-cast-to="boolean" /> &nbsp; <span>Disabled</span> &nbsp;
+                                <input name="security" type="radio" required data-ls-attrs="id=secure-yes-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="true" data-cast-to="boolean" /> &nbsp; <span><?php echo $locale->getText('console.webhooks.index.shared-ssl-enabled'); ?></span> &nbsp;
+                                <input name="security" type="radio" required data-ls-attrs="id=secure-no-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="false" data-cast-to="boolean" /> &nbsp; <span><?php echo $locale->getText('console.webhooks.index.shared-ssl-disabled'); ?></span> &nbsp;
                             </label>
 
-                            <p class="margin-bottom text-size-small text-fade"><span class="text-red">Warning</span>: Untrusted or self-signed certificates may not be secure.
-                                <a href="https://en.wikipedia.org/wiki/Self-signed_certificate" target="_blank" rel="noopener">Learn more<i class="icon-link-ext"></i></a>
+                            <p class="margin-bottom text-size-small text-fade"><span class="text-red"><?php echo $locale->getText('console.webhooks.index.shared-warning-chunk1'); ?></span>: <?php echo $locale->getText('console.webhooks.index.shared-warning-chunk2'); ?>
+                                <a href="https://en.wikipedia.org/wiki/Self-signed_certificate" target="_blank" rel="noopener"><?php echo $locale->getText('shared.learn-more'); ?><i class="icon-link-ext"></i></a>
                             </p>
 
-                            <label class="text-bold">HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></label>
+                            <label class="text-bold"><?php echo $locale->getText('console.webhooks.index.shared-http-auth-title'); ?> <span class="tooltip" data-tooltip="<?php echo $locale->getText('console.webhooks.index.shared-http-auth-tooltip'); ?>"><i class="icon-question"></i></span> &nbsp;<small>(<?php echo $locale->getText('shared.optional'); ?>)</small></label>
 
                             <div class="row responsive thin">
                                 <div class="col span-6 margin-bottom">
-                                    <label data-ls-attrs="for=httpUser-{{webhook.$id}}">User</label>
+                                    <label data-ls-attrs="for=httpUser-{{webhook.$id}}"><?php echo $locale->getText('console.webhooks.index.shared-http-auth-label-user'); ?></label>
                                     <input type="text" class="full-width margin-bottom-no" data-ls-attrs="id=httpUser-{{webhook.$id}}" name="httpUser" autocomplete="off" data-ls-bind="{{webhook.httpUser}}" />
                                 </div>
                                 <div class="col span-6 margin-bottom">
-                                    <label data-ls-attrs="for=httpPass-{{webhook.$id}}">Password</label>
+                                    <label data-ls-attrs="for=httpPass-{{webhook.$id}}"><?php echo $locale->getText('console.webhooks.index.shared-http-auth-label-password'); ?></label>
                                     <input type="password" data-forms-show-secret class="full-width margin-bottom-no" data-ls-attrs="id=httpPass-{{webhook.$id}}" name="httpPass" autocomplete="off" data-ls-bind="{{webhook.httpPass}}" />
                                 </div>
                             </div>
                         </div>
 
                         <footer>
-                            <button type="submit">Save</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                            <button type="submit"><?php echo $locale->getText('console.webhooks.index.update-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.webhooks.index.update-button-cancel'); ?></button>
                         </footer>
                     </form>
                 </div>
@@ -131,23 +131,23 @@ $locale = $this->getParam("locale");
                     data-service="projects.deleteWebhook"
                     data-scope="console"
                     data-event="submit"
-                    data-confirm="Are you sure you want to delete this webhook?"
+                    data-confirm="<?php echo $locale->getText('console.webhooks.index.delete-confirm'); ?>"
                     data-success="alert,trigger"
-                    data-success-param-alert-text="Deleted webhook successfully"
+                    data-success-param-alert-text="<?php echo $locale->getText('console.webhooks.index.delete-success'); ?>"
                     data-success-param-trigger-events="projects.deleteWebhook"
                     data-failure="alert"
-                    data-failure-param-alert-text="Failed to delete webhook"
+                    data-failure-param-alert-text="<?php echo $locale->getText('console.webhooks.index.delete-error'); ?>"
                     data-failure-param-alert-classname="error">
 
                     <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                     <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$id}}" />
 
-                    <button class="danger reverse">Delete</button>
+                    <button class="danger reverse"><?php echo $locale->getText('console.webhooks.index.delete-submit'); ?></button>
                 </form>
 
-                <span data-ls-bind="{{webhook.name}}"></span> &nbsp; (<span data-ls-bind="{{webhook.events.length}}"></span> events)
+                <span data-ls-bind="{{webhook.name}}"></span> &nbsp; (<span data-ls-bind="{{webhook.events.length}}"></span> <?php echo $locale->getText('console.webhooks.index.events-sum'); ?>)
                 <span data-ls-if="false === {{webhook.security}}">
-                    &nbsp; <small class="text-danger">(SSL/TLS Disabled)</small>
+                    &nbsp; <small class="text-danger">(<?php echo $locale->getText('console.webhooks.index.disabled-ssl'); ?>)</small>
                 </span>
                 <div class="margin-top-tiny">
                     <a data-ls-attrs="href={{webhook.url}}" data-ls-bind="{{webhook.url}}" target="_blank" class="text-one-liner"></a>
@@ -157,10 +157,10 @@ $locale = $this->getParam("locale");
     </div>
 
     <div class="clear">
-        <div data-ui-modal class="modal close box sticky-footer" data-button-text="Add Webhook">
+        <div data-ui-modal class="modal close box sticky-footer" data-button-text="<?php echo $locale->getText('console.webhooks.index.create-button-open'); ?>">
             <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-            <h1>Add Webhook</h1>
+            <h1><?php echo $locale->getText('console.webhooks.index.create-button-open'); ?></h1>
 
             <form
                 data-analytics
@@ -172,19 +172,19 @@ $locale = $this->getParam("locale");
                 data-scope="console"
                 data-event="submit"
                 data-success="alert,trigger,reset"
-                data-success-param-alert-text="Created webhook successfully"
+                data-success-param-alert-text="<?php echo $locale->getText('console.webhooks.index.create-success'); ?>"
                 data-success-param-trigger-events="projects.createWebhook"
                 data-failure="alert"
-                data-failure-param-alert-text="Failed to create webhook"
+                data-failure-param-alert-text="<?php echo $locale->getText('console.webhooks.index.create-error'); ?>"
                 data-failure-param-alert-classname="error">
 
                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
 
-                <label for="name">Name</label>
+                <label for="name"><?php echo $locale->getText('console.webhooks.index.shared-label-name'); ?></label>
                 <input type="text" class="full-width" id="name" name="name" required autocomplete="off" maxlength="128" />
 
                 <section data-forms-select-all data-forms-select-all-text="<?php echo $locale->getText('shared.select-all'); ?>" data-forms-unselect-all-text="<?php echo $locale->getText('shared.unselect-all'); ?>">
-                    <label for="events">Events</label>
+                    <label for="events"><?php echo $locale->getText('console.webhooks.index.shared-label-events'); ?></label>
                     <div class="row responsive thin">
                         <?php foreach ($events as $i => $event) : ?>
                             <div class="col span-6 text-one-liner margin-bottom text-height-large text-size-small" title="<?php echo $event; ?>">
@@ -201,45 +201,45 @@ $locale = $this->getParam("locale");
                     </div>
                 </section>
 
-                <label for="url">POST URL</label>
-                <input type="url" class="full-width" id="url" name="url" required autocomplete="off" placeholder="https://example.com/callback" />
+                <label for="url"><?php echo $locale->getText('console.webhooks.index.shared-label-post-url'); ?></label>
+                <input type="url" class="full-width" id="url" name="url" required autocomplete="off" placeholder="<?php echo $locale->getText('console.webhooks.index.shared-placeholder-post-url'); ?>" />
 
                 <div class="margin-bottom toggle" data-ls-ui-open data-button-aria="Advanced Options">
                     <i class="icon-plus pull-end margin-top-tiny"></i>
                     <i class="icon-minus pull-end margin-top-tiny"></i>
                     
                     <h2 class="margin-bottom">
-                        Advanced Options
-                        <small class="text-size-small">(optional)</small>
+                        <?php echo $locale->getText('console.webhooks.index.shared-advanced-options'); ?>
+                        <small class="text-size-small">(<?php echo $locale->getText('shared.optional'); ?>)</small>
                     </h2>
 
                     <label data-ls-attrs="for=security-{{task.$id}}" class="margin-bottom-small">
-                        <div class="margin-bottom-small text-bold">SSL / TLS (Certificate verification)</div>
+                        <div class="margin-bottom-small text-bold"><?php echo $locale->getText('console.webhooks.index.shared-ssl-title'); ?></div>
                                         
-                        <input name="security" type="radio" required data-ls-attrs="id=secure-yes" checked="checked" value="1" /> &nbsp; <span>Enabled</span> &nbsp;
-                        <input name="security" type="radio" required data-ls-attrs="id=secure-no" value="0" /> &nbsp; <span>Disabled</span> &nbsp;
+                        <input name="security" type="radio" required data-ls-attrs="id=secure-yes" checked="checked" value="1" /> &nbsp; <span><?php echo $locale->getText('console.webhooks.index.shared-ssl-enabled'); ?></span> &nbsp;
+                        <input name="security" type="radio" required data-ls-attrs="id=secure-no" value="0" /> &nbsp; <span><?php echo $locale->getText('console.webhooks.index.shared-ssl-disabled'); ?></span> &nbsp;
                     </label>
 
-                    <p class="margin-bottom text-size-small text-fade"><span class="text-red">Warning</span>: Untrusted or self-signed certificates may not be secure.
-                        <a href="https://en.wikipedia.org/wiki/Self-signed_certificate" target="_blank" rel="noopener">Learn more<i class="icon-link-ext"></i></a>
+                    <p class="margin-bottom text-size-small text-fade"><span class="text-red"><?php echo $locale->getText('console.webhooks.index.shared-warning-chunk1'); ?></span>: <?php echo $locale->getText('console.webhooks.index.shared-warning-chunk2'); ?>
+                        <a href="https://en.wikipedia.org/wiki/Self-signed_certificate" target="_blank" rel="noopener"><?php echo $locale->getText('shared.learn-more'); ?><i class="icon-link-ext"></i></a>
                     </p>
 
-                    <label class="text-bold">HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></label>
+                    <label class="text-bold"><?php echo $locale->getText('console.webhooks.index.shared-http-auth-title'); ?> <span class="tooltip" data-tooltip="<?php echo $locale->getText('console.webhooks.index.shared-http-auth-tooltip'); ?>"><i class="icon-question"></i></span> &nbsp;<small>(<?php echo $locale->getText('shared.optional'); ?>)</small></label>
 
                     <div class="row responsive thin">
                         <div class="col span-6 margin-bottom">
-                            <label for="httpUser">User</label>
+                            <label for="httpUser"><?php echo $locale->getText('console.webhooks.index.shared-http-auth-label-user'); ?></label>
                             <input type="text" class="full-width margin-bottom-no" id="httpUser" name="httpUser" autocomplete="off" />
                         </div>
                         <div class="col span-6 margin-bottom">
-                            <label for="httpPass">Password</label>
+                            <label for="httpPass"><?php echo $locale->getText('console.webhooks.index.shared-http-auth-label-password'); ?></label>
                             <input type="password" data-forms-show-secret class="full-width margin-bottom-no" id="httpPass" name="httpPass" autocomplete="off" />
                         </div>
                     </div>
                 </div>
 
                 <footer>
-                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                    <button type="submit"><?php echo $locale->getText('console.webhooks.index.create-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.webhooks.index.create-button-cancel'); ?></button>
                 </footer>
             </form>
         </div>

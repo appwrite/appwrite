@@ -55,7 +55,7 @@ $locale = $this->getParam("locale");
                         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                         <input type="hidden" name="keyId" data-ls-bind="{{key.$id}}" />
 
-                        <label data-ls-attrs="for=name-{{key.$id}}"><?php echo $locale->getText('console.keys.index.update-label-name'); ?> <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different API keys."><i class="icon-question"></i></span></label>
+                        <label data-ls-attrs="for=name-{{key.$id}}"><?php echo $locale->getText('console.keys.index.update-label-name'); ?> <span class="tooltip large" data-tooltip="<?php echo $locale->getText('console.keys.index.update-tooltip-name'); ?>"><i class="icon-question"></i></span></label>
                         <input type="text" class="full-width" data-ls-attrs="id=name-{{key.$id}}" name="name" required autocomplete="off" data-ls-bind="{{key.name}}" maxlength="128" />
 
                         <section data-forms-select-all data-forms-select-all-text="<?php echo $locale->getText('shared.select-all'); ?>" data-forms-unselect-all-text="<?php echo $locale->getText('shared.unselect-all'); ?>">
