@@ -297,7 +297,34 @@ trait StorageBase
         $this->assertEquals('image/png', $file51['headers']['content-type']);
         $this->assertNotEmpty($file51['body']);
         $this->assertEquals($originalChunk, $file51['body']);
-
+        
+        // Test ranged download - with invalid range
+        $file52 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=0-',
+        ], $this->getHeaders()));
+        
+        $this->assertEquals(400, $file52['headers']['status-code']);
+        
+        // Test ranged download - with invalid range
+        $file53 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=988',
+        ], $this->getHeaders()));
+        
+        $this->assertEquals(400, $file53['headers']['status-code']);
+        
+        // Test ranged download - with invalid range
+        $file54 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=-988',
+        ], $this->getHeaders()));
+        
+        $this->assertEquals(400, $file54['headers']['status-code']);
+        
         $file6 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/view', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

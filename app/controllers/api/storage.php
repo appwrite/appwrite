@@ -30,6 +30,8 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
+use function PHPUnit\Framework\isNull;
+
 App::post('/v1/storage/buckets')
     ->desc('Create storage bucket')
     ->groups(['api', 'storage'])
@@ -1067,9 +1069,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             list($unit, $range) = explode('=', $rangeHeader);
             if($unit == 'bytes' && !empty($range)) {
                 list($rangeStart, $rangeEnd) = explode('-', $range);
+                if(strlen($rangeStart) == 0 || strlen($rangeEnd) == 0) {
+                    throw new Exception('Invalid range', 400);
+                }
                 $rangeStart = (int) $rangeStart;
                 $rangeEnd = (int) $rangeEnd;
-                if(($rangeStart > $rangeEnd) || $rangeEnd > $size) {
+                if(($rangeStart >= $rangeEnd) || $rangeEnd > $size) {
                     throw new Exception('Invalid range', 400);
                 }
                 
