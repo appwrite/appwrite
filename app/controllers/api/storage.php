@@ -1,7 +1,5 @@
 <?php
 
-use Appwrite\ClamAV\Network;
-use Swoole\HTTP\Response as SwooleResponse;
 use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Appwrite\ClamAV\Network;
