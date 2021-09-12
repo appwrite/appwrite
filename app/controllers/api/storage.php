@@ -666,6 +666,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
             if ($file->isEmpty()) {
                 $file = $dbForInternal->createDocument('bucket_' . $bucketId, new Document([
+                    '$id' => $fileId,
                     '$read' => $read,
                     '$write' => $write,
                     'dateCreated' => \time(),
