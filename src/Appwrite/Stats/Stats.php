@@ -94,7 +94,7 @@ class Stats
         $functionExecutionTime = $this->params['functionExecutionTime'] ?? 0;
         $functionStatus = $this->params['functionStatus'] ?? '';
 
-        $tags = ",project={$projectId},version=" . App::getEnv('_APP_VERSION', 'UNKNOWN');
+        $tags = ",projectId={$projectId},version=" . App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         // the global namespace is prepended to every key (optional)
         $this->statsd->setNamespace($this->namespace);
@@ -112,7 +112,74 @@ class Stats
         $this->statsd->count('network.outbound' . $tags, $networkResponseSize);
         $this->statsd->count('network.all' . $tags, $networkRequestSize + $networkResponseSize);
 
+        $dbMetrics = [
+            'database.collections.create',
+            'database.collections.read',
+            'database.collections.update',
+            'database.collections.delete',
+            'database.documents.create',
+            'database.documents.read',
+            'database.documents.update',
+            'database.documents.delete',
+        ];
+
+        foreach ($dbMetrics as $metric) {
+            $value = $this->params[$metric] ?? 0;
+            if ($value >= 1) {
+                $tags = ",projectId={$projectId},collectionId=" . ($this->params['collectionId'] ?? '');
+                $this->statsd->increment($metric . $tags);
+            }
+        }
+
+        $storageMertics = [
+            'storage.buckets.create',
+            'storage.buckets.read',
+            'storage.buckets.update',
+            'storage.buckets.delete',
+            'storage.files.create',
+            'storage.files.read',
+            'storage.files.update',
+            'storage.files.delete',
+        ];
+
+        foreach ($storageMertics as $metric) {
+            $value = $this->params[$metric] ?? 0;
+            if ($value >= 1) {
+                $tags = ",projectId={$projectId},bucketId=" . ($this->params['bucketId'] ?? '');
+                $this->statsd->increment($metric . $tags);
+            }
+        }
+
+        $usersMetrics = [
+            'users.create',
+            'users.read',
+            'users.update',
+            'users.delete',
+        ];
+
+        foreach ($usersMetrics as $metric) {
+            $value = $this->params[$metric] ?? 0;
+            if ($value >= 1) {
+                $tags = ",projectId={$projectId}";
+                $this->statsd->increment($metric . $tags);
+            }
+        }
+
+        $sessionsMetrics = [
+            'users.sessions.create',
+            'users.sessions.delete',
+        ];
+
+        foreach ($sessionsMetrics as $metric) {
+            $value = $this->params[$metric] ?? 0;
+            if ($value >= 1) {
+                $tags = ",projectId={$projectId},provider=". ($this->params['provider'] ?? '');
+                $this->statsd->count($metric . $tags, $value);
+            }
+        }
+
         if ($storage >= 1) {
+            $tags = ",projectId={$projectId},bucketId=" . ($this->params['bucketId'] ?? '');
             $this->statsd->count('storage.all' . $tags, $storage);
         }
 

@@ -1549,6 +1549,7 @@ $collections = [
             ],
         ],
     ],
+
     'buckets' => [
         '$collection' => Database::METADATA,
         '$id' => 'buckets',
@@ -1667,6 +1668,92 @@ $collections = [
                 'orders' => [Database::ORDER_ASC],
             ]
         ]
+    ],
+
+    'stats' => [
+        '$collection' => Database::METADATA,
+        '$id' => 'stats',
+        'name' => 'Stats',
+        'attributes' => [
+            [
+                '$id' => 'metric',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 255,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'value',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'time',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'period',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 4,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'type',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 1,
+                'signed' => false,
+                'required' => true,
+                'default' => 0, // 0 -> count, 1 -> sum
+                'array' => false,
+                'filters' => [],
+            ],
+        ],
+        'indexes' => [
+            [
+                '$id' => '_key_time',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['time'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_DESC],
+            ],
+            [
+                '$id' => '_key_metric',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['metric'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => '_key_metric_period',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['metric', 'period'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_DESC],
+            ],
+        ],
     ]
 ];
 

@@ -4,6 +4,8 @@ use Appwrite\ClamAV\Network;
 use Swoole\HTTP\Response as SwooleResponse;
 use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
+use Appwrite\ClamAV\Network;
+use Utopia\Database\Validator\Authorization;
 use Appwrite\Database\Validator\CustomId;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -55,10 +57,12 @@ App::post('/v1/storage/buckets')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('audits')
-    ->action(function ($bucketId, $name, $read, $write, $maximumFileSize, $allowedFileExtensions, $enabled, $adapter, $encryption, $antiVirus, $response, $dbForInternal, $audits) {
+    ->inject('usage')
+    ->action(function ($bucketId, $name, $read, $write, $maximumFileSize, $allowedFileExtensions, $enabled, $adapter, $encryption, $antiVirus, $response, $dbForInternal, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $bucketId = $bucketId == 'unique()' ? $dbForInternal->getId() : $bucketId;
         try {
@@ -282,6 +286,8 @@ App::post('/v1/storage/buckets')
             ->setParam('data', $bucket->getArrayCopy())
         ;
 
+        $usage->setParam('storage.buckets.create', 1);
+
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($bucket, Response::MODEL_BUCKET);
     });
@@ -304,9 +310,11 @@ App::get('/v1/storage/buckets')
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($search, $limit, $offset, $after, $orderType, $response, $dbForInternal) {
+    ->inject('usage')
+    ->action(function ($search, $limit, $offset, $after, $orderType, $response, $dbForInternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, $search)] : [];
         
@@ -317,6 +325,8 @@ App::get('/v1/storage/buckets')
                 throw new Exception("Bucket '{$after}' for the 'after' value not found.", 400);
             }
         }
+
+        $usage->setParam('storage.buckets.read', 1);
 
         $response->dynamic(new Document([
             'buckets' => $dbForInternal->find('buckets', $queries, $limit, $offset, [], [$orderType], $afterBucket ?? null),
@@ -338,15 +348,19 @@ App::get('/v1/storage/buckets/:bucketId')
     ->param('bucketId', '', new UID(), 'Bucket unique ID.')
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($bucketId, $response, $dbForInternal) {
+    ->inject('usage')
+    ->action(function ($bucketId, $response, $dbForInternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
             throw new Exception('Bucket not found', 404);
         }
+
+        $usage->setParam('storage.buckets.read', 1);
 
         $response->dynamic($bucket, Response::MODEL_BUCKET);
     });
@@ -375,10 +389,12 @@ App::put('/v1/storage/buckets/:bucketId')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('audits')
-    ->action(function ($bucketId, $name, $read, $write, $maximumFileSize, $allowedFileExtensions, $enabled, $encryption, $antiVirus, $response, $dbForInternal, $audits) {
+    ->inject('usage')
+    ->action(function ($bucketId, $name, $read, $write, $maximumFileSize, $allowedFileExtensions, $enabled, $encryption, $antiVirus, $response, $dbForInternal, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
@@ -415,6 +431,8 @@ App::put('/v1/storage/buckets/:bucketId')
             ->setParam('data', $bucket->getArrayCopy())
         ;
 
+        $usage->setParam('storage.buckets.update', 1);
+
         $response->dynamic($bucket, Response::MODEL_BUCKET);
     });
 
@@ -435,12 +453,14 @@ App::delete('/v1/storage/buckets/:bucketId')
     ->inject('audits')
     ->inject('deletes')
     ->inject('events')
-    ->action(function ($bucketId, $response, $dbForInternal, $audits, $deletes, $events) {
+    ->inject('usage')
+    ->action(function ($bucketId, $response, $dbForInternal, $audits, $deletes, $events, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $deletes */
         /** @var Appwrite\Event\Event $events */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
@@ -466,6 +486,8 @@ App::delete('/v1/storage/buckets/:bucketId')
             ->setParam('resource', 'storage/buckets/' . $bucket->getId())
             ->setParam('data', $bucket->getArrayCopy())
         ;
+
+        $usage->setParam('storage.buckets.delete', 1);
 
         $response->noContent();
     });
@@ -502,7 +524,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
-        /** @var Appwrite\Event\Event $usage */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
@@ -708,11 +730,11 @@ App::post('/v1/storage/buckets/:bucketId/files')
             ->setParam('resource', 'storage/files/' . $file->getId())
         ;
 
-        if (!empty($sizeActual)) {
-            $usage
-                ->setParam('storage', $sizeActual)
-            ;
-        }
+        $usage
+            ->setParam('storage', $sizeActual)
+            ->setParam('storage.files.create', 1)
+            ->setParam('bucketId', $bucketId)
+        ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($file, Response::MODEL_FILE);
@@ -739,9 +761,11 @@ App::get('/v1/storage/buckets/:bucketId/files')
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($bucketId, $search, $limit, $offset, $after, $orderType, $response, $dbForInternal) {
+    ->inject('usage')
+    ->action(function ($bucketId, $search, $limit, $offset, $after, $orderType, $response, $dbForInternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
@@ -762,6 +786,11 @@ App::get('/v1/storage/buckets/:bucketId/files')
                 throw new Exception("File '{$after}' for the 'after' value not found.", 400);
             }
         }
+
+        $usage
+            ->setParam('storage.files.read', 1)
+            ->setParam('bucketId', $bucketId)
+        ;
 
         $response->dynamic(new Document([
             'files' => $dbForInternal->find('bucket_' . $bucketId, $queries, $limit, $offset, [], [$orderType], $afterFile ?? null),
@@ -785,9 +814,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($bucketId, $fileId, $response, $dbForInternal) {
+    ->inject('usage')
+    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
@@ -800,7 +831,10 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
         if ($file->isEmpty() || $file->getAttribute('bucketId') != $bucketId) {
             throw new Exception('File not found', 404);
         }
-
+        $usage
+            ->setParam('storage.files.read', 1)
+            ->setParam('bucketId', $bucketId)
+        ;
         $response->dynamic($file, Response::MODEL_FILE);
     });
 
@@ -833,11 +867,13 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->inject('response')
     ->inject('project')
     ->inject('dbForInternal')
-    ->action(function ($bucketId, $fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $dbForInternal) {
+    ->inject('usage')
+    ->action(function ($bucketId, $fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $dbForInternal, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $storage = 'files';
 
@@ -954,6 +990,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $cache->save($key, $data);
 
+        $usage
+            ->setParam('storage.files.read', 1)
+            ->setParam('bucketId', $bucketId)
+        ;
+
         $response
             ->setContentType($outputs[$output])
             ->addHeader('Expires', $date)
@@ -980,10 +1021,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($bucketId, $fileId, $response, $dbForInternal) {
-        /** @var Utopia\Swoole\Request $response */
+    ->inject('usage')
+    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
@@ -1033,6 +1075,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             $source = $compressor->decompress($source);
         }
 
+        $usage
+            ->setParam('storage.files.read', 1)
+            ->setParam('bucketId', $bucketId)
+        ;
+
         if(!empty($source)) {
             $response->send($source);
         }
@@ -1065,9 +1112,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($bucketId, $fileId, $response, $dbForInternal) {
+    ->inject('usage')
+    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
@@ -1127,6 +1176,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             $source = $compressor->decompress($source);
         }
 
+        $usage
+            ->setParam('storage.files.read', 1)
+            ->setParam('bucketId', $bucketId)
+        ;
+
         if(!empty($source)) {
             $response->send($source);
         }
@@ -1163,10 +1217,12 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('audits')
-    ->action(function ($bucketId, $fileId, $read, $write, $response, $dbForInternal, $audits) {
+    ->inject('usage')
+    ->action(function ($bucketId, $fileId, $read, $write, $response, $dbForInternal, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Stats\Stats $usage */
 
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
@@ -1188,6 +1244,11 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         $audits
             ->setParam('event', 'storage.files.update')
             ->setParam('resource', 'file/'.$file->getId())
+        ;
+
+        $usage
+            ->setParam('storage.files.update', 1)
+            ->setParam('bucketId', $bucketId)
         ;
 
         $response->dynamic($file, Response::MODEL_FILE);
@@ -1217,8 +1278,8 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
-        /** @var Appwrite\Event\Event $usage */
-
+        /** @var Appwrite\Stats\Stats $usage */
+        
         $bucket = $dbForInternal->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
@@ -1248,6 +1309,8 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $usage
             ->setParam('storage', $file->getAttribute('size', 0) * -1)
+            ->setParam('storage.files.delete', 1)
+            ->setParam('bucketId', $bucketId)
         ;
 
         $events
@@ -1255,4 +1318,163 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         ;
 
         $response->noContent();
+    });
+
+App::get('/v1/storage/usage')
+    ->desc('Get usage stats for storage')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'files.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'getUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USAGE_STORAGE)
+    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->action(function ($range, $response, $dbForInternal) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
+
+        $usage = [];
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+            $period = [
+                '24h' => [
+                    'period' => '30m',
+                    'limit' => 48,
+                ],
+                '7d' => [
+                    'period' => '1d',
+                    'limit' => 7,
+                ],
+                '30d' => [
+                    'period' => '1d',
+                    'limit' => 30,
+                ],
+                '90d' => [
+                    'period' => '1d',
+                    'limit' => 90,
+                ],
+            ];
+
+            $metrics = [
+                "storage.total",
+                "storage.files.count"
+            ];
+
+            $stats = [];
+
+            Authorization::skip(function() use ($dbForInternal, $period, $range, $metrics, &$stats) {
+                foreach ($metrics as $metric) {
+                    $requestDocs = $dbForInternal->find('stats', [
+                        new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
+                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
+                    ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
+    
+                    $stats[$metric] = [];
+                    foreach ($requestDocs as $requestDoc) {
+                        $stats[$metric][] = [
+                            'value' => $requestDoc->getAttribute('value'),
+                            'date' => $requestDoc->getAttribute('time'),
+                        ];
+                    }
+                    $stats[$metric] = array_reverse($stats[$metric]);
+                }    
+            });
+
+            $usage = new Document([
+                'range' => $range,
+                'storage' => $stats['storage.total'],
+                'files' => $stats['storage.files.count']
+            ]);
+        }
+
+        $response->dynamic($usage, Response::MODEL_USAGE_STORAGE);
+    });
+
+App::get('/v1/storage/:bucketId/usage')
+    ->desc('Get usage stats for a storage bucket')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'files.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'getBucketUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USAGE_BUCKETS)
+    ->param('bucketId', '', new UID(), 'Bucket unique ID.')
+    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+    ->inject('response')
+    ->inject('dbForInternal')
+    ->action(function ($bucketId, $range, $response, $dbForInternal) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForInternal */
+
+        $bucket = $dbForInternal->getDocument('buckets', $bucketId);
+
+        if($bucket->isEmpty()) {
+            throw new Exception('Bucket not found', 404);
+        } 
+        
+        $usage = [];
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+            $period = [
+                '24h' => [
+                    'period' => '30m',
+                    'limit' => 48,
+                ],
+                '7d' => [
+                    'period' => '1d',
+                    'limit' => 7,
+                ],
+                '30d' => [
+                    'period' => '1d',
+                    'limit' => 30,
+                ],
+                '90d' => [
+                    'period' => '1d',
+                    'limit' => 90,
+                ],
+            ];
+
+            $metrics = [
+                "storage.buckets.$bucketId.files.count",
+                "storage.buckets.$bucketId.files.create",
+                "storage.buckets.$bucketId.files.read",
+                "storage.buckets.$bucketId.files.update",
+                "storage.buckets.$bucketId.files.delete"
+            ];
+
+            $stats = [];
+
+            Authorization::skip(function() use ($dbForInternal, $period, $range, $metrics, &$stats) {
+                foreach ($metrics as $metric) {
+                    $requestDocs = $dbForInternal->find('stats', [
+                        new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
+                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
+                    ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
+    
+                    $stats[$metric] = [];
+                    foreach ($requestDocs as $requestDoc) {
+                        $stats[$metric][] = [
+                            'value' => $requestDoc->getAttribute('value'),
+                            'date' => $requestDoc->getAttribute('time'),
+                        ];
+                    }
+                    $stats[$metric] = array_reverse($stats[$metric]);
+                }    
+            });
+
+            $usage = new Document([
+                'range' => $range,
+                'files.count' => $stats["storage.buckets.$bucketId.files.count"],
+                'files.create' => $stats["storage.buckets.$bucketId.files.create"],
+                'files.read' => $stats["storage.buckets.$bucketId.files.read"],
+                'files.update' => $stats["storage.buckets.$bucketId.files.update"],
+                'files.delete' => $stats["storage.buckets.$bucketId.files.delete"]
+            ]);
+        }
+
+        $response->dynamic($usage, Response::MODEL_USAGE_BUCKETS);
     });
