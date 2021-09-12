@@ -1017,10 +1017,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->label('sdk.methodType', 'location')
     ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File unique ID.')
+    ->inject('request')
     ->inject('response')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $usage) {
+    ->action(function ($bucketId, $fileId, $request, $response, $dbForInternal, $usage) {
+        /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Stats\Stats $usage */
@@ -1045,12 +1047,35 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             throw new Exception('File not found in ' . $path, 404);
         }
 
+        $usage
+            ->setParam('storage.files.read', 1)
+            ->setParam('bucketId', $bucketId)
+        ;
+
         $response
             ->setContentType($file->getAttribute('mimeType'))
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->addHeader('X-Peak', \memory_get_peak_usage())
             ->addHeader('Content-Disposition', 'attachment; filename="' . $file->getAttribute('name', '') . '"')
         ;
+
+        $size = $device->getFileSize($path);
+
+        // Range header
+        list($unit, $range) = explode('=', $request->getHeader('Range'));
+        if($unit == 'bytes' && !empty($range)) {
+            list($start, $end) = explode('-', $range);
+            $start = (int) $start;
+            $end = (int) $end;
+            if(($start > $end) || $end > $size) {
+                throw new Exception('Invalid Range', 400);
+            }
+            
+            $response->addHeader('Accept-Ranges', 'bytes');
+            $response->addHeader('Content-Range', 'bytes ' . $start . '-' . $end . '/' . $size);
+            $response->addHeader('Content-Length', $end - $start + 1);
+            $response->send($device->read($path, $start, $end));
+        }
 
         $source = '';
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
@@ -1073,16 +1098,10 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             $source = $compressor->decompress($source);
         }
 
-        $usage
-            ->setParam('storage.files.read', 1)
-            ->setParam('bucketId', $bucketId)
-        ;
-
         if(!empty($source)) {
             $response->send($source);
         }
 
-        $size = $device->getFileSize($path);
         if ($size > APP_STORAGE_READ_BUFFER) {          
             $response->addHeader('Content-Length', $device->getFileSize($path));
             $chunk = 2000000; // Max chunk of 2 mb
