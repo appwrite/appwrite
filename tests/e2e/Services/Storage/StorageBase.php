@@ -282,6 +282,22 @@ trait StorageBase
         $this->assertEquals('image/png', $file5['headers']['content-type']);
         $this->assertNotEmpty($file5['body']);
 
+        // Test ranged download
+        $file51 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=0-99',
+        ], $this->getHeaders()));
+
+        $path = __DIR__ . '/../../../resources/logo.png';
+        $originalChunk = \file_get_contents($path, false, null, 0, 100);
+
+        $this->assertEquals(206, $file51['headers']['status-code']);
+        $this->assertEquals('attachment; filename="logo.png"', $file51['headers']['content-disposition']);
+        $this->assertEquals('image/png', $file51['headers']['content-type']);
+        $this->assertNotEmpty($file51['body']);
+        $this->assertEquals($originalChunk, $file51['body']);
+
         $file6 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/view', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

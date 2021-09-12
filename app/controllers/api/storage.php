@@ -1062,19 +1062,25 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         $size = $device->getFileSize($path);
 
         // Range header
-        list($unit, $range) = explode('=', $request->getHeader('Range'));
-        if($unit == 'bytes' && !empty($range)) {
-            list($start, $end) = explode('-', $range);
-            $start = (int) $start;
-            $end = (int) $end;
-            if(($start > $end) || $end > $size) {
-                throw new Exception('Invalid Range', 400);
+        $rangeHeader = $request->getHeader('range');
+        if(!empty($rangeHeader)) {  
+            list($unit, $range) = explode('=', $rangeHeader);
+            if($unit == 'bytes' && !empty($range)) {
+                list($rangeStart, $rangeEnd) = explode('-', $range);
+                $rangeStart = (int) $rangeStart;
+                $rangeEnd = (int) $rangeEnd;
+                if(($rangeStart > $rangeEnd) || $rangeEnd > $size) {
+                    throw new Exception('Invalid range', 400);
+                }
+                
+                $response
+                    ->addHeader('Accept-Ranges', 'bytes')
+                    ->addHeader('Content-Range', 'bytes ' . $rangeStart . '-' . $rangeEnd . '/' . $size)
+                    ->addHeader('Content-Length', $rangeEnd - $rangeStart + 1)
+                    ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
+            } else {
+                throw new Exception('Invalid range', 400);
             }
-            
-            $response->addHeader('Accept-Ranges', 'bytes');
-            $response->addHeader('Content-Range', 'bytes ' . $start . '-' . $end . '/' . $size);
-            $response->addHeader('Content-Length', $end - $start + 1);
-            $response->send($device->read($path, $start, $end));
         }
 
         $source = '';
@@ -1099,7 +1105,14 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         }
 
         if(!empty($source)) {
+            if(!empty($rangeHeader)) {
+                $response->send(substr($source, $rangeStart, ($rangeEnd - $rangeStart + 1)));
+            }
             $response->send($source);
+        }
+
+        if(!empty($rangeHeader)) {
+            $response->send($device->read($path, $rangeStart, ($rangeEnd - $rangeStart + 1)));
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {          
