@@ -119,7 +119,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/PineappleIOnic/php-runtimes.git",
-                "reference": "d633a896c4e5c20fd166f4b5461a869b0db2616e"
+                "reference": "147e76f4a72bc925d9d1613494417d583bd5de34"
             },
             "require": {
                 "php": ">=8.0",
@@ -155,7 +155,7 @@
                 "php",
                 "runtimes"
             ],
-            "time": "2021-09-02T09:13:23+00:00"
+            "time": "2021-09-06T14:46:02+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -4920,6 +4920,7 @@
                     "type": "github"
                 }
             ],
+            "abandoned": true,
             "time": "2020-09-28T06:45:17+00:00"
         },
         {

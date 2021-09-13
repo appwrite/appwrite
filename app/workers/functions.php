@@ -34,27 +34,6 @@ $dockerPass = App::getEnv('DOCKERHUB_PULL_PASSWORD', null);
 $dockerEmail = App::getEnv('DOCKERHUB_PULL_EMAIL', null);
 $orchestration = new Orchestration(new DockerAPI($dockerUser, $dockerPass, $dockerEmail));
 
-/**
- * Warmup Docker Images
- */
-$warmupStart = \microtime(true);
-
-Co\run(function () use ($runtimes, $orchestration) {  // Warmup: make sure images are ready to run fast 🚀
-    foreach ($runtimes as $runtime) {
-        go(function () use ($runtime, $orchestration) {
-            Console::info('Warming up ' . $runtime['name'] . ' ' . $runtime['version'] . ' environment...');
-
-            $response = $orchestration->pull($runtime['image']);
-
-            if ($response) {
-                Console::success("Successfully Warmed up {$runtime['name']} {$runtime['version']}!");
-            } else {
-                Console::error("Failed to Warmup {$runtime['name']} {$runtime['version']}!");
-            }
-        });
-    }
-});
-
 $warmupEnd = \microtime(true);
 $warmupTime = $warmupEnd - $warmupStart;
 

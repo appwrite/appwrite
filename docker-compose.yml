@@ -368,7 +368,7 @@ services:
     entrypoint:
       - php
       - -e
-      - app/executor.php
+      - /usr/src/code/app/executor.php
       - -dopcache.preload=opcache.preload=/usr/src/code/app/preload.php
     stop_signal: SIGINT
     ports:
@@ -376,7 +376,7 @@ services:
     build:
       context: .
       args: 
-        - DEBUG=false
+        - DEBUG=true
         - TESTING=true
         - VERSION=dev
     networks:

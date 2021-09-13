@@ -186,7 +186,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code']);
 
         $executionId = $execution['body']['$id'] ?? '';
-        
+
         sleep(10);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions/'.$executionId, [

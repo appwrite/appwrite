@@ -13,5 +13,6 @@ return function ($request, $response) {
         'APPWRITE_FUNCTION_DATA' => $request->env['APPWRITE_FUNCTION_DATA'],
         'APPWRITE_FUNCTION_USER_ID' => $request->env['APPWRITE_FUNCTION_USER_ID'],
         'APPWRITE_FUNCTION_JWT' => $request->env['APPWRITE_FUNCTION_JWT'],
+        'APPWRITE_FUNCTION_PROJECT_ID' => $request->env['APPWRITE_FUNCTION_PROJECT_ID'],
     ]);
 };

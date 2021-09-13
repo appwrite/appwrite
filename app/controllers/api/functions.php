@@ -403,14 +403,46 @@ App::delete('/v1/functions/:functionId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->inject('response')
+    ->inject('project')
     ->inject('projectDB')
     ->inject('deletes')
-    ->action(function ($functionId, $response, $projectDB, $deletes) {
+    ->action(function ($functionId, $response, $project, $projectDB, $deletes) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $deletes */
 
         $function = $projectDB->getDocument($functionId);
+
+        // Request executor to delete tag containers
+        $ch = \curl_init();
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/cleanup/function");
+        \curl_setopt($ch, CURLOPT_POST, true);
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+            'functionId' => $functionId
+        ]));
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
+        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'X-Appwrite-Project: '.$project->getId(),
+        ]);
+
+        $executorResponse = \curl_exec($ch);
+
+        $error = \curl_error($ch);
+
+        if (!empty($error)) {
+            throw new Exception('Curl error: ' . $error, 500);
+        }
+
+        // Check status code
+        $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        if (200 !== $statusCode) {
+            throw new Exception('Executor error: ' . $executorResponse, $statusCode);
+        }
+
+        \curl_close($ch);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
@@ -506,7 +538,9 @@ App::post('/v1/functions/:functionId/tags')
             'dateCreated' => time(),
             'entrypoint' => $entrypoint,
             'path' => $path,
-            'size' => $size
+            'size' => $size,
+            'status' => 'pending',
+            'builtPath' => ''
         ]);
 
         if (false === $tag) {
@@ -620,9 +654,10 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('tagId', '', new UID(), 'Tag unique ID.')
     ->inject('response')
+    ->inject('project')
     ->inject('projectDB')
     ->inject('usage')
-    ->action(function ($functionId, $tagId, $response, $projectDB, $usage) {
+    ->action(function ($functionId, $tagId, $response, $project, $projectDB, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $usage */
@@ -642,6 +677,37 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
         if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
             throw new Exception('Tag not found', 404);
         }
+
+        // Request executor to delete tag containers
+        $ch = \curl_init();
+        \curl_setopt($ch, CURLOPT_URL, "http://appwrite-executor:8080/v1/cleanup/tag");
+        \curl_setopt($ch, CURLOPT_POST, true);
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+            'tagId' => $tagId
+        ]));
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, 900);
+        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'X-Appwrite-Project: '.$project->getId(),
+        ]);
+
+        $executorResponse = \curl_exec($ch);
+
+        $error = \curl_error($ch);
+
+        if (!empty($error)) {
+            throw new Exception('Curl error: ' . $error, 500);
+        }
+
+        // Check status code
+        $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        if (200 !== $statusCode) {
+            throw new Exception('Executor error: ' . $executorResponse, $statusCode);
+        }
+
+        \curl_close($ch);
 
         $device = Storage::getDevice('functions');
 

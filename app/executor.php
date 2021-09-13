@@ -26,6 +26,12 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
 use Cron\CronExpression;
+use Utopia\Storage\Device\Local;
+use Utopia\Storage\Storage;
+use Utopia\Storage\Validator\FileExt;
+use Utopia\Storage\Validator\FileSize;
+use Utopia\Storage\Validator\Upload;
+use Swoole\Coroutine as Co;
 
 require_once __DIR__ . '/workers.php';
 
@@ -39,12 +45,12 @@ $runtimes = Config::getParam('runtimes');
 Swoole\Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_CURL);
 
 // Warmup: make sure images are ready to run fast 🚀
-Co\run(function() use ($runtimes, $orchestration) {
-    foreach($runtimes as $runtime) {
-        go(function() use ($runtime, $orchestration) {
-            Console::info('Warming up '.$runtime['name'].' '.$runtime['version'].' environment...');
-                
-             $response = $orchestration->pull($runtime['image']);
+Co\run(function () use ($runtimes, $orchestration) {
+    foreach ($runtimes as $runtime) {
+        go(function () use ($runtime, $orchestration) {
+            Console::info('Warming up ' . $runtime['name'] . ' ' . $runtime['version'] . ' environment...');
+
+            $response = $orchestration->pull($runtime['image']);
 
             if ($response) {
                 Console::success("Successfully Warmed up {$runtime['name']} {$runtime['version']}!");
@@ -70,7 +76,7 @@ foreach ($response as $value) {
 
 $executionEnd = \microtime(true);
 
-Console::info(count($activeFunctions).' functions listed in ' . ($executionEnd - $executionStart) . ' seconds');
+Console::info(count($activeFunctions) . ' functions listed in ' . ($executionEnd - $executionStart) . ' seconds');
 
 App::post('/v1/execute') // Define Route
     ->inject('request')
@@ -87,18 +93,126 @@ App::post('/v1/execute') // Define Route
     ->inject('response')
     ->action(
         function ($trigger, $projectId, $executionId, $functionId, $event, $eventData, $data, $webhooks, $userId, $jwt, $request, $response) {
+            global $register;
+            
+            $db = $register->get('dbPool')->get();
+            $cache = $register->get('redisPool')->get();
+        
+            // Create new Database Instance
+            $database = new Database();
+            $database->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
+            $database->setNamespace('app_' . $projectId);
+            $database->setMocks(Config::getParam('collections', []));
+
             try {
-                $data = execute($trigger, $projectId, $executionId, $functionId, $event, $eventData, $data, $webhooks, $userId, $jwt);
-                return $response->json($data);
+                $data = execute($trigger, $projectId, $executionId, $functionId, $database, $event, $eventData, $data, $webhooks, $userId, $jwt);
+                $response->json($data);
             } catch (Exception $e) {
-                return $response
+                $response
                     ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
                     ->addHeader('Expires', '0')
                     ->addHeader('Pragma', 'no-cache')
                     ->json(['error' => $e->getMessage()]);
+            } finally {
+                $register->get('dbPool')->put($db);
+                $register->get('redisPool')->put($cache);
             }
         }
     );
+
+
+// Cleanup Endpoints used internally by appwrite when a function or tag gets deleted to also clean up their containers
+App::post('/v1/cleanup/function')
+    ->param('functionId', '', new UID())
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('projectID')
+    ->action(function ($functionId, $response, $projectDB, $projectID) {
+        /** @var string $functionId */
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var string $projectID */
+
+        global $orchestration;
+
+        try {
+            Authorization::disable();
+            $function = $projectDB->getDocument($functionId);
+            Authorization::reset();
+
+            if (\is_null($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+                throw new Exception('Function not found', 404);
+            }
+
+            Authorization::disable();
+            $results = $projectDB->getCollection([
+                'limit' => 999,
+                'offset' => 0,
+                'orderType' => 'ASC',
+                'filters' => [
+                    '$collection='.Database::SYSTEM_COLLECTION_TAGS,
+                    'functionId='.$functionId,
+                ],
+            ]);
+            Authorization::reset();
+
+            // If amount is 0 then we simply return true
+            if (count($results) === 0) {
+                return $response->json(['success' => true]);
+            }
+
+            // Delete the containers of all tags
+            foreach ($results as $tag) {
+                try {
+                    $orchestration->remove('appwrite-function-'.$tag['$id'], true);
+                    Console::info('Removed container for tag ' . $tag['$id']);
+                } catch (Exception $e) {
+                    // Do nothing, we don't care that much if it fails
+                }
+            }
+
+            return $response->json(['success' => true]);
+        } catch (Exception $e) {
+            Console::error($e->getMessage());
+            return $response->json(['error' => $e->getMessage()]);
+        }
+    });
+
+App::post('/v1/cleanup/tag')
+    ->param('tagId', '', new UID(), 'Tag unique ID.')
+    ->inject('response')
+    ->inject('projectDB')
+    ->inject('projectID')
+    ->action(function ($tagId, $response, $projectDB, $projectID) {
+        /** @var string $tagId */
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var string $projectID */
+
+        global $orchestration;
+
+        try {
+            Authorization::disable();
+            $tag = $projectDB->getDocument($tagId);
+            Authorization::reset();
+
+            if (\is_null($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
+                throw new Exception('Tag not found', 404);
+            }
+
+            try {
+                $orchestration->remove('appwrite-function-'.$tag['$id'], true);
+                Console::info('Removed container for tag ' . $tag['$id']);
+            } catch (Exception $e) {
+                // Do nothing, we don't care that much if it fails
+            }
+        } catch (Exception $e) {
+            Console::error($e->getMessage());
+            return $response->json(['error' => $e->getMessage()]);
+        }
+
+        return $response->json(['success' => true]);
+    });
 
 App::post('/v1/tag')
     ->param('functionId', '', new UID(), 'Function unique ID.')
@@ -132,8 +246,14 @@ App::post('/v1/tag')
         ]));
         Authorization::reset();
 
-        // Deploy Runtime Server
-        createRuntimeServer($functionId, $projectID, $tag);
+        // Build Code
+        go(function()  use ($projectDB, $projectID, $function, $tagId, $functionId) {
+            // Build Code
+            $tag = runBuildStage($tagId, $function, $projectID, $projectDB);
+        
+            // Deploy Runtime Server
+            createRuntimeServer($functionId, $projectID, $tag, $projectDB);
+        });
 
         if ($next) { // Init first schedule
             ResqueScheduler::enqueueAt($next, 'v1-functions', 'FunctionsV1', [
@@ -165,26 +285,209 @@ App::get('/v1/healthz')
         }
     );
 
-function createRuntimeServer(string $functionId, string $projectId, Document $tag) {
+function runBuildStage(string $tagID, Document $function, string $projectID, Database $database): Document
+{
+    global $runtimes;
+    global $orchestration;
+
+    // Update Tag Status
+    Authorization::disable();
+    $tag = $database->getDocument($tagID);
+    $tag = $database->updateDocument(array_merge($tag->getArrayCopy(), [
+        'status' => 'building'
+    ]));
+    Authorization::reset();
+
+    // Check if runtime is active
+    $runtime = (isset($runtimes[$function->getAttribute('runtime', '')]))
+        ? $runtimes[$function->getAttribute('runtime', '')]
+        : null;
+
+    if ($tag->getAttribute('functionId') !== $function->getId()) {
+        throw new Exception('Tag not found', 404);
+    }
+
+    if (\is_null($runtime)) {
+        throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
+    }
+
+    // Grab Tag Files
+    $tagPath = $tag->getAttribute('path', '');
+    $tagPathTarget = '/tmp/project-' . $projectID . '/' . $tag->getId() . '/code.tar.gz';
+    $tagPathTargetDir = \pathinfo($tagPathTarget, PATHINFO_DIRNAME);
+    $container = 'build-stage-' . $tag->getId();
+
+    if (!\is_readable($tagPath)) {
+        throw new Exception('Code is not readable: ' . $tag->getAttribute('path', ''));
+    }
+
+    if (!\file_exists($tagPathTargetDir)) {
+        if (!\mkdir($tagPathTargetDir, 0755, true)) {
+            throw new Exception('Can\'t create directory ' . $tagPathTargetDir);
+        }
+    }
+
+    if (!\file_exists($tagPathTarget)) {
+        if (!\copy($tagPath, $tagPathTarget)) {
+            throw new Exception('Can\'t create temporary code file ' . $tagPathTarget);
+        }
+    }
+
+    $vars = \array_merge($function->getAttribute('vars', []), [
+        'APPWRITE_FUNCTION_ID' => $function->getId(),
+        'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
+        'APPWRITE_FUNCTION_TAG' => $tag->getId(),
+        'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
+        'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
+        'APPWRITE_FUNCTION_PROJECT_ID' => $projectID,
+    ]);
+
+    $buildStart = \microtime(true);
+    $buildTime = \time();
+
+    $orchestration->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', '1'));
+    $orchestration->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', '256'));
+    $orchestration->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '256'));
+
+    foreach ($vars as &$value) {
+        $value = strval($value);
+    }
+
+    $id = $orchestration->run(
+        image: $runtime['base'],
+        name: $container,
+        vars: $vars,
+        workdir: '/usr/code',
+        labels: [
+            'appwrite-type' => 'function',
+            'appwrite-created' => strval($buildTime),
+            'appwrite-runtime' => $function->getAttribute('runtime', ''),
+        ],
+        command: [
+            'tail',
+            '-f',
+            '/dev/null'
+        ],
+        hostname: $container,
+        mountFolder: $tagPathTargetDir,
+        volumes: [
+            '/tmp/project-' . $projectID . '/' . $tag->getId() . '/builtCode'. ':/usr/builtCode:rw'
+        ]
+    );
+
+    $untarStdout = '';
+    $untarStderr = '';
+
+    $untarSuccess = $orchestration->execute(
+        name: $container,
+        command: [
+            'sh',
+            '-c',
+            'mkdir /usr/code -p && cp /tmp/code.tar.gz /usr/code.tar.gz && cd /usr && tar -zxf /usr/code.tar.gz -C /usr/code && rm /usr/code.tar.gz'
+        ],
+        stdout: $untarStdout,
+        stderr: $untarStderr,
+        timeout: 60
+    );
+
+    if (!$untarSuccess) {
+        throw new Exception('Failed to extract tar: ' . $untarStderr);
+    }
+
+    // Build Code / Install Dependencies
+    $buildStdout = '';
+    $buildStderr = '';
+
+    $buildSuccess = $orchestration->execute(
+        name: $container,
+        command: $runtime['buildCommand'],
+        stdout: $buildStdout,
+        stderr: $buildStderr,
+        timeout: 60
+    );
+
+    if (!$buildSuccess) {
+        throw new Exception('Failed to build dependencies: ' . $buildStderr);
+    }
+
+    // Repackage Code and Save.
+    $compressStdout = '';
+    $compressStderr = '';
+
+    $builtCodePath = '/tmp/project-' . $projectID . '/' . $tag->getId() . '/builtCode/code.tar.gz';
+
+    $compressSuccess = $orchestration->execute(
+        name: $container,
+        command: [
+            'sh',
+            '-c',
+            'tar -czvf /usr/builtCode/code.tar.gz /usr/code'
+        ],
+        stdout: $compressStdout,
+        stderr: $compressStderr,
+        timeout: 60
+    );
+
+    if (!$compressSuccess) {
+        throw new Exception('Failed to compress built code: ' . $compressStderr);
+    }
+
+    // Remove Container
+    $orchestration->remove($id, true);
+
+    // Check if the build was successful by checking if file exists
+    if (!\file_exists($builtCodePath)) {
+        throw new Exception('Something went wrong during the build process.');
+    }
+
+    // Upload new code
+    $device = Storage::getDevice('functions');
+
+    $path = $device->getPath(\uniqid().'.'.\pathinfo('code.tar.gz', PATHINFO_EXTENSION));
+
+    if (!\file_exists(\dirname($path))) { // Checks if directory path to file exists
+        if (!@\mkdir(\dirname($path), 0755, true)) {
+            throw new Exception('Can\'t create directory: ' . \dirname($path));
+        }
+    }
+
+    if (!\rename($builtCodePath, $path)) {
+        throw new Exception('Failed moving file', 500);
+    }
+
+    // Update tag with built code attribute
+    Authorization::disable();
+    $tag = $database->updateDocument(array_merge($tag->getArrayCopy(), [
+        'builtPath' => $path,
+        'status' => 'ready'
+    ]));
+    Authorization::enable();
+
+    $buildEnd = \microtime(true);
+
+    Console::info('Tag Built in ' . ($buildEnd - $buildStart) . ' seconds');
+
+    return $tag;
+}
+
+function createRuntimeServer(string $functionId, string $projectId, Document $tag, Database $database)
+{
     global $register;
     global $orchestration;
     global $runtimes;
     global $activeFunctions;
 
-    $db = $register->get('db');
-    $cache = $register->get('cache');
-
-    // Create new Database Instance
-    $database = new Database();
-    $database->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
-    $database->setNamespace('app_' . $projectId);
-    $database->setMocks(Config::getParam('collections', []));
-
     // Grab Tag Document
     Authorization::disable();
     $function = $database->getDocument($functionId);
-    $tag = $database->getDocument($function->getAttribute('tag', ''));
     Authorization::reset();
+
+    // Check if function isn't already created
+    $functions = $orchestration->list(['label' => 'appwrite-type=function', 'name' => 'appwrite-function-' . $tag->getId()]);
+
+    if (\count($functions) > 0) {
+        return;
+    }
 
     // Check if runtime is active
     $runtime = (isset($runtimes[$function->getAttribute('runtime', '')]))
@@ -211,7 +514,7 @@ function createRuntimeServer(string $functionId, string $projectId, Document $ta
 
     $container = 'appwrite-function-' . $tag->getId();
 
-    if (isset($activeFunctions[$container]) && !(\substr($activeFunctions[$container]->getStatus(), 0, 2) === 'Up')) { // Remove conatiner if not online
+    if (isset($activeFunctions[$container]) && !(\substr($activeFunctions[$container]->getStatus(), 0, 2) === 'Up')) { // Remove container if not online
         // If container is online then stop and remove it
         try {
             $orchestration->remove($container);
@@ -222,8 +525,14 @@ function createRuntimeServer(string $functionId, string $projectId, Document $ta
         unset($activeFunctions[$container]);
     }
 
+    // Check if tag is built yet.
+    if ($tag->getAttribute('status') !== 'ready') {
+        throw new Exception('Tag is not built yet', 500);
+    }
+
     // Grab Tag Files
-    $tagPath = $tag->getAttribute('path', '');
+    $tagPath = $tag->getAttribute('builtPath', '');
+
     $tagPathTarget = '/tmp/project-' . $projectId . '/' . $tag->getId() . '/code.tar.gz';
     $tagPathTargetDir = \pathinfo($tagPathTarget, PATHINFO_DIRNAME);
     $container = 'appwrite-function-' . $tag->getId();
@@ -318,21 +627,12 @@ function createRuntimeServer(string $functionId, string $projectId, Document $ta
     }
 };
 
-function execute(string $trigger, string $projectId, string $executionId, string $functionId, string $event = '', string $eventData = '', string $data = '', array $webhooks = [], string $userId = '', string $jwt = ''): array
+function execute(string $trigger, string $projectId, string $executionId, string $functionId, Database $database, string $event = '', string $eventData = '', string $data = '', array $webhooks = [], string $userId = '', string $jwt = ''): array
 {
+    Console::info('Executing function: ' . $functionId);
+
     global $activeFunctions;
     global $runtimes;
-
-    global $register;
-
-    $db = $register->get('db');
-    $cache = $register->get('cache');
-
-    // Create new Database Instance
-    $database = new Database();
-    $database->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
-    $database->setNamespace('app_' . $projectId);
-    $database->setMocks(Config::getParam('collections', []));
 
     // Grab Tag Document
     Authorization::disable();
@@ -396,10 +696,41 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
     $container = 'appwrite-function-' . $tag->getId();
 
-    if (!isset($activeFunctions[$container])) { // Create contianer if not ready
-        createRuntimeServer($functionId, $projectId, $tag);
-    } else {
-        Console::info('Container is ready to run');
+    // Check if code is built
+
+    try {
+        if ($tag->getAttribute('status') !== 'ready') {
+            runBuildStage($tag->getId(), $function, $projectId, $database);
+            sleep(1);
+        }
+    } catch (Exception $e) {
+        Console::error('Something went wrong building the code. ' . $e->getMessage());
+        $execution = $database->updateDocument(array_merge($execution->getArrayCopy(), [
+            'tagId' => $tag->getId(),
+            'status' => 'failed',
+            'exitCode' => 1,
+            'stderr' => \utf8_encode(\mb_substr($e->getMessage(), -4000)), // log last 4000 chars output
+            'time' => 0
+        ]));
+    }
+
+    try {
+        if (!isset($activeFunctions[$container])) { // Create contianer if not ready
+            createRuntimeServer($functionId, $projectId, $tag, $database);
+        } else if ($activeFunctions[$container]->getStatus() === 'Down') { 
+            sleep(1);
+        } else {
+            Console::info('Container is ready to run');
+        }
+    } catch (Exception $e) {
+        Console::error('Something went wrong building the runtime server. ' . $e->getMessage());
+        $execution = $database->updateDocument(array_merge($execution->getArrayCopy(), [
+            'tagId' => $tag->getId(),
+            'status' => 'failed',
+            'exitCode' => 1,
+            'stderr' => \utf8_encode(\mb_substr($e->getMessage(), -4000)), // log last 4000 chars output
+            'time' => 0
+        ]));
     }
 
     $stdout = '';
@@ -419,7 +750,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
     do {
         $attempts++;
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://".$container.":3000/");
+        \curl_setopt($ch, CURLOPT_URL, "http://" . $container . ":3000/");
         \curl_setopt($ch, CURLOPT_POST, true);
         \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
             'path' => '/usr/code',
@@ -432,11 +763,11 @@ function execute(string $trigger, string $projectId, string $executionId, string
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         \curl_setopt($ch, CURLOPT_TIMEOUT, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
         \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-    
+
         $executorResponse = \curl_exec($ch);
 
         $error = \curl_error($ch);
-        
+
         $errNo = \curl_errno($ch);
 
         \curl_close($ch);
@@ -456,7 +787,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
     if ($errNo == CURLE_OPERATION_TIMEDOUT) {
         $exitCode = 124;
     }
-    
+
     if ($errNo !== 0 && $errNo != CURLE_COULDNT_CONNECT && $errNo != CURLE_OPERATION_TIMEDOUT) {
         throw new Exception('Curl error: ' . $error, 500);
     }
@@ -487,8 +818,8 @@ function execute(string $trigger, string $projectId, string $executionId, string
         'tagId' => $tag->getId(),
         'status' => $functionStatus,
         'exitCode' => $exitCode,
-        'stdout' => \mb_substr($stdout, -4000), // log last 4000 chars output
-        'stderr' => \mb_substr($stderr, -4000), // log last 4000 chars output
+        'stdout' => \utf8_encode(\mb_substr($stdout, -4000)), // log last 4000 chars output
+        'stderr' => \utf8_encode(\mb_substr($stderr, -4000)), // log last 4000 chars output
         'time' => $executionTime
     ]));
 
@@ -578,12 +909,14 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
     $projectId = $request->getHeader('x-appwrite-project', '');
 
-    App::setResource('projectDB', function($db, $cache) use ($projectId) {
+    Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS.'/app-'.$projectId));
+
+    App::setResource('projectDB', function ($db, $cache) use ($projectId) {
         $projectDB = new Database();
         $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
-        $projectDB->setNamespace('app_'.$projectId);
+        $projectDB->setNamespace('app_' . $projectId);
         $projectDB->setMocks(Config::getParam('collections', []));
-    
+
         return $projectDB;
     }, ['db', 'cache']);
 
@@ -592,31 +925,31 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         /** @var Utopia\App $utopia */
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
-    
+
         if ($error instanceof PDOException) {
             throw $error;
         }
-    
+
         $route = $utopia->match($request);
-    
-        Console::error('[Error] Timestamp: '.date('c', time()));
-        
-        if($route) {
-            Console::error('[Error] Method: '.$route->getMethod());
+
+        Console::error('[Error] Timestamp: ' . date('c', time()));
+
+        if ($route) {
+            Console::error('[Error] Method: ' . $route->getMethod());
         }
-        
-        Console::error('[Error] Type: '.get_class($error));
-        Console::error('[Error] Message: '.$error->getMessage());
-        Console::error('[Error] File: '.$error->getFile());
-        Console::error('[Error] Line: '.$error->getLine());
-    
+
+        Console::error('[Error] Type: ' . get_class($error));
+        Console::error('[Error] Message: ' . $error->getMessage());
+        Console::error('[Error] File: ' . $error->getFile());
+        Console::error('[Error] Line: ' . $error->getLine());
+
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         $code = $error->getCode();
         $message = $error->getMessage();
-    
+
         //$_SERVER = []; // Reset before reporting to error log to avoid keys being compromised
-    
+
         $output = ((App::isDevelopment())) ? [
             'message' => $error->getMessage(),
             'code' => $error->getCode(),
@@ -629,19 +962,20 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             'code' => $code,
             'version' => $version,
         ];
-    
+
         $response
             ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
             ->addHeader('Expires', '0')
             ->addHeader('Pragma', 'no-cache')
-            ->setStatusCode($code)
-        ;
-    
-        $response->dynamic(new Document($output),
-            $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR);
+            ->setStatusCode($code);
+
+        $response->dynamic(
+            new Document($output),
+            $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR
+        );
     }, ['error', 'utopia', 'request', 'response']);
 
-    App::setResource('projectID', function() use ($projectId) {
+    App::setResource('projectID', function () use ($projectId) {
         return $projectId;
     });
 
@@ -655,7 +989,8 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
 $http->start();
 
-function handleShutdown() {
+function handleShutdown()
+{
     Console::info('Cleaning up containers before shutdown...');
 
     // Remove all containers.
@@ -666,9 +1001,9 @@ function handleShutdown() {
     foreach ($functionsToRemove as $container) {
         try {
             $orchestration->remove($container->getId(), true);
-            Console::info('Removed container '.$container->getName());
+            Console::info('Removed container ' . $container->getName());
         } catch (Exception $e) {
-            Console::error('Failed to remove container: '.$container->getName());
+            Console::error('Failed to remove container: ' . $container->getName());
         }
     }
 }
