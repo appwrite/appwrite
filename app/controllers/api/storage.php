@@ -1062,21 +1062,24 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             ->addHeader('Content-Disposition', 'attachment; filename="' . $file->getAttribute('name', '') . '"')
         ;
 
-        $size = $device->getFileSize($path);
+        $size = $file->getAttribute('sizeOriginal', 0);
 
-        // Range header
         $rangeHeader = $request->getHeader('range');
         if(!empty($rangeHeader)) {  
             list($unit, $range) = explode('=', $rangeHeader);
             if($unit == 'bytes' && !empty($range)) {
                 list($rangeStart, $rangeEnd) = explode('-', $range);
-                if(strlen($rangeStart) == 0 || strlen($rangeEnd) == 0) {
-                    throw new Exception('Invalid range', 400);
+                if(strlen($rangeStart) == 0) {
+                    throw new Exception('Invalid range', 416);
                 }
                 $rangeStart = (int) $rangeStart;
-                $rangeEnd = (int) $rangeEnd;
-                if(($rangeStart >= $rangeEnd) || $rangeEnd > $size) {
-                    throw new Exception('Invalid range', 400);
+                if(strlen($rangeEnd) == 0) {
+                    $rangeEnd =  min(($rangeStart + 2000000-1), ($size - 1));
+                } else {
+                    $rangeEnd = (int) $rangeEnd;
+                }
+                if(($rangeStart >= $rangeEnd) || $rangeEnd >= $size) {
+                    throw new Exception('Invalid range', 416);
                 }
                 
                 $response
@@ -1085,7 +1088,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
                     ->addHeader('Content-Length', $rangeEnd - $rangeStart + 1)
                     ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
             } else {
-                throw new Exception('Invalid range', 400);
+                throw new Exception('Invalid range', 416);
             }
         }
 
