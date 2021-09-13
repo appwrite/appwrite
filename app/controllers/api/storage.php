@@ -1150,10 +1150,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
     ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->inject('response')
+    ->inject('request')
     ->inject('dbForInternal')
     ->inject('usage')
-    ->action(function ($bucketId, $fileId, $response, $dbForInternal, $usage) {
+    ->action(function ($bucketId, $fileId, $response, $request, $dbForInternal, $usage) {
         /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Swoole\Request $request */
         /** @var Utopia\Database\Database $dbForInternal */
         /** @var Appwrite\Stats\Stats $usage */
 
@@ -1194,6 +1196,36 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             ->addHeader('X-Peak', \memory_get_peak_usage())
         ;
 
+        $size = $file->getAttribute('sizeOriginal', 0);
+
+        $rangeHeader = $request->getHeader('range');
+        if(!empty($rangeHeader)) {  
+            list($unit, $range) = explode('=', $rangeHeader);
+            if($unit == 'bytes' && !empty($range)) {
+                list($rangeStart, $rangeEnd) = explode('-', $range);
+                if(strlen($rangeStart) == 0 || strstr($range, '-') === false) {
+                    throw new Exception('Invalid range', 416);
+                }
+                $rangeStart = (int) $rangeStart;
+                if(strlen($rangeEnd) == 0) {
+                    $rangeEnd =  min(($rangeStart + 2000000-1), ($size - 1));
+                } else {
+                    $rangeEnd = (int) $rangeEnd;
+                }
+                if(($rangeStart >= $rangeEnd) || $rangeEnd >= $size) {
+                    throw new Exception('Invalid range', 416);
+                }
+                
+                $response
+                    ->addHeader('Accept-Ranges', 'bytes')
+                    ->addHeader('Content-Range', 'bytes ' . $rangeStart . '-' . $rangeEnd . '/' . $size)
+                    ->addHeader('Content-Length', $rangeEnd - $rangeStart + 1)
+                    ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
+            } else {
+                throw new Exception('Invalid range', 416);
+            }
+        }
+
         $source = '';
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
             $source = $device->read($path);
@@ -1221,7 +1253,14 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         ;
 
         if(!empty($source)) {
+            if(!empty($rangeHeader)) {
+                $response->send(substr($source, $rangeStart, ($rangeEnd - $rangeStart + 1)));
+            }
             $response->send($source);
+        }
+
+        if(!empty($rangeHeader)) {
+            $response->send($device->read($path, $rangeStart, ($rangeEnd - $rangeStart + 1)));
         }
 
         $size = $device->getFileSize($path);
