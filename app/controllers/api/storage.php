@@ -1069,7 +1069,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             list($unit, $range) = explode('=', $rangeHeader);
             if($unit == 'bytes' && !empty($range)) {
                 list($rangeStart, $rangeEnd) = explode('-', $range);
-                if(strlen($rangeStart) == 0) {
+                if(strlen($rangeStart) == 0 || strstr($range, '-') === false) {
                     throw new Exception('Invalid range', 416);
                 }
                 $rangeStart = (int) $rangeStart;
