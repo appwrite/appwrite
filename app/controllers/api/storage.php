@@ -402,17 +402,17 @@ App::put('/v1/storage/buckets/:bucketId')
             throw new Exception('Bucket not found', 404);
         }
 
-        $read??=$bucket->getAttribute('$read', []); // By default inherit read permissions
+        $read ??= $bucket->getAttribute('$read', []); // By default inherit read permissions
         $write??=$bucket->getAttribute('$write', []); // By default inherit write permissions
         $read ??= $bucket->getAttribute('$read', []); // By default inherit read permissions
         $write ??= $bucket->getAttribute('$write',[]); // By default inherit write permissions
-        $read??=$bucket->getAttribute('$read', []); // By default inherit read permissions
+        $read ??= $bucket->getAttribute('$read', []); // By default inherit read permissions
         $write??=$bucket->getAttribute('$write', []); // By default inherit write permissions
         $maximumFileSize??=$bucket->getAttribute('maximumFileSize', (int)App::getEnv('_APP_STORAGE_LIMIT', 0));
         $allowedFileExtensions??=$bucket->getAttribute('allowedFileExtensions', []);
         $enabled??=$bucket->getAttribute('enabled', true);
         $encryption??=$bucket->getAttribute('encryption', true);
-        $antiVirus??=$bucket->getAttribute('antiVirus', true);
+        $antiVirus ??= $bucket->getAttribute('antiVirus', true);
 
         $bucket = $dbForInternal->updateDocument('buckets', $bucket->getId(), $bucket
                 ->setAttribute('name', $name)
@@ -597,7 +597,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         }
 
         // Save to storage
-        $size = $size ?? $device->getFileSize($fileTmpName);
+        $size ??= $device->getFileSize($fileTmpName);
         $path = $device->getPath($fileId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
         $path = str_ireplace($device->getRoot(), $device->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path);
 
