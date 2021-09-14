@@ -187,7 +187,7 @@ Database::addFilter('subQueryAttributes',
         return $database
             ->find('attributes', [
                 new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
-            ], 5000, 0, []);
+            ], 1017, 0, []);
     }
 );
 
@@ -199,7 +199,7 @@ Database::addFilter('subQueryIndexes',
         return $database
             ->find('indexes', [
                 new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
-            ], 5000, 0, []);
+            ], 64, 0, []);
     }
 );
 

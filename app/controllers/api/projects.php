@@ -760,7 +760,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
             new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
         ]);
 
-        if ($webhook == false || $webhook->isEmpty()) {
+        if ($webhook === false || $webhook->isEmpty()) {
             throw new Exception('Webhook not found', 404);
         }
 
@@ -804,7 +804,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
         ]);
 
-        if ($webhook == false || $webhook->isEmpty()) {
+        if ($webhook === false || $webhook->isEmpty()) {
             throw new Exception('Webhook not found', 404);
         }
 
@@ -814,7 +814,8 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             ->setAttribute('url', $url)
             ->setAttribute('security', $security)
             ->setAttribute('httpUser', $httpUser)
-            ->setAttribute('httpPass', $httpPass);
+            ->setAttribute('httpPass', $httpPass)
+        ;
 
         $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
 
@@ -851,7 +852,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
             new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
         ]);
 
-        if($webhook == false || $webhook->isEmpty()) {
+        if($webhook === false || $webhook->isEmpty()) {
             throw new Exception('Webhook not found', 404);
         }
 
@@ -969,7 +970,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
             new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
         ]);
 
-        if ($key == false || $key->isEmpty()) {
+        if ($key === false || $key->isEmpty()) {
             throw new Exception('Key not found', 404);
         }
 
@@ -1007,12 +1008,14 @@ App::put('/v1/projects/:projectId/keys/:keyId')
             new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
         ]);
 
-        if ($key == false || $key->isEmpty()) {
+        if ($key === false || $key->isEmpty()) {
             throw new Exception('Key not found', 404);
         }
 
-        $key->setAttribute('name', $name)
-            ->setAttribute('scopes', $scopes);
+        $key
+            ->setAttribute('name', $name)
+            ->setAttribute('scopes', $scopes)
+        ;
 
         $dbForConsole->updateDocument('keys', $key->getId(), $key);
 
@@ -1049,7 +1052,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
             new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
         ]);
 
-        if($key == false || $key->isEmpty()) {
+        if($key === false || $key->isEmpty()) {
             throw new Exception('Key not found', 404);
         }
 
@@ -1174,7 +1177,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
             new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
         ]);
 
-        if ($platform == false || $platform->isEmpty()) {
+        if ($platform === false || $platform->isEmpty()) {
             throw new Exception('Platform not found', 404);
         }
 
@@ -1214,7 +1217,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
             new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
         ]);
 
-        if ($platform == false || $platform->isEmpty()) {
+        if ($platform === false || $platform->isEmpty()) {
             throw new Exception('Platform not found', 404);
         }
 
@@ -1261,7 +1264,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
             new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
         ]);
 
-        if ($platform == false || $platform->isEmpty()) {
+        if ($platform === false || $platform->isEmpty()) {
             throw new Exception('Platform not found', 404);
         }
 
@@ -1398,7 +1401,7 @@ App::get('/v1/projects/:projectId/domains/:domainId')
             new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
         ]);
 
-        if ($domain == false || $domain->isEmpty()) {
+        if ($domain === false || $domain->isEmpty()) {
             throw new Exception('Domain not found', 404);
         }
 
@@ -1434,7 +1437,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
             new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
         ]);
 
-        if ($domain == false || $domain->isEmpty()) {
+        if ($domain === false || $domain->isEmpty()) {
             throw new Exception('Domain not found', 404);
         }
 
@@ -1454,9 +1457,8 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
             throw new Exception('Failed to verify domain', 401);
         }
 
-        $domain->setAttribute('verification', true);
 
-        $dbForConsole->updateDocument('domains', $domain->getId(), $domain);
+        $dbForConsole->updateDocument('domains', $domain->getId(), $domain->setAttribute('verification', true));
         $dbForConsole->purgeDocument('projects', $project->getId());
 
         // Issue a TLS certificate when domain is verified
@@ -1497,7 +1499,7 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
             new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
         ]);
 
-        if ($domain == false || $domain->isEmpty()) {
+        if ($domain === false || $domain->isEmpty()) {
             throw new Exception('Domain not found', 404);
         }
 
