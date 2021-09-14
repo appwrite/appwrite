@@ -29,6 +29,10 @@ class AttributeString extends Attribute
         ;
     }
 
+    public array $conditions = [
+        'type' => self::TYPE_STRING,
+    ];
+
     /**
      * Get Name
      * 

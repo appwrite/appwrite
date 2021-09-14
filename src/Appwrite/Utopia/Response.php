@@ -341,7 +341,24 @@ class Response extends SwooleResponse
 
                 foreach ($data[$key] as &$item) {
                     if ($item instanceof Document) {
-                        $ruleType = (!\is_null($rule['getNestedType'])) ? $rule['getNestedType']($item) : $rule['type'];
+                        if (\is_array($rule['type'])) {
+                            foreach ($rule['type'] as $type) {
+                                $condition = false;
+                                foreach ($this->getModel($type)->conditions as $attribute => $val) {
+                                    $condition = $item->getAttribute($attribute) === $val;
+                                    if(!$condition) {
+                                        break;
+                                    }
+                                }
+                                if ($condition) {
+                                    $ruleType = $type;
+                                    break;
+                                }
+                            }
+                        } else {
+                            $ruleType = $rule['type'];
+                        }
+
                         if (!array_key_exists($ruleType, $this->models)) {
                             throw new Exception('Missing model for rule: '. $ruleType);
                         }
@@ -350,7 +367,7 @@ class Response extends SwooleResponse
                     }
                 }
             }
-            
+
             $output[$key] = $data[$key];
         }
 

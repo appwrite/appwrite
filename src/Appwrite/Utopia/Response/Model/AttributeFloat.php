@@ -39,6 +39,10 @@ class AttributeFloat extends Attribute
         ;
     }
 
+    public array $conditions = [
+        'type' => self::TYPE_FLOAT,
+    ];
+
     /**
      * Get Name
      * 

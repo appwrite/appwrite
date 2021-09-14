@@ -31,6 +31,11 @@ class AttributeIP extends Attribute
         ;
     }
 
+    public array $conditions = [
+        'type' => self::TYPE_STRING,
+        'format' => \APP_DATABASE_ATTRIBUTE_IP
+    ];
+
     /**
      * Get Name
      * 
