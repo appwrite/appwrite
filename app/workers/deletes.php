@@ -112,6 +112,8 @@ class DeletesV1 extends Worker
         $this->deleteByGroup('indexes', [
             new Query('collectionId', Query::TYPE_EQUAL, [$collectionId])
         ], $dbForInternal);
+
+        $dbForInternal->deleteDocument('collections', $collectionId);
     }
 
     /**
