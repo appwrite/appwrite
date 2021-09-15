@@ -102,7 +102,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId)
     /**
      * Save current connections to the Database every 5 seconds.
      */
-    Timer::tick(100, function () use ($stats, $getConsoleDb, $containerId, &$documentId) {
+    Timer::tick(5000, function () use ($stats, $getConsoleDb, $containerId, &$documentId) {
         foreach ($stats as $projectId => $value) {
             if (empty($value['connections']) && empty($value['messages'])) {
                 continue;
@@ -169,7 +169,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     $attempts = 0;
     $start = time();
 
-    Timer::tick(100, function () use ($server, $register, $realtime, $stats) {
+    Timer::tick(5000, function () use ($server, $register, $realtime, $stats) {
         /**
          * Sending current connections to project channels on the console project every 5 seconds.
          */
