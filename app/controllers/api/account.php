@@ -518,7 +518,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         '$collection' => Database::SYSTEM_COLLECTION_USERS,
                         '$permissions' => ['read' => ['*'], 'write' => ['user:{self}']],
                         'email' => empty($email) ? null : $email,
-                        'emailVerification' => empty($email) ? false : true,
+                        'emailVerification' => empty($email) ? false : true, // Should email be verified if OAuth2 provider doesn't return any email?
                         'status' => Auth::USER_STATUS_ACTIVATED, // Email should already be authenticated by OAuth2 provider
                         'password' => Auth::passwordHash(Auth::passwordGenerator()),
                         'passwordUpdate' => 0,
@@ -571,7 +571,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             if(!empty($email)) {
                 $user->setAttribute('email', $email);
             }
-            
         }
 
         $user
