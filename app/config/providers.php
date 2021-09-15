@@ -151,6 +151,16 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false
     ],
+    'reddit' => [
+        'name' => 'Reddit',
+        'developers' => 'https://www.reddit.com/dev/api/',
+        'icon' => 'icon-reddit',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+    ],
     'salesforce' => [
         'name' => 'Salesforce',
         'developers' => 'https://developer.salesforce.com/docs/',
