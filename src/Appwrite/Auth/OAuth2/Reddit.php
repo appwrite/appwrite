@@ -39,7 +39,7 @@ class Reddit extends OAuth2
             'response_type' => 'code',
             'scope' => \implode(' ', $this->getScopes()),
             'state' => \json_encode($this->state),
-            // 'duration' => 'temporary',
+            'duration' => 'temporary', // expires in one hour
             'redirect_uri' => $this->callback,
         ]);
     }
@@ -66,12 +66,9 @@ class Reddit extends OAuth2
             ])
         );
 
-        $output = [];
-
-        \parse_str($accessToken, $output);
-
-        if (isset($output['access_token'])) {
-            return $output['access_token'];
+        $accessToken = \json_decode($accessToken, true);
+        if (isset($accessToken['access_token'])) {
+            return $accessToken['access_token'];
         }
 
         return '';
@@ -86,8 +83,8 @@ class Reddit extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['id'])) {
-            return $user['id'];
+        if (isset($user['name'])) {
+            return $user['name'];
         }
 
         return '';
@@ -112,6 +109,10 @@ class Reddit extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
+        if(isset($user['title']) && !empty($user['title'])) {
+            return $user['title'];
+        }
+        
         if (isset($user['name'])) {
             return $user['name'];
         }
@@ -126,6 +127,12 @@ class Reddit extends OAuth2
      */
     protected function getUser(string $accessToken)
     {
-        // TODO: Implement getUser() method.
+        $user = $this->request('GET', 'https://oauth.reddit.com/api/v1/me', [
+            'Authorization: Bearer ' . $accessToken
+        ]);
+        
+        var_dump($user);
+        $user = \json_decode($user, true);
+        return $user;
     }
 }
