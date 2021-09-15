@@ -1,3 +1,8 @@
+# Version 0.10.4
+
+## Bugs
+- Fixed another memory leak in realtime service (#1627)
+
 # Version 0.10.3
 
 ## Bugs

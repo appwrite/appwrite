@@ -103,8 +103,6 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId)
      * Save current connections to the Database every 5 seconds.
      */
     Timer::tick(5000, function () use ($stats, $getConsoleDb, $containerId, &$documentId) {
-        [$consoleDb, $returnConsoleDb] = call_user_func($getConsoleDb);
-
         foreach ($stats as $projectId => $value) {
             if (empty($value['connections']) && empty($value['messages'])) {
                 continue;
@@ -129,8 +127,6 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId)
             if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
                 $usage->trigger();
             }
-
-            unset($usage, $connections, $messages);
         }
         $payload = [];
         foreach ($stats as $projectId => $value) {
@@ -141,19 +137,21 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId)
         if (empty($payload)) {
             return;
         }
-        $document = [
-            '$id' => $documentId,
-            '$collection' => Database::SYSTEM_COLLECTION_CONNECTIONS,
-            '$permissions' => [
-                'read' => ['*'],
-                'write' => ['*'],
-            ],
-            'container' => $containerId,
-            'timestamp' => time(),
-            'value' => json_encode($payload)
-        ];
+
         try {
-            $document = $consoleDb->updateDocument($document);
+            [$consoleDb, $returnConsoleDb] = call_user_func($getConsoleDb);
+
+            $consoleDb->updateDocument([
+                '$id' => $documentId,
+                '$collection' => Database::SYSTEM_COLLECTION_CONNECTIONS,
+                '$permissions' => [
+                    'read' => ['*'],
+                    'write' => ['*'],
+                ],
+                'container' => $containerId,
+                'timestamp' => time(),
+                'value' => json_encode($payload)
+            ]);
         } catch (\Throwable $th) {
             Console::error('[Error] Type: ' . get_class($th));
             Console::error('[Error] Message: ' . $th->getMessage());
