@@ -204,7 +204,12 @@ App::get('/v1/users/:userId/sessions')
         foreach ($sessions as $key => $session) { 
             /** @var Document $session */
 
-            $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+            $countryNameKey = 'countries.'.strtolower($session->getAttribute('countryCode'));
+            $countryName = $locale->getText($countryNameKey);
+            if($countryName === '{{' . $countryNameKey . '}}') {
+                $countryName = $locale->getText('locale.country.unknown');
+            }
+            
             $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', false);
 
@@ -318,8 +323,21 @@ App::get('/v1/users/:userId/logs')
             $record = $geodb->get($log['ip']);
 
             if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+                $countryCodeKey = 'countries.'.strtolower($record['country']['iso_code']);
+                $countryCode = $locale->getText($countryCodeKey);
+                if($countryCode === '{{' . $countryCodeKey . '}}') {
+                    $output[$i]['countryCode'] = '--';
+                } else {
+                    $output[$i]['countryCode'] = \strtolower($record['country']['iso_code']);
+                }
+
+                $countryNameKey = 'countries.'.strtolower($record['country']['iso_code']);
+                $countryName = $locale->getText($countryNameKey);
+                if($countryName === '{{' . $countryNameKey . '}}') {
+                    $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
+                } else {
+                    $output[$i]['countryName'] = $countryName;
+                }
             } else {
                 $output[$i]['countryCode'] = '--';
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');

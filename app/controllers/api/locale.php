@@ -40,11 +40,18 @@ App::get('/v1/locale')
 
         if ($record) {
             $output['countryCode'] = $record['country']['iso_code'];
-            $output['country'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            $output['continent'] = $locale->getText('continents.'.strtolower($record['continent']['code']), $locale->getText('locale.country.unknown'));
             $output['continent'] = (isset($continents[$record['continent']['code']])) ? $continents[$record['continent']['code']] : $locale->getText('locale.country.unknown');
             $output['continentCode'] = $record['continent']['code'];
             $output['eu'] = (\in_array($record['country']['iso_code'], $eu)) ? true : false;
+
+            $countryNameKey = 'countries.'.strtolower($record['country']['iso_code']);
+            $countryName = $locale->getText($countryNameKey);
+
+            $continentNameKey = 'continents.'.strtolower($record['continent']['code']);
+            $continentName = $locale->getText($continentNameKey);
+
+            $output['country'] = $countryName === '{{' . $countryNameKey . '}}' ? $locale->getText('locale.country.unknown') : $countryName;
+            $output['continent'] = $continentName === '{{' . $continentNameKey . '}}' ? $locale->getText('locale.country.unknown') : $continentName;
 
             foreach ($currencies as $code => $element) {
                 if (isset($element['locations']) && isset($element['code']) && \in_array($record['country']['iso_code'], $element['locations'])) {
@@ -124,10 +131,12 @@ App::get('/v1/locale/countries/eu')
         $output = [];
 
         foreach ($eu as $code) {
-            if ($locale->getText('countries.'.strtolower($code), false) !== false) {
+            $countryNameKey = 'countries.'.strtolower($code);
+            $countryName = $locale->getText($countryNameKey);
+            if ($countryName !== '{{' . $countryNameKey . '}}') {
                 $output[] = new Document([
-                    'name' => $locale->getText('countries.'.strtolower($code)),
                     'code' => $code,
+                    'name' => $countryName,
                 ]);
             }
         }
@@ -162,11 +171,13 @@ App::get('/v1/locale/countries/phones')
         \asort($list);
 
         foreach ($list as $code => $name) {
-            if ($locale->getText('countries.'.strtolower($code), false) !== false) {
+            $countryNameKey = 'countries.'.strtolower($code);
+            $countryName = $locale->getText($countryNameKey);
+            if ($countryName !== '{{' . $countryNameKey . '}}') {
                 $output[] = new Document([
                     'code' => '+'.$list[$code],
                     'countryCode' => $code,
-                    'countryName' => $locale->getText('countries.'.strtolower($code)),
+                    'countryName' => $countryName,
                 ]);
             }
         }

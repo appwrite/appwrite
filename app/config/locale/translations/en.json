@@ -157,7 +157,7 @@
     "console.users.team.update-submit": "Update",
     "console.users.team.update-label-name": "Name",
     "console.users.team.members-title": "Members",
-    "console.users.team.members-sum": "<?php echo $locale->getText(''); ?>",
+    "console.users.team.members-sum": "members found",
     "console.users.team.no-members-title": "No Memberships Found",
     "console.users.team.no-members-description": "Add your first team member to get started",
     "console.users.team.member-alt-avatar": "User Avatar",
