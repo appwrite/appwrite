@@ -33,7 +33,7 @@ before_install:
 - sudo mv docker-compose /usr/local/bin
 - docker-compose --version
 # Enable Buildkit
-- docker buildx create --use
+- docker buildx create --name travis_builder --use
 - export COMPOSE_INTERACTIVE_NO_CLI
 - export DOCKER_BUILDKIT=1
 - export COMPOSE_DOCKER_CLI_BUILD=1
@@ -56,6 +56,10 @@ script:
 - docker-compose exec appwrite doctor
 - docker-compose exec appwrite vars
 - docker-compose exec appwrite test --debug
+
+after_script:
+# travis re-uses their build nodes so clean them up
+- docker buildx rm travis_builder
 
 after_failure:
 - docker-compose logs appwrite
