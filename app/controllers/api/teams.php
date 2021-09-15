@@ -426,7 +426,7 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
         $url = Template::parseURL($url);
-        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'teamId' => $team->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
+        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
         $url = Template::unParseURL($url);
 
         if (!$isPrivilegedUser && !$isAppUser) { // No need of confirmation when in admin or app mode
