@@ -484,14 +484,15 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         if (empty($user)) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
             $name = $oauth2->getUserName($accessToken);
             $email = $oauth2->getUserEmail($accessToken);
-
-            $user = $projectDB->getCollectionFirst([ // Get user by provider email address
-                'limit' => 1,
-                'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                    'email='.$email,
-                ],
-            ]);
+            if(!empty($email)) { // Supporting OAuth2 providers that don't provide email
+                $user = $projectDB->getCollectionFirst([ // Get user by provider email address
+                    'limit' => 1,
+                    'filters' => [
+                        '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                        'email='.$email,
+                    ],
+                ]);
+            }
 
             if (!$user || empty($user->getId())) { // Last option -> create the user, generate random password
                 $limit = $project->getAttribute('usersAuthLimit', 0);
@@ -516,15 +517,15 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     $user = $projectDB->createDocument([
                         '$collection' => Database::SYSTEM_COLLECTION_USERS,
                         '$permissions' => ['read' => ['*'], 'write' => ['user:{self}']],
-                        'email' => $email,
-                        'emailVerification' => true,
+                        'email' => empty($email) ? null : $email,
+                        'emailVerification' => empty($email) ? false : true,
                         'status' => Auth::USER_STATUS_ACTIVATED, // Email should already be authenticated by OAuth2 provider
                         'password' => Auth::passwordHash(Auth::passwordGenerator()),
                         'passwordUpdate' => 0,
                         'registration' => \time(),
                         'reset' => false,
                         'name' => $name,
-                    ], ['email' => $email]);
+                    ], empty($email) ? [] : ['email' => $email]);
                 } catch (Duplicate $th) {
                     throw new Exception('Account already exists', 409);
                 }
@@ -564,10 +565,13 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $isAnonymousUser = is_null($user->getAttribute('email')) && is_null($user->getAttribute('password'));
 
         if ($isAnonymousUser) {
-            $user
-                ->setAttribute('name', $oauth2->getUserName($accessToken))
-                ->setAttribute('email', $oauth2->getUserEmail($accessToken))
-            ;
+            $user->setAttribute('name', $oauth2->getUserName($accessToken));
+            
+            $email = $oauth2->getUserEmail($accessToken);
+            if(!empty($email)) {
+                $user->setAttribute('email', $email);
+            }
+            
         }
 
         $user
