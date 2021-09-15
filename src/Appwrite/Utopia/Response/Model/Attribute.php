@@ -44,6 +44,8 @@ class Attribute extends Model
         ;
     }
 
+    public array $conditions = [];
+
     /**
      * Get Name
      * 
