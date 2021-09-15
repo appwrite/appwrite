@@ -442,14 +442,14 @@ App::delete('/v1/storage/buckets/:bucketId')
             throw new Exception('Bucket not found', 404);
         }
 
+        if(!$dbForInternal->deleteDocument('buckets', $bucketId)) {
+            throw new Exception('Failed to remove project from DB', 500);
+        }
+        
         $deletes
             ->setParam('type', DELETE_TYPE_DOCUMENT)
             ->setParam('document', $bucket)
         ;
-
-        if(!$dbForInternal->deleteDocument('buckets', $bucketId)) {
-            throw new Exception('Failed to remove project from DB', 500);
-        }
 
         $events
             ->setParam('eventData', $response->output($bucket, Response::MODEL_BUCKET))
