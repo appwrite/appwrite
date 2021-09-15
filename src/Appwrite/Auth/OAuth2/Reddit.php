@@ -131,7 +131,6 @@ class Reddit extends OAuth2
             'Authorization: Bearer ' . $accessToken
         ]);
         
-        var_dump($user);
         $user = \json_decode($user, true);
         return $user;
     }
