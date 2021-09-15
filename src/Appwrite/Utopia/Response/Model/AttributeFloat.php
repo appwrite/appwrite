@@ -54,7 +54,7 @@ class AttributeFloat extends Attribute
     }
 
     /**
-     * Get Collection
+     * Get Type
      * 
      * @return string
      */

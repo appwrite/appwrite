@@ -38,7 +38,7 @@ class AttributeBoolean extends Attribute
     }
 
     /**
-     * Get Collection
+     * Get Type
      * 
      * @return string
      */
