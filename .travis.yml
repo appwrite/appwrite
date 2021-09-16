@@ -6,7 +6,7 @@ arch:
 
 os: linux
 
-# Small change to check build failure
+# Small change to check build
 vm:
   size: large 
   
