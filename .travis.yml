@@ -7,7 +7,7 @@ arch:
 os: linux
 
 vm:
-  size: x-large
+  size: large
 
 language: shell
 
