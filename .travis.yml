@@ -6,9 +6,10 @@ arch:
 
 os: linux
 
+# Small change to check build failure
 vm:
-  size: large
-
+  size: large 
+  
 language: shell
 
 notifications:
