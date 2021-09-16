@@ -26,8 +26,8 @@ use Appwrite\URL\URL as URLParser;
 use Appwrite\Utopia\Response;
 use Utopia\Validator\ArrayList;
 
-$oauthDefaultSuccess = App::getEnv('_APP_HOME').'/auth/oauth2/success';
-$oauthDefaultFailure = App::getEnv('_APP_HOME').'/auth/oauth2/failure';
+$oauthDefaultSuccess = '/v1/auth/oauth2/success';
+$oauthDefaultFailure = '/v1/auth/oauth2/failure';
 
 App::post('/v1/account')
     ->desc('Create Account')
@@ -281,13 +281,13 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('providers'), function($node) {return (!$node['mock']);}))).'.')
-    ->param('success', $oauthDefaultSuccess, function ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
-    ->param('failure', $oauthDefaultFailure, function ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->param('success', '', function ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->param('failure', '', function ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->param('scopes', [], new ArrayList(new Text(128)), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
-    ->action(function ($provider, $success, $failure, $scopes, $request, $response, $project) {
+    ->action(function ($provider, $success, $failure, $scopes, $request, $response, $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
@@ -310,6 +310,14 @@ App::get('/v1/account/sessions/oauth2/:provider')
 
         if (!\class_exists($classname)) {
             throw new Exception('Provider is not supported', 501);
+        }
+
+        if(empty($success)) {
+            $success = $protocol . '://' . $request->getHostname() . $oauthDefaultSuccess;
+        }
+
+        if(empty($failure)) {
+            $failure = $protocol . '://' . $request->getHostname() . $oauthDefaultFailure;
         }
 
         $oauth2 = new $classname($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure], $scopes);
@@ -595,7 +603,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
         
         // Add keys for non-web platforms - TODO - add verification phase to aviod session sniffing
-        if (parse_url($state['success'], PHP_URL_PATH) === parse_url($oauthDefaultSuccess, PHP_URL_PATH)) {
+        if (parse_url($state['success'], PHP_URL_PATH) === $oauthDefaultSuccess) {
             $state['success'] = URLParser::parse($state['success']);
             $query = URLParser::parseQuery($state['success']['query']);
             $query['project'] = $project->getId();

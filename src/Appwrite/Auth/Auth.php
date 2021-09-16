@@ -3,6 +3,7 @@
 namespace Appwrite\Auth;
 
 use Appwrite\Database\Document;
+use Appwrite\Database\Validator\Authorization;
 
 class Auth
 {
@@ -282,11 +283,15 @@ class Auth
      */
     public static function getRoles(Document $user): array
     {
-        if ($user->getId()) {
-            $roles[] = 'user:'.$user->getId();
-            $roles[] = 'role:'.Auth::USER_ROLE_MEMBER;
-        } else {
-            return ['role:'.Auth::USER_ROLE_GUEST];
+        $roles = [];
+
+        if (!self::isPrivilegedUser(Authorization::$roles) && !self::isAppUser(Authorization::$roles)) {
+            if ($user->getId()) {
+                $roles[] = 'user:'.$user->getId();
+                $roles[] = 'role:'.Auth::USER_ROLE_MEMBER;
+            } else {
+                return ['role:'.Auth::USER_ROLE_GUEST];
+            }
         }
 
         foreach ($user->getAttribute('memberships', []) as $node) {

@@ -47,8 +47,8 @@
                 mode: '',
             };
             this.headers = {
-                'x-sdk-version': 'appwrite:web:2.1.0',
-                'X-Appwrite-Response-Format': '0.9.0',
+                'x-sdk-version': 'appwrite:web:4.0.1',
+                'X-Appwrite-Response-Format': '0.10.0',
             };
             this.realtime = {
                 socket: undefined,
@@ -85,14 +85,14 @@
                     });
                 },
                 authenticate: (event) => {
-                    var _a, _b;
+                    var _a, _b, _c;
                     const message = JSON.parse(event.data);
-                    if (message.type === 'connected') {
-                        const cookie = JSON.parse((_a = window.localStorage.getItem('cookieFallback')) !== null && _a !== void 0 ? _a : "{}");
+                    if (message.type === 'connected' && ((_a = this.realtime.socket) === null || _a === void 0 ? void 0 : _a.readyState) === WebSocket.OPEN) {
+                        const cookie = JSON.parse((_b = window.localStorage.getItem('cookieFallback')) !== null && _b !== void 0 ? _b : "{}");
                         const session = cookie === null || cookie === void 0 ? void 0 : cookie[`a_session_${this.config.project}`];
                         const data = message.data;
                         if (session && !data.user) {
-                            (_b = this.realtime.socket) === null || _b === void 0 ? void 0 : _b.send(JSON.stringify({
+                            (_c = this.realtime.socket) === null || _c === void 0 ? void 0 : _c.send(JSON.stringify({
                                 type: "authentication",
                                 data: {
                                     session
@@ -398,7 +398,7 @@
                     }, payload);
                 }),
                 /**
-                 * Complete Password Recovery
+                 * Create Password Recovery (confirmation)
                  *
                  * Use this endpoint to complete the user account password reset. Both the
                  * **userId** and **secret** arguments will be passed as query parameters to
@@ -536,6 +536,82 @@
                     }, payload);
                 }),
                 /**
+                 * Create Magic URL session
+                 *
+                 * Sends the user an email with a secret key for creating a session. When the
+                 * user clicks the link in the email, the user is redirected back to the URL
+                 * you provided with the secret key and userId values attached to the URL
+                 * query string. Use the query string parameters to submit a request to the
+                 * [PUT
+                 * /account/sessions/magic-url](/docs/client/account#accountUpdateMagicURLSession)
+                 * endpoint to complete the login process. The link sent to the user's email
+                 * address is valid for 1 hour. If you are on a mobile device you can leave
+                 * the URL parameter empty, so that the login completion will be handled by
+                 * your Appwrite instance by default.
+                 *
+                 * @param {string} email
+                 * @param {string} url
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createMagicURLSession: (email, url) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof email === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "email"');
+                    }
+                    let path = '/account/sessions/magic-url';
+                    let payload = {};
+                    if (typeof email !== 'undefined') {
+                        payload['email'] = email;
+                    }
+                    if (typeof url !== 'undefined') {
+                        payload['url'] = url;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Magic URL session (confirmation)
+                 *
+                 * Use this endpoint to complete creating the session with the Magic URL. Both
+                 * the **userId** and **secret** arguments will be passed as query parameters
+                 * to the redirect URL you have provided when sending your request to the
+                 * [POST
+                 * /account/sessions/magic-url](/docs/client/account#accountCreateMagicURLSession)
+                 * endpoint.
+                 *
+                 * Please note that in order to avoid a [Redirect
+                 * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+                 * the only valid redirect URLs are the ones from domains you have set when
+                 * adding your platforms in the console interface.
+                 *
+                 * @param {string} userId
+                 * @param {string} secret
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateMagicURLSession: (userId, secret) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof secret === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "secret"');
+                    }
+                    let path = '/account/sessions/magic-url';
+                    let payload = {};
+                    if (typeof userId !== 'undefined') {
+                        payload['userId'] = userId;
+                    }
+                    if (typeof secret !== 'undefined') {
+                        payload['secret'] = secret;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('put', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * Create Account Session with OAuth2
                  *
                  * Allow the user to login to their account using the OAuth2 provider of their
@@ -666,7 +742,7 @@
                     }, payload);
                 }),
                 /**
-                 * Complete Email Verification
+                 * Create Email Verification (confirmation)
                  *
                  * Use this endpoint to complete the user email verification process. Use both
                  * the **userId** and **secret** parameters that were attached to your app URL
@@ -4377,6 +4453,9 @@
                     return data;
                 }
                 catch (e) {
+                    if (e instanceof AppwriteException) {
+                        throw e;
+                    }
                     throw new AppwriteException(e.message);
                 }
             });

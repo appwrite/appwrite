@@ -1,3 +1,14 @@
+# Version 0.10.4
+
+## Bugs
+- Fixed another memory leak in realtime service (#1627)
+
+# Version 0.10.3
+
+## Bugs
+- Fixed memory leak in realtime service (#1606)
+- Fixed function execution output now being UTF-8 encoded before saved (#1607)
+
 # Version 0.10.2
 
 ## Bugs

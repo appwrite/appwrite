@@ -103,15 +103,13 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId)
      * Save current connections to the Database every 5 seconds.
      */
     Timer::tick(5000, function () use ($stats, $getConsoleDb, $containerId, &$documentId) {
-        [$consoleDb, $returnConsoleDb] = call_user_func($getConsoleDb);
-
         foreach ($stats as $projectId => $value) {
             if (empty($value['connections']) && empty($value['messages'])) {
                 continue;
             }
 
-            $connections = $value['connections'];
-            $messages = $value['messages'];
+            $connections = $stats->get($projectId, 'connections');
+            $messages = $stats->get($projectId, 'messages');
 
             $usage = new Event('v1-usage', 'UsageV1');
             $usage
@@ -133,25 +131,27 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId)
         $payload = [];
         foreach ($stats as $projectId => $value) {
             if (!empty($value['connectionsTotal'])) {
-                $payload[$projectId] = $value['connectionsTotal'];
+                $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');
             }
         }
         if (empty($payload)) {
             return;
         }
-        $document = [
-            '$id' => $documentId,
-            '$collection' => Database::SYSTEM_COLLECTION_CONNECTIONS,
-            '$permissions' => [
-                'read' => ['*'],
-                'write' => ['*'],
-            ],
-            'container' => $containerId,
-            'timestamp' => time(),
-            'value' => json_encode($payload)
-        ];
+
         try {
-            $document = $consoleDb->updateDocument($document);
+            [$consoleDb, $returnConsoleDb] = call_user_func($getConsoleDb);
+
+            $consoleDb->updateDocument([
+                '$id' => $documentId,
+                '$collection' => Database::SYSTEM_COLLECTION_CONNECTIONS,
+                '$permissions' => [
+                    'read' => ['*'],
+                    'write' => ['*'],
+                ],
+                'container' => $containerId,
+                'timestamp' => time(),
+                'value' => json_encode($payload)
+            ]);
         } catch (\Throwable $th) {
             Console::error('[Error] Type: ' . get_class($th));
             Console::error('[Error] Message: ' . $th->getMessage());
@@ -210,7 +210,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                 $event = [
                     'project' => 'console',
-                    'roles' => ['team:' . $value['teamId']],
+                    'roles' => ['team:' . $stats->get($projectId, 'teamId')],
                     'data' => [
                         'event' => 'stats.connections',
                         'channels' => ['project'],
