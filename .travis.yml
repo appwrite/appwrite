@@ -6,6 +6,9 @@ arch:
 
 os: linux
 
+vm:
+  size: x-large
+
 language: shell
 
 notifications:
