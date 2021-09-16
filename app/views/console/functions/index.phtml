@@ -38,7 +38,7 @@ $locale = $this->getParam("locale");
                 </div>
 
                 <div data-ls-if="0 != {{project-functions.functions.length}}">
-                    <div class="margin-bottom-small margin-end-small text-align-end text-size-small margin-top-negative"><span data-ls-bind="{{project-functions.sum}}"></span> <?php echo $locale->getText('console.functions.index.functions-sum'); ?></div>
+                    <div class="margin-bottom-small margin-end-small text-align-end text-size-small margin-top-negative"><span data-ls-bind="<?php echo $locale->getText('console.functions.index.functions-sum'); ?>"></span></div>
                     
                     <div class="box margin-bottom">
                         <ul data-ls-loop="project-functions.functions" data-ls-as="function" class="list">

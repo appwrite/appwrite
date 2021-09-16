@@ -379,10 +379,15 @@ App::get('/console/users/user')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
+    ->inject('locale')
+    ->action(function ($layout, $locale) {
         /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
 
         $page = new View(__DIR__.'/../../views/console/users/user.phtml');
+
+        $page
+            ->setParam('locale', $locale);
 
         $layout
             ->setParam('title', APP_NAME.' - User')

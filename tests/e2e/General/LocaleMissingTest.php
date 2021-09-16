@@ -194,6 +194,31 @@ class LocaleMissingTest extends Scope
             Console::success("No unised translation keys");
         }
 
+        $valueRepetitions = [];
+
+        foreach ($translations as $existingTranslationKey => $existingTranslationValue) {
+           if(array_key_exists($existingTranslationValue, $valueRepetitions)) {
+               $valueRepetitions[$existingTranslationValue]++;
+           }  else {
+               $valueRepetitions[$existingTranslationValue] = 1;
+           }
+        }
+
+        \arsort($valueRepetitions);
+
+        Console::log("Showing 20 most used values: (possible repetition)");
+        $index = 1;
+        foreach ($valueRepetitions as $value => $amount) {
+            if($index > 20) {
+                break;
+            }
+
+            Console::log("{$index}. [{$amount}x] {$value}");
+
+            $index++;
+        }
+
+
         $this->assertEmpty($invalidChunks);
         $this->assertEmpty($missingKeys);
         $this->assertEmpty($unusedKeys);

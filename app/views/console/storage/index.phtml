@@ -58,7 +58,7 @@ $locale = $this->getParam("locale");
                 </div>
 
                 <div data-ls-if="0 != {{project-files.sum}}">
-                    <div class="margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-files.sum}}"></span> <?php echo $locale->getText('console.storage.index.files-sum'); ?></div>
+                    <div class="margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="<?php echo $locale->getText('console.storage.index.files-sum'); ?>"></span></div>
 
                     <div class="box margin-bottom">
                         <table class="vertical">

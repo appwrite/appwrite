@@ -288,7 +288,7 @@ $locale = $this->getParam("locale");
             <?php endif; ?>
             <li data-state="/console/functions/function/logs?id={{router.params.id}}&project={{router.params.project}}">
 
-                <div class="text-fade text-size-small pull-end margin-top" data-ls-bind="{{project-function-executions.sum}} <?php echo $locale->getText('console.functions.function.logs-executions-sum'); ?>"></div>
+                <div class="text-fade text-size-small pull-end margin-top" data-ls-bind="<?php echo $locale->getText('console.functions.function.logs-executions-sum'); ?>"></div>
 
                 <h2><?php echo $locale->getText('console.functions.function.logs-title'); ?></h2>
 

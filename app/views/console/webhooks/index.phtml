@@ -145,7 +145,7 @@ $locale = $this->getParam("locale");
                     <button class="danger reverse"><?php echo $locale->getText('console.webhooks.index.delete-submit'); ?></button>
                 </form>
 
-                <span data-ls-bind="{{webhook.name}}"></span> &nbsp; (<span data-ls-bind="{{webhook.events.length}}"></span> <?php echo $locale->getText('console.webhooks.index.events-sum'); ?>)
+                <span data-ls-bind="{{webhook.name}}"></span> &nbsp; (<span data-ls-bind="<?php echo $locale->getText('console.webhooks.index.events-sum'); ?>"></span>)
                 <span data-ls-if="false === {{webhook.security}}">
                     &nbsp; <small class="text-danger">(<?php echo $locale->getText('console.webhooks.index.disabled-ssl'); ?>)</small>
                 </span>

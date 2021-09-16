@@ -91,7 +91,7 @@ $locale = $this->getParam("locale");
                             </div>
 
                             <div data-ls-if="0 != {{project-members.sum}}">
-                                <div class="margin-bottom-small margin-end-small text-align-end text-size-small margin-top-negative"><span data-ls-bind="{{project-members.sum}}"></span> <?php echo $locale->getText('console.users.team.members-sum'); ?></div>
+                                <div class="margin-bottom-small margin-end-small text-align-end text-size-small margin-top-negative"><span data-ls-bind="<?php echo $locale->getText('console.users.team.members-sum'); ?>"></span></div>
 
                                 <div class="box margin-bottom">
                                     <ul data-ls-loop="project-members.memberships" data-ls-as="member" class="list">
@@ -117,7 +117,7 @@ $locale = $this->getParam("locale");
                                                 <button class="danger"><?php echo $locale->getText('console.users.team.member-delete-submit'); ?></button>
                                             </form>
 
-                                            <img src="" data-ls-attrs="src={{member|avatar}}" data-size="200" alt="<?php echo $locale->getText('console.users.team.member-alt-avatar'); ?>" class="avatar pull-start margin-end" loading="lazy" width="60" height="60" />
+                                            <img src="" data-ls-attrs="src={{member|avatar}}" data-size="200" alt="<?php echo $locale->getText('shared.alt-avatar'); ?>" class="avatar pull-start margin-end" loading="lazy" width="60" height="60" />
 
                                             <div class="margin-bottom-tiny">
                                                 <a data-ls-attrs="href=/console/users/user?id={{member.userId}}&project={{router.params.project}}"><span data-ls-bind="{{member.name}}"></span></a> &nbsp;&nbsp;

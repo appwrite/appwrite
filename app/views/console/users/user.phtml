@@ -1,3 +1,8 @@
+<?php
+$locale = $this->getParam("locale");
+/** @var Utopia\Locale\Locale $locale */
+?>
+
 <div
     data-service="users.get"
     data-name="user"
@@ -8,19 +13,19 @@
 
     <div class="cover">
         <h1 class="zone xl margin-bottom-large">
-            <a data-ls-attrs="href=/console/users?project={{router.params.project}}" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> Users</a>
+            <a data-ls-attrs="href=/console/users?project={{router.params.project}}" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> <?php echo $locale->getText('console.users.user.back-button'); ?></a>
             <br />
 
             <span data-ls-bind="{{user.name}}">&nbsp;</span>
-            <span data-ls-if="{{user.name|escape}} === '' && {{user.email}} !== ''">Unknown</span>
-            <span data-ls-if="{{user.name|escape}} === '' && {{user.email}} === ''">Anonymous User</span>
+            <span data-ls-if="{{user.name|escape}} === '' && {{user.email}} !== ''"><?php echo $locale->getText('shared.unknown'); ?></span>
+            <span data-ls-if="{{user.name|escape}} === '' && {{user.email}} === ''"><?php echo $locale->getText('console.users.user.anonymous-user'); ?></span>
         </h1>
     </div>
 
     <div data-ui-modal class="modal width-medium box close" data-button-hide="on" data-open-event="open-update-name">
         <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
         
-        <h2>Update name</h2>
+        <h2><?php echo $locale->getText('console.users.user.update-name-open'); ?></h2>
 
         <form name="users.updateName"
             data-analytics
@@ -32,22 +37,22 @@
             data-scope="sdk"
             data-event="submit"
             data-success="trigger,alert"
-            data-success-param-alert-text="User name was updated successfully"
+            data-success-param-alert-text="<?php echo $locale->getText('console.users.user.update-name-success'); ?>"
             data-success-param-trigger-events="users.update"
             data-failure="alert"
-            data-failure-param-alert-text="Failed to update user name"
+            data-failure-param-alert-text="<?php echo $locale->getText('console.users.user.update-name-error'); ?>"
             data-failure-param-alert-classname="error">
             
             <input type="hidden" disabled name="userId" data-ls-bind="{{user.$id}}">
 
-            <label for="name">Name</label>
+            <label for="name"><?php echo $locale->getText('console.users.user.update-name-label-name'); ?></label>
             <input name="name" id="name" type="text" autocomplete="off" data-ls-bind="{{user.name}}" required class="full-width" maxlength="128">
 
             <hr />
 
             <footer>
 
-                <button type="submit" class="">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                <button type="submit" class=""><?php echo $locale->getText('console.users.user.update-name-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.users.user.update-name-button-cancel'); ?></button>
             </footer>
         </form>
 
@@ -56,7 +61,7 @@
     <div data-ui-modal class="modal width-medium box close" data-button-hide="on" data-open-event="open-update-email">
         <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
         
-        <h2>Update Email</h2>
+        <h2><?php echo $locale->getText('console.users.user.update-email-open'); ?></h2>
 
         <form name="users.updateEmail"
             data-analytics
@@ -68,22 +73,22 @@
             data-scope="sdk"
             data-event="submit"
             data-success="trigger,alert"
-            data-success-param-alert-text="User email was updated successfully"
+            data-success-param-alert-text="<?php echo $locale->getText('console.users.user.update-email-success'); ?>"
             data-success-param-trigger-events="users.update"
             data-failure="alert"
-            data-failure-param-alert-text="Failed to update user email"
+            data-failure-param-alert-text="<?php echo $locale->getText('console.users.user.update-email-error'); ?>"
             data-failure-param-alert-classname="error">
             
             <input type="hidden" disabled name="userId" data-ls-bind="{{user.$id}}">
 
-            <label for="email">Email</label>
+            <label for="email"><?php echo $locale->getText('console.users.user.update-email-label-email'); ?></label>
             <input name="email" id="email" type="text" autocomplete="off" data-ls-bind="{{user.email}}" required class="full-width" maxlength="128">
 
             <hr />
 
             <footer>
 
-                <button type="submit" class="">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                <button type="submit" class=""><?php echo $locale->getText('console.users.user.update-email-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.users.user.update-email-button-cancel'); ?></button>
             </footer>
         </form>
 
@@ -92,7 +97,7 @@
     <div data-ui-modal class="modal width-medium box close" data-button-hide="on" data-open-event="open-update-password">
         <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
         
-        <h2>Update Password</h2>
+        <h2><?php echo $locale->getText('console.users.user.update-password-open'); ?></h2>
 
         <form name="users.updatePassword"
             data-analytics
@@ -104,22 +109,22 @@
             data-scope="sdk"
             data-event="submit"
             data-success="trigger,alert"
-            data-success-param-alert-text="User password was updated successfully"
+            data-success-param-alert-text="<?php echo $locale->getText('console.users.user.update-password-success'); ?>"
             data-success-param-trigger-events="users.update"
             data-failure="alert"
-            data-failure-param-alert-text="Failed to update user password"
+            data-failure-param-alert-text="<?php echo $locale->getText('console.users.user.update-password-error'); ?>"
             data-failure-param-alert-classname="error">
             
             <input type="hidden" disabled name="userId" data-ls-bind="{{user.$id}}">
 
-            <label for="password">Password</label>
+            <label for="password"><?php echo $locale->getText('console.users.user.update-password-label-password'); ?></label>
             <input name="password" id="password" type="password" autocomplete="off" required class="full-width" maxlength="128">
 
             <hr />
 
             <footer>
 
-                <button type="submit" class="">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                <button type="submit" class=""><?php echo $locale->getText('console.users.user.update-password-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.users.user.update-password-button-cancel'); ?></button>
             </footer>
         </form>
 
@@ -128,22 +133,22 @@
     <div data-ui-modal class="modal width-large box close" data-button-hide="on" data-open-event="open-json">
         <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
         
-        <h2>JSON View</h2>
+        <h2><?php echo $locale->getText('shared.json-view-title'); ?></h2>
 
         <div class="margin-bottom">
             <input type="hidden" data-ls-bind="{{user}}" data-forms-code />
         </div>
 
-        <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+        <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.json-view-button-cancel'); ?></button>
     </div>
 
     <div class="zone xl">
         <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
             <li data-state="/console/users/user?id={{router.params.id}}&project={{router.params.project}}">
-                <h2>Overview</h2>
+                <h2><?php echo $locale->getText('console.users.user.overview'); ?></h2>
 
                 <div data-ls-if="{{user.status}} === <?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none" class="box padding-small danger margin-bottom-xxl text-align-center">
-                    This user account is blocked.
+                    <?php echo $locale->getText('console.users.user.overview-account-blocked'); ?>
                 </div>
 
                 <div class="row responsive margin-top-xl">
@@ -152,22 +157,22 @@
 
                         <div class="box margin-bottom-large">
                             <div class="text-align-center">
-                                <img src="" data-ls-attrs="src={{user|avatar}}" data-size="200" alt="User Avatar" class="avatar huge margin-top-negative-xxl" />
+                                <img src="" data-ls-attrs="src={{user|avatar}}" data-size="200" alt="<?php echo $locale->getText('shared.alt-avatar'); ?>" class="avatar huge margin-top-negative-xxl" />
 
-                                <div class="margin-top-small" data-ls-bind="Member since {{user.registration|dateText}}"></div>
+                                <div class="margin-top-small" data-ls-bind="<?php echo $locale->getText('console.users.user.overview-member-since'); ?>"></div>
                                 <div class="margin-top-small">
                                     <span data-ls-if="{{user.emailVerification}} === true">
-                                        <span class="tag green">Verified</span>
+                                        <span class="tag green"><?php echo $locale->getText('console.users.user.overview-verified'); ?></span>
                                     </span>
                                     <span data-ls-if="{{user.emailVerification}} !== true">
-                                        <span class="tag">Unverified</span>
+                                        <span class="tag"><?php echo $locale->getText('console.users.user.overview-unverified'); ?></span>
                                     </span>
                                 </div>
                                 <div class="margin-top-small" data-ls-bind="{{user.email}}"></div>
                             </div>
                         </div>
 
-                        <h3 class="margin-bottom">Preferences</h3>
+                        <h3 class="margin-bottom"><?php echo $locale->getText('console.users.user.overview-preferences-title'); ?></h3>
 
                         <div class="box margin-bottom"
                             data-service="users.getPrefs"
@@ -181,16 +186,16 @@
                                 <table class="vertical">
                                     <thead>
                                         <tr>
-                                            <th>Key</th>
-                                            <th>Value</th>
+                                            <th><?php echo $locale->getText('console.users.user.overview-preferences-key'); ?></th>
+                                            <th><?php echo $locale->getText('console.users.user.overview-preferences-value'); ?></th>
                                         </tr>
                                     </thead>
                                     <tbody data-ls-loop="user-prefs" data-ls-as="pref">
                                         <tr>
-                                            <td data-title="Key: ">
+                                            <td data-title="<?php echo $locale->getText('console.users.user.overview-preferences-key'); ?>: ">
                                                 <span data-ls-bind="{{$index}}"></span>
                                             </td>
-                                            <td data-title="Value: ">
+                                            <td data-title="<?php echo $locale->getText('console.users.user.overview-preferences-value'); ?>: ">
                                                 <span data-ls-bind="{{pref}}"></span>
                                             </td>
                                         </tr>
@@ -199,18 +204,18 @@
                             </div>
 
                             <div data-ls-if="{{user-prefs|isEmptyObject}}">
-                                No user preferences found
+                                <?php echo $locale->getText('console.users.user.overview-preferences-no-found'); ?>
                             </div>
                         </div>
 
-                        <h3 class="text-danger">Danger Zone</h3>
+                        <h3 class="text-danger"><?php echo $locale->getText('console.users.user.overview-dangerzone-title'); ?></h3>
 
                         <div class="box danger margin-bottom">
-                            <p>This is the area where you can delete this user.</p>
+                            <p><?php echo $locale->getText('console.users.user.overview-dangerzone-description-chunk1'); ?></p>
                         
-                            <p>By deleting this user you will lose all data associated with this user.</p>
+                            <p><?php echo $locale->getText('console.users.user.overview-dangerzone-description-chunk2'); ?></p>
                         
-                            <p>PLEASE NOTE: User deletion is irreversible.</p>
+                            <p><?php echo $locale->getText('console.users.user.overview-dangerzone-description-chunk3'); ?></p>
                         
                             <form class="inline"
                                 data-analytics
@@ -222,30 +227,30 @@
                                 data-event="submit"
                                 data-param-user-id="{{router.params.id}}"
                                 data-success="alert,trigger,redirect"
-                                data-confirm="Are you sure you want to delete this user?"
-                                data-success-param-alert-text="Deleted user successfully"
+                                data-confirm="<?php echo $locale->getText('console.users.user.overview-dangerzone-confirm'); ?>"
+                                data-success-param-alert-text="<?php echo $locale->getText('console.users.user.overview-dangerzone-success'); ?>"
                                 data-success-param-trigger-events="users.delete"
                                 data-success-param-redirect-url="/console/users?project={{router.params.project}}"
                                 data-failure="alert"
-                                data-failure-param-alert-text="Failed to delete user"
+                                data-failure-param-alert-text=<?php echo $locale->getText('console.users.user.overview-dangerzone-error'); ?>"
                                 data-failure-param-alert-classname="error">
                                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                         
-                                <button class="danger reverse" type="submit">Delete User</button>
+                                <button class="danger reverse" type="submit"><?php echo $locale->getText('console.users.user.overview-dangerzone-button-submit'); ?></button>
                             </form>
                         </div>
                     </div>
                     <div class="col span-4 sticky-top">
-                        <label>User ID</label>
+                        <label><?php echo $locale->getText('console.users.user.overview-side-user-id'); ?></label>
                         <div class="input-copy margin-bottom">
                             <input id="uid" type="text" autocomplete="off" placeholder="" data-ls-bind="{{user.$id}}" disabled data-forms-copy>
                         </div>
 
                         <ul class="margin-bottom-large text-fade text-size-small">
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-update-name" class="link text-size-small">Update name</button></li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-update-email" class="link text-size-small">Update Email</button></li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-update-password" class="link text-size-small">Update Password</button></li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-update-name" class="link text-size-small"><?php echo $locale->getText('console.users.user.update-name-open'); ?></button></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-update-email" class="link text-size-small"><?php echo $locale->getText('console.users.user.update-email-open'); ?></button></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-update-password" class="link text-size-small"><?php echo $locale->getText('console.users.user.update-password-open'); ?></button></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small"><?php echo $locale->getText('shared.view-as-json'); ?></button></li>
                         </ul>
 
                         <div data-ls-if="{{user.status}} !== <?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none">
@@ -259,13 +264,13 @@
                                 data-event="submit"
                                 data-param-user-id="{{router.params.id}}"
                                 data-success="alert,trigger"
-                                data-success-param-alert-text="Blocked user successfully"
+                                data-success-param-alert-text="<?php echo $locale->getText('console.users.user.overview-side-block-success'); ?>"
                                 data-success-param-trigger-events="users.update"
                                 data-failure="alert"
-                                data-failure-param-alert-text="Failed to block user"
+                                data-failure-param-alert-text="<?php echo $locale->getText('console.users.user.overview-side-block-error'); ?>"
                                 data-failure-param-alert-classname="error">
 
-                                <button name="status" type="submit" class="danger fill" value="<?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>" data-cast-to="integer">Block Account</button>
+                                <button name="status" type="submit" class="danger fill" value="<?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>" data-cast-to="integer"><?php echo $locale->getText('console.users.user.overview-side-block-submit'); ?></button>
                             </form>
                         </div>
 
@@ -280,20 +285,20 @@
                                 data-event="submit"
                                 data-param-user-id="{{router.params.id}}"
                                 data-success="alert,trigger"
-                                data-success-param-alert-text="Activated user successfully"
+                                data-success-param-alert-text="<?php echo $locale->getText('console.users.user.overview-side-unblock-success'); ?>"
                                 data-success-param-trigger-events="users.update"
                                 data-failure="alert"
-                                data-failure-param-alert-text="Failed to activate user"
+                                data-failure-param-alert-text="<?php echo $locale->getText('console.users.user.overview-side-unblock-error'); ?>"
                                 data-failure-param-alert-classname="error">
 
-                                <button name="status" type="submit" class="fill" value="<?php echo \Appwrite\Auth\Auth::USER_STATUS_ACTIVATED; ?>" data-cast-to="integer">Activate Account</button>
+                                <button name="status" type="submit" class="fill" value="<?php echo \Appwrite\Auth\Auth::USER_STATUS_ACTIVATED; ?>" data-cast-to="integer"><?php echo $locale->getText('console.users.user.overview-side-unblock-submit'); ?></button>
                             </form>
                         </div>
                     </div>
                 </div>
             </li>
             <li data-state="/console/users/user/sessions?id={{router.params.id}}&project={{router.params.project}}">
-                <h2>Sessions</h2>
+                <h2><?php echo $locale->getText('console.users.user.sessions'); ?></h2>
 
                 <div
                     data-service="users.getSessions"
@@ -302,7 +307,7 @@
                     data-event="load,users.update">
 
                     <div data-ls-if="{{sessions.sessions.length}} === 0" style="display: none" class="margin-top-xxl margin-bottom-xxl text-align-center">
-                        No sessions available.
+                        <?php echo $locale->getText('console.users.user.sessions-no-sessions'); ?>
                     </div>
 
                     <div data-ls-if="{{sessions.sessions.length}} !== 0" style="display: none">
@@ -317,16 +322,16 @@
                                         data-analytics-label="Delete User Session"
                                         data-service="users.deleteSession"
                                         data-event="submit"
-                                        data-loading="Loading..."
+                                        data-loading="<?php echo $locale->getText('shared.loading'); ?>"
                                         data-success="trigger"
                                         data-success-param-trigger-events="users.update"
                                         data-failure="alert"
-                                        data-failure-param-alert-text="Failed to logout session"
+                                        data-failure-param-alert-text="<?php echo $locale->getText('console.users.user.sessions-logout-error'); ?>"
                                         data-failure-param-alert-classname="error">
 
                                         <input type="hidden" name="userId" data-ls-bind="{{router.params.id}}">
                                         <input type="hidden" name="sessionId" data-ls-bind="{{session.$id}}">
-                                        <button class="danger">Logout</button>
+                                        <button class="danger"><?php echo $locale->getText('console.users.user.sessions-logout-submit'); ?></button>
                                     </form>
                                     <div class="pull-start margin-end avatar-container">
                                         <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-attrs="src={{env.API}}/avatars/browsers/{{session.clientCode|lowercase}}?width=120&height=120&project={{env.PROJECT}},title={{session.clientName}},alt={{session.clientName}}" class="avatar" loading="lazy" width="60" height="60" />
@@ -336,7 +341,7 @@
                                         </div>
                                     </div>
 
-                                    <span data-ls-bind="{{session.clientName}}"></span> <span data-ls-bind="{{session.clientVersion}}"></span> on <span data-ls-bind="{{session.deviceModel}}"></span> <span data-ls-bind="{{session.osName}}"></span> <span data-ls-bind="{{session.osVersion}}"></span>
+                                    <span data-ls-bind="{{session.clientName}}"></span> <span data-ls-bind="{{session.clientVersion}}"></span> <?php echo $locale->getText('shared.client-platform-joiner'); ?> <span data-ls-bind="{{session.deviceModel}}"></span> <span data-ls-bind="{{session.osName}}"></span> <span data-ls-bind="{{session.osVersion}}"></span>
 
                                     <div class="margin-top-small">
                                         <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-if="{{session.countryCode}} !== '--'" data-ls-attrs="src={{env.API}}/avatars/flags/{{session.countryCode}}?width=120&height=120&project={{env.PROJECT}}" class="avatar xxs margin-end-small inline" />
@@ -358,17 +363,17 @@
                             data-success="trigger"
                             data-success-param-trigger-events="users.update"
                             data-failure="alert"
-                            data-failure-param-alert-text="Failed to logout all sessions"
+                            data-failure-param-alert-text="<?php echo $locale->getText('console.users.user.sessions-logout-all-error'); ?>"
                             data-failure-param-alert-classname="error">
                             
-                            <button class="danger">Logout from all sessions</button>
+                            <button class="danger"><?php echo $locale->getText('console.users.user.sessions-logout-all-submit'); ?></button>
                         </form>
                     </div>
                 </div>
 
             </li>
             <li data-state="/console/users/user/audit?id={{router.params.id}}&project={{router.params.project}}">
-                <h2>Activity</h2>
+                <h2><?php echo $locale->getText('console.users.user.activity'); ?></h2>
 
                 <div
                     data-service="users.getLogs"
@@ -377,34 +382,34 @@
                     data-event="load,logs-load">
 
                     <div data-ls-if="{{logs.logs.length}} === 0" style="display: none" class="margin-top-xxl margin-bottom-xxl text-align-center">
-                        No logs available.
+                        <?php echo $locale->getText('console.users.user.activity.no-activity'); ?>
                     </div>
 
                     <div class="box" data-ls-if="{{logs.logs.length}} !== 0" style="display: none">
                         <table class="vertical small">
                             <thead>
                                 <tr>
-                                    <th width="140">Date</th>
-                                    <th width="175">Event</th>
-                                    <th>Client</th>
-                                    <th width="90">Location</th>
-                                    <th width="90">IP</th>
+                                    <th width="140"><?php echo $locale->getText('console.users.user.activity-table-column-date'); ?></th>
+                                    <th width="175"><?php echo $locale->getText('console.users.user.activity-table-column-event'); ?></th>
+                                    <th><?php echo $locale->getText('console.users.user.activity-table-column-client'); ?></th>
+                                    <th width="90"><?php echo $locale->getText('console.users.user.activity-table-column-location'); ?></th>
+                                    <th width="90"><?php echo $locale->getText('console.users.user.activity-table-column-ip'); ?></th>
                                 </tr>
                             </thead>
                             <tbody data-ls-loop="logs.logs" data-ls-as="log">
                                 <tr>
-                                    <td data-title="Date: "><span data-ls-bind="{{log.time|dateTime}}"></span></td>
-                                    <td data-title="Event: "><span data-ls-bind="{{log.event}}"></span></td>
-                                    <td data-title="Client: ">
+                                    <td data-title="<?php echo $locale->getText('console.users.user.activity-table-column-date'); ?>: "><span data-ls-bind="{{log.time|dateTime}}"></span></td>
+                                    <td data-title="<?php echo $locale->getText('console.users.user.activity-table-column-event'); ?>: "><span data-ls-bind="{{log.event}}"></span></td>
+                                    <td data-title="<?php echo $locale->getText('console.users.user.activity-table-column-client'); ?>: ">
                                         <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-if="({{log.clientCode}})" data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.clientCode|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.clientName}},alt={{log.clientName}}" class="avatar xxs inline margin-end-small" />
-                                        <span data-ls-if="({{log.clientName}})" data-ls-bind="{{log.clientName}} {{log.clientVersion}} on {{log.model}} {{log.osName}} {{log.osVersion}}"></span>
-                                        <div data-ls-if="(!{{log.clientName}})" class="text-align-center text-fade">Unknown</div>
+                                        <span data-ls-if="({{log.clientName}})" data-ls-bind="{{log.clientName}} {{log.clientVersion}} <?php echo $locale->getText('shared.client-platform-joiner'); ?> {{log.model}} {{log.osName}} {{log.osVersion}}"></span>
+                                        <div data-ls-if="(!{{log.clientName}})" class="text-align-center text-fade"><?php echo $locale->getText('shared.unknown'); ?></div>
                                     </td>
-                                    <td data-title="Location: ">
+                                    <td data-title="<?php echo $locale->getText('console.users.user.activity-table-column-location'); ?>: ">
                                         <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-if="{{log.countryCode}} !== '--'" data-ls-attrs="src={{env.API}}/avatars/flags/{{log.countryCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline margin-end-small" />
                                         <span data-ls-bind="{{log.countryName}}"></span>
                                     </td>
-                                    <td data-title="IP: "><span data-ls-bind="{{log.ip}}"></span></td>
+                                    <td data-title="<?php echo $locale->getText('console.users.user.activity-table-column-ip'); ?>: "><span data-ls-bind="{{log.ip}}"></span></td>
                                 </tr>
                             </tbody>
                         </table>
