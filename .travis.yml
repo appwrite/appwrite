@@ -4,6 +4,9 @@ arch:
   - amd64
   - arm64-graviton2
 
+vm:
+  size: large
+
 os: linux
 
 language: shell
