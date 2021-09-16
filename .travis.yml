@@ -6,7 +6,7 @@ arch:
 
 os: linux
 
-# Small change to 
+# Small change
 vm:
   size: large 
   
