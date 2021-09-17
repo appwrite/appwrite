@@ -35,7 +35,7 @@ $locale = $this->getParam("locale");
             <input type="hidden" data-ls-bind="{{project-function}}" data-forms-code />
         </div>
 
-        <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.json-view-button-cancel'); ?></button>
+        <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.cancel'); ?></button>
     </div>
 
     <div class="zone xl">
@@ -126,7 +126,7 @@ $locale = $this->getParam("locale");
                                                     data-failure-param-alert-classname="error">
                                                     <input type="hidden" name="tagId" data-ls-bind="{{tag.$id}}" />
 
-                                                    &nbsp; | &nbsp;<button type="submit" class="link text-danger text-size-small"><?php echo $locale->getText('console.functions.function.overview-tags-delete-submit-button'); ?></button>
+                                                    &nbsp; | &nbsp;<button type="submit" class="link text-danger text-size-small"><?php echo $locale->getText('shared.button-delete'); ?></button>
                                                 </form>
                                             </div>
                                         </li>
@@ -310,10 +310,10 @@ $locale = $this->getParam("locale");
                                 <thead>
                                     <tr>
                                         <th width="30"></th>
-                                        <th width="160"><?php echo $locale->getText('console.functions.function.logs-table-column-created'); ?></th>
-                                        <th width="150"><?php echo $locale->getText('console.functions.function.logs-table-column-status'); ?></th>
-                                        <th width="120"><?php echo $locale->getText('console.functions.function.logs-table-column-trigger'); ?></th>
-                                        <th width="80"><?php echo $locale->getText('console.functions.function.logs-table-column-runtime'); ?></th>
+                                        <th width="160"><?php echo $locale->getText('console.functions.function.logs-table-created'); ?></th>
+                                        <th width="150"><?php echo $locale->getText('console.functions.function.logs-table-status'); ?></th>
+                                        <th width="120"><?php echo $locale->getText('console.functions.function.logs-table-trigger'); ?></th>
+                                        <th width="80"><?php echo $locale->getText('console.functions.function.logs-table-runtime'); ?></th>
                                         <th></th>
                                     </tr>
                                 </thead>
@@ -325,18 +325,18 @@ $locale = $this->getParam("locale");
                                             <i class="dot info" data-ls-if="{{execution.status}} === 'processing'"></i>
                                             <i class="dot success" data-ls-if="{{execution.status}} === 'completed'"></i>
                                         </td>
-                                        <td data-title="<?php echo $locale->getText('console.functions.function.logs-table-column-created'); ?>: ">
+                                        <td data-title="<?php echo $locale->getText('console.functions.function.logs-table-created'); ?>: ">
                                             <span data-ls-bind="{{execution.dateCreated|dateTime}}"></span>
                                         </td>
-                                        <td data-title="<?php echo $locale->getText('console.functions.function.logs-table-column-status'); ?>: ">
+                                        <td data-title="<?php echo $locale->getText('console.functions.function.logs-table-status'); ?>: ">
                                             <span data-ls-bind="{{execution.status}}"></span>
 
                                             <span class="text-fade text-size-small" data-ls-if="{{execution.exitCode}} !== 0" data-ls-bind=" <?php echo $locale->getText('console.functions.function.logs-exit-code'); ?>: {{execution.exitCode}}"></span>
                                         </td>
-                                        <td data-title="<?php echo $locale->getText('console.functions.function.logs-table-column-trigger'); ?>: ">
+                                        <td data-title="<?php echo $locale->getText('console.functions.function.logs-table-trigger'); ?>: ">
                                             <span data-ls-bind="{{execution.trigger}}"></span>
                                         </td>
-                                        <td data-title="<?php echo $locale->getText('console.functions.function.logs-table-column-runtime'); ?>: ">
+                                        <td data-title="<?php echo $locale->getText('console.functions.function.logs-table-runtime'); ?>: ">
                                             <span data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-ls-bind="{{execution.time|seconds2hum}}"></span>
                                             <span data-ls-if="{{execution.status}} === 'waiting' || {{execution.status}} === 'processing'">-</span>
                                         </td>
@@ -453,7 +453,7 @@ $locale = $this->getParam("locale");
 
                             <div class="box">
                                 <section class="margin-bottom-large">
-                                    <label for="name"><?php echo $locale->getText('console.functions.function.update-label-name'); ?></label>
+                                    <label for="name"><?php echo $locale->getText('shared.label-name'); ?></label>
                                     <input name="name" id="function-name" type="text" autocomplete="off" data-ls-bind="{{project-function.name}}" data-forms-text-direction required placeholder="<?php echo $locale->getText('console.functions.function.update-placeholder-name'); ?>" maxlength="128" />
 
                                     <label for="execute"><?php echo $locale->getText('console.functions.function.update-label-execute-access'); ?> <span class="tooltip small" data-tooltip="<?php echo $locale->getText('console.functions.function.update-tooltip-execute-access'); ?>"><i class="icon-info-circled"></i></span> <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener"><?php echo $locale->getText('shared.learn-more'); ?></a>)</span></label>
@@ -522,7 +522,7 @@ $locale = $this->getParam("locale");
                                     <hr class="margin-bottom margin-top-small" />
                                 </div>
 
-                                <button><?php echo $locale->getText('console.functions.function.update-submit'); ?></button>
+                                <button><?php echo $locale->getText('shared.button-update'); ?></button>
                             </div>
                         </form>
                     </div>
@@ -647,7 +647,7 @@ $locale = $this->getParam("locale");
                 <div class="text-fade text-size-xs margin-top-negative-small margin-bottom-large">(<?php echo $locale->getText('console.functions.function.modal-deploy-tag-manual-description-gzip'); ?>: <?php echo $fileLimitHuman; ?>)</div>
 
                 <footer>
-                    <button type="submit"><?php echo $locale->getText('console.functions.function.modal-deploy-tag-manual-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.functions.function.modal-deploy-tag-manual-button-cancel'); ?></button>
+                    <button type="submit"><?php echo $locale->getText('shared.button-create'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.cancel'); ?></button>
                 </footer>
             </form>
         </li>

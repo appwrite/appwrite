@@ -131,11 +131,14 @@ App::get('/console/home')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
+    ->inject('locale')
+    ->action(function ($layout, $locale) {
         /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
 
         $page = new View(__DIR__.'/../../views/console/home/index.phtml');
         $page
+            ->setParam('locale', $locale)
             ->setParam('usageStatsEnabled',App::getEnv('_APP_USAGE_STATS','enabled') == 'enabled');
         $layout
             ->setParam('title', APP_NAME.' - Console')

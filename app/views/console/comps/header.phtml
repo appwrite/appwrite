@@ -217,11 +217,11 @@ $locale = $this->getParam("locale");
         data-analytics-label="Create Project">
         <p><?php echo $locale->getText('console.comps.header.modal-new-project-description'); ?></p>
 
-        <label><?php echo $locale->getText('console.comps.header.modal-new-project-input-label-name'); ?></label>
+        <label><?php echo $locale->getText('shared.label-name'); ?></label>
         <input type="text" class="full-width margin-bottom-xl" name="name" required autocomplete="off" maxlength="128" />
 
         <footer>
-            <button type="submit"><?php echo $locale->getText('console.comps.header.modal-new-project-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.comps.header.modal-new-project-button-cancel'); ?></button>
+            <button type="submit"><?php echo $locale->getText('shared.button-create'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.cancel'); ?></button>
         </footer>
     </form>
 </div>

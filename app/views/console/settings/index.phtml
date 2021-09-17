@@ -55,7 +55,7 @@ $locale = $this->getParam("locale");
 
                                 <input name="$id" type="hidden" data-ls-bind="{{console-project.$id}}" />
                                 
-                                <label for="name"><?php echo $locale->getText('console.settings.index.overview-update-label-name'); ?></label>
+                                <label for="name"><?php echo $locale->getText('shared.label-name'); ?></label>
                                 <input name="name" id="name" type="text" autocomplete="off" data-ls-bind="{{console-project.name}}" data-forms-text-direction required maxlength="128" />
 
                                 <label for="logo"><?php echo $locale->getText('console.settings.index.overview-update-label-logo'); ?></label>
@@ -237,22 +237,22 @@ $locale = $this->getParam("locale");
                                 <thead>
                                     <tr>
                                         <th width="120"></th>
-                                        <th width="200"><?php echo $locale->getText('console.settings.index.custom-domains-table-column-domain-name'); ?></th>
-                                        <th width="160"><?php echo $locale->getText('console.settings.index.custom-domains-table-column-tls'); ?></th>
+                                        <th width="200"><?php echo $locale->getText('console.settings.index.custom-domains-table-domain-name'); ?></th>
+                                        <th width="160"><?php echo $locale->getText('console.settings.index.custom-domains-table-tls'); ?></th>
                                         <th></th>
                                         <th width="40"></th>
                                     </tr>
                                 </thead>
                                 <tbody data-ls-loop="console-domains.domains" data-ls-as="domain">
                                     <tr>
-                                        <td data-title="<?php echo $locale->getText('console.settings.index.custom-domains-table-column-status'); ?>: ">
-                                            <span class="text-size-small text-danger" data-ls-if="true !== {{domain.verification}}"><i class="icon-cancel-circled"></i> <?php echo $locale->getText('console.settings.index.custom-domains-status-unverified'); ?>&nbsp;</span>
-                                            <span class="text-size-small text-info" data-ls-if="true === {{domain.verification}}"><i class="icon-ok-circled"></i> <?php echo $locale->getText('console.settings.index.custom-domains-status-verified'); ?>&nbsp;</span>
+                                        <td data-title="<?php echo $locale->getText('console.settings.index.custom-domains-table-status'); ?>: ">
+                                            <span class="text-size-small text-danger" data-ls-if="true !== {{domain.verification}}"><i class="icon-cancel-circled"></i> <?php echo $locale->getText('shared.status-unverified'); ?>&nbsp;</span>
+                                            <span class="text-size-small text-info" data-ls-if="true === {{domain.verification}}"><i class="icon-ok-circled"></i> <?php echo $locale->getText('shared.status-verified'); ?>&nbsp;</span>
                                         </td>
-                                        <td data-title="<?php echo $locale->getText('console.settings.index.custom-domains-table-column-domain-name'); ?>: ">
+                                        <td data-title="<?php echo $locale->getText('console.settings.index.custom-domains-table-domain-name'); ?>: ">
                                             <span class="text-size-small" data-ls-bind="{{domain.domain}}"></span>
                                         </td>
-                                        <td data-title="<?php echo $locale->getText('console.settings.index.custom-domains-table-column-tls'); ?>: ">
+                                        <td data-title="<?php echo $locale->getText('console.settings.index.custom-domains-table-tls'); ?>: ">
                                             <span class="text-size-small text-fade" data-ls-if="!{{domain.certificateId}} && false === {{domain.verification}}"> &nbsp;<?php echo $locale->getText('console.settings.index.custom-domains-tls-pending-verification'); ?>&nbsp;</span>
                                             <span class="text-size-small text-fade" data-ls-if="!{{domain.certificateId}} && true === {{domain.verification}}"> &nbsp;<?php echo $locale->getText('console.settings.index.custom-domains-tls-in-progress'); ?>&nbsp;</span>
                                             <span class="text-size-small text-success" data-ls-if="{{domain.certificateId}}"><i class="icon-ok-circled"></i> <?php echo $locale->getText('console.settings.index.custom-domains-tls-enabled'); ?>&nbsp;</span>
@@ -379,7 +379,7 @@ $locale = $this->getParam("locale");
                                     
                                     <hr />
 
-                                    <button type="submit"><?php echo $locale->getText('console.settings.index.custom-domains-create-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.settings.index.custom-domains-create-button-close'); ?></button>
+                                    <button type="submit"><?php echo $locale->getText('shared.button-create'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.cancel'); ?></button>
                                 </form>
                             </div>
                         </div>
@@ -499,10 +499,10 @@ $locale = $this->getParam("locale");
                             <input name="teamId" id="team-teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
                             <input name="url" type="hidden" data-ls-bind="{{env.ENDPOINT}}/auth/join?project={{router.params.project}}" />
                             
-                            <label for="email"><?php echo $locale->getText('console.settings.index.members-create-label-email'); ?></label>
+                            <label for="email"><?php echo $locale->getText('shared.label-email'); ?></label>
                             <input name="email" id="email" type="email" autocomplete="email" required>
                             
-                            <label for="team-name"><?php echo $locale->getText('console.settings.index.members-create-label-name'); ?> <small>(<?php echo $locale->getText('shared.optional'); ?>)</small></label>
+                            <label for="team-name"><?php echo $locale->getText('shared.label-name'); ?> <small>(<?php echo $locale->getText('shared.optional'); ?>)</small></label>
                             <input name="name" id="team-name" type="text" autocomplete="name" maxlength="128" />
 
 <!--                            <label for="roles" style="display: none">Role</label>-->
@@ -520,7 +520,7 @@ $locale = $this->getParam("locale");
 
                             <div class="clear">
                                 <button<?php if(!$smtpEnabled): ?> disabled<?php endif; ?>><?php echo $locale->getText('console.settings.index.members-create-button-submit'); ?></button>
-                                &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.settings.index.members-create-button-close'); ?></button>
+                                &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.cancel'); ?></button>
                             </div>
                         </form>
                     </div>

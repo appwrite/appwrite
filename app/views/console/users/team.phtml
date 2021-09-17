@@ -32,7 +32,7 @@ $locale = $this->getParam("locale");
             <input type="hidden" data-ls-bind="{{team}}" data-forms-code />
         </div>
 
-        <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.json-view-button-cancel'); ?></button>
+        <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.cancel'); ?></button>
     </div>
 
     <div class="zone xl">
@@ -63,12 +63,12 @@ $locale = $this->getParam("locale");
 
                                 <input data-ls-attrs="id=team-id-{{team.$id}}" name="teamId" type="hidden" disabled data-ls-bind="{{team.$id}}" />
 
-                                <label for="name"><?php echo $locale->getText('console.users.team.update-label-name'); ?></label>
+                                <label for="name"><?php echo $locale->getText('shared.label-name'); ?></label>
                                 <input data-ls-attrs="id=team-name-{{team.$id}}" name="name" type="text" autocomplete="off" data-ls-bind="{{team.name}}" maxlength="128" />
 
                                 <hr />
 
-                                <button><?php echo $locale->getText('console.users.team.update-submit'); ?></button>
+                                <button><?php echo $locale->getText('shared.button-update'); ?></button>
                             </form>
                         </div>
 
@@ -153,10 +153,10 @@ $locale = $this->getParam("locale");
                                     <input name="teamId" id="team-teamId" type="hidden" data-ls-bind="{{team.$id}}">
                                     <input name="url" type="hidden" data-ls-bind="{{env.ENDPOINT}}" />
                                     
-                                    <label for="email"><?php echo $locale->getText('console.users.team.member-create-label-email'); ?></label>
+                                    <label for="email"><?php echo $locale->getText('shared.label-email'); ?></label>
                                     <input name="email" id="email" type="email" autocomplete="email" required>
                                     
-                                    <label for="team-name"><?php echo $locale->getText('console.users.team.member-create-label-name'); ?> <small>(<?php echo $locale->getText('shared.optional'); ?>)</small></label>
+                                    <label for="team-name"><?php echo $locale->getText('shared.label-name'); ?> <small>(<?php echo $locale->getText('shared.optional'); ?>)</small></label>
                                     <input name="name" id="team-name" type="text" autocomplete="name" maxlength="128" />
 
                                     <label for="roles"><?php echo $locale->getText('console.users.team.member-create-label-roles'); ?></label>
@@ -166,7 +166,7 @@ $locale = $this->getParam("locale");
 
                                     <div class="clear">
                                         <button><?php echo $locale->getText('console.users.team.member-create-button-submit'); ?></button>
-                                        &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.users.team.member-create-button-cancel'); ?></button>
+                                        &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.cancel'); ?></button>
                                     </div>
                                 </form>
                             </div>

@@ -36,7 +36,7 @@ $locale = $this->getParam("locale");
                         <input name="search" id="searchFiles" type="search" autocomplete="off" placeholder="<?php echo $locale->getText('shared.search-placeholder'); ?>" class="margin-bottom-no" data-ls-bind="{{router.params.search}}">
                     </div>
                     <div class="col span-2 desktops-only">
-                        <button class="fill" title="Search" aria-label="<?php echo $locale->getText('shared.search-label'); ?>"><i class="icon-search"></i></button>
+                        <button class="fill" title="<?php echo $locale->getText('shared.search-label'); ?>" aria-label="<?php echo $locale->getText('shared.search-label'); ?>"><i class="icon-search"></i></button>
                     </div>
                 </div>
             </form>
@@ -167,7 +167,7 @@ $locale = $this->getParam("locale");
 
                                             <footer>
                                                 <button class="link pull-end text-danger" data-ls-ui-trigger="file-delete-{{file.$id}},modal-close"><?php echo $locale->getText('console.storage.index.delete-button-submit'); ?></button>
-                                                <button type="button" data-ls-ui-trigger="file-update-{{file.$id}},modal-close"><?php echo $locale->getText('console.storage.index.update-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse desktops-only-inline tablets-only-inline"><?php echo $locale->getText('console.storage.index.update-button-cancel'); ?></button>
+                                                <button type="button" data-ls-ui-trigger="file-update-{{file.$id}},modal-close"><?php echo $locale->getText('shared.button-update'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse desktops-only-inline tablets-only-inline"><?php echo $locale->getText('shared.cancel'); ?></button>
                                             </footer>
                                         </div>
                                     </td>
@@ -254,7 +254,7 @@ $locale = $this->getParam("locale");
                         <div class="text-fade text-size-xs margin-top-negative-small margin-bottom"><?php echo $locale->getText('shared.permission-info'); ?></div>
 
                         <footer>
-                            <button type="submit"><?php echo $locale->getText('console.storage.index.create-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.storage.index.create-button-cancel'); ?></button>
+                            <button type="submit"><?php echo $locale->getText('shared.button-create'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.cancel'); ?></button>
                         </footer>
                     </form>
                 </div>

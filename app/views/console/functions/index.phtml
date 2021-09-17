@@ -110,7 +110,7 @@ $locale = $this->getParam("locale");
                             data-failure-param-alert-text="<?php echo $locale->getText('console.functions.index.create-submit-error'); ?>"
                             data-failure-param-alert-classname="error">
 
-                            <label for="name"><?php echo $locale->getText('console.functions.index.create-label-name'); ?></label>
+                            <label for="name"><?php echo $locale->getText('shared.label-name'); ?></label>
                             <input type="text" id="name" name="name" required autocomplete="off" class="margin-bottom" maxlength="128" />
                             
                             <label for="runtime"><?php echo $locale->getText('console.functions.index.create-label-runtime'); ?></label>
@@ -123,7 +123,7 @@ $locale = $this->getParam("locale");
                             <input id="execute" name="execute" value="" hidden/>
 
                             <footer>
-                                <button type="submit"><?php echo $locale->getText('console.functions.index.create-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.functions.index.create-button-cancel'); ?></button>
+                                <button type="submit"><?php echo $locale->getText('shared.button-create'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.cancel'); ?></button>
                             </footer>
                         </form>
                     </div>

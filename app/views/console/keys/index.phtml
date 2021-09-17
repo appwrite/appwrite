@@ -55,7 +55,7 @@ $locale = $this->getParam("locale");
                         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                         <input type="hidden" name="keyId" data-ls-bind="{{key.$id}}" />
 
-                        <label data-ls-attrs="for=name-{{key.$id}}"><?php echo $locale->getText('console.keys.index.update-label-name'); ?> <span class="tooltip large" data-tooltip="<?php echo $locale->getText('console.keys.index.update-tooltip-name'); ?>"><i class="icon-question"></i></span></label>
+                        <label data-ls-attrs="for=name-{{key.$id}}"><?php echo $locale->getText('shared.label-name'); ?> <span class="tooltip large" data-tooltip="<?php echo $locale->getText('console.keys.index.update-tooltip-name'); ?>"><i class="icon-question"></i></span></label>
                         <input type="text" class="full-width" data-ls-attrs="id=name-{{key.$id}}" name="name" required autocomplete="off" data-ls-bind="{{key.name}}" maxlength="128" />
 
                         <section data-forms-select-all data-forms-select-all-text="<?php echo $locale->getText('shared.select-all'); ?>" data-forms-unselect-all-text="<?php echo $locale->getText('shared.unselect-all'); ?>">
@@ -78,7 +78,7 @@ $locale = $this->getParam("locale");
 
                         <hr class="margin-top-no" />
 
-                        <button type="submit"><?php echo $locale->getText('console.keys.index.update-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.keys.index.update-button-cancel'); ?></button>
+                        <button type="submit"><?php echo $locale->getText('console.keys.index.update-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.cancel'); ?></button>
                     </form>
                 </div>
 
@@ -103,8 +103,8 @@ $locale = $this->getParam("locale");
                     <input type="hidden" name="keyId" data-ls-bind="{{key.$id}}" />
                 </form>
 
-                <button class="pull-end desktops-only margin-start-small" data-ls-ui-trigger="key-update-{{key.$id}}"><?php echo $locale->getText('console.keys.index.update-button-modal'); ?></button>
-                <button class="pull-end reverse desktops-only margin-small" data-ls-ui-trigger="key-delete-{{key.$id}}"><?php echo $locale->getText('console.keys.index.delete-button-modal'); ?></button>
+                <button class="pull-end desktops-only margin-start-small" data-ls-ui-trigger="key-update-{{key.$id}}"><?php echo $locale->getText('shared.button-update'); ?></button>
+                <button class="pull-end reverse desktops-only margin-small" data-ls-ui-trigger="key-delete-{{key.$id}}"><?php echo $locale->getText('shared.button-delete'); ?></button>
 
                 <div class="margin-bottom-tiny"><span data-ls-bind="{{key.name}}"></span> <small>(<span data-ls-bind="{{key.scopes.length}}"></span> <?php echo $locale->getText('console.keys.index.scopes-info'); ?>)</small></div>
 
@@ -122,7 +122,7 @@ $locale = $this->getParam("locale");
                             <hr />
 
                             <div>
-                                <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.keys.index.secret-button-cancel'); ?></button>
+                                <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.cancel'); ?></button>
                             </div>
                         </form>
                     </div>
@@ -158,7 +158,7 @@ $locale = $this->getParam("locale");
 
                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
 
-                <label for="name"><?php echo $locale->getText('console.keys.index.add-key-label-name'); ?> <span class="tooltip large" data-tooltip="<?php echo $locale->getText('console.keys.index.add-key-label-name-tooltip'); ?>"><i class="icon-question"></i></span></label>
+                <label for="name"><?php echo $locale->getText('shared.label-name'); ?> <span class="tooltip large" data-tooltip="<?php echo $locale->getText('console.keys.index.add-key-label-name-tooltip'); ?>"><i class="icon-question"></i></span></label>
                 <input type="text" class="full-width" id="name" name="name" required autocomplete="off" maxlength="128" />
 
                 <section data-forms-select-all data-forms-select-all-text="<?php echo $locale->getText('shared.select-all'); ?>" data-forms-unselect-all-text="<?php echo $locale->getText('shared.unselect-all'); ?>">
@@ -181,7 +181,7 @@ $locale = $this->getParam("locale");
 
                 <hr class="margin-top-no" />
 
-                <button type="submit"><?php echo $locale->getText('console.keys.index.add-key-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.keys.index.add-key-button-cancel'); ?></button>
+                <button type="submit"><?php echo $locale->getText('shared.button-create'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.cancel'); ?></button>
             </form>
         </div>
     </div>

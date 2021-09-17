@@ -45,14 +45,14 @@ $locale = $this->getParam("locale");
             
             <input type="hidden" disabled name="userId" data-ls-bind="{{user.$id}}">
 
-            <label for="name"><?php echo $locale->getText('console.users.user.update-name-label-name'); ?></label>
+            <label for="name"><?php echo $locale->getText('shared.label-name'); ?></label>
             <input name="name" id="name" type="text" autocomplete="off" data-ls-bind="{{user.name}}" required class="full-width" maxlength="128">
 
             <hr />
 
             <footer>
 
-                <button type="submit" class=""><?php echo $locale->getText('console.users.user.update-name-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.users.user.update-name-button-cancel'); ?></button>
+                <button type="submit" class=""><?php echo $locale->getText('shared.button-update'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.cancel'); ?></button>
             </footer>
         </form>
 
@@ -81,14 +81,14 @@ $locale = $this->getParam("locale");
             
             <input type="hidden" disabled name="userId" data-ls-bind="{{user.$id}}">
 
-            <label for="email"><?php echo $locale->getText('console.users.user.update-email-label-email'); ?></label>
+            <label for="email"><?php echo $locale->getText('shared.label-email'); ?></label>
             <input name="email" id="email" type="text" autocomplete="off" data-ls-bind="{{user.email}}" required class="full-width" maxlength="128">
 
             <hr />
 
             <footer>
 
-                <button type="submit" class=""><?php echo $locale->getText('console.users.user.update-email-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.users.user.update-email-button-cancel'); ?></button>
+                <button type="submit" class=""><?php echo $locale->getText('shared.button-update'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.cancel'); ?></button>
             </footer>
         </form>
 
@@ -117,14 +117,14 @@ $locale = $this->getParam("locale");
             
             <input type="hidden" disabled name="userId" data-ls-bind="{{user.$id}}">
 
-            <label for="password"><?php echo $locale->getText('console.users.user.update-password-label-password'); ?></label>
+            <label for="password"><?php echo $locale->getText('shared.label-password'); ?></label>
             <input name="password" id="password" type="password" autocomplete="off" required class="full-width" maxlength="128">
 
             <hr />
 
             <footer>
 
-                <button type="submit" class=""><?php echo $locale->getText('console.users.user.update-password-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.users.user.update-password-button-cancel'); ?></button>
+                <button type="submit" class=""><?php echo $locale->getText('shared.button-update'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.cancel'); ?></button>
             </footer>
         </form>
 
@@ -139,7 +139,7 @@ $locale = $this->getParam("locale");
             <input type="hidden" data-ls-bind="{{user}}" data-forms-code />
         </div>
 
-        <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.json-view-button-cancel'); ?></button>
+        <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.cancel'); ?></button>
     </div>
 
     <div class="zone xl">
@@ -162,10 +162,10 @@ $locale = $this->getParam("locale");
                                 <div class="margin-top-small" data-ls-bind="<?php echo $locale->getText('console.users.user.overview-member-since'); ?>"></div>
                                 <div class="margin-top-small">
                                     <span data-ls-if="{{user.emailVerification}} === true">
-                                        <span class="tag green"><?php echo $locale->getText('console.users.user.overview-verified'); ?></span>
+                                        <span class="tag green"><?php echo $locale->getText('shared.status-verified'); ?></span>
                                     </span>
                                     <span data-ls-if="{{user.emailVerification}} !== true">
-                                        <span class="tag"><?php echo $locale->getText('console.users.user.overview-unverified'); ?></span>
+                                        <span class="tag"><?php echo $locale->getText('shared.status-unverified'); ?></span>
                                     </span>
                                 </div>
                                 <div class="margin-top-small" data-ls-bind="{{user.email}}"></div>
@@ -389,27 +389,27 @@ $locale = $this->getParam("locale");
                         <table class="vertical small">
                             <thead>
                                 <tr>
-                                    <th width="140"><?php echo $locale->getText('console.users.user.activity-table-column-date'); ?></th>
-                                    <th width="175"><?php echo $locale->getText('console.users.user.activity-table-column-event'); ?></th>
-                                    <th><?php echo $locale->getText('console.users.user.activity-table-column-client'); ?></th>
-                                    <th width="90"><?php echo $locale->getText('console.users.user.activity-table-column-location'); ?></th>
-                                    <th width="90"><?php echo $locale->getText('console.users.user.activity-table-column-ip'); ?></th>
+                                    <th width="140"><?php echo $locale->getText('console.users.user.activity-table-date'); ?></th>
+                                    <th width="175"><?php echo $locale->getText('console.users.user.activity-table-event'); ?></th>
+                                    <th><?php echo $locale->getText('console.users.user.activity-table-client'); ?></th>
+                                    <th width="90"><?php echo $locale->getText('console.users.user.activity-table-location'); ?></th>
+                                    <th width="90"><?php echo $locale->getText('console.users.user.activity-table-ip'); ?></th>
                                 </tr>
                             </thead>
                             <tbody data-ls-loop="logs.logs" data-ls-as="log">
                                 <tr>
-                                    <td data-title="<?php echo $locale->getText('console.users.user.activity-table-column-date'); ?>: "><span data-ls-bind="{{log.time|dateTime}}"></span></td>
-                                    <td data-title="<?php echo $locale->getText('console.users.user.activity-table-column-event'); ?>: "><span data-ls-bind="{{log.event}}"></span></td>
-                                    <td data-title="<?php echo $locale->getText('console.users.user.activity-table-column-client'); ?>: ">
+                                    <td data-title="<?php echo $locale->getText('console.users.user.activity-table-date'); ?>: "><span data-ls-bind="{{log.time|dateTime}}"></span></td>
+                                    <td data-title="<?php echo $locale->getText('console.users.user.activity-table-event'); ?>: "><span data-ls-bind="{{log.event}}"></span></td>
+                                    <td data-title="<?php echo $locale->getText('console.users.user.activity-table-client'); ?>: ">
                                         <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-if="({{log.clientCode}})" data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.clientCode|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.clientName}},alt={{log.clientName}}" class="avatar xxs inline margin-end-small" />
                                         <span data-ls-if="({{log.clientName}})" data-ls-bind="{{log.clientName}} {{log.clientVersion}} <?php echo $locale->getText('shared.client-platform-joiner'); ?> {{log.model}} {{log.osName}} {{log.osVersion}}"></span>
                                         <div data-ls-if="(!{{log.clientName}})" class="text-align-center text-fade"><?php echo $locale->getText('shared.unknown'); ?></div>
                                     </td>
-                                    <td data-title="<?php echo $locale->getText('console.users.user.activity-table-column-location'); ?>: ">
+                                    <td data-title="<?php echo $locale->getText('console.users.user.activity-table-location'); ?>: ">
                                         <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-if="{{log.countryCode}} !== '--'" data-ls-attrs="src={{env.API}}/avatars/flags/{{log.countryCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline margin-end-small" />
                                         <span data-ls-bind="{{log.countryName}}"></span>
                                     </td>
-                                    <td data-title="<?php echo $locale->getText('console.users.user.activity-table-column-ip'); ?>: "><span data-ls-bind="{{log.ip}}"></span></td>
+                                    <td data-title="<?php echo $locale->getText('console.users.user.activity-table-ip'); ?>: "><span data-ls-bind="{{log.ip}}"></span></td>
                                 </tr>
                             </tbody>
                         </table>

@@ -13,7 +13,7 @@ $locale = $this->getParam("locale");
         <a data-ls-attrs="href=/console/home?project={{router.params.project}}" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> <?php echo $locale->getText('console.shared-button-back-to-home'); ?></a>
         <br />
 
-        <span>Users</span>
+        <span><?php echo $locale->getText('console.users.index.title'); ?></span>
     </h1>
 </div>
 
@@ -21,7 +21,7 @@ $locale = $this->getParam("locale");
     <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
         <li data-state="/console/users?project={{router.params.project}}">
 
-            <h2>Users</h2>
+            <h2><?php echo $locale->getText('console.users.index.title'); ?></h2>
 
             <form class="box padding-small margin-bottom search"
                 data-service="users.list"
@@ -36,10 +36,10 @@ $locale = $this->getParam("locale");
                 data-success-param-state-keys="search,offset">
                 <div class="row thin responsive">
                     <div class="col span-10">
-                        <input name="search" id="searchUsers" type="search" autocomplete="off" placeholder="Search" class="margin-bottom-no" data-ls-bind="{{router.params.search}}">
+                        <input name="search" id="searchUsers" type="search" autocomplete="off" placeholder="<?php echo $locale->getText('shared.search-placeholder'); ?>" class="margin-bottom-no" data-ls-bind="{{router.params.search}}">
                     </div>
                     <div class="col span-2 desktops-only">
-                        <button class="fill" title="Search" aria-label="Search"><i class="icon-search"></i></button>
+                        <button class="fill" title="<?php echo $locale->getText('shared.search-label'); ?>" aria-label="Search"><i class="icon-search"></i></button>
                     </div>
                 </div>
             </form>
@@ -55,23 +55,23 @@ $locale = $this->getParam("locale");
                 data-name="project-users">
 
                 <div data-ls-if="0 == {{project-users.sum}}" class="box margin-bottom">
-                    <h3 class="margin-bottom-small text-bold">No Users Found</h3>
+                    <h3 class="margin-bottom-small text-bold"><?php echo $locale->getText('console.users.index.users-no-found-title'); ?></h3>
 
-                    <p class="margin-bottom-no">Create your first user to get started</p>
+                    <p class="margin-bottom-no"><?php echo $locale->getText('console.users.index.users-no-found-description'); ?></p>
                 </div>
 
                 <div data-ls-if="0 != {{project-users.sum}}">
-                    <div class="margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-users.sum}}"></span> users found</div>
+                    <div class="margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="<?php echo $locale->getText('console.users.index.users-sum'); ?>"></span></div>
 
                     <div class="box margin-bottom">
                         <table class="vertical">
                             <thead>
                                 <tr>
                                     <th width="40"></th>
-                                    <th width="180">Name</th>
-                                    <th>Email</th>
-                                    <th width="140">Status</th>
-                                    <th width="120">Joined</th>
+                                    <th width="180"><?php echo $locale->getText('console.users.index.users-table-name'); ?></th>
+                                    <th><?php echo $locale->getText('console.users.index.users-table-email'); ?></th>
+                                    <th width="140"><?php echo $locale->getText('console.users.index.users-table-status'); ?></th>
+                                    <th width="120"><?php echo $locale->getText('console.users.index.users-table-joined'); ?></th>
                                 </tr>
                             </thead>
                             <tbody data-ls-loop="project-users.users" data-ls-as="user">
@@ -79,30 +79,30 @@ $locale = $this->getParam("locale");
                                     <td class="hide">
                                         <img src="" data-ls-attrs="src={{user|avatar}}" data-size="45" alt="User Avatar" class="avatar pull-start" loading="lazy" width="30" height="30" />
                                     </td>
-                                    <td data-title="Name: ">
+                                    <td data-title="<?php echo $locale->getText('console.users.index.users-table-name'); ?>: ">
                                         <a data-ls-attrs="href=/console/users/user?id={{user.$id}}&project={{router.params.project}}">
                                             <span data-ls-bind="{{user.name}}"></span>
-                                            <span data-ls-if="{{user.name|escape}} === '' && {{user.email}} !== ''">Unknown</span>
-                                            <span data-ls-if="{{user.name|escape}} === '' && {{user.email}} === ''">Anonymous User</span>
+                                            <span data-ls-if="{{user.name|escape}} === '' && {{user.email}} !== ''"><?php echo $locale->getText('shared.unknown'); ?></span>
+                                            <span data-ls-if="{{user.name|escape}} === '' && {{user.email}} === ''"><?php echo $locale->getText('console.users.index.users-anonymous-user'); ?></span>
                                         </a>
                                     </td>
-                                    <td data-title="Email: ">
+                                    <td data-title="<?php echo $locale->getText('console.users.index.users-table-email'); ?>: ">
                                         <span data-ls-bind="{{user.email}}"></span>
                                     </td>
-                                    <td data-title="Status: ">
+                                    <td data-title="<?php echo $locale->getText('console.users.index.users-table-status'); ?>: ">
                                         <span data-ls-if="{{user.emailVerification}} === true">
-                                            <span class="tag green">Verified</span>
+                                            <span class="tag green"><?php echo $locale->getText('shared.status-verified'); ?></span>
                                         </span>
 
                                         <span data-ls-if="{{user.emailVerification}} !== true">
-                                            <span class="tag">Unverified</span>
+                                            <span class="tag"><?php echo $locale->getText('shared.status-unverified'); ?></span>
                                         </span>
 
                                         <span data-ls-if="{{user.status}} === <?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>">
-                                            <span class="tag red">Blocked</span>
+                                            <span class="tag red"><?php echo $locale->getText('shared.status-blocked'); ?></span>
                                         </span>
                                     </td>
-                                    <td data-title="Created: "><small data-ls-bind="{{user.registration|dateText}}"></small></td>
+                                    <td data-title="<?php echo $locale->getText('console.users.index.users-table-joined'); ?>: "><small data-ls-bind="{{user.registration|dateText}}"></small></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -120,7 +120,7 @@ $locale = $this->getParam("locale");
                         data-name="project-users"
                         data-success="state"
                         data-success-param-state-keys="search,offset">
-                        <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-users.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                        <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-users.sum}}" class="margin-end round small" aria-label="<?php echo $locale->getText('shared.pagination-back'); ?>"><i class="icon-left-open"></i></button>
                     </form>
 
                     <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-users.sum|pageTotal}}"></span>
@@ -135,14 +135,14 @@ $locale = $this->getParam("locale");
                         data-name="project-users"
                         data-success="state"
                         data-success-param-state-keys="search,offset">
-                        <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-users.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                        <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-users.sum}}" class="margin-start round small" aria-label="<?php echo $locale->getText('shared.pagination-next'); ?>"><i class="icon-right-open"></i></button>
                     </form>
                 </div>
 
-                <div data-ui-modal class="box modal close" data-button-text="Add User">
+                <div data-ui-modal class="box modal close" data-button-text="<?php echo $locale->getText('console.users.index.users-create-button-open'); ?>">
                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                    <h1>Create User</h1>
+                    <h1><?php echo $locale->getText('console.users.index.users-create-title'); ?></h1>
 
                     <form
                         data-analytics
@@ -153,31 +153,31 @@ $locale = $this->getParam("locale");
                         data-service="users.create"
                         data-event="submit"
                         data-success="alert,trigger,reset"
-                        data-success-param-alert-text="Created user successfully"
+                        data-success-param-alert-text="<?php echo $locale->getText('console.users.index.users-create-success'); ?>"
                         data-success-param-trigger-events="users.create"
                         data-failure="alert"
-                        data-failure-param-alert-text="Failed to create user"
+                        data-failure-param-alert-text="<?php echo $locale->getText('console.users.index.users-create-error'); ?>"
                         data-failure-param-alert-classname="error">
 
-                        <label for="user-name">Name</label>
+                        <label for="user-name"><?php echo $locale->getText('shared.label-name'); ?></label>
                         <input type="text" class="full-width" id="user-name" name="name" required autocomplete="off" maxlength="128" />
 
-                        <label for="user-email">Email</label>
+                        <label for="user-email"><?php echo $locale->getText('shared.label-email'); ?></label>
                         <input type="email" class="full-width" id="user-email" name="email" required autocomplete="off" />
 
-                        <label for="user-password">Password</label>
-                        <input type="password" class="full-width" id="user-password" name="password" required pattern=".{6,}" title="Six or more characters" autocomplete="off" />
+                        <label for="user-password"><?php echo $locale->getText('shared.label-password'); ?></label>
+                        <input type="password" class="full-width" id="user-password" name="password" required pattern=".{6,}" title="<?php echo $locale->getText('shared.input-password-error'); ?>" autocomplete="off" />
 
                         <hr />
 
-                        <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                        <button type="submit"><?php echo $locale->getText('shared.button-create'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.cancel'); ?></button>
                     </form>
                 </div>
             </div>
         </li>
 
         <li data-state="/console/users/teams?project={{router.params.project}}">
-            <h2>Teams</h2>
+            <h2><?php echo $locale->getText('console.users.index.teams-title'); ?></h2>
 
             <form class="box padding-small margin-bottom search"
                 data-service="teams.list"
@@ -192,10 +192,10 @@ $locale = $this->getParam("locale");
                 data-success-param-state-keys="search,offset">
                 <div class="row thin responsive">
                     <div class="col span-10">
-                        <input name="search" id="searchTeams" type="search" autocomplete="off" placeholder="Search" class="margin-bottom-no" data-ls-bind="{{router.params.search}}">
+                        <input name="search" id="searchTeams" type="search" autocomplete="off" placeholder="<?php echo $locale->getText('shared.search-placeholder'); ?>" class="margin-bottom-no" data-ls-bind="{{router.params.search}}">
                     </div>
                     <div class="col span-2 desktops-only">
-                        <button class="fill" title="Search" aria-label="Search"><i class="icon-search"></i></button>
+                        <button class="fill" title="<?php echo $locale->getText('shared.search-label'); ?>" aria-label="Search"><i class="icon-search"></i></button>
                     </div>
                 </div>
             </form>
@@ -211,22 +211,22 @@ $locale = $this->getParam("locale");
                 data-name="project-teams">
 
                 <div data-ls-if="0 == {{project-teams.sum}}" class="box margin-bottom">
-                    <h3 class="margin-bottom-small text-bold">No Teams Found</h3>
+                    <h3 class="margin-bottom-small text-bold"><?php echo $locale->getText('console.users.index.teams-no-found-title'); ?></h3>
 
-                    <p class="margin-bottom-no">Create your first team to get started</p>
+                    <p class="margin-bottom-no"><?php echo $locale->getText('console.users.index.teams-no-found-description'); ?></p>
                 </div>
 
                 <div data-ls-if="0 != {{project-teams.sum}}">
-                    <div class="margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-teams.sum}}"></span> results found</div>
+                    <div class="margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="<?php echo $locale->getText('console.users.index.teams-sum'); ?>"></span></div>
 
                     <div class="box margin-bottom">
                         <table class="vertical">
                             <thead>
                                 <tr>
                                     <th width="40"></th>
-                                    <th>Name</th>
-                                    <th width="150">Members</th>
-                                    <th width="150">Created</th>
+                                    <th><?php echo $locale->getText('console.users.index.teams-table-name'); ?></th>
+                                    <th width="150"><?php echo $locale->getText('console.users.index.teams-table-members'); ?></th>
+                                    <th width="150"><?php echo $locale->getText('console.users.index.teams-table-created'); ?></th>
                                 </tr>
                             </thead>
                             <tbody data-ls-loop="project-teams.teams" data-ls-as="team">
@@ -234,11 +234,11 @@ $locale = $this->getParam("locale");
                                     <td class="hide">
                                         <img src="" data-ls-attrs="src={{team.name|avatar}}" data-size="45" alt="Collection Avatar" class="avatar margin-end pull-start" loading="lazy" width="30" height="30" />
                                     </td>
-                                    <td data-title="Name: ">
+                                    <td data-title="<?php echo $locale->getText('console.users.index.teams-table-name'); ?>: ">
                                         <a data-ls-attrs="href=/console/users/teams/team?id={{team.$id}}&project={{router.params.project}}" data-ls-bind="{{team.name}}"></a>
                                     </td>
-                                    <td data-title="Members: "><span data-ls-bind="{{team.sum}} members"></span></td>
-                                    <td data-title="Date Created: "><small data-ls-bind="{{team.dateCreated|dateText}}"></small></td>
+                                    <td data-title="<?php echo $locale->getText('console.users.index.teams-table-members'); ?>: "><span data-ls-bind="<?php echo $locale->getText('console.users.index.teams-members-sum'); ?>"></span></td>
+                                    <td data-title="<?php echo $locale->getText('console.users.index.teams-table-created'); ?>: "><small data-ls-bind="{{team.dateCreated|dateText}}"></small></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -256,7 +256,7 @@ $locale = $this->getParam("locale");
                         data-name="project-teams"
                         data-success="state"
                         data-success-param-state-keys="search,offset">
-                        <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-teams.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                        <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-teams.sum}}" class="margin-end round small" aria-label="<?php echo $locale->getText('shared.pagination-back'); ?>"><i class="icon-left-open"></i></button>
                     </form>
 
                     <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-teams.sum|pageTotal}}"></span>
@@ -271,14 +271,14 @@ $locale = $this->getParam("locale");
                         data-name="project-teams"
                         data-success="state"
                         data-success-param-state-keys="search,offset">
-                        <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-teams.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                        <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-teams.sum}}" class="margin-start round small" aria-label="<?php echo $locale->getText('shared.pagination-next'); ?>"><i class="icon-right-open"></i></button>
                     </form>
                 </div>
 
-                <div data-ui-modal class="box modal close" data-button-text="Add Team">
+                <div data-ui-modal class="box modal close" data-button-text="<?php echo $locale->getText('console.users.index.teams-create-button-open'); ?>">
                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                    <h1>Create Team</h1>
+                    <h1><?php echo $locale->getText('console.users.index.teams-create-title'); ?></h1>
 
                     <form
                         data-analytics
@@ -289,33 +289,33 @@ $locale = $this->getParam("locale");
                         data-service="teams.create"
                         data-event="submit"
                         data-success="alert,trigger,reset"
-                        data-success-param-alert-text="Created team successfully"
+                        data-success-param-alert-text="<?php echo $locale->getText('console.users.index.teams-create-success'); ?>"
                         data-success-param-trigger-events="filter-teams-changed,teams.create"
                         data-failure="alert"
-                        data-failure-param-alert-text="Failed to create team"
+                        data-failure-param-alert-text="<?php echo $locale->getText('console.users.index.teams-create-error'); ?>"
                         data-failure-param-alert-classname="error">
 
-                        <label for="team-name">Name</label>
+                        <label for="team-name"><?php echo $locale->getText('shared.label-name'); ?></label>
                         <input type="text" class="full-width" id="team-name" name="name" required autocomplete="off" maxlength="128" />
                         
                         <hr />
 
-                        <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                        <button type="submit"><?php echo $locale->getText('shared.button-create'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.cancel'); ?></button>
                     </form>
                 </div>
             </div>
         </li>
         
         <li data-state="/console/users/providers?project={{router.params.project}}">
-            <p data-ls-if="{{console-project.usersAuthLimit}} == 0" class="text-fade text-size-small margin-bottom pull-end">Unlimited Users <span class="link" data-ls-ui-trigger="project-update-auth-users-limit">Set Limit</span></p>
-            <p data-ls-if="{{console-project.usersAuthLimit}} != 0" class="text-fade text-size-small margin-bottom pull-end"><span data-ls-bind="{{console-project.usersAuthLimit|statsTotal}}"></span> Users allowed <span class="link" data-ls-ui-trigger="project-update-auth-users-limit">Change Limit</span></p>
+            <p data-ls-if="{{console-project.usersAuthLimit}} == 0" class="text-fade text-size-small margin-bottom pull-end"><?php echo $locale->getText('console.users.index.settings-limit-none'); ?> <span class="link" data-ls-ui-trigger="project-update-auth-users-limit"><?php echo $locale->getText('console.users.index.settings-limit-set'); ?></span></p>
+            <p data-ls-if="{{console-project.usersAuthLimit}} != 0" class="text-fade text-size-small margin-bottom pull-end"><span data-ls-bind="<?php echo $locale->getText('console.users.index.settings-limit-sum'); ?>"></span> <span class="link" data-ls-ui-trigger="project-update-auth-users-limit"><?php echo $locale->getText('console.users.index.settings-limit-change'); ?></span></p>
             
-            <h2>Settings</h2>
+            <h2><?php echo $locale->getText('console.users.index.settings-title'); ?></h2>
 
             <div data-ui-modal class="modal close" data-button-alias="none" data-open-event="project-update-auth-users-limit">
                 <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                <h1>Max Allowed Users</h1>
+                <h1><?php echo $locale->getText('console.users.index.settings-limit-title'); ?></h1>
 
                 <form data-debug="1"
                     data-analytics
@@ -328,10 +328,10 @@ $locale = $this->getParam("locale");
                     data-event="submit"
                     data-param-project-id="{{router.params.project}}"
                     data-success="alert,trigger"
-                    data-success-param-alert-text="Updated project users limit successfully"
+                    data-success-param-alert-text="<?php echo $locale->getText('console.users.index.settings-limit-success'); ?>"
                     data-success-param-trigger-events="projects.update"
                     data-failure="alert"
-                    data-failure-param-alert-text="Failed to update project users limit"
+                    data-failure-param-alert-text="<?php echo $locale->getText('console.users.index.settings-limit-error'); ?>"
                     data-failure-param-alert-classname="error">
 
                     <input name="limit" id="users-limit" type="number" data-ls-bind="{{console-project.usersAuthLimit}}" data-cast-to="numeric" min="0" />
@@ -340,14 +340,14 @@ $locale = $this->getParam("locale");
                         <div class="col span-1">
                             <i class="icon-info-circled text-sign"></i>
                         </div>
-                        <div class="col span-11">This limit will prevent new users from signing up for your project, no matter what auth method has been used. You will still be able to create users and team memberships from your Appwrite console. For an unlimited amount of users, set the limit to 0.</div>
+                        <div class="col span-11"><?php echo $locale->getText('console.users.index.settings-limit-info'); ?></div>
                     </div>
 
-                    <button>Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                    <button><?php echo $locale->getText('shared.button-update'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.cancel'); ?></button>
                 </form>
             </div>
 
-            <p class="text-fade margin-bottom">Choose auth methods you wish to use.</p>
+            <p class="text-fade margin-bottom"><?php echo $locale->getText('console.users.index.settings-subtitle'); ?></p>
 
             <ul class="tiles cell-3 margin-bottom-small">
                 <?php foreach($auth as $index => $method):
@@ -371,10 +371,10 @@ $locale = $this->getParam("locale");
                                 data-event="change"
                                 data-param-project-id="{{router.params.project}}"
                                 data-success="alert,trigger"
-                                data-success-param-alert-text="Updated project auth status successfully"
+                                data-success-param-alert-text="<?php echo $locale->getText('console.users.index.settings-update-success'); ?>"
                                 data-success-param-trigger-events="projects.update"
                                 data-failure="alert"
-                                data-failure-param-alert-text="Failed to update project auth status settings"
+                                data-failure-param-alert-text="<?php echo $locale->getText('console.users.index.settings-update-error'); ?>"
                                 data-failure-param-alert-classname="error">
                                 <input name="method" id="<?php echo $this->escape($key); ?>" type="hidden" autocomplete="off" value="<?php echo $this->escape($index); ?>">
                                 <?php if( !(in_array($key, ['usersAuthMagicURL', 'usersAuthInvites']) && !$smtpEnabled)): ?>
@@ -383,18 +383,18 @@ $locale = $this->getParam("locale");
                             </form>
                         <?php endif; ?>
                         
-                        <img src="<?php echo $this->escape($icon); ?>?buster=<?php echo APP_CACHE_BUSTER; ?>" alt="Email/Password Logo" class="pull-start provider margin-end" />
+                        <img src="<?php echo $this->escape($icon); ?>?buster=<?php echo APP_CACHE_BUSTER; ?>" alt="<?php echo $locale->getText('console.users.index.settings-alt-email-pass'); ?>" class="pull-start provider margin-end" />
                                 
-                        <span class="text-size-small"><?php echo $this->escape($name); ?><?php if(!$enabled): ?> <spann class="text-fade text-size-xs">soon</span><?php endif; ?>
+                        <span class="text-size-small"><?php echo $this->escape($name); ?><?php if(!$enabled): ?> <spann class="text-fade text-size-xs"><?php echo $locale->getText('shared.soon'); ?></span><?php endif; ?>
                         
                         <?php if( in_array($key, ['usersAuthMagicURL', 'usersAuthInvites']) && !$smtpEnabled): ?>
                             <p class="margin-bottom-no text-one-liner text-size-small text-danger">
-                                SMTP Disabled
+                                <?php echo $locale->getText('console.users.index.settings-smtp-disabled'); ?>
                             </p>
                         <?php else: ?>
                             <?php if($docs): ?>
                             <p class="margin-bottom-no text-one-liner text-size-small">
-                                <a href="<?php echo $this->escape($docs); ?>" target="_blank" rel="noopener">Docs<i class="icon-link-ext"></i></a>
+                                <a href="<?php echo $this->escape($docs); ?>" target="_blank" rel="noopener"><?php echo $locale->getText('console.users.index.settings-docs'); ?><i class="icon-link-ext"></i></a>
                             </p>
                             <?php endif; ?>
                         <?php endif; ?>
@@ -403,7 +403,7 @@ $locale = $this->getParam("locale");
                 <?php endforeach; ?>
             </ul>
 
-            <h3>OAuth2 Providers</h3>
+            <h3><?php echo $locale->getText('console.users.index.settings-oauth-providers'); ?></h3>
 
             <div class="margin-bottom margin-top"
                 data-service="projects.get"
@@ -424,7 +424,7 @@ $locale = $this->getParam("locale");
                             <div data-ui-modal class="modal close" data-button-alias="none" data-open-event="provider-update-<?php echo $provider; ?>">
                                 <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                                <h1><?php echo $this->escape($name); ?> <?php if($sandbox): ?>Sandbox<?php endif; ?> OAuth2 Settings</h1>
+                                <h1><?php echo $this->escape($name); ?> <?php if($sandbox): ?><?php echo $locale->getText('console.users.index.settings-oauth-sandbox'); ?><?php endif; ?> <?php echo $locale->getText('console.users.index.settings-oauth-title'); ?></h1>
 
                                 <form
                                     autocomplete="off"
@@ -438,10 +438,10 @@ $locale = $this->getParam("locale");
                                     data-event="submit"
                                     data-param-project-id="{{router.params.project}}"
                                     data-success="alert,trigger"
-                                    data-success-param-alert-text="Updated project OAuth2 settings successfully"
+                                    data-success-param-alert-text="<?php echo $locale->getText('console.users.index.settings-update-oauth-success'); ?>"
                                     data-success-param-trigger-events="projects.update"
                                     data-failure="alert"
-                                    data-failure-param-alert-text="Failed to update project OAuth2 settings"
+                                    data-failure-param-alert-text="<?php echo $locale->getText('console.users.index.settings-update-oauth-error'); ?>"
                                     data-failure-param-alert-classname="error">
                                     
                                     <input style="display: none" type="text" /> <?php /** Disabling Chrone Autofill @see https://stackoverflow.com/a/15917221/2299554 */ ?>
@@ -450,13 +450,13 @@ $locale = $this->getParam("locale");
                                     <input name="provider" id="provider<?php echo $this->escape(ucfirst($provider)); ?>" type="hidden" autocomplete="off" value="<?php echo $this->escape($provider); ?>">
 
                                     <?php if(!$form): ?>
-                                        <label for="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid">App ID</label>
+                                        <label for="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid"><?php echo $locale->getText('console.users.index.settings-label-app-id'); ?></label>
                                         <input name="appId" id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid" type="text" autocomplete="off" data-ls-bind="{{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid}}">
                                     
-                                        <label for="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret">App Secret</label>
+                                        <label for="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret"><?php echo $locale->getText('console.users.index.settings-label-app-secret'); ?></label>
                                         <input name="secret" data-forms-show-secret id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret" type="password" autocomplete="off" data-ls-bind="{{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret}}">
                                     <?php else: ?>
-                                        <label for="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid">Bundle ID <span class="tooltip" data-tooltip="Attribute internal display name"><i class="icon-info-circled"></i></span></label>
+                                        <label for="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid"><?php echo $locale->getText('console.users.index.settings-label-bundle-id'); ?> <span class="tooltip" data-tooltip="<?php echo $locale->getText('console.users.index.settings-tooltip-bundle-id'); ?>"><i class="icon-info-circled"></i></span></label>
                                         <input name="appId" id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid" type="text" autocomplete="off" data-ls-bind="{{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid}}" placeholder="com.company.appname" />
 
                                         <input name="secret" data-forms-oauth-apple id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret" type="hidden" autocomplete="off" data-ls-bind="{{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret}}" />
@@ -467,7 +467,9 @@ $locale = $this->getParam("locale");
                                             <i class="icon-info-circled text-sign"></i>
                                         </div>
                                         <div class="col span-11">
-                                            <p>To complete set up, add this OAuth2 redirect URI to your <?php echo $this->escape(ucfirst($provider)); ?> app configuration.</p>
+                                            <p><?php echo $locale->getText('console.users.index.settings-oauth-description', [
+                                                    'provider' =>  $this->escape(ucfirst($provider))
+                                                ]); ?></p>
 
                                             <div class="input-copy">
                                                 <input data-forms-copy type="text" disabled data-ls-bind="{{env.ENDPOINT}}/v1/account/sessions/oauth2/callback/<?php echo $this->escape($provider); ?>/{{router.params.project}}" class="margin-bottom-no" />
@@ -475,7 +477,7 @@ $locale = $this->getParam("locale");
                                         </div>
                                     </div>
 
-                                    <button>Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                    <button><?php echo $locale->getText('shared.button-update'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.cancel'); ?></button>
                                 </form>
                             </div>
 
@@ -495,11 +497,11 @@ $locale = $this->getParam("locale");
                                 <img src="/images/users/<?php echo $this->escape(strtolower($provider)); ?>.png?buster=<?php echo APP_CACHE_BUSTER; ?>" alt="<?php echo $this->escape(ucfirst($provider)); ?> Logo" class="pull-start provider margin-end" />
                                 
                                 <span class="text-size-small">
-                                    <?php echo $this->escape($name); ?> <?php if($sandbox): ?><span class="text-size-xs text-fade">sandbox</span><?php endif; ?> <?php if($beta): ?><span class="text-size-xs text-fade">beta</span><?php endif; ?>
+                                    <?php echo $this->escape($name); ?> <?php if($sandbox): ?><span class="text-size-xs text-fade"><?php echo $locale->getText('console.users.index.settings-oauth-sandbox'); ?></span><?php endif; ?> <?php if($beta): ?><span class="text-size-xs text-fade"><?php echo $locale->getText('shared.beta'); ?></span><?php endif; ?>
                                 </span>
 
                                 <p class="margin-bottom-no text-one-liner text-size-small">
-                                    <a href="<?php echo $data['developers']; ?>" target="_blank" rel="noopener">OAuth2 Docs<i class="icon-link-ext"></i></a>
+                                    <a href="<?php echo $data['developers']; ?>" target="_blank" rel="noopener"><?php echo $locale->getText('console.users.index.settings-oauth-docs'); ?><i class="icon-link-ext"></i></a>
                                 </p>
                             </div>
                         </li>

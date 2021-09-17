@@ -18,7 +18,7 @@ $locale = $this->getParam("locale");
 
     <div class="text-danger margin-bottom-large" data-ls-if="{{router.params.failure}} == 1"><?php echo $locale->getText('home.auth.signup.submit-error'); ?></div>
 
-    <small class="pull-end text-size-small"><?php echo $locale->getText('home.auth.shared.fields-required-info'); ?></small>
+    <small class="pull-end text-size-small"><?php echo $locale->getText('shared.fields-required-info'); ?></small>
 
     <form name="account.create"
         data-analytics
@@ -41,13 +41,13 @@ $locale = $this->getParam("locale");
             <p><?php echo $locale->getText('home.auth.signup.root-account-info'); ?></p>
         <?php endif; ?>
 
-        <label><?php echo $locale->getText('home.auth.signup.input-label-name'); ?></label>
+        <label><?php echo $locale->getText('shared.label-name'); ?></label>
         <input name="name" type="text" autocomplete="name" placeholder="" required maxlength="128">
 
-        <label><?php echo $locale->getText('home.auth.signup.input-label-email'); ?></label>
+        <label><?php echo $locale->getText('shared.label-email'); ?></label>
         <input name="email" type="email" autocomplete="email" placeholder="" required data-ls-bind="{{router.params.email}}">
 
-        <label><?php echo $locale->getText('home.auth.signup.input-label-password'); ?></label>
+        <label><?php echo $locale->getText('shared.label-password'); ?></label>
         <input name="password" type="password" autocomplete="off" placeholder="" required data-forms-password-meter pattern=".{6,}" title="<?php echo $locale->getText('shared.input-password-error'); ?>">
 
         <div class="agree margin-top-large margin-bottom-large">

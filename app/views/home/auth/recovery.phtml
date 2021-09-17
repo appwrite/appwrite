@@ -9,7 +9,7 @@ $locale = $this->getParam("locale");
         <?php echo $locale->getText('home.auth.recovery.title'); ?>
     </h1>
 
-    <small class="pull-end text-size-small"><?php echo $locale->getText('home.auth.shared.fields-required-info'); ?></small>
+    <small class="pull-end text-size-small"><?php echo $locale->getText('shared.fields-required-info'); ?></small>
 
     <form name="account.createRecovery"
         data-analytics
@@ -26,7 +26,7 @@ $locale = $this->getParam("locale");
         data-failure-param-alert-text="<?php echo $locale->getText('home.auth.recovery.submit-error'); ?>"
         data-failure-param-alert-classname="error">
 
-        <label><?php echo $locale->getText('home.auth.recovery.input-label-email'); ?></label>
+        <label><?php echo $locale->getText('shared.label-email'); ?></label>
         <input name="email" type="email" class="full-width" autocomplete="email" placeholder="<?php echo $locale->getText('home.auth.recovery.input-placeholder-email'); ?>" required>
 
         <input name="url" type="hidden" data-ls-bind="{{env.ENDPOINT}}/auth/recovery/reset" />

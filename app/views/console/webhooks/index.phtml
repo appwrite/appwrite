@@ -34,7 +34,7 @@ $locale = $this->getParam("locale");
         <ul data-ls-loop="console-webhooks.webhooks" data-ls-as="webhook" class="list">
             <li class="clear">
 
-                <div data-ui-modal class="modal close sticky-footer" data-button-text="<?php echo $locale->getText('console.webhooks.index.update-button-open'); ?>" data-button-class="pull-end">
+                <div data-ui-modal class="modal close sticky-footer" data-button-text="<?php echo $locale->getText('shared.button-update'); ?>" data-button-class="pull-end">
                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                     <h1><?php echo $locale->getText('console.webhooks.index.update-title'); ?></h1>
@@ -58,7 +58,7 @@ $locale = $this->getParam("locale");
                         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                         <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$id}}" />
 
-                        <label data-ls-attrs="for=name-{{webhook.$id}}"><?php echo $locale->getText('console.webhooks.index.shared-label-name'); ?></label>
+                        <label data-ls-attrs="for=name-{{webhook.$id}}"><?php echo $locale->getText('shared.label-name'); ?></label>
                         <input type="text" class="full-width" data-ls-attrs="id=name-{{webhook.$id}}" name="name" required autocomplete="off" data-ls-bind="{{webhook.name}}" maxlength="128" />
 
                         <section data-forms-select-all data-forms-select-all-text="<?php echo $locale->getText('shared.select-all'); ?>" data-forms-unselect-all-text="<?php echo $locale->getText('shared.unselect-all'); ?>">
@@ -110,14 +110,14 @@ $locale = $this->getParam("locale");
                                     <input type="text" class="full-width margin-bottom-no" data-ls-attrs="id=httpUser-{{webhook.$id}}" name="httpUser" autocomplete="off" data-ls-bind="{{webhook.httpUser}}" />
                                 </div>
                                 <div class="col span-6 margin-bottom">
-                                    <label data-ls-attrs="for=httpPass-{{webhook.$id}}"><?php echo $locale->getText('console.webhooks.index.shared-http-auth-label-password'); ?></label>
+                                    <label data-ls-attrs="for=httpPass-{{webhook.$id}}"><?php echo $locale->getText('shared.label-password'); ?></label>
                                     <input type="password" data-forms-show-secret class="full-width margin-bottom-no" data-ls-attrs="id=httpPass-{{webhook.$id}}" name="httpPass" autocomplete="off" data-ls-bind="{{webhook.httpPass}}" />
                                 </div>
                             </div>
                         </div>
 
                         <footer>
-                            <button type="submit"><?php echo $locale->getText('console.webhooks.index.update-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.webhooks.index.update-button-cancel'); ?></button>
+                            <button type="submit"><?php echo $locale->getText('console.webhooks.index.update-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.cancel'); ?></button>
                         </footer>
                     </form>
                 </div>
@@ -142,7 +142,7 @@ $locale = $this->getParam("locale");
                     <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                     <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$id}}" />
 
-                    <button class="danger reverse"><?php echo $locale->getText('console.webhooks.index.delete-submit'); ?></button>
+                    <button class="danger reverse"><?php echo $locale->getText('shared.button-delete'); ?></button>
                 </form>
 
                 <span data-ls-bind="{{webhook.name}}"></span> &nbsp; (<span data-ls-bind="<?php echo $locale->getText('console.webhooks.index.events-sum'); ?>"></span>)
@@ -180,7 +180,7 @@ $locale = $this->getParam("locale");
 
                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
 
-                <label for="name"><?php echo $locale->getText('console.webhooks.index.shared-label-name'); ?></label>
+                <label for="name"><?php echo $locale->getText('shared.label-name'); ?></label>
                 <input type="text" class="full-width" id="name" name="name" required autocomplete="off" maxlength="128" />
 
                 <section data-forms-select-all data-forms-select-all-text="<?php echo $locale->getText('shared.select-all'); ?>" data-forms-unselect-all-text="<?php echo $locale->getText('shared.unselect-all'); ?>">
@@ -232,14 +232,14 @@ $locale = $this->getParam("locale");
                             <input type="text" class="full-width margin-bottom-no" id="httpUser" name="httpUser" autocomplete="off" />
                         </div>
                         <div class="col span-6 margin-bottom">
-                            <label for="httpPass"><?php echo $locale->getText('console.webhooks.index.shared-http-auth-label-password'); ?></label>
+                            <label for="httpPass"><?php echo $locale->getText('shared.label-password'); ?></label>
                             <input type="password" data-forms-show-secret class="full-width margin-bottom-no" id="httpPass" name="httpPass" autocomplete="off" />
                         </div>
                     </div>
                 </div>
 
                 <footer>
-                    <button type="submit"><?php echo $locale->getText('console.webhooks.index.create-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.webhooks.index.create-button-cancel'); ?></button>
+                    <button type="submit"><?php echo $locale->getText('shared.button-create'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.cancel'); ?></button>
                 </footer>
             </form>
         </div>

@@ -49,7 +49,7 @@ $locale = $this->getParam("locale");
                                     data-failure-param-alert-text="<?php echo $locale->getText('console.account.index.overview-update-name-submit-error'); ?>"
                                     data-failure-param-alert-classname="error">
 
-                                    <label for="name"><?php echo $locale->getText('console.account.index.overview-update-name-label-name'); ?></label>
+                                    <label for="name"><?php echo $locale->getText('shared.label-name'); ?></label>
 
                                     <div class="row responsive">
                                         <div class="col span-8 margin-bottom-small">
@@ -80,7 +80,7 @@ $locale = $this->getParam("locale");
                                 data-failure-param-alert-text="<?php echo $locale->getText('console.account.index.overview-update-email-submit-error'); ?>"
                                 data-failure-param-alert-classname="error">
 
-                                <label><?php echo $locale->getText('console.account.index.overview-update-email-label-email'); ?></label>
+                                <label><?php echo $locale->getText('shared.label-email'); ?></label>
                                 <div class="row responsive">
                                     <div class="col span-8 margin-bottom-small">
                                         <input name="email" type="email" class="margin-bottom-no" autocomplete="off" placeholder="<?php echo $locale->getText('console.account.index.overview-update-email-placeholder-email'); ?>" data-ls-bind="{{account.email}}" required>
@@ -91,12 +91,12 @@ $locale = $this->getParam("locale");
                                             
                                             <hr />
 
-                                            <label><?php echo $locale->getText('console.account.index.overview-update-email-label-password'); ?></label>
+                                            <label><?php echo $locale->getText('shared.label-password'); ?></label>
                                             <input name="password" type="password" class="full-width" autocomplete="off" placeholder="" required>
                                             
                                             <hr />
 
-                                            <button type="submit" class="margin-bottom-no"><?php echo $locale->getText('console.account.index.overview-update-email-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.account.index.overview-update-email-button-cancel'); ?></button>
+                                            <button type="submit" class="margin-bottom-no"><?php echo $locale->getText('shared.button-update'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.cancel'); ?></button>
                                         </div>
                                     </div>
                                 </div>
@@ -132,7 +132,7 @@ $locale = $this->getParam("locale");
                                     <hr />
 
                                     <footer>
-                                        <button type="submit"><?php echo $locale->getText('console.account.index.overview-update-password-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('console.account.index.overview-update-password-button-cancel'); ?></button>
+                                        <button type="submit"><?php echo $locale->getText('console.account.index.overview-update-password-button-submit'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo $locale->getText('shared.cancel'); ?></button>
                                     </footer>
                                 </form>
                             </div>
@@ -310,27 +310,27 @@ $locale = $this->getParam("locale");
                     <table class="vertical small">
                         <thead>
                             <tr>
-                                <th width="140"><?php echo $locale->getText('console.account.index.activity-table-column-date'); ?></th>
-                                <th width="175"><?php echo $locale->getText('console.account.index.activity-table-column-event'); ?></th>
-                                <th><?php echo $locale->getText('console.account.index.activity-table-column-client'); ?></th>
-                                <th width="90"><?php echo $locale->getText('console.account.index.activity-table-column-location'); ?></th>
-                                <th width="90"><?php echo $locale->getText('console.account.index.activity-table-column-ip'); ?></th>
+                                <th width="140"><?php echo $locale->getText('console.account.index.activity-table-date'); ?></th>
+                                <th width="175"><?php echo $locale->getText('console.account.index.activity-table-event'); ?></th>
+                                <th><?php echo $locale->getText('console.account.index.activity-table-client'); ?></th>
+                                <th width="90"><?php echo $locale->getText('console.account.index.activity-table-location'); ?></th>
+                                <th width="90"><?php echo $locale->getText('console.account.index.activity-table-ip'); ?></th>
                             </tr>
                         </thead>
                         <tbody data-ls-loop="securityLogs.logs" data-ls-as="log">
                             <tr>
-                                <td data-title="<?php echo $locale->getText('console.account.index.activity-table-column-date'); ?>: "><span data-ls-bind="{{log.time|dateTime}}"></span></td>
-                                <td data-title="<?php echo $locale->getText('console.account.index.activity-table-column-event'); ?>: "><span data-ls-bind="{{log.event}}"></span></td>
-                                <td data-title="<?php echo $locale->getText('console.account.index.activity-table-column-client'); ?>: ">
+                                <td data-title="<?php echo $locale->getText('console.account.index.activity-table-date'); ?>: "><span data-ls-bind="{{log.time|dateTime}}"></span></td>
+                                <td data-title="<?php echo $locale->getText('console.account.index.activity-table-event'); ?>: "><span data-ls-bind="{{log.event}}"></span></td>
+                                <td data-title="<?php echo $locale->getText('console.account.index.activity-table-client'); ?>: ">
                                     <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.clientCode|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.clientName}},alt={{log.clientName}}" class="avatar xxs inline margin-end-small" />
                                     <span data-ls-if="(!{{log.clientName}})"><?php echo $locale->getText('shared.unknown'); ?></span>
                                     <span data-ls-if="({{log.clientName}})" data-ls-bind="{{log.clientName}} {{log.clientVersion}} <?php echo $locale->getText('shared.client-platform-joiner'); ?> {{log.model}} {{log.osName}} {{log.osVersion}}"></span>
                                 </td>
-                                <td data-title="<?php echo $locale->getText('console.account.index.activity-table-column-location'); ?>: ">
+                                <td data-title="<?php echo $locale->getText('console.account.index.activity-table-location'); ?>: ">
                                     <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-attrs="src={{env.API}}/avatars/flags/{{log.countryCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline margin-end-small" />
                                     <span data-ls-bind="{{log.geo.countryName}}"></span>
                                 </td>
-                                <td data-title="<?php echo $locale->getText('console.account.index.activity-table-column-ip'); ?>: "><span data-ls-bind="{{log.ip}}"></span></td>
+                                <td data-title="<?php echo $locale->getText('console.account.index.activity-table-ip'); ?>: "><span data-ls-bind="{{log.ip}}"></span></td>
                             </tr>
                         </tbody>
                     </table>
