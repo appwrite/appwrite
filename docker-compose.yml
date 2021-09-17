@@ -60,6 +60,8 @@ services:
       - traefik.http.routers.appwrite_api_https.rule=PathPrefix(`/`)
       - traefik.http.routers.appwrite_api_https.service=appwrite_api
       - traefik.http.routers.appwrite_api_https.tls=true
+      # live reloader
+      - appwrite-dev-reload
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-uploads:/storage/uploads:rw
@@ -582,6 +584,19 @@ services:
   #     - './debug:/tmp'
   #   ports:
   #     - '3001:80'
+
+  live-reloader:
+    image: apogiatzis/livereloading
+    container_name: livereloader
+    privileged: true
+    environment:
+      - RELOAD_LABEL=appwrite-dev-reload
+      - RELOAD_DIR=/usr/src/code
+    #  - OBSERVER_TYPE=1 # Uncomment this if you're mounting a windows code directory and it's having issues reloading
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
   
   # Dev Tools End   ------------------------------------------------------------------------------------------
 
