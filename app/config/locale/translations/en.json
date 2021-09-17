@@ -79,7 +79,6 @@
     "console.home.index.stats-storage": "Storage",
     "console.home.index.stats-users": "Users",
     "console.home.index.stats-executions": "Executions",
-
     "console.home.index.platforms-title": "Platforms",
     "console.home.index.platforms-alt-platform": "Platform Logo",
     "console.home.index.platforms-alt-ios": "iOS Logo",
@@ -87,16 +86,10 @@
     "console.home.index.platforms-alt-linux": "Linux Logo",
     "console.home.index.platforms-alt-macos": "MacOS Logo",
     "console.home.index.platforms-alt-windows": "Windows Logo",
-
-
     "console.home.index.platforms-update-title": "Update Platform",
-
-
     "console.home.index.platforms-web-alt": "Web Platform Logo",
     "console.home.index.platforms-web-title": "Register your Web App",
     "console.home.index.platforms-web-name": "New Web App",
-
-
     "console.home.index.platforms-label-package-name": "Package Name",
     "console.home.index.platforms-label-bundle-id": "Bundle ID",
     "console.home.index.platforms-label-hostname": "Hostname",
@@ -105,8 +98,6 @@
     "console.home.index.platforms-tooltip-package-name2": "Your application name",
     "console.home.index.platforms-tooltip-name": "Choose any name that will help you distinguish between your different apps.",
     "console.home.index.platforms-tooltip-hostname": "The hostname that your website will use to interact with the Appwrite APIs in production or development environments. No port number required.",
-
-
     "console.home.index.platforms-placeholder-web-name": "My Web App",
     "console.home.index.platforms-placeholder-web-hostname": "localhost",
     "console.home.index.platforms-placeholder-android-name": "My Android App",
@@ -119,29 +110,22 @@
     "console.home.index.platforms-placeholder-macos-hostname": "com.company.appname",
     "console.home.index.platforms-placeholder-windows-name": "My Windows App",
     "console.home.index.platforms-placeholder-windows-hostname": "appname",
-
-
     "console.home.index.platforms-create-button-submit": "Register",
-
     "console.home.index.platforms-web-create-success": "Created new platform successfully",
     "console.home.index.platforms-web-create-error": "Failed to create platform",
     "console.home.index.platforms-web-create-next-steps-title": "Next Steps",
     "console.home.index.platforms-web-create-next-steps-description-chunk1": "After adding your new website, install our Web SDK to integrate with your code and read our",
     "console.home.index.platforms-web-create-next-steps-description-chunk2": "getting started",
     "console.home.index.platforms-web-create-next-steps-description-chunk3": "tutorial",
-
     "console.home.index.platforms-create-success": "Registered new platform successfully",
     "console.home.index.platforms-create-error": "Failed to register platform",
-
     "console.home.index.platforms-update-success": "Updated platform successfully",
     "console.home.index.platforms-update-error": "Failed to update platform",
-
     "console.home.index.platforms-flutter-ios-title": "iOS",
     "console.home.index.platforms-flutter-android-title": "Android",
     "console.home.index.platforms-flutter-linux-title": "Linux",
     "console.home.index.platforms-flutter-macos-title": "MacOS",
     "console.home.index.platforms-flutter-windows-title": "Windows",
-
     "console.home.index.platforms-flutter-alt": "Flutter Platform Logo",
     "console.home.index.platforms-flutter-title": "Register your Flutter App",
     "console.home.index.platforms-flutter-name": "New Flutter App",
@@ -152,15 +136,12 @@
     "console.home.index.platforms-android-title": "Register your Android App",
     "console.home.index.platforms-unity-alt": "Unity Platform Logo",
     "console.home.index.platforms-unity-name": "New Unity Game",
-
     "console.home.index.platforms-no-platform-title": "No Platforms Added to Your Project",
     "console.home.index.platforms-no-platform-description": "Add your first platform and build your new application.",
     "console.home.index.platforms-no-manage-api-keys": "Manage Your Server API Keys",
-
     "console.home.index.platforms-delete-confirm": "Are you sure you want to delete this platform?",
     "console.home.index.platforms-delete-success": "Deleted platform successfully",
     "console.home.index.platforms-delete-error": "Failed to delete platform",
-
     "console.settings.index.title": "Settings",
     "console.settings.index.overview-title": "Overview",
     "console.settings.index.overview-update-submit": "Save",
