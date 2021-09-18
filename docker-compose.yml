@@ -155,6 +155,8 @@ services:
       - traefik.http.routers.appwrite_realtime_wss.service=appwrite_realtime
       - traefik.http.routers.appwrite_realtime_wss.tls=true
       - traefik.http.routers.appwrite_realtime_wss.tls.certresolver=dns
+      # live reloader
+      - appwrite-dev-reload
     networks:
       - appwrite
     volumes:
@@ -182,6 +184,9 @@ services:
       context: .
     networks:
       - appwrite
+    labels:
+      # live reloader
+      - appwrite-dev-reload
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
@@ -204,6 +209,9 @@ services:
       context: .
     networks:
       - appwrite
+    labels:
+      # live reloader
+      - appwrite-dev-reload
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
@@ -251,6 +259,9 @@ services:
       context: .
     networks:
       - appwrite
+    labels:
+      # live reloader
+      - appwrite-dev-reload
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
@@ -278,6 +289,9 @@ services:
       context: .
     networks:
       - appwrite
+    labels:
+      # live reloader
+      - appwrite-dev-reload
     volumes: 
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -335,6 +349,9 @@ services:
       context: .
     networks:
       - appwrite
+    labels:
+      # live reloader
+      - appwrite-dev-reload
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-functions:/storage/functions:rw
@@ -373,6 +390,9 @@ services:
       context: .
     networks:
       - appwrite
+    labels:
+      # live reloader
+      - appwrite-dev-reload
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
@@ -401,6 +421,9 @@ services:
       context: .
     networks:
       - appwrite
+    labels:
+      # live reloader
+      - appwrite-dev-reload
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
@@ -424,6 +447,9 @@ services:
       context: .
     networks:
       - appwrite
+    labels:
+      # live reloader
+      - appwrite-dev-reload
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
@@ -441,6 +467,9 @@ services:
     container_name: appwrite-mariadb
     networks:
       - appwrite
+    labels:
+      # live reloader
+      - appwrite-dev-reload
     volumes:
       - appwrite-mariadb:/var/lib/mysql:rw
     ports:
