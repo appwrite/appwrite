@@ -592,6 +592,8 @@ services:
     environment:
       - RELOAD_LABEL=appwrite-dev-reload
       - RELOAD_DIR=/usr/src/code
+      - RELOAD_DELAY=1
+      - RESTART_TIMEOUT=1
     #  - OBSERVER_TYPE=1 # Uncomment this if you're mounting a windows code directory and it's having issues reloading
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
