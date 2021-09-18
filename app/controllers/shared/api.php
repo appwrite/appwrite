@@ -11,7 +11,7 @@ use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 
-App::init(function ($utopia, $request, $response, $project, $user, $register, $events, $audits, $usage, $deletes, $db) {
+App::init(function ($utopia, $request, $response, $project, $user, $register, $events, $audits, $usage, $deletes, $db, $locale) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
@@ -23,6 +23,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     /** @var Appwrite\Event\Event $usage */
     /** @var Appwrite\Event\Event $deletes */
     /** @var Appwrite\Event\Event $functions */
+    /** @var Utopia\Locale\Locale $locale */
     /** @var PDO $db */
 
     Storage::setDevice('files', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
@@ -31,7 +32,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     $route = $utopia->match($request);
 
     if (empty($project->getId()) && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
-        throw new Exception('Missing or unknown project ID', 400);
+        throw new Exception($locale->getText('exceptions.missing-project-id'), 400);
     }
 
     /*
@@ -71,7 +72,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
         && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') // Abuse is not diabled
         && (!$isAppUser && !$isPrivilegedUser)) // User is not an admin or API key
         {
-        throw new Exception('Too many requests', 429);
+        throw new Exception($locale->getText('exceptions.too-many-requests'), 429);
     }
 
     /*
@@ -112,9 +113,9 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
         ->setParam('projectId', $project->getId())
     ;
 
-}, ['utopia', 'request', 'response', 'project', 'user', 'register', 'events', 'audits', 'usage', 'deletes', 'db'], 'api');
+}, ['utopia', 'request', 'response', 'project', 'user', 'register', 'events', 'audits', 'usage', 'deletes', 'db', 'locale'], 'api');
 
-App::init(function ($utopia, $request, $response, $project, $user) {
+App::init(function ($utopia, $request, $response, $project, $user, $locale) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
@@ -126,6 +127,7 @@ App::init(function ($utopia, $request, $response, $project, $user) {
     /** @var Appwrite\Event\Event $usage */
     /** @var Appwrite\Event\Event $deletes */
     /** @var Appwrite\Event\Event $functions */
+    /** @var Utopia\Locale\Locale $locale */
 
     $route = $utopia->match($request);
 
@@ -139,40 +141,40 @@ App::init(function ($utopia, $request, $response, $project, $user) {
     switch ($route->getLabel('auth.type', '')) {
         case 'emailPassword':
             if($project->getAttribute('usersAuthEmailPassword', true) === false) {
-                throw new Exception('Email / Password authentication is disabled for this project', 501);
+                throw new Exception($locale->getText('exceptions.authentication-disabled-password'), 501);
             }
             break;
 
         case 'magic-url':
             if($project->getAttribute('usersAuthMagicURL', true) === false) {
-                throw new Exception('Magic URL authentication is disabled for this project', 501);
+                throw new Exception($locale->getText('exceptions.authentication-disabled-magic-url'), 501);
             }
             break;
 
         case 'anonymous':
             if($project->getAttribute('usersAuthAnonymous', true) === false) {
-                throw new Exception('Anonymous authentication is disabled for this project', 501);
+                throw new Exception($locale->getText('exceptions.authentication-disabled-anonymous'), 501);
             }
             break;
 
         case 'invites':
             if($project->getAttribute('usersAuthInvites', true) === false) {
-                throw new Exception('Invites authentication is disabled for this project', 501);
+                throw new Exception($locale->getText('exceptions.authentication-disabled-invite'), 501);
             }
             break;
 
         case 'jwt':
             if($project->getAttribute('usersAuthJWT', true) === false) {
-                throw new Exception('JWT authentication is disabled for this project', 501);
+                throw new Exception($locale->getText('exceptions.authentication-disabled-jwt'), 501);
             }
             break;
         
         default:
-            throw new Exception('Unsupported authentication route');
+            throw new Exception($locale->getText('exceptions.authentication-unsupported'));
             break;
     }
 
-}, ['utopia', 'request', 'response', 'project', 'user'], 'auth');
+}, ['utopia', 'request', 'response', 'project', 'user', 'locale'], 'auth');
 
 App::shutdown(function ($utopia, $request, $response, $project, $events, $audits, $usage, $deletes, $mode) {
     /** @var Utopia\App $utopia */
