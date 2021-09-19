@@ -650,7 +650,7 @@ App::delete('/v1/storage/files/:fileId')
 
 //             if (!file_exists($path)) {
 //                  TODO: Translate if required, just like elsewhere in this file
-//                 throw new Exception($locale->getText('exceptions.file-not-found-in-').$path, 404);
+//                 throw new Exception($locale->getText('exceptions.file-not-found-in').$path, 404);
 //             }
 
 //             $compressor = new GZIP();
