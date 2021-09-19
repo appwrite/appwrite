@@ -90,7 +90,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
     $route = $utopia->match($request);
 
     if (!empty($route->getLabel('sdk.auth', [])) && empty($project->getId()) && ($route->getLabel('scope', '') !== 'public')) {
-        throw new Exception('Missing or unknown project ID', 400);
+        throw new Exception($locale->getText('exceptions.missing-project-id'), 400);
     }
 
     $referrer = $request->getReferer();
@@ -257,18 +257,22 @@ App::init(function ($utopia, $request, $response, $console, $project, $consoleDB
 
     if (!\in_array($scope, $scopes)) {
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) { // Check if permission is denied because project is missing
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
-        throw new Exception($user->getAttribute('email', 'User').' (role: '.\strtolower($roles[$role]['label']).') missing scope ('.$scope.')', 401);
+        throw new Exception($locale->getText('exceptions.missing-scope', [
+            'user' => $user->getAttribute('email', $locale->getText('controllers.default-user')),
+            'scope' => $scope,
+            'role' => \strtolower($roles[$role]['label'])
+        ]), 401);
     }
 
     if (Auth::USER_STATUS_BLOCKED == $user->getAttribute('status')) { // Account has not been activated
-        throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
+        throw new Exception($locale->getText('exceptions.user-blocked'), 401); // User is in status blocked
     }
 
     if ($user->getAttribute('reset')) {
-        throw new Exception('Password reset is required', 412);
+        throw new Exception($locale->getText('exceptions.password-reset-required'), 412);
     }
 
 }, ['utopia', 'request', 'response', 'console', 'project', 'consoleDB', 'user', 'locale', 'clients']);
@@ -439,31 +443,34 @@ App::get('/.well-known/acme-challenge')
     ->label('docs', false)
     ->inject('request')
     ->inject('response')
-    ->action(function ($request, $response) {
+    ->inject('locale')
+    ->action(function ($request, $response, $locale) {
+        /** @var Utopia\Locale\Locale $locale */
+
         $base = \realpath(APP_STORAGE_CERTIFICATES);
         $path = \str_replace('/.well-known/acme-challenge/', '', $request->getURI());
         $absolute = \realpath($base.'/.well-known/acme-challenge/'.$path);
 
         if (!$base) {
-            throw new Exception('Storage error', 500);
+            throw new Exception($locale->getText('exceptions.storage-error'), 500);
         }
 
         if (!$absolute) {
-            throw new Exception('Unknown path', 404);
+            throw new Exception($locale->getText('exceptions.unknown-path'), 404);
         }
 
         if (!\substr($absolute, 0, \strlen($base)) === $base) {
-            throw new Exception('Invalid path', 401);
+            throw new Exception($locale->getText('exceptions.invalid-path'), 401);
         }
 
         if (!\file_exists($absolute)) {
-            throw new Exception('Unknown path', 404);
+            throw new Exception($locale->getText('exceptions.unknown-path'), 404);
         }
 
         $content = @\file_get_contents($absolute);
 
         if (!$content) {
-            throw new Exception('Failed to get contents', 500);
+            throw new Exception($locale->getText('exceptions.cant-get-contents'), 500);
         }
 
         $response->text($content);

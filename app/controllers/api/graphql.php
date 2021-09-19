@@ -16,8 +16,11 @@ App::post('/v1/graphql')
     ->desc('GraphQL Endpoint')
     ->groups(['api', 'graphql'])
     ->label('scope', 'public')
+    ->inject('locale')
     ->action(
-        function () {
-            throw new Exception('GraphQL support is coming soon!', 502);
+        function ($locale) {
+            /** @var Utopia\Locale\Locale $locale */
+
+            throw new Exception($locale->getText('exceptions.graphql-unsupported'), 502);
         }
     );

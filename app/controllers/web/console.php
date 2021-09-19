@@ -61,7 +61,7 @@ App::get('/error/:code')
         ;
 
         $layout
-            ->setParam('title', APP_NAME.' - Error')
+            ->setParam('title', APP_NAME.' - ' . $locale->getText('titles.error'))
             ->setParam('body', $page);
     });
 
@@ -83,7 +83,7 @@ App::get('/console')
         ;
 
         $layout
-            ->setParam('title', APP_NAME.' - Console')
+            ->setParam('title', APP_NAME.' - ' . $locale->getText('titles.console'))
             ->setParam('body', $page);
     });
 
@@ -107,7 +107,7 @@ App::get('/console/account')
         ;
 
         $layout
-            ->setParam('title', 'Account - '.APP_NAME)
+            ->setParam('title', APP_NAME.' - ' . $locale->getText('titles.account'))
             ->setParam('body', $page);
     });
 
@@ -116,13 +116,15 @@ App::get('/console/notifications')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
+    ->inject('locale')
+    ->action(function ($layout, $locale) {
         /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
 
         $page = new View(__DIR__.'/../../views/v1/console/notifications/index.phtml');
 
         $layout
-            ->setParam('title', APP_NAME.' - Notifications')
+            ->setParam('title', APP_NAME.' - ' . $locale->getText('titles.notifications'))
             ->setParam('body', $page);
     });
 
@@ -141,7 +143,7 @@ App::get('/console/home')
             ->setParam('locale', $locale)
             ->setParam('usageStatsEnabled',App::getEnv('_APP_USAGE_STATS','enabled') == 'enabled');
         $layout
-            ->setParam('title', APP_NAME.' - Console')
+            ->setParam('title', APP_NAME.' - ' . $locale->getText('titles.console'))
             ->setParam('body', $page);
     });
 
@@ -167,7 +169,7 @@ App::get('/console/settings')
         ;
 
         $layout
-            ->setParam('title', APP_NAME.' - Settings')
+            ->setParam('title', APP_NAME.' - ' . $locale->getText('titles.settings'))
             ->setParam('body', $page);
     });
 
@@ -189,7 +191,7 @@ App::get('/console/webhooks')
         ;
         
         $layout
-            ->setParam('title', APP_NAME.' - Webhooks')
+            ->setParam('title', APP_NAME.' - ' . $locale->getText('titles.webhooks'))
             ->setParam('body', $page);
     });
 
@@ -211,7 +213,7 @@ App::get('/console/keys')
             ->setParam('scopes', $scopes);
 
         $layout
-            ->setParam('title', APP_NAME.' - API Keys')
+            ->setParam('title', APP_NAME.' - ' . $locale->getText('titles.api-keys'))
             ->setParam('body', $page);
     });
 
@@ -231,7 +233,7 @@ App::get('/console/tasks')
             ->setParam("locale", $locale);
 
         $layout
-            ->setParam('title', APP_NAME.' - Tasks')
+            ->setParam('title', APP_NAME.' - ' . $locale->getText('titles.tasks'))
             ->setParam('body', $page);
     });
 
@@ -251,7 +253,7 @@ App::get('/console/database')
             ->setParam("locale", $locale);
 
         $layout
-            ->setParam('title', APP_NAME.' - Database')
+            ->setParam('title', APP_NAME.' - ' . $locale->getText('titles.database'))
             ->setParam('body', $page);
     });
 
@@ -263,17 +265,19 @@ App::get('/console/database/collection')
     ->inject('response')
     ->inject('layout')
     ->inject('projectDB')
-    ->action(function ($id, $response, $layout, $projectDB) {
+    ->inject('locale')
+    ->action(function ($id, $response, $layout, $projectDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\View $layout */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         Authorization::disable();
         $collection = $projectDB->getDocument($id, false);
         Authorization::reset();
 
         if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-            throw new Exception('Collection not found', 404);
+            throw new Exception($locale->getText('exceptions.collection-not-found'), 404);
         }
 
         $page = new View(__DIR__.'/../../views/console/database/collection.phtml');
@@ -283,7 +287,7 @@ App::get('/console/database/collection')
         ;
         
         $layout
-            ->setParam('title', APP_NAME.' - Database Collection')
+            ->setParam('title', APP_NAME.' - ' . $locale->getText('titles.database-collection'))
             ->setParam('body', $page)
         ;
 
@@ -301,16 +305,18 @@ App::get('/console/database/document')
     ->param('collection', '', new UID(), 'Collection unique ID.')
     ->inject('layout')
     ->inject('projectDB')
-    ->action(function ($collection, $layout, $projectDB) {
+    ->inject('locale')
+    ->action(function ($collection, $layout, $projectDB, $locale) {
         /** @var Utopia\View $layout */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         Authorization::disable();
         $collection = $projectDB->getDocument($collection, false);
         Authorization::reset();
 
         if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-            throw new Exception('Collection not found', 404);
+            throw new Exception($locale->getText('exceptions.collection-not-found'), 404);
         }
 
         $page = new View(__DIR__.'/../../views/console/database/document.phtml');
@@ -325,7 +331,7 @@ App::get('/console/database/document')
         ;
 
         $layout
-            ->setParam('title', APP_NAME.' - Database Document')
+            ->setParam('title', APP_NAME.' - ' . $locale->getText('titles.database-document'))
             ->setParam('body', $page);
     });
 
@@ -349,7 +355,7 @@ App::get('/console/storage')
         ;
 
         $layout
-            ->setParam('title', APP_NAME.' - Storage')
+            ->setParam('title', APP_NAME.' - ' . $locale->getText('titles.storage'))
             ->setParam('body', $page);
     });
 
@@ -373,7 +379,7 @@ App::get('/console/users')
         ;
 
         $layout
-            ->setParam('title', APP_NAME.' - Users')
+            ->setParam('title', APP_NAME.' - ' . $locale->getText('titles.users'))
             ->setParam('body', $page);
     });
 
@@ -393,7 +399,7 @@ App::get('/console/users/user')
             ->setParam('locale', $locale);
 
         $layout
-            ->setParam('title', APP_NAME.' - User')
+            ->setParam('title', APP_NAME.' - ' . $locale->getText('titles.user'))
             ->setParam('body', $page);
     });
 
@@ -402,13 +408,15 @@ App::get('/console/users/teams/team')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
+    ->inject('locale')
+    ->action(function ($layout, $locale) {
         /** @var Utopia\View $layout */
+        /** @var Utopia\Locale\Locale $locale */
 
         $page = new View(__DIR__.'/../../views/console/users/team.phtml');
 
         $layout
-            ->setParam('title', APP_NAME.' - Team')
+            ->setParam('title', APP_NAME.' - ' . $locale->getText('titles.team'))
             ->setParam('body', $page);
     });
 
@@ -431,7 +439,7 @@ App::get('/console/functions')
         ;
 
         $layout
-            ->setParam('title', APP_NAME.' - Functions')
+            ->setParam('title', APP_NAME.' - ' . $locale->getText('titles.functions'))
             ->setParam('body', $page);
     });
 
@@ -458,7 +466,7 @@ App::get('/console/functions/function')
         ;
 
         $layout
-            ->setParam('title', APP_NAME.' - Function')
+            ->setParam('title', APP_NAME.' - ' . $locale->getText('titles.function'))
             ->setParam('body', $page);
     });
 
@@ -468,8 +476,10 @@ App::get('/console/version')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('response')
-    ->action(function ($response) {
+    ->inject('locale')
+    ->action(function ($response, $locale) {
         /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Locale\Locale $locale */
 
         try {
             $version = \json_decode(@\file_get_contents(App::getEnv('_APP_HOME', 'http://localhost').'/v1/health/version'), true);
@@ -477,9 +487,9 @@ App::get('/console/version')
             if ($version && isset($version['version'])) {
                 return $response->json(['version' => $version['version']]);
             } else {
-                throw new Exception('Failed to check for a newer version', 500);
+                throw new Exception($locale->getText('exceptions.version-check-failed'), 500);
             }
         } catch (\Throwable $th) {
-            throw new Exception('Failed to check for a newer version', 500);
+            throw new Exception($locale->getText('exceptions.version-check-failed'), 500);
         }
     });

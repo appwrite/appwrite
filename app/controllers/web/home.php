@@ -101,7 +101,7 @@ App::get('/auth/signin')
         ;
 
         $layout
-            ->setParam('title', 'Sign In - '.APP_NAME)
+            ->setParam('title', $locale->getText('titles.sign-in') . ' - '.APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -123,7 +123,7 @@ App::get('/auth/signup')
         ;
 
         $layout
-            ->setParam('title', 'Sign Up - '.APP_NAME)
+            ->setParam('title', $locale->getText('titles.sign-up') . ' - '.APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -145,7 +145,7 @@ App::get('/auth/recovery')
         ;
 
         $layout
-            ->setParam('title', 'Password Recovery - '.APP_NAME)
+            ->setParam('title', $locale->getText('titles.password-recovery') . ' - '.APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -165,7 +165,7 @@ App::get('/auth/confirm')
             ->setParam('locale', $locale);
 
         $layout
-            ->setParam('title', 'Account Confirmation - '.APP_NAME)
+            ->setParam('title', $locale->getText('titles.account-confirmation') . ' - '.APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -185,7 +185,7 @@ App::get('/auth/join')
             ->setParam('locale', $locale);
 
         $layout
-            ->setParam('title', 'Invitation - '.APP_NAME)
+            ->setParam('title', $locale->getText('titles.invitation') . ' - '.APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -205,7 +205,7 @@ App::get('/auth/recovery/reset')
             ->setParam('locale', $locale);
 
         $layout
-            ->setParam('title', 'Password Reset - '.APP_NAME)
+            ->setParam('title', $locale->getText('titles.password-reset') . ' - '.APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -297,7 +297,7 @@ App::get('/error/:code')
         ;
 
         $layout
-            ->setParam('title', 'Error'.' - '.APP_NAME)
+            ->setParam('title', $locale->getText('titles.error') . ' - '.APP_NAME)
             ->setParam('body', $page);
     });
 
