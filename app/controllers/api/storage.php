@@ -46,13 +46,15 @@ App::post('/v1/storage/files')
     ->inject('user')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($file, $read, $write, $request, $response, $projectDB, $user, $audits, $usage) {
+    ->inject('locale')
+    ->action(function ($file, $read, $write, $request, $response, $projectDB, $user, $audits, $usage, $locale) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $usage */
+        /** @var Utopia\Locale\Locale $locale */
 
         $file = $request->getFiles('file');
 
@@ -64,7 +66,7 @@ App::post('/v1/storage/files')
         $upload = new Upload();
 
         if (empty($file)) {
-            throw new Exception('No file sent', 400);
+            throw new Exception($locale->getText('exceptions.no-file-sent'), 400);
         }
 
         // Make sure we handle a single file and multiple files the same way
@@ -74,17 +76,17 @@ App::post('/v1/storage/files')
 
         // Check if file type is allowed (feature for project settings?)
         //if (!$fileType->isValid($file['tmp_name'])) {
-        //throw new Exception('File type not allowed', 400);
+        //throw new Exception($locale->getText('exceptions.file-type-not-allowed'), 400);
         //}
 
         if (!$fileSize->isValid($file['size'])) { // Check if file size is exceeding allowed limit
-            throw new Exception('File size not allowed', 400);
+            throw new Exception($locale->getText('exceptions.file-size-not-allowed'), 400);
         }
 
         $device = Storage::getDevice('files');
 
         if (!$upload->isValid($file['tmp_name'])) {
-            throw new Exception('Invalid file', 403);
+            throw new Exception($locale->getText('exceptions.invalid-file'), 403);
         }
 
         // Save to storage
@@ -92,7 +94,7 @@ App::post('/v1/storage/files')
         $path = $device->getPath(\uniqid().'.'.\pathinfo($file['name'], PATHINFO_EXTENSION));
         
         if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
-            throw new Exception('Failed moving file', 500);
+            throw new Exception($locale->getText('exceptions.failed-moving-file'), 500);
         }
 
         $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
@@ -103,7 +105,7 @@ App::post('/v1/storage/files')
 
             if (!$antiVirus->fileScan($path)) {
                 $device->delete($path);
-                throw new Exception('Invalid file', 403);
+                throw new Exception($locale->getText('exceptions.invalid-file'), 403);
             }
         }
 
@@ -116,7 +118,7 @@ App::post('/v1/storage/files')
         $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
 
         if (!$device->write($path, $data, $mimeType)) {
-            throw new Exception('Failed to save file', 500);
+            throw new Exception($locale->getText('exceptions.failed-to-save-file'), 500);
         }
 
         $sizeActual = $device->getFileSize($path);
@@ -145,7 +147,7 @@ App::post('/v1/storage/files')
         ]);
 
         if (false === $file) {
-            throw new Exception('Failed saving file to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-file-to-db'), 500);
         }
 
         $audits
@@ -214,14 +216,16 @@ App::get('/v1/storage/files/:fileId')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($fileId, $response, $projectDB) {
+    ->inject('locale')
+    ->action(function ($fileId, $response, $projectDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $file = $projectDB->getDocument($fileId);
 
         if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
-            throw new Exception('File not found', 404);
+            throw new Exception($locale->getText('exceptions.file-not-found'), 404);
         }
 
         $response->dynamic($file, Response::MODEL_FILE);
@@ -254,20 +258,22 @@ App::get('/v1/storage/files/:fileId/preview')
     ->inject('response')
     ->inject('project')
     ->inject('projectDB')
-    ->action(function ($fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $projectDB) {
+    ->inject('locale')
+    ->action(function ($fileId, $width, $height, $gravity, $quality, $borderWidth, $borderColor, $borderRadius, $opacity, $rotation, $background, $output, $request, $response, $project, $projectDB, $locale) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $storage = 'files';
 
         if (!\extension_loaded('imagick')) {
-            throw new Exception('Imagick extension is missing', 500);
+            throw new Exception($locale->getText('exceptions.imagick-extension-is-missing'), 500);
         }
 
         if (!Storage::exists($storage)) {
-            throw new Exception('No such storage device', 400);
+            throw new Exception($locale->getText('exceptions.no-such-storage-device'), 400);
         }
 
         if ((\strpos($request->getAccept(), 'image/webp') === false) && ('webp' == $output)) { // Fallback webp to jpeg when no browser support
@@ -284,7 +290,7 @@ App::get('/v1/storage/files/:fileId/preview')
         $file = $projectDB->getDocument($fileId);
 
         if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
-            throw new Exception('File not found', 404);
+            throw new Exception($locale->getText('exceptions.file-not-found'), 404);
         }
 
         $path = $file->getAttribute('path');
@@ -306,7 +312,7 @@ App::get('/v1/storage/files/:fileId/preview')
         $device = Storage::getDevice('files');
 
         if (!\file_exists($path)) {
-            throw new Exception('File not found', 404);
+            throw new Exception($locale->getText('exceptions.file-not-found'), 404);
         }
 
         $cache = new Cache(new Filesystem(APP_STORAGE_CACHE.'/app-'.$project->getId())); // Limit file number or size
@@ -395,20 +401,24 @@ App::get('/v1/storage/files/:fileId/download')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($fileId, $response, $projectDB) {
+    ->inject('locale')
+    ->action(function ($fileId, $response, $projectDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $file = $projectDB->getDocument($fileId);
 
         if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
-            throw new Exception('File not found', 404);
+            throw new Exception($locale->getText('exceptions.file-not-found'), 404);
         }
 
         $path = $file->getAttribute('path', '');
 
         if (!\file_exists($path)) {
-            throw new Exception('File not found in '.$path, 404);
+            throw new Exception($locale->getText('exceptions.file-not-found-in', [
+                'file' => $path
+                ]), 404);
         }
 
         $compressor = new GZIP();
@@ -453,21 +463,25 @@ App::get('/v1/storage/files/:fileId/view')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($fileId, $response, $projectDB) {
+    ->inject('locale')
+    ->action(function ($fileId, $response, $projectDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $file  = $projectDB->getDocument($fileId);
         $mimes = Config::getParam('storage-mimes');
 
         if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
-            throw new Exception('File not found', 404);
+            throw new Exception($locale->getText('exceptions.file-not-found'), 404);
         }
 
         $path = $file->getAttribute('path', '');
 
         if (!\file_exists($path)) {
-            throw new Exception('File not found in '.$path, 404);
+            throw new Exception($locale->getText('exceptions.file-not-found-in', [
+                'file' => $path
+            ]), 404);
         }
 
         $compressor = new GZIP();
@@ -525,15 +539,17 @@ App::put('/v1/storage/files/:fileId')
     ->inject('response')
     ->inject('projectDB')
     ->inject('audits')
-    ->action(function ($fileId, $read, $write, $response, $projectDB, $audits) {
+    ->inject('locale')
+    ->action(function ($fileId, $read, $write, $response, $projectDB, $audits, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Utopia\Locale\Locale $locale */
 
         $file = $projectDB->getDocument($fileId);
 
         if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
-            throw new Exception('File not found', 404);
+            throw new Exception($locale->getText('exceptions.file-not-found'), 404);
         }
 
         $file = $projectDB->updateDocument(\array_merge($file->getArrayCopy(), [
@@ -545,7 +561,7 @@ App::put('/v1/storage/files/:fileId')
         ]));
 
         if (false === $file) {
-            throw new Exception('Failed saving file to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-file-to-db'), 500);
         }
 
         $audits
@@ -573,24 +589,26 @@ App::delete('/v1/storage/files/:fileId')
     ->inject('events')
     ->inject('audits')
     ->inject('usage')
-    ->action(function ($fileId, $response, $projectDB, $events, $audits, $usage) {
+    ->inject('locale')
+    ->action(function ($fileId, $response, $projectDB, $events, $audits, $usage, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $usage */
+        /** @var Utopia\Locale\Locale $locale */
         
         $file = $projectDB->getDocument($fileId);
 
         if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
-            throw new Exception('File not found', 404);
+            throw new Exception($locale->getText('exceptions.file-not-found'), 404);
         }
 
         $device = Storage::getDevice('files');
 
         if ($device->delete($file->getAttribute('path', ''))) {
             if (!$projectDB->deleteDocument($fileId)) {
-                throw new Exception('Failed to remove file from DB', 500);
+                throw new Exception($locale->getText('exceptions.failed-to-remove-file-from-db'), 500);
             }
         }
         
@@ -625,13 +643,14 @@ App::delete('/v1/storage/files/:fileId')
 //             $file = $projectDB->getDocument($fileId);
 
 //             if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
-//                 throw new Exception('File not found', 404);
+//                 throw new Exception($locale->getText('exceptions.file-not-found'), 404);
 //             }
 
 //             $path = $file->getAttribute('path', '');
 
 //             if (!file_exists($path)) {
-//                 throw new Exception('File not found in '.$path, 404);
+//                  TODO: Translate if required, just like elsewhere in this file
+//                 throw new Exception($locale->getText('exceptions.file-not-found-in-').$path, 404);
 //             }
 
 //             $compressor = new GZIP();

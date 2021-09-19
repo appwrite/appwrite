@@ -51,12 +51,14 @@ App::post('/v1/account')
     ->inject('project')
     ->inject('projectDB')
     ->inject('audits')
-    ->action(function ($email, $password, $name, $request, $response, $project, $projectDB, $audits) {
+    ->inject('locale')
+    ->action(function ($email, $password, $name, $request, $response, $project, $projectDB, $audits, $locale) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Utopia\Locale\Locale $locale */
 
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
@@ -64,11 +66,11 @@ App::post('/v1/account')
             $whitelistIPs = $project->getAttribute('authWhitelistIPs');
 
             if (!empty($whitelistEmails) && !\in_array($email, $whitelistEmails)) {
-                throw new Exception('Console registration is restricted to specific emails. Contact your administrator for more information.', 401);
+                throw new Exception($locale->getText('exceptions.registration-restricted-to-emails'), 401);
             }
 
             if (!empty($whitelistIPs) && !\in_array($request->getIP(), $whitelistIPs)) {
-                throw new Exception('Console registration is restricted to specific IPs. Contact your administrator for more information.', 401);
+                throw new Exception($locale->getText('exceptions.registration-restricted-to-ips'), 401);
             }
         }
 
@@ -84,7 +86,7 @@ App::post('/v1/account')
             $sum = $projectDB->getSum();
 
             if($sum >= $limit) {
-                throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
+                throw new Exception($locale->getText('exceptions.registration-restricted'), 501);
             }
         }
 
@@ -97,7 +99,7 @@ App::post('/v1/account')
         ]);
 
         if (!empty($profile)) {
-            throw new Exception('Account already exists', 409);
+            throw new Exception($locale->getText('exceptions.account-already-exists'), 409);
         }
 
         Authorization::disable();
@@ -119,7 +121,7 @@ App::post('/v1/account')
                 'name' => $name,
             ], ['email' => $email]);
         } catch (Duplicate $th) {
-            throw new Exception('Account already exists', 409);
+            throw new Exception($locale->getText('exceptions.account-already-exists'), 409);
         }
 
         Authorization::reset();
@@ -129,7 +131,7 @@ App::post('/v1/account')
         Authorization::setRole('role:'.Auth::USER_ROLE_MEMBER);
 
         if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
         }
 
         $audits
@@ -192,11 +194,11 @@ App::post('/v1/account/sessions')
                 ->setParam('resource', 'users/'.($profile ? $profile->getId() : ''))
             ;
 
-            throw new Exception('Invalid credentials', 401); // Wrong password or username
+            throw new Exception($locale->getText('exceptions.invalid-credentials'), 401); // Wrong password or username
         }
 
         if (Auth::USER_STATUS_BLOCKED == $profile->getAttribute('status')) { // Account is blocked
-            throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
+            throw new Exception($locale->getText('exceptions.invalid-credentials-user-is-blocked'), 401); // User is in status blocked
         }
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -223,7 +225,7 @@ App::post('/v1/account/sessions')
         $session = $projectDB->createDocument($session->getArrayCopy());
 
         if (false === $session) {
-            throw new Exception('Failed saving session to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-session-to-db'), 500);
         }
 
         $profile->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
@@ -231,7 +233,7 @@ App::post('/v1/account/sessions')
         $profile = $projectDB->updateDocument($profile->getArrayCopy());
 
         if (false === $profile) {
-            throw new Exception('Failed saving user to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
         }
         
         $audits
@@ -287,10 +289,12 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->inject('request')
     ->inject('response')
     ->inject('project')
-    ->action(function ($provider, $success, $failure, $scopes, $request, $response, $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->inject('locale')
+    ->action(function ($provider, $success, $failure, $scopes, $request, $response, $project, $locale) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
+        /** @var Utopia\Locale\Locale $locale */
 
         $protocol = $request->getProtocol();
         $callback = $protocol.'://'.$request->getHostname().'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
@@ -303,13 +307,13 @@ App::get('/v1/account/sessions/oauth2/:provider')
         }
 
         if (empty($appId) || empty($appSecret)) {
-            throw new Exception('This provider is disabled. Please configure the provider app ID and app secret key from your '.APP_NAME.' console to continue.', 412);
+            throw new Exception($locale->getText('exceptions.provider-is-disabled'), 412);
         }
 
         $classname = 'Appwrite\\Auth\\OAuth2\\'.\ucfirst($provider);
 
         if (!\class_exists($classname)) {
-            throw new Exception('Provider is not supported', 501);
+            throw new Exception($locale->getText('exceptions.provider-is-not-supported'), 501);
         }
 
         if(empty($success)) {
@@ -401,7 +405,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('geodb')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $projectDB, $geodb, $audits, $events) use ($oauthDefaultSuccess) {
+    ->inject('locale')
+    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $projectDB, $geodb, $audits, $events, $locale) use ($oauthDefaultSuccess) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
@@ -409,6 +414,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Utopia\Locale\Locale $locale */
         
         $protocol = $request->getProtocol();
         $callback = $protocol.'://'.$request->getHostname().'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
@@ -426,7 +432,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $classname = 'Appwrite\\Auth\\OAuth2\\'.\ucfirst($provider);
 
         if (!\class_exists($classname)) {
-            throw new Exception('Provider is not supported', 501);
+            throw new Exception($locale->getText('exceptions.provider-is-not-supported'), 501);
         }
 
         $oauth2 = new $classname($appId, $appSecret, $callback);
@@ -435,18 +441,18 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             try {
                 $state = \array_merge($defaultState, $oauth2->parseState($state));
             } catch (\Exception $exception) {
-                throw new Exception('Failed to parse login state params as passed from OAuth2 provider');
+                throw new Exception($locale->getText('exceptions.failed-to-parse-oauth'));
             }
         } else {
             $state = $defaultState;
         }
 
         if (!$validateURL->isValid($state['success'])) {
-            throw new Exception('Invalid redirect URL for success login', 400);
+            throw new Exception($locale->getText('exceptions.invalid-redirect-url-for-success-login'), 400);
         }
 
         if (!empty($state['failure']) && !$validateURL->isValid($state['failure'])) {
-            throw new Exception('Invalid redirect URL for failure login', 400);
+            throw new Exception($locale->getText('exceptions.invalid-redirect-url-for-failure-login'), 400);
         }
         
         $state['failure'] = null;
@@ -457,7 +463,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $response->redirect($state['failure'], 301, 0);
             }
 
-            throw new Exception('Failed to obtain access token');
+            throw new Exception($locale->getText('exceptions.failed-to-obtain-access-token'));
         }
 
         $oauth2ID = $oauth2->getUserID($accessToken);
@@ -467,13 +473,13 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $response->redirect($state['failure'], 301, 0);
             }
 
-            throw new Exception('Missing ID from OAuth2 provider', 400);
+            throw new Exception($locale->getText('exceptions.missing-id-from-oauth2-provider'), 400);
         }
 
         $current = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret);
 
         if ($current) {
-            $projectDB->deleteDocument($current); //throw new Exception('User already logged in', 401);
+            $projectDB->deleteDocument($current); //throw new Exception($locale->getText('exceptions.user-already-logged-in'), 401);
         }
 
         $user = (empty($user->getId())) ? $projectDB->getCollectionFirst([ // Get user by provider id
@@ -510,7 +516,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     $sum = $projectDB->getSum();
         
                     if($sum >= $limit) {
-                        throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
+                        throw new Exception($locale->getText('exceptions.registration-restricted'), 501);
                     }
                 }
                 
@@ -530,19 +536,19 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'name' => $name,
                     ], ['email' => $email]);
                 } catch (Duplicate $th) {
-                    throw new Exception('Account already exists', 409);
+                    throw new Exception($locale->getText('exceptions.account-already-exists'), 409);
                 }
 
                 Authorization::reset();
 
                 if (false === $user) {
-                    throw new Exception('Failed saving user to DB', 500);
+                    throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
                 }
             }
         }
 
         if (Auth::USER_STATUS_BLOCKED == $user->getAttribute('status')) { // Account is blocked
-            throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
+            throw new Exception($locale->getText('exceptions.invalid-credentials-user-is-blocked'), 401); // User is in status blocked
         }
 
         // Create session token, verify user account and update OAuth2 ID and Access Token
@@ -584,7 +590,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $user = $projectDB->updateDocument($user->getArrayCopy());
 
         if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
         }
 
         $audits
@@ -659,7 +665,7 @@ App::post('/v1/account/sessions/magic-url')
         /** @var Appwrite\Event\Event $mails */
 
         if(empty(App::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception('SMTP Disabled', 503);
+            throw new Exception($locale->getText('exceptions.smtp-disabled'), 503);
         }
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
@@ -686,7 +692,7 @@ App::post('/v1/account/sessions/magic-url')
                 $sum = $projectDB->getSum();
 
                 if($sum >= $limit) {
-                    throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
+                    throw new Exception($locale->getText('exceptions.registration-restricted'), 501);
                 }
             }
 
@@ -733,7 +739,7 @@ App::post('/v1/account/sessions/magic-url')
         $token = $projectDB->createDocument($token->getArrayCopy());
 
         if (false === $token) {
-            throw new Exception('Failed saving token to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-token-to-db'), 500);
         }
 
         $user->setAttribute('tokens', $token, Document::SET_TYPE_APPEND);
@@ -741,7 +747,7 @@ App::post('/v1/account/sessions/magic-url')
         $user = $projectDB->updateDocument($user->getArrayCopy());
 
         if (false === $user) {
-            throw new Exception('Failed to save user to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-to-save-user-to-db'), 500);
         }
 
         if(empty($url)) {
@@ -825,13 +831,13 @@ App::put('/v1/account/sessions/magic-url')
         ]);
 
         if (empty($profile)) {
-            throw new Exception('User not found', 404);
+            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
         }
 
         $token = Auth::tokenVerify($profile->getAttribute('tokens', []), Auth::TOKEN_TYPE_MAGIC_URL, $secret);
 
         if (!$token) {
-            throw new Exception('Invalid login token', 401);
+            throw new Exception($locale->getText('exceptions.invalid-login-token'), 401);
         }
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -860,7 +866,7 @@ App::put('/v1/account/sessions/magic-url')
         $session = $projectDB->createDocument($session->getArrayCopy());
 
         if (false === $session) {
-            throw new Exception('Failed saving session to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-session-to-db'), 500);
         }
 
         $profile->setAttribute('emailVerification', true);
@@ -869,11 +875,11 @@ App::put('/v1/account/sessions/magic-url')
         $user = $projectDB->updateDocument($profile->getArrayCopy());
 
         if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
         }
 
         if (!$projectDB->deleteDocument($token)) {
-            throw new Exception('Failed to remove login token from DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-to-remove-login-token-from-db'), 500);
         }
 
         $audits
@@ -944,11 +950,11 @@ App::post('/v1/account/sessions/anonymous')
         $protocol = $request->getProtocol();
 
         if ('console' === $project->getId()) {
-            throw new Exception('Failed to create anonymous user.', 401);
+            throw new Exception($locale->getText('exceptions.failed-to-create-anonymous-user'), 401);
         }
 
         if ($user->getId()) {
-            throw new Exception('Cannot create an anonymous user when logged in.', 401);
+            throw new Exception($locale->getText('exceptions.cannot-create-an-anonymous-user-when-logged-in'), 401);
         }
 
         $limit = $project->getAttribute('usersAuthLimit', 0);
@@ -963,7 +969,7 @@ App::post('/v1/account/sessions/anonymous')
             $sum = $projectDB->getSum();
 
             if($sum >= $limit) {
-                throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
+                throw new Exception($locale->getText('exceptions.registration-restricted'), 501);
             }
         }
 
@@ -985,12 +991,12 @@ App::post('/v1/account/sessions/anonymous')
                 'name' => null
             ]);
         } catch (Exception $th) {
-            throw new Exception('Failed saving user to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
         }
         Authorization::reset();
 
         if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
         }
 
         // Create session token
@@ -1021,7 +1027,7 @@ App::post('/v1/account/sessions/anonymous')
         $session = $projectDB->createDocument($session->getArrayCopy());
 
         if (false === $session) {
-            throw new Exception('Failed saving session to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-session-to-db'), 500);
         }
 
         $user->setAttribute('sessions', $session, Document::SET_TYPE_APPEND);
@@ -1029,7 +1035,7 @@ App::post('/v1/account/sessions/anonymous')
         $user = $projectDB->updateDocument($user->getArrayCopy());
 
         if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
         }
 
         $audits
@@ -1078,9 +1084,11 @@ App::post('/v1/account/jwt')
     ->label('abuse-key', 'url:{url},userId:{userId}')
     ->inject('response')
     ->inject('user')
-    ->action(function ($response, $user) {
+    ->inject('locale')
+    ->action(function ($response, $user, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Locale\Locale $locale */
             
         $sessions = $user->getAttribute('sessions', []);
         $current = new Document();
@@ -1094,7 +1102,7 @@ App::post('/v1/account/jwt')
         }
 
         if($current->isEmpty()) {
-            throw new Exception('No valid session found', 401);
+            throw new Exception($locale->getText('exceptions.no-valid-session-found'), 401);
         }
         
         $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
@@ -1314,7 +1322,7 @@ App::get('/v1/account/sessions/:sessionId')
         $session = $projectDB->getDocument($sessionId); // get user by session ID
 
         if ($session->isEmpty() || Database::SYSTEM_COLLECTION_SESSIONS != $session->getCollection()) {
-            throw new Exception('Session not found', 404);
+            throw new Exception($locale->getText('exceptions.session-not-found'), 404);
         };
         
         $countryName = (isset($countries[strtoupper($session->getAttribute('countryCode'))]))
@@ -1343,18 +1351,20 @@ App::patch('/v1/account/name')
     ->inject('user')
     ->inject('projectDB')
     ->inject('audits')
-    ->action(function ($name, $response, $user, $projectDB, $audits) {
+    ->inject('locale')
+    ->action(function ($name, $response, $user, $projectDB, $audits, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Utopia\Locale\Locale $locale */
 
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
             'name' => $name,
         ]));
 
         if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
         }
 
         $audits
@@ -1384,15 +1394,17 @@ App::patch('/v1/account/password')
     ->inject('user')
     ->inject('projectDB')
     ->inject('audits')
-    ->action(function ($password, $oldPassword, $response, $user, $projectDB, $audits) {
+    ->inject('locale')
+    ->action(function ($password, $oldPassword, $response, $user, $projectDB, $audits, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Utopia\Locale\Locale $locale */
 
         // Check old password only if its an existing user.
         if ($user->getAttribute('passwordUpdate') !== 0 && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
-            throw new Exception('Invalid credentials', 401);
+            throw new Exception($locale->getText('exceptions.invalid-credentials'), 401);
         }
 
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
@@ -1401,7 +1413,7 @@ App::patch('/v1/account/password')
         ]));
 
         if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
         }
 
         $audits
@@ -1431,11 +1443,13 @@ App::patch('/v1/account/email')
     ->inject('user')
     ->inject('projectDB')
     ->inject('audits')
-    ->action(function ($email, $password, $response, $user, $projectDB, $audits) {
+    ->inject('locale')
+    ->action(function ($email, $password, $response, $user, $projectDB, $audits, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Utopia\Locale\Locale $locale */
 
         $isAnonymousUser = is_null($user->getAttribute('email')) && is_null($user->getAttribute('password')); // Check if request is from an anonymous account for converting
 
@@ -1443,7 +1457,7 @@ App::patch('/v1/account/email')
             !$isAnonymousUser &&
             !Auth::passwordVerify($password, $user->getAttribute('password'))
         ) { // Double check user password
-            throw new Exception('Invalid credentials', 401);
+            throw new Exception($locale->getText('exceptions.invalid-credentials'), 401);
         }
 
         $email = \strtolower($email);
@@ -1456,7 +1470,7 @@ App::patch('/v1/account/email')
         ]);
 
         if (!empty($profile)) {
-            throw new Exception('User already registered', 400);
+            throw new Exception($locale->getText('exceptions.user-already-registered'), 400);
         }
 
         // TODO after this user needs to confirm mail again
@@ -1480,7 +1494,7 @@ App::patch('/v1/account/email')
         $projectDB->addUniqueKey(\md5($document['$collection'].':'.'email'.'='.$email));
 
         if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
         }
         
         $audits
@@ -1509,18 +1523,20 @@ App::patch('/v1/account/prefs')
     ->inject('user')
     ->inject('projectDB')
     ->inject('audits')
-    ->action(function ($prefs, $response, $user, $projectDB, $audits) {
+    ->inject('locale')
+    ->action(function ($prefs, $response, $user, $projectDB, $audits, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Utopia\Locale\Locale $locale */
         
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
             'prefs' => $prefs,
         ]));
 
         if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
         }
 
         $audits
@@ -1548,13 +1564,15 @@ App::delete('/v1/account')
     ->inject('projectDB')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($request, $response, $user, $projectDB, $audits, $events) {
+    ->inject('locale')
+    ->action(function ($request, $response, $user, $projectDB, $audits, $events, $locale) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
+        /** @var Utopia\Locale\Locale $locale */
 
         $protocol = $request->getProtocol();
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
@@ -1562,7 +1580,7 @@ App::delete('/v1/account')
         ]));
 
         if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
         }
 
         //TODO delete all tokens or only current session?
@@ -1616,13 +1634,15 @@ App::delete('/v1/account/sessions/:sessionId')
     ->inject('projectDB')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($sessionId, $request, $response, $user, $projectDB, $audits, $events) {
+    ->inject('locale')
+    ->action(function ($sessionId, $request, $response, $user, $projectDB, $audits, $events, $locale) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
+        /** @var Utopia\Locale\Locale $locale */
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
@@ -1636,7 +1656,7 @@ App::delete('/v1/account/sessions/:sessionId')
 
             if (($sessionId == $session->getId())) {
                 if (!$projectDB->deleteDocument($session->getId())) {
-                    throw new Exception('Failed to remove token from DB', 500);
+                    throw new Exception($locale->getText('exceptions.failed-to-remove-token-from-db'), 500);
                 }
 
                 $audits
@@ -1670,7 +1690,7 @@ App::delete('/v1/account/sessions/:sessionId')
             }
         }
 
-        throw new Exception('Session not found', 404);
+        throw new Exception($locale->getText('exceptions.session-not-found'), 404);
     });
 
 App::delete('/v1/account/sessions')
@@ -1691,13 +1711,15 @@ App::delete('/v1/account/sessions')
     ->inject('projectDB')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($request, $response, $user, $projectDB, $audits, $events) {
+    ->inject('locale')
+    ->action(function ($request, $response, $user, $projectDB, $audits, $events, $locale) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
+        /** @var Utopia\Locale\Locale $locale */
 
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
@@ -1706,7 +1728,7 @@ App::delete('/v1/account/sessions')
             /** @var Document $session */
 
             if (!$projectDB->deleteDocument($session->getId())) {
-                throw new Exception('Failed to remove token from DB', 500);
+                throw new Exception($locale->getText('exceptions.failed-to-remove-token-from-db'), 500);
             }
 
             $audits
@@ -1777,7 +1799,7 @@ App::post('/v1/account/recovery')
         /** @var Appwrite\Event\Event $events */
 
         if(empty(App::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception('SMTP Disabled', 503);
+            throw new Exception($locale->getText('exceptions.smtp-disabled'), 503);
         }
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
@@ -1793,11 +1815,11 @@ App::post('/v1/account/recovery')
         ]);
 
         if (empty($profile)) {
-            throw new Exception('User not found', 404); // TODO maybe hide this
+            throw new Exception($locale->getText('exceptions.user-not-found'), 404); // TODO maybe hide this
         }
 
         if (Auth::USER_STATUS_BLOCKED == $profile->getAttribute('status')) { // Account is blocked
-            throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
+            throw new Exception($locale->getText('exceptions.invalid-credentials-user-is-blocked'), 401); // User is in status blocked
         }
 
         $expire = \time() + Auth::TOKEN_EXPIRATION_RECOVERY;
@@ -1819,7 +1841,7 @@ App::post('/v1/account/recovery')
         $recovery = $projectDB->createDocument($recovery->getArrayCopy());
 
         if (false === $recovery) {
-            throw new Exception('Failed saving recovery to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-recovery-to-db'), 500);
         }
 
         $profile->setAttribute('tokens', $recovery, Document::SET_TYPE_APPEND);
@@ -1827,7 +1849,7 @@ App::post('/v1/account/recovery')
         $profile = $projectDB->updateDocument($profile->getArrayCopy());
 
         if (false === $profile) {
-            throw new Exception('Failed to save user to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-to-save-user-to-db'), 500);
         }
 
         $url = Template::parseURL($url);
@@ -1890,13 +1912,15 @@ App::put('/v1/account/recovery')
     ->inject('response')
     ->inject('projectDB')
     ->inject('audits')
-    ->action(function ($userId, $secret, $password, $passwordAgain, $response, $projectDB, $audits) {
+    ->inject('locale')
+    ->action(function ($userId, $secret, $password, $passwordAgain, $response, $projectDB, $audits, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Utopia\Locale\Locale $locale */
     
         if ($password !== $passwordAgain) {
-            throw new Exception('Passwords must match', 400);
+            throw new Exception($locale->getText('exceptions.passwords-must-match'), 400);
         }
 
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
@@ -1908,13 +1932,13 @@ App::put('/v1/account/recovery')
         ]);
 
         if (empty($profile)) {
-            throw new Exception('User not found', 404); // TODO maybe hide this
+            throw new Exception($locale->getText('exceptions.user-not-found'), 404); // TODO maybe hide this
         }
 
         $recovery = Auth::tokenVerify($profile->getAttribute('tokens', []), Auth::TOKEN_TYPE_RECOVERY, $secret);
 
         if (!$recovery) {
-            throw new Exception('Invalid recovery token', 401);
+            throw new Exception($locale->getText('exceptions.invalid-recovery-token'), 401);
         }
 
         Authorization::setRole('user:'.$profile->getId());
@@ -1926,7 +1950,7 @@ App::put('/v1/account/recovery')
         ]));
 
         if (false === $profile) {
-            throw new Exception('Failed saving user to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
         }
 
         /**
@@ -1934,7 +1958,7 @@ App::put('/v1/account/recovery')
          *  the recovery token but actually we don't need it anymore.
          */
         if (!$projectDB->deleteDocument($recovery)) {
-            throw new Exception('Failed to remove recovery from DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-to-remove-recovery-from-db'), 500);
         }
 
         $audits
@@ -1984,7 +2008,7 @@ App::post('/v1/account/verification')
         /** @var Appwrite\Event\Event $mails */
 
         if(empty(App::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception('SMTP Disabled', 503);
+            throw new Exception($locale->getText('exceptions.smtp-disabled'), 503);
         }
         
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
@@ -2010,7 +2034,7 @@ App::post('/v1/account/verification')
         $verification = $projectDB->createDocument($verification->getArrayCopy());
 
         if (false === $verification) {
-            throw new Exception('Failed saving verification to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-verification-to-db'), 500);
         }
 
         $user->setAttribute('tokens', $verification, Document::SET_TYPE_APPEND);
@@ -2018,7 +2042,7 @@ App::post('/v1/account/verification')
         $user = $projectDB->updateDocument($user->getArrayCopy());
 
         if (false === $user) {
-            throw new Exception('Failed to save user to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-to-save-user-to-db'), 500);
         }
 
         $url = Template::parseURL($url);
@@ -2080,11 +2104,13 @@ App::put('/v1/account/verification')
     ->inject('user')
     ->inject('projectDB')
     ->inject('audits')
-    ->action(function ($userId, $secret, $response, $user, $projectDB, $audits) {
+    ->inject('locale')
+    ->action(function ($userId, $secret, $response, $user, $projectDB, $audits, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Utopia\Locale\Locale $locale */
 
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
             'limit' => 1,
@@ -2095,13 +2121,13 @@ App::put('/v1/account/verification')
         ]);
 
         if (empty($profile)) {
-            throw new Exception('User not found', 404); // TODO maybe hide this
+            throw new Exception($locale->getText('exceptions.user-not-found'), 404); // TODO maybe hide this
         }
 
         $verification = Auth::tokenVerify($profile->getAttribute('tokens', []), Auth::TOKEN_TYPE_VERIFICATION, $secret);
 
         if (!$verification) {
-            throw new Exception('Invalid verification token', 401);
+            throw new Exception($locale->getText('exceptions.invalid-verification-token'), 401);
         }
 
         Authorization::setRole('user:'.$profile->getId());
@@ -2111,7 +2137,7 @@ App::put('/v1/account/verification')
         ]));
 
         if (false === $profile) {
-            throw new Exception('Failed saving user to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
         }
 
         /**
@@ -2119,7 +2145,7 @@ App::put('/v1/account/verification')
          *  the verification token but actually we don't need it anymore.
          */
         if (!$projectDB->deleteDocument($verification)) {
-            throw new Exception('Failed to remove verification from DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-to-remove-verification-from-db'), 500);
         }
 
         $audits

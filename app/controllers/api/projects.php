@@ -21,13 +21,14 @@ use Appwrite\Network\Validator\Domain as DomainValidator;
 use Appwrite\Utopia\Response;
 use Cron\CronExpression;
 
-App::init(function ($project) {
+App::init(function ($project, $locale) {
     /** @var Utopia\Database\Document $project */
+    /** @var Utopia\Locale\Locale $locale */
 
     if($project->getId() !== 'console') {
-        throw new Exception('Access to this API is forbidden.', 401);
+        throw new Exception($locale->getText('exceptions.access-to-this-api-is-forbidden'), 401);
     }
-}, ['project'], 'projects');
+}, ['project', 'locale'], 'projects');
 
 App::post('/v1/projects')
     ->desc('Create Project')
@@ -53,15 +54,17 @@ App::post('/v1/projects')
     ->inject('response')
     ->inject('consoleDB')
     ->inject('projectDB')
-    ->action(function ($name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $consoleDB, $projectDB) {
+    ->inject('locale')
+    ->action(function ($name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $consoleDB, $projectDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $team = $projectDB->getDocument($teamId);
 
         if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
-            throw new Exception('Team not found', 404);
+            throw new Exception($locale->getText('exceptions.team-not-found'), 404);
         }
 
         $project = $consoleDB->createDocument(
@@ -92,7 +95,7 @@ App::post('/v1/projects')
         );
 
         if (false === $project) {
-            throw new Exception('Failed saving project to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-project-to-db'), 500);
         }
 
         $consoleDB->createNamespace($project->getId());
@@ -152,14 +155,16 @@ App::get('/v1/projects/:projectId')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $response->dynamic($project, Response::MODEL_PROJECT);
@@ -178,16 +183,18 @@ App::get('/v1/projects/:projectId/usage')
     ->inject('consoleDB')
     ->inject('projectDB')
     ->inject('register')
-    ->action(function ($projectId, $range, $response, $consoleDB, $projectDB, $register) {
+    ->inject('locale')
+    ->action(function ($projectId, $range, $response, $consoleDB, $projectDB, $register, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Utopia\Registry\Registry $register */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $projectDB->setNamespace('app_'.$project->getId());
@@ -426,14 +433,16 @@ App::patch('/v1/projects/:projectId')
     ->param('legalTaxId', '', new Text(256), 'Project legal tax ID. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $name, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $name, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $project = $consoleDB->updateDocument(\array_merge($project->getArrayCopy(), [
@@ -450,7 +459,7 @@ App::patch('/v1/projects/:projectId')
         ]));
 
         if (false === $project) {
-            throw new Exception('Failed saving project to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-project-to-db'), 500);
         }
 
         $response->dynamic($project, Response::MODEL_PROJECT);
@@ -472,14 +481,16 @@ App::patch('/v1/projects/:projectId/oauth2')
     ->param('secret', '', new text(512), 'Provider secret key. Max length: 512 chars.', true)
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $provider, $appId, $secret, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $provider, $appId, $secret, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $project = $consoleDB->updateDocument(\array_merge($project->getArrayCopy(), [
@@ -488,7 +499,7 @@ App::patch('/v1/projects/:projectId/oauth2')
         ]));
 
         if (false === $project) {
-            throw new Exception('Failed saving project to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-project-to-db'), 500);
         }
 
         $response->dynamic($project, Response::MODEL_PROJECT);
@@ -508,14 +519,16 @@ App::patch('/v1/projects/:projectId/auth/limit')
     ->param('limit', false, new Integer(true), 'Set the max number of users allowed in this project. Use 0 for unlimited.')
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $limit, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $limit, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         if (false === $consoleDB->updateDocument(
@@ -523,7 +536,7 @@ App::patch('/v1/projects/:projectId/auth/limit')
                 'usersAuthLimit' => $limit,
             ]))
         ) {
-            throw new Exception('Failed saving project to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-project-to-db'), 500);
         };
 
         $response->dynamic($project, Response::MODEL_PROJECT);
@@ -544,9 +557,11 @@ App::patch('/v1/projects/:projectId/auth/:method')
     ->param('status', false, new Boolean(true), 'Set the status of this auth method.')
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $method, $status, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $method, $status, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
         $auth = Config::getParam('auth')[$method] ?? [];
@@ -554,7 +569,7 @@ App::patch('/v1/projects/:projectId/auth/:method')
         $status = ($status === '1' || $status === 'true' || $status === 1 || $status === true);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         if (false === $consoleDB->updateDocument(
@@ -562,7 +577,7 @@ App::patch('/v1/projects/:projectId/auth/:method')
                 $authKey => $status,
             ]))
         ) {
-            throw new Exception('Failed saving project to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-project-to-db'), 500);
         };
 
         $response->dynamic($project, Response::MODEL_PROJECT);
@@ -583,20 +598,22 @@ App::delete('/v1/projects/:projectId')
     ->inject('user')
     ->inject('consoleDB')
     ->inject('deletes')
-    ->action(function ($projectId, $password, $response, $user, $consoleDB, $deletes) {
+    ->inject('locale')
+    ->action(function ($projectId, $password, $response, $user, $consoleDB, $deletes, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $consoleDB */
         /** @var Appwrite\Event\Event $deletes */
+        /** @var Utopia\Locale\Locale $locale */
 
         if (!Auth::passwordVerify($password, $user->getAttribute('password'))) { // Double check user password
-            throw new Exception('Invalid credentials', 401);
+            throw new Exception($locale->getText('exceptions.invalid-credentials'), 401);
         }
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $deletes
@@ -622,11 +639,11 @@ App::delete('/v1/projects/:projectId')
         }
                 
         if (!$consoleDB->deleteDocument($project->getAttribute('teamId', null))) {
-            throw new Exception('Failed to remove project team from DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-to-remove-project-team-from-db'), 500);
         }
 
         if (!$consoleDB->deleteDocument($projectId)) {
-            throw new Exception('Failed to remove project from DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-to-remove-project-from-db'), 500);
         }
 
         $response->noContent();
@@ -653,14 +670,16 @@ App::post('/v1/projects/:projectId/webhooks')
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $name, $events, $url, $security, $httpUser, $httpPass, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $name, $events, $url, $security, $httpUser, $httpPass, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
@@ -680,7 +699,7 @@ App::post('/v1/projects/:projectId/webhooks')
         ]);
 
         if (false === $webhook) {
-            throw new Exception('Failed saving webhook to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-webhook-to-db'), 500);
         }
 
         $project->setAttribute('webhooks', $webhook, Document::SET_TYPE_APPEND);
@@ -688,7 +707,7 @@ App::post('/v1/projects/:projectId/webhooks')
         $project = $consoleDB->updateDocument($project->getArrayCopy());
 
         if (false === $project) {
-            throw new Exception('Failed saving project to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-project-to-db'), 500);
         }
 
         $response
@@ -710,14 +729,16 @@ App::get('/v1/projects/:projectId/webhooks')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $webhooks = $project->getAttribute('webhooks', []);
@@ -742,20 +763,22 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('webhookId', null, new UID(), 'Webhook unique ID.')
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $webhookId, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $webhookId, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $webhook = $project->search('$id', $webhookId, $project->getAttribute('webhooks', []));
 
         if (empty($webhook) || !$webhook instanceof Document) {
-            throw new Exception('Webhook not found', 404);
+            throw new Exception($locale->getText('exceptions.webhook-not-found'), 404);
         }
 
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
@@ -781,14 +804,16 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $webhookId, $name, $events, $url, $security, $httpUser, $httpPass, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $webhookId, $name, $events, $url, $security, $httpUser, $httpPass, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
@@ -796,7 +821,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
         $webhook = $project->search('$id', $webhookId, $project->getAttribute('webhooks', []));
 
         if (empty($webhook) || !$webhook instanceof Document) {
-            throw new Exception('Webhook not found', 404);
+            throw new Exception($locale->getText('exceptions.webhook-not-found'), 404);
         }
 
         $webhook
@@ -809,7 +834,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
         ;
 
         if (false === $consoleDB->updateDocument($webhook->getArrayCopy())) {
-            throw new Exception('Failed saving webhook to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-webhook-to-db'), 500);
         }
 
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
@@ -828,24 +853,26 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('webhookId', null, new UID(), 'Webhook unique ID.')
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $webhookId, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $webhookId, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $webhook = $project->search('$id', $webhookId, $project->getAttribute('webhooks', []));
 
         if (empty($webhook) || !$webhook instanceof Document) {
-            throw new Exception('Webhook not found', 404);
+            throw new Exception($locale->getText('exceptions.webhook-not-found'), 404);
         }
 
         if (!$consoleDB->deleteDocument($webhook->getId())) {
-            throw new Exception('Failed to remove webhook from DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-to-remove-webhook-from-db'), 500);
         }
 
         $response->noContent();
@@ -868,14 +895,16 @@ App::post('/v1/projects/:projectId/keys')
     ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true)), 'Key scopes list.')
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $name, $scopes, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $name, $scopes, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $key = $consoleDB->createDocument([
@@ -890,7 +919,7 @@ App::post('/v1/projects/:projectId/keys')
         ]);
 
         if (false === $key) {
-            throw new Exception('Failed saving key to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-key-to-db'), 500);
         }
 
         $project->setAttribute('keys', $key, Document::SET_TYPE_APPEND);
@@ -898,7 +927,7 @@ App::post('/v1/projects/:projectId/keys')
         $project = $consoleDB->updateDocument($project->getArrayCopy());
 
         if (false === $project) {
-            throw new Exception('Failed saving project to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-project-to-db'), 500);
         }
 
         $response
@@ -920,14 +949,16 @@ App::get('/v1/projects/:projectId/keys')
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
         
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $keys = $project->getAttribute('keys', []);
@@ -952,17 +983,22 @@ App::get('/v1/projects/:projectId/keys/:keyId')
     ->param('keyId', null, new UID(), 'Key unique ID.')
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $keyId, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $keyId, $response, $consoleDB, $locale) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
+
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $key = $project->search('$id', $keyId, $project->getAttribute('keys', []));
 
         if (empty($key) || !$key instanceof Document) {
-            throw new Exception('Key not found', 404);
+            throw new Exception($locale->getText('exceptions.key-not-found'), 404);
         }
 
         $response->dynamic($key, Response::MODEL_KEY);
@@ -984,20 +1020,22 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true)), 'Key scopes list')
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $keyId, $name, $scopes, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $keyId, $name, $scopes, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $key = $project->search('$id', $keyId, $project->getAttribute('keys', []));
 
         if (empty($key) || !$key instanceof Document) {
-            throw new Exception('Key not found', 404);
+            throw new Exception($locale->getText('exceptions.key-not-found'), 404);
         }
 
         $key
@@ -1006,7 +1044,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
         ;
 
         if (false === $consoleDB->updateDocument($key->getArrayCopy())) {
-            throw new Exception('Failed saving key to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-key-to-db'), 500);
         }
 
         $response->dynamic($key, Response::MODEL_KEY);
@@ -1025,24 +1063,26 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
     ->param('keyId', null, new UID(), 'Key unique ID.')
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $keyId, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $keyId, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $key = $project->search('$id', $keyId, $project->getAttribute('keys', []));
 
         if (empty($key) || !$key instanceof Document) {
-            throw new Exception('Key not found', 404);
+            throw new Exception($locale->getText('exceptions.key-not-found'), 404);
         }
 
         if (!$consoleDB->deleteDocument($key->getId())) {
-            throw new Exception('Failed to remove key from DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-to-remove-key-from-db'), 500);
         }
 
         $response->noContent();
@@ -1072,14 +1112,16 @@ App::post('/v1/projects/:projectId/tasks')
     ->param('httpPass', '', new Text(256), 'Task HTTP password. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $cron = new CronExpression($schedule);
@@ -1110,7 +1152,7 @@ App::post('/v1/projects/:projectId/tasks')
         ]);
 
         if (false === $task) {
-            throw new Exception('Failed saving tasks to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-tasks-to-db'), 500);
         }
 
         $project->setAttribute('tasks', $task, Document::SET_TYPE_APPEND);
@@ -1118,7 +1160,7 @@ App::post('/v1/projects/:projectId/tasks')
         $project = $consoleDB->updateDocument($project->getArrayCopy());
 
         if (false === $project) {
-            throw new Exception('Failed saving project to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-project-to-db'), 500);
         }
 
         if ($next) {
@@ -1144,14 +1186,16 @@ App::get('/v1/projects/:projectId/tasks')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $tasks = $project->getAttribute('tasks', []);
@@ -1177,20 +1221,22 @@ App::get('/v1/projects/:projectId/tasks/:taskId')
     ->param('taskId', null, new UID(), 'Task unique ID.')
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $taskId, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $taskId, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $task = $project->search('$id', $taskId, $project->getAttribute('tasks', []));
 
         if (empty($task) || !$task instanceof Document) {
-            throw new Exception('Task not found', 404);
+            throw new Exception($locale->getText('exceptions.task-not-found'), 404);
         }
 
         $response->dynamic($task, Response::MODEL_TASK);
@@ -1219,20 +1265,22 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
     ->param('httpPass', '', new Text(256), 'Task HTTP password. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $taskId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $taskId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $task = $project->search('$id', $taskId, $project->getAttribute('tasks', []));
 
         if (empty($task) || !$task instanceof Document) {
-            throw new Exception('Task not found', 404);
+            throw new Exception($locale->getText('exceptions.task-not-found'), 404);
         }
 
         $cron = new CronExpression($schedule);
@@ -1255,7 +1303,7 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
         ;
 
         if (false === $consoleDB->updateDocument($task->getArrayCopy())) {
-            throw new Exception('Failed saving tasks to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-tasks-to-db'), 500);
         }
 
         if ($next) {
@@ -1278,24 +1326,26 @@ App::delete('/v1/projects/:projectId/tasks/:taskId')
     ->param('taskId', null, new UID(), 'Task unique ID.')
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $taskId, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $taskId, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $task = $project->search('$id', $taskId, $project->getAttribute('tasks', []));
 
         if (empty($task) || !$task instanceof Document) {
-            throw new Exception('Task not found', 404);
+            throw new Exception($locale->getText('exceptions.task-not-found'), 404);
         }
 
         if (!$consoleDB->deleteDocument($task->getId())) {
-            throw new Exception('Failed to remove tasks from DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-to-remove-tasks-from-db'), 500);
         }
 
         $response->noContent();
@@ -1321,14 +1371,16 @@ App::post('/v1/projects/:projectId/platforms')
     ->param('hostname', '', new Text(256), 'Platform client hostname. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $type, $name, $key, $store, $hostname, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $type, $name, $key, $store, $hostname, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $platform = $consoleDB->createDocument([
@@ -1347,7 +1399,7 @@ App::post('/v1/projects/:projectId/platforms')
         ]);
 
         if (false === $platform) {
-            throw new Exception('Failed saving platform to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-platform-to-db'), 500);
         }
 
         $project->setAttribute('platforms', $platform, Document::SET_TYPE_APPEND);
@@ -1355,7 +1407,7 @@ App::post('/v1/projects/:projectId/platforms')
         $project = $consoleDB->updateDocument($project->getArrayCopy());
 
         if (false === $project) {
-            throw new Exception('Failed saving project to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-project-to-db'), 500);
         }
 
         $response
@@ -1377,14 +1429,16 @@ App::get('/v1/projects/:projectId/platforms')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $platforms = $project->getAttribute('platforms', []);
@@ -1409,20 +1463,22 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
     ->param('platformId', null, new UID(), 'Platform unique ID.')
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $platformId, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $platformId, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $platform = $project->search('$id', $platformId, $project->getAttribute('platforms', []));
 
         if (empty($platform) || !$platform instanceof Document) {
-            throw new Exception('Platform not found', 404);
+            throw new Exception($locale->getText('exceptions.platform-not-found'), 404);
         }
 
         $response->dynamic($platform, Response::MODEL_PLATFORM);
@@ -1446,20 +1502,22 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
     ->param('hostname', '', new Text(256), 'Platform client URL. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $platformId, $name, $key, $store, $hostname, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $platformId, $name, $key, $store, $hostname, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $platform = $project->search('$id', $platformId, $project->getAttribute('platforms', []));
 
         if (empty($platform) || !$platform instanceof Document) {
-            throw new Exception('Platform not found', 404);
+            throw new Exception($locale->getText('exceptions.platform-not-found'), 404);
         }
 
         $platform
@@ -1471,7 +1529,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
         ;
 
         if (false === $consoleDB->updateDocument($platform->getArrayCopy())) {
-            throw new Exception('Failed saving platform to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-platform-to-db'), 500);
         }
 
         $response->dynamic($platform, Response::MODEL_PLATFORM);
@@ -1490,24 +1548,26 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
     ->param('platformId', null, new UID(), 'Platform unique ID.')
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $platformId, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $platformId, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $platform = $project->search('$id', $platformId, $project->getAttribute('platforms', []));
 
         if (empty($platform) || !$platform instanceof Document) {
-            throw new Exception('Platform not found', 404);
+            throw new Exception($locale->getText('exceptions.platform-not-found'), 404);
         }
 
         if (!$consoleDB->deleteDocument($platform->getId())) {
-            throw new Exception('Failed to remove platform from DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-to-remove-platform-from-db'), 500);
         }
 
         $response->noContent();
@@ -1529,20 +1589,22 @@ App::post('/v1/projects/:projectId/domains')
     ->param('domain', null, new DomainValidator(), 'Domain name.')
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $domain, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $domain, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $document = $project->search('domain', $domain, $project->getAttribute('domains', []));
 
         if (!empty($document)) {
-            throw new Exception('Domain already exists', 409);
+            throw new Exception($locale->getText('exceptions.domain-already-exists'), 409);
         }
 
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
@@ -1568,7 +1630,7 @@ App::post('/v1/projects/:projectId/domains')
         ]);
 
         if (false === $domain) {
-            throw new Exception('Failed saving domain to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-domain-to-db'), 500);
         }
 
         $project->setAttribute('domains', $domain, Document::SET_TYPE_APPEND);
@@ -1576,7 +1638,7 @@ App::post('/v1/projects/:projectId/domains')
         $project = $consoleDB->updateDocument($project->getArrayCopy());
 
         if (false === $project) {
-            throw new Exception('Failed saving project to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-project-to-db'), 500);
         }
 
         $response
@@ -1598,14 +1660,16 @@ App::get('/v1/projects/:projectId/domains')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $domains = $project->getAttribute('domains', []);
@@ -1630,20 +1694,22 @@ App::get('/v1/projects/:projectId/domains/:domainId')
     ->param('domainId', null, new UID(), 'Domain unique ID.')
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $domainId, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $domainId, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $domain = $project->search('$id', $domainId, $project->getAttribute('domains', []));
 
         if (empty($domain) || !$domain instanceof Document) {
-            throw new Exception('Domain not found', 404);
+            throw new Exception($locale->getText('exceptions.domain-not-found'), 404);
         }
 
         $response->dynamic($domain, Response::MODEL_DOMAIN);
@@ -1663,20 +1729,22 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
     ->param('domainId', null, new UID(), 'Domain unique ID.')
     ->inject('response')
     ->inject('consoleDB')
-    ->action(function ($projectId, $domainId, $response, $consoleDB) {
+    ->inject('locale')
+    ->action(function ($projectId, $domainId, $response, $consoleDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $domain = $project->search('$id', $domainId, $project->getAttribute('domains', []));
 
         if (empty($domain) || !$domain instanceof Document) {
-            throw new Exception('Domain not found', 404);
+            throw new Exception($locale->getText('exceptions.domain-not-found'), 404);
         }
 
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
@@ -1693,7 +1761,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         $validator = new CNAME($target->get());
 
         if (!$validator->isValid($domain->getAttribute('domain', ''))) {
-            throw new Exception('Failed to verify domain', 401);
+            throw new Exception($locale->getText('exceptions.failed-to-verify-domain'), 401);
         }
 
         $domain
@@ -1701,7 +1769,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         ;
 
         if (false === $consoleDB->updateDocument($domain->getArrayCopy())) {
-            throw new Exception('Failed saving domains to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-domains-to-db'), 500);
         }
 
         // Issue a TLS certificate when domain is verified
@@ -1727,20 +1795,22 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
     ->inject('response')
     ->inject('consoleDB')
     ->inject('deletes')
-    ->action(function ($projectId, $domainId, $response, $consoleDB, $deletes) {
+    ->inject('locale')
+    ->action(function ($projectId, $domainId, $response, $consoleDB, $deletes, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception('Project not found', 404);
+            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
         }
 
         $domain = $project->search('$id', $domainId, $project->getAttribute('domains', []));
 
         if (empty($domain) || !$domain instanceof Document) {
-            throw new Exception('Domain not found', 404);
+            throw new Exception($locale->getText('exceptions.domain-not-found'), 404);
         }
 
         if ($consoleDB->deleteDocument($domain->getId())) {
@@ -1749,7 +1819,7 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
                 ->setParam('document', $domain)
             ;
         } else {
-            throw new Exception('Failed to remove domains from DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-to-remove-domains-from-db'), 500);
         }
 
         $response->noContent();

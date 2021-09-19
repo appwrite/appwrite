@@ -78,8 +78,10 @@ App::get('/v1/health/time')
     ->label('sdk.method', 'getTime')
     ->label('sdk.description', '/docs/references/health/get-time.md')
     ->inject('response')
-    ->action(function ($response) {
+    ->inject('locale')
+    ->action(function ($response, $locale) {
         /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Locale\Locale $locale */
 
         /*
          * Code from: @see https://www.beliefmedia.com.au/query-ntp-time-server
@@ -112,7 +114,7 @@ App::get('/v1/health/time')
         $diff = ($timestamp - \time());
 
         if ($diff > $gap || $diff < ($gap * -1)) {
-            throw new Exception('Server time gaps detected');
+            throw new Exception($locale->getText('exceptions.server-time-gaps-detected'));
         }
 
         $response->json(['remote' => $timestamp, 'local' => \time(), 'diff' => $diff]);

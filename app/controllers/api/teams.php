@@ -38,11 +38,13 @@ App::post('/v1/teams')
     ->inject('user')
     ->inject('projectDB')
     ->inject('events')
-    ->action(function ($name, $roles, $response, $user, $projectDB, $events) {
+    ->inject('locale')
+    ->action(function ($name, $roles, $response, $user, $projectDB, $events, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $events */
+        /** @var Utopia\Locale\Locale $locale */
 
         Authorization::disable();
 
@@ -63,7 +65,7 @@ App::post('/v1/teams')
         Authorization::reset();
 
         if (false === $team) {
-            throw new Exception('Failed saving team to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-team-to-db'), 500);
         }
 
         if (!$isPrivilegedUser && !$isAppUser) { // Don't add user on server mode
@@ -88,7 +90,7 @@ App::post('/v1/teams')
             $user = $projectDB->updateDocument($user->getArrayCopy());
 
             if (false === $user) {
-                throw new Exception('Failed saving user to DB', 500);
+                throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
             }
         }
 
@@ -153,14 +155,16 @@ App::get('/v1/teams/:teamId')
     ->param('teamId', '', new UID(), 'Team unique ID.')
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($teamId, $response, $projectDB) {
+    ->inject('locale')
+    ->action(function ($teamId, $response, $projectDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $team = $projectDB->getDocument($teamId);
 
         if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
-            throw new Exception('Team not found', 404);
+            throw new Exception($locale->getText('exceptions.team-not-found'), 404);
         }
 
         $response->dynamic($team, Response::MODEL_TEAM);
@@ -182,14 +186,16 @@ App::put('/v1/teams/:teamId')
     ->param('name', null, new Text(128), 'Team name. Max length: 128 chars.')
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($teamId, $name, $response, $projectDB) {
+    ->inject('locale')
+    ->action(function ($teamId, $name, $response, $projectDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $team = $projectDB->getDocument($teamId);
 
         if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
-            throw new Exception('Team not found', 404);
+            throw new Exception($locale->getText('exceptions.team-not-found'), 404);
         }
 
         $team = $projectDB->updateDocument(\array_merge($team->getArrayCopy(), [
@@ -197,7 +203,7 @@ App::put('/v1/teams/:teamId')
         ]));
 
         if (false === $team) {
-            throw new Exception('Failed saving team to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-team-to-db'), 500);
         }
         
         $response->dynamic($team, Response::MODEL_TEAM);
@@ -219,19 +225,21 @@ App::delete('/v1/teams/:teamId')
     ->inject('projectDB')
     ->inject('events')
     ->inject('deletes')
-    ->action(function ($teamId, $response, $projectDB, $events, $deletes) {
+    ->inject('locale')
+    ->action(function ($teamId, $response, $projectDB, $events, $deletes, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $events */
+        /** @var Utopia\Locale\Locale $locale */
 
         $team = $projectDB->getDocument($teamId);
 
         if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
-            throw new Exception('Team not found', 404);
+            throw new Exception($locale->getText('exceptions.team-not-found'), 404);
         }
 
         if (!$projectDB->deleteDocument($teamId)) {
-            throw new Exception('Failed to remove team from DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-to-remove-team-from-db'), 500);
         }
 
         $deletes
@@ -281,7 +289,7 @@ App::post('/v1/teams/:teamId/memberships')
         /** @var Appwrite\Event\Event $mails */
 
         if(empty(App::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception('SMTP Disabled', 503);
+            throw new Exception($locale->getText('exceptions.smtp-disabled'), 503);
         }
         
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
@@ -292,7 +300,7 @@ App::post('/v1/teams/:teamId/memberships')
         $team = $projectDB->getDocument($teamId);
 
         if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
-            throw new Exception('Team not found', 404);
+            throw new Exception($locale->getText('exceptions.team-not-found'), 404);
         }
 
         $memberships = $projectDB->getCollection([
@@ -326,7 +334,7 @@ App::post('/v1/teams/:teamId/memberships')
                 $sum = $projectDB->getSum();
     
                 if($sum >= $limit) {
-                    throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501);
+                    throw new Exception($locale->getText('exceptions.registration-restricted'), 501);
                 }
             }
 
@@ -356,13 +364,13 @@ App::post('/v1/teams/:teamId/memberships')
                     'tokens' => [],
                 ], ['email' => $email]);
             } catch (Duplicate $th) {
-                throw new Exception('Account already exists', 409);
+                throw new Exception($locale->getText('exceptions.account-already-exists'), 409);
             }
 
             Authorization::reset();
 
             if (false === $invitee) {
-                throw new Exception('Failed saving user to DB', 500);
+                throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
             }
         }
 
@@ -370,7 +378,7 @@ App::post('/v1/teams/:teamId/memberships')
 
         foreach ($memberships as $member) {
             if ($member->getAttribute('userId') ==  $invitee->getId()) {
-                throw new Exception('User has already been invited or is already a member of this team', 409);
+                throw new Exception($locale->getText('exceptions.user-already-invited'), 409);
             }
 
             if ($member->getAttribute('userId') == $user->getId() && \in_array('owner', $member->getAttribute('roles', []))) {
@@ -379,7 +387,7 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
-            throw new Exception('User is not allowed to send invitations for this team', 401);
+            throw new Exception($locale->getText('exceptions.user-not-allowed-to-invite'), 401);
         }
 
         $secret = Auth::tokenGenerator();
@@ -413,7 +421,7 @@ App::post('/v1/teams/:teamId/memberships')
             $invitee = $projectDB->updateDocument($invitee->getArrayCopy());
 
             if (false === $invitee) {
-                throw new Exception('Failed saving user to DB', 500);
+                throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
             }
 
             Authorization::reset();
@@ -422,7 +430,7 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
         if (false === $membership) {
-            throw new Exception('Failed saving membership to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-membership-to-db'), 500);
         }
 
         $url = Template::parseURL($url);
@@ -480,21 +488,23 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->inject('user')
     ->inject('projectDB')
     ->inject('audits')
-    ->action(function ($teamId, $membershipId, $roles, $request, $response, $user, $projectDB,$audits) {
+    ->inject('locale')
+    ->action(function ($teamId, $membershipId, $roles, $request, $response, $user, $projectDB, $audits, $locale) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Utopia\Locale\Locale $locale */
 
         $team = $projectDB->getDocument($teamId);
         if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
-            throw new Exception('Team not found', 404);
+            throw new Exception($locale->getText('exceptions.team-not-found'), 404);
         }
 
         $membership = $projectDB->getDocument($membershipId);
         if (empty($membership->getId()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $membership->getCollection()) {
-            throw new Exception('Membership not found', 404);
+            throw new Exception($locale->getText('exceptions.membership-not-found'), 404);
         }
 
 
@@ -503,7 +513,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         $isOwner = Authorization::isRole('team:'.$team->getId().'/owner');;
         
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
-            throw new Exception('User is not allowed to modify roles', 401);
+            throw new Exception($locale->getText('exceptions.user-is-not-allowed-to-modify-roles'), 401);
         }
 
         // Update the roles
@@ -511,7 +521,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         $membership = $projectDB->updateDocument($membership->getArrayCopy());
 
         if (false === $membership) {
-            throw new Exception('Failed updating membership', 500);
+            throw new Exception($locale->getText('exceptions.failed-updating-membership'), 500);
         }
 
         $audits
@@ -541,14 +551,16 @@ App::get('/v1/teams/:teamId/memberships')
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($teamId, $search, $limit, $offset, $orderType, $response, $projectDB) {
+    ->inject('locale')
+    ->action(function ($teamId, $search, $limit, $offset, $orderType, $response, $projectDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $team = $projectDB->getDocument($teamId);
 
         if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
-            throw new Exception('Team not found', 404);
+            throw new Exception($locale->getText('exceptions.team-not-found'), 404);
         }
 
         $memberships = $projectDB->getCollection([
@@ -598,23 +610,25 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->inject('projectDB')
     ->inject('geodb')
     ->inject('audits')
-    ->action(function ($teamId, $membershipId, $userId, $secret, $request, $response, $user, $projectDB, $geodb, $audits) {
+    ->inject('locale')
+    ->action(function ($teamId, $membershipId, $userId, $secret, $request, $response, $user, $projectDB, $geodb, $audits, $locale) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var MaxMind\Db\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Utopia\Locale\Locale $locale */
 
         $protocol = $request->getProtocol();
         $membership = $projectDB->getDocument($membershipId);
 
         if (empty($membership->getId()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $membership->getCollection()) {
-            throw new Exception('Invite not found', 404);
+            throw new Exception($locale->getText('exceptions.invite-not-found'), 404);
         }
 
         if ($membership->getAttribute('teamId') !== $teamId) {
-            throw new Exception('Team IDs don\'t match', 404);
+            throw new Exception($locale->getText('exceptions.team-ids-dont-match'), 404);
         }
 
         Authorization::disable();
@@ -624,11 +638,11 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         Authorization::reset();
 
         if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
-            throw new Exception('Team not found', 404);
+            throw new Exception($locale->getText('exceptions.team-not-found'), 404);
         }
 
         if (Auth::hash($secret) !== $membership->getAttribute('secret')) {
-            throw new Exception('Secret key not valid', 401);
+            throw new Exception($locale->getText('exceptions.secret-key-not-valid'), 401);
         }
 
         if ($userId != $membership->getAttribute('userId')) {
@@ -685,7 +699,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         $user = $projectDB->updateDocument($user->getArrayCopy());
 
         if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
         }
 
         Authorization::disable();
@@ -697,7 +711,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         Authorization::reset();
 
         if (false === $team) {
-            throw new Exception('Failed saving team to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-team-to-db'), 500);
         }
 
         $audits
@@ -740,30 +754,32 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
     ->inject('projectDB')
     ->inject('audits')
     ->inject('events')
-    ->action(function ($teamId, $membershipId, $response, $projectDB, $audits, $events) {
+    ->inject('locale')
+    ->action(function ($teamId, $membershipId, $response, $projectDB, $audits, $events, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $events */
+        /** @var Utopia\Locale\Locale $locale */
 
         $membership = $projectDB->getDocument($membershipId);
 
         if (empty($membership->getId()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $membership->getCollection()) {
-            throw new Exception('Invite not found', 404);
+            throw new Exception($locale->getText('exceptions.invite-not-found'), 404);
         }
 
         if ($membership->getAttribute('teamId') !== $teamId) {
-            throw new Exception('Team IDs don\'t match', 404);
+            throw new Exception($locale->getText('exceptions.team-ids-dont-match'), 404);
         }
 
         $team = $projectDB->getDocument($teamId);
 
         if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
-            throw new Exception('Team not found', 404);
+            throw new Exception($locale->getText('exceptions.team-not-found'), 404);
         }
 
         if (!$projectDB->deleteDocument($membership->getId())) {
-            throw new Exception('Failed to remove membership from DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-to-remove-membership-from-db'), 500);
         }
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
@@ -773,7 +789,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         }
 
         if (false === $team) {
-            throw new Exception('Failed saving team to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-team-to-db'), 500);
         }
 
         $audits

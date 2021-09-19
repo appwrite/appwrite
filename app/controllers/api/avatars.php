@@ -17,23 +17,24 @@ use Utopia\Validator\Text;
 use Appwrite\Network\Validator\URL;
 use Utopia\Validator\WhiteList;
 
-$avatarCallback = function ($type, $code, $width, $height, $quality, $response) {
+$avatarCallback = function ($type, $code, $width, $height, $quality, $response, $locale) {
     /** @var Appwrite\Utopia\Response $response */
+    /** @var Utopia\Locale\Locale $locale */
 
     $code = \strtolower($code);
     $type = \strtolower($type);
     $set = Config::getParam('avatar-' . $type, []);
 
     if (empty($set)) {
-        throw new Exception('Avatar set not found', 404);
+        throw new Exception($locale->getText('exceptions.avatar-set-not-found'), 404);
     }
 
     if (!\array_key_exists($code, $set)) {
-        throw new Exception('Avatar not found', 404);
+        throw new Exception($locale->getText('exceptions.avatar-not-found'), 404);
     }
 
     if (!\extension_loaded('imagick')) {
-        throw new Exception('Imagick extension is missing', 500);
+        throw new Exception($locale->getText('exceptions.imagick-extension-is-missing'), 500);
     }
 
     $output = 'png';
@@ -43,7 +44,9 @@ $avatarCallback = function ($type, $code, $width, $height, $quality, $response) 
     $type = 'png';
 
     if (!\is_readable($path)) {
-        throw new Exception('File not readable in ' . $path, 500);
+        throw new Exception($locale->getText('exceptions.file-not-readable-in', [
+            'file' => $path
+            ]), 500);
     }
 
     $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . '/app-0')); // Limit file number or size
@@ -95,8 +98,11 @@ App::get('/v1/avatars/credit-cards/:code')
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->inject('response')
-    ->action(function ($code, $width, $height, $quality, $response) use ($avatarCallback) {
-        return $avatarCallback('credit-cards', $code, $width, $height, $quality, $response);
+    ->inject('locale')
+    ->action(function ($code, $width, $height, $quality, $response, $locale) use ($avatarCallback) {
+        /** @var Utopia\Locale\Locale $locale */
+
+        return $avatarCallback('credit-cards', $code, $width, $height, $quality, $response, $locale);
     });
 
 App::get('/v1/avatars/browsers/:code')
@@ -115,8 +121,11 @@ App::get('/v1/avatars/browsers/:code')
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->inject('response')
-    ->action(function ($code, $width, $height, $quality, $response) use ($avatarCallback) {
-        return $avatarCallback('browsers', $code, $width, $height, $quality, $response);
+    ->inject('locale')
+    ->action(function ($code, $width, $height, $quality, $response, $locale) use ($avatarCallback) {
+        /** @var Utopia\Locale\Locale $locale */
+
+        return $avatarCallback('browsers', $code, $width, $height, $quality, $response, $locale);
     });
 
 App::get('/v1/avatars/flags/:code')
@@ -135,8 +144,11 @@ App::get('/v1/avatars/flags/:code')
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->inject('response')
-    ->action(function ($code, $width, $height, $quality, $response) use ($avatarCallback) {
-        return $avatarCallback('flags', $code, $width, $height, $quality, $response);
+    ->inject('locale')
+    ->action(function ($code, $width, $height, $quality, $response, $locale) use ($avatarCallback) {
+        /** @var Utopia\Locale\Locale $locale */
+
+        return $avatarCallback('flags', $code, $width, $height, $quality, $response, $locale);
     });
 
 App::get('/v1/avatars/image')
@@ -154,8 +166,10 @@ App::get('/v1/avatars/image')
     ->param('width', 400, new Range(0, 2000), 'Resize preview image width, Pass an integer between 0 to 2000.', true)
     ->param('height', 400, new Range(0, 2000), 'Resize preview image height, Pass an integer between 0 to 2000.', true)
     ->inject('response')
-    ->action(function ($url, $width, $height, $response) {
+    ->inject('locale')
+    ->action(function ($url, $width, $height, $response, $locale) {
         /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Locale\Locale $locale */
 
         $quality = 80;
         $output = 'png';
@@ -175,19 +189,19 @@ App::get('/v1/avatars/image')
         }
 
         if (!\extension_loaded('imagick')) {
-            throw new Exception('Imagick extension is missing', 500);
+            throw new Exception($locale->getText('exceptions.imagick-extension-is-missing'), 500);
         }
 
         $fetch = @\file_get_contents($url, false);
 
         if (!$fetch) {
-            throw new Exception('Image not found', 404);
+            throw new Exception($locale->getText('exceptions.image-not-found'), 404);
         }
 
         try {
             $image = new Image($fetch);
         } catch (\Exception$exception) {
-            throw new Exception('Unable to parse image', 500);
+            throw new Exception($locale->getText('exceptions.unable-to-parse-image'), 500);
         }
 
         $image->crop((int) $width, (int) $height);
@@ -221,8 +235,10 @@ App::get('/v1/avatars/favicon')
     ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE)
     ->param('url', '', new URL(), 'Website URL which you want to fetch the favicon from.')
     ->inject('response')
-    ->action(function ($url, $response) {
+    ->inject('locale')
+    ->action(function ($url, $response, $locale) {
         /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Locale\Locale $locale */
 
         $width = 56;
         $height = 56;
@@ -244,7 +260,7 @@ App::get('/v1/avatars/favicon')
         }
 
         if (!\extension_loaded('imagick')) {
-            throw new Exception('Imagick extension is missing', 500);
+            throw new Exception($locale->getText('exceptions.imagick-extension-is-missing'), 500);
         }
 
         $curl = \curl_init();
@@ -265,7 +281,7 @@ App::get('/v1/avatars/favicon')
         \curl_close($curl);
 
         if (!$html) {
-            throw new Exception('Failed to fetch remote URL', 404);
+            throw new Exception($locale->getText('exceptions.failed-to-fetch-remote-url'), 404);
         }
 
         $doc = new DOMDocument();
@@ -323,7 +339,7 @@ App::get('/v1/avatars/favicon')
             $data = @\file_get_contents($outputHref, false);
 
             if (empty($data) || (\mb_substr($data, 0, 5) === '<html') || \mb_substr($data, 0, 5) === '<!doc') {
-                throw new Exception('Favicon not found', 404);
+                throw new Exception($locale->getText('exceptions.favicon-not-found'), 404);
             }
 
             $cache->save($key, $data);
@@ -339,7 +355,7 @@ App::get('/v1/avatars/favicon')
         $fetch = @\file_get_contents($outputHref, false);
 
         if (!$fetch) {
-            throw new Exception('Icon not found', 404);
+            throw new Exception($locale->getText('exceptions.icon-not-found'), 404);
         }
 
         $image = new Image($fetch);

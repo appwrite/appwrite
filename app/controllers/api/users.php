@@ -37,9 +37,11 @@ App::post('/v1/users')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($email, $password, $name, $response, $projectDB) {
+    ->inject('locale')
+    ->action(function ($email, $password, $name, $response, $projectDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $email = \strtolower($email);
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
@@ -51,7 +53,7 @@ App::post('/v1/users')
         ]);
 
         if (!empty($profile)) {
-            throw new Exception('User already registered', 409);
+            throw new Exception($locale->getText('exceptions.user-already-registered'), 409);
         }
 
         try {
@@ -71,7 +73,7 @@ App::post('/v1/users')
                 'name' => $name,
             ], ['email' => $email]);
         } catch (Duplicate $th) {
-            throw new Exception('Account already exists', 409);
+            throw new Exception($locale->getText('exceptions.account-already-exists'), 409);
         }
 
         $response
@@ -131,14 +133,16 @@ App::get('/v1/users/:userId')
     ->param('userId', '', new UID(), 'User unique ID.')
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($userId, $response, $projectDB) {
+    ->inject('locale')
+    ->action(function ($userId, $response, $projectDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $user = $projectDB->getDocument($userId);
 
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception('User not found', 404);
+            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
         }
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -158,14 +162,16 @@ App::get('/v1/users/:userId/prefs')
     ->param('userId', '', new UID(), 'User unique ID.')
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($userId, $response, $projectDB) {
+    ->inject('locale')
+    ->action(function ($userId, $response, $projectDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $user = $projectDB->getDocument($userId);
 
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception('User not found', 404);
+            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
         }
 
         $prefs = $user->getAttribute('prefs', new \stdClass());
@@ -196,7 +202,7 @@ App::get('/v1/users/:userId/sessions')
         $user = $projectDB->getDocument($userId);
 
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception('User not found', 404);
+            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
         }
 
         $sessions = $user->getAttribute('sessions', []);
@@ -251,7 +257,7 @@ App::get('/v1/users/:userId/logs')
         $user = $projectDB->getDocument($userId);
 
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception('User not found', 404);
+            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
         }
 
         $adapter = new AuditAdapter($utopia->getResource('db'));
@@ -363,14 +369,16 @@ App::patch('/v1/users/:userId/status')
     ->param('status', '', new WhiteList([Auth::USER_STATUS_ACTIVATED, Auth::USER_STATUS_BLOCKED, Auth::USER_STATUS_UNACTIVATED], true, Validator::TYPE_INTEGER), 'User Status code. To activate the user pass '.Auth::USER_STATUS_ACTIVATED.', to block the user pass '.Auth::USER_STATUS_BLOCKED.' and for disabling the user pass '.Auth::USER_STATUS_UNACTIVATED)
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($userId, $status, $response, $projectDB) {
+    ->inject('locale')
+    ->action(function ($userId, $status, $response, $projectDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $user = $projectDB->getDocument($userId);
 
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception('User not found', 404);
+            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
         }
 
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
@@ -378,7 +386,7 @@ App::patch('/v1/users/:userId/status')
         ]));
 
         if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
         }
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -400,14 +408,16 @@ App::patch('/v1/users/:userId/verification')
     ->param('emailVerification', false, new Boolean(), 'User Email Verification Status.')
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($userId, $emailVerification, $response, $projectDB) {
+    ->inject('locale')
+    ->action(function ($userId, $emailVerification, $response, $projectDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $user = $projectDB->getDocument($userId);
 
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception('User not found', 404);
+            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
         }
 
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
@@ -415,7 +425,7 @@ App::patch('/v1/users/:userId/verification')
         ]));
 
         if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
         }
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -438,15 +448,17 @@ App::patch('/v1/users/:userId/name')
     ->inject('response')
     ->inject('projectDB')
     ->inject('audits')
-    ->action(function ($userId, $name, $response, $projectDB, $audits) {
+    ->inject('locale')
+    ->action(function ($userId, $name, $response, $projectDB, $audits, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Utopia\Locale\Locale $locale */
         
         $user = $projectDB->getDocument($userId);
 
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception('User not found', 404);
+            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
         }
 
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
@@ -454,7 +466,7 @@ App::patch('/v1/users/:userId/name')
         ]));
 
         if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
         }
 
         $audits
@@ -483,15 +495,17 @@ App::patch('/v1/users/:userId/password')
     ->inject('response')
     ->inject('projectDB')
     ->inject('audits')
-    ->action(function ($userId, $password, $response, $projectDB, $audits) {
+    ->inject('locale')
+    ->action(function ($userId, $password, $response, $projectDB, $audits, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Utopia\Locale\Locale $locale */
 
         $user = $projectDB->getDocument($userId);
 
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception('User not found', 404);
+            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
         }
 
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
@@ -500,7 +514,7 @@ App::patch('/v1/users/:userId/password')
         ]));
 
         if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
         }
 
         $audits
@@ -529,15 +543,17 @@ App::patch('/v1/users/:userId/email')
     ->inject('response')
     ->inject('projectDB')
     ->inject('audits')
-    ->action(function ($userId, $email, $response, $projectDB, $audits) {
+    ->inject('locale')
+    ->action(function ($userId, $email, $response, $projectDB, $audits, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
+        /** @var Utopia\Locale\Locale $locale */
 
         $user = $projectDB->getDocument($userId);
         
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception('User not found', 404);
+            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
         }
         
         $isAnonymousUser = is_null($user->getAttribute('email')) && is_null($user->getAttribute('password')); // Check if request is from an anonymous account for converting
@@ -551,7 +567,7 @@ App::patch('/v1/users/:userId/email')
         ]);
 
         if (!empty($profile)) {
-            throw new Exception('User already registered', 400);
+            throw new Exception($locale->getText('exceptions.user-already-registered'), 400);
         }
 
         if (!$isAnonymousUser) {
@@ -566,7 +582,7 @@ App::patch('/v1/users/:userId/email')
         $projectDB->addUniqueKey(\md5($user['$collection'].':'.'email'.'='.$email));
 
         if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
         }
         
         $audits
@@ -594,14 +610,16 @@ App::patch('/v1/users/:userId/prefs')
     ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($userId, $prefs, $response, $projectDB) {
+    ->inject('locale')
+    ->action(function ($userId, $prefs, $response, $projectDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $user = $projectDB->getDocument($userId);
 
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception('User not found', 404);
+            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
         }
 
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
@@ -609,7 +627,7 @@ App::patch('/v1/users/:userId/prefs')
         ]));
 
         if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
         }
 
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
@@ -631,15 +649,17 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->inject('response')
     ->inject('projectDB')
     ->inject('events')
-    ->action(function ($userId, $sessionId, $response, $projectDB, $events) {
+    ->inject('locale')
+    ->action(function ($userId, $sessionId, $response, $projectDB, $events, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $events */
+        /** @var Utopia\Locale\Locale $locale */
 
         $user = $projectDB->getDocument($userId);
 
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception('User not found', 404);
+            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
         }
 
         $sessions = $user->getAttribute('sessions', []);
@@ -649,7 +669,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
 
             if ($sessionId == $session->getId()) {
                 if (!$projectDB->deleteDocument($session->getId())) {
-                    throw new Exception('Failed to remove token from DB', 500);
+                    throw new Exception($locale->getText('exceptions.failed-to-remove-token-from-db'), 500);
                 }
 
                 $events
@@ -677,15 +697,17 @@ App::delete('/v1/users/:userId/sessions')
     ->inject('response')
     ->inject('projectDB')
     ->inject('events')
-    ->action(function ($userId, $response, $projectDB, $events) {
+    ->inject('locale')
+    ->action(function ($userId, $response, $projectDB, $events, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $events */
+        /** @var Utopia\Locale\Locale $locale */
 
         $user = $projectDB->getDocument($userId);
 
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception('User not found', 404);
+            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
         }
 
         $sessions = $user->getAttribute('sessions', []);
@@ -694,7 +716,7 @@ App::delete('/v1/users/:userId/sessions')
             /** @var Document $session */
 
             if (!$projectDB->deleteDocument($session->getId())) {
-                throw new Exception('Failed to remove token from DB', 500);
+                throw new Exception($locale->getText('exceptions.failed-to-remove-token-from-db'), 500);
             }
         }
 
@@ -722,23 +744,25 @@ App::delete('/v1/users/:userId')
     ->inject('projectDB')
     ->inject('events')
     ->inject('deletes')
-    ->action(function ($userId, $response, $projectDB, $events, $deletes) {
+    ->inject('locale')
+    ->action(function ($userId, $response, $projectDB, $events, $deletes, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $events */
         /** @var Appwrite\Event\Event $deletes */
+        /** @var Utopia\Locale\Locale $locale */
         
         $user = $projectDB->getDocument($userId);
 
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception('User not found', 404);
+            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
         }
         if (!$projectDB->deleteDocument($userId)) {
-            throw new Exception('Failed to remove user from DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-to-remove-user-from-db'), 500);
         }
 
         if (!$projectDB->deleteUniqueKey(md5('users:email='.$user->getAttribute('email', null)))) {
-            throw new Exception('Failed to remove unique key from DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-to-remove-unique-key-from-db'), 500);
         }
         
         $reservedId = $projectDB->createDocument([
@@ -750,7 +774,7 @@ App::delete('/v1/users/:userId')
         ]);
 
         if (false === $reservedId) {
-            throw new Exception('Failed saving reserved id to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-reserved-id-to-db'), 500);
         }
 
         $deletes

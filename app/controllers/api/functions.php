@@ -46,9 +46,11 @@ App::post('/v1/functions')
     ->param('timeout', 15, new Range(1, 900), 'Function maximum execution time in seconds.', true)
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($name, $execute, $runtime, $vars, $events, $schedule, $timeout, $response, $projectDB) {
+    ->inject('locale')
+    ->action(function ($name, $execute, $runtime, $vars, $events, $schedule, $timeout, $response, $projectDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $function = $projectDB->createDocument([
             '$collection' => Database::SYSTEM_COLLECTION_FUNCTIONS,
@@ -70,7 +72,7 @@ App::post('/v1/functions')
         ]);
 
         if (false === $function) {
-            throw new Exception('Failed saving function to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-function-to-db'), 500);
         }
 
         $response
@@ -130,14 +132,16 @@ App::get('/v1/functions/:functionId')
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($functionId, $response, $projectDB) {
+    ->inject('locale')
+    ->action(function ($functionId, $response, $projectDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception('Function not found', 404);
+            throw new Exception($locale->getText('exceptions.function-not-found'), 404);
         }
 
         $response->dynamic($function, Response::MODEL_FUNCTION);
@@ -156,17 +160,19 @@ App::get('/v1/functions/:functionId/usage')
     ->inject('project')
     ->inject('projectDB')
     ->inject('register')
-    ->action(function ($functionId, $range, $response, $project, $projectDB, $register) {
+    ->inject('locale')
+    ->action(function ($functionId, $range, $response, $project, $projectDB, $register, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $consoleDB */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Utopia\Registry\Registry $register */
+        /** @var Utopia\Locale\Locale $locale */
 
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception('Function not found', 404);
+            throw new Exception($locale->getText('exceptions.function-not-found'), 404);
         }
         
         if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
@@ -286,15 +292,17 @@ App::put('/v1/functions/:functionId')
     ->inject('response')
     ->inject('projectDB')
     ->inject('project')
-    ->action(function ($functionId, $name, $execute, $vars, $events, $schedule, $timeout, $response, $projectDB, $project) {
+    ->inject('locale')
+    ->action(function ($functionId, $name, $execute, $vars, $events, $schedule, $timeout, $response, $projectDB, $project, $ocale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Database\Document $project */
+        /** @var Utopia\Locale\Locale $locale */
 
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception('Function not found', 404);
+            throw new Exception($locale->getText('exceptions.function-not-found'), 404);
         }
 
         $original = $function->getAttribute('schedule', '');
@@ -315,7 +323,7 @@ App::put('/v1/functions/:functionId')
         ]));
 
         if (false === $function) {
-            throw new Exception('Failed saving function to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-function-to-db'), 500);
         }
 
         if ($next && $schedule !== $original) {
@@ -348,20 +356,22 @@ App::patch('/v1/functions/:functionId/tag')
     ->inject('response')
     ->inject('projectDB')
     ->inject('project')
-    ->action(function ($functionId, $tag, $response, $projectDB, $project) {
+    ->inject('locale')
+    ->action(function ($functionId, $tag, $response, $projectDB, $project, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Database\Document $project */
+        /** @var Utopia\Locale\Locale $locale */
 
         $function = $projectDB->getDocument($functionId);
         $tag = $projectDB->getDocument($tag);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception('Function not found', 404);
+            throw new Exception($locale->getText('exceptions.function-not-found'), 404);
         }
 
         if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
-            throw new Exception('Tag not found', 404);
+            throw new Exception($locale->getText('exceptions.tag-not-found'), 404);
         }
 
         $schedule = $function->getAttribute('schedule', '');
@@ -384,7 +394,7 @@ App::patch('/v1/functions/:functionId/tag')
         }
 
         if (false === $function) {
-            throw new Exception('Failed saving function to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-function-to-db'), 500);
         }
 
         $response->dynamic($function, Response::MODEL_FUNCTION);
@@ -405,19 +415,21 @@ App::delete('/v1/functions/:functionId')
     ->inject('response')
     ->inject('projectDB')
     ->inject('deletes')
-    ->action(function ($functionId, $response, $projectDB, $deletes) {
+    ->inject('locale')
+    ->action(function ($functionId, $response, $projectDB, $deletes, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $deletes */
+        /** @var Utopia\Locale\Locale $locale */
 
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception('Function not found', 404);
+            throw new Exception($locale->getText('exceptions.function-not-found'), 404);
         }
 
         if (!$projectDB->deleteDocument($function->getId())) {
-            throw new Exception('Failed to remove function from DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-to-remove-function-from-db'), 500);
         }
 
         $deletes
@@ -449,16 +461,18 @@ App::post('/v1/functions/:functionId/tags')
     ->inject('response')
     ->inject('projectDB')
     ->inject('usage')
-    ->action(function ($functionId, $command, $file, $request, $response, $projectDB, $usage) {
+    ->inject('locale')
+    ->action(function ($functionId, $command, $file, $request, $response, $projectDB, $usage, $locale) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $usage */
+        /** @var Utopia\Locale\Locale $locale */
 
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception('Function not found', 404);
+            throw new Exception($locale->getText('exceptions.function-not-found'), 404);
         }
 
         $file = $request->getFiles('code');
@@ -468,7 +482,7 @@ App::post('/v1/functions/:functionId/tags')
         $upload = new Upload();
 
         if (empty($file)) {
-            throw new Exception('No file sent', 400);
+            throw new Exception($locale->getText('exceptions.no-file-sent'), 400);
         }
 
         // Make sure we handle a single file and multiple files the same way
@@ -477,15 +491,15 @@ App::post('/v1/functions/:functionId/tags')
         $file['size'] = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
         if (!$fileExt->isValid($file['name'])) { // Check if file type is allowed
-            throw new Exception('File type not allowed', 400);
+            throw new Exception($locale->getText('exceptions.file-type-not-allowed'), 400);
         }
 
         if (!$fileSize->isValid($file['size'])) { // Check if file size is exceeding allowed limit
-            throw new Exception('File size not allowed', 400);
+            throw new Exception($locale->getText('exceptions.file-size-not-allowed'), 400);
         }
 
         if (!$upload->isValid($file['tmp_name'])) {
-            throw new Exception('Invalid file', 403);
+            throw new Exception($locale->getText('exceptions.invalid-file'), 403);
         }
 
         // Save to storage
@@ -493,7 +507,7 @@ App::post('/v1/functions/:functionId/tags')
         $path = $device->getPath(\uniqid().'.'.\pathinfo($file['name'], PATHINFO_EXTENSION));
         
         if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
-            throw new Exception('Failed moving file', 500);
+            throw new Exception($locale->getText('exceptions.failed-moving-file'), 500);
         }
         
         $tag = $projectDB->createDocument([
@@ -510,7 +524,7 @@ App::post('/v1/functions/:functionId/tags')
         ]);
 
         if (false === $tag) {
-            throw new Exception('Failed saving tag to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-tag-to-db'), 500);
         }
 
         $usage
@@ -541,14 +555,16 @@ App::get('/v1/functions/:functionId/tags')
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($functionId, $search, $limit, $offset, $orderType, $response, $projectDB) {
+    ->inject('locale')
+    ->action(function ($functionId, $search, $limit, $offset, $orderType, $response, $projectDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception('Function not found', 404);
+            throw new Exception($locale->getText('exceptions.function-not-found'), 404);
         }
         
         $results = $projectDB->getCollection([
@@ -583,24 +599,26 @@ App::get('/v1/functions/:functionId/tags/:tagId')
     ->param('tagId', '', new UID(), 'Tag unique ID.')
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($functionId, $tagId, $response, $projectDB) {
+    ->inject('locale')
+    ->action(function ($functionId, $tagId, $response, $projectDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
 
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception('Function not found', 404);
+            throw new Exception($locale->getText('exceptions.function-not-found'), 404);
         }
 
         $tag = $projectDB->getDocument($tagId);
 
         if ($tag->getAttribute('functionId') !== $function->getId()) {
-            throw new Exception('Tag not found', 404);
+            throw new Exception($locale->getText('exceptions.tag-not-found'), 404);
         }
 
         if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
-            throw new Exception('Tag not found', 404);
+            throw new Exception($locale->getText('exceptions.tag-not-found'), 404);
         }
 
         $response->dynamic($tag, Response::MODEL_TAG);
@@ -622,32 +640,34 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
     ->inject('response')
     ->inject('projectDB')
     ->inject('usage')
-    ->action(function ($functionId, $tagId, $response, $projectDB, $usage) {
+    ->inject('locale')
+    ->action(function ($functionId, $tagId, $response, $projectDB, $usage, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $usage */
+        /** @var Utopia\Locale\Locale $locale */
 
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception('Function not found', 404);
+            throw new Exception($locale->getText('exceptions.function-not-found'), 404);
         }
         
         $tag = $projectDB->getDocument($tagId);
 
         if ($tag->getAttribute('functionId') !== $function->getId()) {
-            throw new Exception('Tag not found', 404);
+            throw new Exception($locale->getText('exceptions.tag-not-found'), 404);
         }
 
         if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
-            throw new Exception('Tag not found', 404);
+            throw new Exception($locale->getText('exceptions.tag-not-found'), 404);
         }
 
         $device = Storage::getDevice('functions');
 
         if ($device->delete($tag->getAttribute('path', ''))) {
             if (!$projectDB->deleteDocument($tag->getId())) {
-                throw new Exception('Failed to remove tag from DB', 500);
+                throw new Exception($locale->getText('exceptions.failed-to-remove-tag-from-db'), 500);
             }
         }
 
@@ -657,7 +677,7 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
             ]));
     
             if (false === $function) {
-                throw new Exception('Failed saving function to DB', 500);
+                throw new Exception($locale->getText('exceptions.failed-saving-function-to-db'), 500);
             }
         }
 
@@ -689,28 +709,30 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('project')
     ->inject('projectDB')
     ->inject('user')
-    ->action(function ($functionId, $data, /*$async,*/ $response, $project, $projectDB, $user) {
+    ->inject('locale')
+    ->action(function ($functionId, $data, /*$async,*/ $response, $project, $projectDB, $user, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Database\Document $user */
+        /** @var Utopia\Locale\Locale $locale */
 
         Authorization::disable();
 
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception('Function not found', 404);
+            throw new Exception($locale->getText('exceptions.function-not-found'), 404);
         }
 
         $tag = $projectDB->getDocument($function->getAttribute('tag'));
 
         if ($tag->getAttribute('functionId') !== $function->getId()) {
-            throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
+            throw new Exception($locale->getText('exceptions.tag-not-found'), 404);
         }
 
         if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
-            throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
+            throw new Exception($locale->getText('exceptions.tag-not-found'), 404);
         }
 
         Authorization::reset();
@@ -742,7 +764,7 @@ App::post('/v1/functions/:functionId/executions')
         Authorization::reset();
 
         if (false === $execution) {
-            throw new Exception('Failed saving execution to DB', 500);
+            throw new Exception($locale->getText('exceptions.failed-saving-execution-to-db'), 500);
         }
         
         $jwt = ''; // initialize
@@ -801,16 +823,18 @@ App::get('/v1/functions/:functionId/executions')
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($functionId, $search, $limit, $offset, $orderType, $response, $projectDB) {
+    ->inject('locale')
+    ->action(function ($functionId, $search, $limit, $offset, $orderType, $response, $projectDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
         
         Authorization::disable();
         $function = $projectDB->getDocument($functionId);
         Authorization::reset();
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception('Function not found', 404);
+            throw new Exception($locale->getText('exceptions.function-not-found'), 404);
         }
         
         $results = $projectDB->getCollection([
@@ -845,26 +869,28 @@ App::get('/v1/functions/:functionId/executions/:executionId')
     ->param('executionId', '', new UID(), 'Execution unique ID.')
     ->inject('response')
     ->inject('projectDB')
-    ->action(function ($functionId, $executionId, $response, $projectDB) {
+    ->inject('locale')
+    ->action(function ($functionId, $executionId, $response, $projectDB, $locale) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
         
         Authorization::disable();
         $function = $projectDB->getDocument($functionId);
         Authorization::reset();
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception('Function not found', 404);
+            throw new Exception($locale->getText('exceptions.function-not-found'), 404);
         }
 
         $execution = $projectDB->getDocument($executionId);
 
         if ($execution->getAttribute('functionId') !== $function->getId()) {
-            throw new Exception('Execution not found', 404);
+            throw new Exception($locale->getText('exceptions.execution-not-found'), 404);
         }
 
         if (empty($execution->getId()) || Database::SYSTEM_COLLECTION_EXECUTIONS != $execution->getCollection()) {
-            throw new Exception('Execution not found', 404);
+            throw new Exception($locale->getText('exceptions.execution-not-found'), 404);
         }
 
         $response->dynamic($execution, Response::MODEL_EXECUTION);
