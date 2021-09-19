@@ -39,6 +39,12 @@ install:
 
 script:
 - docker ps -a
+# Tests should fail if any container is in exited status
+- ALL_UP=`docker ps -aq --filter "status=exited"`
+- >
+  if [[ "$ALL_UP" != "" ]]; then
+    exit 1
+  fi
 - docker-compose logs appwrite
 - docker-compose logs mariadb
 - docker-compose logs appwrite-worker-functions

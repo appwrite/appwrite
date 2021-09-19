@@ -82,7 +82,7 @@ class DeletesV1 extends Worker
                 $this->deleteCertificates($document);
                 break;
 
-            case DELETE_TYPE_USAGE_STATS:
+            case DELETE_TYPE_USAGE:
                 $this->deleteUsageStats($this->args['timestamp1d'], $this->args['timestamp30m']);
                 break;
             default:
