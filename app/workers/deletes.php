@@ -104,6 +104,7 @@ class DeletesV1 extends Worker
         $collectionId = $document->getId();
 
         $dbForInternal = $this->getInternalDB($projectId);
+        $dbForExternal = $this->getExternalDB($projectId);
 
         $this->deleteByGroup('attributes', [
             new Query('collectionId', Query::TYPE_EQUAL, [$collectionId])
@@ -113,7 +114,7 @@ class DeletesV1 extends Worker
             new Query('collectionId', Query::TYPE_EQUAL, [$collectionId])
         ], $dbForInternal);
 
-        $dbForInternal->deleteDocument('collections', $collectionId);
+        $dbForExternal->deleteCollection($collectionId);
     }
 
     /**
