@@ -6,9 +6,10 @@ arch:
 
 os: linux
 
+# Small change
 vm:
-  size: large
-
+  size: large 
+  
 language: shell
 
 notifications:
