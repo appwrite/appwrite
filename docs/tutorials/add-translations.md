@@ -1,6 +1,6 @@
 # Help translate Appwrite to your language ✍️
 
-This document is part of the Appwrite contributors' guide. Before you continue reading this document make sure you have read the [Code of Conduct](https://github.com/appwrite/appwrite/blob/master/CODE_OF_CONDUCT.md) and the [Contributing Guide](https://github.com/appwrite/appwrite/blob/master/CONTRIBUTING.md).
+This document is part of the Appwrite contributors' guide. Before you continue reading this document, make sure you have read the [Code of Conduct](https://github.com/appwrite/appwrite/blob/master/CODE_OF_CONDUCT.md) and the [Contributing Guide](https://github.com/appwrite/appwrite/blob/master/CONTRIBUTING.md).
 
 ## Getting Started
 
@@ -35,7 +35,7 @@ We maintain a [`locale branch`](https://github.com/appwrite/appwrite/tree/locale
 
 2. **en.json**
 
-    [en.json]((https://github.com/appwrite/appwrite/blob/locale/app/config/locale/translations/en.json)) contains the English translation for all the terms that are present in **terms.json**. You can use this file as a reference when making a contribution for your language.
+    [en.json]((https://github.com/appwrite/appwrite/blob/locale/app/config/locale/translations/en.json)) contains the English translation for all the terms that are present in **terms.json**. You can use this file as a reference when making a contribution to your language.
 
     ```json
     {
@@ -50,7 +50,7 @@ We maintain a [`locale branch`](https://github.com/appwrite/appwrite/tree/locale
 
 3. **languages.php**
 
-    [languages.php](https://github.com/appwrite/appwrite/blob/locale/app/config/locale/languages.php) contains all the languages listed in **[ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)**. You can use this file to find your language code when making a contribution for your language. 
+    [languages.php](https://github.com/appwrite/appwrite/blob/locale/app/config/locale/languages.php) contains all the languages listed in **[ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)**. You can use this file to find your language code when making a contribution to your language. 
 
 Great, let's start. First, find the code of the language you want to add. For example, if you want to add support for **Spanish**, you can find the code for Spanish in [languages.php](https://github.com/appwrite/appwrite/blob/locale/app/config/locale/languages.php#L202).
 
@@ -80,17 +80,17 @@ Finally, load your translation file in `init.php` by following a pattern similar
 
 We use [PO Editor](https://poeditor.com/) to manage all our translations in a convenient way. The first step is to join the Appwrite Project on PO Editor using [our invite link](https://poeditor.com/join/project?hash=BNrWbRXyk6). 
 
-On the home page, you can see all the languages that we currently support and the progress in each one. You can choose to be help us complete the existing translations or add new ones.
+On the home page, you can see all the languages that we currently support and the progress in each one. You can choose to help us complete the existing translations or add new ones.
 
 ![Home Page](images/home-page.png)
 
-Once you've chosen the languages you want to contribute to, click on **Join Translation** with your email ID and name or choose one of the OAuth providers.
+Once you've chosen the languages, you want to contribute to, click on **Join Translation** with your email ID and name or choose one of the OAuth providers.
 
 Continue with the rest of the process until you arrive at your dashboard.
 
 ![Dashboard](images/dashboard.png)
 
-Your request might be pending, so you can ping us on Discord and we'll make the process faster 😀 . Once your request has been accepeted, you can proceed.
+Your request might be pending, so you can ping us on Discord, and we'll make the process faster 😀 . Once your request has been accepted, you can proceed.
 
 ![Get Started](images/guide.png)
 
@@ -98,9 +98,9 @@ You're now ready to start contributing. On the left, you'll find the string to b
 
 ![Reference Language](images/reference-language.png)
 
-Once you're happy with your translations, you can export them. Head over to the **Exports** tab and choose the **Key-Value JSON** option only. Download the file and you can then follow the steps similar to the Github approach. 
+Once you're happy with your translations, you can export them. Head over to the **Exports** tab and choose the **Key-Value JSON** option only. Download the file, and you can then follow the steps similar to the Github approach. 
 
 ![Exporting](images/export.png)
 
 ### 🤕 Stuck ? 
-If you need any help with the contribution, feel free to head over to [our discord channel](https://appwrite.io/discord) and we'll be happy to help you out.
+If you need any help with the contribution, feel free to head over to [our discord channel](https://appwrite.io/discord), and we'll be happy to help you out.
