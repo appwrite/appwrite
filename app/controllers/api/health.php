@@ -219,8 +219,10 @@ App::get('/v1/health/storage/local')
     ->label('sdk.method', 'getStorageLocal')
     ->label('sdk.description', '/docs/references/health/get-storage-local.md')
     ->inject('response')
-    ->action(function ($response) {
+    ->inject('locale')
+    ->action(function ($response, $locale) {
         /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Locale\Locale $locale */
 
         foreach ([
             'Uploads' => APP_STORAGE_UPLOADS,
@@ -231,11 +233,15 @@ App::get('/v1/health/storage/local')
             $device = new Local($volume);
 
             if (!\is_readable($device->getRoot())) {
-                throw new Exception('Device '.$key.' dir is not readable');
+                throw new Exception($locale->getText('exceptions.device-dir-not-readable', [
+                    'device' => $key
+                ]));
             }
 
             if (!\is_writable($device->getRoot())) {
-                throw new Exception('Device '.$key.' dir is not writable');
+                throw new Exception($locale->getText('exceptions.device-dir-not-writable', [
+                    'device' => $key
+                ]));
             }
         }
 

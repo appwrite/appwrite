@@ -333,7 +333,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         }
 
         if (isset($data['$id'])) {
-            throw new Exception('$id is not allowed for creating new documents, try update instead', 400);
+            throw new Exception($locale->getText('exceptions.id-is-locked-field'), 400);
         }
         
         $collection = $projectDB->getDocument($collectionId, false);

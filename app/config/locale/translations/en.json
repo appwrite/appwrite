@@ -1,6 +1,12 @@
 {
+    "exceptions.device-dir-not-readable": "Device {{device}} dir is not readable",
+    "exceptions.device-dir-not-writable": "Device {{device}} dir is not writable",
+    "exceptions.failed-delete-project-document": "Failed to remove project document ({{key}}) from DB",
+    "exceptions.id-is-locked-field": "$id is not allowed for creating new documents, try update instead",
+    "exceptions.unreachable-domain-target": "Unreachable CNAME target ({{domain}}), please use a domain with a public suffix.",
     "exceptions.missing-project-id": "Missing or unknown project ID",
     "exceptions.project-not-found": "Project not found",
+    "exceptions.invite-belongs-to-different-user": "Invite does not belong to current user ({{email}})",
     "exceptions.missing-scope": "{{user}} (role: {{role}}) missing scope ({{scope}})",
     "exceptions.too-many-requests": "Too many requests",
     "exceptions.authentication-disabled-password": "Email / Password authentication is disabled for this project",

@@ -633,7 +633,9 @@ App::delete('/v1/projects/:projectId')
                         ;
                     }
                 } else {
-                    throw new Exception('Failed to remove project document ('.$key.')] from DB', 500);
+                    throw new Exception($locale->getText('exceptions.failed-delete-project-document', [
+                        'key' => $key
+                    ]), 500);
                 }
             }
         }
@@ -1610,7 +1612,9 @@ App::post('/v1/projects/:projectId/domains')
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception('Unreachable CNAME target ('.$target->get().'), please use a domain with a public suffix.', 500);
+            throw new Exception($locale->getText('exceptions.unreachable-domain-target', [
+                'domain' => $target->get()
+            ]), 500);
         }
 
         $domain = new Domain($domain);
@@ -1750,7 +1754,9 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception('Unreachable CNAME target ('.$target->get().'), please use a domain with a public suffix.', 500);
+            throw new Exception($locale->getText('exceptions.unreachable-domain-target', [
+                'domain' => $target->get()
+            ]), 500);
         }
 
         if ($domain->getAttribute('verification') === true) {

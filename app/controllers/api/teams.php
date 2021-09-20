@@ -646,7 +646,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         if ($userId != $membership->getAttribute('userId')) {
-            throw new Exception('Invite does not belong to current user ('.$user->getAttribute('email').')', 401);
+            throw new Exception($locale->getText('exceptions.invite-belongs-to-different-user', [
+                'email' => $user->getAttribute('email')
+            ]), 401);
         }
 
         if (empty($user->getId())) {
@@ -660,7 +662,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         if ($membership->getAttribute('userId') !== $user->getId()) {
-            throw new Exception('Invite does not belong to current user ('.$user->getAttribute('email').')', 401);
+            throw new Exception($locale->getText('exceptions.invite-belongs-to-different-user', [
+                'email' => $user->getAttribute('email')
+            ]), 401);
         }
 
         $membership // Attach user to team
