@@ -234,7 +234,7 @@ $locale = $this->getParam("locale");
             data-ls-attrs="href=/console/keys?project={{router.params.project}}"><?php echo $locale->getText('console.home.index.platforms-no-manage-api-keys'); ?></a>
     </div>
 
-    <div class="drop-list pull-start" data-ls-ui-open="" data-button-aria="Choose Platform" data-button-text="Add Platform" data-button-class="button" data-blur="1">
+    <div class="drop-list pull-start" data-ls-ui-open="" data-button-aria="<?php echo $locale->getText('console.home.index.platforms-label-add'); ?>" data-button-text="<?php echo $locale->getText('console.home.index.platforms-button-add'); ?>" data-button-class="button" data-blur="1">
         <ul>
             <li>
                 <div class="link web-new"><img src="/images/clients/web.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="<?php echo $locale->getText('console.home.index.platforms-web-alt'); ?>" class="avatar xxs margin-end-small" loading="lazy" /> <?php echo $locale->getText('console.home.index.platforms-web-name'); ?></div>

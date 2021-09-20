@@ -497,7 +497,7 @@ $locale = $this->getParam("locale");
                                             <div class="margin-bottom-small">
                                                 <div data-forms-remove class="row thin">
                                                     <div class="col span-10">
-                                                        <input type="hidden" data-forms-key-value data-ls-attrs="name={{$index}}" data-ls-bind="{{var}}" />
+                                                        <input type="hidden" data-forms-key-value data-ls-attrs="name={{$index}}" data-ls-bind="{{var}}" data-forms-translation-value="<?php echo $locale->getText('console.functions.function.update-placeholder-env-value'); ?>" data-forms-translation-key="<?php echo $locale->getText('console.functions.function.update-placeholder-env-key'); ?>" />
                                                     </div>
                                                     <div class="col span-2">
                                                         <button type="button" data-remove class="reverse danger round pull-end"><i class="icon-cancel"></i></button>
@@ -510,7 +510,7 @@ $locale = $this->getParam("locale");
                                             <div class="margin-bottom-small">
                                                 <div data-forms-remove class="row thin margin-bottom-small">
                                                     <div class="col span-10">
-                                                        <input type="hidden" name="" data-forms-key-value />
+                                                        <input type="hidden" name="" data-forms-key-value data-forms-translation-value="<?php echo $locale->getText('console.functions.function.update-placeholder-env-value'); ?>" data-forms-translation-key="<?php echo $locale->getText('console.functions.function.update-placeholder-env-key'); ?>" />
                                                     </div>
                                                     <div class="col span-2">
                                                         <button type="button" data-remove class="reverse danger round pull-end"><i class="icon-cancel"></i></button>

@@ -13,7 +13,7 @@ $locale = $this->getParam("locale");
                 data-analytics-event="click"
                 data-analytics-category="console/footer"
                 data-analytics-label="GitHub Link"
-                href="https://github.com/appwrite/appwrite" target="_blank" rel="noopener"><i class="icon-github-circled"></i> GitHub</a>
+                href="https://github.com/appwrite/appwrite" target="_blank" rel="noopener"><i class="icon-github-circled"></i> <?php echo $locale->getText('console.index.community-card-button-github'); ?></a>
         </li>
         <li>
             <a class="link-animation-enabled"
@@ -21,7 +21,7 @@ $locale = $this->getParam("locale");
                 data-analytics-event="click"
                 data-analytics-category="console/footer"
                 data-analytics-label="Discord Link"
-                href="https://appwrite.io/discord" target="_blank" rel="noopener"><i class="icon-discord"></i> Discord</a>
+                href="https://appwrite.io/discord" target="_blank" rel="noopener"><i class="icon-discord"></i> <?php echo $locale->getText('console.index.community-card-button-discord'); ?></a>
         </li>
         <li>
             <a class="link-animation-enabled"

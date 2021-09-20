@@ -12,11 +12,11 @@
     
           key.type = "text";
           key.className = "margin-bottom-no";
-          key.placeholder = "Key";
+          key.placeholder = element.getAttribute("data-forms-translation-key") || "Key";
           key.required = true;
           value.type = "text";
           value.className = "margin-bottom-no";
-          value.placeholder = "Value";
+          value.placeholder = element.getAttribute("data-forms-translation-value") || "Value";
           value.required = true;
     
           wrap.className = "row thin margin-bottom-small";
