@@ -500,5 +500,13 @@ class DatabaseCustomServerTest extends Scope
 
         $this->assertEquals(400, $tooMany['headers']['status-code']);
         $this->assertEquals('Index limit exceeded', $tooMany['body']['message']);
+
+        $collection = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(204, $collection['headers']['status-code']);
     }
 }

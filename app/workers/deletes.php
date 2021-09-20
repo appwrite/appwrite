@@ -11,7 +11,7 @@ use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\CLI\Console;
 use Utopia\Audit\Audit;
 
-require_once __DIR__.'/../workers.php';
+require_once __DIR__.'/../init.php';
 
 Console::title('Deletes V1 Worker');
 Console::success(APP_NAME.' deletes worker v1 has started'."\n");
@@ -44,6 +44,9 @@ class DeletesV1 extends Worker
                 
                 switch ($document->getCollection()) {
                     // TODO@kodumbeats define these as constants somewhere
+                    case 'collections':
+                        $this->deleteCollection($document, $projectId);
+                        break;
                     case 'projects':
                         $this->deleteProject($document);
                         break;
@@ -78,7 +81,10 @@ class DeletesV1 extends Worker
                 $document = new Document($this->args['document']);
                 $this->deleteCertificates($document);
                 break;
-                        
+
+            case DELETE_TYPE_USAGE:
+                $this->deleteUsageStats($this->args['timestamp1d'], $this->args['timestamp30m']);
+                break;
             default:
                 Console::error('No delete operation for type: '.$type);
                 break;
@@ -87,6 +93,51 @@ class DeletesV1 extends Worker
 
     public function shutdown(): void
     {
+    }
+
+    /**
+     * @param Document $document teams document
+     * @param string $projectId
+     */
+    protected function deleteCollection(Document $document, string $projectId): void
+    {
+        $collectionId = $document->getId();
+
+        $dbForInternal = $this->getInternalDB($projectId);
+        $dbForExternal = $this->getExternalDB($projectId);
+
+        $this->deleteByGroup('attributes', [
+            new Query('collectionId', Query::TYPE_EQUAL, [$collectionId])
+        ], $dbForInternal);
+
+        $this->deleteByGroup('indexes', [
+            new Query('collectionId', Query::TYPE_EQUAL, [$collectionId])
+        ], $dbForInternal);
+
+        $dbForExternal->deleteCollection($collectionId);
+    }
+
+    /**
+     * @param int $timestamp1d
+     * @param int $timestamp30m
+     */
+    protected function deleteUsageStats(int $timestamp1d, int $timestamp30m) {
+        $this->deleteForProjectIds(function($projectId) use ($timestamp1d, $timestamp30m) {
+            if (!($dbForInternal = $this->getInternalDB($projectId))) {
+                throw new Exception('Failed to get projectDB for project '.$projectId);
+            }
+
+            // Delete Usage stats
+            $this->deleteByGroup('stats', [
+                new Query('time', Query::TYPE_LESSER, [$timestamp1d]),
+                new Query('period', Query::TYPE_EQUAL, ['1d']),
+            ], $dbForInternal);
+
+            $this->deleteByGroup('stats', [
+                new Query('time', Query::TYPE_LESSER, [$timestamp30m]),
+                new Query('period', Query::TYPE_EQUAL, ['30m']),
+            ], $dbForInternal);
+        });
     }
     
     /**
