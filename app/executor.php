@@ -340,6 +340,7 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
         'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
         'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
         'APPWRITE_FUNCTION_PROJECT_ID' => $projectID,
+        'APPWRITE_ENTRYPOINT_NAME' => $tag->getAttribute('entrypoint')
     ]);
 
     $buildStart = \microtime(true);
@@ -383,7 +384,7 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
         command: [
             'sh',
             '-c',
-            'mkdir /usr/code -p && cp /tmp/code.tar.gz /usr/code.tar.gz && cd /usr && tar -zxf /usr/code.tar.gz -C /usr/code && rm /usr/code.tar.gz'
+            'mkdir -p /usr/code && cp /tmp/code.tar.gz /usr/code.tar.gz && cd /usr && tar -zxf /usr/code.tar.gz -C /usr/code && rm /usr/code.tar.gz'
         ],
         stdout: $untarStdout,
         stderr: $untarStderr,
@@ -403,7 +404,7 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
         command: $runtime['buildCommand'],
         stdout: $buildStdout,
         stderr: $buildStderr,
-        timeout: 60
+        timeout: 600 //TODO: Make this configurable
     );
 
     if (!$buildSuccess) {
@@ -419,9 +420,7 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
     $compressSuccess = $orchestration->execute(
         name: $container,
         command: [
-            'sh',
-            '-c',
-            'tar -czvf /usr/builtCode/code.tar.gz /usr/code'
+            'tar', '-C', '/usr/code', '-czvf', '/usr/builtCode/code.tar.gz', './'
         ],
         stdout: $compressStdout,
         stderr: $compressStderr,
@@ -533,12 +532,12 @@ function createRuntimeServer(string $functionId, string $projectId, Document $ta
     // Grab Tag Files
     $tagPath = $tag->getAttribute('builtPath', '');
 
-    $tagPathTarget = '/tmp/project-' . $projectId . '/' . $tag->getId() . '/code.tar.gz';
+    $tagPathTarget = '/tmp/project-' . $projectId . '/' . $tag->getId() . '/builtCode/code.tar.gz';
     $tagPathTargetDir = \pathinfo($tagPathTarget, PATHINFO_DIRNAME);
     $container = 'appwrite-function-' . $tag->getId();
 
     if (!\is_readable($tagPath)) {
-        throw new Exception('Code is not readable: ' . $tag->getAttribute('path', ''));
+        throw new Exception('Code is not readable: ' . $tagPath);
     }
 
     if (!\file_exists($tagPathTargetDir)) {
@@ -589,24 +588,25 @@ function createRuntimeServer(string $functionId, string $projectId, Document $ta
         // Add to network
         $orchestration->networkConnect($container, 'appwrite_runtimes');
 
-        $untarStdout = '';
-        $untarStderr = '';
+        // Handled by Dockerfiles
+        // $untarStdout = '';
+        // $untarStderr = '';
 
-        $untarSuccess = $orchestration->execute(
-            name: $container,
-            command: [
-                'sh',
-                '-c',
-                'mkdir /usr/code -p && cp /tmp/code.tar.gz /usr/code/code.tar.gz && cd /usr/code && tar -zxf /usr/code/code.tar.gz --strip 1 && rm /usr/code/code.tar.gz'
-            ],
-            stdout: $untarStdout,
-            stderr: $untarStderr,
-            timeout: 60
-        );
+        // $untarSuccess = $orchestration->execute(
+        //     name: $container,
+        //     command: [
+        //         'sh',
+        //         '-c',
+        //         'mkdir /usr/code -p && cp /tmp/code.tar.gz /usr/code/code.tar.gz && cd /usr/code && tar -zxf /usr/code/code.tar.gz --strip 1 && rm /usr/code/code.tar.gz'
+        //     ],
+        //     stdout: $untarStdout,
+        //     stderr: $untarStderr,
+        //     timeout: 60
+        // );
 
-        if (!$untarSuccess) {
-            throw new Exception('Failed to extract tar: ' . $untarStderr);
-        }
+        // if (!$untarSuccess) {
+        //     throw new Exception('Failed to extract tar: ' . $untarStderr);
+        // }
 
         $executionEnd = \microtime(true);
 
@@ -750,19 +750,27 @@ function execute(string $trigger, string $projectId, string $executionId, string
     do {
         $attempts++;
         $ch = \curl_init();
-        \curl_setopt($ch, CURLOPT_URL, "http://" . $container . ":3000/");
-        \curl_setopt($ch, CURLOPT_POST, true);
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+
+        $body = \json_encode([
             'path' => '/usr/code',
             'file' => $tag->getAttribute('entrypoint', ''),
             'env' => $vars,
             'payload' => $data,
             'timeout' => $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900))
-        ]));
+        ]);
+
+        \curl_setopt($ch, CURLOPT_URL, "http://" . $container . ":3000/");
+        \curl_setopt($ch, CURLOPT_POST, true);
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
 
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         \curl_setopt($ch, CURLOPT_TIMEOUT, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
         \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Content-Length: ' . \strlen($body)
+        ]);
 
         $executorResponse = \curl_exec($ch);
 
