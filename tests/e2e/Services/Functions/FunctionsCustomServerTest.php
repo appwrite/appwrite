@@ -7,8 +7,6 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use function array_merge;
-use function var_dump;
 
 class FunctionsCustomServerTest extends Scope
 {

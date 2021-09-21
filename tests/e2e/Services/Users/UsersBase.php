@@ -3,8 +3,6 @@
 namespace Tests\E2E\Services\Users;
 
 use Tests\E2E\Client;
-use function array_merge;
-use function var_dump;
 
 trait UsersBase
 {

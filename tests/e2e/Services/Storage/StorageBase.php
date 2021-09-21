@@ -7,7 +7,6 @@ use Tests\E2E\Client;
 use Utopia\Image\Image;
 use function array_merge;
 use function realpath;
-use function var_dump;
 
 trait StorageBase
 {
