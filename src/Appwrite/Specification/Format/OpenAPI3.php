@@ -6,6 +6,8 @@ use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
 use stdClass;
 use Utopia\Validator;
+use function array_map;
+use function var_dump;
 
 class OpenAPI3 extends Format
 {
@@ -39,7 +41,13 @@ class OpenAPI3 extends Format
         }
         if (!is_object($model)) return;
         foreach ($model->getRules() as $rule) {
-            $this->getUsedModels($rule['type'], $usedModels);
+            if(\is_array($rule['type'])) {
+                foreach ($rule['type'] as $type) {
+                    $this->getUsedModels($type, $usedModels);
+                }
+            } else {
+                $this->getUsedModels($rule['type'], $usedModels);
+            }
         }
     }
 
@@ -430,11 +438,23 @@ class OpenAPI3 extends Format
                         $type = 'object';
                         $rule['type'] = ($rule['type']) ? $rule['type'] : 'none';
 
-                        $items = [
-                            '$ref' => '#/components/schemas/'.$rule['type'],
-                        ];
+                        if(\is_array($rule['type'])) {
+                            $items = [
+                                'oneOf' => \array_map(function($type) {
+                                    return ['$ref' => '#/components/schemas/'.$type];
+                                }, $rule['type'])
+                            ];
+                        } else {
+                            $items = [
+                                '$ref' => '#/components/schemas/'.$rule['type'],
+                            ];
+                        }
+
+
                         break;
                 }
+
+
 
                 if($rule['array']) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name] = [
