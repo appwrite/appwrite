@@ -6,8 +6,6 @@ use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
 use stdClass;
 use Utopia\Validator;
-use function array_map;
-use function var_dump;
 
 class OpenAPI3 extends Format
 {
@@ -449,12 +447,8 @@ class OpenAPI3 extends Format
                                 '$ref' => '#/components/schemas/'.$rule['type'],
                             ];
                         }
-
-
                         break;
                 }
-
-
 
                 if($rule['array']) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name] = [

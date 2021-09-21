@@ -39,7 +39,13 @@ class Swagger2 extends Format
         }
         if (!is_object($model)) return;
         foreach ($model->getRules() as $rule) {
-            $this->getUsedModels($rule['type'], $usedModels);
+            if(\is_array($rule['type'])) {
+                foreach ($rule['type'] as $type) {
+                    $this->getUsedModels($type, $usedModels);
+                }
+            } else {
+                $this->getUsedModels($rule['type'], $usedModels);
+            }
         }
     }
 
@@ -91,15 +97,15 @@ class Swagger2 extends Format
         if (isset($output['securityDefinitions']['Project'])) {
             $output['securityDefinitions']['Project']['x-appwrite'] = ['demo' => '5df5acd0d48c2'];
         }
-        
+
         if (isset($output['securityDefinitions']['Key'])) {
             $output['securityDefinitions']['Key']['x-appwrite'] = ['demo' => '919c2d18fb5d4...a2ae413da83346ad2'];
         }
-        
+
         if (isset($output['securityDefinitions']['JWT'])) {
             $output['securityDefinitions']['JWT']['x-appwrite'] = ['demo' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...'];
         }
-        
+
         if (isset($output['securityDefinitions']['Locale'])) {
             $output['securityDefinitions']['Locale']['x-appwrite'] = ['demo' => 'en'];
         }
@@ -147,7 +153,7 @@ class Swagger2 extends Format
             if(empty($routeSecurity)) {
                 $sdkPlatofrms[] = APP_PLATFORM_CLIENT;
             }
-            
+
             $temp = [
                 'summary' => $route->getDesc(),
                 'operationId' => $route->getLabel('sdk.namespace', 'default').ucfirst($id),
@@ -216,7 +222,7 @@ class Swagger2 extends Format
 
             if ((!empty($scope))) { //  && 'public' != $scope
                 $securities = ['Project' => []];
-                
+
                 foreach($route->getLabel('sdk.auth', []) as $security) {
                     if(array_key_exists($security, $this->keys)) {
                         $securities[$security] = [];
@@ -226,7 +232,7 @@ class Swagger2 extends Format
                 $temp['x-appwrite']['auth'] = array_slice($securities, 0, $this->authCount);
                 $temp['security'][] = $securities;
             }
-       
+
             $body = [
                 'name' => 'payload',
                 'in' => 'body',
@@ -399,7 +405,7 @@ class Swagger2 extends Format
             if($model->isAny()) {
                 $output['definitions'][$model->getType()]['additionalProperties'] = true;
             }
-            
+
             if(!empty($required)) {
                 $output['definitions'][$model->getType()]['required'] = $required;
             }
@@ -414,7 +420,7 @@ class Swagger2 extends Format
                     case 'json':
                         $type = 'string';
                         break;
-                    
+
                     case 'integer':
                         $type = 'integer';
                         $format = 'int32';
@@ -424,19 +430,29 @@ class Swagger2 extends Format
                         $type = 'number';
                         $format = 'float';
                         break;
-                    
+
                     case 'boolean':
                         $type = 'boolean';
                         break;
-                    
+
                     default:
                         $type = 'object';
                         $rule['type'] = ($rule['type']) ? $rule['type'] : 'none';
 
-                        $items = [
-                            'type' => $type,
-                            '$ref' => '#/definitions/'.$rule['type'],
-                        ];
+                        if(\is_array($rule['type'])) {
+                            // THIS IS NOT SUPPORTED IN 2.0!!!
+//                            $items = [
+//                                'oneOf' => \array_map(function($type) {
+//                                    return ['$ref' => '#/definitions/'.$type];
+//                                }, $rule['type'])
+//                            ];
+
+                            $items = [];
+                        } else {
+                            $items = [
+                                '$ref' => '#/definitions/'.$rule['type'],
+                            ];
+                        }
                         break;
                 }
 
