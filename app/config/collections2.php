@@ -695,6 +695,17 @@ $collections = [
                 'array' => true,
                 'filters' => ['json'],
             ],
+            [
+                '$id' => 'deleted',
+                'type' => Database::VAR_BOOLEAN,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [
