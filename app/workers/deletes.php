@@ -44,6 +44,9 @@ class DeletesV1 extends Worker
                 
                 switch ($document->getCollection()) {
                     // TODO@kodumbeats define these as constants somewhere
+                    case 'collections':
+                        $this->deleteCollection($document, $projectId);
+                        break;
                     case 'projects':
                         $this->deleteProject($document);
                         break;
@@ -90,6 +93,28 @@ class DeletesV1 extends Worker
 
     public function shutdown(): void
     {
+    }
+
+    /**
+     * @param Document $document teams document
+     * @param string $projectId
+     */
+    protected function deleteCollection(Document $document, string $projectId): void
+    {
+        $collectionId = $document->getId();
+
+        $dbForInternal = $this->getInternalDB($projectId);
+        $dbForExternal = $this->getExternalDB($projectId);
+
+        $this->deleteByGroup('attributes', [
+            new Query('collectionId', Query::TYPE_EQUAL, [$collectionId])
+        ], $dbForInternal);
+
+        $this->deleteByGroup('indexes', [
+            new Query('collectionId', Query::TYPE_EQUAL, [$collectionId])
+        ], $dbForInternal);
+
+        $dbForExternal->deleteCollection($collectionId);
     }
 
     /**

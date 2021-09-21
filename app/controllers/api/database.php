@@ -628,11 +628,14 @@ App::delete('/v1/database/collections/:collectionId')
             throw new Exception('Collection not found', 404);
         }
 
-        $dbForExternal->deleteCollection($collectionId); // TDOD move to DB worker
-
         if (!$dbForInternal->deleteDocument('collections', $collectionId)) {
             throw new Exception('Failed to remove collection from DB', 500);
         }
+
+        $deletes
+            ->setParam('type', DELETE_TYPE_DOCUMENT)
+            ->setParam('document', $collection)
+        ;
 
         $usage->setParam('database.collections.delete', 1);
 
