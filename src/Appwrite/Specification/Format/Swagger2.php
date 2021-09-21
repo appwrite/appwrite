@@ -446,7 +446,7 @@ class Swagger2 extends Format
 
                         if(\is_array($rule['type'])) {
                             $items = [
-                                'oneOf' => \array_map(function($type) {
+                                'anyOf' => \array_map(function($type) {
                                     return ['$ref' => '#/definitions/'.$type];
                                 }, $rule['type'])
                             ];
