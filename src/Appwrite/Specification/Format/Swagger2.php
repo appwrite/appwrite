@@ -440,14 +440,11 @@ class Swagger2 extends Format
                         $rule['type'] = ($rule['type']) ? $rule['type'] : 'none';
 
                         if(\is_array($rule['type'])) {
-                            // THIS IS NOT SUPPORTED IN 2.0!!!
-//                            $items = [
-//                                'oneOf' => \array_map(function($type) {
-//                                    return ['$ref' => '#/definitions/'.$type];
-//                                }, $rule['type'])
-//                            ];
-
-                            $items = [];
+                            $items = [
+                                'oneOf' => \array_map(function($type) {
+                                    return ['$ref' => '#/definitions/'.$type];
+                                }, $rule['type'])
+                            ];
                         } else {
                             $items = [
                                 '$ref' => '#/definitions/'.$rule['type'],
