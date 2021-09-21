@@ -3,7 +3,6 @@
 namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
-use function array_merge;
 
 trait TeamsBase
 {

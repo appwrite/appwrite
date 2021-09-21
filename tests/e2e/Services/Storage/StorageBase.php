@@ -5,8 +5,6 @@ namespace Tests\E2E\Services\Storage;
 use CURLFile;
 use Tests\E2E\Client;
 use Utopia\Image\Image;
-use function array_merge;
-use function realpath;
 
 trait StorageBase
 {

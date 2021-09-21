@@ -7,7 +7,6 @@ use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Services\Projects\ProjectsBase;
 use Tests\E2E\Client;
-use function array_merge;
 
 class ProjectsConsoleClientTest extends Scope
 {
