@@ -97,7 +97,7 @@ App::get('/v1/users')
             $afterUser = $dbForInternal->getDocument('users', $after);
 
             if ($afterUser->isEmpty()) {
-                throw new Exception('User for after not found', 400);
+                throw new Exception("User '{$after}' for the 'after' value not found.", 400);
             }
         }
       
@@ -107,7 +107,7 @@ App::get('/v1/users')
             $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
         }
 
-        $results = $dbForInternal->find('users', $queries, $limit, $offset, ['_id'], [$orderType]);
+        $results = $dbForInternal->find('users', $queries, $limit, $offset, [], [$orderType], $afterUser ?? null);
         $sum = $dbForInternal->count('users', $queries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([

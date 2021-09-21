@@ -7,6 +7,7 @@ use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Services\Projects\ProjectsBase;
 use Tests\E2E\Client;
+use function array_merge;
 
 class ProjectsConsoleClientTest extends Scope
 {
@@ -96,6 +97,28 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertNotEmpty($response['body']);
         $this->assertEquals($id, $response['body']['projects'][0]['$id']);
         $this->assertEquals('Project Test', $response['body']['projects'][0]['name']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders(), [
+            'search' => $id
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals('Project Test', $response['body']['projects'][0]['name']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders(), [
+            'search' => 'Project Test'
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals($id, $response['body']['projects'][0]['$id']);
 
         /**
          * Test after pagination

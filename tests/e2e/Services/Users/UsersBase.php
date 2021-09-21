@@ -3,6 +3,8 @@
 namespace Tests\E2E\Services\Users;
 
 use Tests\E2E\Client;
+use function array_merge;
+use function var_dump;
 
 trait UsersBase
 {
@@ -16,14 +18,14 @@ trait UsersBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'userId' => 'unique()',
-            'email' => 'users.service@example.com',
+            'email' => 'first.user@example.com',
             'password' => 'password',
-            'name' => 'Project User',
+            'name' => 'First Name',
         ]);
 
         $this->assertEquals($user['headers']['status-code'], 201);
-        $this->assertEquals($user['body']['name'], 'Project User');
-        $this->assertEquals($user['body']['email'], 'users.service@example.com');
+        $this->assertEquals($user['body']['name'], 'First Name');
+        $this->assertEquals($user['body']['email'], 'first.user@example.com');
         $this->assertEquals($user['body']['status'], true);
         $this->assertGreaterThan(0, $user['body']['registration']);
 
@@ -56,7 +58,7 @@ trait UsersBase
     public function testListUsers(array $data): void
     {
         /**
-         * Test for SUCCESS
+         * Test for SUCCESS listUsers
          */
         $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
             'content-type' => 'application/json',
@@ -82,8 +84,70 @@ trait UsersBase
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['users']);
         $this->assertCount(1, $response['body']['users']);
-
         $this->assertEquals($response['body']['users'][0]['$id'], 'user1');
+
+        /**
+         * Test for SUCCESS searchUsers
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'First Name'
+        ]);
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['users']);
+        $this->assertGreaterThan(0, $response['body']['users']);
+        $this->assertEquals($response['body']['users'][0]['$id'], $data['userId']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'first.user'
+        ]);
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['users']);
+        $this->assertGreaterThan(0, $response['body']['users']);
+        $this->assertEquals($response['body']['users'][0]['$id'], $data['userId']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'first user name'
+        ]);
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['users']);
+        $this->assertGreaterThan(0, $response['body']['users']);
+        $this->assertEquals($response['body']['users'][0]['$id'], $data['userId']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => $data['userId']
+        ]);
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['users']);
+        $this->assertGreaterThan(0, $response['body']['users']);
+        $this->assertEquals($response['body']['users'][0]['$id'], $data['userId']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'first user - first.user@example.com ' . $data['userId']
+        ]);
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['users']);
+        $this->assertGreaterThan(0, $response['body']['users']);
+        $this->assertEquals($response['body']['users'][0]['$id'], $data['userId']);
     }
 
     /**
@@ -100,8 +164,8 @@ trait UsersBase
         ], $this->getHeaders()));
 
         $this->assertEquals($user['headers']['status-code'], 200);
-        $this->assertEquals($user['body']['name'], 'Project User');
-        $this->assertEquals($user['body']['email'], 'users.service@example.com');
+        $this->assertEquals($user['body']['name'], 'First Name');
+        $this->assertEquals($user['body']['email'], 'first.user@example.com');
         $this->assertEquals($user['body']['status'], true);
         $this->assertGreaterThan(0, $user['body']['registration']);
 

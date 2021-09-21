@@ -5,6 +5,9 @@ namespace Tests\E2E\Services\Storage;
 use CURLFile;
 use Tests\E2E\Client;
 use Utopia\Image\Image;
+use function array_merge;
+use function realpath;
+use function var_dump;
 
 trait StorageBase
 {
@@ -163,7 +166,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'fileId' => 'unique()',
-            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/file.png'), 'image/png', 'file.png'),
             'read' => ['role:all'],
             'write' => ['role:all'],
         ]);
@@ -171,9 +174,9 @@ trait StorageBase
         $this->assertEquals($file['headers']['status-code'], 201);
         $this->assertNotEmpty($file['body']['$id']);
         $this->assertIsInt($file['body']['dateCreated']);
-        $this->assertEquals('logo.png', $file['body']['name']);
-        $this->assertEquals('image/png', $file['body']['mimeType']);
-        $this->assertEquals(47218, $file['body']['sizeOriginal']);
+        $this->assertEquals('file.png', $file['body']['name']);
+        $this->assertEquals('image/jpeg', $file['body']['mimeType']);
+        $this->assertEquals(16804, $file['body']['sizeOriginal']);
 
         $files = $this->client->call(Client::METHOD_GET, '/storage/files', array_merge([
             'content-type' => 'application/json',
@@ -196,6 +199,33 @@ trait StorageBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($files['body']['files'][1]['$id'], $response['body']['files'][0]['$id']);
         $this->assertCount(1, $response['body']['files']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/storage/files', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => $data['fileId'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertGreaterThan(0, $response['body']['sum']);
+        $this->assertIsInt($response['body']['sum']);
+        $this->assertCount(1, $response['body']['files']);
+        $this->assertEquals('logo.png', $response['body']['files'][0]['name']);
+
+
+        $response = $this->client->call(Client::METHOD_GET, '/storage/files', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => 'logo',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertGreaterThan(0, $response['body']['sum']);
+        $this->assertIsInt($response['body']['sum']);
+        $this->assertGreaterThan(0, $response['body']['files']);
+        $this->assertEquals($data['fileId'], $response['body']['files'][0]['$id']);
 
         /**
          * Test for FAILURE
