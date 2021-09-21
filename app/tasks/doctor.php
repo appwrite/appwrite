@@ -129,6 +129,7 @@ $cli
 
         try {
             $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */
+            $mail->SMTPDebug = \PHPMailer\PHPMailer\SMTP::DEBUG_SERVER;
 
             $mail->addAddress('demo@example.com', 'Example.com');
             $mail->Subject = 'Test SMTP Connection';

@@ -76,6 +76,11 @@ class MailsV1 extends Worker
         /** @var \PHPMailer\PHPMailer\PHPMailer $mail */
         $mail = $register->get('smtp');
 
+        // https://github.com/PHPMailer/PHPMailer/wiki/Troubleshooting#enabling-debug-output
+        if (App::getEnv('_APP_ENV') !== App::MODE_TYPE_PRODUCTION) {
+            $mail->SMTPDebug = \PHPMailer\PHPMailer\SMTP::DEBUG_SERVER;
+        }
+
         // Set project mail
         /*$register->get('smtp')
             ->setFrom(
