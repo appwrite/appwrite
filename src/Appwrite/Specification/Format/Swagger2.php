@@ -33,7 +33,7 @@ class Swagger2 extends Format
      */
     protected function getUsedModels($model, array &$usedModels)
     {   
-        if (is_string($model) && !in_array($model, ['string', 'integer', 'boolean', 'json', 'float'])) {
+        if (is_string($model) && !in_array($model, ['string', 'integer', 'boolean', 'json', 'float', 'double'])) {
             $usedModels[] = $model;
             return;
         }
@@ -429,6 +429,11 @@ class Swagger2 extends Format
                     case 'float':
                         $type = 'number';
                         $format = 'float';
+                        break;
+
+                    case 'double':
+                        $type = 'number';
+                        $format = 'double';
                         break;
 
                     case 'boolean':
