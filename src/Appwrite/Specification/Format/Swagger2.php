@@ -447,6 +447,7 @@ class Swagger2 extends Format
                             ];
                         } else {
                             $items = [
+                                'type' => $type,
                                 '$ref' => '#/definitions/'.$rule['type'],
                             ];
                         }
