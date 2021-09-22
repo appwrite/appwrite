@@ -267,6 +267,16 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false
     ],
+    'stripe' => [
+        'name' => 'Stripe',
+        'developers' => 'https://stripe.com/docs/api',
+        'icon' => 'icon-stripe',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false
+    ],
     // Keep Last
     'mock' => [
         'name' => 'Mock',
