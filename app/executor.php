@@ -628,18 +628,6 @@ function createRuntimeServer(string $functionId, string $projectId, Document $ta
             'private-key' => $privateKey,
         ]);
 
-        // $activeFunctions[$container] = new Container(
-        //     $container,
-        //     $id,
-        //     'Up',
-        //     [
-        //         'appwrite-type' => 'function',
-        //         'appwrite-created' => strval($executionTime),
-        //         'appwrite-runtime' => $function->getAttribute('runtime', ''),
-        //         'security-key' => $privateKey,
-        //     ]
-        // );
-
         Console::info('Runtime Server created in ' . ($executionEnd - $executionStart) . ' seconds');
     } else {
         Console::info('Runtime server is ready to run');
@@ -664,7 +652,6 @@ function execute(string $trigger, string $projectId, string $executionId, string
     }
 
     Authorization::disable();
-
     // Grab execution document if exists
     // It it doesn't exist, create a new one.
     $execution = (!empty($executionId)) ? $database->getDocument($executionId) : $database->createDocument([
@@ -680,7 +667,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
         'exitCode' => 0,
         'stdout' => '',
         'stderr' => '',
-        'time' => 0
+        'time' => 0,
     ]);
 
     if (false === $execution || ($execution instanceof Document && $execution->isEmpty())) {
@@ -697,6 +684,22 @@ function execute(string $trigger, string $projectId, string $executionId, string
     if (\is_null($runtime)) {
         throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
     }
+
+    // Process environment variables
+    $vars = \array_merge($function->getAttribute('vars', []), [
+        'APPWRITE_FUNCTION_ID' => $function->getId(),
+        'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
+        'APPWRITE_FUNCTION_TAG' => $tag->getId(),
+        'APPWRITE_FUNCTION_TRIGGER' => $trigger,
+        'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
+        'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
+        'APPWRITE_FUNCTION_EVENT' => $event,
+        'APPWRITE_FUNCTION_EVENT_DATA' => $eventData,
+        'APPWRITE_FUNCTION_DATA' => $data,
+        'APPWRITE_FUNCTION_USER_ID' => $userId,
+        'APPWRITE_FUNCTION_JWT' => $jwt,
+        'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
+    ]);
 
     $container = 'appwrite-function-' . $tag->getId();
 
@@ -800,8 +803,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
         \curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
-            'Content-Length: ' . \strlen($body),
-            'x-internal-challenge: '. $signedChallenge,
+            'Content-Length: ' . \strlen($body)
         ]);
 
         $executorResponse = \curl_exec($ch);
