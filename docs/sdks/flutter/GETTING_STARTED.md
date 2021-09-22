@@ -10,11 +10,15 @@ If you are building your Flutter application for multiple devices, you have to f
 ### Android
 For **Android** first add your app <u>name</u> and <u>package name</u>, Your package name is generally the **applicationId** in your app-level <a href="https://github.com/appwrite/playground-for-flutter/blob/0fdbdff98384fff940ed0b1e08cf14cfe3a2be3e/android/app/build.gradle#L41" target="_blank" rel="noopener">build.gradle</a> file. By registering your new app platform, you are allowing your app to communicate with the Appwrite API.
 
-In order to capture the Appwrite OAuth callback url, the following activity needs to be added to your [AndroidManifest.xml](https://github.com/appwrite/playground-for-flutter/blob/master/android/app/src/main/AndroidManifest.xml). Be sure to replace the **[PROJECT_ID]** string with your actual Appwrite project ID. You can find your Appwrite project ID in your project settings screen in the console.
+In order to capture the Appwrite OAuth callback url, the following activity needs to be added inside the `<application>` tag, along side the existing `<activity>` tags in your [AndroidManifest.xml](https://github.com/appwrite/playground-for-flutter/blob/master/android/app/src/main/AndroidManifest.xml). Be sure to replace the **[PROJECT_ID]** string with your actual Appwrite project ID. You can find your Appwrite project ID in your project settings screen in the console.
 
 ```xml
-<manifest>
-    <application>
+<manifest ...>
+    ....
+    <application ...>
+        ....
+        
+        <!-- Add this inside the <application> tag, along side the existing <activity> tags -->
         <activity android:name="com.linusu.flutter_web_auth.CallbackActivity" >
             <intent-filter android:label="flutter_web_auth">
                 <action android:name="android.intent.action.VIEW" />
