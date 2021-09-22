@@ -98,6 +98,8 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled',true);
                                                 <input type="hidden" name="tag" data-ls-bind="{{tag.$id}}">
                                                 <button>Activate</button>
                                             </form>
+
+                                            <p data-ls-bind="{{tag.status}}"></p>
     
                                             <b data-ls-bind="{{tag.$id}}"></b> &nbsp;
                                             <span class="text-fade" data-ls-bind="{{tag.entrypoint}}"></span>

@@ -1640,7 +1640,25 @@ $collections = [
                 'default' => '',
                 'required' => false,
                 'array' => false,
-            ]
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Build Stdout',
+                'key' => 'buildStdout',
+                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
+                'default' => '',
+                'required' => false,
+                'array' => false,
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Build Stderr',
+                'key' => 'buildStderr',
+                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
+                'default' => '',
+                'required' => false,
+                'array' => false,
+            ],
         ],
     ],
     Database::SYSTEM_COLLECTION_EXECUTIONS => [

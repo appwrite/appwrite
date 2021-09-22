@@ -40,6 +40,24 @@ class Tag extends Model
                 'default' => '',
                 'example' => 'python-3.8',
             ])
+            ->addRule('status', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The tags current built status',
+                'default' => '',
+                'example' => 'ready',
+            ])
+            ->addRule('buildStdout', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The stdout of the build.',
+                'default' => '',
+                'example' => '',
+            ])
+            ->addRule('buildStderr', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The stderr of the build.',
+                'default' => '',
+                'example' => '',
+            ])
         ;
     }
 

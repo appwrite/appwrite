@@ -94,10 +94,10 @@ App::post('/v1/execute') // Define Route
     ->action(
         function ($trigger, $projectId, $executionId, $functionId, $event, $eventData, $data, $webhooks, $userId, $jwt, $request, $response) {
             global $register;
-            
+
             $db = $register->get('dbPool')->get();
             $cache = $register->get('redisPool')->get();
-        
+
             // Create new Database Instance
             $database = new Database();
             $database->setAdapter(new RedisAdapter(new MySQLAdapter($db, $cache), $cache));
@@ -150,8 +150,8 @@ App::post('/v1/cleanup/function')
                 'offset' => 0,
                 'orderType' => 'ASC',
                 'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_TAGS,
-                    'functionId='.$functionId,
+                    '$collection=' . Database::SYSTEM_COLLECTION_TAGS,
+                    'functionId=' . $functionId,
                 ],
             ]);
             Authorization::reset();
@@ -164,7 +164,7 @@ App::post('/v1/cleanup/function')
             // Delete the containers of all tags
             foreach ($results as $tag) {
                 try {
-                    $orchestration->remove('appwrite-function-'.$tag['$id'], true);
+                    $orchestration->remove('appwrite-function-' . $tag['$id'], true);
                     Console::info('Removed container for tag ' . $tag['$id']);
                 } catch (Exception $e) {
                     // Do nothing, we don't care that much if it fails
@@ -201,7 +201,7 @@ App::post('/v1/cleanup/tag')
             }
 
             try {
-                $orchestration->remove('appwrite-function-'.$tag['$id'], true);
+                $orchestration->remove('appwrite-function-' . $tag['$id'], true);
                 Console::info('Removed container for tag ' . $tag['$id']);
             } catch (Exception $e) {
                 // Do nothing, we don't care that much if it fails
@@ -247,10 +247,10 @@ App::post('/v1/tag')
         Authorization::reset();
 
         // Build Code
-        go(function()  use ($projectDB, $projectID, $function, $tagId, $functionId) {
+        go(function ()  use ($projectDB, $projectID, $function, $tagId, $functionId) {
             // Build Code
             $tag = runBuildStage($tagId, $function, $projectID, $projectDB);
-        
+
             // Deploy Runtime Server
             createRuntimeServer($functionId, $projectID, $tag, $projectDB);
         });
@@ -290,181 +290,194 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
     global $runtimes;
     global $orchestration;
 
-    // Update Tag Status
-    Authorization::disable();
-    $tag = $database->getDocument($tagID);
-    $tag = $database->updateDocument(array_merge($tag->getArrayCopy(), [
-        'status' => 'building'
-    ]));
-    Authorization::reset();
-
-    // Check if runtime is active
-    $runtime = (isset($runtimes[$function->getAttribute('runtime', '')]))
-        ? $runtimes[$function->getAttribute('runtime', '')]
-        : null;
-
-    if ($tag->getAttribute('functionId') !== $function->getId()) {
-        throw new Exception('Tag not found', 404);
-    }
-
-    if (\is_null($runtime)) {
-        throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
-    }
-
-    // Grab Tag Files
-    $tagPath = $tag->getAttribute('path', '');
-    $tagPathTarget = '/tmp/project-' . $projectID . '/' . $tag->getId() . '/code.tar.gz';
-    $tagPathTargetDir = \pathinfo($tagPathTarget, PATHINFO_DIRNAME);
-    $container = 'build-stage-' . $tag->getId();
-
-    if (!\is_readable($tagPath)) {
-        throw new Exception('Code is not readable: ' . $tag->getAttribute('path', ''));
-    }
-
-    if (!\file_exists($tagPathTargetDir)) {
-        if (!\mkdir($tagPathTargetDir, 0755, true)) {
-            throw new Exception('Can\'t create directory ' . $tagPathTargetDir);
-        }
-    }
-
-    if (!\file_exists($tagPathTarget)) {
-        if (!\copy($tagPath, $tagPathTarget)) {
-            throw new Exception('Can\'t create temporary code file ' . $tagPathTarget);
-        }
-    }
-
-    $vars = \array_merge($function->getAttribute('vars', []), [
-        'APPWRITE_FUNCTION_ID' => $function->getId(),
-        'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
-        'APPWRITE_FUNCTION_TAG' => $tag->getId(),
-        'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
-        'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
-        'APPWRITE_FUNCTION_PROJECT_ID' => $projectID,
-        'APPWRITE_ENTRYPOINT_NAME' => $tag->getAttribute('entrypoint')
-    ]);
-
-    $buildStart = \microtime(true);
-    $buildTime = \time();
-
-    $orchestration->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', '1'));
-    $orchestration->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', '256'));
-    $orchestration->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '256'));
-
-    foreach ($vars as &$value) {
-        $value = strval($value);
-    }
-
-    $id = $orchestration->run(
-        image: $runtime['base'],
-        name: $container,
-        vars: $vars,
-        workdir: '/usr/code',
-        labels: [
-            'appwrite-type' => 'function',
-            'appwrite-created' => strval($buildTime),
-            'appwrite-runtime' => $function->getAttribute('runtime', ''),
-        ],
-        command: [
-            'tail',
-            '-f',
-            '/dev/null'
-        ],
-        hostname: $container,
-        mountFolder: $tagPathTargetDir,
-        volumes: [
-            '/tmp/project-' . $projectID . '/' . $tag->getId() . '/builtCode'. ':/usr/builtCode:rw'
-        ]
-    );
-
-    $untarStdout = '';
-    $untarStderr = '';
-
-    $untarSuccess = $orchestration->execute(
-        name: $container,
-        command: [
-            'sh',
-            '-c',
-            'mkdir -p /usr/code && cp /tmp/code.tar.gz /usr/code.tar.gz && cd /usr && tar -zxf /usr/code.tar.gz -C /usr/code && rm /usr/code.tar.gz'
-        ],
-        stdout: $untarStdout,
-        stderr: $untarStderr,
-        timeout: 60
-    );
-
-    if (!$untarSuccess) {
-        throw new Exception('Failed to extract tar: ' . $untarStderr);
-    }
-
-    // Build Code / Install Dependencies
     $buildStdout = '';
     $buildStderr = '';
 
-    $buildSuccess = $orchestration->execute(
-        name: $container,
-        command: $runtime['buildCommand'],
-        stdout: $buildStdout,
-        stderr: $buildStderr,
-        timeout: 600 //TODO: Make this configurable
-    );
+    try {
+        // Update Tag Status
+        Authorization::disable();
+        $tag = $database->getDocument($tagID);
+        $tag = $database->updateDocument(array_merge($tag->getArrayCopy(), [
+            'status' => 'building'
+        ]));
+        Authorization::reset();
 
-    if (!$buildSuccess) {
-        throw new Exception('Failed to build dependencies: ' . $buildStderr);
-    }
+        // Check if runtime is active
+        $runtime = (isset($runtimes[$function->getAttribute('runtime', '')]))
+            ? $runtimes[$function->getAttribute('runtime', '')]
+            : null;
 
-    // Repackage Code and Save.
-    $compressStdout = '';
-    $compressStderr = '';
-
-    $builtCodePath = '/tmp/project-' . $projectID . '/' . $tag->getId() . '/builtCode/code.tar.gz';
-
-    $compressSuccess = $orchestration->execute(
-        name: $container,
-        command: [
-            'tar', '-C', '/usr/code', '-czvf', '/usr/builtCode/code.tar.gz', './'
-        ],
-        stdout: $compressStdout,
-        stderr: $compressStderr,
-        timeout: 60
-    );
-
-    if (!$compressSuccess) {
-        throw new Exception('Failed to compress built code: ' . $compressStderr);
-    }
-
-    // Remove Container
-    $orchestration->remove($id, true);
-
-    // Check if the build was successful by checking if file exists
-    if (!\file_exists($builtCodePath)) {
-        throw new Exception('Something went wrong during the build process.');
-    }
-
-    // Upload new code
-    $device = Storage::getDevice('functions');
-
-    $path = $device->getPath(\uniqid().'.'.\pathinfo('code.tar.gz', PATHINFO_EXTENSION));
-
-    if (!\file_exists(\dirname($path))) { // Checks if directory path to file exists
-        if (!@\mkdir(\dirname($path), 0755, true)) {
-            throw new Exception('Can\'t create directory: ' . \dirname($path));
+        if ($tag->getAttribute('functionId') !== $function->getId()) {
+            throw new Exception('Tag not found', 404);
         }
+
+        if (\is_null($runtime)) {
+            throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
+        }
+
+        // Grab Tag Files
+        $tagPath = $tag->getAttribute('path', '');
+        $tagPathTarget = '/tmp/project-' . $projectID . '/' . $tag->getId() . '/code.tar.gz';
+        $tagPathTargetDir = \pathinfo($tagPathTarget, PATHINFO_DIRNAME);
+        $container = 'build-stage-' . $tag->getId();
+
+        if (!\is_readable($tagPath)) {
+            throw new Exception('Code is not readable: ' . $tag->getAttribute('path', ''));
+        }
+
+        if (!\file_exists($tagPathTargetDir)) {
+            if (!\mkdir($tagPathTargetDir, 0755, true)) {
+                throw new Exception('Can\'t create directory ' . $tagPathTargetDir);
+            }
+        }
+
+        if (!\file_exists($tagPathTarget)) {
+            if (!\copy($tagPath, $tagPathTarget)) {
+                throw new Exception('Can\'t create temporary code file ' . $tagPathTarget);
+            }
+        }
+
+        $vars = \array_merge($function->getAttribute('vars', []), [
+            'APPWRITE_FUNCTION_ID' => $function->getId(),
+            'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
+            'APPWRITE_FUNCTION_TAG' => $tag->getId(),
+            'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
+            'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
+            'APPWRITE_FUNCTION_PROJECT_ID' => $projectID,
+            'APPWRITE_ENTRYPOINT_NAME' => $tag->getAttribute('entrypoint')
+        ]);
+
+        $buildStart = \microtime(true);
+        $buildTime = \time();
+
+        $orchestration->setCpus(App::getEnv('_APP_FUNCTIONS_CPUS', '1'));
+        $orchestration->setMemory(App::getEnv('_APP_FUNCTIONS_MEMORY', '256'));
+        $orchestration->setSwap(App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', '256'));
+
+        foreach ($vars as &$value) {
+            $value = strval($value);
+        }
+
+        $id = $orchestration->run(
+            image: $runtime['base'],
+            name: $container,
+            vars: $vars,
+            workdir: '/usr/code',
+            labels: [
+                'appwrite-type' => 'function',
+                'appwrite-created' => strval($buildTime),
+                'appwrite-runtime' => $function->getAttribute('runtime', ''),
+            ],
+            command: [
+                'tail',
+                '-f',
+                '/dev/null'
+            ],
+            hostname: $container,
+            mountFolder: $tagPathTargetDir,
+            volumes: [
+                '/tmp/project-' . $projectID . '/' . $tag->getId() . '/builtCode' . ':/usr/builtCode:rw'
+            ]
+        );
+
+        $untarStdout = '';
+        $untarStderr = '';
+
+        $untarSuccess = $orchestration->execute(
+            name: $container,
+            command: [
+                'sh',
+                '-c',
+                'mkdir -p /usr/code && cp /tmp/code.tar.gz /usr/code.tar.gz && cd /usr && tar -zxf /usr/code.tar.gz -C /usr/code && rm /usr/code.tar.gz'
+            ],
+            stdout: $untarStdout,
+            stderr: $untarStderr,
+            timeout: 60
+        );
+
+        if (!$untarSuccess) {
+            throw new Exception('Failed to extract tar: ' . $untarStderr);
+        }
+
+        // Build Code / Install Dependencies
+        $buildSuccess = $orchestration->execute(
+            name: $container,
+            command: ['sh', '-c', 'cd /usr/local/src && ./build.sh'],
+            stdout: $buildStdout,
+            stderr: $buildStderr,
+            timeout: 600 //TODO: Make this configurable
+        );
+
+        if (!$buildSuccess) {
+            throw new Exception('Failed to build dependencies: ' . $buildStderr);
+        }
+
+        // Repackage Code and Save.
+        $compressStdout = '';
+        $compressStderr = '';
+
+        $builtCodePath = '/tmp/project-' . $projectID . '/' . $tag->getId() . '/builtCode/code.tar.gz';
+
+        $compressSuccess = $orchestration->execute(
+            name: $container,
+            command: [
+                'tar', '-C', '/usr/code', '-czvf', '/usr/builtCode/code.tar.gz', './'
+            ],
+            stdout: $compressStdout,
+            stderr: $compressStderr,
+            timeout: 60
+        );
+
+        if (!$compressSuccess) {
+            throw new Exception('Failed to compress built code: ' . $compressStderr);
+        }
+
+        // Remove Container
+        $orchestration->remove($id, true);
+
+        // Check if the build was successful by checking if file exists
+        if (!\file_exists($builtCodePath)) {
+            throw new Exception('Something went wrong during the build process.');
+        }
+
+        // Upload new code
+        $device = Storage::getDevice('functions');
+
+        $path = $device->getPath(\uniqid() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
+
+        if (!\file_exists(\dirname($path))) { // Checks if directory path to file exists
+            if (!@\mkdir(\dirname($path), 0755, true)) {
+                throw new Exception('Can\'t create directory: ' . \dirname($path));
+            }
+        }
+
+        if (!\rename($builtCodePath, $path)) {
+            throw new Exception('Failed moving file', 500);
+        }
+
+        // Update tag with built code attribute
+        Authorization::disable();
+        $tag = $database->updateDocument(array_merge($tag->getArrayCopy(), [
+            'builtPath' => $path,
+            'status' => 'ready',
+            'buildStdout' => $buildStdout,
+            'buildStderr' => $buildStderr
+        ]));
+        Authorization::enable();
+
+        $buildEnd = \microtime(true);
+
+        Console::info('Tag Built in ' . ($buildEnd - $buildStart) . ' seconds');
+    } catch (Exception $e) {
+        Console::error('Tag build failed: ' . $e->getMessage());
+        Authorization::disable();
+        $tag = $database->updateDocument(array_merge($tag->getArrayCopy(), [
+            'status' => 'failed',
+            'buildStdout' => $buildStdout,
+            'buildStderr' => $buildStderr,
+        ]));
+        Authorization::enable();
     }
-
-    if (!\rename($builtCodePath, $path)) {
-        throw new Exception('Failed moving file', 500);
-    }
-
-    // Update tag with built code attribute
-    Authorization::disable();
-    $tag = $database->updateDocument(array_merge($tag->getArrayCopy(), [
-        'builtPath' => $path,
-        'status' => 'ready'
-    ]));
-    Authorization::enable();
-
-    $buildEnd = \microtime(true);
-
-    Console::info('Tag Built in ' . ($buildEnd - $buildStart) . ' seconds');
 
     return $tag;
 }
@@ -588,26 +601,6 @@ function createRuntimeServer(string $functionId, string $projectId, Document $ta
         // Add to network
         $orchestration->networkConnect($container, 'appwrite_runtimes');
 
-        // Handled by Dockerfiles
-        // $untarStdout = '';
-        // $untarStderr = '';
-
-        // $untarSuccess = $orchestration->execute(
-        //     name: $container,
-        //     command: [
-        //         'sh',
-        //         '-c',
-        //         'mkdir /usr/code -p && cp /tmp/code.tar.gz /usr/code/code.tar.gz && cd /usr/code && tar -zxf /usr/code/code.tar.gz --strip 1 && rm /usr/code/code.tar.gz'
-        //     ],
-        //     stdout: $untarStdout,
-        //     stderr: $untarStderr,
-        //     timeout: 60
-        // );
-
-        // if (!$untarSuccess) {
-        //     throw new Exception('Failed to extract tar: ' . $untarStderr);
-        // }
-
         $executionEnd = \microtime(true);
 
         $activeFunctions[$container] = new Container(
@@ -717,13 +710,14 @@ function execute(string $trigger, string $projectId, string $executionId, string
     try {
         if (!isset($activeFunctions[$container])) { // Create contianer if not ready
             createRuntimeServer($functionId, $projectId, $tag, $database);
-        } else if ($activeFunctions[$container]->getStatus() === 'Down') { 
+        } else if ($activeFunctions[$container]->getStatus() === 'Down') {
             sleep(1);
         } else {
             Console::info('Container is ready to run');
         }
     } catch (Exception $e) {
         Console::error('Something went wrong building the runtime server. ' . $e->getMessage());
+        Authorization::disable();
         $execution = $database->updateDocument(array_merge($execution->getArrayCopy(), [
             'tagId' => $tag->getId(),
             'status' => 'failed',
@@ -731,6 +725,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
             'stderr' => \utf8_encode(\mb_substr($e->getMessage(), -4000)), // log last 4000 chars output
             'time' => 0
         ]));
+        Authorization::enable();
     }
 
     $stdout = '';
@@ -917,7 +912,20 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
     $projectId = $request->getHeader('x-appwrite-project', '');
 
-    Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS.'/app-'.$projectId));
+    Storage::setDevice('functions', new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId));
+
+    // Check environment variable key
+    $secretKey = $request->getHeader('x-appwrite-executor-key', '');
+
+    if (empty($secretKey)) {
+        $swooleResponse->status(401);
+        return $swooleResponse->end('401: Authentication Error');
+    }
+
+    if ($secretKey !== App::getEnv('_APP_EXECUTOR_SECRET', '')) {
+        $swooleResponse->status(401);
+        return $swooleResponse->end('401: Authentication Error');
+    }
 
     App::setResource('projectDB', function ($db, $cache) use ($projectId) {
         $projectDB = new Database();

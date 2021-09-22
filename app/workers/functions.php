@@ -298,6 +298,7 @@ class FunctionsV1 extends Worker
         \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
         \curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
+            'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
         ]);
 
         \curl_exec($ch);

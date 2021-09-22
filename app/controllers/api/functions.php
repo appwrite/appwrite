@@ -369,6 +369,7 @@ App::patch('/v1/functions/:functionId/tag')
         \curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
             'X-Appwrite-Project: '.$project->getId(),
+            'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
         ]);
 
         $executorResponse = \curl_exec($ch);
@@ -426,6 +427,7 @@ App::delete('/v1/functions/:functionId')
         \curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
             'X-Appwrite-Project: '.$project->getId(),
+            'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
         ]);
 
         $executorResponse = \curl_exec($ch);
@@ -540,7 +542,9 @@ App::post('/v1/functions/:functionId/tags')
             'path' => $path,
             'size' => $size,
             'status' => 'pending',
-            'builtPath' => ''
+            'builtPath' => '',
+            'buildStdout' => '',
+            'buildStderr' => ''
         ]);
 
         if (false === $tag) {
@@ -691,6 +695,7 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
         \curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
             'X-Appwrite-Project: '.$project->getId(),
+            'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
         ]);
 
         $executorResponse = \curl_exec($ch);
@@ -867,6 +872,7 @@ App::post('/v1/functions/:functionId/executions')
             \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
             \curl_setopt($ch, CURLOPT_HTTPHEADER, [
                 'Content-Type: application/json',
+                'x-appwrite-executor-key: '. App::getEnv('_APP_EXECUTOR_SECRET', '')
             ]);
     
             $responseExecute = \curl_exec($ch);
