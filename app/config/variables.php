@@ -454,6 +454,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_EXECUTOR_SECRET',
+                'description' => 'The secret key used by appwrite to communicate with the function executor. Make sure to change this!',
+                'introduction' => '0.11.0',
+                'default' => 'your-secret-key',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_FUNCTIONS_ENVS',
                 'description' => 'Deprectated with 0.8.0, use \'_APP_FUNCTIONS_RUNTIMES\' instead!',
                 'introduction' => '0.7.0',
