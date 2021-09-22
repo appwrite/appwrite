@@ -539,7 +539,7 @@ function createRuntimeServer(string $functionId, string $projectId, Document $ta
         'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
         'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
         'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
-        'APPWRITE_INTERNAL_RUNTIME_SECRET' => $publicKey,
+        'APPWRITE_INTERNAL_RUNTIME_PUBLIC' => $publicKey,
     ]);
 
     $container = 'appwrite-function-' . $tag->getId();
