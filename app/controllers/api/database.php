@@ -785,7 +785,7 @@ App::post('/v1/database/collections/:collectionId/attributes/ip')
     });
 
 App::post('/v1/database/collections/:collectionId/attributes/url')
-    ->desc('Create IP Address Attribute')
+    ->desc('Create URL Attribute')
     ->groups(['api', 'database'])
     ->label('event', 'database.attributes.create')
     ->label('scope', 'collections.write')
