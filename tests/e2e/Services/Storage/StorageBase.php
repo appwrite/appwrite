@@ -210,7 +210,6 @@ trait StorageBase
         $this->assertCount(1, $response['body']['files']);
         $this->assertEquals('logo.png', $response['body']['files'][0]['name']);
 
-
         $response = $this->client->call(Client::METHOD_GET, '/storage/files', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
