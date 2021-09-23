@@ -715,6 +715,13 @@ $collections = [
                 'lengths' => [1024],
                 'orders' => [Database::ORDER_ASC],
             ],
+            [
+                '$id' => '_key_deleted_email',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['deleted', 'email'],
+                'lengths' => [0, 1024],
+                'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
+            ],
         ],
     ],
 
