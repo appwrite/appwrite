@@ -518,7 +518,7 @@ App::shutdown(function($utopia, $response, $request) {
         throw new Exception('Failed to read results', 500);
     }
 
-    $result[$route->getMethod() . ':' . $route->getURL()] = true;
+    $result[$route->getMethod() . ':' . $route->getPath()] = true;
 
     $tests = \array_merge($tests, $result);
 
@@ -526,5 +526,5 @@ App::shutdown(function($utopia, $response, $request) {
         throw new Exception('Failed to save results', 500);
     }
 
-    $response->dynamic(new Document(['result' => $route->getMethod() . ':' . $route->getURL() . ':passed']), Response::MODEL_MOCK);
+    $response->dynamic(new Document(['result' => $route->getMethod() . ':' . $route->getPath() . ':passed']), Response::MODEL_MOCK);
 }, ['utopia', 'response', 'request'], 'mock');

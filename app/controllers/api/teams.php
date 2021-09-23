@@ -33,7 +33,7 @@ App::post('/v1/teams')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TEAM)
-    ->param('teamId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
+    ->param('teamId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Team name. Max length: 128 chars.')
     ->param('roles', ['owner'], new ArrayList(new Key()), 'Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.', true)
     ->inject('response')
@@ -408,7 +408,7 @@ App::post('/v1/teams/:teamId/memberships')
         $audits
             ->setParam('userId', $invitee->getId())
             ->setParam('event', 'teams.memberships.create')
-            ->setParam('resource', 'teams/'.$teamId)
+            ->setParam('resource', 'team/'.$teamId)
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -570,7 +570,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'teams.memberships.update')
-            ->setParam('resource', 'teams/'.$teamId)
+            ->setParam('resource', 'team/'.$teamId)
         ;
 
         $response->dynamic($membership, Response::MODEL_MEMBERSHIP);
@@ -695,7 +695,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'teams.memberships.update.status')
-            ->setParam('resource', 'teams/'.$teamId)
+            ->setParam('resource', 'team/'.$teamId)
         ;
 
         if (!Config::getParam('domainVerification')) {
@@ -788,7 +788,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         $audits
             ->setParam('userId', $membership->getAttribute('userId'))
             ->setParam('event', 'teams.memberships.delete')
-            ->setParam('resource', 'teams/'.$teamId)
+            ->setParam('resource', 'team/'.$teamId)
         ;
 
         $events

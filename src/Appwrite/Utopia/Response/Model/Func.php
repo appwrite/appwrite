@@ -43,7 +43,7 @@ class Func extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function status. Possible values: disabled, enabled',
+                'description' => 'Function status. Possible values: `disabled`, `enabled`',
                 'default' => '',
                 'example' => 'enabled',
             ])

@@ -27,6 +27,7 @@ class DatabaseCustomServerTest extends Scope
             'collectionId' => 'first',
             'read' => ['role:all'],
             'write' => ['role:all'],
+            'permission' => 'document'
         ]);
 
         $test2 = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
@@ -38,6 +39,7 @@ class DatabaseCustomServerTest extends Scope
             'collectionId' => 'second',
             'read' => ['role:all'],
             'write' => ['role:all'],
+            'permission' => 'document'
         ]);
 
         $collections = $this->client->call(Client::METHOD_GET, '/database/collections', array_merge([
@@ -109,6 +111,7 @@ class DatabaseCustomServerTest extends Scope
             'name' => 'Actors',
             'read' => ['role:all'],
             'write' => ['role:all'],
+            'permission' => 'document'
         ]);
 
         $this->assertEquals($actors['headers']['status-code'], 201);
@@ -145,7 +148,7 @@ class DatabaseCustomServerTest extends Scope
         ]);
 
         // Wait for database worker to finish creating attributes
-        sleep(5);
+        sleep(2);
 
         $index = $this->client->call(Client::METHOD_POST, '/database/collections/' . $actors['body']['$id'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -160,7 +163,7 @@ class DatabaseCustomServerTest extends Scope
         ]);
 
         // Wait for database worker to finish creating index
-        sleep(5);
+        sleep(2);
 
         $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $actors['body']['$id'], array_merge([
             'content-type' => 'application/json',
@@ -168,24 +171,27 @@ class DatabaseCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), []); 
 
-        $unneededId = $unneeded['body']['$id'];
+        $unneededId = $unneeded['body']['key'];
 
+        $this->assertEquals($collection['headers']['status-code'], 200);
         $this->assertIsArray($collection['body']['attributes']);
         $this->assertCount(3, $collection['body']['attributes']);
-        $this->assertEquals($collection['body']['attributes'][0]['$id'], $firstName['body']['$id']);
-        $this->assertEquals($collection['body']['attributes'][1]['$id'], $lastName['body']['$id']);
-        $this->assertEquals($collection['body']['attributes'][2]['$id'], $unneeded['body']['$id']);
+        $this->assertEquals($collection['body']['attributes'][0]['key'], $firstName['body']['key']);
+        $this->assertEquals($collection['body']['attributes'][1]['key'], $lastName['body']['key']);
+        $this->assertEquals($collection['body']['attributes'][2]['key'], $unneeded['body']['key']);
         $this->assertCount(1, $collection['body']['indexes']);
-        $this->assertEquals($collection['body']['indexes'][0]['$id'], $index['body']['$id']);
+        $this->assertEquals($collection['body']['indexes'][0]['key'], $index['body']['key']);
 
         // Delete attribute
-        $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $actors ['body']['$id'] . '/attributes/' . $unneededId, array_merge([
+        $attribute = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $actors ['body']['$id'] . '/attributes/' . $unneededId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        sleep(5);
+        $this->assertEquals($attribute['headers']['status-code'], 204);
+
+        sleep(2);
 
         $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $actors['body']['$id'], array_merge([
             'content-type' => 'application/json',
@@ -193,16 +199,18 @@ class DatabaseCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), []); 
 
+        $this->assertEquals($collection['headers']['status-code'], 200);
         $this->assertIsArray($collection['body']['attributes']);
         $this->assertCount(2, $collection['body']['attributes']);
-        $this->assertEquals($collection['body']['attributes'][0]['$id'], $firstName['body']['$id']);
-        $this->assertEquals($collection['body']['attributes'][1]['$id'], $lastName['body']['$id']);
+        $this->assertEquals($collection['body']['attributes'][0]['key'], $firstName['body']['key']);
+        $this->assertEquals($collection['body']['attributes'][1]['key'], $lastName['body']['key']);
 
         return [
             'collectionId' => $actors['body']['$id'],
-            'indexId' => $index['body']['$id'],
+            'indexId' => $index['body']['key'],
         ];
     }
+
     /**
      * @depends testDeleteAttribute
      */
@@ -214,14 +222,16 @@ class DatabaseCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
+        $this->assertEquals($index['headers']['status-code'], 204);
+
         // Wait for database worker to finish deleting index
-        sleep(5);
+        sleep(2);
 
         $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['collectionId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), []); 
+        ]), []);
 
         $this->assertCount(0, $collection['body']['indexes']);
 
@@ -295,5 +305,111 @@ class DatabaseCustomServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals($response['headers']['status-code'], 404);
+    }
+
+    public function testIndexLimitException()
+    {
+        $collection = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => 'testLimitException',
+            'name' => 'testLimitException',
+            'read' => ['role:all'],
+            'write' => ['role:all'],
+            'permission' => 'document',
+        ]);
+
+        $this->assertEquals($collection['headers']['status-code'], 201);
+        $this->assertEquals($collection['body']['name'], 'testLimitException');
+
+        $collectionId = $collection['body']['$id'];
+
+        // add unique attributes for indexing
+        for ($i=0; $i < 64; $i++) {
+            // $this->assertEquals(true, static::getDatabase()->createAttribute('indexLimit', "test{$i}", Database::VAR_STRING, 16, true));
+            $attribute = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/string', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'attributeId' => "attribute{$i}",
+                'size' => 64,
+                'required' => true,
+            ]);
+
+            $this->assertEquals($attribute['headers']['status-code'], 201);
+        }
+
+        sleep(5);
+
+        $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals($collection['headers']['status-code'], 200);
+        $this->assertEquals($collection['body']['name'], 'testLimitException');
+        $this->assertIsArray($collection['body']['attributes']);
+        $this->assertIsArray($collection['body']['indexes']);
+        $this->assertCount(64, $collection['body']['attributes']);
+        $this->assertCount(0, $collection['body']['indexes']);
+
+        // testing for indexLimit = 64
+        // MariaDB, MySQL, and MongoDB create 3 indexes per new collection
+        // Add up to the limit, then check if the next index throws IndexLimitException
+        for ($i=0; $i < 61; $i++) {
+            // $this->assertEquals(true, static::getDatabase()->createIndex('indexLimit', "index{$i}", Database::INDEX_KEY, ["test{$i}"], [16]));
+            $index = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/indexes', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'indexId' => "key_attribute{$i}",
+                'type' => 'key',
+                'attributes' => ["attribute{$i}"],
+            ]);
+
+            $this->assertEquals(201, $index['headers']['status-code']);
+            $this->assertEquals("key_attribute{$i}", $index['body']['key']);
+        }
+
+        sleep(5);
+
+        $collection = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals($collection['headers']['status-code'], 200);
+        $this->assertEquals($collection['body']['name'], 'testLimitException');
+        $this->assertIsArray($collection['body']['attributes']);
+        $this->assertIsArray($collection['body']['indexes']);
+        $this->assertCount(64, $collection['body']['attributes']);
+        $this->assertCount(61, $collection['body']['indexes']);
+
+        $tooMany = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'indexId' => 'tooMany',
+            'type' => 'key',
+            'attributes' => ['attribute61'],
+        ]);
+
+        $this->assertEquals(400, $tooMany['headers']['status-code']);
+        $this->assertEquals('Index limit exceeded', $tooMany['body']['message']);
+
+        $collection = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(204, $collection['headers']['status-code']);
     }
 }

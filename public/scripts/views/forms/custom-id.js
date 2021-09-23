@@ -114,16 +114,19 @@
         const CAPITAL_A = 65;
         const CAPITAL_Z = 90;
         const UNDERSCORE = 95;
+        const HYPHEN = 45;
+        const PERIOD = 46;
 
         const isNotValidDigit = key < ZERO || key > NINE;
         const isNotValidSmallAlphabet = key < SMALL_A || key > SMALL_Z;
         const isNotValidCapitalAlphabet = key < CAPITAL_A || key > CAPITAL_Z;
 
+        const isNotValidFirstChar = (key === UNDERSCORE || key === HYPHEN || key === PERIOD);
         //Leading underscore is prevented
-        if (key == UNDERSCORE && e.target.value.length == 0) {
+        if ( isNotValidFirstChar && e.target.value.length == 0) {
           e.preventDefault();
         }
-        if (key != UNDERSCORE && isNotValidDigit && isNotValidSmallAlphabet && isNotValidCapitalAlphabet) {
+        if (key != UNDERSCORE && key != HYPHEN && key != PERIOD && isNotValidDigit && isNotValidSmallAlphabet && isNotValidCapitalAlphabet) {
           e.preventDefault();
         }
       }

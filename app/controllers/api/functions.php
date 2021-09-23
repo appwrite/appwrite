@@ -39,7 +39,7 @@ App::post('/v1/functions')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
-    ->param('functionId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
+    ->param('functionId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
     ->param('execute', [], new ArrayList(new Text(64)), 'An array of strings with execution permissions. By default no user is granted with any execute permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
@@ -152,6 +152,9 @@ App::get('/v1/functions/:functionId/usage')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USAGE_FUNCTIONS)
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d']), 'Date range.', true)
     ->inject('response')
@@ -170,99 +173,62 @@ App::get('/v1/functions/:functionId/usage')
             throw new Exception('Function not found', 404);
         }
         
+        $usage = [];
         if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $period = [
                 '24h' => [
-                    'start' => DateTime::createFromFormat('U', \strtotime('-24 hours')),
-                    'end' => DateTime::createFromFormat('U', \strtotime('+1 hour')),
-                    'group' => '30m',
+                    'period' => '30m',
+                    'limit' => 48,
                 ],
                 '7d' => [
-                    'start' => DateTime::createFromFormat('U', \strtotime('-7 days')),
-                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                    'group' => '1d',
+                    'period' => '1d',
+                    'limit' => 7,
                 ],
                 '30d' => [
-                    'start' => DateTime::createFromFormat('U', \strtotime('-30 days')),
-                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                    'group' => '1d',
+                    'period' => '1d',
+                    'limit' => 30,
                 ],
                 '90d' => [
-                    'start' => DateTime::createFromFormat('U', \strtotime('-90 days')),
-                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                    'group' => '1d',
+                    'period' => '1d',
+                    'limit' => 90,
                 ],
             ];
+            
+            $metrics = [
+                "functions.$functionId.executions", 
+                "functions.$functionId.failures", 
+                "functions.$functionId.compute"
+            ];
+
+            $stats = [];
+
+            Authorization::skip(function() use ($dbForInternal, $period, $range, $metrics, &$stats) {
+                foreach ($metrics as $metric) {
+                    $requestDocs = $dbForInternal->find('stats', [
+                        new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
+                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
+                    ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
     
-            $client = $register->get('influxdb');
-    
-            $executions = [];
-            $failures = [];
-            $compute = [];
-    
-            if ($client) {
-                $start = $period[$range]['start']->format(DateTime::RFC3339);
-                $end = $period[$range]['end']->format(DateTime::RFC3339);
-                $database = $client->selectDB('telegraf');
-    
-                // Executions
-                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-                $points = $result->getPoints();
-    
-                foreach ($points as $point) {
-                    $executions[] = [
-                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                        'date' => \strtotime($point['time']),
-                    ];
-                }
-    
-                // Failures
-                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' AND "functionStatus"=\'failed\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-                $points = $result->getPoints();
-    
-                foreach ($points as $point) {
-                    $failures[] = [
-                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                        'date' => \strtotime($point['time']),
-                    ];
-                }
-    
-                // Compute
-                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_time" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
-                $points = $result->getPoints();
-    
-                foreach ($points as $point) {
-                    $compute[] = [
-                        'value' => round((!empty($point['value'])) ? $point['value'] / 1000 : 0, 2), // minutes
-                        'date' => \strtotime($point['time']),
-                    ];
-                }
-            }
-    
-            $response->json([
+                    $stats[$metric] = [];
+                    foreach ($requestDocs as $requestDoc) {
+                        $stats[$metric][] = [
+                            'value' => $requestDoc->getAttribute('value'),
+                            'date' => $requestDoc->getAttribute('time'),
+                        ];
+                    }
+                    $stats[$metric] = array_reverse($stats[$metric]);
+                }    
+            });
+
+            $usage = new Document([
                 'range' => $range,
-                'executions' => [
-                    'data' => $executions,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $executions)),
-                ],
-                'failures' => [
-                    'data' => $failures,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $failures)),
-                ],
-                'compute' => [
-                    'data' => $compute,
-                    'total' => \array_sum(\array_map(function ($item) {
-                        return $item['value'];
-                    }, $compute)),
-                ],
+                'functions.executions' => $stats["functions.$functionId.executions"],
+                'functions.failures' => $stats["functions.$functionId.failures"],
+                'functions.compute' => $stats["functions.$functionId.compute"]
             ]);
-        } else {
-            $response->json([]);
         }
+
+        $response->dynamic($usage, Response::MODEL_USAGE_FUNCTIONS);
     });
 
 App::put('/v1/functions/:functionId')

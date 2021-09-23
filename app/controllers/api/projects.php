@@ -6,10 +6,14 @@ use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain as DomainValidator;
 use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Response;
+use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
+use Utopia\Audit\Audit;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Exception;
@@ -19,13 +23,11 @@ use Utopia\Validator\Integer;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\Audit\Audit;
-use Utopia\Abuse\Adapters\TimeLimit;
 
 App::init(function ($project) {
     /** @var Utopia\Database\Document $project */
 
-    if($project->getId() !== 'console') {
+    if ($project->getId() !== 'console') {
         throw new Exception('Access to this API is forbidden.', 401);
     }
 }, ['project'], 'projects');
@@ -40,7 +42,7 @@ App::post('/v1/projects')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
-    ->param('projectId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, and underscore. Can\'t start with a leading underscore. Max length is 36 chars.')
+    ->param('projectId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
     ->param('teamId', '', new UID(), 'Team unique ID.')
     ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
@@ -69,7 +71,7 @@ App::post('/v1/projects')
         if ($team->isEmpty()) {
             throw new Exception('Team not found', 404);
         }
-        
+
         $auth = Config::getParam('auth', []);
         $auths = ['limit' => 0];
         foreach ($auth as $index => $method) {
@@ -221,22 +223,25 @@ App::get('/v1/projects/:projectId')
     });
 
 App::get('/v1/projects/:projectId/usage')
-    ->desc('Get Project')
+    ->desc('Get usage stats for a project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USAGE_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('register')
-    ->action(function ($projectId, $range, $response, $dbForConsole, $projectDB, $register) {
+    ->action(function ($projectId, $range, $response, $dbForConsole, $dbForInternal, $register) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Registry\Registry $register */
 
         $project = $dbForConsole->getDocument('projects', $projectId);
@@ -245,172 +250,72 @@ App::get('/v1/projects/:projectId/usage')
             throw new Exception('Project not found', 404);
         }
 
+        $usage = [];
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-
             $period = [
                 '24h' => [
-                    'start' => DateTime::createFromFormat('U', \strtotime('-24 hours')),
-                    'end' => DateTime::createFromFormat('U', \strtotime('+1 hour')),
-                    'group' => '30m',
+                    'period' => '30m',
+                    'limit' => 48,
                 ],
                 '7d' => [
-                    'start' => DateTime::createFromFormat('U', \strtotime('-7 days')),
-                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                    'group' => '1d',
+                    'period' => '1d',
+                    'limit' => 7,
                 ],
                 '30d' => [
-                    'start' => DateTime::createFromFormat('U', \strtotime('-30 days')),
-                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                    'group' => '1d',
+                    'period' => '1d',
+                    'limit' => 30,
                 ],
                 '90d' => [
-                    'start' => DateTime::createFromFormat('U', \strtotime('-90 days')),
-                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                    'group' => '1d',
+                    'period' => '1d',
+                    'limit' => 90,
                 ],
             ];
 
-            $client = $register->get('influxdb');
+            $dbForInternal->setNamespace('project_' . $projectId . '_internal');
 
-            $requests = [];
-            $network = [];
-            $functions = [];
+            $metrics = [
+                'requests', 
+                'network', 
+                'executions',
+                'users.count',
+                'database.documents.count',
+                'database.collections.count',
+                'storage.total'
+            ];
 
-            if ($client) {
-                $start = $period[$range]['start']->format(DateTime::RFC3339);
-                $end = $period[$range]['end']->format(DateTime::RFC3339);
-                $database = $client->selectDB('telegraf');
+            $stats = [];
 
-                // Requests
-                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_requests_all" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' AND "project"=\'' . $project->getId() . '\' GROUP BY time(' . $period[$range]['group'] . ') FILL(null)');
-                $points = $result->getPoints();
+            Authorization::skip(function() use ($dbForInternal, $period, $range, $metrics, &$stats) {
+                foreach ($metrics as $metric) {
+                    $requestDocs = $dbForInternal->find('stats', [
+                        new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
+                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
+                    ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
+    
+                    $stats[$metric] = [];
+                    foreach ($requestDocs as $requestDoc) {
+                        $stats[$metric][] = [
+                            'value' => $requestDoc->getAttribute('value'),
+                            'date' => $requestDoc->getAttribute('time'),
+                        ];
+                    }
+                    $stats[$metric] = array_reverse($stats[$metric]);
+                }    
+            });
 
-                foreach ($points as $point) {
-                    $requests[] = [
-                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                        'date' => \strtotime($point['time']),
-                    ];
-                }
-
-                // Network
-                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_network_all" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' AND "project"=\'' . $project->getId() . '\' GROUP BY time(' . $period[$range]['group'] . ') FILL(null)');
-                $points = $result->getPoints();
-
-                foreach ($points as $point) {
-                    $network[] = [
-                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                        'date' => \strtotime($point['time']),
-                    ];
-                }
-
-                // Functions
-                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' AND "project"=\'' . $project->getId() . '\' GROUP BY time(' . $period[$range]['group'] . ') FILL(null)');
-                $points = $result->getPoints();
-
-                foreach ($points as $point) {
-                    $functions[] = [
-                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                        'date' => \strtotime($point['time']),
-                    ];
-                }
-            }
-        } else {
-            $requests = [];
-            $network = [];
-            $functions = [];
-        }
-
-        // Users
-
-        $projectDB->getCollection([
-            'limit' => 0,
-            'offset' => 0,
-            'filters' => [
-                '$collection=users',
-            ],
-        ]);
-
-        $usersTotal = $projectDB->getSum();
-
-        // Documents
-
-        $collections = $projectDB->getCollection([
-            'limit' => 100,
-            'offset' => 0,
-            'filters' => [
-                '$collection=collections',
-            ],
-        ]);
-
-        $collectionsTotal = $projectDB->getSum();
-
-        $documents = [];
-
-        foreach ($collections as $collection) {
-            $result = $projectDB->getCollection([
-                'limit' => 0,
-                'offset' => 0,
-                'filters' => [
-                    '$collection=' . $collection['$id'],
-                ],
+            $usage = new Document([
+                'range' => $range,
+                'requests' => $stats['requests'],
+                'network' => $stats['network'],
+                'functions' => $stats['executions'],
+                'documents' => $stats['database.documents.count'],
+                'collections' => $stats['database.collections.count'],
+                'users' => $stats['users.count'],
+                'storage' => $stats['storage.total']
             ]);
-
-            $documents[] = ['name' => $collection['name'], 'total' => $projectDB->getSum()];
         }
 
-        $response->json([
-            'range' => $range,
-            'requests' => [
-                'data' => $requests,
-                'total' => \array_sum(\array_map(function ($item) {
-                    return $item['value'];
-                }, $requests)),
-            ],
-            'network' => [
-                'data' => \array_map(function ($value) {return ['value' => \round($value['value'] / 1000000, 2), 'date' => $value['date']];}, $network), // convert bytes to mb
-                'total' => \array_sum(\array_map(function ($item) {
-                    return $item['value'];
-                }, $network)),
-            ],
-            'functions' => [
-                'data' => $functions,
-                'total' => \array_sum(\array_map(function ($item) {
-                    return $item['value'];
-                }, $functions)),
-            ],
-            'collections' => [
-                'data' => $collections,
-                'total' => $collectionsTotal,
-            ],
-            'documents' => [
-                'data' => $documents,
-                'total' => \array_sum(\array_map(function ($item) {
-                    return $item['total'];
-                }, $documents)),
-            ],
-            'users' => [
-                'data' => [],
-                'total' => $usersTotal,
-            ],
-            'storage' => [
-                'total' => $projectDB->getCount(
-                    [
-                        'attribute' => 'sizeOriginal',
-                        'filters' => [
-                            '$collection=files',
-                        ],
-                    ]
-                ) +
-                $projectDB->getCount(
-                    [
-                        'attribute' => 'size',
-                        'filters' => [
-                            '$collection=tags',
-                        ],
-                    ]
-                ),
-            ],
-        ]);
+        $response->dynamic($usage, Response::MODEL_USAGE_PROJECT);
     });
 
 App::patch('/v1/projects/:projectId')
@@ -474,7 +379,7 @@ App::patch('/v1/projects/:projectId/service')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), function($element) {return $element['optional'];})), true), 'Service name.')
+    ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), function ($element) {return $element['optional'];})), true), 'Service name.')
     ->param('status', null, new Boolean(), 'Service status.')
     ->inject('response')
     ->inject('dbForConsole')

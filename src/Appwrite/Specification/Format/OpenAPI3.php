@@ -22,6 +22,28 @@ class OpenAPI3 extends Format
     }
 
     /**
+     * Get Used Models
+     *
+     * Recursively get all used models
+     * 
+     * @param object $model
+     * @param array $models
+     *
+     * @return void
+     */
+    protected function getUsedModels($model, array &$usedModels)
+    {   
+        if (is_string($model) && !in_array($model, ['string', 'integer', 'boolean', 'json', 'float'])) {
+            $usedModels[] = $model;
+            return;
+        }
+        if (!is_object($model)) return;
+        foreach ($model->getRules() as $rule) {
+            $this->getUsedModels($rule['type'], $usedModels);
+        }
+    }
+
+    /**
      * Parse
      *
      * Parses Appwrite App to given format
@@ -91,7 +113,7 @@ class OpenAPI3 extends Format
         $usedModels = [];
 
         foreach ($this->routes as $route) { /** @var \Utopia\Route $route */
-            $url = \str_replace('/v1', '', $route->getURL());
+            $url = \str_replace('/v1', '', $route->getPath());
             $scope = $route->getLabel('scope', '');
             $hide = $route->getLabel('sdk.hide', false);
             $consumes = [$route->getLabel('sdk.request.type', 'application/json')];
@@ -352,11 +374,7 @@ class OpenAPI3 extends Format
             $output['paths'][$url][\strtolower($route->getMethod())] = $temp;
         }
         foreach ($this->models as $model) {
-            foreach ($model->getRules() as $rule) {
-                if (!in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])) {
-                    $usedModels[] = $rule['type'];
-                }
-            }
+            $this->getUsedModels($model, $usedModels);
         }
         foreach ($this->models as $model) {
             if (!in_array($model->getType(), $usedModels) && $model->getType() !== 'error') {

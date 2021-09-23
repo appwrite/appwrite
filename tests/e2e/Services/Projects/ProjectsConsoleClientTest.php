@@ -237,24 +237,16 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(count($response['body']), 8);
         $this->assertNotEmpty($response['body']);
-        $this->assertArrayHasKey('collections', $response['body']);
-        $this->assertArrayHasKey('documents', $response['body']);
-        $this->assertArrayHasKey('network', $response['body']);
-        $this->assertArrayHasKey('requests', $response['body']);
-        $this->assertArrayHasKey('storage', $response['body']);
-        $this->assertArrayHasKey('users', $response['body']);
-        $this->assertIsArray($response['body']['collections']['data']);
-        $this->assertIsInt($response['body']['collections']['total']);
-        $this->assertIsArray($response['body']['documents']['data']);
-        $this->assertIsInt($response['body']['documents']['total']);
-        $this->assertIsArray($response['body']['network']['data']);
-        $this->assertIsInt($response['body']['network']['total']);
-        $this->assertIsArray($response['body']['requests']['data']);
-        $this->assertIsInt($response['body']['requests']['total']);
-        $this->assertIsInt($response['body']['storage']['total']);
-        $this->assertIsArray($response['body']['users']['data']);
-        $this->assertIsInt($response['body']['users']['total']);
+        $this->assertEquals('30d', $response['body']['range']);
+        $this->assertIsArray($response['body']['requests']);
+        $this->assertIsArray($response['body']['network']);
+        $this->assertIsArray($response['body']['functions']);
+        $this->assertIsArray($response['body']['documents']);
+        $this->assertIsArray($response['body']['collections']);
+        $this->assertIsArray($response['body']['users']);
+        $this->assertIsArray($response['body']['storage']);
 
         /**
          * Test for FAILURE
