@@ -407,11 +407,11 @@ App::put('/v1/storage/buckets/:bucketId')
         $read ??= $bucket->getAttribute('$read', []); // By default inherit read permissions
         $write ??= $bucket->getAttribute('$write',[]); // By default inherit write permissions
         $read ??= $bucket->getAttribute('$read', []); // By default inherit read permissions
-        $write??=$bucket->getAttribute('$write', []); // By default inherit write permissions
-        $maximumFileSize??=$bucket->getAttribute('maximumFileSize', (int)App::getEnv('_APP_STORAGE_LIMIT', 0));
-        $allowedFileExtensions??=$bucket->getAttribute('allowedFileExtensions', []);
-        $enabled??=$bucket->getAttribute('enabled', true);
-        $encryption??=$bucket->getAttribute('encryption', true);
+        $write ??= $bucket->getAttribute('$write', []); // By default inherit write permissions
+        $maximumFileSize ??= $bucket->getAttribute('maximumFileSize', (int)App::getEnv('_APP_STORAGE_LIMIT', 0));
+        $allowedFileExtensions ??= $bucket->getAttribute('allowedFileExtensions', []);
+        $enabled ??= $bucket->getAttribute('enabled', true);
+        $encryption ??= $bucket->getAttribute('encryption', true);
         $antiVirus ??= $bucket->getAttribute('antiVirus', true);
 
         $bucket = $dbForInternal->updateDocument('buckets', $bucket->getId(), $bucket
@@ -468,14 +468,14 @@ App::delete('/v1/storage/buckets/:bucketId')
             throw new Exception('Bucket not found', 404);
         }
 
+        if(!$dbForInternal->deleteDocument('buckets', $bucketId)) {
+            throw new Exception('Failed to remove project from DB', 500);
+        }
+        
         $deletes
             ->setParam('type', DELETE_TYPE_DOCUMENT)
             ->setParam('document', $bucket)
         ;
-
-        if (!$dbForInternal->deleteDocument('buckets', $bucketId)) {
-            throw new Exception('Failed to remove project from DB', 500);
-        }
 
         $events
             ->setParam('eventData', $response->output($bucket, Response::MODEL_BUCKET))

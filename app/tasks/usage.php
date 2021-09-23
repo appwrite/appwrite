@@ -255,10 +255,27 @@ $cli
 
             /**
              * Aggregate InfluxDB every 30 seconds
+             * @var InfluxDB\Client $client
              */
             $client = $register->get('influxdb');
             if ($client) {
+                $attempts = 0;
+                $max = 10;
+                $sleep = 1;
+
                 $database = $client->selectDB('telegraf');
+                do { // check if telegraf database is ready
+                    $attempts++;
+                    if(!in_array('telegraf', $client->listDatabases())) {
+                        Console::warning("InfluxDB not ready. Retrying connection ({$attempts})...");
+                        if($attempts >= $max) {
+                            throw new \Exception('InfluxDB database not ready yet');
+                        }
+                        sleep($sleep);
+                    } else {
+                        break; // leave the do-while if successful
+                    }
+                } while ($attempts < $max);
 
                 // sync data
                 foreach ($globalMetrics as $metric => $options) { //for each metrics
@@ -335,7 +352,23 @@ $cli
                 $latestProject = null;
 
                 do { // Loop over all the projects
-                    $projects = $dbForConsole->find('projects', [], 100, orderAfter:$latestProject);
+                    $attempts = 0;
+                    $max = 10;
+                    $sleep = 1;
+
+                    do { // list projects
+                        try {
+                            $attempts++;
+                            $projects = $dbForConsole->find('projects', [], 100, orderAfter:$latestProject);
+                            break; // leave the do-while if successful
+                        } catch (\Exception $e) {
+                            Console::warning("Console DB not ready yet. Retrying ({$attempts})...");
+                            if ($attempts >= $max) {
+                                throw new \Exception('Failed access console db: ' . $e->getMessage());
+                            }
+                            sleep($sleep);
+                        }
+                    } while ($attempts < $max);
 
                     if (empty($projects)) {
                         continue;
