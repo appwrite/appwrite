@@ -1,3 +1,6 @@
+## 2.0.0
+- BREAKING All services and methods now return proper response objects instead of `Response` object
+
 ## 1.0.4
 - Fix user agent by using `packageName` instead of `appName`
 
