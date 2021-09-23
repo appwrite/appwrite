@@ -6,7 +6,6 @@ use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
 use stdClass;
 use Utopia\Validator;
-use function var_dump;
 
 class OpenAPI3 extends Format
 {
