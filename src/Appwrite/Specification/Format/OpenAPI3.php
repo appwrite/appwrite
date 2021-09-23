@@ -6,6 +6,7 @@ use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
 use stdClass;
 use Utopia\Validator;
+use function var_dump;
 
 class OpenAPI3 extends Format
 {
@@ -442,11 +443,19 @@ class OpenAPI3 extends Format
                         $rule['type'] = ($rule['type']) ? $rule['type'] : 'none';
 
                         if(\is_array($rule['type'])) {
-                            $items = [
-                                'anyOf' => \array_map(function($type) {
-                                    return ['$ref' => '#/components/schemas/'.$type];
-                                }, $rule['type'])
-                            ];
+                            if($rule['array']) {
+                                $items = [
+                                    'anyOf' => \array_map(function($type) {
+                                        return ['$ref' => '#/components/schemas/'.$type];
+                                    }, $rule['type'])
+                                ];
+                            } else {
+                                $items = [
+                                    'oneOf' => \array_map(function($type) {
+                                        return ['$ref' => '#/components/schemas/'.$type];
+                                    }, $rule['type'])
+                                ];
+                            }
                         } else {
                             $items = [
                                 '$ref' => '#/components/schemas/'.$rule['type'],

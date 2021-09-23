@@ -445,11 +445,19 @@ class Swagger2 extends Format
                         $rule['type'] = ($rule['type']) ? $rule['type'] : 'none';
 
                         if(\is_array($rule['type'])) {
-                            $items = [
-                                'anyOf' => \array_map(function($type) {
-                                    return ['$ref' => '#/definitions/'.$type];
-                                }, $rule['type'])
-                            ];
+                            if($rule['array']) {
+                                $items = [
+                                    'anyOf' => \array_map(function($type) {
+                                        return ['$ref' => '#/definitions/'.$type];
+                                    }, $rule['type'])
+                                ];
+                            } else {
+                                $items = [
+                                    'oneOf' => \array_map(function($type) {
+                                        return ['$ref' => '#/definitions/'.$type];
+                                    }, $rule['type'])
+                                ];
+                            }
                         } else {
                             $items = [
                                 'type' => $type,
