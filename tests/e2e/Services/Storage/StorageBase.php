@@ -220,7 +220,7 @@ trait StorageBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['sum']);
         $this->assertIsInt($response['body']['sum']);
-        $this->assertGreaterThan(0, $response['body']['files']);
+        $this->assertCount(1, $response['body']['files']);
         $this->assertEquals($data['fileId'], $response['body']['files'][0]['$id']);
 
         /**
