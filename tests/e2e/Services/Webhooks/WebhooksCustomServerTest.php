@@ -28,6 +28,7 @@ class WebhooksCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Actors1',
+            'permission' => 'document',
         ]);
         
         $this->assertEquals($actors['headers']['status-code'], 200);
@@ -63,15 +64,14 @@ class WebhooksCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'id' => 'fullname',
-            'type' => 'text',
+            'indexId' => 'fullname',
+            'type' => 'key',
             'attributes' => ['lastName', 'firstName'],
             'orders' => ['ASC', 'ASC'],
         ]);
 
         $this->assertEquals($index['headers']['status-code'], 201);
-        $this->assertEquals($index['body']['$collection'], $data['actorsId']);
-        $this->assertEquals($index['body']['$id'], 'fullname');
+        $this->assertEquals($index['body']['key'], 'fullname');
 
         // wait for database worker to create index
         sleep(5);
@@ -122,9 +122,11 @@ class WebhooksCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
+            'collectionId' => 'unique()',
             'name' => 'Demo',
             'read' => ['role:all'],
             'write' => ['role:all'],
+            'permission' => 'document'
         ]);
         
         $this->assertEquals($actors['headers']['status-code'], 201);
@@ -171,6 +173,7 @@ class WebhooksCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'userId' => 'unique()',
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -322,6 +325,7 @@ class WebhooksCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'functionId' => 'unique()',
             'name' => 'Test',
             'execute' => ['role:all'],
             'runtime' => 'php-8.0',
@@ -474,7 +478,7 @@ class WebhooksCustomServerTest extends Scope
         $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$data['functionId'].'/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
+        ], $this->getHeaders()), ['executionId' => 'unique()',]);
 
         $this->assertEquals($execution['headers']['status-code'], 201);
         $this->assertNotEmpty($execution['body']['$id']);

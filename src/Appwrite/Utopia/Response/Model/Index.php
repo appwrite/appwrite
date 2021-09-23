@@ -10,17 +10,11 @@ class Index extends Model
     public function __construct()
     {
         $this
-            ->addRule('$collection', [
+            ->addRule('key', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Collection ID.',
+                'description' => 'Index Key.',
                 'default' => '',
-                'example' => '5e5ea5c16d55',
-            ])
-            ->addRule('$id', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Index ID.',
-                'default' => '',
-                'example' => '',
+                'example' => 'index1',
             ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
@@ -28,20 +22,18 @@ class Index extends Model
                 'default' => '',
                 'example' => '',
             ])
+            ->addRule('status', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Index status. Possible values: `available`, `processing`, `deleting`, or `failed`',
+                'default' => '',
+                'example' => 'available',
+            ])
             ->addRule('attributes', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Index attributes.',
                 'default' => [],
                 'example' => [],
                 'array' => true,
-            ])
-            ->addRule('lengths', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Index lengths.',
-                'default' => [],
-                'example' => [],
-                'array' => true,
-                'required' => false,
             ])
             ->addRule('orders', [
                 'type' => self::TYPE_STRING,

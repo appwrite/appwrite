@@ -251,7 +251,7 @@
                         </span>
 
                         <div class="pull-start margin-end avatar-container">
-                            <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-attrs="src={{env.API}}/avatars/browsers/{{session.clientCode|lowercase}}?width=60&height=60&project={{env.PROJECT}},title={{session.clientName}},alt={{session.clientName}}" class="avatar" loading="lazy" width="60" height="60" />
+                            <img onerror="this.onerror=null;this.className='avatar hide'" data-ls-attrs="src={{env.API}}/avatars/browsers/{{session.clientCode|lowercase}}?width=60&height=60&project={{env.PROJECT}},title={{session.clientName}},alt={{session.clientName}}" class="avatar" loading="lazy" width="60" height="60" />
                                 
                             <div data-ls-if="{{session.provider}} !== 'email'" class="corner">
                                 <img data-ls-attrs="src=/images/users/{{session.provider}}.png?buster=<?php echo APP_CACHE_BUSTER; ?>,title={{session.provider}},alt={{session.provider}}"  class="avatar xs" loading="lazy" width="30" height="30" />
@@ -266,7 +266,7 @@
                         </span>
 
                         <div class="margin-top-small">
-                            <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-if="{{session.countryCode}} !== '--'" data-ls-attrs="src={{env.API}}/avatars/flags/{{session.countryCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs margin-end-small inline" />
+                            <img onerror="this.onerror=null;this.className='avatar hide'" data-ls-if="{{session.countryCode}} !== '--'" data-ls-attrs="src={{env.API}}/avatars/flags/{{session.countryCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs margin-end-small inline" />
                             <small data-ls-bind="{{session.ip}}"></small> / <small data-ls-bind="{{session.countryName}}"></small>
                         </div>
                     </li>
@@ -305,10 +305,10 @@
                     <table class="vertical small">
                         <thead>
                             <tr>
-                                <th width="140">Date</th>
+                                <th width="120">Date</th>
                                 <th width="175">Event</th>
                                 <th>Client</th>
-                                <th width="90">Location</th>
+                                <th width="110">Location</th>
                                 <th width="90">IP</th>
                             </tr>
                         </thead>
@@ -317,13 +317,13 @@
                                 <td data-title="Date: "><span data-ls-bind="{{log.time|dateTime}}"></span></td>
                                 <td data-title="Event: "><span data-ls-bind="{{log.event}}"></span></td>
                                 <td data-title="Client: ">
-                                    <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.clientCode|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.clientName}},alt={{log.clientName}}" class="avatar xxs inline margin-end-small" />
+                                    <img onerror="this.onerror=null;this.className='avatar hide'" data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.clientCode|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.clientName}},alt={{log.clientName}}" class="avatar xxs inline margin-end-small" />
                                     <span data-ls-if="(!{{log.clientName}})">Unknown</span>
                                     <span data-ls-if="({{log.clientName}})" data-ls-bind="{{log.clientName}} {{log.clientVersion}} on {{log.model}} {{log.osName}} {{log.osVersion}}"></span>
                                 </td>
                                 <td data-title="Location: ">
-                                    <img onerror="this.onerror=null;this.src='/images/unknown.svg'" data-ls-attrs="src={{env.API}}/avatars/flags/{{log.countryCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline margin-end-small" />
-                                    <span data-ls-bind="{{log.geo.countryName}}"></span>
+                                    <img onerror="this.onerror=null;this.className='avatar xxs hide'" data-ls-attrs="src={{env.API}}/avatars/flags/{{log.countryCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline margin-end-small" />
+                                    <span data-ls-bind="{{log.countryName}}"></span>
                                 </td>
                                 <td data-title="IP: "><span data-ls-bind="{{log.ip}}"></span></td>
                             </tr>

@@ -1,7 +1,7 @@
 (function(window) {
   window.ls.container.get("view").add({
     selector: "data-ui-phases",
-    controller: function(element, window, document, expression, router) {
+    controller: function(element, window, document, expression, router, view) {
       var tabs = document.createElement("ul");
       var container = document.createElement("div");
       var titles = Array.prototype.slice.call(
@@ -111,6 +111,8 @@
             setTab(i);
           }
         });
+
+        view.render(title);
       });
 
       next.map(function(obj) {

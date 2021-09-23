@@ -1,16 +1,19 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Database\Validator\CustomId;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain as DomainValidator;
 use Appwrite\Network\Validator\URL;
-use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Response;
-use Cron\CronExpression;
+use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
+use Utopia\Audit\Audit;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Exception;
@@ -20,8 +23,14 @@ use Utopia\Validator\Integer;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\Audit\Audit;
-use Utopia\Abuse\Adapters\TimeLimit;
+
+App::init(function ($project) {
+    /** @var Utopia\Database\Document $project */
+
+    if ($project->getId() !== 'console') {
+        throw new Exception('Access to this API is forbidden.', 401);
+    }
+}, ['project'], 'projects');
 
 App::post('/v1/projects')
     ->desc('Create Project')
@@ -33,6 +42,7 @@ App::post('/v1/projects')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
     ->param('teamId', '', new UID(), 'Team unique ID.')
     ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
@@ -49,7 +59,7 @@ App::post('/v1/projects')
     ->inject('dbForInternal')
     ->inject('dbForExternal')
     ->inject('consoleDB')
-    ->action(function ($name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $dbForConsole, $dbForInternal, $dbForExternal, $consoleDB) {
+    ->action(function ($projectId, $name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $dbForConsole, $dbForInternal, $dbForExternal, $consoleDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
         /** @var Utopia\Database\Database $dbForInternal */
@@ -62,11 +72,18 @@ App::post('/v1/projects')
             throw new Exception('Team not found', 404);
         }
 
+        $auth = Config::getParam('auth', []);
+        $auths = ['limit' => 0];
+        foreach ($auth as $index => $method) {
+            $auths[$method['key'] ?? ''] = true;
+        }
+
         $project = $dbForConsole->createDocument('projects', new Document([
+            '$id' => $projectId == 'unique()' ? $dbForConsole->getId() : $projectId,
             '$read' => ['team:' . $teamId],
             '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
-            'teamId' => $team->getId(),
             'name' => $name,
+            'teamId' => $team->getId(),
             'description' => $description,
             'logo' => $logo,
             'url' => $url,
@@ -77,16 +94,12 @@ App::post('/v1/projects')
             'legalCity' => $legalCity,
             'legalAddress' => $legalAddress,
             'legalTaxId' => $legalTaxId,
+            'services' => new stdClass(),
             'platforms' => [],
             'webhooks' => [],
             'keys' => [],
-            'tasks' => [],
             'domains' => [],
-            'usersAuthEmailPassword' => true,
-            'usersAuthAnonymous' => true,
-            'usersAuthInvites' => true,
-            'usersAuthJWT' => true,
-            'usersAuthPhone' => true,
+            'auths' => $auths,
         ]));
 
         $collections = Config::getParam('collections2', []); /** @var array $collections */
@@ -150,16 +163,25 @@ App::get('/v1/projects')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('after', '', new UID(), 'ID of the project used as the starting point for the query, excluding the project itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function ($search, $limit, $offset, $orderType, $response, $dbForConsole) {
+    ->action(function ($search, $limit, $offset, $after, $orderType, $response, $dbForConsole) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
 
         $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
 
-        $results = $dbForConsole->find('projects', $queries, $limit, $offset, ['_id'], [$orderType]);
+        if (!empty($after)) {
+            $afterProject = $dbForConsole->getDocument('projects', $after);
+
+            if ($afterProject->isEmpty()) {
+                throw new Exception("Project '{$after}' for the 'after' value not found.", 400);
+            }
+        }
+
+        $results = $dbForConsole->find('projects', $queries, $limit, $offset, [], [$orderType], $afterProject ?? null);
         $sum = $dbForConsole->count('projects', $queries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
@@ -195,22 +217,25 @@ App::get('/v1/projects/:projectId')
     });
 
 App::get('/v1/projects/:projectId/usage')
-    ->desc('Get Project')
+    ->desc('Get usage stats for a project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USAGE_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->inject('projectDB')
+    ->inject('dbForInternal')
     ->inject('register')
-    ->action(function ($projectId, $range, $response, $dbForConsole, $projectDB, $register) {
+    ->action(function ($projectId, $range, $response, $dbForConsole, $dbForInternal, $register) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForConsole */
-        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Database\Database $dbForInternal */
         /** @var Utopia\Registry\Registry $register */
 
         $project = $dbForConsole->getDocument('projects', $projectId);
@@ -219,179 +244,72 @@ App::get('/v1/projects/:projectId/usage')
             throw new Exception('Project not found', 404);
         }
 
+        $usage = [];
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-
             $period = [
                 '24h' => [
-                    'start' => DateTime::createFromFormat('U', \strtotime('-24 hours')),
-                    'end' => DateTime::createFromFormat('U', \strtotime('+1 hour')),
-                    'group' => '30m',
+                    'period' => '30m',
+                    'limit' => 48,
                 ],
                 '7d' => [
-                    'start' => DateTime::createFromFormat('U', \strtotime('-7 days')),
-                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                    'group' => '1d',
+                    'period' => '1d',
+                    'limit' => 7,
                 ],
                 '30d' => [
-                    'start' => DateTime::createFromFormat('U', \strtotime('-30 days')),
-                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                    'group' => '1d',
+                    'period' => '1d',
+                    'limit' => 30,
                 ],
                 '90d' => [
-                    'start' => DateTime::createFromFormat('U', \strtotime('-90 days')),
-                    'end' => DateTime::createFromFormat('U', \strtotime('now')),
-                    'group' => '1d',
+                    'period' => '1d',
+                    'limit' => 90,
                 ],
             ];
 
-            $client = $register->get('influxdb');
+            $dbForInternal->setNamespace('project_' . $projectId . '_internal');
 
-            $requests = [];
-            $network = [];
-            $functions = [];
+            $metrics = [
+                'requests', 
+                'network', 
+                'executions',
+                'users.count',
+                'database.documents.count',
+                'database.collections.count',
+                'storage.total'
+            ];
 
-            if ($client) {
-                $start = $period[$range]['start']->format(DateTime::RFC3339);
-                $end = $period[$range]['end']->format(DateTime::RFC3339);
-                $database = $client->selectDB('telegraf');
+            $stats = [];
 
-                // Requests
-                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_requests_all" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' AND "project"=\'' . $project->getId() . '\' GROUP BY time(' . $period[$range]['group'] . ') FILL(null)');
-                $points = $result->getPoints();
+            Authorization::skip(function() use ($dbForInternal, $period, $range, $metrics, &$stats) {
+                foreach ($metrics as $metric) {
+                    $requestDocs = $dbForInternal->find('stats', [
+                        new Query('period', Query::TYPE_EQUAL, [$period[$range]['period']]),
+                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
+                    ], $period[$range]['limit'], 0, ['time'], [Database::ORDER_DESC]);
+    
+                    $stats[$metric] = [];
+                    foreach ($requestDocs as $requestDoc) {
+                        $stats[$metric][] = [
+                            'value' => $requestDoc->getAttribute('value'),
+                            'date' => $requestDoc->getAttribute('time'),
+                        ];
+                    }
+                    $stats[$metric] = array_reverse($stats[$metric]);
+                }    
+            });
 
-                foreach ($points as $point) {
-                    $requests[] = [
-                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                        'date' => \strtotime($point['time']),
-                    ];
-                }
-
-                // Network
-                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_network_all" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' AND "project"=\'' . $project->getId() . '\' GROUP BY time(' . $period[$range]['group'] . ') FILL(null)');
-                $points = $result->getPoints();
-
-                foreach ($points as $point) {
-                    $network[] = [
-                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                        'date' => \strtotime($point['time']),
-                    ];
-                }
-
-                // Functions
-                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' AND "project"=\'' . $project->getId() . '\' GROUP BY time(' . $period[$range]['group'] . ') FILL(null)');
-                $points = $result->getPoints();
-
-                foreach ($points as $point) {
-                    $functions[] = [
-                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                        'date' => \strtotime($point['time']),
-                    ];
-                }
-            }
-        } else {
-            $requests = [];
-            $network = [];
-            $functions = [];
-        }
-
-        // Users
-
-        $projectDB->getCollection([
-            'limit' => 0,
-            'offset' => 0,
-            'filters' => [
-                '$collection=users',
-            ],
-        ]);
-
-        $usersTotal = $projectDB->getSum();
-
-        // Documents
-
-        $collections = $projectDB->getCollection([
-            'limit' => 100,
-            'offset' => 0,
-            'filters' => [
-                '$collection=collections',
-            ],
-        ]);
-
-        $collectionsTotal = $projectDB->getSum();
-
-        $documents = [];
-
-        foreach ($collections as $collection) {
-            $result = $projectDB->getCollection([
-                'limit' => 0,
-                'offset' => 0,
-                'filters' => [
-                    '$collection=' . $collection['$id'],
-                ],
+            $usage = new Document([
+                'range' => $range,
+                'requests' => $stats['requests'],
+                'network' => $stats['network'],
+                'functions' => $stats['executions'],
+                'documents' => $stats['database.documents.count'],
+                'collections' => $stats['database.collections.count'],
+                'users' => $stats['users.count'],
+                'storage' => $stats['storage.total']
             ]);
-
-            $documents[] = ['name' => $collection['name'], 'total' => $projectDB->getSum()];
         }
 
-        // Tasks
-        $tasksTotal = \count($project->getAttribute('tasks', []));
-
-        $response->json([
-            'range' => $range,
-            'requests' => [
-                'data' => $requests,
-                'total' => \array_sum(\array_map(function ($item) {
-                    return $item['value'];
-                }, $requests)),
-            ],
-            'network' => [
-                'data' => \array_map(function ($value) {return ['value' => \round($value['value'] / 1000000, 2), 'date' => $value['date']];}, $network), // convert bytes to mb
-                'total' => \array_sum(\array_map(function ($item) {
-                    return $item['value'];
-                }, $network)),
-            ],
-            'functions' => [
-                'data' => $functions,
-                'total' => \array_sum(\array_map(function ($item) {
-                    return $item['value'];
-                }, $functions)),
-            ],
-            'collections' => [
-                'data' => $collections,
-                'total' => $collectionsTotal,
-            ],
-            'documents' => [
-                'data' => $documents,
-                'total' => \array_sum(\array_map(function ($item) {
-                    return $item['total'];
-                }, $documents)),
-            ],
-            'users' => [
-                'data' => [],
-                'total' => $usersTotal,
-            ],
-            'tasks' => [
-                'data' => [],
-                'total' => $tasksTotal,
-            ],
-            'storage' => [
-                'total' => $projectDB->getCount(
-                    [
-                        'attribute' => 'sizeOriginal',
-                        'filters' => [
-                            '$collection=files',
-                        ],
-                    ]
-                ) +
-                $projectDB->getCount(
-                    [
-                        'attribute' => 'size',
-                        'filters' => [
-                            '$collection=tags',
-                        ],
-                    ]
-                ),
-            ],
-        ]);
+        $response->dynamic($usage, Response::MODEL_USAGE_PROJECT);
     });
 
 App::patch('/v1/projects/:projectId')
@@ -443,6 +361,39 @@ App::patch('/v1/projects/:projectId')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
+App::patch('/v1/projects/:projectId/service')
+    ->desc('Update service status')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateServiceStatus')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), function ($element) {return $element['optional'];})), true), 'Service name.')
+    ->param('status', null, new Boolean(), 'Service status.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function ($projectId, $service, $status, $response, $dbForConsole) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Utopia\Database\Database $dbForConsole */
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception('Project not found', 404);
+        }
+
+        $services = $project->getAttribute('services', []);
+        $services[$service] = $status;
+
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('services', $services));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
 App::patch('/v1/projects/:projectId/oauth2')
     ->desc('Update Project OAuth2')
     ->groups(['api', 'projects'])
@@ -469,10 +420,11 @@ App::patch('/v1/projects/:projectId/oauth2')
             throw new Exception('Project not found', 404);
         }
 
-        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
-                ->setAttribute('usersOauth2' . \ucfirst($provider) . 'Appid', $appId)
-                ->setAttribute('usersOauth2' . \ucfirst($provider) . 'Secret', $secret)
-        );
+        $providers = $project->getAttribute('providers', []);
+        $providers[$provider . 'Appid'] = $appId;
+        $providers[$provider . 'Secret'] = $secret;
+
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('providers', $providers));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -501,8 +453,11 @@ App::patch('/v1/projects/:projectId/auth/limit')
             throw new Exception('Project not found', 404);
         }
 
+        $auths = $project->getAttribute('auths', []);
+        $auths['limit'] = $limit;
+
         $dbForConsole->updateDocument('projects', $project->getId(), $project
-                ->setAttribute('usersAuthLimit', $limit)
+                ->setAttribute('auths', $auths)
         );
 
         $response->dynamic($project, Response::MODEL_PROJECT);
@@ -536,9 +491,10 @@ App::patch('/v1/projects/:projectId/auth/:method')
             throw new Exception('Project not found', 404);
         }
 
-        $dbForConsole->updateDocument('projects', $project->getId(), $project
-                ->setAttribute($authKey, $status)
-        );
+        $auths = $project->getAttribute('auths', []);
+        $auths[$authKey] = $status;
+
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('auths', $auths));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -959,238 +915,6 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
 
         if (!$project->findAndRemove('$id', $keyId, 'keys')) {
             throw new Exception('Key not found', 404);
-        }
-
-        $dbForConsole->updateDocument('projects', $project->getId(), $project);
-
-        $response->noContent();
-    });
-
-// Tasks
-
-App::post('/v1/projects/:projectId/tasks')
-    ->desc('Create Task')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'createTask')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TASK)
-    ->param('projectId', null, new UID(), 'Project unique ID.')
-    ->param('name', null, new Text(128), 'Task name. Max length: 128 chars.')
-    ->param('status', null, new WhiteList(['play', 'pause'], true), 'Task status.')
-    ->param('schedule', null, new Cron(), 'Task schedule CRON syntax.')
-    ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
-    ->param('httpMethod', '', new WhiteList(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT'], true), 'Task HTTP method.')
-    ->param('httpUrl', '', new URL(), 'Task HTTP URL')
-    ->param('httpHeaders', null, new ArrayList(new Text(256)), 'Task HTTP headers list.', true)
-    ->param('httpUser', '', new Text(256), 'Task HTTP user. Max length: 256 chars.', true)
-    ->param('httpPass', '', new Text(256), 'Task HTTP password. Max length: 256 chars.', true)
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function ($projectId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
-        }
-
-        $cron = new CronExpression($schedule);
-        $next = ($status == 'play') ? $cron->getNextRunDate()->format('U') : null;
-        $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
-
-        $task = new Document([
-            '$id' => $dbForConsole->getId(),
-            'projectId' => $project->getId(),
-            'name' => $name,
-            'status' => $status,
-            'schedule' => $schedule,
-            'updated' => \time(),
-            'previous' => null,
-            'next' => $next,
-            'security' => $security,
-            'httpMethod' => $httpMethod,
-            'httpUrl' => $httpUrl,
-            'httpHeaders' => $httpHeaders,
-            'httpUser' => $httpUser,
-            'httpPass' => $httpPass,
-            'log' => '{}',
-            'failures' => 0,
-        ]);
-
-        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
-                ->setAttribute('tasks', $task, Document::SET_TYPE_APPEND)
-        );
-
-        if ($next) {
-            ResqueScheduler::enqueueAt($next, 'v1-tasks', 'TasksV1', $task->getArrayCopy());
-        }
-
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($task, Response::MODEL_TASK);
-    });
-
-App::get('/v1/projects/:projectId/tasks')
-    ->desc('List Tasks')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'listTasks')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TASK_LIST)
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function ($projectId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
-        }
-
-        $tasks = $project->getAttribute('tasks', []);
-
-        $response->dynamic(new Document([
-            'tasks' => $tasks,
-            'sum' => count($tasks),
-        ]), Response::MODEL_TASK_LIST);
-
-    });
-
-App::get('/v1/projects/:projectId/tasks/:taskId')
-    ->desc('Get Task')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'getTask')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TASK)
-    ->param('projectId', null, new UID(), 'Project unique ID.')
-    ->param('taskId', null, new UID(), 'Task unique ID.')
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function ($projectId, $taskId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
-        }
-
-        $task = $project->find('$id', $taskId, 'tasks');
-
-        if (empty($task) || !$task instanceof Document) {
-            throw new Exception('Task not found', 404);
-        }
-
-        $response->dynamic($task, Response::MODEL_TASK);
-    });
-
-App::put('/v1/projects/:projectId/tasks/:taskId')
-    ->desc('Update Task')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateTask')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TASK)
-    ->param('projectId', null, new UID(), 'Project unique ID.')
-    ->param('taskId', null, new UID(), 'Task unique ID.')
-    ->param('name', null, new Text(128), 'Task name. Max length: 128 chars.')
-    ->param('status', null, new WhiteList(['play', 'pause'], true), 'Task status.')
-    ->param('schedule', null, new Cron(), 'Task schedule CRON syntax.')
-    ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
-    ->param('httpMethod', '', new WhiteList(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT'], true), 'Task HTTP method.')
-    ->param('httpUrl', '', new URL(), 'Task HTTP URL.')
-    ->param('httpHeaders', null, new ArrayList(new Text(256)), 'Task HTTP headers list.', true)
-    ->param('httpUser', '', new Text(256), 'Task HTTP user. Max length: 256 chars.', true)
-    ->param('httpPass', '', new Text(256), 'Task HTTP password. Max length: 256 chars.', true)
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function ($projectId, $taskId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
-        }
-
-        $task = $project->find('$id', $taskId, 'tasks');
-
-        if (empty($task) || !$task instanceof Document) {
-            throw new Exception('Task not found', 404);
-        }
-
-        $cron = new CronExpression($schedule);
-        $next = ($status == 'play') ? $cron->getNextRunDate()->format('U') : null;
-        $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
-
-        $project->findAndReplace('$id', $task->getId(), $task
-                ->setAttribute('name', $name)
-                ->setAttribute('status', $status)
-                ->setAttribute('schedule', $schedule)
-                ->setAttribute('updated', \time())
-                ->setAttribute('next', $next)
-                ->setAttribute('security', $security)
-                ->setAttribute('httpMethod', $httpMethod)
-                ->setAttribute('httpUrl', $httpUrl)
-                ->setAttribute('httpHeaders', $httpHeaders)
-                ->setAttribute('httpUser', $httpUser)
-                ->setAttribute('httpPass', $httpPass)
-            , 'tasks');
-
-        $dbForConsole->updateDocument('projects', $project->getId(), $project);
-
-        if ($next) {
-            ResqueScheduler::enqueueAt($next, 'v1-tasks', 'TasksV1', $task->getArrayCopy());
-        }
-
-        $response->dynamic($task, Response::MODEL_TASK);
-    });
-
-App::delete('/v1/projects/:projectId/tasks/:taskId')
-    ->desc('Delete Task')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'deleteTask')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('projectId', null, new UID(), 'Project unique ID.')
-    ->param('taskId', null, new UID(), 'Task unique ID.')
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function ($projectId, $taskId, $response, $dbForConsole) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404);
-        }
-
-        if (!$project->findAndRemove('$id', $taskId, 'tasks')) {
-            throw new Exception('Task not found', 404);
         }
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project);

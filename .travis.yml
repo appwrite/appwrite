@@ -1,11 +1,15 @@
-dist: xenial
+dist: focal
 
 arch:
   - amd64
-  - arm64
+  - arm64-graviton2
 
 os: linux
 
+# Small change
+vm:
+  size: large 
+  
 language: shell
 
 notifications:
@@ -30,17 +34,27 @@ before_install:
 - echo "_APP_FUNCTIONS_RUNTIMES=php-8.0" >> .env
 
 install:
-- docker-compose up -d
+- docker-compose up -d --build
 - sleep 10
 
 script:
 - docker ps -a
+# Tests should fail if any container is in exited status
+- ALL_UP=`docker ps -aq --filter "status=exited"`
+- >
+  if [[ "$ALL_UP" != "" ]]; then
+    exit 1
+  fi
 - docker-compose logs appwrite
 - docker-compose logs mariadb
 - docker-compose logs appwrite-worker-functions
 - docker-compose exec appwrite doctor
 - docker-compose exec appwrite vars
 - docker-compose exec appwrite test --debug
+- docker-compose logs appwrite
+
+after_failure:
+- docker-compose logs appwrite
 
 deploy:
   - provider: script

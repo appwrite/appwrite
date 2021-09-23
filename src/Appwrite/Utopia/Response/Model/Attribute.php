@@ -10,23 +10,23 @@ class Attribute extends Model
     public function __construct()
     {
         $this
-            ->addRule('$collection', [
+            ->addRule('key', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Collection ID.',
+                'description' => 'Attribute Key.',
                 'default' => '',
-                'example' => '5e5ea5c16d55',
-            ])
-            ->addRule('$id', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Attribute ID.',
-                'default' => '',
-                'example' => '60ccf71b98a2d',
+                'example' => 'fullName',
             ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Attribute type.',
                 'default' => '',
                 'example' => 'string',
+            ])
+            ->addRule('status', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Attribute status. Possible values: `available`, `processing`, `deleting`, or `failed`',
+                'default' => '',
+                'example' => 'available',
             ])
             ->addRule('size', [
                 'type' => self::TYPE_STRING,
@@ -40,27 +40,12 @@ class Attribute extends Model
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('signed', [
-                'type' => self::TYPE_BOOLEAN,
-                'description' => 'Is attribute signed?',
-                'default' => true,
-                'example' => true,
-                'required' => false,
-            ])
             ->addRule('array', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Is attribute an array?',
                 'default' => false,
                 'example' => false,
                 'required' => false
-            ])
-            ->addRule('filters', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Attribute filters.',
-                'default' => [],
-                'example' => [],
-                'array' => true,
-                'required' => false,
             ])
         ;
     }

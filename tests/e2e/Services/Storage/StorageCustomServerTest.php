@@ -22,6 +22,7 @@ class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'bucketId' => 'unique()',
             'name' => 'Test Bucket',
         ]);
         $this->assertEquals(201, $bucket['headers']['status-code']);
@@ -36,6 +37,20 @@ class StorageCustomServerTest extends Scope
         $this->assertEquals(true, $bucket['body']['antiVirus']);
         $this->assertEquals('local', $bucket['body']['adapter']);
         $bucketId = $bucket['body']['$id'];
+
+        /**
+         * Test create with Custom ID
+         */
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'bucketId' => 'bucket1',
+            'name' => 'Test Bucket',
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $this->assertEquals('bucket1', $bucket['body']['$id']);
+        
         /**
          * Test for FAILURE
          */
@@ -43,6 +58,7 @@ class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'bucketId' => 'unique()',
             'name' => '',
         ]);
         $this->assertEquals(400, $bucket['headers']['status-code']);
@@ -69,6 +85,19 @@ class StorageCustomServerTest extends Scope
         $this->assertEquals($id, $response['body']['buckets'][0]['$id']);
         $this->assertEquals('Test Bucket', $response['body']['buckets'][0]['name']);
 
+        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'after' => $response['body']['buckets'][0]['$id']
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['buckets']);
+        $this->assertCount(1, $response['body']['buckets']);
+
+        $this->assertEquals('bucket1', $response['body']['buckets'][0]['$id']);
         return $data;
     }
 
@@ -121,14 +150,15 @@ class StorageCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $id, array_merge([
+        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'bucketId' => 'unique()',
             'name' => 'Test Bucket Updated',
             'enabled' => false,
         ]);
-        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $this->assertEquals(200, $bucket['headers']['status-code']);
         $this->assertNotEmpty($bucket['body']['$id']);
         $this->assertIsInt($bucket['body']['dateCreated']);
         $this->assertIsArray($bucket['body']['$read']);
@@ -143,7 +173,7 @@ class StorageCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $id, array_merge([
+        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -178,10 +208,6 @@ class StorageCustomServerTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
         $this->assertEquals(404, $response['headers']['status-code']);
-        
-        /**
-         * Test for FAILURE
-         */
 
         return $data;
     }

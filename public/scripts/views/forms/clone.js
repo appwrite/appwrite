@@ -38,6 +38,8 @@
         clone.innerHTML = template;
         clone.className = element.className;
 
+        var input = clone.querySelector("input, select, textarea");
+
         view.render(clone);
 
         if (target) {
@@ -46,7 +48,9 @@
           button.parentNode.insertBefore(clone, button);
         }
 
-        clone.querySelector("input").focus();
+        if(input) {
+          input.focus();
+        }
 
         Array.prototype.slice
           .call(clone.querySelectorAll("[data-remove]"))
@@ -86,6 +90,15 @@
       element.parentNode.insertBefore(button, element.nextSibling);
 
       element.parentNode.removeChild(element);
+
+
+      button.form.addEventListener('reset', function (event) {
+        target.innerHTML = '';
+
+        if (first) {
+          button.click();
+        }
+      });
 
       if (first) {
         button.click();

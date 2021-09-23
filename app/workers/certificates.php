@@ -9,7 +9,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
 
-require_once __DIR__.'/../workers.php';
+require_once __DIR__.'/../init.php';
 
 Console::title('Certificates V1 Worker');
 Console::success(APP_NAME.' certificates worker v1 has started');
@@ -78,9 +78,9 @@ class CertificatesV1 extends Worker
             }
         }
 
-        $certificate = $dbForConsole->findFirst('certificates', [
+        $certificate = $dbForConsole->findOne('certificates', [
             new Query('domain', QUERY::TYPE_EQUAL, [$domain->get()])
-        ], /*limit*/ 1);
+        ]);
 
         // $condition = ($certificate
         //     && $certificate instanceof Document

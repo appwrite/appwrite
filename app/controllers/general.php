@@ -44,16 +44,15 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         } else {
             Authorization::disable();
 
-            $certificate = $dbForConsole->findFirst('certificates', [
+            $certificate = $dbForConsole->findOne('certificates', [
                 new Query('domain', QUERY::TYPE_EQUAL, [$domain->get()])
-            ], /*limit*/ 1);
+            ]);
 
             if (empty($certificate)) {
                 $certificate = new Document([
                     'domain' => $domain->get(),
                 ]);
                 $certificate = $dbForConsole->createDocument('certificates', $certificate);
-                Authorization::enable();
 
                 Console::info('Issuing a TLS certificate for the master domain (' . $domain->get() . ') in a few seconds...');
 
@@ -63,10 +62,11 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
                     'validateTarget' => false,
                     'validateCNAME' => false,
                 ]);
-            } else {
-                Authorization::enable(); // ensure authorization is reenabled
             }
+
             $domains[$domain->get()] = true;
+
+            Authorization::reset(); // ensure authorization is re-enabled
         }
         Config::setParam('domains', $domains);
     }
@@ -256,7 +256,14 @@ App::init(function ($utopia, $request, $response, $console, $project, $dbForCons
         }
     }, $user->getAttribute('memberships', []));
 
-    // TDOO Check if user is root
+    $service = $route->getLabel('sdk.namespace','');
+    if(!empty($service)) {
+        if(array_key_exists($service, $project->getAttribute('services',[]))
+            && !$project->getAttribute('services',[])[$service]
+            && !Auth::isPrivilegedUser(Authorization::$roles)) {
+            throw new Exception('Service is disabled', 503);
+        }
+    }
 
     if (!\in_array($scope, $scopes)) {
         if ($project->isEmpty()) { // Check if permission is denied because project is missing
@@ -312,7 +319,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
         
         if($route) {
             Console::error('[Error] Method: '.$route->getMethod());
-            Console::error('[Error] URL: '.$route->getURL());
+            Console::error('[Error] URL: '.$route->getPath());
         }
         
         Console::error('[Error] Type: '.get_class($error));
@@ -333,6 +340,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
         case 412: // Error allowed publicly
         case 429: // Error allowed publicly
         case 501: // Error allowed publicly
+        case 503: // Error allowed publicly
             $code = $error->getCode();
             $message = $error->getMessage();
             break;

@@ -8,17 +8,23 @@ return [
         'controller' => 'web/home.php',
         'sdk' => false,
         'docs' => false,
+        'docsUrl' => '',
         'tests' => false,
+        'optional' => false,
+        'icon' => '',
     ],
-    'console/' => [
+    'console' => [
         'key' => 'console',
         'name' => 'Console',
         'controller' => 'web/console.php',
         'sdk' => false,
         'docs' => false,
+        'docsUrl' => '',
         'tests' => false,
+        'optional' => false,
+        'icon' => '',
     ],
-    'v1/account' => [
+    'account' => [
         'key' => 'account',
         'name' => 'Account',
         'subtitle' => 'The Account service allows you to authenticate and manage a user account.',
@@ -26,9 +32,12 @@ return [
         'controller' => 'api/account.php',
         'sdk' => true,
         'docs' => true,
+        'docsUrl' => 'https://appwrite.io/docs/client/account',
         'tests' => false,
+        'optional' => true,
+        'icon' => '/images/services/account.png',
     ],
-    'v1/avatars' => [
+    'avatars' => [
         'key' => 'avatars',
         'name' => 'Avatars',
         'subtitle'=> 'The Avatars service aims to help you complete everyday tasks related to your app image, icons, and avatars.',
@@ -36,9 +45,12 @@ return [
         'controller' => 'api/avatars.php',
         'sdk' => true,
         'docs' => true,
+        'docsUrl' => 'https://appwrite.io/docs/client/avatars',
         'tests' => false,
+        'optional' => true,
+        'icon' => '/images/services/avatars.png',
     ],
-    'v1/database' => [
+    'database' => [
         'key' => 'database',
         'name' => 'Database',
         'subtitle' => 'The Database service allows you to create structured collections of documents, query and filter lists of documents',
@@ -46,9 +58,12 @@ return [
         'controller' => 'api/database.php',
         'sdk' => true,
         'docs' => true,
+        'docsUrl' => 'https://appwrite.io/docs/client/database',
         'tests' => false,
+        'optional' => true,
+        'icon' => '/images/services/database.png',
     ],
-    'v1/locale' => [
+    'locale' => [
         'key' => 'locale',
         'name' => 'Locale',
         'subtitle' => 'The Locale service allows you to customize your app based on your users\' location.',
@@ -56,9 +71,12 @@ return [
         'controller' => 'api/locale.php',
         'sdk' => true,
         'docs' => true,
+        'docsUrl' => 'https://appwrite.io/docs/client/locale',
         'tests' => false,
+        'optional' => true,
+        'icon' => '/images/services/locale.png',
     ],
-    'v1/health' => [
+    'health' => [
         'key' => 'health',
         'name' => 'Health',
         'subtitle' => 'The Health service allows you to both validate and monitor your Appwrite server\'s health.',
@@ -66,18 +84,24 @@ return [
         'controller' => 'api/health.php',
         'sdk' => true,
         'docs' => true,
+        'docsUrl' => 'https://appwrite.io/docs/server/health',
         'tests' => false,
+        'optional' => true,
+        'icon' => '/images/services/health.png',
     ],
-    'v1/projects' => [
+    'projects' => [
         'key' => 'projects',
         'name' => 'Projects',
         'subtitle' => 'The Project service allows you to manage all the projects in your Appwrite server.',
         'controller' => 'api/projects.php',
         'sdk' => true,
         'docs' => true,
+        'docsUrl' => '',
         'tests' => false,
+        'optional' => false,
+        'icon' => '',
     ],
-    'v1/storage' => [
+    'storage' => [
         'key' => 'storage',
         'name' => 'Storage',
         'subtitle' => 'The Storage service allows you to manage your project files.',
@@ -85,9 +109,12 @@ return [
         'controller' => 'api/storage.php',
         'sdk' => true,
         'docs' => true,
+        'docsUrl' => 'https://appwrite.io/docs/client/storage',
         'tests' => false,
+        'optional' => true,
+        'icon' => '/images/services/storage.png',
     ],
-    'v1/teams' => [
+    'teams' => [
         'key' => 'teams',
         'name' => 'Teams',
         'subtitle' => 'The Teams service allows you to group users of your project and to enable them to share read and write access to your project resources',
@@ -95,9 +122,12 @@ return [
         'controller' => 'api/teams.php',
         'sdk' => true,
         'docs' => true,
+        'docsUrl' => 'https://appwrite.io/docs/client/teams',
         'tests' => false,
+        'optional' => true,
+        'icon' => '/images/services/teams.png',
     ],
-    'v1/users' => [
+    'users' => [
         'key' => 'users',
         'name' => 'Users',
         'subtitle' => 'The Users service allows you to manage your project users.',
@@ -105,9 +135,12 @@ return [
         'controller' => 'api/users.php',
         'sdk' => true,
         'docs' => true,
+        'docsUrl' => 'https://appwrite.io/docs/server/users',
         'tests' => false,
+        'optional' => true,
+        'icon' => '/images/services/users.png',
     ],
-    'v1/functions' => [
+    'functions' => [
         'key' => 'functions',
         'name' => 'Functions',
         'subtitle' => 'The Functions Service allows you view, create and manage your Cloud Functions.',
@@ -115,9 +148,12 @@ return [
         'controller' => 'api/functions.php',
         'sdk' => true,
         'docs' => true,
+        'docsUrl' => 'https://appwrite.io/docs/functions',
         'tests' => false,
+        'optional' => true,
+        'icon' => '/images/services/functions.png',
     ],
-    'v1/mock' => [
+    'mock' => [
         'key' => 'mock',
         'name' => 'Mock',
         'subtitle' => '',
@@ -125,9 +161,12 @@ return [
         'controller' => 'mock.php',
         'sdk' => false,
         'docs' => false,
+        'docsUrl' => '',
         'tests' => true,
+        'optional' => false,
+        'icon' => '',
     ],
-    'v1/graphql' => [
+    'graphql' => [
         'key' => 'graphql',
         'name' => 'GraphQL',
         'subtitle' => 'Appwrite\'s GraphQL Endpoint',
@@ -135,6 +174,9 @@ return [
         'controller' => 'api/graphql.php',
         'sdk' => false,
         'docs' => false,
-        'tests' => false,
+        'docsUrl' => '',
+        'tests' => true,
+        'optional' => false,
+        'icon' => '',
     ],
 ];

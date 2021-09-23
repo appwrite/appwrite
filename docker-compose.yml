@@ -7,7 +7,7 @@ version: '3'
 
 services:
   traefik:
-    image: traefik:2.3
+    image: traefik:2.5
     container_name: appwrite-traefik
     command:
       - --log.level=DEBUG
@@ -73,7 +73,6 @@ services:
       - mariadb
       - redis
       # - clamav
-      - influxdb
     entrypoint: 
       - php
       - -e
@@ -112,8 +111,6 @@ services:
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
       - _APP_USAGE_STATS
-      - _APP_INFLUXDB_HOST
-      - _APP_INFLUXDB_PORT
       - _APP_STORAGE_LIMIT
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_FUNCTIONS_CONTAINERS
@@ -121,28 +118,12 @@ services:
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
       - _APP_FUNCTIONS_RUNTIMES
-
-  appwrite-worker-usage:
-    entrypoint: worker-usage
-    container_name: appwrite-worker-usage
-    build:
-      context: .
-    networks:
-      - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-    depends_on:
-      - redis
-      - telegraf
-    environment:
-      - _APP_ENV
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
       - _APP_STATSD_HOST
       - _APP_STATSD_PORT
+      - _APP_MAINTENANCE_INTERVAL
+      - _APP_MAINTENANCE_RETENTION_EXECUTION
+      - _APP_MAINTENANCE_RETENTION_ABUSE
+      - _APP_MAINTENANCE_RETENTION_AUDIT
 
   appwrite-worker-audits:
     entrypoint: worker-audits
@@ -191,33 +172,6 @@ services:
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
 
-  appwrite-worker-tasks:
-    entrypoint: worker-tasks
-    container_name: appwrite-worker-tasks
-    build:
-      context: .
-    networks:
-      - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-    depends_on:
-      - redis
-      - mariadb
-    environment:
-      - _APP_ENV
-      - _APP_OPENSSL_KEY_V1
-      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-
   appwrite-worker-deletes:
     entrypoint: worker-deletes
     container_name: appwrite-worker-deletes
@@ -257,6 +211,7 @@ services:
     volumes: 
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      # - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - redis
       - mariadb
@@ -335,6 +290,8 @@ services:
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
       - _APP_USAGE_STATS
+      - _APP_STATSD_HOST
+      - _APP_STATSD_PORT
       - DOCKERHUB_PULL_USERNAME
       - DOCKERHUB_PULL_PASSWORD
 
@@ -389,6 +346,37 @@ services:
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
 
+  appwrite-usage:
+    entrypoint:
+     - php
+     - -e
+     - /usr/src/code/app/cli.php
+     - usage
+    container_name: appwrite-usage
+    build:
+      context: .
+      args:
+        - DEBUG=false
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./dev:/usr/local/dev
+    depends_on:
+      - influxdb
+      - mariadb
+    environment:
+      - _APP_ENV
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_INFLUXDB_HOST
+      - _APP_INFLUXDB_PORT
+      - _APP_USAGE_SYNC_INTERVAL
+
   appwrite-schedule:
     entrypoint: schedule
     container_name: appwrite-schedule
@@ -422,7 +410,7 @@ services:
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
       - MYSQL_USER=user
       - MYSQL_PASSWORD=${_APP_DB_PASS}
-    command: 'mysqld --innodb-flush-method=fsync --wait_timeout=86400' # add ' --query_cache_size=0' for DB tests
+    command: 'mysqld --innodb-flush-method=fsync' # add ' --query_cache_size=0' for DB tests
     # command: mv /var/lib/mysql/ib_logfile0 /var/lib/mysql/ib_logfile0.bu && mv /var/lib/mysql/ib_logfile1 /var/lib/mysql/ib_logfile1.bu
 
   # smtp:
@@ -440,6 +428,8 @@ services:
   redis:
     image: redis:6.0-alpine
     container_name: appwrite-redis
+    ports:
+      - "6379:6379"
     networks:
       - appwrite
     volumes:

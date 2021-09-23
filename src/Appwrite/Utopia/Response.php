@@ -34,17 +34,24 @@ use Appwrite\Utopia\Response\Model\Team;
 use Appwrite\Utopia\Response\Model\Locale;
 use Appwrite\Utopia\Response\Model\Log;
 use Appwrite\Utopia\Response\Model\Membership;
+use Appwrite\Utopia\Response\Model\Metric;
 use Appwrite\Utopia\Response\Model\Permissions;
 use Appwrite\Utopia\Response\Model\Phone;
 use Appwrite\Utopia\Response\Model\Platform;
 use Appwrite\Utopia\Response\Model\Project;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Tag;
-use Appwrite\Utopia\Response\Model\Task;
 use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\Mock; // Keep last
+use Appwrite\Utopia\Response\Model\UsageBuckets;
+use Appwrite\Utopia\Response\Model\UsageCollection;
+use Appwrite\Utopia\Response\Model\UsageDatabase;
+use Appwrite\Utopia\Response\Model\UsageFunctions;
+use Appwrite\Utopia\Response\Model\UsageProject;
+use Appwrite\Utopia\Response\Model\UsageStorage;
+use Appwrite\Utopia\Response\Model\UsageUsers;
 use stdClass;
 
 /**
@@ -58,9 +65,17 @@ class Response extends SwooleResponse
     const MODEL_LOG = 'log';
     const MODEL_LOG_LIST = 'logList';
     const MODEL_ERROR = 'error';
+    const MODEL_METRIC = 'metric';
+    const MODEL_METRIC_LIST = 'metricList';
     const MODEL_ERROR_DEV = 'errorDev';
     const MODEL_BASE_LIST = 'baseList';
-    const MODEL_PERMISSIONS = 'permissions';
+    const MODEL_USAGE_DATABASE = 'usageDatabase';
+    const MODEL_USAGE_COLLECTION = 'usageCollection';
+    const MODEL_USAGE_USERS = 'usageUsers';
+    const MODEL_USAGE_BUCKETS = 'usageBuckets';
+    const MODEL_USAGE_STORAGE = 'usageStorage';
+    const MODEL_USAGE_FUNCTIONS = 'usageFunctions';
+    const MODEL_USAGE_PROJECT = 'usageProject';
     
     // Database
     const MODEL_COLLECTION = 'collection';
@@ -69,7 +84,6 @@ class Response extends SwooleResponse
     const MODEL_ATTRIBUTE_LIST = 'attributeList';
     const MODEL_INDEX = 'index';
     const MODEL_INDEX_LIST = 'indexList';
-    const MODEL_RULE = 'rule';
     const MODEL_DOCUMENT = 'document';
     const MODEL_DOCUMENT_LIST = 'documentList';
 
@@ -122,13 +136,16 @@ class Response extends SwooleResponse
     const MODEL_WEBHOOK_LIST = 'webhookList';
     const MODEL_KEY = 'key';
     const MODEL_KEY_LIST = 'keyList';
-    const MODEL_TASK = 'task';
-    const MODEL_TASK_LIST = 'taskList';
     const MODEL_PLATFORM = 'platform';
     const MODEL_PLATFORM_LIST = 'platformList';
     const MODEL_DOMAIN = 'domain';
     const MODEL_DOMAIN_LIST = 'domainList';
     
+    // Deprecated
+    const MODEL_PERMISSIONS = 'permissions';
+    const MODEL_RULE = 'rule';
+    const MODEL_TASK = 'task';
+
     // Tests (keep last)
     const MODEL_MOCK = 'mock';
 
@@ -173,7 +190,6 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Projects List', self::MODEL_PROJECT_LIST, 'projects', self::MODEL_PROJECT, true, false))
             ->setModel(new BaseList('Webhooks List', self::MODEL_WEBHOOK_LIST, 'webhooks', self::MODEL_WEBHOOK, true, false))
             ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY, true, false))
-            ->setModel(new BaseList('Tasks List', self::MODEL_TASK_LIST, 'tasks', self::MODEL_TASK, true, false))
             ->setModel(new BaseList('Platforms List', self::MODEL_PLATFORM_LIST, 'platforms', self::MODEL_PLATFORM, true, false))
             ->setModel(new BaseList('Domains List', self::MODEL_DOMAIN_LIST, 'domains', self::MODEL_DOMAIN, true, false))
             ->setModel(new BaseList('Countries List', self::MODEL_COUNTRY_LIST, 'countries', self::MODEL_COUNTRY))
@@ -181,13 +197,12 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Languages List', self::MODEL_LANGUAGE_LIST, 'languages', self::MODEL_LANGUAGE))
             ->setModel(new BaseList('Currencies List', self::MODEL_CURRENCY_LIST, 'currencies', self::MODEL_CURRENCY))
             ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
+            ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
             // Entities
-            ->setModel(new Permissions())
             ->setModel(new Collection())
             ->setModel(new Attribute())
             ->setModel(new Index())
             ->setModel(new ModelDocument())
-            ->setModel(new Rule())
             ->setModel(new Log())
             ->setModel(new User())
             ->setModel(new Preferences())
@@ -205,7 +220,6 @@ class Response extends SwooleResponse
             ->setModel(new Project())
             ->setModel(new Webhook())
             ->setModel(new Key())
-            ->setModel(new Task())
             ->setModel(new Domain())
             ->setModel(new Platform())
             ->setModel(new Country())
@@ -213,6 +227,14 @@ class Response extends SwooleResponse
             ->setModel(new Language())
             ->setModel(new Currency())
             ->setModel(new Phone())
+            ->setModel(new Metric())
+            ->setModel(new UsageDatabase())
+            ->setModel(new UsageCollection())
+            ->setModel(new UsageUsers())
+            ->setModel(new UsageStorage())
+            ->setModel(new UsageBuckets())
+            ->setModel(new UsageFunctions())
+            ->setModel(new UsageProject())
             // Verification
             // Recovery
             // Tests (keep last)
@@ -307,6 +329,8 @@ class Response extends SwooleResponse
             $this->payload = $document->getArrayCopy();
             return $this->payload;
         }
+
+        $document = $model->filter($document);
 
         foreach ($model->getRules() as $key => $rule) {
             if (!$document->isSet($key)) {
