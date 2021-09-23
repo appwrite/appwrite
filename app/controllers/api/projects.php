@@ -26,7 +26,7 @@ App::init(function ($project, $locale) {
     /** @var Utopia\Locale\Locale $locale */
 
     if($project->getId() !== 'console') {
-        throw new Exception($locale->getText('exceptions.access-to-this-api-is-forbidden'), 401);
+        throw new Exception($locale->getText('exceptions.projects.access-to-this-api-is-forbidden'), 401);
     }
 }, ['project', 'locale'], 'projects');
 
@@ -64,7 +64,7 @@ App::post('/v1/projects')
         $team = $projectDB->getDocument($teamId);
 
         if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
-            throw new Exception($locale->getText('exceptions.team-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.teams.team-not-found'), 404);
         }
 
         $project = $consoleDB->createDocument(
@@ -95,7 +95,7 @@ App::post('/v1/projects')
         );
 
         if (false === $project) {
-            throw new Exception($locale->getText('exceptions.failed-saving-project-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-saving-project-to-db'), 500);
         }
 
         $consoleDB->createNamespace($project->getId());
@@ -164,7 +164,7 @@ App::get('/v1/projects/:projectId')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $response->dynamic($project, Response::MODEL_PROJECT);
@@ -194,7 +194,7 @@ App::get('/v1/projects/:projectId/usage')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $projectDB->setNamespace('app_'.$project->getId());
@@ -442,7 +442,7 @@ App::patch('/v1/projects/:projectId')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $project = $consoleDB->updateDocument(\array_merge($project->getArrayCopy(), [
@@ -459,7 +459,7 @@ App::patch('/v1/projects/:projectId')
         ]));
 
         if (false === $project) {
-            throw new Exception($locale->getText('exceptions.failed-saving-project-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-saving-project-to-db'), 500);
         }
 
         $response->dynamic($project, Response::MODEL_PROJECT);
@@ -490,7 +490,7 @@ App::patch('/v1/projects/:projectId/oauth2')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $project = $consoleDB->updateDocument(\array_merge($project->getArrayCopy(), [
@@ -499,7 +499,7 @@ App::patch('/v1/projects/:projectId/oauth2')
         ]));
 
         if (false === $project) {
-            throw new Exception($locale->getText('exceptions.failed-saving-project-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-saving-project-to-db'), 500);
         }
 
         $response->dynamic($project, Response::MODEL_PROJECT);
@@ -528,7 +528,7 @@ App::patch('/v1/projects/:projectId/auth/limit')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         if (false === $consoleDB->updateDocument(
@@ -536,7 +536,7 @@ App::patch('/v1/projects/:projectId/auth/limit')
                 'usersAuthLimit' => $limit,
             ]))
         ) {
-            throw new Exception($locale->getText('exceptions.failed-saving-project-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-saving-project-to-db'), 500);
         };
 
         $response->dynamic($project, Response::MODEL_PROJECT);
@@ -569,7 +569,7 @@ App::patch('/v1/projects/:projectId/auth/:method')
         $status = ($status === '1' || $status === 'true' || $status === 1 || $status === true);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         if (false === $consoleDB->updateDocument(
@@ -577,7 +577,7 @@ App::patch('/v1/projects/:projectId/auth/:method')
                 $authKey => $status,
             ]))
         ) {
-            throw new Exception($locale->getText('exceptions.failed-saving-project-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-saving-project-to-db'), 500);
         };
 
         $response->dynamic($project, Response::MODEL_PROJECT);
@@ -607,13 +607,13 @@ App::delete('/v1/projects/:projectId')
         /** @var Utopia\Locale\Locale $locale */
 
         if (!Auth::passwordVerify($password, $user->getAttribute('password'))) { // Double check user password
-            throw new Exception($locale->getText('exceptions.invalid-credentials'), 401);
+            throw new Exception($locale->getText('exceptions.account.invalid-credentials'), 401);
         }
 
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $deletes
@@ -633,7 +633,7 @@ App::delete('/v1/projects/:projectId')
                         ;
                     }
                 } else {
-                    throw new Exception($locale->getText('exceptions.failed-delete-project-document', [
+                    throw new Exception($locale->getText('exceptions.projects.failed-delete-project-document', [
                         'key' => $key
                     ]), 500);
                 }
@@ -641,11 +641,11 @@ App::delete('/v1/projects/:projectId')
         }
                 
         if (!$consoleDB->deleteDocument($project->getAttribute('teamId', null))) {
-            throw new Exception($locale->getText('exceptions.failed-to-remove-project-team-from-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-to-remove-project-team-from-db'), 500);
         }
 
         if (!$consoleDB->deleteDocument($projectId)) {
-            throw new Exception($locale->getText('exceptions.failed-to-remove-project-from-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-to-remove-project-from-db'), 500);
         }
 
         $response->noContent();
@@ -681,7 +681,7 @@ App::post('/v1/projects/:projectId/webhooks')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
@@ -701,7 +701,7 @@ App::post('/v1/projects/:projectId/webhooks')
         ]);
 
         if (false === $webhook) {
-            throw new Exception($locale->getText('exceptions.failed-saving-webhook-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-saving-webhook-to-db'), 500);
         }
 
         $project->setAttribute('webhooks', $webhook, Document::SET_TYPE_APPEND);
@@ -709,7 +709,7 @@ App::post('/v1/projects/:projectId/webhooks')
         $project = $consoleDB->updateDocument($project->getArrayCopy());
 
         if (false === $project) {
-            throw new Exception($locale->getText('exceptions.failed-saving-project-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-saving-project-to-db'), 500);
         }
 
         $response
@@ -740,7 +740,7 @@ App::get('/v1/projects/:projectId/webhooks')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $webhooks = $project->getAttribute('webhooks', []);
@@ -774,13 +774,13 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $webhook = $project->search('$id', $webhookId, $project->getAttribute('webhooks', []));
 
         if (empty($webhook) || !$webhook instanceof Document) {
-            throw new Exception($locale->getText('exceptions.webhook-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.projects.webhook-not-found'), 404);
         }
 
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
@@ -815,7 +815,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
@@ -823,7 +823,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
         $webhook = $project->search('$id', $webhookId, $project->getAttribute('webhooks', []));
 
         if (empty($webhook) || !$webhook instanceof Document) {
-            throw new Exception($locale->getText('exceptions.webhook-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.projects.webhook-not-found'), 404);
         }
 
         $webhook
@@ -836,7 +836,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
         ;
 
         if (false === $consoleDB->updateDocument($webhook->getArrayCopy())) {
-            throw new Exception($locale->getText('exceptions.failed-saving-webhook-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-saving-webhook-to-db'), 500);
         }
 
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
@@ -864,17 +864,17 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $webhook = $project->search('$id', $webhookId, $project->getAttribute('webhooks', []));
 
         if (empty($webhook) || !$webhook instanceof Document) {
-            throw new Exception($locale->getText('exceptions.webhook-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.projects.webhook-not-found'), 404);
         }
 
         if (!$consoleDB->deleteDocument($webhook->getId())) {
-            throw new Exception($locale->getText('exceptions.failed-to-remove-webhook-from-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-to-remove-webhook-from-db'), 500);
         }
 
         $response->noContent();
@@ -906,7 +906,7 @@ App::post('/v1/projects/:projectId/keys')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $key = $consoleDB->createDocument([
@@ -921,7 +921,7 @@ App::post('/v1/projects/:projectId/keys')
         ]);
 
         if (false === $key) {
-            throw new Exception($locale->getText('exceptions.failed-saving-key-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-saving-key-to-db'), 500);
         }
 
         $project->setAttribute('keys', $key, Document::SET_TYPE_APPEND);
@@ -929,7 +929,7 @@ App::post('/v1/projects/:projectId/keys')
         $project = $consoleDB->updateDocument($project->getArrayCopy());
 
         if (false === $project) {
-            throw new Exception($locale->getText('exceptions.failed-saving-project-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-saving-project-to-db'), 500);
         }
 
         $response
@@ -960,7 +960,7 @@ App::get('/v1/projects/:projectId/keys')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $keys = $project->getAttribute('keys', []);
@@ -994,13 +994,13 @@ App::get('/v1/projects/:projectId/keys/:keyId')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $key = $project->search('$id', $keyId, $project->getAttribute('keys', []));
 
         if (empty($key) || !$key instanceof Document) {
-            throw new Exception($locale->getText('exceptions.key-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.projects.key-not-found'), 404);
         }
 
         $response->dynamic($key, Response::MODEL_KEY);
@@ -1031,13 +1031,13 @@ App::put('/v1/projects/:projectId/keys/:keyId')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $key = $project->search('$id', $keyId, $project->getAttribute('keys', []));
 
         if (empty($key) || !$key instanceof Document) {
-            throw new Exception($locale->getText('exceptions.key-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.projects.key-not-found'), 404);
         }
 
         $key
@@ -1046,7 +1046,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
         ;
 
         if (false === $consoleDB->updateDocument($key->getArrayCopy())) {
-            throw new Exception($locale->getText('exceptions.failed-saving-key-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-saving-key-to-db'), 500);
         }
 
         $response->dynamic($key, Response::MODEL_KEY);
@@ -1074,17 +1074,17 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $key = $project->search('$id', $keyId, $project->getAttribute('keys', []));
 
         if (empty($key) || !$key instanceof Document) {
-            throw new Exception($locale->getText('exceptions.key-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.projects.key-not-found'), 404);
         }
 
         if (!$consoleDB->deleteDocument($key->getId())) {
-            throw new Exception($locale->getText('exceptions.failed-to-remove-key-from-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-to-remove-key-from-db'), 500);
         }
 
         $response->noContent();
@@ -1123,7 +1123,7 @@ App::post('/v1/projects/:projectId/tasks')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $cron = new CronExpression($schedule);
@@ -1154,7 +1154,7 @@ App::post('/v1/projects/:projectId/tasks')
         ]);
 
         if (false === $task) {
-            throw new Exception($locale->getText('exceptions.failed-saving-tasks-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-saving-tasks-to-db'), 500);
         }
 
         $project->setAttribute('tasks', $task, Document::SET_TYPE_APPEND);
@@ -1162,7 +1162,7 @@ App::post('/v1/projects/:projectId/tasks')
         $project = $consoleDB->updateDocument($project->getArrayCopy());
 
         if (false === $project) {
-            throw new Exception($locale->getText('exceptions.failed-saving-project-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-saving-project-to-db'), 500);
         }
 
         if ($next) {
@@ -1197,7 +1197,7 @@ App::get('/v1/projects/:projectId/tasks')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $tasks = $project->getAttribute('tasks', []);
@@ -1232,13 +1232,13 @@ App::get('/v1/projects/:projectId/tasks/:taskId')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $task = $project->search('$id', $taskId, $project->getAttribute('tasks', []));
 
         if (empty($task) || !$task instanceof Document) {
-            throw new Exception($locale->getText('exceptions.task-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.projects.task-not-found'), 404);
         }
 
         $response->dynamic($task, Response::MODEL_TASK);
@@ -1276,13 +1276,13 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $task = $project->search('$id', $taskId, $project->getAttribute('tasks', []));
 
         if (empty($task) || !$task instanceof Document) {
-            throw new Exception($locale->getText('exceptions.task-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.projects.task-not-found'), 404);
         }
 
         $cron = new CronExpression($schedule);
@@ -1305,7 +1305,7 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
         ;
 
         if (false === $consoleDB->updateDocument($task->getArrayCopy())) {
-            throw new Exception($locale->getText('exceptions.failed-saving-tasks-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-saving-tasks-to-db'), 500);
         }
 
         if ($next) {
@@ -1337,17 +1337,17 @@ App::delete('/v1/projects/:projectId/tasks/:taskId')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $task = $project->search('$id', $taskId, $project->getAttribute('tasks', []));
 
         if (empty($task) || !$task instanceof Document) {
-            throw new Exception($locale->getText('exceptions.task-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.projects.task-not-found'), 404);
         }
 
         if (!$consoleDB->deleteDocument($task->getId())) {
-            throw new Exception($locale->getText('exceptions.failed-to-remove-tasks-from-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-to-remove-tasks-from-db'), 500);
         }
 
         $response->noContent();
@@ -1382,7 +1382,7 @@ App::post('/v1/projects/:projectId/platforms')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $platform = $consoleDB->createDocument([
@@ -1401,7 +1401,7 @@ App::post('/v1/projects/:projectId/platforms')
         ]);
 
         if (false === $platform) {
-            throw new Exception($locale->getText('exceptions.failed-saving-platform-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-saving-platform-to-db'), 500);
         }
 
         $project->setAttribute('platforms', $platform, Document::SET_TYPE_APPEND);
@@ -1409,7 +1409,7 @@ App::post('/v1/projects/:projectId/platforms')
         $project = $consoleDB->updateDocument($project->getArrayCopy());
 
         if (false === $project) {
-            throw new Exception($locale->getText('exceptions.failed-saving-project-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-saving-project-to-db'), 500);
         }
 
         $response
@@ -1440,7 +1440,7 @@ App::get('/v1/projects/:projectId/platforms')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $platforms = $project->getAttribute('platforms', []);
@@ -1474,13 +1474,13 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $platform = $project->search('$id', $platformId, $project->getAttribute('platforms', []));
 
         if (empty($platform) || !$platform instanceof Document) {
-            throw new Exception($locale->getText('exceptions.platform-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.projects.platform-not-found'), 404);
         }
 
         $response->dynamic($platform, Response::MODEL_PLATFORM);
@@ -1513,13 +1513,13 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $platform = $project->search('$id', $platformId, $project->getAttribute('platforms', []));
 
         if (empty($platform) || !$platform instanceof Document) {
-            throw new Exception($locale->getText('exceptions.platform-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.projects.platform-not-found'), 404);
         }
 
         $platform
@@ -1531,7 +1531,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
         ;
 
         if (false === $consoleDB->updateDocument($platform->getArrayCopy())) {
-            throw new Exception($locale->getText('exceptions.failed-saving-platform-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-saving-platform-to-db'), 500);
         }
 
         $response->dynamic($platform, Response::MODEL_PLATFORM);
@@ -1559,17 +1559,17 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $platform = $project->search('$id', $platformId, $project->getAttribute('platforms', []));
 
         if (empty($platform) || !$platform instanceof Document) {
-            throw new Exception($locale->getText('exceptions.platform-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.projects.platform-not-found'), 404);
         }
 
         if (!$consoleDB->deleteDocument($platform->getId())) {
-            throw new Exception($locale->getText('exceptions.failed-to-remove-platform-from-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-to-remove-platform-from-db'), 500);
         }
 
         $response->noContent();
@@ -1600,19 +1600,19 @@ App::post('/v1/projects/:projectId/domains')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $document = $project->search('domain', $domain, $project->getAttribute('domains', []));
 
         if (!empty($document)) {
-            throw new Exception($locale->getText('exceptions.domain-already-exists'), 409);
+            throw new Exception($locale->getText('exceptions.projects.domain-already-exists'), 409);
         }
 
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception($locale->getText('exceptions.unreachable-domain-target', [
+            throw new Exception($locale->getText('exceptions.projects.unreachable-domain-target', [
                 'domain' => $target->get()
             ]), 500);
         }
@@ -1634,7 +1634,7 @@ App::post('/v1/projects/:projectId/domains')
         ]);
 
         if (false === $domain) {
-            throw new Exception($locale->getText('exceptions.failed-saving-domain-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-saving-domain-to-db'), 500);
         }
 
         $project->setAttribute('domains', $domain, Document::SET_TYPE_APPEND);
@@ -1642,7 +1642,7 @@ App::post('/v1/projects/:projectId/domains')
         $project = $consoleDB->updateDocument($project->getArrayCopy());
 
         if (false === $project) {
-            throw new Exception($locale->getText('exceptions.failed-saving-project-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-saving-project-to-db'), 500);
         }
 
         $response
@@ -1673,7 +1673,7 @@ App::get('/v1/projects/:projectId/domains')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $domains = $project->getAttribute('domains', []);
@@ -1707,13 +1707,13 @@ App::get('/v1/projects/:projectId/domains/:domainId')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $domain = $project->search('$id', $domainId, $project->getAttribute('domains', []));
 
         if (empty($domain) || !$domain instanceof Document) {
-            throw new Exception($locale->getText('exceptions.domain-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.projects.domain-not-found'), 404);
         }
 
         $response->dynamic($domain, Response::MODEL_DOMAIN);
@@ -1742,19 +1742,19 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $domain = $project->search('$id', $domainId, $project->getAttribute('domains', []));
 
         if (empty($domain) || !$domain instanceof Document) {
-            throw new Exception($locale->getText('exceptions.domain-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.projects.domain-not-found'), 404);
         }
 
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception($locale->getText('exceptions.unreachable-domain-target', [
+            throw new Exception($locale->getText('exceptions.projects.unreachable-domain-target', [
                 'domain' => $target->get()
             ]), 500);
         }
@@ -1767,7 +1767,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         $validator = new CNAME($target->get());
 
         if (!$validator->isValid($domain->getAttribute('domain', ''))) {
-            throw new Exception($locale->getText('exceptions.failed-to-verify-domain'), 401);
+            throw new Exception($locale->getText('exceptions.projects.failed-to-verify-domain'), 401);
         }
 
         $domain
@@ -1775,7 +1775,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         ;
 
         if (false === $consoleDB->updateDocument($domain->getArrayCopy())) {
-            throw new Exception($locale->getText('exceptions.failed-saving-domains-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-saving-domains-to-db'), 500);
         }
 
         // Issue a TLS certificate when domain is verified
@@ -1810,13 +1810,13 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
         $project = $consoleDB->getDocument($projectId);
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-            throw new Exception($locale->getText('exceptions.project-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.general.project-not-found'), 404);
         }
 
         $domain = $project->search('$id', $domainId, $project->getAttribute('domains', []));
 
         if (empty($domain) || !$domain instanceof Document) {
-            throw new Exception($locale->getText('exceptions.domain-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.projects.domain-not-found'), 404);
         }
 
         if ($consoleDB->deleteDocument($domain->getId())) {
@@ -1825,7 +1825,7 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
                 ->setParam('document', $domain)
             ;
         } else {
-            throw new Exception($locale->getText('exceptions.failed-to-remove-domains-from-db'), 500);
+            throw new Exception($locale->getText('exceptions.projects.failed-to-remove-domains-from-db'), 500);
         }
 
         $response->noContent();

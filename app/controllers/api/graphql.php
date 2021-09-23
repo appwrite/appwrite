@@ -21,6 +21,6 @@ App::post('/v1/graphql')
         function ($locale) {
             /** @var Utopia\Locale\Locale $locale */
 
-            throw new Exception($locale->getText('exceptions.graphql-unsupported'), 502);
+            throw new Exception($locale->getText('exceptions.graphql.graphql-unsupported'), 502);
         }
     );

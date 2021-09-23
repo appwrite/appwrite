@@ -32,7 +32,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
     $route = $utopia->match($request);
 
     if (empty($project->getId()) && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
-        throw new Exception($locale->getText('exceptions.missing-project-id'), 400);
+        throw new Exception($locale->getText('exceptions.general.missing-project-id'), 400);
     }
 
     /*
@@ -72,7 +72,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register, $e
         && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') // Abuse is not diabled
         && (!$isAppUser && !$isPrivilegedUser)) // User is not an admin or API key
         {
-        throw new Exception($locale->getText('exceptions.too-many-requests'), 429);
+        throw new Exception($locale->getText('exceptions.api.too-many-requests'), 429);
     }
 
     /*
@@ -141,36 +141,36 @@ App::init(function ($utopia, $request, $response, $project, $user, $locale) {
     switch ($route->getLabel('auth.type', '')) {
         case 'emailPassword':
             if($project->getAttribute('usersAuthEmailPassword', true) === false) {
-                throw new Exception($locale->getText('exceptions.authentication-disabled-password'), 501);
+                throw new Exception($locale->getText('exceptions.api.authentication-disabled-password'), 501);
             }
             break;
 
         case 'magic-url':
             if($project->getAttribute('usersAuthMagicURL', true) === false) {
-                throw new Exception($locale->getText('exceptions.authentication-disabled-magic-url'), 501);
+                throw new Exception($locale->getText('exceptions.api.authentication-disabled-magic-url'), 501);
             }
             break;
 
         case 'anonymous':
             if($project->getAttribute('usersAuthAnonymous', true) === false) {
-                throw new Exception($locale->getText('exceptions.authentication-disabled-anonymous'), 501);
+                throw new Exception($locale->getText('exceptions.api.authentication-disabled-anonymous'), 501);
             }
             break;
 
         case 'invites':
             if($project->getAttribute('usersAuthInvites', true) === false) {
-                throw new Exception($locale->getText('exceptions.authentication-disabled-invite'), 501);
+                throw new Exception($locale->getText('exceptions.api.authentication-disabled-invite'), 501);
             }
             break;
 
         case 'jwt':
             if($project->getAttribute('usersAuthJWT', true) === false) {
-                throw new Exception($locale->getText('exceptions.authentication-disabled-jwt'), 501);
+                throw new Exception($locale->getText('exceptions.api.authentication-disabled-jwt'), 501);
             }
             break;
         
         default:
-            throw new Exception($locale->getText('exceptions.authentication-unsupported'));
+            throw new Exception($locale->getText('exceptions.api.authentication-unsupported'));
             break;
     }
 

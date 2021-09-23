@@ -70,17 +70,17 @@ App::post('/v1/database/collections')
                 'rules' => $parsedRules,
             ]);
         } catch (AuthorizationException $exception) {
-            throw new Exception($locale->getText('exceptions.unauthorized-permissions'), 401);
+            throw new Exception($locale->getText('exceptions.database.unauthorized-permissions'), 401);
         } catch (StructureException $exception) {
-            throw new Exception($locale->getText('exceptions.bad-structure', [
+            throw new Exception($locale->getText('exceptions.database.bad-structure', [
                 'error' => $exception->getMessage()
             ]), 400);
         } catch (\Exception $exception) {
-            throw new Exception($locale->getText('exceptions.failed-saving-document-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.database.failed-saving-document-to-db'), 500);
         }
 
         if (false === $data) {
-            throw new Exception($locale->getText('exceptions.failed-saving-collection-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.database.failed-saving-collection-to-db'), 500);
         }
 
         $audits
@@ -155,7 +155,7 @@ App::get('/v1/database/collections/:collectionId')
         $collection = $projectDB->getDocument($collectionId, false);
 
         if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-            throw new Exception($locale->getText('exceptions.collection-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.database.collection-not-found'), 404);
         }
 
         $response->dynamic($collection, Response::MODEL_COLLECTION);
@@ -191,7 +191,7 @@ App::put('/v1/database/collections/:collectionId')
         $collection = $projectDB->getDocument($collectionId, false);
 
         if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-            throw new Exception($locale->getText('exceptions.collection-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.database.collection-not-found'), 404);
         }
 
         $parsedRules = [];
@@ -220,17 +220,17 @@ App::put('/v1/database/collections/:collectionId')
                 'rules' => $parsedRules,
             ]));
         } catch (AuthorizationException $exception) {
-            throw new Exception($locale->getText('exceptions.unauthorized-permissions'), 401);
+            throw new Exception($locale->getText('exceptions.database.unauthorized-permissions'), 401);
         } catch (StructureException $exception) {
-            throw new Exception($locale->getText('exceptions.bad-structure', [
+            throw new Exception($locale->getText('exceptions.database.bad-structure', [
                 'error' => $exception->getMessage()
             ]), 400);
         } catch (\Exception $exception) {
-            throw new Exception($locale->getText('exceptions.failed-saving-document-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.database.failed-saving-document-to-db'), 500);
         }
 
         if (false === $collection) {
-            throw new Exception($locale->getText('exceptions.failed-saving-collection-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.database.failed-saving-collection-to-db'), 500);
         }
 
         $audits
@@ -270,11 +270,11 @@ App::delete('/v1/database/collections/:collectionId')
         $collection = $projectDB->getDocument($collectionId, false);
 
         if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-            throw new Exception($locale->getText('exceptions.collection-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.database.collection-not-found'), 404);
         }
 
         if (!$projectDB->deleteDocument($collectionId)) {
-            throw new Exception($locale->getText('exceptions.failed-to-remove-collection-from-db'), 500);
+            throw new Exception($locale->getText('exceptions.database.failed-to-remove-collection-from-db'), 500);
         }
 
         $deletes
@@ -329,17 +329,17 @@ App::post('/v1/database/collections/:collectionId/documents')
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data)) {
-            throw new Exception($locale->getText('exceptions.missing-payload'), 400);
+            throw new Exception($locale->getText('exceptions.database.missing-payload'), 400);
         }
 
         if (isset($data['$id'])) {
-            throw new Exception($locale->getText('exceptions.id-is-locked-field'), 400);
+            throw new Exception($locale->getText('exceptions.database.id-is-locked-field'), 400);
         }
         
         $collection = $projectDB->getDocument($collectionId, false);
 
         if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-            throw new Exception($locale->getText('exceptions.collection-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.database.collection-not-found'), 404);
         }
 
         $data['$collection'] = $collectionId; // Adding this param to make API easier for developers
@@ -354,7 +354,7 @@ App::post('/v1/database/collections/:collectionId/documents')
             $parentDocument = $projectDB->getDocument($parentDocument, false);
 
             if (empty($parentDocument->getArrayCopy())) { // Check empty
-                throw new Exception($locale->getText('exceptions.no-parent-document-found'), 404);
+                throw new Exception($locale->getText('exceptions.database.no-parent-document-found'), 404);
             }
 
             /*
@@ -369,7 +369,7 @@ App::post('/v1/database/collections/:collectionId/documents')
             $structure = new Structure($projectDB);
 
             if (!$structure->isValid($new)) {
-                throw new Exception($locale->getText('exceptions.invalid-data-structure', [
+                throw new Exception($locale->getText('exceptions.database.invalid-data-structure', [
                     'error' => $structure->getDescription()
                 ]), 400);
             }
@@ -377,7 +377,7 @@ App::post('/v1/database/collections/:collectionId/documents')
             $authorization = new Authorization($parentDocument, 'write');
 
             if (!$authorization->isValid($new->getPermissions())) {
-                throw new Exception($locale->getText('exceptions.unauthorized-permissions'), 401);
+                throw new Exception($locale->getText('exceptions.database.unauthorized-permissions'), 401);
             }
 
             $parentDocument
@@ -402,13 +402,13 @@ App::post('/v1/database/collections/:collectionId/documents')
         try {
             $data = $projectDB->createDocument($data);
         } catch (AuthorizationException $exception) {
-            throw new Exception($locale->getText('exceptions.unauthorized-permissions'), 401);
+            throw new Exception($locale->getText('exceptions.database.unauthorized-permissions'), 401);
         } catch (StructureException $exception) {
-            throw new Exception($locale->getText('exceptions.bad-structure', [
+            throw new Exception($locale->getText('exceptions.database.bad-structure', [
                 'error' => $exception->getMessage()
             ]), 400);
         } catch (\Exception $exception) {
-            throw new Exception($locale->getText('exceptions.failed-saving-document-to-db').$exception->getMessage(), 500);
+            throw new Exception($locale->getText('exceptions.database.failed-saving-document-to-db').$exception->getMessage(), 500);
         }
 
         $audits
@@ -453,7 +453,7 @@ App::get('/v1/database/collections/:collectionId/documents')
         $collection = $projectDB->getDocument($collectionId, false);
 
         if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-            throw new Exception($locale->getText('exceptions.collection-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.database.collection-not-found'), 404);
         }
 
         $types = [];
@@ -519,7 +519,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
         $collection = $projectDB->getDocument($collectionId, false);
 
         if (empty($document->getArrayCopy()) || $document->getCollection() != $collection->getId()) { // Check empty
-            throw new Exception($locale->getText('exceptions.no-document-found'), 404);
+            throw new Exception($locale->getText('exceptions.database.no-document-found'), 404);
         }
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
@@ -558,15 +558,15 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
  
         if (!\is_array($data)) {
-            throw new Exception($locale->getText('exceptions.data-param-should-be-a-valid-json-object'), 400);
+            throw new Exception($locale->getText('exceptions.database-data-param-should-be-a-valid-json-object'), 400);
         }
 
         if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-            throw new Exception($locale->getText('exceptions.collection-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.database.collection-not-found'), 404);
         }
 
         if (empty($document->getArrayCopy()) || $document->getCollection() != $collectionId) { // Check empty
-            throw new Exception($locale->getText('exceptions.no-document-found'), 404);
+            throw new Exception($locale->getText('exceptions.database.no-document-found'), 404);
         }
 
         $data = \array_merge($document->getArrayCopy(), $data);
@@ -577,19 +577,19 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         $data['$permissions']['write'] = (is_null($write)) ? ($document->getPermissions()['write'] ?? []) : $write; // By default inherit write permissions
 
         if (empty($data)) {
-            throw new Exception($locale->getText('exceptions.missing-payload'), 400);
+            throw new Exception($locale->getText('exceptions.database.missing-payload'), 400);
         }
 
         try {
             $data = $projectDB->updateDocument($data);
         } catch (AuthorizationException $exception) {
-            throw new Exception($locale->getText('exceptions.unauthorized-permissions'), 401);
+            throw new Exception($locale->getText('exceptions.database.unauthorized-permissions'), 401);
         } catch (StructureException $exception) {
-            throw new Exception($locale->getText('exceptions.bad-structure', [
+            throw new Exception($locale->getText('exceptions.database.bad-structure', [
                 'error' => $exception->getMessage()
             ]), 400);
         } catch (\Exception $exception) {
-            throw new Exception($locale->getText('exceptions.failed-saving-document-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.database.failed-saving-document-to-db'), 500);
         }
 
         $audits
@@ -630,23 +630,23 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         $document = $projectDB->getDocument($documentId, false);
 
         if (empty($document->getArrayCopy()) || $document->getCollection() != $collectionId) { // Check empty
-            throw new Exception($locale->getText('exceptions.no-document-found'), 404);
+            throw new Exception($locale->getText('exceptions.database.no-document-found'), 404);
         }
 
         if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-            throw new Exception($locale->getText('exceptions.collection-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.database.collection-not-found'), 404);
         }
 
         try {
             $projectDB->deleteDocument($documentId);
         } catch (AuthorizationException $exception) {
-            throw new Exception($locale->getText('exceptions.unauthorized-permissions'), 401);
+            throw new Exception($locale->getText('exceptions.database.unauthorized-permissions'), 401);
         } catch (StructureException $exception) {
-            throw new Exception($locale->getText('exceptions.bad-structure', [
+            throw new Exception($locale->getText('exceptions.database.bad-structure', [
                 'error' => $exception->getMessage()
             ]), 400);
         } catch (\Exception $exception) {
-            throw new Exception($locale->getText('exceptions.failed-to-remove-document-from-db'), 500);
+            throw new Exception($locale->getText('exceptions.database.failed-to-remove-document-from-db'), 500);
         }
 
         $events

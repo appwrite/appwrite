@@ -114,7 +114,7 @@ App::get('/v1/health/time')
         $diff = ($timestamp - \time());
 
         if ($diff > $gap || $diff < ($gap * -1)) {
-            throw new Exception($locale->getText('exceptions.server-time-gaps-detected'));
+            throw new Exception($locale->getText('exceptions.health.server-time-gaps-detected'));
         }
 
         $response->json(['remote' => $timestamp, 'local' => \time(), 'diff' => $diff]);
@@ -233,13 +233,13 @@ App::get('/v1/health/storage/local')
             $device = new Local($volume);
 
             if (!\is_readable($device->getRoot())) {
-                throw new Exception($locale->getText('exceptions.device-dir-not-readable', [
+                throw new Exception($locale->getText('exceptions.health.device-dir-not-readable', [
                     'device' => $key
                 ]));
             }
 
             if (!\is_writable($device->getRoot())) {
-                throw new Exception($locale->getText('exceptions.device-dir-not-writable', [
+                throw new Exception($locale->getText('exceptions.health.device-dir-not-writable', [
                     'device' => $key
                 ]));
             }

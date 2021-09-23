@@ -72,7 +72,7 @@ App::post('/v1/functions')
         ]);
 
         if (false === $function) {
-            throw new Exception($locale->getText('exceptions.failed-saving-function-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.functions.failed-saving-function-to-db'), 500);
         }
 
         $response
@@ -141,7 +141,7 @@ App::get('/v1/functions/:functionId')
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception($locale->getText('exceptions.function-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.functions.function-not-found'), 404);
         }
 
         $response->dynamic($function, Response::MODEL_FUNCTION);
@@ -172,7 +172,7 @@ App::get('/v1/functions/:functionId/usage')
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception($locale->getText('exceptions.function-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.functions.function-not-found'), 404);
         }
         
         if(App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
@@ -302,7 +302,7 @@ App::put('/v1/functions/:functionId')
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception($locale->getText('exceptions.function-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.functions.function-not-found'), 404);
         }
 
         $original = $function->getAttribute('schedule', '');
@@ -323,7 +323,7 @@ App::put('/v1/functions/:functionId')
         ]));
 
         if (false === $function) {
-            throw new Exception($locale->getText('exceptions.failed-saving-function-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.functions.failed-saving-function-to-db'), 500);
         }
 
         if ($next && $schedule !== $original) {
@@ -367,11 +367,11 @@ App::patch('/v1/functions/:functionId/tag')
         $tag = $projectDB->getDocument($tag);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception($locale->getText('exceptions.function-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.functions.function-not-found'), 404);
         }
 
         if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
-            throw new Exception($locale->getText('exceptions.tag-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.functions.tag-not-found'), 404);
         }
 
         $schedule = $function->getAttribute('schedule', '');
@@ -394,7 +394,7 @@ App::patch('/v1/functions/:functionId/tag')
         }
 
         if (false === $function) {
-            throw new Exception($locale->getText('exceptions.failed-saving-function-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.functions.failed-saving-function-to-db'), 500);
         }
 
         $response->dynamic($function, Response::MODEL_FUNCTION);
@@ -425,11 +425,11 @@ App::delete('/v1/functions/:functionId')
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception($locale->getText('exceptions.function-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.functions.function-not-found'), 404);
         }
 
         if (!$projectDB->deleteDocument($function->getId())) {
-            throw new Exception($locale->getText('exceptions.failed-to-remove-function-from-db'), 500);
+            throw new Exception($locale->getText('exceptions.functions.failed-to-remove-function-from-db'), 500);
         }
 
         $deletes
@@ -472,7 +472,7 @@ App::post('/v1/functions/:functionId/tags')
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception($locale->getText('exceptions.function-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.functions.function-not-found'), 404);
         }
 
         $file = $request->getFiles('code');
@@ -482,7 +482,7 @@ App::post('/v1/functions/:functionId/tags')
         $upload = new Upload();
 
         if (empty($file)) {
-            throw new Exception($locale->getText('exceptions.no-file-sent'), 400);
+            throw new Exception($locale->getText('exceptions.storage.no-file-sent'), 400);
         }
 
         // Make sure we handle a single file and multiple files the same way
@@ -491,15 +491,15 @@ App::post('/v1/functions/:functionId/tags')
         $file['size'] = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
         if (!$fileExt->isValid($file['name'])) { // Check if file type is allowed
-            throw new Exception($locale->getText('exceptions.file-type-not-allowed'), 400);
+            throw new Exception($locale->getText('exceptions.storage.file-type-not-allowed'), 400);
         }
 
         if (!$fileSize->isValid($file['size'])) { // Check if file size is exceeding allowed limit
-            throw new Exception($locale->getText('exceptions.file-size-not-allowed'), 400);
+            throw new Exception($locale->getText('exceptions.storage.file-size-not-allowed'), 400);
         }
 
         if (!$upload->isValid($file['tmp_name'])) {
-            throw new Exception($locale->getText('exceptions.invalid-file'), 403);
+            throw new Exception($locale->getText('exceptions.storage.invalid-file'), 403);
         }
 
         // Save to storage
@@ -507,7 +507,7 @@ App::post('/v1/functions/:functionId/tags')
         $path = $device->getPath(\uniqid().'.'.\pathinfo($file['name'], PATHINFO_EXTENSION));
         
         if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
-            throw new Exception($locale->getText('exceptions.failed-moving-file'), 500);
+            throw new Exception($locale->getText('exceptions.storage.failed-moving-file'), 500);
         }
         
         $tag = $projectDB->createDocument([
@@ -524,7 +524,7 @@ App::post('/v1/functions/:functionId/tags')
         ]);
 
         if (false === $tag) {
-            throw new Exception($locale->getText('exceptions.failed-saving-tag-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.functions.failed-saving-tag-to-db'), 500);
         }
 
         $usage
@@ -564,7 +564,7 @@ App::get('/v1/functions/:functionId/tags')
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception($locale->getText('exceptions.function-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.functions.function-not-found'), 404);
         }
         
         $results = $projectDB->getCollection([
@@ -608,17 +608,17 @@ App::get('/v1/functions/:functionId/tags/:tagId')
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception($locale->getText('exceptions.function-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.functions.function-not-found'), 404);
         }
 
         $tag = $projectDB->getDocument($tagId);
 
         if ($tag->getAttribute('functionId') !== $function->getId()) {
-            throw new Exception($locale->getText('exceptions.tag-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.functions.tag-not-found'), 404);
         }
 
         if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
-            throw new Exception($locale->getText('exceptions.tag-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.functions.tag-not-found'), 404);
         }
 
         $response->dynamic($tag, Response::MODEL_TAG);
@@ -650,24 +650,24 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception($locale->getText('exceptions.function-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.functions.function-not-found'), 404);
         }
         
         $tag = $projectDB->getDocument($tagId);
 
         if ($tag->getAttribute('functionId') !== $function->getId()) {
-            throw new Exception($locale->getText('exceptions.tag-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.functions.tag-not-found'), 404);
         }
 
         if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
-            throw new Exception($locale->getText('exceptions.tag-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.functions.tag-not-found'), 404);
         }
 
         $device = Storage::getDevice('functions');
 
         if ($device->delete($tag->getAttribute('path', ''))) {
             if (!$projectDB->deleteDocument($tag->getId())) {
-                throw new Exception($locale->getText('exceptions.failed-to-remove-tag-from-db'), 500);
+                throw new Exception($locale->getText('exceptions.functions.failed-to-remove-tag-from-db'), 500);
             }
         }
 
@@ -677,7 +677,7 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
             ]));
     
             if (false === $function) {
-                throw new Exception($locale->getText('exceptions.failed-saving-function-to-db'), 500);
+                throw new Exception($locale->getText('exceptions.functions.failed-saving-function-to-db'), 500);
             }
         }
 
@@ -722,17 +722,17 @@ App::post('/v1/functions/:functionId/executions')
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception($locale->getText('exceptions.function-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.functions.function-not-found'), 404);
         }
 
         $tag = $projectDB->getDocument($function->getAttribute('tag'));
 
         if ($tag->getAttribute('functionId') !== $function->getId()) {
-            throw new Exception($locale->getText('exceptions.tag-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.functions.tag-not-found-while-execution'), 404);
         }
 
         if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
-            throw new Exception($locale->getText('exceptions.tag-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.functions.tag-not-found-while-execution'), 404);
         }
 
         Authorization::reset();
@@ -764,7 +764,7 @@ App::post('/v1/functions/:functionId/executions')
         Authorization::reset();
 
         if (false === $execution) {
-            throw new Exception($locale->getText('exceptions.failed-saving-execution-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.functions.failed-saving-execution-to-db'), 500);
         }
         
         $jwt = ''; // initialize
@@ -834,7 +834,7 @@ App::get('/v1/functions/:functionId/executions')
         Authorization::reset();
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception($locale->getText('exceptions.function-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.functions.function-not-found'), 404);
         }
         
         $results = $projectDB->getCollection([
@@ -880,17 +880,17 @@ App::get('/v1/functions/:functionId/executions/:executionId')
         Authorization::reset();
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception($locale->getText('exceptions.function-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.functions.function-not-found'), 404);
         }
 
         $execution = $projectDB->getDocument($executionId);
 
         if ($execution->getAttribute('functionId') !== $function->getId()) {
-            throw new Exception($locale->getText('exceptions.execution-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.functions.execution-not-found'), 404);
         }
 
         if (empty($execution->getId()) || Database::SYSTEM_COLLECTION_EXECUTIONS != $execution->getCollection()) {
-            throw new Exception($locale->getText('exceptions.execution-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.functions.execution-not-found'), 404);
         }
 
         $response->dynamic($execution, Response::MODEL_EXECUTION);

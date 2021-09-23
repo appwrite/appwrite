@@ -26,15 +26,15 @@ $avatarCallback = function ($type, $code, $width, $height, $quality, $response, 
     $set = Config::getParam('avatar-' . $type, []);
 
     if (empty($set)) {
-        throw new Exception($locale->getText('exceptions.avatar-set-not-found'), 404);
+        throw new Exception($locale->getText('exceptions.avatars.avatar-set-not-found'), 404);
     }
 
     if (!\array_key_exists($code, $set)) {
-        throw new Exception($locale->getText('exceptions.avatar-not-found'), 404);
+        throw new Exception($locale->getText('exceptions.avatars.avatar-not-found'), 404);
     }
 
     if (!\extension_loaded('imagick')) {
-        throw new Exception($locale->getText('exceptions.imagick-extension-is-missing'), 500);
+        throw new Exception($locale->getText('exceptions.storage.imagick-extension-is-missing'), 500);
     }
 
     $output = 'png';
@@ -44,7 +44,7 @@ $avatarCallback = function ($type, $code, $width, $height, $quality, $response, 
     $type = 'png';
 
     if (!\is_readable($path)) {
-        throw new Exception($locale->getText('exceptions.file-not-readable-in', [
+        throw new Exception($locale->getText('exceptions.avatars.file-not-readable-in', [
             'file' => $path
             ]), 500);
     }
@@ -189,19 +189,19 @@ App::get('/v1/avatars/image')
         }
 
         if (!\extension_loaded('imagick')) {
-            throw new Exception($locale->getText('exceptions.imagick-extension-is-missing'), 500);
+            throw new Exception($locale->getText('exceptions.storage.imagick-extension-is-missing'), 500);
         }
 
         $fetch = @\file_get_contents($url, false);
 
         if (!$fetch) {
-            throw new Exception($locale->getText('exceptions.image-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.avatars.image-not-found'), 404);
         }
 
         try {
             $image = new Image($fetch);
         } catch (\Exception$exception) {
-            throw new Exception($locale->getText('exceptions.unable-to-parse-image'), 500);
+            throw new Exception($locale->getText('exceptions.avatars.unable-to-parse-image'), 500);
         }
 
         $image->crop((int) $width, (int) $height);
@@ -260,7 +260,7 @@ App::get('/v1/avatars/favicon')
         }
 
         if (!\extension_loaded('imagick')) {
-            throw new Exception($locale->getText('exceptions.imagick-extension-is-missing'), 500);
+            throw new Exception($locale->getText('exceptions.storage.imagick-extension-is-missing'), 500);
         }
 
         $curl = \curl_init();
@@ -281,7 +281,7 @@ App::get('/v1/avatars/favicon')
         \curl_close($curl);
 
         if (!$html) {
-            throw new Exception($locale->getText('exceptions.failed-to-fetch-remote-url'), 404);
+            throw new Exception($locale->getText('exceptions.avatars.failed-to-fetch-remote-url'), 404);
         }
 
         $doc = new DOMDocument();
@@ -339,7 +339,7 @@ App::get('/v1/avatars/favicon')
             $data = @\file_get_contents($outputHref, false);
 
             if (empty($data) || (\mb_substr($data, 0, 5) === '<html') || \mb_substr($data, 0, 5) === '<!doc') {
-                throw new Exception($locale->getText('exceptions.favicon-not-found'), 404);
+                throw new Exception($locale->getText('exceptions.avatars.favicon-not-found'), 404);
             }
 
             $cache->save($key, $data);
@@ -355,7 +355,7 @@ App::get('/v1/avatars/favicon')
         $fetch = @\file_get_contents($outputHref, false);
 
         if (!$fetch) {
-            throw new Exception($locale->getText('exceptions.icon-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.avatars.icon-not-found'), 404);
         }
 
         $image = new Image($fetch);

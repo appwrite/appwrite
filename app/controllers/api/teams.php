@@ -65,7 +65,7 @@ App::post('/v1/teams')
         Authorization::reset();
 
         if (false === $team) {
-            throw new Exception($locale->getText('exceptions.failed-saving-team-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.teams.failed-saving-team-to-db'), 500);
         }
 
         if (!$isPrivilegedUser && !$isAppUser) { // Don't add user on server mode
@@ -90,7 +90,7 @@ App::post('/v1/teams')
             $user = $projectDB->updateDocument($user->getArrayCopy());
 
             if (false === $user) {
-                throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
+                throw new Exception($locale->getText('exceptions.account.failed-saving-user-to-db'), 500);
             }
         }
 
@@ -164,7 +164,7 @@ App::get('/v1/teams/:teamId')
         $team = $projectDB->getDocument($teamId);
 
         if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
-            throw new Exception($locale->getText('exceptions.team-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.teams.team-not-found'), 404);
         }
 
         $response->dynamic($team, Response::MODEL_TEAM);
@@ -195,7 +195,7 @@ App::put('/v1/teams/:teamId')
         $team = $projectDB->getDocument($teamId);
 
         if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
-            throw new Exception($locale->getText('exceptions.team-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.teams.team-not-found'), 404);
         }
 
         $team = $projectDB->updateDocument(\array_merge($team->getArrayCopy(), [
@@ -203,7 +203,7 @@ App::put('/v1/teams/:teamId')
         ]));
 
         if (false === $team) {
-            throw new Exception($locale->getText('exceptions.failed-saving-team-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.teams.failed-saving-team-to-db'), 500);
         }
         
         $response->dynamic($team, Response::MODEL_TEAM);
@@ -235,11 +235,11 @@ App::delete('/v1/teams/:teamId')
         $team = $projectDB->getDocument($teamId);
 
         if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
-            throw new Exception($locale->getText('exceptions.team-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.teams.team-not-found'), 404);
         }
 
         if (!$projectDB->deleteDocument($teamId)) {
-            throw new Exception($locale->getText('exceptions.failed-to-remove-team-from-db'), 500);
+            throw new Exception($locale->getText('exceptions.teams.failed-to-remove-team-from-db'), 500);
         }
 
         $deletes
@@ -289,7 +289,7 @@ App::post('/v1/teams/:teamId/memberships')
         /** @var Appwrite\Event\Event $mails */
 
         if(empty(App::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception($locale->getText('exceptions.smtp-disabled'), 503);
+            throw new Exception($locale->getText('exceptions.account.smtp-disabled'), 503);
         }
         
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::$roles);
@@ -300,7 +300,7 @@ App::post('/v1/teams/:teamId/memberships')
         $team = $projectDB->getDocument($teamId);
 
         if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
-            throw new Exception($locale->getText('exceptions.team-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.teams.team-not-found'), 404);
         }
 
         $memberships = $projectDB->getCollection([
@@ -334,7 +334,7 @@ App::post('/v1/teams/:teamId/memberships')
                 $sum = $projectDB->getSum();
     
                 if($sum >= $limit) {
-                    throw new Exception($locale->getText('exceptions.registration-restricted'), 501);
+                    throw new Exception($locale->getText('exceptions.account.registration-restricted'), 501);
                 }
             }
 
@@ -364,13 +364,13 @@ App::post('/v1/teams/:teamId/memberships')
                     'tokens' => [],
                 ], ['email' => $email]);
             } catch (Duplicate $th) {
-                throw new Exception($locale->getText('exceptions.account-already-exists'), 409);
+                throw new Exception($locale->getText('exceptions.account.account-already-exists'), 409);
             }
 
             Authorization::reset();
 
             if (false === $invitee) {
-                throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
+                throw new Exception($locale->getText('exceptions.account.failed-saving-user-to-db'), 500);
             }
         }
 
@@ -378,7 +378,7 @@ App::post('/v1/teams/:teamId/memberships')
 
         foreach ($memberships as $member) {
             if ($member->getAttribute('userId') ==  $invitee->getId()) {
-                throw new Exception($locale->getText('exceptions.user-already-invited'), 409);
+                throw new Exception($locale->getText('exceptions.teams.user-already-invited'), 409);
             }
 
             if ($member->getAttribute('userId') == $user->getId() && \in_array('owner', $member->getAttribute('roles', []))) {
@@ -387,7 +387,7 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
-            throw new Exception($locale->getText('exceptions.user-not-allowed-to-invite'), 401);
+            throw new Exception($locale->getText('exceptions.teams.user-not-allowed-to-invite'), 401);
         }
 
         $secret = Auth::tokenGenerator();
@@ -421,7 +421,7 @@ App::post('/v1/teams/:teamId/memberships')
             $invitee = $projectDB->updateDocument($invitee->getArrayCopy());
 
             if (false === $invitee) {
-                throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
+                throw new Exception($locale->getText('exceptions.account.failed-saving-user-to-db'), 500);
             }
 
             Authorization::reset();
@@ -430,7 +430,7 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
         if (false === $membership) {
-            throw new Exception($locale->getText('exceptions.failed-saving-membership-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.teams.failed-saving-membership-to-db'), 500);
         }
 
         $url = Template::parseURL($url);
@@ -499,12 +499,12 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
 
         $team = $projectDB->getDocument($teamId);
         if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
-            throw new Exception($locale->getText('exceptions.team-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.teams.team-not-found'), 404);
         }
 
         $membership = $projectDB->getDocument($membershipId);
         if (empty($membership->getId()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $membership->getCollection()) {
-            throw new Exception($locale->getText('exceptions.membership-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.teams.membership-not-found'), 404);
         }
 
 
@@ -513,7 +513,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         $isOwner = Authorization::isRole('team:'.$team->getId().'/owner');;
         
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
-            throw new Exception($locale->getText('exceptions.user-is-not-allowed-to-modify-roles'), 401);
+            throw new Exception($locale->getText('exceptions.teams.user-is-not-allowed-to-modify-roles'), 401);
         }
 
         // Update the roles
@@ -521,7 +521,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         $membership = $projectDB->updateDocument($membership->getArrayCopy());
 
         if (false === $membership) {
-            throw new Exception($locale->getText('exceptions.failed-updating-membership'), 500);
+            throw new Exception($locale->getText('exceptions.teams.failed-updating-membership'), 500);
         }
 
         $audits
@@ -560,7 +560,7 @@ App::get('/v1/teams/:teamId/memberships')
         $team = $projectDB->getDocument($teamId);
 
         if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
-            throw new Exception($locale->getText('exceptions.team-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.teams.team-not-found'), 404);
         }
 
         $memberships = $projectDB->getCollection([
@@ -624,11 +624,11 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         $membership = $projectDB->getDocument($membershipId);
 
         if (empty($membership->getId()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $membership->getCollection()) {
-            throw new Exception($locale->getText('exceptions.invite-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.teams.invite-not-found'), 404);
         }
 
         if ($membership->getAttribute('teamId') !== $teamId) {
-            throw new Exception($locale->getText('exceptions.team-ids-dont-match'), 404);
+            throw new Exception($locale->getText('exceptions.teams-team-ids-dont-match'), 404);
         }
 
         Authorization::disable();
@@ -638,15 +638,15 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         Authorization::reset();
 
         if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
-            throw new Exception($locale->getText('exceptions.team-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.teams.team-not-found'), 404);
         }
 
         if (Auth::hash($secret) !== $membership->getAttribute('secret')) {
-            throw new Exception($locale->getText('exceptions.secret-key-not-valid'), 401);
+            throw new Exception($locale->getText('exceptions.teams-secret-key-not-valid'), 401);
         }
 
         if ($userId != $membership->getAttribute('userId')) {
-            throw new Exception($locale->getText('exceptions.invite-belongs-to-different-user', [
+            throw new Exception($locale->getText('exceptions.teams.invite-belongs-to-different-user', [
                 'email' => $user->getAttribute('email')
             ]), 401);
         }
@@ -662,7 +662,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         if ($membership->getAttribute('userId') !== $user->getId()) {
-            throw new Exception($locale->getText('exceptions.invite-belongs-to-different-user', [
+            throw new Exception($locale->getText('exceptions.teams.invite-belongs-to-different-user', [
                 'email' => $user->getAttribute('email')
             ]), 401);
         }
@@ -703,7 +703,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         $user = $projectDB->updateDocument($user->getArrayCopy());
 
         if (false === $user) {
-            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.account.failed-saving-user-to-db'), 500);
         }
 
         Authorization::disable();
@@ -715,7 +715,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         Authorization::reset();
 
         if (false === $team) {
-            throw new Exception($locale->getText('exceptions.failed-saving-team-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.teams.failed-saving-team-to-db'), 500);
         }
 
         $audits
@@ -769,21 +769,21 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         $membership = $projectDB->getDocument($membershipId);
 
         if (empty($membership->getId()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $membership->getCollection()) {
-            throw new Exception($locale->getText('exceptions.invite-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.teams.invite-not-found'), 404);
         }
 
         if ($membership->getAttribute('teamId') !== $teamId) {
-            throw new Exception($locale->getText('exceptions.team-ids-dont-match'), 404);
+            throw new Exception($locale->getText('exceptions.teams-team-ids-dont-match'), 404);
         }
 
         $team = $projectDB->getDocument($teamId);
 
         if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
-            throw new Exception($locale->getText('exceptions.team-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.teams.team-not-found'), 404);
         }
 
         if (!$projectDB->deleteDocument($membership->getId())) {
-            throw new Exception($locale->getText('exceptions.failed-to-remove-membership-from-db'), 500);
+            throw new Exception($locale->getText('exceptions.teams.failed-to-remove-membership-from-db'), 500);
         }
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
@@ -793,7 +793,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         }
 
         if (false === $team) {
-            throw new Exception($locale->getText('exceptions.failed-saving-team-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.teams.failed-saving-team-to-db'), 500);
         }
 
         $audits

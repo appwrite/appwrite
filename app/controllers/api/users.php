@@ -53,7 +53,7 @@ App::post('/v1/users')
         ]);
 
         if (!empty($profile)) {
-            throw new Exception($locale->getText('exceptions.user-already-registered'), 409);
+            throw new Exception($locale->getText('exceptions.account.user-already-registered'), 409);
         }
 
         try {
@@ -73,7 +73,7 @@ App::post('/v1/users')
                 'name' => $name,
             ], ['email' => $email]);
         } catch (Duplicate $th) {
-            throw new Exception($locale->getText('exceptions.account-already-exists'), 409);
+            throw new Exception($locale->getText('exceptions.account.account-already-exists'), 409);
         }
 
         $response
@@ -142,7 +142,7 @@ App::get('/v1/users/:userId')
         $user = $projectDB->getDocument($userId);
 
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.account.user-not-found'), 404);
         }
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -171,7 +171,7 @@ App::get('/v1/users/:userId/prefs')
         $user = $projectDB->getDocument($userId);
 
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.account.user-not-found'), 404);
         }
 
         $prefs = $user->getAttribute('prefs', new \stdClass());
@@ -202,7 +202,7 @@ App::get('/v1/users/:userId/sessions')
         $user = $projectDB->getDocument($userId);
 
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.account.user-not-found'), 404);
         }
 
         $sessions = $user->getAttribute('sessions', []);
@@ -257,7 +257,7 @@ App::get('/v1/users/:userId/logs')
         $user = $projectDB->getDocument($userId);
 
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.account.user-not-found'), 404);
         }
 
         $adapter = new AuditAdapter($utopia->getResource('db'));
@@ -378,7 +378,7 @@ App::patch('/v1/users/:userId/status')
         $user = $projectDB->getDocument($userId);
 
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.account.user-not-found'), 404);
         }
 
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
@@ -386,7 +386,7 @@ App::patch('/v1/users/:userId/status')
         ]));
 
         if (false === $user) {
-            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.account.failed-saving-user-to-db'), 500);
         }
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -417,7 +417,7 @@ App::patch('/v1/users/:userId/verification')
         $user = $projectDB->getDocument($userId);
 
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.account.user-not-found'), 404);
         }
 
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
@@ -425,7 +425,7 @@ App::patch('/v1/users/:userId/verification')
         ]));
 
         if (false === $user) {
-            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.account.failed-saving-user-to-db'), 500);
         }
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -458,7 +458,7 @@ App::patch('/v1/users/:userId/name')
         $user = $projectDB->getDocument($userId);
 
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.account.user-not-found'), 404);
         }
 
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
@@ -466,7 +466,7 @@ App::patch('/v1/users/:userId/name')
         ]));
 
         if (false === $user) {
-            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.account.failed-saving-user-to-db'), 500);
         }
 
         $audits
@@ -505,7 +505,7 @@ App::patch('/v1/users/:userId/password')
         $user = $projectDB->getDocument($userId);
 
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.account.user-not-found'), 404);
         }
 
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
@@ -514,7 +514,7 @@ App::patch('/v1/users/:userId/password')
         ]));
 
         if (false === $user) {
-            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.account.failed-saving-user-to-db'), 500);
         }
 
         $audits
@@ -553,7 +553,7 @@ App::patch('/v1/users/:userId/email')
         $user = $projectDB->getDocument($userId);
         
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.account.user-not-found'), 404);
         }
         
         $isAnonymousUser = is_null($user->getAttribute('email')) && is_null($user->getAttribute('password')); // Check if request is from an anonymous account for converting
@@ -567,7 +567,7 @@ App::patch('/v1/users/:userId/email')
         ]);
 
         if (!empty($profile)) {
-            throw new Exception($locale->getText('exceptions.user-already-registered'), 400);
+            throw new Exception($locale->getText('exceptions.account.user-already-registered'), 400);
         }
 
         if (!$isAnonymousUser) {
@@ -582,7 +582,7 @@ App::patch('/v1/users/:userId/email')
         $projectDB->addUniqueKey(\md5($user['$collection'].':'.'email'.'='.$email));
 
         if (false === $user) {
-            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.account.failed-saving-user-to-db'), 500);
         }
         
         $audits
@@ -619,7 +619,7 @@ App::patch('/v1/users/:userId/prefs')
         $user = $projectDB->getDocument($userId);
 
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.account.user-not-found'), 404);
         }
 
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
@@ -627,7 +627,7 @@ App::patch('/v1/users/:userId/prefs')
         ]));
 
         if (false === $user) {
-            throw new Exception($locale->getText('exceptions.failed-saving-user-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.account.failed-saving-user-to-db'), 500);
         }
 
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
@@ -659,7 +659,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
         $user = $projectDB->getDocument($userId);
 
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.account.user-not-found'), 404);
         }
 
         $sessions = $user->getAttribute('sessions', []);
@@ -669,7 +669,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
 
             if ($sessionId == $session->getId()) {
                 if (!$projectDB->deleteDocument($session->getId())) {
-                    throw new Exception($locale->getText('exceptions.failed-to-remove-token-from-db'), 500);
+                    throw new Exception($locale->getText('exceptions.account.failed-to-remove-token-from-db'), 500);
                 }
 
                 $events
@@ -707,7 +707,7 @@ App::delete('/v1/users/:userId/sessions')
         $user = $projectDB->getDocument($userId);
 
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.account.user-not-found'), 404);
         }
 
         $sessions = $user->getAttribute('sessions', []);
@@ -716,7 +716,7 @@ App::delete('/v1/users/:userId/sessions')
             /** @var Document $session */
 
             if (!$projectDB->deleteDocument($session->getId())) {
-                throw new Exception($locale->getText('exceptions.failed-to-remove-token-from-db'), 500);
+                throw new Exception($locale->getText('exceptions.account.failed-to-remove-token-from-db'), 500);
             }
         }
 
@@ -755,14 +755,14 @@ App::delete('/v1/users/:userId')
         $user = $projectDB->getDocument($userId);
 
         if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
-            throw new Exception($locale->getText('exceptions.user-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.account.user-not-found'), 404);
         }
         if (!$projectDB->deleteDocument($userId)) {
-            throw new Exception($locale->getText('exceptions.failed-to-remove-user-from-db'), 500);
+            throw new Exception($locale->getText('exceptions.account.failed-to-remove-user-from-db'), 500);
         }
 
         if (!$projectDB->deleteUniqueKey(md5('users:email='.$user->getAttribute('email', null)))) {
-            throw new Exception($locale->getText('exceptions.failed-to-remove-unique-key-from-db'), 500);
+            throw new Exception($locale->getText('exceptions.account.failed-to-remove-unique-key-from-db'), 500);
         }
         
         $reservedId = $projectDB->createDocument([
@@ -774,7 +774,7 @@ App::delete('/v1/users/:userId')
         ]);
 
         if (false === $reservedId) {
-            throw new Exception($locale->getText('exceptions.failed-saving-reserved-id-to-db'), 500);
+            throw new Exception($locale->getText('exceptions.account.failed-saving-reserved-id-to-db'), 500);
         }
 
         $deletes

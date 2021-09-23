@@ -277,7 +277,7 @@ App::get('/console/database/collection')
         Authorization::reset();
 
         if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-            throw new Exception($locale->getText('exceptions.collection-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.database.collection-not-found'), 404);
         }
 
         $page = new View(__DIR__.'/../../views/console/database/collection.phtml');
@@ -316,7 +316,7 @@ App::get('/console/database/document')
         Authorization::reset();
 
         if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-            throw new Exception($locale->getText('exceptions.collection-not-found'), 404);
+            throw new Exception($locale->getText('exceptions.database.collection-not-found'), 404);
         }
 
         $page = new View(__DIR__.'/../../views/console/database/document.phtml');
@@ -487,9 +487,9 @@ App::get('/console/version')
             if ($version && isset($version['version'])) {
                 return $response->json(['version' => $version['version']]);
             } else {
-                throw new Exception($locale->getText('exceptions.version-check-failed'), 500);
+                throw new Exception($locale->getText('exceptions.console.version-check-failed'), 500);
             }
         } catch (\Throwable $th) {
-            throw new Exception($locale->getText('exceptions.version-check-failed'), 500);
+            throw new Exception($locale->getText('exceptions.console.version-check-failed'), 500);
         }
     });
