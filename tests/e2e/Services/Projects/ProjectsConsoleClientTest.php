@@ -87,6 +87,7 @@ class ProjectsConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
+
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -97,6 +98,9 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals($id, $response['body']['projects'][0]['$id']);
         $this->assertEquals('Project Test', $response['body']['projects'][0]['name']);
 
+        /**
+         * Test search queries
+         */
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -104,9 +108,11 @@ class ProjectsConsoleClientTest extends Scope
             'search' => $id
         ]));
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertEquals('Project Test', $response['body']['projects'][0]['name']);
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($response['body']['sum'], 1);
+        $this->assertIsArray($response['body']['projects']);
+        $this->assertCount(1, $response['body']['projects']);
+        $this->assertEquals($response['body']['projects'][0]['name'], 'Project Test');
 
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
@@ -115,9 +121,11 @@ class ProjectsConsoleClientTest extends Scope
             'search' => 'Project Test'
         ]));
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertEquals($id, $response['body']['projects'][0]['$id']);
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($response['body']['sum'], 1);
+        $this->assertIsArray($response['body']['projects']);
+        $this->assertCount(1, $response['body']['projects']);
+        $this->assertEquals($response['body']['projects'][0]['$id'], $data['projectId']);
 
         /**
          * Test after pagination

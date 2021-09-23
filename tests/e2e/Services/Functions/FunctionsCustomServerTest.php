@@ -77,6 +77,10 @@ class FunctionsCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
+
+        /**
+         * Test search queries
+         */
         $response = $this->client->call(Client::METHOD_GET, '/functions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -110,7 +114,9 @@ class FunctionsCustomServerTest extends Scope
         $this->assertCount(1, $response['body']['functions']);
         $this->assertEquals($response['body']['functions'][0]['$id'], $data['functionId']);
 
-
+        /**
+         * Test pagination
+         */
         $response = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -154,7 +160,6 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertCount(1, $response['body']['functions']);
         $this->assertEquals($response['body']['functions'][0]['name'], 'Test 2');
-
 
         return $data;
     }
@@ -316,6 +321,9 @@ class FunctionsCustomServerTest extends Scope
         $this->assertIsArray($function['body']['tags']);
         $this->assertCount(1, $function['body']['tags']);
 
+        /**
+         * Test search queries
+         */
         $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/tags', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
