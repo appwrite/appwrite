@@ -205,7 +205,7 @@ trait StorageBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertGreaterThan(0, $response['body']['sum']);
+        $this->assertEquals(1, $response['body']['sum']);
         $this->assertIsInt($response['body']['sum']);
         $this->assertCount(1, $response['body']['files']);
         $this->assertEquals('logo.png', $response['body']['files'][0]['name']);
