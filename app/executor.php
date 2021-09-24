@@ -72,7 +72,7 @@ $activeFunctions = new Swoole\Table(1024);
 $activeFunctions->column('id', Swoole\Table::TYPE_STRING, 512);
 $activeFunctions->column('name', Swoole\Table::TYPE_STRING, 512);
 $activeFunctions->column('status', Swoole\Table::TYPE_STRING, 512);
-$activeFunctions->column('private-key', Swoole\Table::TYPE_STRING, 4096);
+$activeFunctions->column('key', Swoole\Table::TYPE_STRING, 4096);
 $activeFunctions->create();
 
 
@@ -622,7 +622,7 @@ function createRuntimeServer(string $functionId, string $projectId, Document $ta
             'id' => $id,
             'name' => $container,
             'status' => 'Up ' . \round($executionEnd - $executionStart, 2) . 's',
-            'private-key' => $privateKey,
+            'key' => $secret,
         ]);
 
         Console::info('Runtime Server created in ' . ($executionEnd - $executionStart) . ' seconds');
