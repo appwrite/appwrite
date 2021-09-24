@@ -401,7 +401,7 @@ Blogging, speaking about, or creating tutorials about one of Appwrite’s many f
 
 Presenting at meetups and conferences about your Appwrite projects. Your unique challenges and successes in building things with Appwrite can provide great speaking material. We’d love to review your talk abstract/CFP, so get in touch with us if you’d like some help!
 
-### Sending Feedbacks & Reporting Bugs
+### Sending Feedback & Reporting Bugs
 
 Sending feedback is a great way for us to understand your different use cases of Appwrite better. If you had any issues, bugs, or want to share about your experience, feel free to do so on our GitHub issues page or at our [Discord channel](https://discord.gg/GSeTUeA).
 
