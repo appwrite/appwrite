@@ -1,3 +1,7 @@
+## 2.0.1
+- Fix realtime close and reconnect working only 1 out of two times due to future returning too early
+- Add dart doc comments to newly added response models
+
 ## 2.0.0
 - BREAKING All services and methods now return proper response objects instead of `Response` object
 
