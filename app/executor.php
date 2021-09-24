@@ -513,10 +513,7 @@ function createRuntimeServer(string $functionId, string $projectId, Document $ta
     }
 
     // Generate random secret key
-    $privateKey = openssl_pkey_new(array('private_key_bits' => 2048));
-    $details = openssl_pkey_get_details($privateKey);
-    $publicKey = $details['key'];
-    openssl_pkey_export($privateKey, $privateKey); // Turn private key into a string so we can place it into a swoole table
+    $secret = \bin2hex(\random_bytes(16));
 
     // Check if runtime is active
     $runtime = (isset($runtimes[$function->getAttribute('runtime', '')]))
@@ -539,7 +536,7 @@ function createRuntimeServer(string $functionId, string $projectId, Document $ta
         'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
         'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
         'APPWRITE_FUNCTION_PROJECT_ID' => $projectId,
-        'APPWRITE_INTERNAL_RUNTIME_PUBLIC' => $publicKey,
+        'APPWRITE_INTERNAL_RUNTIME_KEY' => $secret,
     ]);
 
     $container = 'appwrite-function-' . $tag->getId();
@@ -742,14 +739,8 @@ function execute(string $trigger, string $projectId, string $executionId, string
         Authorization::enable();
     }
 
-    // Generate Signed Challenge
     $internalFunction = $activeFunctions->get('appwrite-function-' . $tag->getId());
-    $privateKey = openssl_pkey_get_private($internalFunction['private-key']); // Convert PEM formatted key from swoole table into resource
-
-    $signedChallenge = '';
-
-    \openssl_sign($function->getId(), $signedChallenge, $privateKey, OPENSSL_ALGO_SHA256);
-    $signedChallenge = \base64_encode($signedChallenge);
+    $key = $internalFunction['key'];
 
     // Process environment variables
     $vars = \array_merge($function->getAttribute('vars', []), [
@@ -803,7 +794,8 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
         \curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
-            'Content-Length: ' . \strlen($body)
+            'Content-Length: ' . \strlen($body),
+            'x-internal-challenge: ' . $key
         ]);
 
         $executorResponse = \curl_exec($ch);
