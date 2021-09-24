@@ -1067,6 +1067,8 @@ trait DatabaseBase
             'required' => false,
         ]);
 
+        sleep(2);
+
         $ip = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/ip', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1075,6 +1077,8 @@ trait DatabaseBase
             'attributeId' => 'ip',
             'required' => false,
         ]);
+
+        sleep(2);
 
         $url = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/url', array_merge([
             'content-type' => 'application/json',
@@ -1085,6 +1089,8 @@ trait DatabaseBase
             'size' => 256,
             'required' => false,
         ]);
+
+        sleep(2);
 
         $range = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
             'content-type' => 'application/json',
@@ -1097,6 +1103,8 @@ trait DatabaseBase
             'max' => 10,
         ]);
 
+        sleep(2);
+
         // TODO@kodumbeats min and max are rounded in error message
         $floatRange = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/float', array_merge([
             'content-type' => 'application/json',
@@ -1108,6 +1116,8 @@ trait DatabaseBase
             'min' => 1.1,
             'max' => 1.4,
         ]);
+
+        sleep(2);
 
         // TODO@kodumbeats float validator rejects 0.0 and 1.0 as floats
         // $probability = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/float', array_merge([
@@ -1130,6 +1140,8 @@ trait DatabaseBase
             'required' => false,
             'max' => 10,
         ]);
+
+        sleep(2);
 
         $lowerBound = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/integer', array_merge([
             'content-type' => 'application/json',
@@ -1501,6 +1513,144 @@ trait DatabaseBase
         }
 
         return $data;
+    }
+
+
+    public function testEnforceCollectionPermissions()
+    {
+        $user = 'user:' . $this->getUser()['$id'];
+        $collection = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => 'unique()',
+            'name' => 'enforceCollectionPermissions',
+            'permission' => 'collection',
+            'read' => [$user],
+            'write' => [$user]
+        ]);
+
+        $this->assertEquals($collection['headers']['status-code'], 201);
+        $this->assertEquals($collection['body']['name'], 'enforceCollectionPermissions');
+        $this->assertEquals($collection['body']['permission'], 'collection');
+
+        $collectionId = $collection['body']['$id'];
+
+        sleep(2);
+
+        $attribute = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'attributeId' => 'attribute',
+            'size' => 64,
+            'required' => true,
+        ]);
+
+        $this->assertEquals(201, $attribute['headers']['status-code'], 201);
+        $this->assertEquals('attribute', $attribute['body']['key']);
+
+        // wait for db to add attribute
+        sleep(2);
+
+        $index = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'indexId' => 'key_attribute',
+            'type' => 'key',
+            'attributes' => [$attribute['body']['key']],
+        ]);
+
+        $this->assertEquals(201, $index['headers']['status-code']);
+        $this->assertEquals('key_attribute', $index['body']['key']);
+
+        // wait for db to add attribute
+        sleep(2);
+
+        $document1 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'unique()',
+            'data' => [
+                'attribute' => 'one',
+            ],
+            'read' => [$user],
+            'write' => [$user],
+        ]);
+
+        $this->assertEquals(201, $document1['headers']['status-code']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(1, $documents['body']['sum']);
+        $this->assertCount(1, $documents['body']['documents']);
+
+        /*
+         * Test for Failure
+         */
+
+        // Remove write permission
+        $collection = $this->client->call(Client::METHOD_PUT, '/database/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'name' => 'enforceCollectionPermissions',
+            'permission' => 'collection',
+            'read' => [$user],
+            'write' => []
+        ]);
+
+        $this->assertEquals(200, $collection['headers']['status-code']);
+
+        $badDocument = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'unique()',
+            'data' => [
+                'attribute' => 'bad',
+            ],
+            'read' => [$user],
+            'write' => [$user],
+        ]);
+
+        if($this->getSide() == 'client') {
+            $this->assertEquals(401, $badDocument['headers']['status-code']);
+        }
+
+        if($this->getSide() == 'server') {
+            $this->assertEquals(201, $badDocument['headers']['status-code']);
+        }
+
+        // Remove read permission
+        $collection = $this->client->call(Client::METHOD_PUT, '/database/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'name' => 'enforceCollectionPermissions',
+            'permission' => 'collection',
+            'read' => [],
+            'write' => []
+        ]);
+
+        $this->assertEquals(200, $collection['headers']['status-code']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(404, $documents['headers']['status-code']);
     }
 
     /**
