@@ -120,10 +120,9 @@ $logs = $this->getParam('logs', null);
                     <a data-ls-if="0 < {{project-collection.attributes.length}}" data-ls-attrs="href=/console/database/document?collection={{router.params.id}}&project={{router.params.project}}&buster={{project-collection.dateUpdated}}" class="button">
                         Add Document
                     </a>
-
-                    <button disabled data-ls-if="!{{project-collection.attributes.length}}">
-                        Add Document
-                    </button >
+                    <a data-ls-if="!{{project-collection.attributes.length}}" data-ls-attrs="href=/console/database/collection/attributes?id={{router.params.id}}&project={{router.params.project}}" class="button">
+                        Create Attribute
+                    </a>
                 </div>
             </li>
             <li data-state="/console/database/collection/attributes?id={{router.params.id}}&project={{router.params.project}}">
@@ -151,7 +150,8 @@ $logs = $this->getParam('logs', null);
                         <tbody data-ls-loop="project-collection.attributes" data-ls-as="attribute">
                             <tr>
                                 <td>
-                                    <i data-ls-attrs="class=icon-{{attribute.type}}"></i>
+                                    <i data-ls-if="!{{attribute.format}}" data-ls-attrs="class=icon-{{attribute.type}}"></i>
+                                    <i  data-ls-if="{{attribute.format}}" data-ls-attrs="class=icon-{{attribute.format}}"></i>
                                 </td>
                                 <td data-title="Status">
                                     <span data-ls-if="{{attribute.status}} == 'available'" class="text-size-small text-success">available&nbsp;</span>
@@ -167,6 +167,7 @@ $logs = $this->getParam('logs', null);
                                 <td data-title="Type:">
                                     <span class="text-size-small" data-ls-bind="{{attribute.type}}"></span>
                                     <span class="text-size-small" data-ls-if="{{attribute.array}}">[]</span>
+                                    <span class="text-size-small" data-ls-if="{{attribute.format}}" data-ls-bind="({{attribute.format}})"></span>
                                 </td>
 
                                 <td data-title="Default:">
@@ -469,8 +470,8 @@ $logs = $this->getParam('logs', null);
                 <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" />  &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
             </div>
 
-            <label for="string-default">Default Value</label>
-            <input id="string-default" name="default" type="text" class="margin-bottom-large" autocomplete="off">
+            <label for="xdefault">Default Value</label>
+            <input name="xdefault" type="text" class="margin-bottom-large" autocomplete="off">
 
             <footer>
                 <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
@@ -503,7 +504,7 @@ $logs = $this->getParam('logs', null);
             <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
             <label for="integer-attributeId">Attribute ID</label>
-            <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
+            <input id="integer-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
 
             <div class="margin-bottom">
                 <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
@@ -525,7 +526,62 @@ $logs = $this->getParam('logs', null);
             </div>
 
             <label for="integer-default">Default Value</label>
-            <input id="integer-default" name="default" type="number" value="0" class="margin-bottom-large" autocomplete="off" data-cast-to="integer">
+            <input id="integer-default" name="xdefault" type="number" value="0" class="margin-bottom-large" autocomplete="off" data-cast-to="integer">
+
+            <footer>
+                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+            </footer>
+        </form>
+    </div>
+
+    <div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-float">
+        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+        <h1>Add Float Attribute</h1>
+
+        <form
+                data-analytics
+                data-analytics-activity
+                data-analytics-event="submit"
+                data-analytics-category="console"
+                data-analytics-label="Create Collection Attribute (float)"
+                data-service="database.createFloatAttribute"
+                data-scope="sdk"
+                data-event="submit"
+                data-success="alert,trigger,reset"
+                data-success-param-alert-text="Created new attribute successfully"
+                data-success-param-trigger-events="database.createAttribute"
+                data-failure="alert"
+                data-failure-param-alert-text="Failed to create attribute"
+                data-failure-param-alert-classname="error">
+
+            <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+            <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
+
+            <label for="float-attributeId">Attribute ID</label>
+            <input id="float-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
+
+            <div class="margin-bottom">
+                <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+            </div>
+
+            <div class="margin-bottom">
+                <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" />  &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+            </div>
+
+            <div class="row responsive thin">
+                <div class="col span-6 margin-bottom-small">
+                    <label for="float-min">Min</label>
+                    <input id="float-min" type="number" class="full-width" name="min" value="0" step="any" required autocomplete="off" data-cast-to="float" />
+                </div>
+                <div class="col span-6 margin-bottom-small">
+                    <label for="float-max">Max</label>
+                    <input id="float-max" type="number" class="full-width" name="max" value="0" step="any" required autocomplete="off" data-cast-to="float" />
+                </div>
+            </div>
+
+            <label for="float-default">Default Value</label>
+            <input id="float-default" name="xdefault" type="number" value="0" step="any" class="margin-bottom-large" autocomplete="off" data-cast-to="float">
 
             <footer>
                 <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
@@ -563,13 +619,104 @@ $logs = $this->getParam('logs', null);
             <div class="margin-bottom">
                 <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
             </div>
-                                                                
+
             <div class="margin-bottom">
                 <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" />  &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
             </div>
 
             <label for="string-default">Default Value</label>
-            <input id="string-default" name="default" type="email" placeholder="demo@appwrite.io" class="margin-bottom-large" autocomplete="off">
+            <input id="string-default" name="xdefault" type="email" placeholder="demo@appwrite.io" class="margin-bottom-large" autocomplete="off">
+
+            <footer>
+                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+            </footer>
+        </form>
+    </div>
+
+    <div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-boolean">
+        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+        <h1>Add Boolean Attribute</h1>
+
+        <form
+                data-analytics
+                data-analytics-activity
+                data-analytics-event="submit"
+                data-analytics-category="console"
+                data-analytics-label="Create Collection Attribute (boolean)"
+                data-service="database.createBooleanAttribute"
+                data-scope="sdk"
+                data-event="submit"
+                data-success="alert,trigger,reset"
+                data-success-param-alert-text="Created new attribute successfully"
+                data-success-param-trigger-events="database.createAttribute"
+                data-failure="alert"
+                data-failure-param-alert-text="Failed to create attribute"
+                data-failure-param-alert-classname="error">
+
+            <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+            <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
+
+            <label for="string-attributeId">Attribute ID</label>
+            <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
+
+            <div class="margin-bottom">
+                <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+            </div>
+
+            <div class="margin-bottom">
+                <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" />  &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+            </div>
+
+
+            <div class="margin-bottom-large">
+                <input name="xdefault" type="hidden" data-forms-switch data-cast-to="boolean" autocomplete="off" />  &nbsp; Default Value <span class="tooltip" data-tooltip="Whether this attribute is set to true or false on creation"><i class="icon-info-circled"></i></span>
+            </div>
+
+            <footer>
+                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+            </footer>
+        </form>
+    </div>
+
+
+    <div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-ip">
+        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+        <h1>Add IP Attribute</h1>
+
+        <form
+                data-analytics
+                data-analytics-activity
+                data-analytics-event="submit"
+                data-analytics-category="console"
+                data-analytics-label="Create Collection Attribute (IP)"
+                data-service="database.createIpAttribute"
+                data-scope="sdk"
+                data-event="submit"
+                data-success="alert,trigger,reset"
+                data-success-param-alert-text="Created new attribute successfully"
+                data-success-param-trigger-events="database.createAttribute"
+                data-failure="alert"
+                data-failure-param-alert-text="Failed to create attribute"
+                data-failure-param-alert-classname="error">
+
+            <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+            <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
+
+            <label for="string-attributeId">Attribute ID</label>
+            <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
+
+            <div class="margin-bottom">
+                <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+            </div>
+
+            <div class="margin-bottom">
+                <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" />  &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+            </div>
+
+            <label for="string-default">Default Value</label>
+            <input id="string-default" name="xdefault" type="text" data-forms-ip-address placeholder="127.0.0.1" class="margin-bottom-large">
 
             <footer>
                 <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
@@ -607,13 +754,13 @@ $logs = $this->getParam('logs', null);
             <div class="margin-bottom">
                 <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
             </div>
-                                                                
+
             <div class="margin-bottom">
                 <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" />  &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
             </div>
 
             <label for="string-default">Default Value</label>
-            <input id="string-default" name="default" type="url" placeholder="https://appwrite.io/my-link" class="margin-bottom-large" autocomplete="off">
+            <input id="string-default" name="xdefault" type="url" pattern="https://.*" title="Valid URL address" placeholder="https://appwrite.io/my-link" class="margin-bottom-large" autocomplete="off">
 
             <footer>
                 <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>

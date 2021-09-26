@@ -70,7 +70,7 @@
         }
     ],
     "require-dev": {
-        "appwrite/sdk-generator": "0.13.0",
+        "appwrite/sdk-generator": "0.15.1",
         "swoole/ide-helper": "4.6.7",
         "phpunit/phpunit": "9.5.6",
         "vimeo/psalm": "4.7.2"

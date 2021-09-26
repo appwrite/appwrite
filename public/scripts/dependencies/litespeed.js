@@ -904,7 +904,14 @@ window.ls.container.get("view").add({
         if (!key) {
           return null;
         }
-        element.setAttribute(key, value);
+
+        if(value !== 'false') {
+          element.setAttribute(key, value);
+        } else {
+          if (debug) {
+            console.info("debug-ls-attrs attribute ignored due to 'false' value.");
+          }
+        }
       }
     };
     check();

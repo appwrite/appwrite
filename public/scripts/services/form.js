@@ -16,6 +16,9 @@
                 case 'numeric':
                     value = Number(value);
                     break;
+                case 'float':
+                    value = parseFloat(value);
+                    break;
                 case 'string':
                     value = value.toString();
                     break;

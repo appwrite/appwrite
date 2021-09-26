@@ -60,9 +60,10 @@
                                 data-failure="alert"
                                 data-failure-param-alert-text="Failed to update document"
                                 data-failure-param-alert-classname="error">
-                                
+
                                 <input type="hidden" name="collectionId" data-ls-bind="{{project-collection.$id}}" />
-                                <input type="hidden" name="documentId" data-ls-bind="{{project-document.$id}}" />
+
+                                <input data-ls-if="{{project-document.$id}}"  type="hidden" name="documentId" data-ls-bind="{{project-document.$id}}" />
 
                                 <label>&nbsp;</label>
 
@@ -75,7 +76,7 @@
                                                     <div data-ls-if="{{attribute.required}}" class="text-size-xs text-danger text-fade">required</div>
                                                     <div data-ls-if="!{{attribute.required}}" class="text-size-xs text-fade">optional</div>
                                                 </label>
-                                                <textarea data-ls-attrs="name={{attribute.key}}" data-ls-bind="{{project-document|documentAttribute}}"></textarea>
+                                                <textarea data-ls-attrs="placeholder={{attribute.default}},name={{attribute.key}},required={{attribute.required}}" data-ls-bind="{{project-document|documentAttribute}}"></textarea>
                                             </li>
                                         </ul>
                                     </fieldset>
