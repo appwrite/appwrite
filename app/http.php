@@ -30,7 +30,7 @@ $http
 ;
 
 $http->on('WorkerStart', function($serv, $workerId) {
-    Console::success('Worker '.++$workerId.' started succefully');
+    Console::success('Worker '.++$workerId.' started successfully');
 });
 
 $http->on('BeforeReload', function($serv, $workerId) {
@@ -43,7 +43,7 @@ $http->on('AfterReload', function($serv, $workerId) {
 
 $http->on('start', function (Server $http) use ($payloadSize) {
 
-    Console::success('Server started succefully (max payload is '.number_format($payloadSize).' bytes)');
+    Console::success('Server started successfully (max payload is '.number_format($payloadSize).' bytes)');
 
     Console::info("Master pid {$http->master_pid}, manager pid {$http->manager_pid}");
 

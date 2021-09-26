@@ -49,7 +49,7 @@ $adapter->setPackageMaxLength(64000); // Default maximum Package Size (64kb)
 $server = new Server($adapter);
 
 $server->onStart(function () use ($stats, $register, $containerId, &$documentId) {
-    Console::success('Server started succefully');
+    Console::success('Server started successfully');
 
     $getConsoleDb = function () use ($register) {
         $db = $register->get('dbPool')->get();
@@ -164,7 +164,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$documentId)
 });
 
 $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime) {
-    Console::success('Worker ' . $workerId . ' started succefully');
+    Console::success('Worker ' . $workerId . ' started successfully');
 
     $attempts = 0;
     $start = time();
