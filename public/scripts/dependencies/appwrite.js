@@ -1756,6 +1756,30 @@
                     }, payload);
                 }),
                 /**
+                 * List Document Logs
+                 *
+                 * Get the document activity logs list by its unique ID.
+                 *
+                 * @param {string} collectionId
+                 * @param {string} documentId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                listDocumentLogs: (collectionId, documentId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof documentId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "documentId"');
+                    }
+                    let path = '/database/collections/{collectionId}/documents/{documentId}/logs'.replace('{collectionId}', collectionId).replace('{documentId}', documentId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * List Indexes
                  *
                  *

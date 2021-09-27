@@ -117,7 +117,7 @@ $logs = $this->getParam('logs', null);
                         </form>
                     </div>
 
-                    <a data-ls-if="0 < {{project-collection.attributes.length}}" data-ls-attrs="href=/console/database/document?collection={{router.params.id}}&project={{router.params.project}}&buster={{project-collection.dateUpdated}}" class="button">
+                    <a data-ls-if="0 < {{project-collection.attributes.length}}" data-ls-attrs="href=/console/database/document/new?collection={{router.params.id}}&project={{router.params.project}}" class="button">
                         Add Document
                     </a>
                     <a data-ls-if="!{{project-collection.attributes.length}}" data-ls-attrs="href=/console/database/collection/attributes?id={{router.params.id}}&project={{router.params.project}}" class="button">
@@ -322,7 +322,7 @@ $logs = $this->getParam('logs', null);
                 <button class="new-index">Add Index</button>
             </li>
             <li data-state="/console/database/collection/activity?id={{router.params.id}}&project={{router.params.project}}">
-                <h2>Activity <span class="badge" data-ls-bind="{{project-collection-logs.logs.length}}"></span></h2>
+                <h2>Activity <span class="badge" data-ls-bind="{{logs.logs.length}}"></span></h2>
 
                 <?php echo $logs->render(); ?>                
             </li>
@@ -517,16 +517,17 @@ $logs = $this->getParam('logs', null);
             <div class="row responsive thin">
                 <div class="col span-6 margin-bottom-small">
                     <label for="integer-min">Min</label>
-                    <input id="integer-min" type="number" class="full-width" name="min" value="0" required autocomplete="off" data-cast-to="integer" />
+                    <input id="integer-min" type="number" step="1" class="full-width" name="min" value="0" required autocomplete="off" data-cast-to="integer" />
                 </div>
                 <div class="col span-6 margin-bottom-small">
                     <label for="integer-max">Max</label>
-                    <input id="integer-max" type="number" class="full-width" name="max" value="0" required autocomplete="off" data-cast-to="integer" />
+                    <input id="integer-max" type="number" step="1" class="full-width" name="max" value="0" required autocomplete="off" data-cast-to="integer" />
                 </div>
             </div>
 
             <label for="integer-default">Default Value</label>
-            <input id="integer-default" name="xdefault" type="number" value="0" class="margin-bottom-large" autocomplete="off" data-cast-to="integer">
+
+            <input id="integer-default" name="xdefault" type="number" step="1" value="0" class="margin-bottom-large" autocomplete="off" data-cast-to="integer">
 
             <footer>
                 <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
@@ -540,26 +541,26 @@ $logs = $this->getParam('logs', null);
         <h1>Add Float Attribute</h1>
 
         <form
-                data-analytics
-                data-analytics-activity
-                data-analytics-event="submit"
-                data-analytics-category="console"
-                data-analytics-label="Create Collection Attribute (float)"
-                data-service="database.createFloatAttribute"
-                data-scope="sdk"
-                data-event="submit"
-                data-success="alert,trigger,reset"
-                data-success-param-alert-text="Created new attribute successfully"
-                data-success-param-trigger-events="database.createAttribute"
-                data-failure="alert"
-                data-failure-param-alert-text="Failed to create attribute"
-                data-failure-param-alert-classname="error">
+            data-analytics
+            data-analytics-activity
+            data-analytics-event="submit"
+            data-analytics-category="console"
+            data-analytics-label="Create Collection Attribute (float)"
+            data-service="database.createFloatAttribute"
+            data-scope="sdk"
+            data-event="submit"
+            data-success="alert,trigger,reset"
+            data-success-param-alert-text="Created new attribute successfully"
+            data-success-param-trigger-events="database.createAttribute"
+            data-failure="alert"
+            data-failure-param-alert-text="Failed to create attribute"
+            data-failure-param-alert-classname="error">
 
             <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
             <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
 
-            <label for="float-attributeId">Attribute ID</label>
-            <input id="float-attributeId" type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
+            <label for="attributeId">Attribute ID</label>
+            <input type="text" class="full-width" name="attributeId" required autocomplete="off" maxlength="128" />
 
             <div class="margin-bottom">
                 <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
@@ -572,16 +573,16 @@ $logs = $this->getParam('logs', null);
             <div class="row responsive thin">
                 <div class="col span-6 margin-bottom-small">
                     <label for="float-min">Min</label>
-                    <input id="float-min" type="number" class="full-width" name="min" value="0" step="any" required autocomplete="off" data-cast-to="float" />
+                    <input id="float-min" type="number" class="full-width" name="min" value="0.00" step="0.01" required autocomplete="off" data-cast-to="float" />
                 </div>
                 <div class="col span-6 margin-bottom-small">
                     <label for="float-max">Max</label>
-                    <input id="float-max" type="number" class="full-width" name="max" value="0" step="any" required autocomplete="off" data-cast-to="float" />
+                    <input id="float-max" type="number" class="full-width" name="max" value="0.00" step="0.01" required autocomplete="off" data-cast-to="float" />
                 </div>
             </div>
 
             <label for="float-default">Default Value</label>
-            <input id="float-default" name="xdefault" type="number" value="0" step="any" class="margin-bottom-large" autocomplete="off" data-cast-to="float">
+            <input id="float-default" name="xdefault" type="number" value="0.00" step="0.01" class="margin-bottom-large" autocomplete="off" data-cast-to="float">
 
             <footer>
                 <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
