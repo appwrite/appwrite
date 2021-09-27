@@ -19,7 +19,7 @@ use Utopia\Swoole\Request;
 
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
-$payloadSize = 5 * (1024 * 1024); // 5MB
+$payloadSize = 6 * (1024 * 1024); // 5MB
 
 $http
     ->set([
