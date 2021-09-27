@@ -566,7 +566,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             $start = $request->getContentRangeStart();
             $end = $request->getContentRangeEnd();
             $size = $request->getContentRangeSize();
-
+            $fileId = $request->getHeader('x-appwrite-id', $fileId);
             if(is_null($start) || is_null($end) || is_null($size)) {
                 throw new Exception('Invalid content-range header', 400);
             }
