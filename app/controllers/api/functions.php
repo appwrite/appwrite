@@ -680,8 +680,10 @@ App::post('/v1/functions/:functionId/executions')
 
         Authorization::disable();
 
+        $executionId = $dbForInternal->getId();
+
         $execution = $dbForInternal->createDocument('executions', new Document([
-            '$id' => $dbForInternal->getId(),
+            '$id' => $executionId,
             '$read' => (!$user->isEmpty()) ? ['user:' . $user->getId()] : [],
             '$write' => [],
             'dateCreated' => time(),
@@ -693,6 +695,7 @@ App::post('/v1/functions/:functionId/executions')
             'stdout' => '',
             'stderr' => '',
             'time' => 0.0,
+            'search' => implode(' ', [$functionId, $executionId]),
         ]));
 
         Authorization::reset();
@@ -747,10 +750,11 @@ App::get('/v1/functions/:functionId/executions')
     ->param('functionId', '', new UID(), 'Function unique ID.')
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('after', '', new UID(), 'ID of the execution used as the starting point for the query, excluding the execution itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->inject('response')
     ->inject('dbForInternal')
-    ->action(function ($functionId, $limit, $offset, $after, $response, $dbForInternal) {
+    ->action(function ($functionId, $limit, $offset, $search, $after, $response, $dbForInternal) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Database\Database $dbForInternal */
 
@@ -770,13 +774,17 @@ App::get('/v1/functions/:functionId/executions')
             }
         }
 
-        $results = $dbForInternal->find('executions', [
-            new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]),
-        ], $limit, $offset, [], [Database::ORDER_DESC], $afterExecution ?? null);
+        $queries = [
+            new Query('functionId', Query::TYPE_EQUAL, [$function->getId()])
+        ];
 
-        $sum = $dbForInternal->count('executions', [
-            new Query('functionId', Query::TYPE_EQUAL, [$function->getId()]),
-        ], APP_LIMIT_COUNT);
+        if (!empty($search)) {
+            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+        }
+
+        $results = $dbForInternal->find('executions', $queries, $limit, $offset, [], [Database::ORDER_DESC], $afterExecution ?? null);
+
+        $sum = $dbForInternal->count('executions', $queries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
             'executions' => $results,

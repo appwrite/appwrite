@@ -7,6 +7,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use function array_merge;
+use function var_dump;
 
 class FunctionsCustomServerTest extends Scope
 {
@@ -473,6 +475,36 @@ class FunctionsCustomServerTest extends Scope
         $this->assertIsArray($function['body']['executions']);
         $this->assertCount(1, $function['body']['executions']);
         $this->assertEquals($function['body']['executions'][0]['$id'], $data['executionId']);
+
+        /**
+         * Test search queries
+         */
+
+        $response = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => $data['executionId'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['sum']);
+        $this->assertIsInt($response['body']['sum']);
+        $this->assertCount(1, $response['body']['executions']);
+        $this->assertEquals($data['functionId'], $response['body']['executions'][0]['functionId']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => $data['functionId'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['sum']);
+        $this->assertIsInt($response['body']['sum']);
+        $this->assertCount(1, $response['body']['executions']);
+        $this->assertEquals($data['executionId'], $response['body']['executions'][0]['$id']);
 
         return $data;
     }
