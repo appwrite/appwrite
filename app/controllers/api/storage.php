@@ -732,7 +732,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         ;
 
         $usage
-            ->setParam('storage', $sizeActual)
+            ->setParam('storage', $sizeActual ?? 0)
             ->setParam('storage.files.create', 1)
             ->setParam('bucketId', $bucketId)
         ;
