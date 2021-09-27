@@ -4420,9 +4420,10 @@
                             let formData = new FormData();
                             for (const key in params) {
                                 if (Array.isArray(params[key])) {
-                                    formData.append(key + '[]', params[key].join(','));
-                                }
-                                else {
+                                    params[key].forEach((value) => {
+                                        formData.append(key + '[]', value);
+                                    })
+                                } else {
                                     formData.append(key, params[key]);
                                 }
                             }
