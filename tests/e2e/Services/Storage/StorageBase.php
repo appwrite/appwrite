@@ -70,28 +70,31 @@ trait StorageBase
 
         $source = __DIR__ . "/../../../resources/disk-a/large-file.mp4";
         $totalSize = \filesize($source);
-        $chunkSize = 5000000;
+        $chunkSize = 5*1024*1024;
         $handle = @fopen($source, "rb");
         $fileId = 'unique()';
         $mimeType = mime_content_type($source);
         $counter = 0;
         $size = filesize($source);
-
+        $headers = [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ];
+        $id = '';
         while (!feof($handle)) {
             $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'large-file.mp4');
-            $contentRanges = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size) . '/' . $size;
-            $largeFile = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket2['body']['$id'] . '/files', array_merge([
-                'content-type' => 'multipart/form-data',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'content-range' => $contentRanges,
-            ], $this->getHeaders()), [
+            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size) . '/' . $size;
+            if(!empty($id)) {
+                $headers['x-appwrite-id'] = $id;
+            }
+            $largeFile = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket2['body']['$id'] . '/files', array_merge($headers, $this->getHeaders()), [
                 'fileId' => $fileId,
                 'file' => $curlFile,
                 'read' => ['role:all'],
                 'write' => ['role:all'],
             ]);
             $counter++;
-            $fileId = $largeFile['body']['$id'];
+            $id = $largeFile['body']['$id'];
         }
         @fclose($handle);
         
