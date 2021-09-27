@@ -63,16 +63,18 @@ $logs = $this->getParam('logs', null);
                             <table class="vertical borders">
                                 <thead>
                                     <tr data-ls-loop="project-collection.attributes" data-ls-as="attribute" data-ls-prefix="template-attribute-title-first" data-ls-limit="20">
-                                        <td style="width: 170px">
-                                            <i data-ls-attrs="class=pull-end icon-{{attribute.type}} text-size-xs"></i>
+                                        <td data-ls-if="{{attribute.status}} === 'available'" style="width: 170px">
+                                            <i data-ls-if="{{attribute.format}}" data-ls-attrs="class=pull-end icon-{{attribute.format}} text-size-xs"></i>
+                                            <i data-ls-if="!{{attribute.format}}" data-ls-attrs="class=pull-end icon-{{attribute.type}} text-size-xs"></i>
                                             <span class="text-bold" data-ls-bind="{{attribute.key}}"></span>
                                             <span class="text-size-small" data-ls-if="{{attribute.array}}">[]</span>
                                         </td>
+
                                     </tr>
                                 </thead>
                                 <tbody data-ls-loop="project-documents.documents" data-ls-as="node">
                                     <tr data-ls-loop="project-collection.attributes" data-ls-as="attribute" data-ls-prefix="template-attribute-body-first" data-ls-limit="20">
-                                        <td data-ls-attrs="data-title={{attribute.key}}: ">
+                                        <td data-ls-if="{{attribute.status}} === 'available'" data-ls-attrs="data-title={{attribute.key}}: ">
                                             <!-- <a href="" target="_blank" rel="noopener" class="pull-end margin-start"><i class="icon-link-ext"></i></a> -->
                                             <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection={{router.params.id}}&project={{router.params.project}}"><span data-ls-bind="{{node|documentAttribute}}"></span></a>
                                             <span data-ls-if="!{{node|documentAttribute}}" class="text-fade">n/a</span>
