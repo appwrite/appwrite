@@ -29,4 +29,4 @@ With these steps, your environment variable is properly added and can be accesse
 
 If everything went well, commit and initiate a PR and wait for the Appwrite team's approval.
 
-Whooho! You have successfully added the new environment variable to Appwrite. 🎉
+Whooho! You have successfully added a new environment variable to Appwrite. 🎉
