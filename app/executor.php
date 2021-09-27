@@ -28,38 +28,36 @@ use Utopia\Validator\Text;
 use Cron\CronExpression;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
-use Utopia\Storage\Validator\FileExt;
-use Utopia\Storage\Validator\FileSize;
-use Utopia\Storage\Validator\Upload;
 use Swoole\Coroutine as Co;
+use Utopia\Orchestration\Adapter\DockerCLI;
 
 require_once __DIR__ . '/workers.php';
 
 $dockerUser = App::getEnv('DOCKERHUB_PULL_USERNAME', null);
 $dockerPass = App::getEnv('DOCKERHUB_PULL_PASSWORD', null);
 $dockerEmail = App::getEnv('DOCKERHUB_PULL_EMAIL', null);
-$orchestration = new Orchestration(new DockerAPI($dockerUser, $dockerPass, $dockerEmail));
+$orchestration = new Orchestration(new DockerCLI($dockerUser, $dockerPass));
 
 $runtimes = Config::getParam('runtimes');
 
-Swoole\Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_CURL);
+Swoole\Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL);
 
 // Warmup: make sure images are ready to run fast 🚀
-// Co\run(function () use ($runtimes, $orchestration) {
-//     foreach ($runtimes as $runtime) {
-//         go(function () use ($runtime, $orchestration) {
-//             Console::info('Warming up ' . $runtime['name'] . ' ' . $runtime['version'] . ' environment...');
+Co\run(function () use ($runtimes, $orchestration) {
+    foreach ($runtimes as $runtime) {
+        go(function () use ($runtime, $orchestration) {
+            Console::info('Warming up ' . $runtime['name'] . ' ' . $runtime['version'] . ' environment...');
 
-//             $response = $orchestration->pull($runtime['image']);
+            $response = $orchestration->pull($runtime['image']);
 
-//             if ($response) {
-//                 Console::success("Successfully Warmed up {$runtime['name']} {$runtime['version']}!");
-//             } else {
-//                 Console::error("Failed to Warmup {$runtime['name']} {$runtime['version']}!");
-//             }
-//         });
-//     }
-// });
+            if ($response) {
+                Console::success("Successfully Warmed up {$runtime['name']} {$runtime['version']}!");
+            } else {
+                Console::error("Failed to Warmup {$runtime['name']} {$runtime['version']}!");
+            }
+        });
+    }
+});
 
 /**
  * List function servers
@@ -258,7 +256,7 @@ App::post('/v1/tag')
         Authorization::reset();
 
         // Build Code
-        go(function ()  use ($projectDB, $projectID, $function, $tagId, $functionId) {
+        go(function () use ($projectDB, $projectID, $function, $tagId, $functionId) {
             // Build Code
             $tag = runBuildStage($tagId, $function, $projectID, $projectDB);
 
@@ -304,10 +302,19 @@ function runBuildStage(string $tagID, Document $function, string $projectID, Dat
     $buildStdout = '';
     $buildStderr = '';
 
+    // Check if tag is already built
+    Authorization::disable();
+    $tag = $database->getDocument($tagID);
+    Authorization::reset();
+
     try {
+        // If we already have a built package ready there is no need to rebuild.
+        if ($tag->getAttribute('status') === 'ready' && \file_exists($tag->getAttribute('builtPath'))) {
+            return $tag;
+        }
+
         // Update Tag Status
         Authorization::disable();
-        $tag = $database->getDocument($tagID);
         $tag = $database->updateDocument(array_merge($tag->getArrayCopy(), [
             'status' => 'building'
         ]));
@@ -994,8 +1001,6 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
         $code = $error->getCode();
         $message = $error->getMessage();
-
-        //$_SERVER = []; // Reset before reporting to error log to avoid keys being compromised
 
         $output = ((App::isDevelopment())) ? [
             'message' => $error->getMessage(),
