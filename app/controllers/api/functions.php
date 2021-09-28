@@ -423,40 +423,100 @@ App::post('/v1/functions/:functionId/tags')
         }
 
         // Make sure we handle a single file and multiple files the same way
-        $file['name'] = (\is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
-        $file['tmp_name'] = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
-        $file['size'] = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+        $fileName = (\is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
+        $fileTmpName = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
+        $size = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
         if (!$fileExt->isValid($file['name'])) { // Check if file type is allowed
             throw new Exception('File type not allowed', 400);
         }
 
-        if (!$fileSize->isValid($file['size'])) { // Check if file size is exceeding allowed limit
+        $contentRange = $request->getHeader('content-range');
+        $tagId = $dbForInternal->getId();
+        $chunk = 1;
+        $chunks = 1;
+
+        if (!empty($contentRange)) {
+            $start = $request->getContentRangeStart();
+            $end = $request->getContentRangeEnd();
+            $size = $request->getContentRangeSize();
+            $tagId = $request->getHeader('x-appwrite-id', $tagId);
+            if(is_null($start) || is_null($end) || is_null($size)) {
+                throw new Exception('Invalid content-range header', 400);
+            }
+
+            if ($end == $size) {
+                //if it's a last chunks the chunk size might differ, so we set the $chunks and $chunk to notify it's last chunk
+                $chunks = $chunk = -1;
+            } else {
+                // Calculate total number of chunks based on the chunk size i.e ($rangeEnd - $rangeStart)
+                $chunks = (int) ceil($size / ($end + 1 - $start));
+                $chunk = (int) ($start / ($end + 1 - $start));
+            }
+        }
+
+        if (!$fileSize->isValid($size)) { // Check if file size is exceeding allowed limit
             throw new Exception('File size not allowed', 400);
         }
 
-        if (!$upload->isValid($file['tmp_name'])) {
+        if (!$upload->isValid($fileTmpName)) {
             throw new Exception('Invalid file', 403);
         }
 
         // Save to storage
-        $size = $device->getFileSize($file['tmp_name']);
-        $path = $device->getPath(\uniqid().'.'.\pathinfo($file['name'], PATHINFO_EXTENSION));
+        $size ??= $device->getFileSize($fileTmpName);
+        $path = $device->getPath($tagId.'.'.\pathinfo($fileName, PATHINFO_EXTENSION));
         
-        if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
+        $tag = $dbForInternal->getDocument('tags', $tagId);
+
+        if(!$tag->isEmpty()) {
+            $chunks = $tag->getAttribute('chunksTotal', 1);
+            if($chunk == -1) {
+                $chunk = $chunks - 1;
+            }
+        }
+
+        $chunksUploaded = $device->upload($fileTmpName, $path, $chunk, $chunks);
+
+        if (empty($chunksUploaded)) {
             throw new Exception('Failed moving file', 500);
         }
         
-        $tag = $dbForInternal->createDocument('tags', new Document([
-            '$id' => $dbForInternal->getId(),
-            '$read' => [],
-            '$write' => [],
-            'functionId' => $function->getId(),
-            'dateCreated' => time(),
-            'command' => $command,
-            'path' => $path,
-            'size' => $size,
-        ]));
+        if($chunksUploaded == $chunks) {
+            $size = $device->getFileSize($path);
+
+            if ($tag->isEmpty()) {
+                $tag = $dbForInternal->createDocument('tags', new Document([
+                    '$id' => $tagId,
+                    '$read' => [],
+                    '$write' => [],
+                    'functionId' => $function->getId(),
+                    'dateCreated' => time(),
+                    'command' => $command,
+                    'path' => $path,
+                    'size' => $size,
+                ]));
+            } else {
+                $tag = $dbForInternal->updateDocument('tags', $tagId, $tag->setAttribute('size', $size));
+            }
+        } else {
+            if($tag->isEmpty()) {
+                $tag = $dbForInternal->createDocument('tags', new Document([
+                    '$id' => $tagId,
+                    '$read' => [],
+                    '$write' => [],
+                    'functionId' => $function->getId(),
+                    'dateCreated' => time(),
+                    'command' => $command,
+                    'path' => $path,
+                    'size' => 0,
+                    'chunksTotal' => $chunks,
+                    'chunksUploaded' => $chunksUploaded,
+                ]));
+            } else {
+                $tag = $dbForInternal->updateDocument('tags', $tagId, $tag->setAttribute('chunksUploaded', $chunksUploaded));
+            }
+        }
 
         $usage
             ->setParam('storage', $tag->getAttribute('size', 0))
