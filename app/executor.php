@@ -829,7 +829,7 @@ function execute(string $trigger, string $projectId, string $executionId, string
         $errNo = \curl_errno($ch);
 
         \curl_close($ch);
-        if ($errNo != CURLE_COULDNT_CONNECT) {
+        if ($errNo != CURLE_COULDNT_CONNECT && $errNo != 111) {
             break;
         }
 
