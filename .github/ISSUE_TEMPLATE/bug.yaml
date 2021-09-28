@@ -22,7 +22,7 @@ body:
     attributes:
       label: "👍 Expected behavior"
       description: "What did you think would happen?"
-      placeholder: "Appwrite should ..."
+      placeholder: "It should ..."
   - type: textarea
     id: actual-behavior
     validations:
@@ -30,24 +30,19 @@ body:
     attributes:
       label: "👎 Actual Behavior"
       description: "What did actually happen? Add screenshots, if applicable."
-      placeholder: "Appwrite ..."
+      placeholder: "It actually ..."
   - type: dropdown
     id: appwrite-version
     attributes:
       label: "🎲 Appwrite version"
       description: "What version of Appwrite are you running?"
       options:
-        - Version 0.9.4
-        - Version 0.9.3
-        - Version 0.9.2
-        - Version 0.9.1
-        - Version 0.9.0
-        - Version 0.8.0
-        - Version 0.7.2
-        - Version 0.7.1
-        - Version 0.7.0
-        - Version 0.6.2
-        - Different version
+        - Version 0.10.x
+        - Version 0.9.x
+        - Version 0.8.x
+        - Version 0.7.x
+        - Version 0.6.x
+        - Different version (specify in environment)
     validations:
       required: true
   - type: dropdown
