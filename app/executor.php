@@ -680,6 +680,20 @@ function execute(string $trigger, string $projectId, string $executionId, string
 
     Authorization::reset();
 
+    if ($tag->getAttribute('status') == 'building') {
+        Console::error('Execution Failed. Reason: Code was still being built.');
+        Authorization::disable();
+        $execution = $database->updateDocument(array_merge($execution->getArrayCopy(), [
+            'tagId' => $tag->getId(),
+            'status' => 'failed',
+            'exitCode' => 1,
+            'stderr' => 'Tag is still being built.', // log last 4000 chars output
+            'time' => 0
+        ]));
+        Authorization::reset();
+        throw new Exception('Tag is still being built.');
+    }
+
     // Check if runtime is active
     $runtime = (isset($runtimes[$function->getAttribute('runtime', '')]))
         ? $runtimes[$function->getAttribute('runtime', '')]
@@ -706,8 +720,6 @@ function execute(string $trigger, string $projectId, string $executionId, string
     ]);
 
     $container = 'appwrite-function-' . $tag->getId();
-
-    // Check if code is built
 
     try {
         if ($tag->getAttribute('status') !== 'ready') {
@@ -744,6 +756,11 @@ function execute(string $trigger, string $projectId, string $executionId, string
             'time' => 0
         ]));
         Authorization::enable();
+        return [
+            'status' => 'failed',
+            'response' => \utf8_encode(\mb_substr($e->getMessage(), -4000)), // log last 4000 chars output
+            'time' => 0
+        ];
     }
 
     $internalFunction = $activeFunctions->get('appwrite-function-' . $tag->getId());
