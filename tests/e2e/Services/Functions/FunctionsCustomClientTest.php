@@ -93,6 +93,9 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(200, $function['headers']['status-code']);
 
+        // Wait for tag to be built.
+        sleep(5);
+
         $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$function['body']['$id'].'/executions', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -175,6 +178,9 @@ class FunctionsCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $function['headers']['status-code']);
+
+        // Wait for tag to be built.
+        sleep(5);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([
             'content-type' => 'application/json',
@@ -277,6 +283,9 @@ class FunctionsCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $function['headers']['status-code']);
+
+        // Wait for tag to be built.
+        sleep(5);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([
             'content-type' => 'application/json',

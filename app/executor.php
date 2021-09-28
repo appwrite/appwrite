@@ -842,11 +842,13 @@ function execute(string $trigger, string $projectId, string $executionId, string
     }
 
     // If timeout error
-    if ($errNo == CURLE_OPERATION_TIMEDOUT) {
+    if ($errNo == CURLE_OPERATION_TIMEDOUT || $errNo == 110) {
         $exitCode = 124;
     }
 
-    if ($errNo !== 0 && $errNo != CURLE_COULDNT_CONNECT && $errNo != CURLE_OPERATION_TIMEDOUT) {
+    // 110 is the Swoole error code for timeout, see: https://www.swoole.co.uk/docs/swoole-error-code
+    if ($errNo !== 0 && $errNo != CURLE_COULDNT_CONNECT && $errNo != CURLE_OPERATION_TIMEDOUT && $errNo != 110) {
+        Console::error('A internal curl error has occoured within the executor! Error Msg: '. $error);
         throw new Exception('Curl error: ' . $error, 500);
     }
 

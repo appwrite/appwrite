@@ -221,6 +221,9 @@ class FunctionsCustomServerTest extends Scope
         $this->assertIsInt($response['body']['dateCreated']);
         $this->assertIsInt($response['body']['dateUpdated']);
         $this->assertEquals($data['tagId'], $response['body']['tag']);
+
+        // Wait for tag to be built.
+        sleep(5);
        
         /**
          * Test for FAILURE
@@ -494,7 +497,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $tag['headers']['status-code']);
 
         // Allow build step to run
-        sleep(20);
+        sleep(5);
        
         $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([
             'content-type' => 'application/json',
@@ -573,6 +576,9 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $tag['headers']['status-code']);
+
+        // Allow build step to run
+        sleep(5);
        
         $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([
             'content-type' => 'application/json',

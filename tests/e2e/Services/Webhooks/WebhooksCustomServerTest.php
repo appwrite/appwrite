@@ -428,6 +428,9 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']['$id']);
 
+        // Wait for tag to be built.
+        sleep(5);
+
         $webhook = $this->getLastRequest();
 
         $this->assertEquals($webhook['method'], 'POST');
