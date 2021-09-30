@@ -1127,9 +1127,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
 
         if ($size > APP_STORAGE_READ_BUFFER) {          
             $response->addHeader('Content-Length', $device->getFileSize($path));
-            $chunk = 2000000; // Max chunk of 2 mb
-            for ($i=0; $i < ceil($size / $chunk); $i++) {
-                $response->chunk($device->read($path, ($i * $chunk), min($chunk, $size - ($i * $chunk))), (($i + 1) * $chunk) >= $size);
+            for ($i=0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
+                $response->chunk($device->read($path, ($i * MAX_OUTPUT_CHUNK_SIZE), min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))), (($i + 1) * MAX_OUTPUT_CHUNK_SIZE) >= $size);
             }
         } else {
             $response->send($device->read($path));

@@ -103,6 +103,8 @@ const APP_AUTH_TYPE_SESSION = 'Session';
 const APP_AUTH_TYPE_JWT = 'JWT';
 const APP_AUTH_TYPE_KEY = 'Key';
 const APP_AUTH_TYPE_ADMIN = 'Admin';
+// Response related
+const MAX_OUTPUT_CHUNK_SIZE = 2*1024*1024; // 2MB
 
 $register = new Registry();
 
