@@ -1040,7 +1040,14 @@ App::get('/v1/database/collections/:collectionId/attributes/:attributeId')
     ->label('sdk.description', '/docs/references/database/get-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE)
+    ->label('sdk.response.model', [
+        Response::MODEL_ATTRIBUTE_BOOLEAN,
+        Response::MODEL_ATTRIBUTE_INTEGER,
+        Response::MODEL_ATTRIBUTE_FLOAT,
+        Response::MODEL_ATTRIBUTE_EMAIL,
+        Response::MODEL_ATTRIBUTE_URL,
+        Response::MODEL_ATTRIBUTE_IP,
+        Response::MODEL_ATTRIBUTE_STRING,])// needs to be last, since its condition would dominate any other string attribute
     ->param('collectionId', '', new UID(), 'Collection unique ID. You can create a new collection using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('attributeId', '', new Key(), 'Attribute ID.')
     ->inject('response')
