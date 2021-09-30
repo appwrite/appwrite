@@ -6,6 +6,12 @@ jobs:
   phpstan:
     runs-on: ubuntu-latest
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        # We must fetch at least the immediate parents so that if this is
+        # a pull request then we can checkout the head.
+        fetch-depth: 2
     - name: Setup PHP
       id: setup-php
       uses: shivammathur/setup-php@v2
