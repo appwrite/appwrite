@@ -1,0 +1,12 @@
+parameters:
+    level: 1
+    paths:
+        - src
+        - app
+    scanDirectories:
+      - vendor/swoole/ide-helper
+    bootstrapFiles:
+      - app/init.php
+    excludePaths:
+        analyse:
+            - vendor/swoole

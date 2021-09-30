@@ -65,10 +65,11 @@
     },
     "require-dev": {
         "appwrite/sdk-generator": "0.15.2",
-        "phpunit/phpunit": "9.5.6",
+        "phpunit/phpunit": "9.5.10",
         "swoole/ide-helper": "4.6.7",
         "textalk/websocket": "1.5.2",
-        "vimeo/psalm": "4.7.2"
+        "vimeo/psalm": "4.7.2",
+        "phpstan/phpstan": "0.12.99"
     },
     "provide": {
         "ext-phpiredis": "*"

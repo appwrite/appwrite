@@ -1,0 +1,19 @@
+
+name: "PHPStan"
+on: [pull_request]
+
+jobs:
+  phpstan:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Setup PHP
+      id: setup-php
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.0'
+        extensions: swoole
+    - name: Install Dependencies
+      run: composer install --prefer-dist
+    - name: Run PHPStan
+      run: vendor/bin/phpstan
+
