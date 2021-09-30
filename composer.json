@@ -36,7 +36,7 @@
         "ext-sockets": "*",
 
         "appwrite/php-clamav": "1.1.*",
-        "appwrite/php-runtimes": "0.4.*",
+        "appwrite/php-runtimes": "0.5.*",
 
         "utopia-php/framework": "0.18.*",
         "utopia-php/abuse": "0.5.*",
