@@ -63,7 +63,7 @@ body:
       required: false
     attributes:
       label: "🧱 Your Environment"
-      description: "Is your environment special in any way?"
+      description: "Is your environment customized in any way?"
       placeholder: "I use Cloudflare for ..."
   - type: checkboxes
     id: no-duplicate-issues
