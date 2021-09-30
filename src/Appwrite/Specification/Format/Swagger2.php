@@ -183,13 +183,22 @@ class Swagger2 extends Format
             }
 
             foreach ($this->models as $key => $value) {
-                if($value->getType() === $model) {
-                    $model = $value;
-                    break;
+                if(\is_array($model)) {
+                    $model = \array_map(function($m) use($value) {
+                        if($m === $value->getType()) {
+                            return $value;
+                        }
+                        return $m;
+                    }, $model);
+                } else {
+                    if($value->getType() === $model) {
+                        $model = $value;
+                        break;
+                    }
                 }
             }
 
-            if($model->isNone()) {
+            if(!(\is_array($model)) &&  $model->isNone()) {
                 $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
                     'description' => (in_array($produces, [
                         'image/*',
@@ -206,13 +215,41 @@ class Swagger2 extends Format
                     ],
                 ];
             } else {
-                $usedModels[] = $model->getType();
-                $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
-                    'description' => $model->getName(),
-                    'schema' => [
-                        '$ref' => '#/definitions/'.$model->getType(),
-                    ],
-                ];
+
+                if(\is_array($model)) {
+                    $modelDescription = \join(', or ', \array_map(function ($m) {
+                        return $m->getName();
+                    }, $model));
+                    // model has multiple possible responses, we will use oneOf
+                    foreach ($model as $m) {
+                        $usedModels[] = $m->getType();
+                    }
+                    $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
+                        'description' => $modelDescription,
+                        'content' => [
+                            $produces => [
+                                'schema' => [
+                                    'oneOf' => \array_map(function($m) {
+                                        return ['$ref' => '#/definitions/'.$m->getType()];
+                                    }, $model)
+                                ],
+                            ],
+                        ],
+                    ];
+                } else {
+                    // Response definition using one type
+                    $usedModels[] = $model->getType();
+                    $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
+                        'description' => $model->getName(),
+                        'content' => [
+                            $produces => [
+                                'schema' => [
+                                    '$ref' => '#/definitions/'.$model->getType(),
+                                ],
+                            ],
+                        ],
+                    ];
+                }
             }
 
             if(in_array($route->getLabel('sdk.response.code', 500), [204, 301, 302, 308], true)) {
